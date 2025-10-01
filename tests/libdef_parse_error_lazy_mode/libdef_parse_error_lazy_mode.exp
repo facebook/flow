@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------- lib.js:1:7
 
-Unexpected token `;`, expected an identifier
+Unexpected token `;`, expected an identifier [ParseError]
 
    1| const ;
             ^

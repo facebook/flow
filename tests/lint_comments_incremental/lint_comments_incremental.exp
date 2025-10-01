@@ -29,7 +29,7 @@ No errors!
 After fixing the lint error, leaving the suppression:
 Warning --------------------------------------------------------------------------------------------------- test.js:4:22
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    4| //flowlint-next-line sketchy-null:off
                            ^^^^^^^^^^^^^^^^

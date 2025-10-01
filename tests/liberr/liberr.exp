@@ -85,7 +85,7 @@ Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`? [lint-se
 
 Error ---------------------------------------------------------------------------------------- libs/missing_name.js:10:3
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    10|   // $FlowFixMe
          ^^^^^^^^^^^^^
@@ -326,7 +326,7 @@ Nonexistent/misspelled lint rule. Perhaps you have a missing/extra `,`? [lint-se
 
 Error ---------------------------------------------------------------------------------------- libs/missing_name.js:10:3
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    10|   // $FlowFixMe
          ^^^^^^^^^^^^^

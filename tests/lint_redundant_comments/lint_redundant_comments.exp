@@ -200,7 +200,7 @@ Redundant argument. The values set by this argument are overwritten later in thi
 
 Warning -------------------------------------------------------------------------------------------------- test.js:15:12
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    15| /*flowlint sketchy-null:off*/ //Unused suppression
                   ^^^^^^^^^^^^^^^^
@@ -208,7 +208,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:43:32
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    43| /*flowlint sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
                                       ^^^^^^^^^^^^^^^^^^^^^
@@ -216,7 +216,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:44:37
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    44| /*flowlint-line sketchy-null:error, sketchy-null-bool:off*/ //Unused suppression
                                            ^^^^^^^^^^^^^^^^^^^^^
@@ -224,7 +224,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:53:53
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    53| /*Clearing the settings; not an error.*/ /*flowlint sketchy-null:off*/ //Unused suppression
                                                            ^^^^^^^^^^^^^^^^
@@ -232,7 +232,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:66:32
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    66| /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
                                       ^^^^^^^^^^^^^^^^^^^^^
@@ -240,7 +240,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:66:55
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    66| /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
                                                              ^^^^^^^^^^^^^^^^^^^^^^^
@@ -248,7 +248,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:66:80
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    66| /*flowlint sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^
@@ -256,7 +256,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:67:37
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    67| /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
                                            ^^^^^^^^^^^^^^^^^^^^^
@@ -264,7 +264,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:67:60
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    67| /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
                                                                   ^^^^^^^^^^^^^^^^^^^^^^^
@@ -272,7 +272,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:67:85
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    67| /*flowlint-line sketchy-null:error, sketchy-null-bool:off, sketchy-null-string:off, sketchy-null-number:off*/ //Unused suppressions
                                                                                            ^^^^^^^^^^^^^^^^^^^^^^^

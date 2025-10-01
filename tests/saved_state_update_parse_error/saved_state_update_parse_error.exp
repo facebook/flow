@@ -2,7 +2,7 @@ Parse error should be reported:
 
 Error --------------------------------------------------------------------------------------------------------- a.js:8:1
 
-Unexpected identifier, expected the token `)`
+Unexpected identifier, expected the token `)` [ParseError]
 
    8| module.exports = (new A(): A);
       ^^^^^^
@@ -18,7 +18,7 @@ Parse error, but no typing error in b.js:
 
 Error --------------------------------------------------------------------------------------------------------- a.js:8:1
 
-Unexpected identifier, expected the token `)`
+Unexpected identifier, expected the token `)` [ParseError]
 
    8| module.exports = (new A(): A);
       ^^^^^^

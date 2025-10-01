@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:3:4
 
-Unexpected token `!`, expected the end of an expression statement (`;`)
+Unexpected token `!`, expected the end of an expression statement (`;`) [ParseError]
 
    3|   a! as number;
          ^

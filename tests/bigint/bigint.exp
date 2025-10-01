@@ -364,7 +364,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ invalid01.js:1:23
 
-A bigint literal must be an integer
+A bigint literal must be an integer [ParseError]
 
    1| type InvalidDecimal = 1.0n; // error
                             ^^^^
@@ -372,7 +372,7 @@ A bigint literal must be an integer
 
 Error ------------------------------------------------------------------------------------------------ invalid02.js:1:27
 
-A bigint literal must be an integer
+A bigint literal must be an integer [ParseError]
 
    1| type InvalidNegDecimal = -1.0n; // error
                                 ^^^^
@@ -380,7 +380,7 @@ A bigint literal must be an integer
 
 Error ------------------------------------------------------------------------------------------------ invalid03.js:1:25
 
-A bigint literal must be an integer
+A bigint literal must be an integer [ParseError]
 
    1| const invalid_decimal = 1.0n; // error
                               ^^^^
@@ -388,7 +388,7 @@ A bigint literal must be an integer
 
 Error ------------------------------------------------------------------------------------------------ invalid04.js:1:30
 
-A bigint literal must be an integer
+A bigint literal must be an integer [ParseError]
 
    1| const invalid_neg_decimal = -1.0n; // error
                                    ^^^^
@@ -396,7 +396,7 @@ A bigint literal must be an integer
 
 Error ------------------------------------------------------------------------------------------------ invalid05.js:1:17
 
-A bigint literal cannot use exponential notation
+A bigint literal cannot use exponential notation [ParseError]
 
    1| type InvalidE = 2e9n; // error
                       ^^^^
@@ -404,7 +404,7 @@ A bigint literal cannot use exponential notation
 
 Error ------------------------------------------------------------------------------------------------ invalid06.js:1:21
 
-A bigint literal cannot use exponential notation
+A bigint literal cannot use exponential notation [ParseError]
 
    1| type InvalidNegE = -2e9n; // error
                           ^^^^
@@ -412,7 +412,7 @@ A bigint literal cannot use exponential notation
 
 Error ------------------------------------------------------------------------------------------------ invalid07.js:1:24
 
-A bigint literal cannot use exponential notation
+A bigint literal cannot use exponential notation [ParseError]
 
    1| type InvalidDecimalE = 2.0e9n; // error
                              ^^^^^^
@@ -420,7 +420,7 @@ A bigint literal cannot use exponential notation
 
 Error ------------------------------------------------------------------------------------------------ invalid08.js:1:28
 
-A bigint literal cannot use exponential notation
+A bigint literal cannot use exponential notation [ParseError]
 
    1| type InvalidNegDecimalE = -2.0e9n; // error
                                  ^^^^^^
@@ -428,7 +428,7 @@ A bigint literal cannot use exponential notation
 
 Error ------------------------------------------------------------------------------------------------ invalid09.js:1:19
 
-A bigint literal cannot use exponential notation
+A bigint literal cannot use exponential notation [ParseError]
 
    1| const invalid_e = 2e9n; // error
                         ^^^^
@@ -436,7 +436,7 @@ A bigint literal cannot use exponential notation
 
 Error ------------------------------------------------------------------------------------------------ invalid10.js:1:24
 
-A bigint literal cannot use exponential notation
+A bigint literal cannot use exponential notation [ParseError]
 
    1| const invalid_neg_e = -2e9n; // error
                              ^^^^
@@ -444,7 +444,7 @@ A bigint literal cannot use exponential notation
 
 Error ------------------------------------------------------------------------------------------------ invalid11.js:1:27
 
-Octal literals are not allowed in strict mode.
+Octal literals are not allowed in strict mode. [ParseError]
 
    1| type InvalidOctalLegacy = 016432n; // error
                                 ^^^^^^
@@ -452,7 +452,7 @@ Octal literals are not allowed in strict mode.
 
 Error ------------------------------------------------------------------------------------------------ invalid12.js:1:31
 
-Octal literals are not allowed in strict mode.
+Octal literals are not allowed in strict mode. [ParseError]
 
    1| type InvalidNegOctalLegacy = -016432n; // error
                                     ^^^^^^
@@ -460,7 +460,7 @@ Octal literals are not allowed in strict mode.
 
 Error ------------------------------------------------------------------------------------------------ invalid13.js:1:30
 
-Unexpected token ILLEGAL
+Unexpected token ILLEGAL [ParseError]
 
    1| const invalid_octal_legacy = 016432n; // error
                                    ^^^^^^^
@@ -468,7 +468,7 @@ Unexpected token ILLEGAL
 
 Error ------------------------------------------------------------------------------------------------ invalid14.js:1:35
 
-Unexpected token ILLEGAL
+Unexpected token ILLEGAL [ParseError]
 
    1| const invalid_neg_octal_legacy = -016432n; // error
                                         ^^^^^^^

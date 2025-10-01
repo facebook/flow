@@ -48,7 +48,7 @@ References:
 
 Warning ------------------------------------------------------------------------------------------------------ A.js:11:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    11| // $FlowFixMe[incompatible-type] Error unused suppression
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,7 +56,7 @@ Unused suppression comment.
 
 Warning ------------------------------------------------------------------------------------------------------- E.js:8:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    8| // $FlowFixMe[sketchy-null-string] - this is unused because sketchy-null-string is off
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

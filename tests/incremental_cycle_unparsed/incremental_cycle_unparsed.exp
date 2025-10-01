@@ -186,7 +186,7 @@ use it as an annotation. [value-as-type]
 
 Error ----------------------------------------------------------------------------------------------------- foo.js:14:11
 
-Unexpected identifier, expected the token `;`
+Unexpected identifier, expected the token `;` [ParseError]
 
    14| let parse error
                  ^^^^^

@@ -8,7 +8,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 === Force check A1.js
 Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    7| // $FlowFixMe[random] - Unused suppression
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -23,7 +23,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 === Force check B1.js
 Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    7| // $FlowFixMe[random] - Unused suppression
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -31,7 +31,7 @@ Unused suppression comment.
 
 Warning ----------------------------------------------------------------------------------------------------- B2.js:15:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    15| // $FlowFixMe[incompatible-type] This is an unused suppression
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -46,7 +46,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 === Add comment to B1.js (should skip B2.js check)
 Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    7| // $FlowFixMe[random] - Unused suppression
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -54,7 +54,7 @@ Unused suppression comment.
 
 Warning ----------------------------------------------------------------------------------------------------- B2.js:15:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    15| // $FlowFixMe[incompatible-type] This is an unused suppression
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -67,7 +67,7 @@ The Flow server is currently in lazy mode and is only checking 8/8 files.
 To learn more, visit flow.org/en/docs/lang/lazy-modes
 Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    7| // $FlowFixMe[random] - Unused suppression
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -75,7 +75,7 @@ Unused suppression comment.
 
 Warning ----------------------------------------------------------------------------------------------------- B2.js:15:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    15| // $FlowFixMe[incompatible-type] This is an unused suppression
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -90,7 +90,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 === Add comment to B1.js (B4 won't be in to_merge set)
 Warning ------------------------------------------------------------------------------------------------------ A2.js:7:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    7| // $FlowFixMe[random] - Unused suppression
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -98,7 +98,7 @@ Unused suppression comment.
 
 Warning ----------------------------------------------------------------------------------------------------- B2.js:15:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    15| // $FlowFixMe[incompatible-type] This is an unused suppression
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -15,7 +15,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    8| // $FlowFixMe - unused suppression comment
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,7 +56,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    8| // $FlowFixMe - unused suppression comment
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -157,7 +157,7 @@ JSON without --include-suppressed
       "message":[
         {
           "context":"// $FlowFixMe - unused suppression comment",
-          "descr":"Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`",
+          "descr":"Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -270,7 +270,7 @@ JSON with --include-suppressed
       "message":[
         {
           "context":"// $FlowFixMe - unused suppression comment",
-          "descr":"Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`",
+          "descr":"Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]",
           "type":"Blame",
           "loc":{
             "source":"test.js",
@@ -398,7 +398,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    8| // $FlowFixMe - unused suppression comment
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -439,7 +439,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:8:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    8| // $FlowFixMe - unused suppression comment
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

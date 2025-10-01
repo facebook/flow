@@ -48,7 +48,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -119,7 +119,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -145,7 +145,7 @@ Found 5 errors
 Focused check on a file with local errors but no dependency or reverse dependency:
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -188,7 +188,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -217,7 +217,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -246,7 +246,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -275,7 +275,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -315,7 +315,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -372,7 +372,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -433,7 +433,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -445,7 +445,7 @@ Found 2 errors
 Focused check with syntax error:
 Error ---------------------------------------------------------------------------------------------------- syntax.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       

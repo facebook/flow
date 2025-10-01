@@ -1,7 +1,7 @@
 syntax_error.js
 Error ---------------------------------------------------------------------------------------------- syntax_error.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -31,7 +31,7 @@ Unexpected `@flow` declaration. Only one per file is allowed. [duplicate-flow-de
 
 Error -------------------------------------------------------------------------- docblock_error_with_syntax_error.js:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       
@@ -74,7 +74,7 @@ Found 1 error
 syntax_error.js (no filename)
 Error ------------------------------------------------------------------------------------------------------------ -:4:1
 
-Unexpected end of input
+Unexpected end of input [ParseError]
 
    4|
       

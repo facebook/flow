@@ -48,7 +48,7 @@ References:
 
 Warning ------------------------------------------------------------------------------------------------------ A.js:14:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    14| // $FlowFixMe[incompatible-type] Error unused suppression
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -56,7 +56,7 @@ Unused suppression comment.
 
 Warning ------------------------------------------------------------------------------------------------------- B.js:1:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    1| // $FlowFixMe[incompatible-type]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

@@ -9,7 +9,7 @@ To learn more, visit flow.org/en/docs/lang/lazy-modes
 Status after focusing a.js:
 Warning ------------------------------------------------------------------------------- invalid_export_suppressed.js:8:3
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    8|   // $FlowFixMe[invalid-export]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -17,7 +17,7 @@ Unused suppression comment.
 
 Warning ----------------------------------------------------------------- signature_verification_error_suppressed.js:7:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    7| // $FlowFixMe[signature-verification-failure]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -25,7 +25,7 @@ Unused suppression comment.
 
 Warning ----------------------------------------------------------------------------------- type_error_suppressed.js:7:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    7| // $FlowFixMe[incompatible-type]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -57,7 +57,7 @@ Found 1 error
 Status including warnings:
 Warning ------------------------------------------------------------------------------- invalid_export_suppressed.js:8:3
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    8|   // $FlowFixMe[invalid-export]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -65,7 +65,7 @@ Unused suppression comment.
 
 Warning ----------------------------------------------------------------- signature_verification_error_suppressed.js:7:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    7| // $FlowFixMe[signature-verification-failure]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -73,7 +73,7 @@ Unused suppression comment.
 
 Warning ----------------------------------------------------------------------------------- type_error_suppressed.js:7:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    7| // $FlowFixMe[incompatible-type]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

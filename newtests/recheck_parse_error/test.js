@@ -14,7 +14,7 @@ module.exports = (suite(({addFile, addFiles, addCode}) => [
         `
           test.js:5
             5: I am a parse error
-                 ^^ Unexpected identifier, expected the end of an expression statement (\`;\`)
+                 ^^ Unexpected identifier, expected the end of an expression statement (\`;\`) [ParseError]
         `,
       ),
   ]),

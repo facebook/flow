@@ -58,7 +58,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ invalid_prop_variance.js:1:17
 
-Unexpected identifier, expected the token `:`
+Unexpected identifier, expected the token `:` [ParseError]
 
    1| type Foo = {out foo: string} // parse error
                       ^^^
@@ -66,7 +66,7 @@ Unexpected identifier, expected the token `:`
 
 Error ---------------------------------------------------------------------------------- invalid_tparam_variance.js:1:11
 
-Unexpected reserved type
+Unexpected reserved type [ParseError]
 
    1| class Foo<readonly T> {} // parse error
                 ^^^^^^^^

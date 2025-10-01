@@ -1262,7 +1262,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- typeof-unexpected.js:6:15
 
-`typeof` can only be used to get the type of variables.
+`typeof` can only be used to get the type of variables. [ParseError]
 
    6| (null: typeof 42);
                     ^^

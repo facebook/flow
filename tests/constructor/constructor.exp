@@ -107,7 +107,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- invalid_async.js:2:9
 
-Constructor can't be an async function.
+Constructor can't be an async function. [ParseError]
 
    2|   async constructor() { }
               ^^^^^^^^^^^

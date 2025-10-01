@@ -81,7 +81,7 @@ Unreachable code. [unreachable-code]
 
 Error -------------------------------------------------------------------------------------------- toplevel_break.js:1:1
 
-Illegal break statement.
+Illegal break statement. [ParseError]
 
    1| break; // error, illegal
       ^^^^^^
@@ -89,7 +89,7 @@ Illegal break statement.
 
 Error ----------------------------------------------------------------------------------------- toplevel_continue.js:1:1
 
-Illegal continue statement
+Illegal continue statement [ParseError]
 
    1| continue; // error, illegal
       ^^^^^^^^^
@@ -97,7 +97,7 @@ Illegal continue statement
 
 Error ------------------------------------------------------------------------------------------- toplevel_return.js:1:1
 
-Illegal return statement
+Illegal return statement [ParseError]
 
    1| return; // error, illegal
       ^^^^^^

@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------- invalid_package_file/package.json:1:1
 
-Unexpected end of input, expected the token `{`
+Unexpected end of input, expected the token `{` [ParseError]
 
    1|
       

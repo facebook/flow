@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------- setter_class_missing_param.js:2:7
 
-Setter should have exactly one parameter
+Setter should have exactly one parameter [ParseError]
 
    2|   set foo() {}
             ^^^
@@ -28,7 +28,7 @@ Flags: --pretty
 
 Error ------------------------------------------------------------------------------ setter_class_multiple_params.js:2:7
 
-Setter should have exactly one parameter
+Setter should have exactly one parameter [ParseError]
 
    2|   set foo(x: string, y: string) {}
             ^^^
@@ -56,7 +56,7 @@ Flags: --pretty
 
 Error ---------------------------------------------------------------------------- setter_interface_missing_param.js:2:7
 
-Setter should have exactly one parameter
+Setter should have exactly one parameter [ParseError]
 
    2|   set foo(): void
             ^^^
@@ -84,7 +84,7 @@ Flags: --pretty
 
 Error -------------------------------------------------------------------------- setter_interface_multiple_params.js:2:7
 
-Setter should have exactly one parameter
+Setter should have exactly one parameter [ParseError]
 
    2|   set foo(x: string, y: string): void
             ^^^
@@ -112,7 +112,7 @@ Flags: --pretty
 
 Error ------------------------------------------------------------------------------- setter_object_missing_param.js:2:7
 
-Setter should have exactly one parameter
+Setter should have exactly one parameter [ParseError]
 
    2|   set foo() {}
             ^^^
@@ -140,7 +140,7 @@ Flags: --pretty
 
 Error ----------------------------------------------------------------------------- setter_object_multiple_params.js:2:7
 
-Setter should have exactly one parameter
+Setter should have exactly one parameter [ParseError]
 
    2|   set foo(x: string, y: string) {}
             ^^^
@@ -168,7 +168,7 @@ Flags: --pretty
 
 Error --------------------------------------------------------------------------------- setter_type_missing_param.js:2:7
 
-Setter should have exactly one parameter
+Setter should have exactly one parameter [ParseError]
 
    2|   set foo(): void
             ^^^
@@ -196,7 +196,7 @@ Flags: --pretty
 
 Error ------------------------------------------------------------------------------- setter_type_multiple_params.js:2:7
 
-Setter should have exactly one parameter
+Setter should have exactly one parameter [ParseError]
 
    2|   set foo(x: string, y: string): void
             ^^^

@@ -155,7 +155,7 @@ References:
 Error ---------------------------------------------------------------------------------- invalid-break-statement.js:17:5
 
 Illegal break statement. `break` statements are not required in `match` statements, as unlike `switch` statements,
-`match` statement cases do not fall-through by default.
+`match` statement cases do not fall-through by default. [ParseError]
 
    17|     break; // ERROR: parse error
            ^^^^^^

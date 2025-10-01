@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:1:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    1| // $FlowFixMe
       ^^^^^^^^^^^^^
@@ -22,7 +22,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:4:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    4| // $FlowExpectedError
       ^^^^^^^^^^^^^^^^^^^^^
@@ -45,6 +45,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    10| // $FlowFixMe[]
        ^^^^^^^^^^^^^^^
@@ -67,6 +68,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    13| // $FlowFixMe [asdfa
        ^^^^^^^^^^^^^^^^^^^^
@@ -88,7 +90,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    18| // $FlowFixMe
        ^^^^^^^^^^^^^

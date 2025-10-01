@@ -191,7 +191,7 @@ Malformed lint rule. Properly formed rules contain a single `:` character. Perha
 
 Warning --------------------------------------------------------------------------------------- simple_sketchies.js:2:12
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    2| /*flowlint sketchy-null:off*/ //unused suppression
                  ^^^^^^^^^^^^^^^^
@@ -199,7 +199,7 @@ Unused suppression comment.
 
 Warning --------------------------------------------------------------------------------------- simple_sketchies.js:51:4
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    51|  * sketchy-null-mixed:off
           ^^^^^^^^^^^^^^^^^^^^^^
@@ -207,7 +207,7 @@ Unused suppression comment.
 
 Warning --------------------------------------------------------------------------------------- simple_sketchies.js:62:4
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
           v-----------------
    62|  * sketchy-null-bool:
@@ -217,7 +217,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------- simple_sketchies.js:84:14
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    84|   /*flowlint sketchy-null:off*/ //Unused suppression
                     ^^^^^^^^^^^^^^^^
@@ -225,7 +225,7 @@ Unused suppression comment.
 
 Warning ------------------------------------------------------------------------------------- simple_sketchies.js:118:12
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    118| /*flowlint sketchy-null:off*/ //Unused suppression
                    ^^^^^^^^^^^^^^^^

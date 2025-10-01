@@ -571,7 +571,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ call.js:4:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    4| // $FlowFixMe
       ^^^^^^^^^^^^^
@@ -3644,7 +3644,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- strict_by_default.js:5:20
 
-Strict mode function may not have duplicate parameter names
+Strict mode function may not have duplicate parameter names [ParseError]
 
    5|   destructured as {a}: {a: number}, // ERROR
                          ^

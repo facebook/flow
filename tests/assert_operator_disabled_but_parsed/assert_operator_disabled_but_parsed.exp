@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------- chain_lhs.js:3:5
 
-Invalid left-hand side in assignment
+Invalid left-hand side in assignment [ParseError]
 
    3|     c?.x!.y = 42;
           ^^^^^^^

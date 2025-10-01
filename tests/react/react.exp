@@ -1279,7 +1279,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- profiler.js:19:3
 
-Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclosing parent tag
+Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclosing parent tag [ParseError]
 
    19|   <Profiler id="fake" onRender={onRender}>
          ^

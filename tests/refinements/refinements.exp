@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- assignment.js:6:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    assignment.js:6:13
    6|     var z = y * 1000;
@@ -31,7 +31,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- assignment.js:17:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    assignment.js:17:5
    17|     x.doStuff();
@@ -59,7 +59,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- assignment.js:23:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    assignment.js:23:5
    23|     x.doStuff();
@@ -96,7 +96,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- assignment.js:30:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    assignment.js:30:5
    30|     y.doStuff();
@@ -130,7 +130,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bigint.js:5:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bigint.js:5:5
    5|     x as 1n; // OK
@@ -144,7 +144,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:6:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bigint.js:6:14
    6|   } else if (x === 2n) {
@@ -158,7 +158,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bigint.js:7:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bigint.js:7:5
    7|     x as 2n; // OK
@@ -172,7 +172,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bigint.js:9:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    bigint.js:9:5
    9|     x as empty; // OK
@@ -189,7 +189,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:18:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bigint.js:18:5
    18|     x as -1n; // OK
@@ -203,7 +203,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- bigint.js:19:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bigint.js:19:14
    19|   } else if (x === -2n) {
@@ -217,7 +217,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:20:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bigint.js:20:5
    20|     x as -2n; // OK
@@ -231,7 +231,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:22:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    bigint.js:22:5
    22|     x as empty; // OK
@@ -248,7 +248,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ bool.js:8:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bool.js:8:7
    8|   if (x === true) {
@@ -262,7 +262,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:12:3
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    bool.js:12:3
    12|   x[0]; // error on null and undefined
@@ -293,7 +293,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:17:9
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bool.js:17:9
    17|     if (x !== false) {
@@ -307,7 +307,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- bool.js:18:7
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    bool.js:18:7
    18|       x[0]; // error on null and undefined
@@ -372,7 +372,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:35:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bool.js:35:14
    35|       return x.result;
@@ -386,7 +386,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:37:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bool.js:37:12
    37|     return x.result; // error
@@ -414,7 +414,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:42:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bool.js:42:14
    42|       return x.result;
@@ -428,7 +428,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- bool.js:44:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    bool.js:44:12
    44|     return x.result; // error
@@ -456,7 +456,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- compound_refinement.js:11:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    compound_refinement.js:11:23
    11| if (x.type === 'a' && x.a.type === 'b') {
@@ -470,7 +470,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- compound_refinement.js:12:3
 
-Refined at [1]
+Refined at [1] [InferError]
 
    compound_refinement.js:12:3
    12|   x.a.b; // okay
@@ -484,7 +484,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- compound_refinement.js:12:3
 
-Refined at [1]
+Refined at [1] [InferError]
 
    compound_refinement.js:12:3
    12|   x.a.b; // okay
@@ -498,7 +498,7 @@ References:
 
 Error --------------------------------------------------------------------------------- computed_string_literal.js:11:11
 
-Refined at [1]
+Refined at [1] [InferError]
 
    computed_string_literal.js:11:11
    11|     stuff(a.b_c);
@@ -512,7 +512,7 @@ References:
 
 Error --------------------------------------------------------------------------------- computed_string_literal.js:17:11
 
-Refined at [1]
+Refined at [1] [InferError]
 
    computed_string_literal.js:17:11
    17|     stuff(a["b_c"]);
@@ -526,7 +526,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- computed_string_literal.js:21:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    computed_string_literal.js:21:6
    21|     (b.a: string); // ok
@@ -540,7 +540,7 @@ References:
 
 Error --------------------------------------------------------------------------------- computed_string_literal.js:22:11
 
-Refined at [1]
+Refined at [1] [InferError]
 
    computed_string_literal.js:22:11
    22|     stuff(b.a);
@@ -554,7 +554,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- computed_string_literal.js:24:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    computed_string_literal.js:24:6
    24|     (b.b: string); // ok
@@ -568,7 +568,7 @@ References:
 
 Error --------------------------------------------------------------------------------- computed_string_literal.js:25:11
 
-Refined at [1]
+Refined at [1] [InferError]
 
    computed_string_literal.js:25:11
    25|     stuff(b.b);
@@ -582,7 +582,7 @@ References:
 
 Error --------------------------------------------------------------------------------- computed_string_literal.js:32:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    computed_string_literal.js:32:14
    32|       return b.a;
@@ -596,7 +596,7 @@ References:
 
 Error --------------------------------------------------------------------------------- computed_string_literal.js:34:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    computed_string_literal.js:34:14
    34|       return b.b;
@@ -610,7 +610,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- computed_string_literal.js:36:8
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    computed_string_literal.js:36:8
    36|       (b["@type"]: empty);
@@ -627,7 +627,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- computed_string_literal.js:36:8
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    computed_string_literal.js:36:8
    36|       (b["@type"]: empty);
@@ -658,7 +658,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- cond_expr.js:2:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    cond_expr.js:2:8
    2| (a.q ? a.q : "foo"); // a is marked as refined, because a is refined to empty
@@ -672,7 +672,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- cond_expr.js:2:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    cond_expr.js:2:8
    2| (a.q ? a.q : "foo"); // a is marked as refined, because a is refined to empty
@@ -728,7 +728,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:11:25
 
-Refined at [1]
+Refined at [1] [InferError]
 
    cond_prop.js:11:25
    11|   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
@@ -760,7 +760,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:11:25
 
-Refined at [1]
+Refined at [1] [InferError]
 
    cond_prop.js:11:25
    11|   return getTypeASTName(typeAST.type); // error, BadType not a subtype of Type
@@ -774,7 +774,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:17:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    cond_prop.js:17:14
    17|       return x.result;
@@ -788,7 +788,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:19:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    cond_prop.js:19:12
    19|     return x.result; // error
@@ -830,7 +830,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- cond_prop.js:26:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    cond_prop.js:26:12
    26|     return x.result; // error
@@ -872,7 +872,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ cond_prop.js:36:9
 
-Refined at [1]
+Refined at [1] [InferError]
 
    cond_prop.js:36:9
    36|         t.quux as string; // ok. since foo is an object (always truthy), the
@@ -1041,7 +1041,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- eval.js:21:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    eval.js:21:14
    21|   const id = arg.id;
@@ -1055,7 +1055,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- exists.js:6:15
 
-Refined at [1]
+Refined at [1] [InferError]
 
    exists.js:6:15
    6|   return x && x || "";
@@ -1069,7 +1069,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exists.js:10:15
 
-Refined at [1]
+Refined at [1] [InferError]
 
    exists.js:10:15
    10|   return x && x.foo || "";
@@ -1083,7 +1083,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exists.js:14:19
 
-Refined at [1]
+Refined at [1] [InferError]
 
    exists.js:14:19
    14|   return x && new x().foo || "";
@@ -1105,7 +1105,7 @@ Cannot get `TDR.current` because property `current` is not readable. [cannot-rea
 
 Error -------------------------------------------------------------------------------------------------- exists.js:24:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    exists.js:24:12
    24|   if (!C) (C: empty); // okay
@@ -1119,7 +1119,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- exists.js:25:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    exists.js:25:12
    25|   if (!P) (P: empty); // okay
@@ -1168,7 +1168,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:14:22
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:14:22
    14|     takesBotFunction(x); //error
@@ -1197,7 +1197,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:20:22
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:20:22
    20|     takesTopFunction(x); // error
@@ -1226,7 +1226,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:26:22
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:26:22
    26|     takesMidFunction(x); // error
@@ -1255,7 +1255,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:32:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:32:23
    32|     takesMidFunction2(x); // error
@@ -1284,7 +1284,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:38:24
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:38:24
    38|     takesHigherOrderFn(x); // error
@@ -1313,7 +1313,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:44:25
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:44:25
    44|     takesHigherOrderFn2(x); // error
@@ -1342,7 +1342,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:50:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:50:21
    50|     takesMultiArgFn(x); // error
@@ -1371,7 +1371,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:56:22
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:56:22
    56|     takesMultiArgFn2(x); // error
@@ -1385,7 +1385,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:62:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:62:5
    62|     x(y); // error
@@ -1413,7 +1413,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:63:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:63:5
    63|     x(z);
@@ -1441,7 +1441,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:64:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:64:5
    64|     x(x); // error
@@ -1469,7 +1469,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:64:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:64:7
    64|     x(x); // error
@@ -1483,7 +1483,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:65:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:65:5
    65|     x(1,2,3,4,5); //error
@@ -1511,7 +1511,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:66:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:66:5
    66|     x(...[1,2]); //error
@@ -1539,7 +1539,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:67:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:67:5
    67|     x();
@@ -1567,7 +1567,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:73:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:73:13
    73|   const f = obj.field(0); // error
@@ -1595,7 +1595,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:79:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:79:5
    79|     x.name;
@@ -1609,7 +1609,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:80:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:80:5
    80|     x.length;
@@ -1623,7 +1623,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:81:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    fn.js:81:5
    81|     x.foo; // error
@@ -1651,7 +1651,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- func_call.js:7:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    func_call.js:7:7
    7|       x.y.indexOf(z()); // no error
@@ -1758,7 +1758,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- heap_defassign.js:8:21
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    heap_defassign.js:8:21
    8|     var x: number = obj.p;      // error, obj.p : number | string
@@ -1789,7 +1789,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:14:21
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    heap_defassign.js:14:21
    14|     var x: number = obj.p;      // error, obj.p : number | string
@@ -1820,7 +1820,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ heap_defassign.js:20:21
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    heap_defassign.js:20:21
    20|     var x: number = obj.p;      // error, obj.p : number | string
@@ -1936,7 +1936,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- ident.js:8:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:8:5
    8|     x as 1; // OK
@@ -1950,7 +1950,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:9:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:9:14
    9|   } else if (x === two) {
@@ -1964,7 +1964,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:10:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:10:5
    10|     x as 2; // OK
@@ -1978,7 +1978,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:12:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    ident.js:12:5
    12|     x as empty; // OK
@@ -1995,7 +1995,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:16:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:16:5
    16|     x as 1; // OK
@@ -2026,7 +2026,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:18:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:18:5
    18|     x as empty; // ERROR: `2` remains
@@ -2040,7 +2040,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:22:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:22:5
    22|     x as 2; // OK
@@ -2054,7 +2054,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:24:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:24:5
    24|     x as 1; // OK
@@ -2102,7 +2102,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:25:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:25:5
    25|     x as empty; // ERROR: it is `1`
@@ -2116,7 +2116,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:34:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:34:5
    34|     x as 1; // OK
@@ -2147,7 +2147,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:43:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:43:5
    43|     x as 1; // OK
@@ -2178,7 +2178,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:44:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:44:5
    44|     x as empty; // ERROR: it is `1`
@@ -2192,7 +2192,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:55:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:55:5
    55|     x as 1n; // OK
@@ -2206,7 +2206,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:56:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:56:14
    56|   } else if (x === two) {
@@ -2220,7 +2220,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:57:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:57:5
    57|     x as 2n; // OK
@@ -2234,7 +2234,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:59:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    ident.js:59:5
    59|     x as empty; // OK
@@ -2251,7 +2251,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:70:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:70:5
    70|     x as 'foo'; // OK
@@ -2265,7 +2265,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:71:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:71:14
    71|   } else if (x === bar) {
@@ -2279,7 +2279,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:72:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:72:5
    72|     x as 'bar'; // OK
@@ -2293,7 +2293,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:74:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    ident.js:74:5
    74|     x as empty; // OK
@@ -2310,7 +2310,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:83:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:83:5
    83|     x as 'foo'; // OK
@@ -2341,7 +2341,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:97:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:97:5
    97|     x as true; // OK
@@ -2355,7 +2355,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:98:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:98:14
    98|   } else if (x === f) {
@@ -2369,7 +2369,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- ident.js:99:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:99:5
    99|     x as false; // OK
@@ -2383,7 +2383,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:101:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    ident.js:101:5
    101|     x as empty; // OK
@@ -2400,7 +2400,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:111:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:111:5
    111|     x as null; // OK
@@ -2414,7 +2414,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:113:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:113:5
    113|     x as 1; // OK
@@ -2445,7 +2445,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:114:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:114:5
    114|     x as empty; // ERROR: it is `1`
@@ -2459,7 +2459,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:124:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:124:5
    124|     x as void; // OK
@@ -2473,7 +2473,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:126:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:126:5
    126|     x as 1; // OK
@@ -2504,7 +2504,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- ident.js:127:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    ident.js:127:5
    127|     x as empty; // ERROR: it is `1`
@@ -2535,7 +2535,7 @@ References:
 
 Error -------------------------------------------------------------------------------- inclusion_check_widening.js:32:16
 
-Refined at [1]
+Refined at [1] [InferError]
 
    inclusion_check_widening.js:32:16
    32| const y = x && x.f.g; // error: x is always null
@@ -2587,7 +2587,7 @@ References:
 
 Error --------------------------------------------------------------------------------- inclusion_check_widening.js:57:9
 
-Refined at [1]
+Refined at [1] [InferError]
 
    inclusion_check_widening.js:57:9
    57|         prop !== null &&
@@ -2601,7 +2601,7 @@ References:
 
 Error --------------------------------------------------------------------------------- inclusion_check_widening.js:58:9
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    inclusion_check_widening.js:58:9
    58|         prop !== 0 // error (0 incompatible with C)
@@ -2659,7 +2659,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:13:10
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:13:10
    13|   return v.f(); // error: trying to still use the refinement.
@@ -2701,7 +2701,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:19:10
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:19:10
    19|   return v.f(); // error: trying to still use the refinement.
@@ -2743,7 +2743,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:25:10
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:25:10
    25|   return v.f(); // error: trying to still use the refinement.
@@ -2785,7 +2785,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:31:10
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:31:10
    31|   return v.f(); // error: trying to still use the refinement.
@@ -2841,7 +2841,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:45:47
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:45:47
    45|   if (a.b)                                    a.b.c;   // ok
@@ -2855,7 +2855,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:46:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:46:47
    46|   if (a.b) { f();                             a.b.c; } // error
@@ -2883,7 +2883,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:53:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:53:47
    53|   if (a.b) { true && f();                     a.b.c; } // error
@@ -2911,7 +2911,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:54:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:54:47
    54|   if (a.b) { f() && true;                     a.b.c; } // error
@@ -2939,7 +2939,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:55:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:55:47
    55|   if (a.b) { false || f();                    a.b.c; } // error
@@ -2967,7 +2967,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:56:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:56:47
    56|   if (a.b) { f() || false;                    a.b.c; } // error
@@ -3003,7 +3003,7 @@ This condition is falsy. [constant-condition]
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:57:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:57:47
    57|   if (a.b) { null ?? f();                     a.b.c; } // error
@@ -3031,7 +3031,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:58:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:58:47
    58|   if (a.b) { f() ?? true;                     a.b.c; } // error
@@ -3059,7 +3059,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:60:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:60:47
    60|   if (a.b) { p ? f() : 0;                     a.b.c; } // error
@@ -3087,7 +3087,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:61:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:61:47
    61|   if (a.b) { p ? 1 : f();                     a.b.c; } // error
@@ -3115,7 +3115,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:62:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:62:47
    62|   if (a.b) { f() ? 1 : 0;                     a.b.c; } // error
@@ -3143,7 +3143,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:64:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:64:47
    64|   if (a.b) { if (p) f();                      a.b.c; } // error
@@ -3171,7 +3171,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:65:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:65:47
    65|   if (a.b) { if (p); else f();                a.b.c; } // error
@@ -3199,7 +3199,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:66:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:66:47
    66|   if (a.b) { if (f());                        a.b.c; } // error
@@ -3227,7 +3227,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:69:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:69:52
    69|   if (a.b) { switch (p) { case true: f(); }        a.b.c; } // error
@@ -3255,7 +3255,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:70:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:70:52
    70|   if (a.b) { switch (p) { case true: f(); break; } a.b.c; } // error
@@ -3283,7 +3283,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:71:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:71:52
    71|   if (a.b) { switch (p) { default: f(); }          a.b.c; } // error
@@ -3311,7 +3311,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:72:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:72:52
    72|   if (a.b) { switch (p) { default: f(); break; }   a.b.c; } // error
@@ -3339,7 +3339,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:73:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:73:52
    73|   if (a.b) { switch (f()) {}                       a.b.c; } // error
@@ -3367,7 +3367,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:74:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:74:52
    74|   if (a.b) { switch (f()) { case true: }           a.b.c; } // error
@@ -3395,7 +3395,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:75:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:75:52
    75|   if (a.b) { switch (f()) { case true: break; }    a.b.c; } // error
@@ -3423,7 +3423,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:76:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:76:52
    76|   if (a.b) { switch (f()) { default: }             a.b.c; } // error
@@ -3451,7 +3451,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:77:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:77:52
    77|   if (a.b) { switch (f()) { default: break; }      a.b.c; } // error
@@ -3479,7 +3479,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:81:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:81:47
    81|   if (a.b) { while (p) f();                   a.b.c; } // error
@@ -3507,7 +3507,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:82:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:82:47
    82|   if (a.b) { while (f());                     a.b.c; } // error
@@ -3535,7 +3535,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:83:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:83:47
    83|   if (a.b) { do f(); while (p);               a.b.c; } // error
@@ -3563,7 +3563,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:84:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:84:47
    84|   if (a.b) { do; while (f());                 a.b.c; } // error
@@ -3591,7 +3591,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:85:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:85:47
    85|   if (a.b) { for (; p;) f();                  a.b.c; } // error
@@ -3619,7 +3619,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:86:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:86:47
    86|   if (a.b) { for (; p; f());                  a.b.c; } // error
@@ -3647,7 +3647,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:87:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:87:47
    87|   if (a.b) { for (; f(););                    a.b.c; } // error
@@ -3675,7 +3675,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:88:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:88:47
    88|   if (a.b) { for (f(); p;);                   a.b.c; } // error
@@ -3703,7 +3703,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:89:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:89:47
    89|   if (a.b) { for (i1 in y) f();               a.b.c; } // error
@@ -3731,7 +3731,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:90:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:90:47
    90|   if (a.b) { for (i2 in ff());                a.b.c; } // error
@@ -3759,7 +3759,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:91:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:91:47
    91|   if (a.b) { for (i3 of y) f();               a.b.c; } // error
@@ -3787,7 +3787,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:92:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:92:47
    92|   if (a.b) { for (i4 of ff());                a.b.c; } // error
@@ -3815,7 +3815,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:96:35
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:96:35
    96|   if (a.b) { while (p) { f(); if (p) continue; }     a.b.c; } // error
@@ -3846,7 +3846,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:96:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:96:54
    96|   if (a.b) { while (p) { f(); if (p) continue; }     a.b.c; } // error
@@ -3874,7 +3874,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:97:35
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:97:35
    97|   if (a.b) { while (p) { f(); if (p) break;    }     a.b.c; } // error
@@ -3905,7 +3905,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:97:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:97:54
    97|   if (a.b) { while (p) { f(); if (p) break;    }     a.b.c; } // error
@@ -3933,7 +3933,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:98:35
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:98:35
    98|   if (a.b) { while (p) { f(); if (p) return;   }     a.b.c; } // ideally ok, error acceptable
@@ -3964,7 +3964,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:98:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:98:54
    98|   if (a.b) { while (p) { f(); if (p) return;   }     a.b.c; } // ideally ok, error acceptable
@@ -3992,7 +3992,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:99:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:99:54
    99|   if (a.b) { while (f()) { if (p) continue; }        a.b.c; } // error
@@ -4020,7 +4020,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:100:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:100:54
    100|   if (a.b) { while (f()) { if (p) break;    }        a.b.c; } // error
@@ -4048,7 +4048,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:101:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:101:54
    101|   if (a.b) { while (f()) { if (p) return;   }        a.b.c; } // error
@@ -4076,7 +4076,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:103:50
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:103:50
    103|   if (a.b) { do { f(); if (p) continue; } while (p); a.b.c; } // error
@@ -4090,7 +4090,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:103:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:103:54
    103|   if (a.b) { do { f(); if (p) continue; } while (p); a.b.c; } // error
@@ -4118,7 +4118,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:104:50
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:104:50
    104|   if (a.b) { do { f(); if (p) break;    } while (p); a.b.c; } // error
@@ -4149,7 +4149,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:104:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:104:54
    104|   if (a.b) { do { f(); if (p) break;    } while (p); a.b.c; } // error
@@ -4177,7 +4177,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:105:50
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:105:50
    105|   if (a.b) { do { f(); if (p) return;   } while (p); a.b.c; } // error[unreachable-code]
@@ -4208,7 +4208,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:105:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:105:54
    105|   if (a.b) { do { f(); if (p) return;   } while (p); a.b.c; } // error[unreachable-code]
@@ -4236,7 +4236,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:106:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:106:54
    106|   if (a.b) { do { if (p) continue; } while (f());    a.b.c; } // error
@@ -4264,7 +4264,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:107:30
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:107:30
    107|   if (a.b) { do { if (p) if (p) break;    } while (f());    a.b.c; } // ideally ok, error acceptable
@@ -4295,7 +4295,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:107:61
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:107:61
    107|   if (a.b) { do { if (p) if (p) break;    } while (f());    a.b.c; } // ideally ok, error acceptable
@@ -4331,7 +4331,7 @@ Unreachable code. [unreachable-code]
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:110:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:110:7
    110|   if (a.b) { for (; p;) { f(); if (p) continue; }    a.b.c; } // error
@@ -4345,7 +4345,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:110:36
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:110:36
    110|   if (a.b) { for (; p;) { f(); if (p) continue; }    a.b.c; } // error
@@ -4376,7 +4376,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:110:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:110:54
    110|   if (a.b) { for (; p;) { f(); if (p) continue; }    a.b.c; } // error
@@ -4404,7 +4404,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:111:7
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:111:7
    111|   if (a.b) { for (; p;) { f(); if (p) break;    }    a.b.c; } // error
@@ -4418,7 +4418,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:111:36
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:111:36
    111|   if (a.b) { for (; p;) { f(); if (p) break;    }    a.b.c; } // error
@@ -4449,7 +4449,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:111:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:111:54
    111|   if (a.b) { for (; p;) { f(); if (p) break;    }    a.b.c; } // error
@@ -4477,7 +4477,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:112:36
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:112:36
    112|   if (a.b) { for (; p;) { f(); if (p) return;   }    a.b.c; } // ideally ok, error acceptable
@@ -4508,7 +4508,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:112:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:112:54
    112|   if (a.b) { for (; p;) { f(); if (p) return;   }    a.b.c; } // ideally ok, error acceptable
@@ -4536,7 +4536,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:113:33
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:113:33
    113|   if (a.b) { for (; p; f()) if (p) continue;         a.b.c; } // error
@@ -4567,7 +4567,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:113:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:113:54
    113|   if (a.b) { for (; p; f()) if (p) continue;         a.b.c; } // error
@@ -4595,7 +4595,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:114:33
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:114:33
    114|   if (a.b) { for (; p; f()) if (p) break;            a.b.c; } // ideally ok, error acceptable
@@ -4626,7 +4626,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:114:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:114:54
    114|   if (a.b) { for (; p; f()) if (p) break;            a.b.c; } // ideally ok, error acceptable
@@ -4654,7 +4654,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:115:33
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:115:33
    115|   if (a.b) { for (; p; f()) if (p) return;           a.b.c; } // ideally ok, error acceptable
@@ -4685,7 +4685,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:115:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:115:54
    115|   if (a.b) { for (; p; f()) if (p) return;           a.b.c; } // ideally ok, error acceptable
@@ -4713,7 +4713,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:116:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:116:54
    116|   if (a.b) { for (; f();) if (p) continue;           a.b.c; } // error
@@ -4741,7 +4741,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:117:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:117:54
    117|   if (a.b) { for (; f();) if (p) break;              a.b.c; } // error
@@ -4769,7 +4769,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:118:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:118:54
    118|   if (a.b) { for (; f();) if (p) return;             a.b.c; } // error
@@ -4797,7 +4797,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:119:32
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:119:32
    119|   if (a.b) { for (f(); p;) if (p) continue;          a.b.c; } // error
@@ -4828,7 +4828,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:119:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:119:54
    119|   if (a.b) { for (f(); p;) if (p) continue;          a.b.c; } // error
@@ -4856,7 +4856,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:120:32
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:120:32
    120|   if (a.b) { for (f(); p;) if (p) break;             a.b.c; } // error
@@ -4887,7 +4887,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:120:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:120:54
    120|   if (a.b) { for (f(); p;) if (p) break;             a.b.c; } // error
@@ -4915,7 +4915,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:121:32
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:121:32
    121|   if (a.b) { for (f(); p;) if (p) return;            a.b.c; } // error
@@ -4946,7 +4946,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:121:54
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:121:54
    121|   if (a.b) { for (f(); p;) if (p) return;            a.b.c; } // error
@@ -4974,7 +4974,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:123:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:123:55
    123|   if (a.b) { for (i5 in y) { f(); if (p) continue; }  a.b.c; } // error
@@ -5002,7 +5002,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:124:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:124:55
    124|   if (a.b) { for (i6 in y) { f(); if (p) break;    }  a.b.c; } // error
@@ -5030,7 +5030,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:125:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:125:55
    125|   if (a.b) { for (i7 in y) { f(); if (p) return;   }  a.b.c; } // ideally ok, error acceptable
@@ -5058,7 +5058,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:126:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:126:55
    126|   if (a.b) { for (i8 in ff()) if (p) continue;        a.b.c; } // error
@@ -5086,7 +5086,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:127:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:127:55
    127|   if (a.b) { for (i9 in ff()) if (p) break;           a.b.c; } // error
@@ -5114,7 +5114,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:128:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:128:55
    128|   if (a.b) { for (i10 in ff()) if (p) return;         a.b.c; } // error
@@ -5142,7 +5142,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:130:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:130:55
    130|   if (a.b) { for (i11 of y) { f(); if (p) continue; } a.b.c; } // error
@@ -5170,7 +5170,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:131:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:131:55
    131|   if (a.b) { for (i12 of y) { f(); if (p) break;    } a.b.c; } // error
@@ -5198,7 +5198,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:132:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:132:55
    132|   if (a.b) { for (i13 of y) { f(); if (p) return;   } a.b.c; } // ideally ok, error acceptable
@@ -5226,7 +5226,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:133:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:133:55
    133|   if (a.b) { for (i14 of ff()) if (p) continue;       a.b.c; } // error
@@ -5254,7 +5254,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:134:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:134:55
    134|   if (a.b) { for (i15 of ff()) if (p) break;          a.b.c; } // error
@@ -5282,7 +5282,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:135:55
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:135:55
    135|   if (a.b) { for (i16 of ff()) if (p) return;         a.b.c; } // error
@@ -5310,7 +5310,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:139:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:139:47
    139|   if (a.b) { while (p) { f(); continue; }     a.b.c; } // error
@@ -5366,7 +5366,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:142:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:142:47
    142|   if (a.b) { while (f()) { continue; }        a.b.c; } // error
@@ -5422,7 +5422,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:146:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:146:47
    146|   if (a.b) { do { f(); continue; } while (p); a.b.c; } // error
@@ -5472,7 +5472,7 @@ Unreachable code. [unreachable-code]
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:149:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:149:7
    149|   if (a.b) { do { continue; } while (f());    a.b.c; } // error
@@ -5486,7 +5486,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:149:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:149:47
    149|   if (a.b) { do { continue; } while (f());    a.b.c; } // error
@@ -5514,7 +5514,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:150:7
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:150:7
    150|   if (a.b) { do { break;    } while (f());    a.b.c; } // ideally ok, error acceptable
@@ -5550,7 +5550,7 @@ Unreachable code. [unreachable-code]
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:153:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:153:7
    153|   if (a.b) { for (; p;) { f(); continue; }    a.b.c; } // error
@@ -5564,7 +5564,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:153:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:153:47
    153|   if (a.b) { for (; p;) { f(); continue; }    a.b.c; } // error
@@ -5592,7 +5592,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:154:7
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:154:7
    154|   if (a.b) { for (; p;) { f(); break;    }    a.b.c; } // error
@@ -5634,7 +5634,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:156:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:156:47
    156|   if (a.b) { for (; p; f()) continue;         a.b.c; } // error
@@ -5690,7 +5690,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:159:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:159:47
    159|   if (a.b) { for (; f();) continue;           a.b.c; } // error
@@ -5746,7 +5746,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:162:47
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:162:47
    162|   if (a.b) { for (f(); p;) continue;          a.b.c; } // error
@@ -5802,7 +5802,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:166:48
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:166:48
    166|   if (a.b) { for (i5 in y) { f(); continue; }  a.b.c; } // error
@@ -5858,7 +5858,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:169:48
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:169:48
    169|   if (a.b) { for (i8 in ff()) continue;        a.b.c; } // error
@@ -5914,7 +5914,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:173:48
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:173:48
    173|   if (a.b) { for (i11 of y) { f(); continue; } a.b.c; } // error
@@ -5970,7 +5970,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:176:48
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:176:48
    176|   if (a.b) { for (i14 of ff()) continue;       a.b.c; } // error
@@ -6026,7 +6026,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:188:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:188:52
    188|   if (a.b) { l: { f(); }                           a.b.c; } // error
@@ -6054,7 +6054,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:189:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:189:52
    189|   if (a.b) { l: { f(); break l; }                  a.b.c; } // error
@@ -6082,7 +6082,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:190:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:190:52
    190|   if (a.b) { l: if (p) { f(); break l; }           a.b.c; } // error
@@ -6110,7 +6110,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:191:52
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:191:52
    191|   l: if (a.b) { if (p) { f(); break l; }           a.b.c; } // ideally ok, error acceptable
@@ -6124,7 +6124,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:192:10
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:192:10
    192|   l: if (a.b) { f(); break l;                      a.b.c; } // error[unreachable-code]
@@ -6146,7 +6146,7 @@ Unreachable code. [unreachable-code]
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:195:7
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:195:7
    195|   if (a.b) { l: switch (p) { case true: f(); break l; } a.b.c; } // error
@@ -6160,7 +6160,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:195:57
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:195:57
    195|   if (a.b) { l: switch (p) { case true: f(); break l; } a.b.c; } // error
@@ -6188,7 +6188,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:196:57
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:196:57
    196|   if (a.b) { l: switch (p) { default: f(); break l; }   a.b.c; } // error
@@ -6216,7 +6216,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:197:57
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:197:57
    197|   if (a.b) { l: switch (f()) { case true: break l; }    a.b.c; } // error
@@ -6244,7 +6244,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:198:57
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:198:57
    198|   if (a.b) { l: switch (f()) { default: break l; }      a.b.c; } // error
@@ -6272,7 +6272,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:202:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:202:52
    202|   if (a.b) { l: while (p) { f(); continue l; }     a.b.c; } // error
@@ -6314,7 +6314,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:204:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:204:52
    204|   if (a.b) { l: while (f()) { continue l; }        a.b.c; } // error
@@ -6356,7 +6356,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:207:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:207:52
    207|   if (a.b) { l: do { f(); continue l; } while (p); a.b.c; } // error
@@ -6398,7 +6398,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:209:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:209:52
    209|   if (a.b) { l: do { continue l; } while (f());    a.b.c; } // error
@@ -6440,7 +6440,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:212:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:212:52
    212|   if (a.b) { l: for (; p;) { f(); continue l; }    a.b.c; } // error
@@ -6482,7 +6482,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:214:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:214:52
    214|   if (a.b) { l: for (; p; f()) continue l;         a.b.c; } // error
@@ -6524,7 +6524,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:216:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:216:52
    216|   if (a.b) { l: for (; f();) continue l;           a.b.c; } // error
@@ -6566,7 +6566,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:218:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:218:52
    218|   if (a.b) { l: for (f(); p;) continue l;          a.b.c; } // error
@@ -6608,7 +6608,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:221:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:221:52
    221|   if (a.b) { l: for (i1 in y) { f(); continue l; } a.b.c; } // error
@@ -6650,7 +6650,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:223:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:223:52
    223|   if (a.b) { l: for (i3 in ff()) continue l;       a.b.c; } // error
@@ -6692,7 +6692,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:226:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:226:52
    226|   if (a.b) { l: for (i5 of y) { f(); continue l; } a.b.c; } // error
@@ -6734,7 +6734,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:228:52
 
-Refinement invalidated due to function call at [1]
+Refinement invalidated due to function call at [1] [InferError]
 
    invalidation.js:228:52
    228|   if (a.b) { l: for (i7 of ff()) continue l;       a.b.c; } // error
@@ -6776,7 +6776,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:238:47
 
-Refined at [1]
+Refined at [1] [InferError]
 
    invalidation.js:238:47
    238|   if (a.b)                                    a.b.c;   // ok
@@ -6790,7 +6790,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:239:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:239:47
    239|   if (a.b) { delete x.b;                      a.b.c; } // error
@@ -6818,7 +6818,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:240:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:240:47
    240|   if (a.b) { x.b = y;                         a.b.c; } // error
@@ -6846,7 +6846,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:247:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:247:47
    247|   if (a.b) { true && delete x.b;              a.b.c; } // error
@@ -6874,7 +6874,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:248:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:248:47
    248|   if (a.b) { delete x.b && true;              a.b.c; } // error
@@ -6902,7 +6902,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:249:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:249:47
    249|   if (a.b) { true && (x.b = y);               a.b.c; } // error
@@ -6930,7 +6930,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:250:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:250:47
    250|   if (a.b) { (x.b = y) && true;               a.b.c; } // error
@@ -6958,7 +6958,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:252:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:252:47
    252|   if (a.b) { false || (x.b = y);              a.b.c; } // error
@@ -6986,7 +6986,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:253:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:253:47
    253|   if (a.b) { (x.b = y) || false;              a.b.c; } // error
@@ -7022,7 +7022,7 @@ This condition is falsy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:254:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:254:47
    254|   if (a.b) { null ?? (x.b = y);               a.b.c; } // error
@@ -7050,7 +7050,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:255:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:255:47
    255|   if (a.b) { (x.b = y) ?? true;               a.b.c; } // error
@@ -7078,7 +7078,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:257:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:257:47
    257|   if (a.b) { p ? (x.b = y) : 0;               a.b.c; } // error
@@ -7106,7 +7106,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:258:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:258:47
    258|   if (a.b) { p ? 1 : (x.b = y);               a.b.c; } // error
@@ -7134,7 +7134,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:259:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:259:47
    259|   if (a.b) { (x.b = y) ? 1 : 0;               a.b.c; } // error
@@ -7162,7 +7162,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:261:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:261:47
    261|   if (a.b) { if (p) x.b = y;                  a.b.c; } // error
@@ -7190,7 +7190,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:262:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:262:47
    262|   if (a.b) { if (p); else x.b = y;            a.b.c; } // error
@@ -7218,7 +7218,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:263:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:263:47
    263|   if (a.b) { if (x.b = y);                    a.b.c; } // error
@@ -7246,7 +7246,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:266:56
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:266:56
    266|   if (a.b) { switch (p) { case true: x.b = y; }        a.b.c; } // error
@@ -7274,7 +7274,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:267:56
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:267:56
    267|   if (a.b) { switch (p) { case true: x.b = y; break; } a.b.c; } // error
@@ -7302,7 +7302,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:268:56
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:268:56
    268|   if (a.b) { switch (p) { default: x.b = y; }          a.b.c; } // error
@@ -7330,7 +7330,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:269:56
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:269:56
    269|   if (a.b) { switch (p) { default: x.b = y; break; }   a.b.c; } // error
@@ -7358,7 +7358,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:270:56
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:270:56
    270|   if (a.b) { switch (x.b = y) {}                       a.b.c; } // error
@@ -7386,7 +7386,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:271:54
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:271:54
    271|   if (a.b) { switch (x.b = y) { case {}: }           a.b.c; } // error
@@ -7414,7 +7414,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:272:54
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:272:54
    272|   if (a.b) { switch (x.b = y) { case {}: break; }    a.b.c; } // error
@@ -7442,7 +7442,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:273:56
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:273:56
    273|   if (a.b) { switch (x.b = y) { default: }             a.b.c; } // error
@@ -7470,7 +7470,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:274:56
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:274:56
    274|   if (a.b) { switch (x.b = y) { default: break; }      a.b.c; } // error
@@ -7498,7 +7498,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:278:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:278:47
    278|   if (a.b) { while (p) x.b = y;               a.b.c; } // error
@@ -7526,7 +7526,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:279:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:279:47
    279|   if (a.b) { while (x.b = y);                 a.b.c; } // error
@@ -7554,7 +7554,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:280:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:280:47
    280|   if (a.b) { do x.b = y; while (p);           a.b.c; } // error
@@ -7582,7 +7582,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:281:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:281:47
    281|   if (a.b) { do; while (x.b = y);             a.b.c; } // error
@@ -7610,7 +7610,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:282:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:282:47
    282|   if (a.b) { for (; p;) x.b = y;              a.b.c; } // error
@@ -7638,7 +7638,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:283:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:283:47
    283|   if (a.b) { for (; p; x.b = y);              a.b.c; } // error
@@ -7666,7 +7666,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:284:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:284:47
    284|   if (a.b) { for (; x.b = y;);                a.b.c; } // error
@@ -7694,7 +7694,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:285:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:285:47
    285|   if (a.b) { for (x.b = y; p;);               a.b.c; } // error
@@ -7722,7 +7722,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:286:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:286:47
    286|   if (a.b) { for (i1 in y) x.b = y;           a.b.c; } // error
@@ -7750,7 +7750,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:287:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:287:47
    287|   if (a.b) { for (i2 in x.b = y);             a.b.c; } // error
@@ -7778,7 +7778,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:288:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:288:47
    288|   if (a.b) { for (i3 of y) x.b = y;           a.b.c; } // error
@@ -7806,7 +7806,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- invalidation.js:289:47
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    invalidation.js:289:47
    289|   if (a.b) { for (i4 of x.b = y);             a.b.c; } // error
@@ -7879,7 +7879,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- issue-7103.js:13:15
 
-Refined at [1]
+Refined at [1] [InferError]
 
    issue-7103.js:13:15
    13|       return (box: empty).value;
@@ -7910,7 +7910,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- issue-7104.js:20:15
 
-Refined at [1]
+Refined at [1] [InferError]
 
    issue-7104.js:20:15
    20|       return (box: empty).value; // error, but no underconstrained error
@@ -7986,7 +7986,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:39
 
-Refined at [1]
+Refined at [1] [InferError]
 
    issue-7105.js:9:39
    9|         yield { type: "DONE", value: (box: empty).value }; // TODO(T225770374)
@@ -8000,7 +8000,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- issue-7105.js:17:22
 
-Refined at [1]
+Refined at [1] [InferError]
 
    issue-7105.js:17:22
    17|   if (result.done || result.value.type !== "DONE")
@@ -8014,7 +8014,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- issue-7105.js:19:10
 
-Refined at [1]
+Refined at [1] [InferError]
 
    issue-7105.js:19:10
    19|   return result.value.value;
@@ -8028,7 +8028,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- issue-7105.js:19:10
 
-Refined at [1]
+Refined at [1] [InferError]
 
    issue-7105.js:19:10
    19|   return result.value.value;
@@ -8062,7 +8062,7 @@ References:
 
 Error -------------------------------------------------------------- loop_incorrect_invalidation_regression_test.js:9:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    loop_incorrect_invalidation_regression_test.js:9:13
    9|       if (f(v)) { // ok: non-null refinement is kept
@@ -8076,7 +8076,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- maybe_react.js:18:19
 
-Refined at [1]
+Refined at [1] [InferError]
 
    maybe_react.js:18:19
    18| ((title != null ? title.toString() : '') : string)
@@ -8090,7 +8090,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- maybe_react.js:23:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    maybe_react.js:23:7
    23| (m && m(): ?number); // OK!
@@ -8104,7 +8104,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- maybe_react.js:28:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    maybe_react.js:28:8
    28| (C && <C />: ?ExactReactElement_DEPRECATED<$NonMaybeType<MaybeComponent>>); // ok
@@ -8118,7 +8118,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:10:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:10:5
    10|     x as 1; // OK
@@ -8132,7 +8132,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- member.js:11:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:11:14
    11|   } else if (x === O.B) {
@@ -8146,7 +8146,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:12:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:12:5
    12|     x as 2; // OK
@@ -8160,7 +8160,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:14:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    member.js:14:5
    14|     x as empty; // OK
@@ -8177,7 +8177,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:18:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:18:5
    18|     x as 1; // OK
@@ -8208,7 +8208,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:20:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:20:5
    20|     x as empty; // ERROR: `2` remains
@@ -8222,7 +8222,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:31:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:31:5
    31|     O.x as 1; // OK
@@ -8236,7 +8236,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- member.js:32:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:32:14
    32|   } else if (O.x === two) {
@@ -8250,7 +8250,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:33:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:33:5
    33|     O.x as 2; // OK
@@ -8264,7 +8264,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:35:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    member.js:35:5
    35|     O.x as empty; // OK
@@ -8281,7 +8281,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:39:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:39:5
    39|     O.x as 1; // OK
@@ -8312,7 +8312,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:41:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:41:5
    41|     O.x as empty; // ERROR: `2` remains
@@ -8326,7 +8326,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:58:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:58:5
    58|     x.value as number; // OK
@@ -8340,7 +8340,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:59:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:59:5
    59|     x.value as empty; // ERROR
@@ -8371,7 +8371,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:76:7
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    member.js:76:7
    76|       x as empty; // OK
@@ -8388,7 +8388,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- member.js:97:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:97:7
    97|       x.value as string; // OK
@@ -8402,7 +8402,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- member.js:100:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    member.js:100:7
    100|       x.value as number; // OK
@@ -8416,7 +8416,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- member.js:103:7
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    member.js:103:7
    103|       x as empty; // OK
@@ -8461,7 +8461,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- missing-property-cond.js:9:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:9:5
    9|     o.p2.x; // error, since o.p2's type is unknown (e.g., could be `number`)
@@ -8517,7 +8517,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:19:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:19:5
    19|     o.p4.x; // currently OK, should be unreachable
@@ -8531,7 +8531,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:19:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:19:5
    19|     o.p4.x; // currently OK, should be unreachable
@@ -8588,7 +8588,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:31:19
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:31:19
    31|   if (o && typeof o.bar === 'string') {} // ok
@@ -8602,7 +8602,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:32:27
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:32:27
    32|   if (o != null && typeof o.bar === 'string') {} // ok
@@ -8616,7 +8616,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:33:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:33:21
    33|   if (o !== null && o !== undefined && typeof o.bar === 'string') {} // ok
@@ -8630,7 +8630,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:33:47
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    missing-property-cond.js:33:47
    33|   if (o !== null && o !== undefined && typeof o.bar === 'string') {} // ok
@@ -8647,7 +8647,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:37:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:37:14
    37|   if (o.p && o.p.q) {} // this is ok because o.p is truthy, so o.p.q is safe
@@ -8661,7 +8661,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:38:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:38:14
    38|   if (o.p && o.p.q && o.p.q.r) {}
@@ -8675,7 +8675,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:38:23
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    missing-property-cond.js:38:23
    38|   if (o.p && o.p.q && o.p.q.r) {}
@@ -8692,7 +8692,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:38:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:38:23
    38|   if (o.p && o.p.q && o.p.q.r) {}
@@ -8720,7 +8720,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:52:26
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:52:26
    52|   invariant(b != null && b.foo != null); // ok
@@ -8734,7 +8734,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:57:20
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:57:20
    57|   if (a != null && a.foo instanceof Set) {
@@ -8748,7 +8748,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:58:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:58:6
    58|     (a.foo: Set<mixed>);
@@ -8762,7 +8762,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:58:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:58:6
    58|     (a.foo: Set<mixed>);
@@ -8776,7 +8776,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:64:34
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:64:34
    64|   if (a != null && Array.isArray(a.foo)) {
@@ -8790,7 +8790,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:65:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:65:6
    65|     (a.foo: $ReadOnlyArray<mixed>);
@@ -8804,7 +8804,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ missing-property-cond.js:65:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    missing-property-cond.js:65:6
    65|     (a.foo: $ReadOnlyArray<mixed>);
@@ -8835,7 +8835,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:8:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:8:17
    8|     takesString(x); // error
@@ -8864,7 +8864,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- mixed.js:9:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:9:6
    9|     !x as false; // error: we don't know the truthiness of x
@@ -8878,7 +8878,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:11:32
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:11:32
    11|   if (typeof x === 'number' && x) {
@@ -8892,7 +8892,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:12:6
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:12:6
    12|     !x as false; // ok
@@ -8909,7 +8909,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:14:19
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:14:19
    14|   if (x && typeof x === 'number') {
@@ -8923,7 +8923,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:15:6
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:15:6
    15|     !x as false; // ok
@@ -8957,7 +8957,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:21:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:21:17
    21|     takesNumber(x); // error
@@ -8986,7 +8986,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:22:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:22:6
    22|     !x as false; // error: we don't know the truthiness of x
@@ -9000,7 +9000,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:24:32
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:24:32
    24|   if (typeof x === 'string' && x) {
@@ -9014,7 +9014,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:25:6
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:25:6
    25|     !x as false; // ok
@@ -9031,7 +9031,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:27:19
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:27:19
    27|   if (x && typeof x === 'string') {
@@ -9045,7 +9045,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:28:6
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:28:6
    28|     !x as false; // ok
@@ -9079,7 +9079,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:34:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:34:17
    34|     takesString(x); // error
@@ -9111,7 +9111,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:35:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:35:5
    35|     x as true; // error: we don't know the truthiness of x
@@ -9125,7 +9125,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:37:33
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:37:33
    37|   if (typeof x === 'boolean' && x) {
@@ -9139,7 +9139,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:38:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:38:5
    38|     x as true; // ok
@@ -9156,7 +9156,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:40:19
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:40:19
    40|   if (x && typeof x === 'boolean') {
@@ -9170,7 +9170,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:41:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:41:5
    41|     x as true; // ok
@@ -9205,7 +9205,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:47:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:47:17
    47|     takesString(x); // error
@@ -9253,7 +9253,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:53:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:53:17
    53|     takesString(x); // error
@@ -9285,7 +9285,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:59:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:59:17
    59|     takesString(x); // error
@@ -9317,7 +9317,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:65:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:65:17
    65|     takesString(x); // error
@@ -9348,7 +9348,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:71:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:71:17
    71|     takesString(x); // error
@@ -9397,7 +9397,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:77:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:77:17
    77|     takesString(x); // error
@@ -9428,7 +9428,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:83:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:83:17
    83|     takesString(x); // error
@@ -9459,7 +9459,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:89:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:89:17
    89|     takesString(x); // error
@@ -9473,7 +9473,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:95:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:95:5
    95|     x as {+[key: string]: mixed} | null;
@@ -9487,7 +9487,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:96:9
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:96:9
    96|     if (x !== null) {
@@ -9501,7 +9501,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- mixed.js:97:7
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:97:7
    97|       x['foo'] as string; // error, mixed
@@ -9535,7 +9535,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- mixed.js:103:32
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:103:32
    103|   if (typeof x === 'object' && x) {
@@ -9549,7 +9549,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:104:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:104:5
    104|     x as Object;
@@ -9566,7 +9566,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- mixed.js:106:19
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:106:19
    106|   if (x && typeof x === 'object') {
@@ -9580,7 +9580,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:107:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:107:5
    107|     x as Object;
@@ -9597,7 +9597,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- mixed.js:109:27
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:109:27
    109|   if (x != null && typeof x === 'object') {
@@ -9611,7 +9611,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:110:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:110:5
    110|     x as Object;
@@ -9628,7 +9628,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- mixed.js:112:28
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:112:28
    112|   if (x !== null && typeof x === 'object') {
@@ -9642,7 +9642,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:113:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:113:5
    113|     x as Object;
@@ -9659,7 +9659,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- mixed.js:119:17
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:119:17
    119|     takesString(x[0]); // error
@@ -9691,7 +9691,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- mixed.js:127:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:127:14
    127|       node = node[0];
@@ -9705,7 +9705,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- mixed.js:135:16
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed.js:135:16
    135|     if (typeof x === 'object') {
@@ -9719,7 +9719,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- mixed.js:136:7
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed.js:136:7
    136|       x as empty; // OK: Impossible to be both
@@ -9736,7 +9736,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- mixed_object.js:2:32
 
-Refined at [1]
+Refined at [1] [InferError]
 
    mixed_object.js:2:32
    2|   if (typeof x === "object" && x !== null) {
@@ -9750,7 +9750,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- mixed_object.js:3:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    mixed_object.js:3:5
    3|     x.a = 3;
@@ -9792,7 +9792,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- nested_union_maybe.js:11:18
 
-Refined at [1]
+Refined at [1] [InferError]
 
    nested_union_maybe.js:11:18
    11| if(y != null) { (y : string) }
@@ -9834,7 +9834,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- not.js:5:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    not.js:5:5
    5|     x++; // should error for null, void and boolean (false)
@@ -9848,7 +9848,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ not.js:11:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    not.js:11:5
    11|     x[0]; // should error for null, void and number (0)
@@ -9890,7 +9890,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- not.js:16:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    not.js:16:21
    16|   if (x === null || x === undefined) {
@@ -9904,7 +9904,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ not.js:20:8
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    not.js:20:8
    20|   if (!x) {
@@ -9921,7 +9921,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ not.js:21:5
 
-Refined at [1] [2] [3]
+Refined at [1] [2] [3] [InferError]
 
    not.js:21:5
    21|     x[0]; // should error for number (0)
@@ -9955,7 +9955,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- not.js:31:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    not.js:31:12
    31|       y = !y;
@@ -10065,7 +10065,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- number.js:6:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:6:8
    6|       (x: void); // error
@@ -10155,7 +10155,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:20:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:20:14
    20|       return x; // unreachable, no error
@@ -10192,7 +10192,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:27:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:27:14
    27|       return x;
@@ -10229,7 +10229,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:43:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:43:12
    43|     return x;
@@ -10243,7 +10243,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:48:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:48:8
    48|       (x: 0);
@@ -10291,7 +10291,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:49:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:49:8
    49|       (x: void); // error
@@ -10305,7 +10305,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:52:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:52:8
    52|       (x: 1);
@@ -10353,7 +10353,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- number.js:53:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:53:8
    53|       (x: void); // error
@@ -10367,7 +10367,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:59:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:59:14
    59|       return x.foo;
@@ -10398,7 +10398,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:68:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:68:14
    68|       return x.foo;
@@ -10412,7 +10412,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:70:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:70:14
    70|       return x.bar;
@@ -10440,7 +10440,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:88:12
 
-Refined at [1] [2] [3]
+Refined at [1] [2] [3] [InferError]
 
    number.js:88:12
    88|     return n;
@@ -10460,7 +10460,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:93:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:93:14
    93|       return s;
@@ -10491,7 +10491,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:95:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:95:14
    95|       return s; // error
@@ -10505,7 +10505,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:102:10
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:102:10
    102|         (mode: 0);
@@ -10519,7 +10519,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:107:10
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    number.js:107:10
    107|         (mode: 1 | 2);
@@ -10553,7 +10553,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:114:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:114:14
    114|       return x; // error
@@ -10567,7 +10567,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:116:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:116:14
    116|       return x; // no error, inferred to be 0
@@ -10598,7 +10598,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:124:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:124:8
    124|       (x: void); // error
@@ -10689,7 +10689,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:145:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:145:14
    145|       return x;
@@ -10726,7 +10726,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- number.js:152:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:152:8
    152|       (x: 0);
@@ -10740,7 +10740,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:161:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:161:12
    161|     return x;
@@ -10754,7 +10754,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:166:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:166:14
    166|       return x;
@@ -10785,7 +10785,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- number.js:168:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    number.js:168:12
    168|     return x;
@@ -10816,7 +10816,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prop_exists.js:4:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_prop_exists.js:4:5
    4|     x as empty; // ERROR
@@ -10830,7 +10830,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prop_exists.js:5:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_prop_exists.js:5:5
    5|     x as {|a: false, b: string, c: true|}; // OK
@@ -10861,7 +10861,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prop_exists.js:7:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_prop_exists.js:7:5
    7|     x as empty; // ERROR
@@ -10875,7 +10875,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prop_exists.js:8:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_prop_exists.js:8:5
    8|     x as {|a: true, b: number|}; // OK
@@ -10922,7 +10922,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prop_exists.js:16:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_prop_exists.js:16:5
    16|     x as empty; // ERROR
@@ -10987,7 +10987,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:25:16
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    object_prop_exists.js:25:16
    25|         return result as empty; // good error: result not refined to empty
@@ -11021,7 +11021,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:31:16
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    object_prop_exists.js:31:16
    31|         return result as empty; // good error: result not refined to empty
@@ -11055,7 +11055,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:37:16
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    object_prop_exists.js:37:16
    37|         return result as empty; // good error: result not refined to empty
@@ -11089,7 +11089,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:43:16
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    object_prop_exists.js:43:16
    43|         return result as empty; // good error: result not refined to empty
@@ -11123,7 +11123,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:49:16
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    object_prop_exists.js:49:16
    49|         return result as empty; // good error: result not refined to empty
@@ -11157,7 +11157,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- object_prop_exists.js:55:16
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    object_prop_exists.js:55:16
    55|         return result as empty; // good error: result not refined to empty, and only reference the void case
@@ -11174,7 +11174,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- object_union_number_keys.js:5:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:5:5
    5|     x[1] as number; // OK
@@ -11188,7 +11188,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- object_union_number_keys.js:6:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:6:5
    6|     x[1] as empty; // ERROR
@@ -11219,7 +11219,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- object_union_number_keys.js:8:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:8:5
    8|     x[1] as string; // OK
@@ -11233,7 +11233,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:12:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:12:5
    12|     x[1] as number; // OK
@@ -11247,7 +11247,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:13:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:13:5
    13|     x[1] as empty; // ERROR
@@ -11278,7 +11278,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:15:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:15:5
    15|     x[1] as string; // OK
@@ -11312,7 +11312,7 @@ References:
 
 Error -------------------------------------------------------------------------------- object_union_number_keys.js:24:11
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    object_union_number_keys.js:24:11
    24|   switch (x[0]) {
@@ -11329,7 +11329,7 @@ References:
 
 Error -------------------------------------------------------------------------------- object_union_number_keys.js:24:11
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    object_union_number_keys.js:24:11
    24|   switch (x[0]) {
@@ -11366,7 +11366,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:35:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:35:5
    35|     x[1] as number; // OK
@@ -11380,7 +11380,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:36:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:36:5
    36|     x[1] as empty; // ERROR
@@ -11411,7 +11411,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:38:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:38:5
    38|     x[1] as string; // OK
@@ -11425,7 +11425,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:42:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:42:5
    42|     x[1] as number; // OK
@@ -11439,7 +11439,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:43:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:43:5
    43|     x[1] as empty; // ERROR
@@ -11470,7 +11470,7 @@ References:
 
 Error --------------------------------------------------------------------------------- object_union_number_keys.js:45:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    object_union_number_keys.js:45:5
    45|     x[1] as string; // OK
@@ -11484,7 +11484,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- opaque_refinement.js:8:3
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_refinement.js:8:3
    8|   bar[foo1];
@@ -11498,7 +11498,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- opaque_refinement.js:8:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_refinement.js:8:7
    8|   bar[foo1];
@@ -11512,7 +11512,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- opaque_refinement.js:15:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_refinement.js:15:5
    15|     state.d.index[id];
@@ -11526,7 +11526,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- opaque_refinement.js:15:19
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_refinement.js:15:19
    15|     state.d.index[id];
@@ -11540,7 +11540,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:23:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_type.js:23:5
    23|     foo as null | void | string; // ok
@@ -11588,7 +11588,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:24:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_type.js:24:5
    24|     foo as empty; // error
@@ -11602,7 +11602,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:27:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_type.js:27:5
    27|     foo as void | string; // ok
@@ -11650,7 +11650,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:28:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_type.js:28:5
    28|     foo as empty; // error
@@ -11664,7 +11664,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:31:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_type.js:31:5
    31|     foo as null | string; // ok
@@ -11712,7 +11712,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:32:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_type.js:32:5
    32|     foo as empty; // error
@@ -11726,7 +11726,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- opaque_type.js:44:3
 
-Refined at [1]
+Refined at [1] [InferError]
 
    opaque_type.js:44:3
    44|   elem as ME;
@@ -11740,7 +11740,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- property.js:5:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    property.js:5:12
    5|     return x[y];
@@ -11754,7 +11754,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:12:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    property.js:12:12
    12|     return x.y[z];
@@ -11768,7 +11768,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:19:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    property.js:19:12
    19|     return x[y.z];
@@ -11782,7 +11782,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:26:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    property.js:26:12
    26|     return x.y[a.b];
@@ -11796,7 +11796,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:33:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    property.js:33:12
    33|     return x[y];
@@ -11810,7 +11810,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:40:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    property.js:40:12
    40|     return x.y[z];
@@ -11824,7 +11824,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:47:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    property.js:47:12
    47|     return x[y.z];
@@ -11838,7 +11838,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:54:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    property.js:54:12
    54|     return x.y[a.b];
@@ -11852,7 +11852,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:61:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    property.js:61:12
    61|     return x[0];
@@ -11883,7 +11883,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:71:12
 
-Refinement invalidated due to property assignment at [1]
+Refinement invalidated due to property assignment at [1] [InferError]
 
    property.js:71:12
    71|     return x[y.z];  // error
@@ -11897,7 +11897,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ property.js:79:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    property.js:79:12
    79|     return x[y.z];  // ok
@@ -11928,7 +11928,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:4:24
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    refinements.js:4:24
    4|         var y:string = x; // Error
@@ -11987,7 +11987,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinements.js:7:20
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    refinements.js:7:20
    7|     var z:string = x; // Error: number ~> string
@@ -12179,7 +12179,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:43:24
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    refinements.js:43:24
    43|         var y:string = x;  // Error
@@ -12213,7 +12213,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:45:20
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    refinements.js:45:20
    45|     var z:string = x; // Error: null ~> string
@@ -12287,7 +12287,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- refinements.js:85:10
 
-Refined at [1]
+Refined at [1] [InferError]
 
    refinements.js:85:10
    85|         (x: string); // ok
@@ -12335,7 +12335,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- string.js:6:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:6:8
    6|       (x: void); // error
@@ -12425,7 +12425,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:20:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:20:14
    20|       return x; // unreachable, no error
@@ -12462,7 +12462,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:27:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:27:14
    27|       return x;
@@ -12499,7 +12499,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:43:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:43:12
    43|     return x;
@@ -12513,7 +12513,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:48:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:48:8
    48|       (x: 'foo');
@@ -12561,7 +12561,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:49:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:49:8
    49|       (x: void); // error
@@ -12575,7 +12575,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:52:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:52:8
    52|       (x: 'bar');
@@ -12623,7 +12623,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- string.js:53:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:53:8
    53|       (x: void); // error
@@ -12637,7 +12637,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:59:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:59:14
    59|       return x.foo;
@@ -12668,7 +12668,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:68:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:68:14
    68|       return x.foo;
@@ -12682,7 +12682,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:70:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:70:14
    70|       return x.bar;
@@ -12710,7 +12710,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:89:12
 
-Refined at [1] [2] [3]
+Refined at [1] [2] [3] [InferError]
 
    string.js:89:12
    89|     return ch;
@@ -12730,7 +12730,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:94:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:94:14
    94|       return s;
@@ -12761,7 +12761,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- string.js:96:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:96:14
    96|       return s; // error
@@ -12775,7 +12775,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- string.js:103:10
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:103:10
    103|         (mode: "a");
@@ -12789,7 +12789,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- string.js:108:10
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    string.js:108:10
    108|         (mode: "b" | "c");
@@ -12823,7 +12823,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- string.js:115:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:115:14
    115|       return x; // error
@@ -12837,7 +12837,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- string.js:117:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:117:14
    117|       return x; // no error, inferred to be ""
@@ -12851,7 +12851,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- string.js:124:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:124:14
    124|       return x;
@@ -12865,7 +12865,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- string.js:127:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    string.js:127:14
    127|       return x;
@@ -12911,7 +12911,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- super_member.js:13:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    super_member.js:13:14
    13|       return super.prop; // error, unknown type passed to string expected
@@ -12925,7 +12925,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- super_member.js:22:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    super_member.js:22:14
    22|       return super.prop; // OK
@@ -12939,7 +12939,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- switch.js:6:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    switch.js:6:14
    6|       return text;
@@ -12970,7 +12970,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- switch.js:8:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    switch.js:8:14
    8|       return text; // error, should return string
@@ -12984,7 +12984,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:17:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    switch.js:17:14
    17|       return text[0];
@@ -12998,7 +12998,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:19:15
 
-Refined at [1]
+Refined at [1] [InferError]
 
    switch.js:19:15
    19|       return (text++) + '';
@@ -13012,7 +13012,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:27:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    switch.js:27:14
    27|       return text[0]; // error, [0] on number
@@ -13040,7 +13040,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:37:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    switch.js:37:14
    37|       return text[0]; // error, [0] on number
@@ -13068,7 +13068,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:46:14
 
-Refined at [1]
+Refined at [1] [InferError]
 
    switch.js:46:14
    46|       return text[0];
@@ -13096,7 +13096,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- switch.js:51:15
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    switch.js:51:15
    51|       return (text++) + '';
@@ -13113,7 +13113,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:9:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:9:12
    9|     return typeAST.value; // OK, since typeAST: Name
@@ -13127,7 +13127,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:11:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:11:12
    11|     return typeAST.name; // OK, since typeAST: ListType
@@ -13141,7 +13141,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:20:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:20:12
    20|     return x.prop1.charAt(0); // typeAST: Node1, but x.prop1 may be undefined
@@ -13169,7 +13169,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:34:30
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:34:30
    34|   if (x.kind === 'Fruit') { (x.taste: 'Good'); } // error, Apple.taste = Bad
@@ -13201,7 +13201,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:35:9
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:35:9
    35|   else (x.raw: 'No'); // error, Carrot.raw = Maybe
@@ -13233,7 +13233,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:40:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:40:6
    40|     (x.raw: 'Yes' | 'No'); // 2 errors:
@@ -13279,7 +13279,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:54:34
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:54:34
    54|   case "cons": return 1 + length(l.next);
@@ -13293,7 +13293,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:70:27
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:70:27
    70|   case EnumKind.A: return x.A;
@@ -13307,7 +13307,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:71:27
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    tagged_union.js:71:27
    71|   case EnumKind.B: return x.B;
@@ -13324,7 +13324,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:72:19
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    tagged_union.js:72:19
    72|   default: return x.A; // error, x: C and property A not found in type C
@@ -13355,7 +13355,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:82:15
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:82:15
    82|   else return x.nationality;
@@ -13400,7 +13400,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:89:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:89:8
    89|       (x.kindTypo: string); // typos can't be used, though
@@ -13470,7 +13470,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:112:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:112:8
    112|       (x.legnth: number); // inside the block, it's a number
@@ -13501,7 +13501,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:113:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:113:8
    113|       (x.legnth: string); // error: number literal 0 !~> string
@@ -13529,7 +13529,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:117:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:117:8
    117|       (y.legnth: number); // inside the block, it's a number
@@ -13560,7 +13560,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:118:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:118:8
    118|       (y.legnth: string); // error: number literal 0 !~> string
@@ -13611,7 +13611,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:122:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:122:8
    122|       (z.toStirng: number); // inside the block, it's a number
@@ -13642,7 +13642,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:123:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:123:8
    123|       (z.toStirng: string); // error: number literal 0 !~> string
@@ -13693,7 +13693,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:127:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:127:8
    127|       (q.valeuOf: number); // inside the block, it's a number
@@ -13724,7 +13724,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:128:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:128:8
    128|       (q.valeuOf: string); // error: number literal 0 !~> string
@@ -13775,7 +13775,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:139:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:139:8
    139|       (t.calll: number); // inside the block, it's a number
@@ -13806,7 +13806,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:140:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:140:8
    140|       (t.calll: string); // error: number literal 0 !~> string
@@ -13838,7 +13838,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:147:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:147:8
    147|       (x.str: 'not str'); // error: 'str' !~> 'not str'
@@ -13870,7 +13870,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:150:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:150:8
    150|       (x.num: 456); // error: 123 !~> 456
@@ -13902,7 +13902,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:153:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:153:8
    153|       (x.boolean: false); // error: true !~> false
@@ -13947,7 +13947,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:157:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:157:8
    157|       (x.badStr: empty); // error: 'bad' !~> empty
@@ -13992,7 +13992,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:160:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:160:8
    160|       (x.badNum: empty); // error: 123 !~> empty
@@ -14037,7 +14037,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:163:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:163:8
    163|       (x.badBool: empty); // error: true !~> empty
@@ -14051,7 +14051,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:170:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:170:8
    170|       (x.y: string);
@@ -14065,7 +14065,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:171:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:171:7
    171|       x.z; // error
@@ -14093,7 +14093,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:173:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:173:8
    173|       (x.z: string);
@@ -14107,7 +14107,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:174:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:174:7
    174|       x.y; // error
@@ -14135,7 +14135,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:177:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:177:8
    177|       (x.z: string);
@@ -14149,7 +14149,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:178:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:178:7
    178|       x.y; // error
@@ -14177,7 +14177,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:180:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:180:8
    180|       (x.y: string);
@@ -14191,7 +14191,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:181:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:181:7
    181|       x.z; // error
@@ -14219,7 +14219,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:188:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:188:8
    188|       (x.y: string); // ok, because 123 !== 'foo'
@@ -14233,7 +14233,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:189:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:189:7
    189|       x.z; // error
@@ -14289,7 +14289,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:196:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:196:8
    196|       (x.z: string);
@@ -14303,7 +14303,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:197:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:197:7
    197|       x.y; // error
@@ -14331,7 +14331,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:199:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:199:8
    199|       (x.y: string);
@@ -14345,7 +14345,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:200:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:200:7
    200|       x.z; // error
@@ -14373,7 +14373,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:207:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:207:8
    207|       (x.y: string); // ok, because 123 !== string
@@ -14387,7 +14387,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:208:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:208:7
    208|       x.z; // error
@@ -14443,7 +14443,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:215:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:215:8
    215|       (x.z: string);
@@ -14457,7 +14457,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:216:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:216:7
    216|       x.y; // error
@@ -14541,7 +14541,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:237:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:237:8
    237|       (x.y: string);
@@ -14555,7 +14555,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:238:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:238:7
    238|       x.z; // error
@@ -14583,7 +14583,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:240:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:240:8
    240|       (x.z: string);
@@ -14597,7 +14597,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:241:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:241:7
    241|       x.y; // error
@@ -14625,7 +14625,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:244:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:244:8
    244|       (x.z: string);
@@ -14639,7 +14639,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:245:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:245:7
    245|       x.y; // error
@@ -14667,7 +14667,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:247:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:247:8
    247|       (x.y: string);
@@ -14681,7 +14681,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:248:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:248:7
    248|       x.z; // error
@@ -14709,7 +14709,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:255:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:255:8
    255|       (x.y: string);
@@ -14723,7 +14723,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:256:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:256:7
    256|       x.z; // error
@@ -14751,7 +14751,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:258:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:258:8
    258|       (x.z: string);
@@ -14765,7 +14765,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:259:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:259:7
    259|       x.y; // error
@@ -14793,7 +14793,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:262:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:262:8
    262|       (x.z: string);
@@ -14807,7 +14807,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:263:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:263:7
    263|       x.y; // error
@@ -14835,7 +14835,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:265:8
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:265:8
    265|       (x.y: string);
@@ -14849,7 +14849,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- tagged_union.js:266:7
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union.js:266:7
    266|       x.z; // error
@@ -14877,7 +14877,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- tagged_union_import.js:18:34
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union_import.js:18:34
    18|       console.log(`Successful: ${status.message}`);
@@ -14891,7 +14891,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- tagged_union_import.js:21:31
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tagged_union_import.js:21:31
    21|       console.log(`Errored: ${status.error}`);
@@ -14905,7 +14905,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- tuple.js:3:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:3:6
    3|     (a[0]: string);
@@ -14919,7 +14919,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- tuple.js:6:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:6:6
    6|     (a[0]: number);
@@ -14933,7 +14933,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- tuple.js:7:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:7:6
    7|     (a[1]: string);
@@ -14947,7 +14947,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:15:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:15:6
    15|     (a[0]: string);
@@ -14961,7 +14961,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:17:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:17:6
    17|     (a[0]: number);
@@ -14975,7 +14975,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:18:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:18:6
    18|     (a[1]: number);
@@ -14989,7 +14989,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:26:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:26:6
    26|     (a[0]: string);
@@ -15003,7 +15003,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:28:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:28:6
    28|     (a[0]: number);
@@ -15017,7 +15017,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:29:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:29:6
    29|     (a[1]: number);
@@ -15031,7 +15031,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:30:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:30:6
    30|     (a[2]: number); // Error: one of the variants has only 2 elements.
@@ -15059,7 +15059,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:36:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:36:6
    36|     (a: empty);
@@ -15073,7 +15073,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:42:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:42:6
    42|     (a: empty);
@@ -15087,7 +15087,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:48:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:48:6
    48|     (a: empty);
@@ -15101,7 +15101,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:51:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:51:6
    51|     (a: empty);
@@ -15115,7 +15115,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:54:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:54:6
    54|     (a: empty);
@@ -15129,7 +15129,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:61:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:61:6
    61|     (a[0]: string);
@@ -15143,7 +15143,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:64:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:64:6
    64|     (a[0]: number);
@@ -15157,7 +15157,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:65:6
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple.js:65:6
    65|     (a[1]: string);
@@ -15171,7 +15171,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- tuple_union.js:5:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:5:5
    5|     x[1] as number; // OK
@@ -15185,7 +15185,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- tuple_union.js:6:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:6:5
    6|     x[1] as empty; // ERROR
@@ -15216,7 +15216,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- tuple_union.js:8:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:8:5
    8|     x[1] as string; // OK
@@ -15230,7 +15230,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:16:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:16:5
    16|     x[1] as number; // OK
@@ -15244,7 +15244,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:17:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:17:5
    17|     x[1] as empty; // ERROR
@@ -15275,7 +15275,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:19:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:19:5
    19|     x[1] as string; // OK
@@ -15289,7 +15289,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:27:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:27:5
    27|     x[1] as number; // OK
@@ -15303,7 +15303,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:28:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:28:5
    28|     x[1] as empty; // ERROR
@@ -15334,7 +15334,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:30:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:30:5
    30|     x[1] as string; // OK
@@ -15348,7 +15348,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tuple_union.js:37:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:37:21
    37|     return Math.abs(args[1]);
@@ -15362,7 +15362,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tuple_union.js:39:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:39:12
    39|     return args[1] + args[2];
@@ -15376,7 +15376,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tuple_union.js:39:22
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:39:22
    39|     return args[1] + args[2];
@@ -15471,7 +15471,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:53:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:53:5
    53|     x as empty; // ERROR
@@ -15485,7 +15485,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:54:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:54:5
    54|     x as [false, string, true]; // OK
@@ -15516,7 +15516,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:56:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:56:5
    56|     x as empty; // ERROR
@@ -15530,7 +15530,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:57:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:57:5
    57|     x as [true, number]; // OK
@@ -15591,7 +15591,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:65:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    tuple_union.js:65:5
    65|     x as empty; // ERROR
@@ -15605,7 +15605,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- typeof.js:5:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:5:5
    5|     x[0]; // error for boolean, not number
@@ -15650,7 +15650,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:19:44
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:19:44
    19|   if (typeof BAZ !== 'undefined' && typeof BAZ.stuff === 'function') {
@@ -15664,7 +15664,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:20:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:20:5
    20|     BAZ.stuff(123);
@@ -15678,7 +15678,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:20:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:20:5
    20|     BAZ.stuff(123);
@@ -15734,7 +15734,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:26:44
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:26:44
    26|   if (typeof BAZ !== 'undefined' && typeof BAZ.stuff === 'function') {
@@ -15748,7 +15748,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:27:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:27:5
    27|     BAZ.stuff(123); // ok
@@ -15762,7 +15762,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:27:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:27:5
    27|     BAZ.stuff(123); // ok
@@ -15804,7 +15804,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:36:10
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:36:10
    36|   return x; // OK, x refined to `number`
@@ -15818,7 +15818,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:43:10
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:43:10
    43|   return x; // OK, x refined to `number`
@@ -15841,7 +15841,7 @@ Cannot compare the result of `typeof` to string literal `foo` because it is not 
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:55:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:55:12
    55|     return x.length;
@@ -15915,7 +15915,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:84:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:84:5
    84|     x as string; // error
@@ -15946,7 +15946,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:90:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:90:5
    90|     x as empty; // error number ~> empty
@@ -15960,7 +15960,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:96:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:96:5
    96|     x as number; // OK
@@ -15991,7 +15991,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:97:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:97:5
    97|     x as empty; // error number ~> empty
@@ -16022,7 +16022,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:109:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:109:5
    109|     x as empty; // error string ~> empty
@@ -16053,7 +16053,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:115:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:115:5
    115|     x as empty; // error boolean ~> empty
@@ -16085,7 +16085,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:121:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:121:5
    121|     x as true;
@@ -16116,7 +16116,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:122:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:122:5
    122|     x as empty; // error boolean ~> empty
@@ -16147,7 +16147,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- typeof.js:128:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    typeof.js:128:5
    128|     x as empty; // error symbol ~> empty
@@ -16178,7 +16178,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- undef.js:4:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:4:21
    4|   if (x !== null && x !== undefined) {
@@ -16192,7 +16192,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- undef.js:5:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    undef.js:5:13
    5|     var y = x * 1000;
@@ -16209,7 +16209,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:10:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:10:21
    10|   if (x === null || x === undefined) {
@@ -16223,7 +16223,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:12:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    undef.js:12:13
    12|     var y = x * 1000;
@@ -16240,7 +16240,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:17:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:17:23
    17|   if (x.x !== null && x.x !== undefined) {
@@ -16254,7 +16254,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:17:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:17:23
    17|   if (x.x !== null && x.x !== undefined) {
@@ -16268,7 +16268,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:18:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    undef.js:18:13
    18|     var y = x.x * 1000;
@@ -16285,7 +16285,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:18:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    undef.js:18:13
    18|     var y = x.x * 1000;
@@ -16302,7 +16302,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:23:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:23:23
    23|   if (x.x === null || x.x === undefined) {
@@ -16316,7 +16316,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:23:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:23:23
    23|   if (x.x === null || x.x === undefined) {
@@ -16330,7 +16330,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:25:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    undef.js:25:13
    25|     var y = x.x * 1000;
@@ -16347,7 +16347,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:25:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    undef.js:25:13
    25|     var y = x.x * 1000;
@@ -16364,7 +16364,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:31:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:31:13
    31|     var y = x * 1000;
@@ -16395,7 +16395,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:38:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:38:13
    38|     var y = x * 1000;
@@ -16426,7 +16426,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:44:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:44:13
    44|     var y = x.x * 1000;
@@ -16440,7 +16440,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:44:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:44:13
    44|     var y = x.x * 1000;
@@ -16471,7 +16471,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:51:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:51:13
    51|     var y = x.x * 1000;
@@ -16485,7 +16485,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:51:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:51:13
    51|     var y = x.x * 1000;
@@ -16516,7 +16516,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:57:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:57:13
    57|     var y = x * 1000; // unreachable
@@ -16530,7 +16530,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:60:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:60:13
    60|     var z = x * 1000; // unreachable
@@ -16544,7 +16544,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:66:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:66:13
    66|     var a = x * 1000;
@@ -16558,7 +16558,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- undef.js:69:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    undef.js:69:13
    69|     var b = y * 1000; // error
@@ -16623,7 +16623,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- uninitialized_union.js:9:18
 
-Refined at [1]
+Refined at [1] [InferError]
 
    uninitialized_union.js:9:18
    9| if (y != null && y.f != null) {
@@ -16637,7 +16637,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- union.js:7:5
 
-Refined at [1]
+Refined at [1] [InferError]
 
    union.js:7:5
    7|     x[0]; // error on boolean
@@ -16665,7 +16665,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- union.js:12:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    union.js:12:21
    12|   if (x !== true && x !== false) {
@@ -16679,7 +16679,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:13:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    union.js:13:5
    13|     x[0]; // error on number
@@ -16710,7 +16710,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- union.js:18:12
 
-Refined at [1]
+Refined at [1] [InferError]
 
    union.js:18:12
    18|   if (x && x !== true) {
@@ -16724,7 +16724,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:19:5
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    union.js:19:5
    19|     x[0]; // error on number
@@ -16772,7 +16772,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- void.js:4:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:4:21
    4|   if (x !== null && x !== void(0)) {
@@ -16786,7 +16786,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- void.js:5:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:5:13
    5|     var y = x * 1000;
@@ -16803,7 +16803,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:10:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:10:21
    10|   if (x === null || x === void(0)) {
@@ -16817,7 +16817,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:12:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:12:13
    12|     var y = x * 1000;
@@ -16834,7 +16834,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:17:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:17:23
    17|   if (x.x !== null && x.x !== void(0)) {
@@ -16848,7 +16848,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:17:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:17:23
    17|   if (x.x !== null && x.x !== void(0)) {
@@ -16862,7 +16862,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:18:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:18:13
    18|     var y = x.x * 1000;
@@ -16879,7 +16879,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:18:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:18:13
    18|     var y = x.x * 1000;
@@ -16896,7 +16896,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:23:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:23:23
    23|   if (x.x === null || x.x === void(0)) {
@@ -16910,7 +16910,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:23:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:23:23
    23|   if (x.x === null || x.x === void(0)) {
@@ -16924,7 +16924,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:25:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:25:13
    25|     var y = x.x * 1000;
@@ -16941,7 +16941,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:25:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:25:13
    25|     var y = x.x * 1000;
@@ -16958,7 +16958,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:31:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:31:13
    31|     var y = x * 1000;
@@ -16989,7 +16989,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:38:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:38:13
    38|     var y = x * 1000;
@@ -17020,7 +17020,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:44:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:44:13
    44|     var y = x.x * 1000;
@@ -17034,7 +17034,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:44:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:44:13
    44|     var y = x.x * 1000;
@@ -17065,7 +17065,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:51:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:51:13
    51|     var y = x.x * 1000;
@@ -17079,7 +17079,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:51:13
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:51:13
    51|     var y = x.x * 1000;
@@ -17110,7 +17110,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:56:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:56:21
    56|   if (x !== null && x !== void(x * 1000)) {
@@ -17124,7 +17124,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:56:32
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:56:32
    56|   if (x !== null && x !== void(x * 1000)) {
@@ -17155,7 +17155,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:57:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:57:13
    57|     var y = x * 1000;
@@ -17172,7 +17172,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:62:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:62:21
    62|   if (x === null || x === void(x * 1000)) {
@@ -17186,7 +17186,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:62:32
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:62:32
    62|   if (x === null || x === void(x * 1000)) {
@@ -17217,7 +17217,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:64:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:64:13
    64|     var y = x * 1000;
@@ -17234,7 +17234,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:69:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:69:23
    69|   if (x.x !== null && x.x !== void(x.x * 1000)) {
@@ -17248,7 +17248,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:69:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:69:23
    69|   if (x.x !== null && x.x !== void(x.x * 1000)) {
@@ -17262,7 +17262,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:69:36
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:69:36
    69|   if (x.x !== null && x.x !== void(x.x * 1000)) {
@@ -17276,7 +17276,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:69:36
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:69:36
    69|   if (x.x !== null && x.x !== void(x.x * 1000)) {
@@ -17307,7 +17307,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:70:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:70:13
    70|     var y = x.x * 1000;
@@ -17324,7 +17324,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:70:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:70:13
    70|     var y = x.x * 1000;
@@ -17341,7 +17341,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:75:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:75:23
    75|   if (x.x === null || x.x === void(x.x * 1000)) {
@@ -17355,7 +17355,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:75:23
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:75:23
    75|   if (x.x === null || x.x === void(x.x * 1000)) {
@@ -17369,7 +17369,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:75:36
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:75:36
    75|   if (x.x === null || x.x === void(x.x * 1000)) {
@@ -17383,7 +17383,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:75:36
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:75:36
    75|   if (x.x === null || x.x === void(x.x * 1000)) {
@@ -17414,7 +17414,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:77:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:77:13
    77|     var y = x.x * 1000;
@@ -17431,7 +17431,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:77:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:77:13
    77|     var y = x.x * 1000;
@@ -17482,7 +17482,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:92:21
 
-Refined at [1]
+Refined at [1] [InferError]
 
    void.js:92:21
    92|   if (x !== null && x !== void(0)) {
@@ -17496,7 +17496,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- void.js:93:13
 
-Refined at [1] [2]
+Refined at [1] [2] [InferError]
 
    void.js:93:13
    93|     var y = x * 1000;

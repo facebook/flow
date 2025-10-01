@@ -206,7 +206,7 @@ References:
 
 Error -------------------------------------------------------------------------------- class_constructor_property.js:6:3
 
-Classes may not have fields named `constructor`.
+Classes may not have fields named `constructor`. [ParseError]
 
    6|   constructor: T = e; // error
         ^^^^^^^^^^^
@@ -438,7 +438,7 @@ Error --------------------------------------------------------------------------
 
 Error ----------------------------------------------------------------------- declared_class_constructor_property.js:6:3
 
-Classes may not have fields named `constructor`.
+Classes may not have fields named `constructor`. [ParseError]
 
    6|   constructor: T; // error
         ^^^^^^^^^^^

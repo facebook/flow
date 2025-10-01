@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- pragma.js.flow:3:6
 
-Unexpected identifier, expected the end of an expression statement (`;`)
+Unexpected identifier, expected the end of an expression statement (`;`) [ParseError]
 
    3| this is a parse error
            ^^

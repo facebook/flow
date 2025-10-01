@@ -188,7 +188,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- await_not_in_async.js:5:9
 
-Unexpected number, expected the end of an expression statement (`;`)
+Unexpected number, expected the end of an expression statement (`;`) [ParseError]
 
    5|   await 1;
               ^
@@ -196,7 +196,7 @@ Unexpected number, expected the end of an expression statement (`;`)
 
 Error --------------------------------------------------------------------------------------- await_not_in_async2.js:6:9
 
-Unexpected number, expected the token `,`
+Unexpected number, expected the token `,` [ParseError]
 
    6| f(await 1);
               ^
@@ -204,7 +204,7 @@ Unexpected number, expected the token `,`
 
 Error --------------------------------------------------------------------------------------- await_not_in_async3.js:6:9
 
-Unexpected number, expected the token `,`
+Unexpected number, expected the token `,` [ParseError]
 
    6| f(await 1);
               ^

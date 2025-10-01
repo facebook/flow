@@ -1309,7 +1309,7 @@ References:
 
 Error ------------------------------------------------------------------------------ require_specific_suppression.js:5:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    5| // $FlowFixMe
       ^^^^^^^^^^^^^

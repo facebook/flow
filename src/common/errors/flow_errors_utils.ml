@@ -31,6 +31,11 @@ let string_of_kind = function
   | RecursionLimitError -> "RecursionLimitError"
   | LintError lint_kind -> "LintError" ^ "-" ^ Lints.string_of_kind lint_kind
 
+let string_of_error_code ~error_code ~error_kind =
+  match error_code with
+  | Some code -> Error_codes.string_of_code code
+  | None -> string_of_kind error_kind
+
 (* internal rep for core info *)
 type 'a message =
   | BlameM of 'a * string
@@ -312,6 +317,9 @@ module Friendly = struct
       group_message_post;
     }
 
+  let msg_of_error_code_suffix_for_display ~error_code ~error_kind =
+    [text " ["; text (string_of_error_code ~error_code ~error_kind); text "]"]
+
   (* Creates a message group from the error_message type. If show_all_branches
    * is false then we will hide speculation branches with a lower score. If any
    * speculation branches are hidden then the boolean we return will be true. *)
@@ -414,6 +422,7 @@ module Friendly = struct
         ~show_all_branches
         ~hidden_branches
         ~error_code
+        ~error_kind
         ~in_speculation
         acc_frames
         acc_explanations
@@ -433,11 +442,7 @@ module Friendly = struct
         in
         let message =
           if show_code then
-            Base.Option.value_map
-              ~f:(fun error_code ->
-                message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
-              ~default:message
-              error_code
+            message @ msg_of_error_code_suffix_for_display ~error_code ~error_kind
           else
             message
         in
@@ -492,11 +497,7 @@ module Friendly = struct
         let primary_loc = error.loc in
         let message =
           if show_code then
-            Base.Option.value_map
-              ~f:(fun error_code ->
-                message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
-              ~default:message
-              error_code
+            message @ msg_of_error_code_suffix_for_display ~error_code ~error_kind
           else
             message
         in
@@ -541,6 +542,7 @@ module Friendly = struct
             ~in_speculation
             ~hidden_branches
             ~error_code
+            ~error_kind
             ~show_code
             (frames :: (acc_frames' @ acc_frames))
             (explanations :: (acc_explanations' @ acc_explanations))
@@ -561,11 +563,7 @@ module Friendly = struct
             if (Base.Option.is_none error.root || not show_root) && frames = [] then
               let message = [text "all branches are incompatible:"] in
               if show_code then
-                Base.Option.value_map
-                  ~f:(fun error_code ->
-                    message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
-                  ~default:message
-                  error_code
+                message @ msg_of_error_code_suffix_for_display ~error_code ~error_kind
               else
                 message
             else
@@ -592,11 +590,7 @@ module Friendly = struct
               let message = message @ [text ":"] in
               let message =
                 if show_code then
-                  Base.Option.value_map
-                    ~f:(fun error_code ->
-                      message @ [text " ["; text (Error_codes.string_of_code error_code); text "]"])
-                    ~default:message
-                    error_code
+                  message @ msg_of_error_code_suffix_for_display ~error_code ~error_kind
                 else
                   message
               in
@@ -614,6 +608,7 @@ module Friendly = struct
                     ~in_speculation:true
                     ~hidden_branches
                     ~error_code
+                    ~error_kind
                     acc_frames'
                     acc_explanations'
                     error
@@ -664,8 +659,15 @@ module Friendly = struct
           ))
     in
     (* Partially apply loop with the state it needs. Have fun! *)
-    fun error ->
-      loop ~hidden_branches:None ~in_speculation:false ~error_code:error.code [] [] error
+    fun ~error_kind error ->
+      loop
+        ~hidden_branches:None
+        ~in_speculation:false
+        ~error_code:error.code
+        ~error_kind
+        []
+        []
+        error
 
   let extract_references_message_intermediate ~next_id ~loc_to_id ~id_to_loc ~message =
     let (next_id, loc_to_id, id_to_loc, message) =
@@ -750,9 +752,14 @@ module Friendly = struct
       Base.List.concat (Base.List.intersperse (List.rev acc) ~sep:[text " "])
 
   (* Converts our friendly error to a classic error message. *)
-  let to_classic error =
+  let to_classic ~error_kind error =
     let (_, loc, message) =
-      message_group_of_error ~show_all_branches:false ~show_root:true ~show_code:true error
+      message_group_of_error
+        ~show_all_branches:false
+        ~show_root:true
+        ~show_code:true
+        ~error_kind
+        error
     in
     (* Extract the references from the message. *)
     let (references, message) = extract_references message in
@@ -2767,14 +2774,19 @@ module Cli_output = struct
       if hidden_branches then on_hidden_branches ();
       (a, b)
     in
-    let (_, error) = group in
+    let (error_kind, error) = group in
 
     (* Singleton errors concatenate the optional error root with the error
      * message and render a single message. *)
     Friendly.(
       let (primary_loc, { group_message; group_message_list; group_message_post }) =
         let (hidden_branches, loc, err) =
-          message_group_of_error ~show_all_branches ~show_root:true ~show_code:true error
+          message_group_of_error
+            ~show_all_branches
+            ~show_root:true
+            ~show_code:true
+            ~error_kind
+            error
         in
         check (Option.is_some hidden_branches, loc, err)
       in
@@ -3159,11 +3171,16 @@ module Json_output = struct
         )
     )
 
-  let json_of_friendly_error_props ~strip_root ~stdin_file ~offset_kind error =
+  let json_of_friendly_error_props ~strip_root ~stdin_file ~offset_kind ~error_kind error =
     Hh_json.(
       Friendly.(
         let (_, primary_loc, message_group) =
-          message_group_of_error ~show_all_branches:false ~show_root:true ~show_code:true error
+          message_group_of_error
+            ~show_all_branches:false
+            ~show_root:true
+            ~show_code:true
+            ~error_kind
+            error
         in
         let (references, message_group) = extract_references message_group in
         let root_loc =
@@ -3240,8 +3257,10 @@ module Json_output = struct
       (* add the error type specific props *)
       @
       match version with
-      | JsonV1 -> json_of_classic_error_props ~json_of_message (Friendly.to_classic error)
-      | JsonV2 -> json_of_friendly_error_props ~strip_root ~stdin_file ~offset_kind error
+      | JsonV1 ->
+        json_of_classic_error_props ~json_of_message (Friendly.to_classic ~error_kind:kind error)
+      | JsonV2 ->
+        json_of_friendly_error_props ~strip_root ~stdin_file ~offset_kind ~error_kind:kind error
     )
 
   let json_of_error_with_context
@@ -3439,8 +3458,8 @@ module Vim_emacs_output = struct
           rest_of_error);
       Buffer.contents buf
     in
-    let to_string ~strip_root prefix ((_, error) : Loc.t printable_error) : string =
-      classic_to_string ~strip_root prefix (Friendly.to_classic error)
+    let to_string ~strip_root prefix ((error_kind, error) : Loc.t printable_error) : string =
+      classic_to_string ~strip_root prefix (Friendly.to_classic ~error_kind error)
     in
     fun ~strip_root oc ~errors ~warnings () ->
       let sl =
@@ -3484,6 +3503,7 @@ module Lsp_output = struct
         ~show_all_branches:false
         ~show_root:true
         ~show_code:false
+        ~error_kind:kind
         friendly
     in
     let (references, group) = Friendly.extract_references group in
@@ -3506,9 +3526,7 @@ module Lsp_output = struct
     {
       loc;
       message = String.trim message;
-      code =
-        code_of_printable_error error
-        |> Base.Option.value_map ~f:Error_codes.string_of_code ~default:(string_of_kind kind);
+      code = string_of_error_code ~error_kind:kind ~error_code:(code_of_printable_error error);
       relatedLocations = List.rev relatedLocations;
     }
 end

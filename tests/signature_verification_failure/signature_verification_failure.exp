@@ -346,7 +346,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- typeof.js:6:22
 
-`typeof` can only be used to get the type of variables.
+`typeof` can only be used to get the type of variables. [ParseError]
 
    6| export var z: typeof 42 = 42;
                            ^^

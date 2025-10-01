@@ -38,7 +38,7 @@ Parse error in package.json will be reported
 ============================================
 Error ------------------------------------------------------------------------------------------------- package.json:2:1
 
-Unexpected end of input, expected the token `}`
+Unexpected end of input, expected the token `}` [ParseError]
 
    2|
       

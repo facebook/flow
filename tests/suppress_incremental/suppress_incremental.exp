@@ -25,7 +25,7 @@ No errors!
 After fixing the error, leaving the suppression:
 Warning ---------------------------------------------------------------------------------------------------- test.js:3:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    3| // $FlowFixMe[incompatible-type]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

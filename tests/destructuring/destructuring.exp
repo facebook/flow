@@ -1139,7 +1139,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- destructuring_init.js:1:5
 
-Destructuring assignment must be initialized
+Destructuring assignment must be initialized [ParseError]
 
    1| var {foo};
           ^^^^^
@@ -1336,7 +1336,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- destructuring_param.js:5:17
 
-Strict mode function may not have duplicate parameter names
+Strict mode function may not have duplicate parameter names [ParseError]
 
    5| function g(a, { a }) {
                       ^

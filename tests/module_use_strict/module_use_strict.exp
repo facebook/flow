@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:1:2
 
-Octal literals are not allowed in strict mode.
+Octal literals are not allowed in strict mode. [ParseError]
 
    1| (01: number);
        ^^

@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------- ParseError.js:3:18
 
-Unexpected token `#`, expected an identifier
+Unexpected token `#`, expected an identifier [ParseError]
 
    3| function foo() { ### // invalid token
                        ^

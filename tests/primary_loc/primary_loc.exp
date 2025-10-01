@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ test.js:1:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    1| //$FlowFixMe (unused)
       ^^^^^^^^^^^^^^^^^^^^^
@@ -23,7 +23,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    7| //$FlowFixMe (unused)
       ^^^^^^^^^^^^^^^^^^^^^

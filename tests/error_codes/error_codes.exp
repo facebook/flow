@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    7| //$FlowFixMe
       ^^^^^^^^^^^^
@@ -43,6 +43,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:10:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    10| //$FlowFixMe[]
        ^^^^^^^^^^^^^^
@@ -67,7 +68,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:13:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    13| // $FlowFixMe
        ^^^^^^^^^^^^^
@@ -92,7 +93,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:16:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
        v-
    16| /*
@@ -120,7 +121,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    21| //$FlowFixMe arithmetic isn't parsed as an error code
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -146,6 +147,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:30:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    30| // $FlowFixMe [incompatible-type]
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -218,7 +220,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:42:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    42| // $FlowFixMe
        ^^^^^^^^^^^^^
@@ -353,7 +355,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:91:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    91| //$FlowFixMe
        ^^^^^^^^^^^^
@@ -405,7 +407,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:103:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    103| // $FlowFixMe
         ^^^^^^^^^^^^^
@@ -493,7 +495,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:121:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    121| // $FlowFixMe
         ^^^^^^^^^^^^^
@@ -546,6 +548,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:135:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    135| //$FlowFixMe[incompatible-use, arithmetic]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -571,6 +574,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:138:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    138| //$FlowFixMe[incompatible-use,arithmetic]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -613,6 +617,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:144:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    144| //$FlowFixMe[A]
         ^^^^^^^^^^^^^^^
@@ -621,6 +626,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 Error ---------------------------------------------------------------------------------------------------- test.js:147:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    147| //$FlowFixMe[ ]
         ^^^^^^^^^^^^^^^
@@ -629,6 +635,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 Error ---------------------------------------------------------------------------------------------------- test.js:150:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    150| //$FlowFixMe[<]
         ^^^^^^^^^^^^^^^
@@ -637,6 +644,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 Error ---------------------------------------------------------------------------------------------------- test.js:153:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    153| //$FlowFixMe[>]
         ^^^^^^^^^^^^^^^
@@ -645,6 +653,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 Error ---------------------------------------------------------------------------------------------------- test.js:156:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    156| //$FlowFixMe[*]
         ^^^^^^^^^^^^^^^
@@ -653,6 +662,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 Error ---------------------------------------------------------------------------------------------------- test.js:159:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    159| //$FlowFixMe[_]
         ^^^^^^^^^^^^^^^
@@ -661,6 +671,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 Error ---------------------------------------------------------------------------------------------------- test.js:162:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    162| //$FlowFixMe[1]
         ^^^^^^^^^^^^^^^
@@ -669,6 +680,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 Error ---------------------------------------------------------------------------------------------------- test.js:165:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
    165| //$FlowFixMe[0]
         ^^^^^^^^^^^^^^^
@@ -677,6 +689,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 Error ---------------------------------------------------------------------------------------------------- test.js:168:1
 
 Suppression contains a malformed error code. Suppressions with error codes should be formatted as `$FlowFixMe[<CODE>]`.
+[InferError]
 
         v------------
    168| /*$FlowFixMe[
@@ -686,7 +699,7 @@ Suppression contains a malformed error code. Suppressions with error codes shoul
 
 Error --------------------------------------------------------------------------------------------------- unused.js:26:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    26| //$FlowFixMe unused
        ^^^^^^^^^^^^^^^^^^^
@@ -694,7 +707,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Error --------------------------------------------------------------------------------------------------- unused.js:35:1
 
-Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]`
+Suppression is missing a code. Please update this suppression to use an error code: `$FlowFixMe[<CODE>]` [InferError]
 
    35| //$FlowFixMe unused
        ^^^^^^^^^^^^^^^^^^^
@@ -702,7 +715,7 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Warning --------------------------------------------------------------------------------------------------- test.js:33:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    33| // $FlowFixMe[arithmetic]
        ^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -710,7 +723,7 @@ Unused suppression comment.
 
 Warning --------------------------------------------------------------------------------------------------- test.js:67:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    67| //$FlowFixMe[incompatible-type]
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -718,7 +731,7 @@ Unused suppression comment.
 
 Warning --------------------------------------------------------------------------------------------------- test.js:72:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    72| //$FlowFixMe[incompatible-type]
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -726,7 +739,7 @@ Unused suppression comment.
 
 Warning --------------------------------------------------------------------------------------------------- test.js:77:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    77| //$FlowFixMe[incompatible-type]
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -734,7 +747,7 @@ Unused suppression comment.
 
 Warning --------------------------------------------------------------------------------------------------- test.js:78:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    78| //$FlowFixMe[prop-missing]
        ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -742,7 +755,7 @@ Unused suppression comment.
 
 Warning --------------------------------------------------------------------------------------------------- test.js:84:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    84| //$FlowFixMe[arithmetic]
        ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -750,7 +763,7 @@ Unused suppression comment.
 
 Warning --------------------------------------------------------------------------------------------------- test.js:97:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    97| //$FlowFixMe[prop-missing]
        ^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -758,7 +771,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:130:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    130| // $FlowFixMe[prop-missing]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -766,7 +779,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- test.js:141:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    141| //$FlowFixMe[incompatible-use]
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -774,7 +787,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- unused.js:5:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    5| //$FlowFixMe[arithmetic] unused
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -782,7 +795,7 @@ Unused suppression comment.
 
 Warning -------------------------------------------------------------------------------------------------- unused.js:8:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    8| //$FlowFixMe[arithmetic] unused
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -790,7 +803,7 @@ Unused suppression comment.
 
 Warning ------------------------------------------------------------------------------------------------- unused.js:13:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    13| //$FlowFixMe[arithmetic] unused
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -798,7 +811,7 @@ Unused suppression comment.
 
 Warning ------------------------------------------------------------------------------------------------- unused.js:19:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    19| //$FlowFixMe[arithmetic] unused
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -806,7 +819,7 @@ Unused suppression comment.
 
 Warning ------------------------------------------------------------------------------------------------- unused.js:27:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    27| //$FlowFixMe[arithmetic] unused
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -814,7 +827,7 @@ Unused suppression comment.
 
 Warning ------------------------------------------------------------------------------------------------- unused.js:33:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    33| //$FlowFixMe[arithmetic] unused
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -822,7 +835,7 @@ Unused suppression comment.
 
 Warning ------------------------------------------------------------------------------------------------- unused.js:34:1
 
-Unused suppression comment.
+Unused suppression comment. [InferError]
 
    34| //$FlowFixMe[incompatible-type] unused
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
