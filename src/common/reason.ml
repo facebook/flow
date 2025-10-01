@@ -191,6 +191,32 @@ type 'loc virtual_reason_desc =
   | RAsyncImport
   | RCode of string
   | RCustom of string
+  | RNonnullAssert
+  | RMixins
+  | RUnaryMinus
+  | RUnaryNot
+  | RRest
+  | RGlobalObject
+  | RProviders
+  | RForOfElement
+  | RUpdate
+  | RUnusedYield
+  | RUnusedReturn
+  | RCommonInterface
+  | RContextualVariable
+  | RNext
+  | RModuleReference
+  | RNewFunction
+  | RNewArray
+  | RArrayLength
+  | RImportMeta
+  | RAwait
+  | RAsyncReturn
+  | RCallableObjectType
+  | RClassExtends
+  | RClassMixins
+  | RReactKey
+  | RNoProviders
   | RPolyType of 'loc virtual_reason_desc
   | RExactType of 'loc virtual_reason_desc
   | RReadOnlyType
@@ -286,9 +312,14 @@ let rec map_desc_locs f = function
     | RIdentifier _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _ | RMember _
     | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _ | RUndefinedProperty _
     | RSomeProperty | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _ | RImportStar _
-    | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _ | RIncompatibleInstantiation _
-    | ROpaqueType _ | RObjectKeyMirror | RIndexedAccess _ | RConditionalType | RRendersNothing
-    | RAutocompleteToken | RMatch | RMatchPattern | RMatchWildcard ) as r ->
+    | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _ | RNonnullAssert | RMixins
+    | RUnaryMinus | RUnaryNot | RRest | RGlobalObject | RProviders | RForOfElement | RUpdate
+    | RUnusedYield | RUnusedReturn | RCommonInterface | RContextualVariable | RNext
+    | RModuleReference | RNewFunction | RNewArray | RArrayLength | RImportMeta | RAwait
+    | RAsyncReturn | RCallableObjectType | RClassExtends | RClassMixins | RReactKey | RNoProviders
+    | RIncompatibleInstantiation _ | ROpaqueType _ | RObjectKeyMirror | RIndexedAccess _
+    | RConditionalType | RRendersNothing | RAutocompleteToken | RMatch | RMatchPattern
+    | RMatchWildcard ) as r ->
     r
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RTypeAlias (s, None, d) -> RTypeAlias (s, None, map_desc_locs f d)
@@ -701,6 +732,32 @@ let rec string_of_desc = function
     spf "Default import from `%s`" (Flow_import_specifier.display_userland m)
   | RAsyncImport -> "async import"
   | RCustom x -> x
+  | RNonnullAssert -> "!"
+  | RMixins -> "mixins"
+  | RUnaryMinus -> "unary minus"
+  | RUnaryNot -> "unary not"
+  | RRest -> "rest"
+  | RGlobalObject -> "global object"
+  | RProviders -> "providers"
+  | RForOfElement -> "for-of element"
+  | RUpdate -> "update"
+  | RUnusedYield -> "unused yield"
+  | RUnusedReturn -> "unused return"
+  | RCommonInterface -> "common interface"
+  | RContextualVariable -> "contextual variable"
+  | RNext -> "next"
+  | RModuleReference -> "module reference"
+  | RNewFunction -> "new Function(..)"
+  | RNewArray -> "new Array(..)"
+  | RArrayLength -> "array length"
+  | RImportMeta -> "import.meta"
+  | RAwait -> "await"
+  | RAsyncReturn -> "async return"
+  | RCallableObjectType -> "callable object type"
+  | RClassExtends -> "class extends"
+  | RClassMixins -> "class mixins"
+  | RReactKey -> "React key"
+  | RNoProviders -> "no providers"
   | RPolyType (RClass d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
   | RExactType d -> string_of_desc d
@@ -1447,6 +1504,32 @@ let classification_of_reason_desc desc =
   | RAsyncImport
   | RCode _
   | RCustom _
+  | RNonnullAssert
+  | RMixins
+  | RUnaryMinus
+  | RUnaryNot
+  | RRest
+  | RGlobalObject
+  | RProviders
+  | RForOfElement
+  | RUpdate
+  | RUnusedYield
+  | RUnusedReturn
+  | RCommonInterface
+  | RContextualVariable
+  | RNext
+  | RModuleReference
+  | RNewFunction
+  | RNewArray
+  | RArrayLength
+  | RImportMeta
+  | RAwait
+  | RAsyncReturn
+  | RCallableObjectType
+  | RClassExtends
+  | RClassMixins
+  | RReactKey
+  | RNoProviders
   | RExports
   | RPolyType _
   | RExactType _

@@ -108,7 +108,7 @@ class func_scope_visitor
           (* Convert the return expression's type T to Promise<T>. If the
              * expression type is itself a Promise<T>, ensure we still return
              * a Promise<T> via Promise.resolve. *)
-          let async_return_reason = mk_reason (RCustom "async return") loc in
+          let async_return_reason = mk_reason RAsyncReturn loc in
           let t' =
             Flow.get_builtin_typeapp
               cx
@@ -323,7 +323,7 @@ struct
         let yield_t = Tvar.mk cx (replace_desc_reason (RCustom "yield") reason) in
         let next_t =
           match return_t with
-          | Annotated _ -> Tvar.mk cx (replace_desc_reason (RCustom "next") reason)
+          | Annotated _ -> Tvar.mk cx (replace_desc_reason RNext reason)
           | Inferred _ -> VoidT.make (replace_desc_reason RUnannotatedNext reason)
         in
         let return_targ = Tvar.mk cx reason in

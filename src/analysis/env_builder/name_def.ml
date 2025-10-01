@@ -1258,7 +1258,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             | _ ->
               (* TODO: This should be a parse error, but we only produce an internal
                  error in statement.ml. *)
-              mk_reason (RCustom "contextual variable") param_loc
+              mk_reason RContextualVariable param_loc
           in
           this#record_hint param_loc hints;
           Contextual { reason; hints; optional = false; default_expression = None }
@@ -1787,7 +1787,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
                   (loc, Some { tparams_map = tparams; return_annot; async })
               in
 
-              this#add_ordinary_binding loc (mk_reason (RCustom "next") body_loc) (GeneratorNext gen)
+              this#add_ordinary_binding loc (mk_reason RNext body_loc) (GeneratorNext gen)
           end;
 
           Base.Option.iter predicate ~f:(fun (_, { Ast.Type.Predicate.kind; comments = _ }) ->

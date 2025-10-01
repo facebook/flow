@@ -642,7 +642,7 @@ module Make
           if opt_state = NewChain then
             (Some voided_out_collector, mk_reason ROptionalChain chain_loc)
           else
-            (None, mk_reason (RCustom "!") chain_loc)
+            (None, mk_reason RNonnullAssert chain_loc)
         in
         OptChainM
           {
@@ -881,7 +881,7 @@ module Make
         ~standard_cjs_esm_interop:true
         module_type_or_any
     in
-    let reason = mk_reason (RCustom "module reference") loc in
+    let reason = mk_reason RModuleReference loc in
     let t = Flow.get_builtin_typeapp cx reason "$Flow$ModuleRef" [require_t] in
     (t, { lit with Ast.ModuleRefLiteral.def_loc_opt })
 
@@ -1645,7 +1645,7 @@ module Make
                 { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; comments = _ }); _ }
             ) ->
           RIdentifier (OrdinaryName name)
-        | _ -> RCustom "for-of element"
+        | _ -> RForOfElement
       in
       let reason = mk_reason reason_desc loc in
       let eval_right () =
@@ -3255,7 +3255,7 @@ module Make
             | SpreadArg t ->
               Flow.flow_t cx (t, StrModuleT.at loc))
           argts;
-        let reason = mk_reason (RCustom "new Function(..)") loc in
+        let reason = mk_reason RNewFunction loc in
         let proto = ObjProtoT reason in
         ( ( loc,
             DefT
@@ -3346,8 +3346,8 @@ module Make
       in
       (match result with
       | Ok (targ_t, arg_t) ->
-        let reason = mk_reason (RCustom "new Array(..)") loc in
-        let length_reason = replace_desc_reason (RCustom "array length") reason in
+        let reason = mk_reason RNewArray loc in
+        let length_reason = replace_desc_reason RArrayLength reason in
         Flow.flow_t cx (arg_t, DefT (length_reason, NumGeneralT AnyLiteral));
         let (targ_ts, targs_ast) =
           match targ_t with
@@ -3744,7 +3744,7 @@ module Make
           property = (_, { Ast.Identifier.name = "meta"; _ }) as property;
           comments;
         } ->
-      let reason = mk_reason (RCustom "import.meta") loc in
+      let reason = mk_reason RImportMeta loc in
       let t = Flow.get_builtin_type cx reason "Import$Meta" in
       ((loc, t), MetaProperty { MetaProperty.meta; property; comments })
     | MetaProperty _ ->
@@ -4949,7 +4949,7 @@ module Make
                         if opt_state = NewChain then
                           (mk_reason ROptionalChain loc, Some voided_out_collector)
                         else
-                          (mk_reason (RCustom "!") loc, None)
+                          (mk_reason RNonnullAssert loc, None)
                       in
                       let lhs_reason = mk_expression_reason callee in
                       OptionalChain.run
@@ -5248,7 +5248,7 @@ module Make
       let argument = delete cx loc argument in
       (BoolModuleT.at loc, { operator = Ast.Expression.Unary.Delete; argument; comments })
     | { operator = Await; argument; comments } ->
-      let reason = mk_reason (RCustom "await") loc in
+      let reason = mk_reason RAwait loc in
       let (((_, arg), _) as argument_ast) = expression cx argument in
       ( Type_operation_utils.Promise.await cx reason arg,
         { operator = Await; argument = argument_ast; comments }
@@ -5261,7 +5261,7 @@ module Make
       let (((_, argt), _) as argument) =
         expression ~encl_ctx ?decl ~has_hint ~as_const ~frozen cx argument
       in
-      let reason = mk_reason (RCustom "!") loc in
+      let reason = mk_reason RNonnullAssert loc in
       ( Operators.non_maybe cx reason argt,
         { operator = Ast.Expression.Unary.Nonnull; argument; comments }
       )
@@ -5269,7 +5269,7 @@ module Make
   (* numeric pre/post inc/dec *)
   and update cx loc expr =
     let open Ast.Expression.Update in
-    let reason = mk_reason (RCustom "update") loc in
+    let reason = mk_reason RUpdate loc in
     let { argument; _ } = expr in
     let (((_, arg_t), _) as arg_ast) = expression cx argument in
     let result_t = Operators.unary_arith cx reason UnaryArithKind.Update arg_t in
@@ -5503,7 +5503,7 @@ module Make
           let (((_, t), _) as expr) =
             reconstruct_ast
               ~filter_nullish:(fun loc ->
-                let reason = mk_reason (RCustom "!") loc in
+                let reason = mk_reason RNonnullAssert loc in
                 let t = Operators.non_maybe cx reason t in
                 (loc, t))
               ((id_exp_loc, t), Ast.Expression.Identifier ((id_loc, t), name))
@@ -5514,7 +5514,7 @@ module Make
           let (((_, t), _) as expr) =
             reconstruct_ast
               ~filter_nullish:(fun loc ->
-                let reason = mk_reason (RCustom "!") loc in
+                let reason = mk_reason RNonnullAssert loc in
                 let t = Operators.non_maybe cx reason t in
                 (loc, t))
               expr
@@ -5546,7 +5546,7 @@ module Make
           if optional = NewChain then
             mk_reason ROptionalChain lhs_loc
           else
-            mk_reason (RCustom "!") lhs_loc
+            mk_reason RNonnullAssert lhs_loc
         in
 
         (* When deleting an optional chain, we only really care about the case
@@ -5738,7 +5738,7 @@ module Make
               Error_message.(
                 EIllegalAssertOperator
                   {
-                    op = mk_reason (RCustom "!") lhs_loc;
+                    op = mk_reason RNonnullAssert lhs_loc;
                     obj = mk_expression_reason (expr_loc, expr);
                     specialized = true;
                   }

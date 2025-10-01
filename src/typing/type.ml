@@ -3623,12 +3623,12 @@ module AConstraint = struct
       in
       replace_desc_reason desc r
     | Annot_GetStaticsT r -> replace_desc_reason (RCustom "statics") r
-    | Annot_MixinT r -> replace_desc_reason (RCustom "mixins") r
-    | Annot_UnaryArithT (r, _) -> replace_desc_reason (RCustom "unary minus") r
-    | Annot_NotT r -> replace_desc_reason (RCustom "unary not") r
+    | Annot_MixinT r -> replace_desc_reason RMixins r
+    | Annot_UnaryArithT (r, _) -> replace_desc_reason RUnaryMinus r
+    | Annot_NotT r -> replace_desc_reason RUnaryNot r
     | Annot_GetPropT { reason; prop_ref; _ } ->
       replace_desc_reason (RProperty (name_of_propref prop_ref)) reason
-    | Annot_ObjRestT (r, _) -> replace_desc_reason (RCustom "rest") r
+    | Annot_ObjRestT (r, _) -> replace_desc_reason RRest r
     | r -> reason_of_op r
 
   let to_annot_op_exn = function
@@ -4330,7 +4330,7 @@ let dummy_this loc = mk_reason RDummyThis loc |> MixedT.make
 let implicit_mixed_this r = update_desc_reason (fun desc -> RImplicitThis desc) r |> MixedT.make
 
 let global_this reason =
-  let reason = replace_desc_reason (RCustom "global object") reason in
+  let reason = replace_desc_reason RGlobalObject reason in
   ObjProtoT reason
 
 let default_obj_assign_kind = ObjAssign { assert_exact = false }

@@ -2162,7 +2162,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           | [] -> mk_object_annot cx loc ~exact None dict pmap proto
           | [t] -> t
           | t0 :: t1 :: ts ->
-            let callable_reason = mk_annot_reason (RCustom "callable object type") loc in
+            let callable_reason = mk_annot_reason RCallableObjectType loc in
             let rep = InterRep.make t0 t1 ts in
             IntersectionT (callable_reason, rep))
         | os ->

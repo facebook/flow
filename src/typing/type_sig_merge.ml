@@ -155,7 +155,7 @@ let eval file loc t = function
 let async_void_return file loc =
   Flow_js_utils.lookup_builtin_typeapp
     file.cx
-    Reason.(mk_reason (RCustom "async return") loc)
+    Reason.(mk_reason RAsyncReturn loc)
     "Promise"
     [Type.VoidT.at loc]
 
@@ -579,7 +579,7 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
     make_hooklike file hooklike t
   | Pack.ModuleRef { loc; index } ->
     let t = require file loc index ~standard_cjs_esm_interop:true in
-    let reason = Reason.(mk_reason (RCustom "module reference") loc) in
+    let reason = Reason.(mk_reason RModuleReference loc) in
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t] in
     make_hooklike file hooklike t
 
@@ -981,7 +981,7 @@ and merge_annot env file = function
         (match ts with
         | (t, []) -> t
         | (t0, t1 :: ts) ->
-          let reason = Reason.(mk_annot_reason (RCustom "callable object type") loc) in
+          let reason = Reason.(mk_annot_reason RCallableObjectType loc) in
           Type.(IntersectionT (reason, InterRep.make t0 t1 ts)))
     end
   | ObjSpreadAnnot { loc; exact; elems_rev } ->
@@ -1489,7 +1489,7 @@ and merge_class_extends env file this reason extends mixins =
     | ObjectPrototypeExtendsNull -> (Type.NullProtoT super_reason, Type.FunProtoT super_reason)
     | ClassImplicitExtends -> (Type.ObjProtoT super_reason, Type.FunProtoT super_reason)
     | ClassExplicitExtends { loc; t } ->
-      let reason_op = Reason.mk_reason (Reason.RCustom "class extends") loc in
+      let reason_op = Reason.mk_reason Reason.RClassExtends loc in
       let t = specialize file reason_op (merge env file t) in
       let t = TypeUtil.this_typeapp ~annot_loc:loc t this None in
       (t, TypeUtil.class_type t)
@@ -1527,7 +1527,7 @@ and merge_class_mixin =
   in
   fun env file this -> function
     | ClassMixin { loc; t } ->
-      let reason_op = Reason.mk_reason (Reason.RCustom "class mixins") loc in
+      let reason_op = Reason.mk_reason Reason.RClassMixins loc in
       let t = specialize file reason_op (merge_mixin_ref file loc t) in
       TypeUtil.this_typeapp ~annot_loc:loc t this None
     | ClassMixinApp { loc; t; targs } ->

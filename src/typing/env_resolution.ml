@@ -215,8 +215,7 @@ let resolve_hint cx loc hint : Type_hint.concr_hint =
             Type_env.checked_find_loc_env_write cx Env_api.OrdinaryNameLoc loc
         )
       in
-      UnionT
-        (mk_reason (RCustom "providers") loc, UnionRep.make ~kind:UnionRep.ProvidersKind t1 t2 ts)
+      UnionT (mk_reason RProviders loc, UnionRep.make ~kind:UnionRep.ProvidersKind t1 t2 ts)
     | WriteLocHint (kind, loc) -> Type_env.checked_find_loc_env_write cx kind loc
     | StringLiteralType name ->
       DefT
@@ -826,7 +825,7 @@ let rec resolve_binding cx def_scope_kind reason loc b =
       TypeAssertions.assert_for_in_rhs cx right_t;
       StrModuleT.at loc
     | Of { await } ->
-      let reason = mk_reason (RCustom "for-of element") loc (*TODO: loc should be loc of loop *) in
+      let reason = mk_reason RForOfElement loc (*TODO: loc should be loc of loop *) in
       Statement.for_of_elemt cx right_t reason await)
   | Hooklike binding ->
     let t = resolve_binding cx def_scope_kind reason loc binding in
@@ -918,7 +917,7 @@ let resolve_op_assign cx ~exp_loc lhs assertion op rhs =
     let ((lhs_loc, lhs_t), _) = Statement.assignment_lhs cx lhs in
     let lhs_t =
       if assertion then
-        let reason = mk_reason (RCustom "!") lhs_loc in
+        let reason = mk_reason RNonnullAssert lhs_loc in
         Operators.non_maybe cx reason lhs_t
       else
         lhs_t
@@ -945,7 +944,7 @@ let resolve_op_assign cx ~exp_loc lhs assertion op rhs =
     | _ -> assert_false "Bad conditional guard")
 
 let resolve_update cx ~id_loc ~exp_loc id_reason =
-  let reason = mk_reason (RCustom "update") exp_loc in
+  let reason = mk_reason RUpdate exp_loc in
   let id_t = Type_env.ref_entry_exn ~lookup_mode:Type_env.LookupMode.ForValue cx id_loc id_reason in
   Operators.unary_arith cx reason UnaryArithKind.Update id_t
 
@@ -1097,8 +1096,8 @@ let resolve_generator_next cx reason gen =
             reason
             gen_name
             [
-              Tvar.mk cx (replace_desc_reason (RCustom "unused yield") reason);
-              Tvar.mk cx (replace_desc_reason (RCustom "unused return") reason);
+              Tvar.mk cx (replace_desc_reason RUnusedYield reason);
+              Tvar.mk cx (replace_desc_reason RUnusedReturn reason);
               next;
             ]
         in

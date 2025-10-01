@@ -461,7 +461,7 @@ let find_signatures ~loc_of_aloc ~get_ast_from_shared_mem ~cx ~file_sig ~ast ~ty
     let ts =
       if name = "key" then
         (* 'key' is special-cased *)
-        let reason_key = Reason.mk_reason (Reason.RCustom "React key") key_loc in
+        let reason_key = Reason.mk_reason Reason.RReactKey key_loc in
         let t = TypeUtil.maybe (Flow_js.get_builtin_type cx reason_key "React$Key") in
         [(t, true)]
       else

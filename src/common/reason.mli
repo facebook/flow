@@ -153,6 +153,32 @@ type 'loc virtual_reason_desc =
   | RAsyncImport
   | RCode of string
   | RCustom of string
+  | RNonnullAssert
+  | RMixins
+  | RUnaryMinus
+  | RUnaryNot
+  | RRest
+  | RGlobalObject
+  | RProviders
+  | RForOfElement
+  | RUpdate
+  | RUnusedYield
+  | RUnusedReturn
+  | RCommonInterface
+  | RContextualVariable
+  | RNext
+  | RModuleReference
+  | RNewFunction
+  | RNewArray
+  | RArrayLength
+  | RImportMeta
+  | RAwait
+  | RAsyncReturn
+  | RCallableObjectType
+  | RClassExtends
+  | RClassMixins
+  | RReactKey
+  | RNoProviders
   | RPolyType of 'loc virtual_reason_desc
   | RExactType of 'loc virtual_reason_desc
   | RReadOnlyType

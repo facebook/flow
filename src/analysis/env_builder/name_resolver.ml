@@ -1699,7 +1699,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 kind;
               }
             | Bindings.GeneratorNext ->
-              let reason = mk_reason (RCustom "next") loc in
+              let reason = mk_reason RNext loc in
               let write_entries =
                 EnvMap.add_ordinary loc (Env_api.AssigningWrite reason) env_state.write_entries
               in

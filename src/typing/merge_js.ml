@@ -921,7 +921,7 @@ let check_haste_provider_conflict cx tast =
                 in
                 let prog_aloc = fst tast in
                 let interface_t =
-                  let reason = Reason.(mk_reason (RCustom "common interface") (fst tast)) in
+                  let reason = Reason.(mk_reason RCommonInterface (fst tast)) in
                   get_exports_t ~is_common_interface_module:true reason self_module_type
                 in
                 let platform_specific_t =
@@ -1118,7 +1118,7 @@ let check_multiplatform_conformance cx ast tast =
         | None -> AnyT.make Untyped reason
       in
       let interface_t =
-        let reason = Reason.(mk_reason (RCustom "common interface") prog_aloc) in
+        let reason = Reason.(mk_reason RCommonInterface prog_aloc) in
         get_exports_t
           ~is_common_interface_module:true
           reason

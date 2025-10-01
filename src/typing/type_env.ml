@@ -179,13 +179,12 @@ let provider_type_for_def_loc ?(intersect = false) cx env def_loc =
        )
   in
   match providers with
-  | [] -> MixedT.make (mk_reason (RCustom "no providers") def_loc)
+  | [] -> MixedT.make (mk_reason RNoProviders def_loc)
   | [t] -> t
   | t1 :: t2 :: ts when intersect ->
-    IntersectionT (mk_reason (RCustom "providers") def_loc, InterRep.make t1 t2 ts)
+    IntersectionT (mk_reason RProviders def_loc, InterRep.make t1 t2 ts)
   | t1 :: t2 :: ts ->
-    UnionT
-      (mk_reason (RCustom "providers") def_loc, UnionRep.make ~kind:UnionRep.ProvidersKind t1 t2 ts)
+    UnionT (mk_reason RProviders def_loc, UnionRep.make ~kind:UnionRep.ProvidersKind t1 t2 ts)
 
 (*************)
 (*  Reading  *)
@@ -1087,4 +1086,4 @@ let discriminant_after_negated_cases cx switch_loc refinement_key_opt =
   | Ok t -> Some t
   | Error _ -> None
 
-let get_next cx loc = read_entry_exn ~lookup_mode:ForValue cx loc (mk_reason (RCustom "next") loc)
+let get_next cx loc = read_entry_exn ~lookup_mode:ForValue cx loc (mk_reason RNext loc)

@@ -611,9 +611,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
        * and don't check a type for key. Otherwise we would cause a lot of issues
        * in existing React code. *)
       let () =
-        let reason_key =
-          replace_desc_reason (RCustom "React key") (reason_of_t normalized_jsx_props)
-        in
+        let reason_key = replace_desc_reason RReactKey (reason_of_t normalized_jsx_props) in
         (* Create the key type. *)
         let key_t = optional (maybe (get_builtin_type cx reason_key "React$Key")) in
         (* Flow the config input key type to the key type. *)
