@@ -725,7 +725,7 @@ let detect_unused_promises cx =
     (Context.maybe_unused_promises cx)
 
 let enforce_optimize cx loc t =
-  let reason = Reason.mk_reason (Reason.RCustom "$Flow$EnforceOptimized") loc in
+  let reason = Reason.(mk_reason (RTypeApp (RType (OrdinaryName "$Flow$EnforceOptimized")))) loc in
   let internal_t =
     let open Type in
     OpaqueT
