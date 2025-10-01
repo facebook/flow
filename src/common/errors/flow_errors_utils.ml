@@ -128,17 +128,6 @@ module Friendly = struct
 
   type t = ALoc.t t'
 
-  type docs = {
-    call: string;
-    tuplemap: string;
-  }
-
-  let docs =
-    {
-      call = "https://flow.org/en/docs/types/utilities/#toc-call";
-      tuplemap = "https://flow.org/en/docs/types/utilities/#toc-tuplemap";
-    }
-
   (* This function was introduced into the OCaml standard library in 4.04.0. Not
    * all of our tooling supports 4.04.0 yet, so we have a small
    * equivalent implementation here. *)

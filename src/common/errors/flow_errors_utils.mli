@@ -46,13 +46,6 @@ module Friendly : sig
     | Text of string
     | Code of string
 
-  type docs = {
-    call: string;
-    tuplemap: string;
-  }
-
-  val docs : docs
-
   val message_of_string : string -> 'a message
 
   val text : string -> 'a message_feature
