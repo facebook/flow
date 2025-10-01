@@ -2411,7 +2411,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           begin
             match rhs with
             | (fun_loc, Ast.Expression.ArrowFunction _) ->
-              let reason = mk_reason (RCustom "<<arrow function>>") fun_loc in
+              let reason = mk_reason (RFunction RNormal) fun_loc in
               let write_entries =
                 EnvMap.add_ordinary fun_loc (Env_api.AssigningWrite reason) env_state.write_entries
               in
@@ -4192,7 +4192,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           match id with
           | Some (loc, _) -> loc
           | None ->
-            let reason = mk_reason (RCustom "<<anonymous function>>") fun_loc in
+            let reason = mk_reason (RFunction RNormal) fun_loc in
             let write_entries =
               EnvMap.add_ordinary fun_loc (Env_api.AssigningWrite reason) env_state.write_entries
             in
