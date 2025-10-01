@@ -28,7 +28,7 @@ type t =
   generic_t
 
 let rec merge_type cx =
-  let create_union rep = UnionT (locationless_reason (RCustom "union"), rep) in
+  let create_union rep = UnionT (locationless_reason RUnionType, rep) in
   function
   | (DefT (_, NumGeneralT _), (DefT (_, NumGeneralT _) as t))
   | (DefT (_, StrGeneralT _), (DefT (_, StrGeneralT _) as t))
@@ -100,7 +100,7 @@ let rec merge_type cx =
             Some (name, loc, merge_type cx (rest_t1, rest_t2))
         in
         let tout = merge_type cx (ft1.return_t, ft2.return_t) in
-        let reason = locationless_reason (RCustom "function") in
+        let reason = locationless_reason RFunctionType in
         (* TODO merging type guards would require aligning param names as well *)
         let type_guard = None in
         DefT
@@ -219,7 +219,7 @@ let rec merge_type cx =
             );
         }
       in
-      let reason = locationless_reason (RCustom "object") in
+      let reason = locationless_reason RObjectType in
       mk_object_def_type ~reason ~flags ~call id o1.proto_t
     | _ -> create_union (UnionRep.make t1 t2 []))
   | ( DefT
@@ -273,7 +273,7 @@ let rec merge_type cx =
         elements2
     in
     DefT
-      ( locationless_reason (RCustom "array"),
+      ( locationless_reason RArray,
         ArrT
           (ArrayAT
              {
@@ -292,7 +292,7 @@ let rec merge_type cx =
       DefT (_, ArrT (ArrayAT { elem_t = t2; tuple_view = _; react_dro = dro2 }))
     ) ->
     DefT
-      ( locationless_reason (RCustom "array"),
+      ( locationless_reason RArray,
         ArrT
           (ArrayAT
              {
@@ -331,7 +331,7 @@ let rec merge_type cx =
               ts1
               ts2 ->
     DefT
-      ( locationless_reason (RCustom "tuple"),
+      ( locationless_reason RTupleType,
         ArrT
           (TupleAT
              {
@@ -367,7 +367,7 @@ let rec merge_type cx =
       )
   | (DefT (_, ArrT (ROArrayAT (elemt1, dro1))), DefT (_, ArrT (ROArrayAT (elemt2, dro2)))) ->
     DefT
-      ( locationless_reason (RCustom "read only array"),
+      ( locationless_reason RArrayType,
         ArrT
           (ROArrayAT
              ( merge_type cx (elemt1, elemt2),

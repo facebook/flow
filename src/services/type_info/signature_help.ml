@@ -224,7 +224,7 @@ module Callee_finder = struct
         | [] -> None
         | [t] -> Some (t, opt)
         | t0 :: t1 :: ts ->
-          let r = Reason.(locationless_reason (RCustom "intersection")) in
+          let r = Reason.(locationless_reason RIntersectionType) in
           Some (IntersectionT (r, InterRep.make t0 t1 ts), opt)
       end
     | _ -> None

@@ -4434,7 +4434,7 @@ let apply_opt_methodcalltype
     meth_strict_arity = opt_meth_strict_arity;
   }
 
-let create_intersection rep = IntersectionT (locationless_reason (RCustom "intersection"), rep)
+let create_intersection rep = IntersectionT (locationless_reason RIntersectionType, rep)
 
 let apply_opt_action action t_out =
   match action with
