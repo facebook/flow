@@ -30,8 +30,9 @@ module Normalizer = Ty_normalizer.Make (struct
         )
       in
       match Lookahead.peek cx tout with
-      | Lookahead.LowerBounds [t] ->
-        cont (TypeUtil.mod_reason_of_t (replace_desc_reason (RCustom "get keys")) t)
+      (* We patch the reason here to avoid having a identifier reason description,
+       * which will hide the underlying type. *)
+      | Lookahead.LowerBounds [t] -> cont (TypeUtil.mod_reason_of_t (replace_desc_reason RKeySet) t)
       | _ -> default ()
     else
       default ()
