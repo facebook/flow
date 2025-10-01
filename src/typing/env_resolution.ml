@@ -820,13 +820,14 @@ let rec resolve_binding cx def_scope_kind reason loc b =
     else
       AnyT (mk_reason RAnyImplicit loc, AnyError (Some MissingAnnotation))
   | Root (For (kind, exp)) ->
-    let reason = mk_reason (RCustom "for-in") loc (*TODO: loc should be loc of loop *) in
     let right_t = expression cx ~encl_ctx:OtherTestContext exp in
     (match kind with
     | In ->
       TypeAssertions.assert_for_in_rhs cx right_t;
       StrModuleT.at loc
-    | Of { await } -> Statement.for_of_elemt cx right_t reason await)
+    | Of { await } ->
+      let reason = mk_reason (RCustom "for-of element") loc (*TODO: loc should be loc of loop *) in
+      Statement.for_of_elemt cx right_t reason await)
   | Hooklike binding ->
     let t = resolve_binding cx def_scope_kind reason loc binding in
     make_hooklike cx t
