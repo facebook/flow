@@ -149,48 +149,6 @@ jobs:
         name: build_linux_arm64_dist
         path: |
           dist/flow-linux64-arm64.zip
-  build_macos_x86:
-    runs-on: macos-13-xlarge
-    steps:
-    - uses: actions/checkout@v3.6.0
-    - uses: maxim-lobanov/setup-xcode@v1.6.0
-      with:
-        xcode-version: '14.3.1'
-    - name: Update curl cacerts
-      run: echo "cacert $GITHUB_WORKSPACE/.circleci/cacert.pem" >> ~/.curlrc
-    - uses: ./.github/actions/install-opam-mac
-      with:
-        arch: x86_64
-    - name: Create cache breaker
-      run: arch --x86_64 .circleci/make_opam_cachebreaker.sh > .circleci/opamcachebreaker
-      shell: bash
-    - name: opam cache
-      uses: actions/cache@v4
-      with:
-        path: |-
-          ~/.opam
-          _opam
-        key: v1-opam-cache-${{ runner.os }}-x86_64_on_arm-${{ hashFiles('.circleci/opamcachebreaker') }}
-    - name: Init opam
-      run: arch --x86_64 .circleci/opam_init.sh
-    - name: Install deps from opam
-      run: arch --x86_64 make deps
-      shell: bash
-    - name: Build flow
-      run: |-
-        arch --x86_64 opam exec -- make bin/flow dist/flow.zip
-        mkdir -p bin/macos && cp bin/flow bin/macos/flow
-    - name: Create artifacts
-      run: cp dist/flow.zip dist/flow-osx.zip
-    - uses: actions/upload-artifact@v4.4.0
-      with:
-        name: build_macos_bin
-        path: bin/macos/flow
-    - uses: actions/upload-artifact@v4.4.0
-      with:
-        name: build_macos_dist
-        path: |
-          dist/flow-osx.zip
   build_macos_arm64:
     runs-on: macos-13-xlarge
     steps:
@@ -482,7 +440,6 @@ jobs:
     needs:
     - build_js
     - build_linux
-    - build_macos_x86
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
@@ -504,14 +461,6 @@ jobs:
     - uses: actions/download-artifact@v4.1.7
       with:
         name: build_linux_dist
-        path: dist
-    - uses: actions/download-artifact@v4.1.7
-      with:
-        name: build_macos_bin
-        path: bin/macos
-    - uses: actions/download-artifact@v4.1.7
-      with:
-        name: build_macos_dist
         path: dist
     - uses: actions/download-artifact@v4.1.7
       with:
