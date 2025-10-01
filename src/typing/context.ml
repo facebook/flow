@@ -194,8 +194,6 @@ type component_t = {
   speculation_state: Speculation_state.t;
   instantiation_stack: TypeAppExpansion.entry list ref;
   (* Post-inference checks *)
-  mutable literal_subtypes: (ALoc.t * Env_api.literal_check) list;
-  mutable matching_props: (string * Type.t * Type.t) list;
   mutable delayed_forcing_tvars: ISet.t;
   mutable post_component_tvar_forcing_states: Type.Constraint.ForcingState.t list;
   mutable post_inference_polarity_checks:
@@ -409,8 +407,6 @@ let make_ccx () =
     sig_cx = empty_sig_cx;
     aloc_tables = Utils_js.FilenameMap.empty;
     synthesis_produced_uncacheable_result = false;
-    matching_props = [];
-    literal_subtypes = [];
     delayed_forcing_tvars = ISet.empty;
     post_component_tvar_forcing_states = [];
     post_inference_polarity_checks = [];
@@ -687,8 +683,6 @@ let opaque_type_new_bound_syntax cx = cx.metadata.opaque_type_new_bound_syntax
 
 let type_expansion_recursion_limit cx = cx.metadata.type_expansion_recursion_limit
 
-let literal_subtypes cx = cx.ccx.literal_subtypes
-
 let delayed_forcing_tvars cx = cx.ccx.delayed_forcing_tvars
 
 let post_component_tvar_forcing_states cx =
@@ -718,8 +712,6 @@ let array_or_object_literal_declaration_upper_bounds cx =
   IMap.values cx.ccx.array_or_object_literal_declaration_upper_bounds
 
 let inferred_component_return cx = cx.ccx.inferred_component_return
-
-let matching_props cx = cx.ccx.matching_props
 
 let use_mixed_in_catch_variables cx = cx.metadata.use_mixed_in_catch_variables
 
@@ -826,10 +818,6 @@ let set_synthesis_produced_uncacheable_result cx =
 let mk_placeholder cx reason =
   set_synthesis_produced_uncacheable_result cx;
   Type.AnyT.placeholder reason
-
-let add_matching_props cx c = cx.ccx.matching_props <- c :: cx.ccx.matching_props
-
-let add_literal_subtypes cx c = cx.ccx.literal_subtypes <- c :: cx.ccx.literal_subtypes
 
 let add_post_component_tvar_forcing_state cx id state =
   cx.ccx.delayed_forcing_tvars <- ISet.add id cx.ccx.delayed_forcing_tvars;

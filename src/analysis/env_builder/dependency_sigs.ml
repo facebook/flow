@@ -18,8 +18,6 @@ module type C = sig
 
   val enable_const_params : t -> bool
 
-  val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit
-
   val add_exhaustive_check : t -> ALoc.t -> ALoc.t list * bool -> unit
 
   val exhaustive_check : t -> ALoc.t -> ALoc.t list * bool

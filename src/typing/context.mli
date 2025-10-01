@@ -306,10 +306,6 @@ val opaque_type_new_bound_syntax : t -> bool
 
 val type_expansion_recursion_limit : t -> int
 
-val matching_props : t -> (string * Type.t * Type.t) list
-
-val literal_subtypes : t -> (ALoc.t * Env_api.literal_check) list
-
 val delayed_forcing_tvars : t -> ISet.t
 
 val post_component_tvar_forcing_states : t -> Type.Constraint.ForcingState.t list
@@ -393,10 +389,6 @@ val add_tvar : t -> Type.ident -> Type.Constraint.node -> unit
 val set_synthesis_produced_uncacheable_result : t -> unit
 
 val mk_placeholder : t -> Reason.t -> Type.t
-
-val add_matching_props : t -> string * Type.t * Type.t -> unit
-
-val add_literal_subtypes : t -> ALoc.t * Env_api.literal_check -> unit
 
 val add_post_component_tvar_forcing_state :
   t -> Type.ident -> Type.Constraint.ForcingState.t -> unit

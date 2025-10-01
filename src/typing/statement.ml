@@ -5336,27 +5336,6 @@ module Make
     else
       check ~encl_ctx
 
-  and matching_prop_check cx left right =
-    let open Ast.Expression in
-    let left =
-      match left with
-      | (annot, OptionalMember { OptionalMember.member; _ }) -> (annot, Member member)
-      | _ -> left
-    in
-    let ((_, other_t), _) = right in
-    match left with
-    | (_, Member { Member._object = ((_, obj_t), _); property; _ }) ->
-      (match property with
-      | Member.PropertyIdentifier (_, { Ast.Identifier.name = pname; _ })
-      | Member.PropertyExpression (_, StringLiteral { Ast.StringLiteral.value = pname; _ }) ->
-        Context.add_matching_props cx (pname, other_t, obj_t)
-      | Member.PropertyExpression (_, NumberLiteral { Ast.NumberLiteral.value; _ })
-        when Js_number.is_float_safe_integer value ->
-        let pname = Dtoa.ecma_string_of_float value in
-        Context.add_matching_props cx (pname, other_t, obj_t)
-      | _ -> ())
-    | _ -> ()
-
   (* traverse a binary expression, return result type *)
   and binary cx loc ~encl_ctx { Ast.Expression.Binary.operator; left; right; comments } =
     let open Ast.Expression.Binary in
@@ -5389,14 +5368,6 @@ module Make
       in
       let (((_, t1), _) as left) = reconstruct_ast left in
       let (((_, t2), _) as right) = reconstruct_ast right in
-      if is_conditional_test_context encl_ctx then begin
-        matching_prop_check cx left right;
-        (* If this is a switch statement only consider the case where the object
-         * access in the discriminant. *)
-        match encl_ctx with
-        | SwitchTestContext _ -> ()
-        | _ -> matching_prop_check cx right left
-      end;
       Operators.check_strict_eq ~encl_ctx cx (t1, t2);
       Context.add_strict_comparison cx (loc, (left, right));
       (BoolModuleT.at loc, { operator; left; right; comments })

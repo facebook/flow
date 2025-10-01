@@ -26,8 +26,6 @@ module TestCx = struct
 
   let enable_const_params _cx = false
 
-  let add_literal_subtypes _ _ = ()
-
   let add_exhaustive_check _ _ _ = ()
 
   let exhaustive_check _ _ = ([], false)

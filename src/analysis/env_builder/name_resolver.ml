@@ -54,7 +54,6 @@ module type S = sig
     Env_api.values * Refinement_invalidation.t ALocMap.t * (int -> Env_api.refinement)
 end
 
-module PostInferenceCheck = Env_api
 module Scope_api = Scope_api.With_ALoc
 module Ssa_api = Ssa_api.With_ALoc
 module Env_api = Env_api.With_ALoc
@@ -1045,24 +1044,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
   class name_resolver
     cx is_lib exclude_syms (prepass_info, prepass_values, unbound_names) provider_info program_loc =
     let add_output = FlowAPIUtils.add_output cx in
-
-    let rec add_literal_subtype_test refinee_loc literal =
-      match literal with
-      | SingletonNumR { loc; lit = (num, raw); sense = _ } ->
-        Context.add_literal_subtypes
-          cx
-          (refinee_loc, PostInferenceCheck.SingletonNum (loc, num, raw))
-      | SingletonBoolR { loc; lit; sense = _ } ->
-        Context.add_literal_subtypes cx (refinee_loc, PostInferenceCheck.SingletonBool (loc, lit))
-      | SingletonStrR { loc; lit; sense = _ } ->
-        Context.add_literal_subtypes cx (refinee_loc, PostInferenceCheck.SingletonStr (loc, lit))
-      | NotR r -> add_literal_subtype_test refinee_loc r
-      | AndR (r1, r2)
-      | OrR (r1, r2) ->
-        add_literal_subtype_test refinee_loc r1;
-        add_literal_subtype_test refinee_loc r2
-      | _ -> ()
-    in
 
     let valid_declaration_check name loc =
       let error null_write possible_generic_escape_locs =
@@ -5548,19 +5529,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let refis = this#maybe_sentinel ~sense:true ~strict loc expr other in
         let refis =
           match RefinementKey.of_expression expr with
-          | Some ({ RefinementKey.lookup; loc = _ } as key) when strict ->
-            (match lookup with
-            | { RefinementKey.base = "this" | "super"; projections = [] } ->
-              (* This preserves the old env behavior that it does not perform literal subtyping check
-                 against this and super.
-                 TODO: error on this in the new-env. *)
-              ()
-            | { RefinementKey.base; projections = [] } ->
-              let { val_ref = _; def_loc; _ } = this#env_read base in
-              (match def_loc with
-              | None -> ()
-              | Some def_loc -> add_literal_subtype_test def_loc refinement)
-            | _ -> ());
+          | Some key when strict ->
             this#extend_refinement key ~refining_locs:(L.LSet.singleton loc) refinement refis
           | _ -> refis
         in
@@ -5842,17 +5811,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             ~on_other_eq_member:(fun _ _ -> ())
             ~on_other_eq_test:(fun _ _ -> ())
             ~is_switch_cond_context:false
-            ~on_literal_test:(fun ~strict ~sense:_ _loc expr refinement _other ->
-              match RefinementKey.of_expression expr with
-              | Some { RefinementKey.lookup; loc = _ } when strict ->
-                (match lookup with
-                | { RefinementKey.base; projections = [] } ->
-                  let { val_ref = _; def_loc; _ } = this#env_read base in
-                  (match def_loc with
-                  | None -> ()
-                  | Some def_loc -> add_literal_subtype_test def_loc refinement)
-                | _ -> ())
-              | _ -> ())
+            ~on_literal_test:(fun ~strict:_ ~sense:_ _loc _expr _refinement _other -> ())
         in
         match operator with
         | StrictEqual ->
