@@ -439,7 +439,6 @@ jobs:
     runs-on: ubuntu-22.04
     needs:
     - build_js
-    - build_linux
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
@@ -454,22 +453,6 @@ jobs:
       with:
         name: build_js_packages
         path: packages/flow-parser
-    - uses: actions/download-artifact@v4.1.7
-      with:
-        name: build_linux_bin
-        path: bin/linux
-    - uses: actions/download-artifact@v4.1.7
-      with:
-        name: build_linux_dist
-        path: dist
-    - uses: actions/download-artifact@v4.1.7
-      with:
-        name: build_macos_arm64_bin
-        path: bin/macos-arm64
-    - uses: actions/download-artifact@v4.1.7
-      with:
-        name: build_macos_arm64_dist
-        path: dist
     - name: Pack flow-parser
       run: |
         mkdir -p packages/flow-parser/dist/
