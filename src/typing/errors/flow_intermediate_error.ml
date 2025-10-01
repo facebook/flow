@@ -601,8 +601,6 @@ let rec make_intermediate_error :
         explanation loc frames use_op (ExplanationReactHookArgsDeepReadOnly props_loc)
       | Frame (ReactDeepReadOnly (hook_loc, HookReturn), use_op) ->
         explanation loc frames use_op (ExplanationReactHookReturnDeepReadOnly hook_loc)
-      | Frame (ReactDeepReadOnly (hook_loc, ImmutableAnnot), use_op) ->
-        explanation loc frames use_op (ExplanationReactImmutable hook_loc)
       | Frame (ConstrainedAssignment { name; declaration; providers }, use_op) ->
         explanation loc frames use_op (ExplanationConstrainedAssign { name; declaration; providers })
       | Frame (UnifyFlip, (Frame (ArrayElementCompatibility _, _) as use_op)) ->
@@ -1499,12 +1497,6 @@ let to_printable_error :
         text " cannot be written to. ";
         text
           "(https://react.dev/reference/rules/components-and-hooks-must-be-pure#return-values-and-arguments-to-hooks-are-immutable)";
-      ]
-    | ExplanationReactImmutable annot_loc ->
-      [
-        text "Values annotated using ";
-        hardcoded_string_desc_ref "`React.Immutable`" annot_loc;
-        text " are managed by the React runtime and cannot be mutated";
       ]
     | ExplanationAdditionalUnionMembers { left; right; members; extra_number } ->
       [text "Type "; ref left; text " includes members "]

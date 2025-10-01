@@ -404,7 +404,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | CondT _
     | CheckUnusedPromiseT _
     | WriteComputedObjPropCheckT _
-    | CheckReactImmutableT _
     | ConvertEmptyPropsToMixedT _
     | ValueToTypeReferenceT _
     | ExitRendersT _ ->

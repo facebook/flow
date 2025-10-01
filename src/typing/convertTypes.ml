@@ -750,7 +750,6 @@ and json_of_destructor cx depth destructor =
           | HookReturn -> JSON_String "HookReturn"
           | HookArg -> JSON_String "HookArg"
           | Props -> JSON_String "Props"
-          | ImmutableAnnot -> JSON_String "ImmutableAnnot"
           | DebugAnnot -> JSON_String "DebugAnnot"
         );
       ]

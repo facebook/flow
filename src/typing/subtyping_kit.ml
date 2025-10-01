@@ -138,7 +138,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
   let flow_obj_to_obj cx trace ~use_op (lreason, l_obj) (ureason, u_obj) =
     let {
-      flags = { react_dro = ldro; _ } as lflags;
+      flags = lflags;
       call_t = lcall;
       props_tmap = lflds;
       proto_t = lproto;
@@ -147,38 +147,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
       l_obj
     in
     let {
-      flags = { react_dro = udro; _ } as rflags;
+      flags = rflags;
       call_t = ucall;
       props_tmap = uflds;
       proto_t = uproto;
       reachable_targs = _;
     } =
       u_obj
-    in
-
-    let mod_t name react_dro t =
-      if
-        Base.Option.value_map ~f:dro_strict ~default:false ldro
-        = Base.Option.value_map ~f:dro_strict ~default:false udro
-      then
-        t
-      else
-        let t =
-          match (react_dro, name) with
-          | (Some dro, None) -> Flow.mk_react_dro cx use_op dro t
-          | (Some dro, Some name)
-            when not
-                   (is_exception_to_react_dro
-                      (Named { name; reason = reason_of_t t; from_indexed_access = false })
-                   ) ->
-            Flow.mk_react_dro cx use_op dro t
-          | _ -> t
-        in
-        match name with
-        | Some (OrdinaryName name)
-          when Context.hook_compatibility cx && Flow_ast_utils.hook_name name ->
-          mk_hooklike cx use_op t
-        | _ -> t
     in
 
     (* if inflowing type is literal (thus guaranteed to be
@@ -194,7 +169,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ) ->
       let use_op_k = Frame (IndexerKeyCompatibility { lower = lreason; upper = ureason }, use_op) in
       ( if lit then
-        rec_flow_t cx trace ~use_op:use_op_k (mod_t None ldro lk, mod_t None udro uk)
+        rec_flow_t cx trace ~use_op:use_op_k (lk, uk)
       else
         (* Don't report polarity errors when checking the indexer key. We would
          * report these errors again a second time when checking values. *)
@@ -208,8 +183,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
               (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
             ~upper_object_reason:ureason
             (Computed uk)
-            ( OrdinaryField { type_ = mod_t None ldro lk; polarity = lpolarity },
-              OrdinaryField { type_ = mod_t None udro uk; polarity = upolarity }
+            ( OrdinaryField { type_ = lk; polarity = lpolarity },
+              OrdinaryField { type_ = uk; polarity = upolarity }
             )
         in
         add_output_prop_polarity_mismatch cx use_op_k (lreason, ureason) errs
@@ -218,7 +193,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         Frame (PropertyCompatibility { prop = None; lower = lreason; upper = ureason }, use_op)
       in
       if lit then
-        rec_flow_t cx trace ~use_op:use_op_v (mod_t None ldro lv, mod_t None udro uv)
+        rec_flow_t cx trace ~use_op:use_op_v (lv, uv)
       else
         let errs =
           rec_flow_p
@@ -229,8 +204,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
               (Some (DefT (lreason, ObjT l_obj), DefT (ureason, ObjT u_obj)))
             ~upper_object_reason:ureason
             (Computed uv)
-            ( OrdinaryField { type_ = mod_t None ldro lv; polarity = lpolarity },
-              OrdinaryField { type_ = mod_t None udro uv; polarity = upolarity }
+            ( OrdinaryField { type_ = lv; polarity = lpolarity },
+              OrdinaryField { type_ = uv; polarity = upolarity }
             )
         in
         add_output_prop_polarity_mismatch cx use_op_v (lreason, ureason) errs
@@ -315,20 +290,13 @@ module Make (Flow : INPUT) : OUTPUT = struct
               (* prop from unaliased LB: check <: *)
               match (Property.read_t lp, Property.read_t up) with
               | (Some lt, Some ut) ->
-                rec_flow
-                  cx
-                  trace
-                  (mod_t (Some name) ldro lt, UseT (use_op, mod_t (Some name) udro ut));
+                rec_flow cx trace (lt, UseT (use_op, ut));
                 acc
               | _ -> acc
             else
               (* prop from aliased LB *)
               let (invariant_subtyping_failed_prop_names, additional_polarity_mismatch_errs) =
-                match
-                  ( Property.type_ lp |> TypeUtil.map_property ~f:(mod_t (Some name) ldro),
-                    Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
-                  )
-                with
+                match (Property.type_ lp, Property.type_ up) with
                 | ( OrdinaryField { type_ = lt; polarity = Polarity.Neutral },
                     OrdinaryField { type_ = ut; polarity = Polarity.Neutral }
                   )
@@ -367,9 +335,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
               )
           | (None, Some { key; value; dict_polarity; _ }) when not (is_dictionary_exempt name) ->
             let subtype_against_indexer polarity_mismatch_errs_acc () =
-              let lp =
-                OrdinaryField { type_ = mod_t (Some name) ldro value; polarity = dict_polarity }
-              in
+              let lp = OrdinaryField { type_ = value; polarity = dict_polarity } in
               let up =
                 match up with
                 | Field
@@ -379,8 +345,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
                       type_ = OptionalT { reason = _; type_ = ut; use_desc = _ };
                       polarity;
                     } ->
-                  OrdinaryField { type_ = mod_t (Some name) udro ut; polarity }
-                | _ -> Property.type_ up |> TypeUtil.map_property ~f:(mod_t (Some name) udro)
+                  OrdinaryField { type_ = ut; polarity }
+                | _ -> Property.type_ up
               in
               if lit then
                 match
@@ -685,10 +651,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 type_ = OptionalT { reason = _; type_ = lt; use_desc = _ };
                 polarity;
               } ->
-            OrdinaryField { type_ = mod_t (Some name) ldro lt; polarity }
-          | _ -> Property.type_ lp |> TypeUtil.map_property ~f:(mod_t (Some name) ldro)
+            OrdinaryField { type_ = lt; polarity }
+          | _ -> Property.type_ lp
         in
-        let up = OrdinaryField { type_ = mod_t (Some name) udro value; polarity = dict_polarity } in
+        let up = OrdinaryField { type_ = value; polarity = dict_polarity } in
         begin
           if lit then
             match (Property.read_t_of_property_type lp, Property.read_t_of_property_type up) with
@@ -954,28 +920,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         cx
         (Error_message.EIncompatibleWithUseOp { reason_lower; reason_upper; use_op; explanation })
 
-  let check_dro_subtyping cx use_op l u trace =
-    match (l, u) with
-    | ((AnyT _ | AnnotT _), _)
-    | (_, (AnyT _ | AnnotT _)) ->
-      ()
-    | (l, u) -> begin
-      match TypeUtil.(dro_of_type l, dro_of_type u |> Base.Option.map ~f:dro_strict) with
-      | (Some dro, _) when not (dro_strict dro) -> ()
-      | (None, _) -> ()
-      | (Some _, Some true) -> ()
-      | (Some (dro_loc, _), (None | Some false)) ->
-        rec_flow
-          cx
-          trace
-          ( u,
-            CheckReactImmutableT
-              { use_op; lower_reason = reason_of_t l; upper_reason = reason_of_t u; dro_loc }
-          )
-    end
-
   let rec_sub_t cx use_op l u trace =
-    check_dro_subtyping cx use_op l u trace;
     match (l, u) with
     (* The sink component of an annotation constrains values flowing
        into the annotated site. *)

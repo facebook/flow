@@ -2632,13 +2632,6 @@ and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
       let remainder = Some (annot opts scope tbls xs remainder) in
       Annot (StringSuffix { loc; suffix = s; remainder })
     | _ -> Err (loc, CheckError))
-  | "React$Immutable" -> begin
-    match targs with
-    | Some (_, { arguments = [t]; _ }) ->
-      let t = annot opts scope tbls xs t in
-      Annot (ReactImmutable (loc, t))
-    | _ -> Err (loc, CheckError)
-  end
   | "$Flow$EnforceOptimized" -> begin
     match targs with
     | Some (_, { arguments = [t]; _ }) -> annot opts scope tbls xs t

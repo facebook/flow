@@ -342,7 +342,6 @@ type 'loc explanation =
   | ExplanationReactHookIncompatibleWithEachOther
   | ExplanationReactHookIncompatibleWithNormalFunctions
   | ExplanationReactHookReturnDeepReadOnly of 'loc
-  | ExplanationReactImmutable of 'loc
   | ExplanationIncompatibleReactDeepReadOnly
   | ExplanationRenderTypeRequirement
   | ExplanationTypeGuardCompatibility

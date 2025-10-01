@@ -101,7 +101,6 @@ and reason_of_use_t = function
   | ResolveUnionT { reason; _ } -> reason
   | CheckUnusedPromiseT { reason; _ } -> reason
   | WriteComputedObjPropCheckT { reason; _ } -> reason
-  | CheckReactImmutableT { lower_reason = reason; _ } -> reason
   | ConvertEmptyPropsToMixedT (reason, _) -> reason
   | ExitRendersT { renders_reason; _ } -> renders_reason
   | EvalTypeDestructorT { reason; _ } -> reason
@@ -272,8 +271,6 @@ let rec util_use_op_of_use_t :
   | ValueToTypeReferenceT (use_op, reason, kind, t) ->
     util use_op (fun use_op -> ValueToTypeReferenceT (use_op, reason, kind, t))
   | GetEnumT ({ use_op; _ } as x) -> util use_op (fun use_op -> GetEnumT { x with use_op })
-  | CheckReactImmutableT ({ use_op; _ } as x) ->
-    util use_op (fun use_op -> CheckReactImmutableT { x with use_op })
   | CallElemT (_, _, _, _, _)
   | GetStaticsT (_, _)
   | GetProtoT (_, _)
@@ -908,15 +905,6 @@ let all_explicit_targ_ts = function
         | (ExplicitArg t, Some acc) -> Some (t :: acc)
         | _ -> None
     )
-
-let dro_strict (_, dro_t) =
-  match dro_t with
-  | HookArg
-  | HookReturn
-  | Props
-  | DebugAnnot ->
-    false
-  | ImmutableAnnot -> true
 
 let tuple_length reason ~inexact (num_req, num_total) =
   if inexact then

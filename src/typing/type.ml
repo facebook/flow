@@ -826,12 +826,6 @@ module rec TypeTerm : sig
         value_t: t;
         err_on_str_key: use_op * reason;
       }
-    | CheckReactImmutableT of {
-        lower_reason: reason;
-        upper_reason: reason;
-        use_op: use_op;
-        dro_loc: ALoc.t;
-      }
     (* When extracting the props of an abstract component, we don't want to produce empty, even
        when the config type of the component is empty, because that would allow unsound access
        to the props. This utility passes through everything else but converts empty to mixed.
@@ -1200,7 +1194,6 @@ module rec TypeTerm : sig
     | HookReturn
     | HookArg
     | Props
-    | ImmutableAnnot
     | DebugAnnot
 
   and react_dro = ALoc.t * dro_type
@@ -4223,7 +4216,6 @@ let string_of_use_ctor = function
   | OptionalIndexedAccessT _ -> "OptionalIndexedAccessT"
   | CheckUnusedPromiseT _ -> "CheckUnusedPromiseT"
   | WriteComputedObjPropCheckT _ -> "WriteComputedObjPropCheckT"
-  | CheckReactImmutableT _ -> "CheckReactImmutableT"
   | ConvertEmptyPropsToMixedT _ -> "ConvertEmptyPropsToMixedT"
   | ExitRendersT _ -> "ExitRendersT"
   | EvalTypeDestructorT _ -> "EvalTypeDestructorT"

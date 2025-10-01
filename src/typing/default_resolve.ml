@@ -176,7 +176,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
   | OptionalIndexedAccessT { tout_tvar; _ } -> resolve_tvar tout_tvar
   | CheckUnusedPromiseT _ -> _TODO
   | WriteComputedObjPropCheckT _ -> ()
-  | CheckReactImmutableT _ -> ()
   | ConvertEmptyPropsToMixedT (_, tout) -> resolve tout
   | ExitRendersT { renders_reason = _; u } -> default_resolve_touts ~flow cx loc u
   | EvalTypeDestructorT _ -> ()

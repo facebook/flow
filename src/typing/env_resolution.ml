@@ -87,9 +87,7 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
         | Props ->
           Context.react_rule_enabled cx Options.DeepReadOnlyProps
         | HookReturn -> Context.react_rule_enabled cx Options.DeepReadOnlyHookReturns
-        | DebugAnnot
-        | ImmutableAnnot ->
-          true
+        | DebugAnnot -> true
       in
       if enabled then
         Flow_js.mk_possibly_evaluated_destructor
