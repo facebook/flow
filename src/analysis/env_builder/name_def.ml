@@ -1996,7 +1996,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               (Decomp_ObjComputed (mk_expression_reason expr))
               [Hint_t (ValueHint (NoContext, _object), ExpectedTypeHint)])
         | (_, Ast.Expression.Member _) -> []
-        | _ -> [Hint_t (AnyErrorHint (mk_reason RDestructuring lhs_loc), ExpectedTypeHint)]
+        | _ -> [Hint_t (AnyErrorHint (mk_reason RAnyImplicit lhs_loc), ExpectedTypeHint)]
       in
       let rec other_pattern_hint_opt = function
         | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (id_loc, _); _ })
@@ -2009,7 +2009,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         | (_, Ast.Pattern.Identifier _) -> None
         | (_, Ast.Pattern.Expression (l, _)) ->
           (* Unsupported syntax like [foo.bar] = expr *)
-          Some (AnyErrorHint (mk_reason (RCustom "unsupported syntax") l))
+          Some (AnyErrorHint (mk_reason RAnyImplicit l))
         | (loc, Ast.Pattern.Array { Ast.Pattern.Array.elements; _ }) ->
           Base.List.fold_until
             elements
