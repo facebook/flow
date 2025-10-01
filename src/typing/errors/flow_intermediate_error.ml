@@ -563,8 +563,6 @@ let rec make_intermediate_error :
           root_loc
           root_loc
           (RootCannotCheckAgainstSwitchDiscriminant discriminant)
-      | Op (MatchingProp { op; obj; key; sentinel_reason }) ->
-        root loc frames op (RootCannotCompareWithProperty { sentinel = sentinel_reason; obj; key })
       | Op (EvalMappedType { mapped_type }) ->
         root loc frames mapped_type (RootCannotInstantiateEval mapped_type)
       | Op (TypeGuardIncompatibility { guard_type; param_name }) ->
@@ -1570,8 +1568,6 @@ let to_printable_error :
       [text "The import resolves to a forked module that has implementations of conflicting types"]
     | RootCannotConformToCommonInterface { originate_from_import = false } ->
       [text "Cannot conform to common interface module"]
-    | RootCannotCompareWithProperty { sentinel; obj; key } ->
-      [text "Cannot compare "; ref sentinel; text " with property "; code key; text " of "; ref obj]
     | RootCannotCreateElement component -> [text "Cannot create "; desc component; text " element"]
     | RootCannotDeclareRef -> [text "Cannot declare ref"]
     | RootCannotDeclareTypeGuard { type_guard_loc; fn } ->

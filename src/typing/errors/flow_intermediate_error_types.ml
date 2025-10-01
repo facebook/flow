@@ -412,11 +412,6 @@ type 'loc root_message =
       target: 'loc virtual_reason_desc;
     }
   | RootCannotConformToCommonInterface of { originate_from_import: bool }
-  | RootCannotCompareWithProperty of {
-      sentinel: 'loc virtual_reason;
-      obj: 'loc virtual_reason;
-      key: string;
-    }
   | RootCannotCreateElement of 'loc virtual_reason_desc
   | RootCannotDeclareRef
   | RootCannotDeclareTypeGuard of {

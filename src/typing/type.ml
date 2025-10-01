@@ -440,12 +440,6 @@ module rec TypeTerm : sig
         test: 'loc;
         discriminant: 'loc;
       }
-    | MatchingProp of {
-        op: 'loc virtual_reason;
-        obj: 'loc virtual_reason;
-        key: string;
-        sentinel_reason: 'loc virtual_reason;
-      }
     | EvalMappedType of { mapped_type: 'loc virtual_reason }
     | TypeGuardIncompatibility of {
         guard_type: 'loc virtual_reason;
@@ -4077,7 +4071,6 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | UpdateProperty _ -> "UpdateProperty"
   | RefinementCheck _ -> "RefinementCheck"
   | SwitchRefinementCheck _ -> "SwitchRefinementCheck"
-  | MatchingProp _ -> "MatchingProp"
   | EvalMappedType _ -> "EvalMappedType"
   | TypeGuardIncompatibility _ -> "TypeGuardIncompatibility"
   | RenderTypeInstantiation _ -> "RenderTypeInstantiation"

@@ -389,14 +389,6 @@ let rec mod_loc_of_virtual_use_op f =
       RefinementCheck { test = mod_reason test; discriminant = mod_reason discriminant }
     | SwitchRefinementCheck { test; discriminant } ->
       SwitchRefinementCheck { test = f test; discriminant = f discriminant }
-    | MatchingProp { op; obj; key; sentinel_reason } ->
-      MatchingProp
-        {
-          op = mod_reason op;
-          obj = mod_reason obj;
-          key;
-          sentinel_reason = mod_reason sentinel_reason;
-        }
     | EvalMappedType { mapped_type } -> EvalMappedType { mapped_type = mod_reason mapped_type }
     | TypeGuardIncompatibility { guard_type; param_name } ->
       TypeGuardIncompatibility { guard_type = mod_reason guard_type; param_name }
