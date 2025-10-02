@@ -387,4 +387,4 @@ The definition for `React.Ref<typeof Component>` is roughly:
 type Ref<C> =
   | string
   | (instance: React.ElementRef<C> | null) => mixed;
-  | { -current: React$ElementRef<ElementType> | null, ... }
+  | { -current: React.ElementRef<ElementType> | null, ... }

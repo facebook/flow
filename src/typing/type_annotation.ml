@@ -1292,17 +1292,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                  )
               );
           local_generic_type ()
-        | "React$ElementRef" ->
-          if not (Context.is_lib_file cx) then
-            Flow_js_utils.add_output
-              cx
-              (Error_message.EInternalType
-                 ( loc,
-                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
-                     "ElementRef"
-                 )
-              );
-          local_generic_type ()
         | "React$RefSetter" ->
           if not (Context.is_lib_file cx) then
             Flow_js_utils.add_output

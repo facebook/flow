@@ -7,7 +7,6 @@ type T2_good = Enum<E>; // ok
 
 type C = component();
 
-type T3_bad = React$ElementRef<C>; // error
 type T3_good = React.ElementRef<C>; // ok
 type T4_bad = React$ElementConfig<C>; // error
 type T4_good = React.ElementConfig<C>; // ok

@@ -170,7 +170,10 @@ Flags: --pretty
       "type":"type ElementConfig<C> = React$ElementConfig<C>"
     },
     {"name":"ElementProps","type":"type ElementProps<C> = React$ElementProps<C>"},
-    {"name":"ElementRef","type":"type ElementRef<C> = React$ElementRef<C>"},
+    {
+      "name":"ElementRef",
+      "type":"type ElementRef<C: string | component(...empty)> = C extends empty ? any : C extends infer S extends string ? $JSXIntrinsics[S][\"instance\"] : C extends component(...infer Props extends {...}) ? \"ref\" extends $Keys<Props> ? Props extends {+ref?: React$RefSetter<infer I>, ...} ? I : mixed : void : empty"
+    },
     {"name":"ElementType","type":"type ElementType = React$ElementType"},
     {
       "name":"Interaction",

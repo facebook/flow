@@ -246,8 +246,8 @@ References:
    component_to_component.js:26:37
     26|   x: component(ref: React.RefSetter<Component>, ...{...}),
                                             ^^^^^^^^^ [2]
-   <BUILTINS>/react.js:253:34
-   253|   declare export type RefSetter<-T> = React$RefSetter<T>;
+   <BUILTINS>/react.js:262:34
+   262|   declare export type RefSetter<-T> = React$RefSetter<T>;
                                          ^ [3]
 
 
@@ -335,8 +335,8 @@ Cannot create `C` element because in property `ref`: [incompatible-type]
                                                 ^^^^^^
 
 References:
-   <BUILTINS>/react.js:573:8
-   573|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:582:8
+   582|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:89:6
     89|   | ((T | null) => mixed)
