@@ -13,6 +13,6 @@ C as component() renders A; // error: renders A ~> renders? A
 C as component() renders? A2; // error: renders? A2 ~> renders? A
 
 declare function RendersAny(): any;
-declare function extractRenders<R: React.Node>(c: component(ref?: React$RefSetter<mixed>, ...empty) renders R): R;
+declare function extractRenders<R: React.Node>(c: component(ref?: React.RefSetter<mixed>, ...empty) renders R): R;
 const extractedAnyRender = extractRenders(RendersAny);
 extractedAnyRender as empty; // ok: any ~> empty

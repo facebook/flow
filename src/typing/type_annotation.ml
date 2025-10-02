@@ -1281,28 +1281,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                  )
               );
           local_generic_type ()
-        | "React$Context" ->
-          if not (Context.is_lib_file cx) then
-            Flow_js_utils.add_output
-              cx
-              (Error_message.EInternalType
-                 ( loc,
-                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
-                     "Context"
-                 )
-              );
-          local_generic_type ()
-        | "React$RefSetter" ->
-          if not (Context.is_lib_file cx) then
-            Flow_js_utils.add_output
-              cx
-              (Error_message.EInternalType
-                 ( loc,
-                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
-                     "RefSetter"
-                 )
-              );
-          local_generic_type ()
         | "$ReadOnlyMap" ->
           if
             Context.is_utility_type_deprecated env.cx "$ReadOnlyMap"

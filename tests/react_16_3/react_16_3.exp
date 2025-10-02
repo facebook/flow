@@ -52,12 +52,12 @@ References:
    forwardRef.js:18:32
     18| const badRef = React.createRef<DivInstance>();
                                        ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:582:8
-   582|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:578:8
+   578|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:89:6
-    89|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:105:8
+   105|     | ((T | null) => mixed)
+               ^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:22:38
@@ -104,12 +104,12 @@ References:
    forwardRef.js:41:54
     41| const badUnionRef = React.createRef<ButtonInstance | DivInstance>();
                                                              ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:582:8
-   582|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:578:8
+   578|     ): React$RefObject<T | null>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:89:6
-    89|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:105:8
+   105|     | ((T | null) => mixed)
+               ^^^^^^^^^^^^^^^^^^^ [5]
 
 
 

@@ -1121,19 +1121,19 @@ Cannot declare ref because: [incompatible-type]
 The `ref` parameter must be a subtype of `React.RefSetter`.
 
    declared.js:50:29
-   50| declare component InlineRef(ref: number); // error
-                                   ^^^
+    50| declare component InlineRef(ref: number); // error
+                                    ^^^
 
 References:
    declared.js:50:34
-   50| declare component InlineRef(ref: number); // error
-                                        ^^^^^^ [1]
-   <BUILTINS>/react.js:88:5
-   88|   | { -current: T | null, ... }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:89:6
-   89|   | ((T | null) => mixed)
-            ^^^^^^^^^^^^^^^^^^^ [3]
+    50| declare component InlineRef(ref: number); // error
+                                         ^^^^^^ [1]
+   <BUILTINS>/react.js:104:7
+   104|     | { -current: T | null, ... }
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:105:8
+   105|     | ((T | null) => mixed)
+               ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ declared.js:56:52
@@ -2091,19 +2091,19 @@ Cannot declare ref because: [incompatible-type]
 The `ref` parameter must be a subtype of `React.RefSetter`.
 
    names.js:22:24
-   22| export component NoRef(ref: string) { return <div /> }; // Error
-                              ^^^
+    22| export component NoRef(ref: string) { return <div /> }; // Error
+                               ^^^
 
 References:
    names.js:22:29
-   22| export component NoRef(ref: string) { return <div /> }; // Error
-                                   ^^^^^^ [1]
-   <BUILTINS>/react.js:88:5
-   88|   | { -current: T | null, ... }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:89:6
-   89|   | ((T | null) => mixed)
-            ^^^^^^^^^^^^^^^^^^^ [3]
+    22| export component NoRef(ref: string) { return <div /> }; // Error
+                                    ^^^^^^ [1]
+   <BUILTINS>/react.js:104:7
+   104|     | { -current: T | null, ... }
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:105:8
+   105|     | ((T | null) => mixed)
+               ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- names.js:23:2
@@ -2600,19 +2600,19 @@ Cannot create `meta` element because in property `ref`: [incompatible-type]
  - Or `MetaInstance` [1] is incompatible with null [3] in the first parameter.
 
    propsof.js:28:22
-   28|   let b = <meta ref={ref} />; // error
-                            ^^^
+    28|   let b = <meta ref={ref} />; // error
+                             ^^^
 
 References:
    flow-typed/jsx.js:29:15
-   29|     instance: MetaInstance,
-                     ^^^^^^^^^^^^ [1]
+    29|     instance: MetaInstance,
+                      ^^^^^^^^^^^^ [1]
    propsof.js:3:60
-    3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
-                                                                  ^^^^^^^^^ [2]
-   <BUILTINS>/react.js:89:11
-   89|   | ((T | null) => mixed)
-                 ^^^^ [3]
+     3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
+                                                                   ^^^^^^^^^ [2]
+   <BUILTINS>/react.js:105:13
+   105|     | ((T | null) => mixed)
+                    ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
@@ -2622,19 +2622,19 @@ Cannot create `meta` element because in property `ref`: [incompatible-type]
  - Or `MetaInstance` [1] is incompatible with null [3] in property `current`.
 
    propsof.js:28:22
-   28|   let b = <meta ref={ref} />; // error
-                            ^^^
+    28|   let b = <meta ref={ref} />; // error
+                             ^^^
 
 References:
    flow-typed/jsx.js:29:15
-   29|     instance: MetaInstance,
-                     ^^^^^^^^^^^^ [1]
+    29|     instance: MetaInstance,
+                      ^^^^^^^^^^^^ [1]
    propsof.js:3:60
-    3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
-                                                                  ^^^^^^^^^ [2]
-   <BUILTINS>/react.js:89:11
-   89|   | ((T | null) => mixed)
-                 ^^^^ [3]
+     3| component A(foo: string, bar: number, ref: React.RefSetter<AInstance>) {
+                                                                   ^^^^^^^^^ [2]
+   <BUILTINS>/react.js:105:13
+   105|     | ((T | null) => mixed)
+                    ^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- provider.js:4:9
@@ -2686,22 +2686,22 @@ Cannot declare ref because: [incompatible-type]
 The `ref` parameter must be a subtype of `React.RefSetter`.
 
    refs.js:3:15
-    3| component Foo(ref: {current: typeof Reffed}) { return null };
-                     ^^^
+     3| component Foo(ref: {current: typeof Reffed}) { return null };
+                      ^^^
 
 References:
-   <BUILTINS>/react.js:88:21
-   88|   | { -current: T | null, ... }
-                           ^^^^ [1]
+   <BUILTINS>/react.js:104:23
+   104|     | { -current: T | null, ... }
+                              ^^^^ [1]
    refs.js:3:30
-    3| component Foo(ref: {current: typeof Reffed}) { return null };
-                                    ^^^^^^^^^^^^^ [2]
+     3| component Foo(ref: {current: typeof Reffed}) { return null };
+                                     ^^^^^^^^^^^^^ [2]
    refs.js:3:20
-    3| component Foo(ref: {current: typeof Reffed}) { return null };
-                          ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:89:6
-   89|   | ((T | null) => mixed)
-            ^^^^^^^^^^^^^^^^^^^ [4]
+     3| component Foo(ref: {current: typeof Reffed}) { return null };
+                           ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:105:8
+   105|     | ((T | null) => mixed)
+               ^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:5:15
@@ -2713,22 +2713,22 @@ Cannot declare ref because: [incompatible-type]
 The `ref` parameter must be a subtype of `React.RefSetter`.
 
    refs.js:5:15
-    5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
-                     ^^^
+     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+                      ^^^
 
 References:
    refs.js:5:22
-    5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
-                            ^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:89:11
-   89|   | ((T | null) => mixed)
-                 ^^^^ [2]
+     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+                             ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:105:13
+   105|     | ((T | null) => mixed)
+                    ^^^^ [2]
    refs.js:5:21
-    5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
-                           ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:88:5
-   88|   | { -current: T | null, ... }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+                            ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:104:7
+   104|     | { -current: T | null, ... }
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
@@ -2828,19 +2828,19 @@ Cannot cast `Foo` to component because in property `ref.current`: [incompatible-
  - Or component Reffed [1] is incompatible with null [3].
 
    refs.js:12:2
-   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
-        ^^^
+    12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+         ^^^
 
 References:
    refs.js:3:30
-    3| component Foo(ref: {current: typeof Reffed}) { return null };
-                                    ^^^^^^^^^^^^^ [1]
+     3| component Foo(ref: {current: typeof Reffed}) { return null };
+                                     ^^^^^^^^^^^^^ [1]
    refs.js:12:38
-   12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
-                                            ^^^^^^ [2]
-   <BUILTINS>/react.js:88:21
-   88|   | { -current: T | null, ... }
-                           ^^^^ [3]
+    12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
+                                             ^^^^^^ [2]
+   <BUILTINS>/react.js:104:23
+   104|     | { -current: T | null, ... }
+                              ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
@@ -2995,71 +2995,40 @@ Cannot cast `Bar` to component because in the first parameter of property `ref`:
  - Or component Reffed [1] is incompatible with null [3].
 
    refs.js:15:2
-   15| (Bar: component(ref: React.RefSetter<string>)); // err
-        ^^^
+    15| (Bar: component(ref: React.RefSetter<string>)); // err
+         ^^^
 
 References:
    refs.js:5:22
-    5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
-                            ^^^^^^^^^^^^^ [1]
+     5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
+                             ^^^^^^^^^^^^^ [1]
    refs.js:15:38
-   15| (Bar: component(ref: React.RefSetter<string>)); // err
-                                            ^^^^^^ [2]
-   <BUILTINS>/react.js:89:11
-   89|   | ((T | null) => mixed)
-                 ^^^^ [3]
+    15| (Bar: component(ref: React.RefSetter<string>)); // err
+                                             ^^^^^^ [2]
+   <BUILTINS>/react.js:105:13
+   105|     | ((T | null) => mixed)
+                    ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
 
-Cannot cast `Baz` to component because in property `ref`: [incompatible-type]
- - Either function type [1] is incompatible with object type [2]. Functions without statics are not compatible with
-   objects.
- - Or component Reffed [3] is incompatible with string [4] in the first parameter.
+Cannot cast `Baz` to component because string [1] is incompatible with component Reffed [2] in type argument `T` [3] of
+property `ref`. [incompatible-type]
 
    refs.js:17:2
-   17| (Baz: component(ref: React.RefSetter<string>)); // err
-        ^^^
+    17| (Baz: component(ref: React.RefSetter<string>)); // err
+         ^^^
 
 References:
-   refs.js:17:22
-   17| (Baz: component(ref: React.RefSetter<string>)); // err
-                            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:88:5
-   88|   | { -current: T | null, ... }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   refs.js:8:36
-    8| component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
-                                          ^^^^^^^^^^^^^ [3]
    refs.js:17:38
-   17| (Baz: component(ref: React.RefSetter<string>)); // err
-                                            ^^^^^^ [4]
-
-
-Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
-
-Cannot cast `Baz` to component because in property `ref`: [incompatible-type]
- - Either object type [1] is incompatible with function type [2]. Non-callable objects are not compatible with
-   functions.
- - Or component Reffed [3] is incompatible with string [4] in property `current`.
-
-   refs.js:17:2
-   17| (Baz: component(ref: React.RefSetter<string>)); // err
-        ^^^
-
-References:
-   refs.js:17:22
-   17| (Baz: component(ref: React.RefSetter<string>)); // err
-                            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:89:6
-   89|   | ((T | null) => mixed)
-            ^^^^^^^^^^^^^^^^^^^ [2]
+    17| (Baz: component(ref: React.RefSetter<string>)); // err
+                                             ^^^^^^ [1]
    refs.js:8:36
-    8| component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
-                                          ^^^^^^^^^^^^^ [3]
-   refs.js:17:38
-   17| (Baz: component(ref: React.RefSetter<string>)); // err
-                                            ^^^^^^ [4]
+     8| component Baz(ref: React.RefSetter<typeof Reffed>) { return null };
+                                           ^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:258:34
+   258|   declare export type RefSetter<-T> = React.RefSetter<T>;
+                                         ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
@@ -3070,25 +3039,25 @@ Cannot create `MyNestedInput` element because in property `ref`: [incompatible-t
  - Or function type [4] is incompatible with object type [5]. Functions without statics are not compatible with objects.
 
    refs.js:64:53
-   64|                 <MyNestedInput {...otherProps} ref={ref} />
-                                                           ^^^
+    64|                 <MyNestedInput {...otherProps} ref={ref} />
+                                                            ^^^
 
 References:
    refs.js:56:66
-   56|     component MyNestedInput(other: string, ref: React$RefSetter<?CommonInstance>) {
-                                                                        ^^^^^^^^^^^^^^ [1]
+    56|     component MyNestedInput(other: string, ref: React.RefSetter<?CommonInstance>) {
+                                                                         ^^^^^^^^^^^^^^ [1]
    refs.js:60:59
-   60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                 ^^^^^^^^^^^^^^ [2]
+    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                  ^^^^^^^^^^^^^^ [2]
    refs.js:60:60
-   60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                  ^^^^^^^^^^^^^ [3]
+    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                   ^^^^^^^^^^^^^ [3]
    refs.js:60:43
-   60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:88:5
-   88|   | { -current: T | null, ... }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:104:7
+   104|     | { -current: T | null, ... }
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
@@ -3099,25 +3068,25 @@ Cannot create `MyNestedInput` element because in property `ref`: [incompatible-t
  - Or object type [4] is incompatible with function type [5]. Non-callable objects are not compatible with functions.
 
    refs.js:64:53
-   64|                 <MyNestedInput {...otherProps} ref={ref} />
-                                                           ^^^
+    64|                 <MyNestedInput {...otherProps} ref={ref} />
+                                                            ^^^
 
 References:
    refs.js:56:66
-   56|     component MyNestedInput(other: string, ref: React$RefSetter<?CommonInstance>) {
-                                                                        ^^^^^^^^^^^^^^ [1]
+    56|     component MyNestedInput(other: string, ref: React.RefSetter<?CommonInstance>) {
+                                                                         ^^^^^^^^^^^^^^ [1]
    refs.js:60:59
-   60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                 ^^^^^^^^^^^^^^ [2]
+    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                  ^^^^^^^^^^^^^^ [2]
    refs.js:60:60
-   60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                  ^^^^^^^^^^^^^ [3]
+    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                   ^^^^^^^^^^^^^ [3]
    refs.js:60:43
-   60|     component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:89:6
-   89|   | ((T | null) => mixed)
-            ^^^^^^^^^^^^^^^^^^^ [5]
+    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:105:8
+   105|     | ((T | null) => mixed)
+               ^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:92:13
@@ -3127,22 +3096,22 @@ Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
 
    refs.js:92:13
-   92|   <Foo ref={badRef} />; // error
-                   ^^^^^^
+    92|   <Foo ref={badRef} />; // error
+                    ^^^^^^
 
 References:
    refs.js:88:66
-   88|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
-                                                                        ^^^^^^ [1]
+    88|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
+                                                                         ^^^^^^ [1]
    refs.js:90:60
-   90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
-                                                                  ^^^^^^^ [2]
+    90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
+                                                                   ^^^^^^^ [2]
    refs.js:90:25
-   90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:88:5
-   88|   | { -current: T | null, ... }
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+    90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:104:7
+   104|     | { -current: T | null, ... }
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:92:13
@@ -3152,22 +3121,22 @@ Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
 
    refs.js:92:13
-   92|   <Foo ref={badRef} />; // error
-                   ^^^^^^
+    92|   <Foo ref={badRef} />; // error
+                    ^^^^^^
 
 References:
    refs.js:88:66
-   88|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
-                                                                        ^^^^^^ [1]
+    88|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
+                                                                         ^^^^^^ [1]
    refs.js:90:60
-   90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
-                                                                  ^^^^^^^ [2]
+    90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
+                                                                   ^^^^^^^ [2]
    refs.js:90:25
-   90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
-                               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:89:6
-   89|   | ((T | null) => mixed)
-            ^^^^^^^^^^^^^^^^^^^ [4]
+    90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
+                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:105:8
+   105|     | ((T | null) => mixed)
+               ^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- refs.js:105:23
@@ -3181,12 +3150,12 @@ Cannot create `GenericRef1` element because in property `ref`: [incompatible-typ
                               ^ [1]
 
 References:
-   <BUILTINS>/react.js:88:5
-    88|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:89:6
-    89|   | ((T | null) => mixed)
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:104:7
+   104|     | { -current: T | null, ... }
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:105:8
+   105|     | ((T | null) => mixed)
+               ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- refs.js:108:23
@@ -3200,11 +3169,11 @@ Cannot create `GenericRef2` element because in property `ref`: [incompatible-typ
                               ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/react.js:88:5
-    88|   | { -current: T | null, ... }
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:104:7
+   104|     | { -current: T | null, ... }
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:101:51
-   101|     component GenericRef2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
+   101|     component GenericRef2<T>(ref: React.RefSetter<Array<Array<Array<T>>>>) { return null };
                                                           ^^^^^^^^^^^^^^^^^^^^^^ [3]
    refs.js:108:27
    108|     <GenericRef2 ref={(r: string | null) => {}} />; // error
@@ -3651,7 +3620,7 @@ Strict mode function may not have duplicate parameter names [ParseError]
 
 
 
-Found 235 errors
+Found 234 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

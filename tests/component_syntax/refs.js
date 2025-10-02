@@ -5,9 +5,9 @@ component Foo(ref: {current: typeof Reffed}) { return null };
 component Bar(ref: ((typeof Reffed) => mixed)) { return null };
 
 
-component Baz(ref: React$RefSetter<typeof Reffed>) { return null };
+component Baz(ref: React.RefSetter<typeof Reffed>) { return null };
 
-component Qux(ref: React$RefSetter<'div'>) { return null };
+component Qux(ref: React.RefSetter<'div'>) { return null };
 
 (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
 (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
@@ -21,11 +21,11 @@ component Qux(ref: React$RefSetter<'div'>) { return null };
 
 import * as React from 'react';
 { // ok
-    component MyNestedInput(other: string, ref: React$RefSetter<?InputInstance>) {
+    component MyNestedInput(other: string, ref: React.RefSetter<?InputInstance>) {
         return <input id={other} ref={ref} />
     }
 
-    component MyInput(label: string, ref: React$RefSetter<?CommonInstance>, ...otherProps: { other: string}) {
+    component MyInput(label: string, ref: React.RefSetter<?CommonInstance>, ...otherProps: { other: string}) {
         return (
             <label>
                 {label}
@@ -53,11 +53,11 @@ import * as React from 'react';
 }
 
 { //mismatch
-    component MyNestedInput(other: string, ref: React$RefSetter<?CommonInstance>) {
+    component MyNestedInput(other: string, ref: React.RefSetter<?CommonInstance>) {
         return <input id={other} ref={ref} />
     }
 
-    component MyInput(label: string, ref: React$RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+    component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
         return (
             <label>
                 {label}
@@ -97,8 +97,8 @@ import * as React from 'react';
 }
 
 {
-    component GenericRef1<T>(ref: React$RefSetter<T>) { return null };
-    component GenericRef2<T>(ref: React$RefSetter<Array<Array<Array<T>>>>) { return null };
+    component GenericRef1<T>(ref: React.RefSetter<T>) { return null };
+    component GenericRef2<T>(ref: React.RefSetter<Array<Array<Array<T>>>>) { return null };
 
     <GenericRef1 ref={(r: string | null) => {}} />; // ok
     <GenericRef1 ref={(r: number | null) => {}} />; // ok

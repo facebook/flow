@@ -402,16 +402,16 @@ Cannot cast `FnWithRequiredRefProp` to `React.ComponentType` because property `r
 in object type [2]. [incompatible-type]
 
    subtyping.js:13:1
-    13| FnWithRequiredRefProp as React.ComponentType<{+foo: string}>; // error: missing ref prop
-        ^^^^^^^^^^^^^^^^^^^^^
+   13| FnWithRequiredRefProp as React.ComponentType<{+foo: string}>; // error: missing ref prop
+       ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:115:44
-   115|   type ComponentType<-P: {...}> = component(...P);
-                                                   ^^^^^^ [1]
+   <BUILTINS>/react.js:90:44
+   90|   type ComponentType<-P: {...}> = component(...P);
+                                                  ^^^^^^ [1]
    fn_components.js:3:54
-     3| declare export function FnWithRequiredRefProp(props: {foo: string, ref: React.RefSetter<HTMLElement>}): React.Node;
-                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    3| declare export function FnWithRequiredRefProp(props: {foo: string, ref: React.RefSetter<HTMLElement>}): React.Node;
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:18:1

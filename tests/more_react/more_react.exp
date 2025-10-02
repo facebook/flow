@@ -134,8 +134,8 @@ References:
    subclassComponent.js:21:15
     21| declare class D extends React$Component2<Props2, void> {}
                       ^ [1]
-   <BUILTINS>/react.js:606:19
-   606|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:602:19
+   602|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [2]
    <BUILTINS>/react.js:43:5
     43|   | string
@@ -154,8 +154,8 @@ References:
    subclassComponent.js:21:15
     21| declare class D extends React$Component2<Props2, void> {}
                       ^ [1]
-   <BUILTINS>/react.js:606:19
-   606|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:602:19
+   602|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [2]
 
 
@@ -187,8 +187,8 @@ References:
    subclassComponent.js:23:15
     23| declare class E extends D {}
                       ^ [1]
-   <BUILTINS>/react.js:606:19
-   606|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:602:19
+   602|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [2]
    <BUILTINS>/react.js:43:5
     43|   | string
@@ -207,8 +207,8 @@ References:
    subclassComponent.js:23:15
     23| declare class E extends D {}
                       ^ [1]
-   <BUILTINS>/react.js:606:19
-   606|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:602:19
+   602|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [2]
 
 
@@ -240,8 +240,8 @@ References:
    subclassComponent.js:25:15
     25| declare class F {
                       ^ [1]
-   <BUILTINS>/react.js:606:19
-   606|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:602:19
+   602|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [2]
    <BUILTINS>/react.js:43:5
     43|   | string
@@ -260,8 +260,8 @@ References:
    subclassComponent.js:25:15
     25| declare class F {
                       ^ [1]
-   <BUILTINS>/react.js:606:19
-   606|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:602:19
+   602|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [2]
 
 

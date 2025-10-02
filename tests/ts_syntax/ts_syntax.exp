@@ -302,83 +302,83 @@ The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [d
                                                        ^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:141:28
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:137:28
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   141|   type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   137|   type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:162:18
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:158:18
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   162|     ...children: $ReadOnlyArray<React$Node>
+   158|     ...children: $ReadOnlyArray<React$Node>
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:832:17
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:828:17
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   832|       inputs?: ?$ReadOnlyArray<mixed>,
+   828|       inputs?: ?$ReadOnlyArray<mixed>,
                         ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:845:17
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:841:17
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   845|       inputs?: ?$ReadOnlyArray<mixed>,
+   841|       inputs?: ?$ReadOnlyArray<mixed>,
                         ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:854:43
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:850:43
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   854|     declare hook useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
+   850|     declare hook useCallback<T: (...args: $ReadOnlyArray<empty>) => mixed>(
                                                   ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:856:16
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:852:16
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   856|       inputs: ?$ReadOnlyArray<mixed>,
+   852|       inputs: ?$ReadOnlyArray<mixed>,
                        ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:867:16
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:863:16
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   867|       inputs: ?$ReadOnlyArray<mixed>,
+   863|       inputs: ?$ReadOnlyArray<mixed>,
                        ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:879:16
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:875:16
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   879|       inputs: ?$ReadOnlyArray<mixed>,
+   875|       inputs: ?$ReadOnlyArray<mixed>,
                        ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:925:17
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:921:17
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   925|       inputs?: ?$ReadOnlyArray<mixed>,
+   921|       inputs?: ?$ReadOnlyArray<mixed>,
                         ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:992:30
+Error --------------------------------------------------------------------------------------- <BUILTINS>/react.js:988:30
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   992|     type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
+   988|     type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T;
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
