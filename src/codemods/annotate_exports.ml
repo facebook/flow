@@ -67,7 +67,6 @@ module SignatureVerification = struct
         Type_sig_options.munge = not prevent_munge;
         facebook_keyMirror = true;
         facebook_fbt = Options.facebook_fbt options;
-        max_literal_len = Options.max_literal_length options;
         exact_by_default = Options.exact_by_default options;
         enable_enums = Options.enums options;
         enable_component_syntax = Options.typecheck_component_syntax_in_file options file;

@@ -93,7 +93,6 @@ module Opts = struct
     long_lived_workers: bool;
     max_files_checked_per_worker: int;
     max_header_tokens: int;
-    max_literal_length: int;
     max_seconds_for_check_per_worker: float;
     max_workers: int option;
     max_workers_down_scaling_factor: int;
@@ -239,7 +238,6 @@ module Opts = struct
       long_lived_workers = false;
       max_files_checked_per_worker = 100;
       max_header_tokens = 10;
-      max_literal_length = 10000;
       max_seconds_for_check_per_worker = 5.0;
       max_workers = None;
       max_workers_down_scaling_factor = 1;
@@ -1147,7 +1145,6 @@ module Opts = struct
       ("lazy_mode", lazy_mode_parser);
       ("log_saving", log_saving_parser);
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
-      ("max_literal_length", uint (fun opts v -> Ok { opts with max_literal_length = v }));
       ("merge_timeout", merge_timeout_parser);
       ("module.file_ext", file_ext_parser);
       ("module.ignore_non_literal_requires", ignore_non_literal_requires_parser);
@@ -1935,8 +1932,6 @@ let long_lived_workers c = c.options.Opts.long_lived_workers
 let max_files_checked_per_worker c = c.options.Opts.max_files_checked_per_worker
 
 let max_header_tokens c = c.options.Opts.max_header_tokens
-
-let max_literal_length c = c.options.Opts.max_literal_length
 
 let max_seconds_for_check_per_worker c = c.options.Opts.max_seconds_for_check_per_worker
 

@@ -203,7 +203,6 @@ let sig_options
     ?(munge = false)
     ?(facebook_keyMirror = false)
     ?facebook_fbt
-    ?(max_literal_len = 100)
     ?(exact_by_default = false)
     ?(enable_enums = true)
     ?(enable_component_syntax = true)
@@ -219,7 +218,6 @@ let sig_options
     Type_sig_options.munge;
     facebook_keyMirror;
     facebook_fbt;
-    max_literal_len;
     exact_by_default;
     enable_enums;
     enable_component_syntax;
@@ -242,7 +240,6 @@ let print_sig
     ?facebook_fbt
     ?facebook_keyMirror
     ?exact_by_default
-    ?max_literal_len
     ?module_ref_prefix
     ?enable_enums
     ?enable_component_syntax
@@ -258,7 +255,6 @@ let print_sig
       ?facebook_fbt
       ?facebook_keyMirror
       ?exact_by_default
-      ?max_literal_len
       ?enable_enums
       ?enable_component_syntax
       ?enable_relay_integration

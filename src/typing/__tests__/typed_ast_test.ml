@@ -43,7 +43,6 @@ let metadata =
     facebook_module_interop = false;
     file_options = Files.default_options;
     ignore_non_literal_requires = false;
-    max_literal_length = 100;
     max_workers = 0;
     missing_module_generators = [];
     no_unchecked_indexed_access = false;

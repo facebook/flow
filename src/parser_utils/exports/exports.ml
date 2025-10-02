@@ -227,9 +227,9 @@ module Eval = struct
       (* TODO? *)
       Nothing
     | Value
-        ( ( ClassExpr _ | FunExpr _ | StringVal _ | StringLit _ | LongStringLit _ | NumberVal _
-          | NumberLit _ | BooleanVal _ | BooleanLit _ | NullLit _ | EmptyConstArrayLit _
-          | ArrayLit _ | BigIntVal _ | BigIntLit _ | AsConst _ ),
+        ( ( ClassExpr _ | FunExpr _ | StringVal _ | StringLit _ | NumberVal _ | NumberLit _
+          | BooleanVal _ | BooleanLit _ | NullLit _ | EmptyConstArrayLit _ | ArrayLit _
+          | BigIntVal _ | BigIntLit _ | AsConst _ ),
           _
         ) ->
       Nothing
@@ -370,7 +370,6 @@ module CJS = struct
     | BooleanVal _
     | ClassExpr _
     | FunExpr _
-    | LongStringLit _
     | NullLit _
     | NumberLit _
     | NumberVal _

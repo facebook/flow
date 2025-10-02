@@ -416,7 +416,6 @@ type ('loc, 'a) value =
     }
   | StringVal of 'loc
   | StringLit of 'loc * string
-  | LongStringLit of 'loc
   | NumberVal of 'loc
   | NumberLit of 'loc * float * string
   | BigIntVal of 'loc

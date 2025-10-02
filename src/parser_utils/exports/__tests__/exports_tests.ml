@@ -52,7 +52,6 @@ let sig_opts =
     Type_sig_options.munge = false;
     facebook_keyMirror = false;
     facebook_fbt = None;
-    max_literal_len = 100;
     exact_by_default = true;
     enable_enums = true;
     enable_component_syntax = true;

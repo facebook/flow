@@ -1104,10 +1104,6 @@ and merge_value ?(as_const = false) ?(const_decl = false) env file = function
     else
       let reason = Reason.(mk_reason RString loc) in
       Type.(DefT (reason, StrGeneralT AnyLiteral))
-  | LongStringLit loc ->
-    let len = Context.max_literal_length file.cx in
-    let reason = Reason.(mk_annot_reason (RLongStringLit len) loc) in
-    Type.(DefT (reason, StrGeneralT AnyLiteral))
   | NumberVal loc ->
     let reason = Reason.(mk_reason RNumber loc) in
     Type.(DefT (reason, NumGeneralT AnyLiteral))

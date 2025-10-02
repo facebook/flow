@@ -25,7 +25,6 @@ type 'loc virtual_reason_desc =
   | RSymbol
   | RExports
   | RNullOrVoid
-  | RLongStringLit of int (* Max length *)
   | RStringLit of name
   | RStringPrefix of { prefix: string }
   | RStringWithoutPrefix of { prefix: string }

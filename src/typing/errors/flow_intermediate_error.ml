@@ -864,12 +864,7 @@ let rec make_intermediate_error :
           rest_param
           (MessageIncompatibleComponentRestParam rest_param)
       (* Default incompatibility. *)
-      | _ -> begin
-        match (desc_of_reason lower, desc_of_reason upper) with
-        | (RLongStringLit n, RStringLit _) ->
-          make_error lower (MessageNonLiteralString { lower; upper; n })
-        | _ -> make_error lower (MessageIncompatibleGeneral { lower; upper })
-      end)
+      | _ -> begin make_error lower (MessageIncompatibleGeneral { lower; upper }) end)
   in
   (* An error between two incompatible types due to invariant subtyping.
    *
@@ -3692,15 +3687,6 @@ let to_printable_error :
       (match suggestion with
       | None -> []
       | Some suggestion -> [text " Did you mean "; code suggestion; text "?"])
-    | MessageNonLiteralString { lower; upper; n } ->
-      [
-        ref lower;
-        text " is incompatible with ";
-        ref upper;
-        text " because strings longer than ";
-        code (string_of_int n);
-        text " characters are not treated as literals";
-      ]
     | MessageNonConstVarExport decl_reason ->
       let reason_opt =
         match decl_reason with

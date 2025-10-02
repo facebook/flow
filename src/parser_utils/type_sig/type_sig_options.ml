@@ -9,7 +9,6 @@ type t = {
   munge: bool;
   facebook_keyMirror: bool;
   facebook_fbt: string option;
-  max_literal_len: int;
   exact_by_default: bool;
   enable_enums: bool;
   enable_component_syntax: bool;
@@ -52,7 +51,6 @@ let of_options options docblock locs_to_dirtify file =
     locs_to_dirtify;
     hook_compatibility = Options.hook_compatibility_in_file options file;
     facebook_fbt = Options.facebook_fbt options;
-    max_literal_len = Options.max_literal_length options;
     exact_by_default = Options.exact_by_default options;
     enable_enums = Options.enums options;
     enable_component_syntax = Options.typecheck_component_syntax_in_file options file;
@@ -73,7 +71,6 @@ let builtin_options options =
     enable_relay_integration = false;
     relay_integration_module_prefix = None;
     facebook_fbt = Options.facebook_fbt options;
-    max_literal_len = Options.max_literal_length options;
     exact_by_default = Options.exact_by_default options;
     enable_enums = Options.enums options;
     enable_component_syntax = true;

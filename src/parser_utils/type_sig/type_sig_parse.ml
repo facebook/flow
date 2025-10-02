@@ -2911,19 +2911,17 @@ let module_ref_literal tbls loc { Ast.ModuleRefLiteral.value; prefix_len; _ } =
   in
   ModuleRef { loc; mref }
 
-let string_literal ~frozen opts loc s =
+let string_literal ~frozen loc s =
   if frozen = FrozenProp then
     Annot (SingletonString (loc, s))
-  else if opts.max_literal_len = 0 || String.length s <= opts.max_literal_len then
-    Value (StringLit (loc, s))
   else
-    Value (LongStringLit loc)
+    Value (StringLit (loc, s))
 
-let template_literal opts loc quasis =
+let template_literal loc quasis =
   let module T = Ast.Expression.TemplateLiteral in
   match quasis with
   | [(_, { T.Element.value = { T.Element.raw = _; cooked = s }; tail = _ })] ->
-    string_literal ~frozen:NotFrozen opts loc s
+    string_literal ~frozen:NotFrozen loc s
   | _ -> Value (StringVal loc)
 
 let graphql_literal opts tbls loc quasi =
@@ -3017,7 +3015,7 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
   let loc = push_loc tbls loc in
   match expr with
   | E.StringLiteral { Ast.StringLiteral.value; raw = _; comments = _ } ->
-    string_literal ~frozen opts loc value
+    string_literal ~frozen loc value
   | E.NumberLiteral { Ast.NumberLiteral.value; raw; comments = _ } ->
     if frozen = FrozenProp then
       Annot (SingletonNumber (loc, value, raw))
@@ -3051,7 +3049,7 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
     when opts.enable_relay_integration ->
     graphql_literal opts tbls loc quasi
   | E.TemplateLiteral { E.TemplateLiteral.quasis; expressions = _; comments = _ } ->
-    template_literal opts loc quasis
+    template_literal loc quasis
   | E.Identifier id ->
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
     let id_loc = push_loc tbls id_loc in

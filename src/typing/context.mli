@@ -105,7 +105,6 @@ type metadata = {
   facebook_module_interop: bool;
   file_options: Files.options;
   ignore_non_literal_requires: bool;
-  max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   no_unchecked_indexed_access: bool;
@@ -175,8 +174,6 @@ val sig_cx : t -> sig_t
 (* accessors *)
 
 val metadata : t -> metadata
-
-val max_literal_length : t -> int
 
 val babel_loose_array_spread : t -> bool
 

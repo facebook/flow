@@ -55,7 +55,6 @@ type metadata = {
   facebook_module_interop: bool;
   file_options: Files.options;
   ignore_non_literal_requires: bool;
-  max_literal_length: int;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   no_unchecked_indexed_access: bool;
@@ -308,7 +307,6 @@ let metadata_of_options options =
     facebook_module_interop = Options.facebook_module_interop options;
     file_options = Options.file_options options;
     ignore_non_literal_requires = Options.should_ignore_non_literal_requires options;
-    max_literal_length = Options.max_literal_length options;
     max_workers = Options.max_workers options;
     missing_module_generators = Options.missing_module_generators options;
     no_unchecked_indexed_access = Options.no_unchecked_indexed_access options;
@@ -486,8 +484,6 @@ let in_declare_namespace cx = cx.environment.Loc_env.scope_kind = Name_def.Decla
 (* accessors *)
 
 let metadata cx = cx.metadata
-
-let max_literal_length cx = cx.metadata.max_literal_length
 
 let babel_loose_array_spread cx = cx.metadata.babel_loose_array_spread
 

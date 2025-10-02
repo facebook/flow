@@ -919,11 +919,6 @@ type 'loc message =
       export_name: string;
       suggestion: string option;
     }
-  | MessageNonLiteralString of {
-      lower: 'loc virtual_reason;
-      upper: 'loc virtual_reason;
-      n: int;
-    }
   | MessageNonConstVarExport of 'loc virtual_reason option
   | MessageNonStrictImport
   | MessageNonToplevelExport

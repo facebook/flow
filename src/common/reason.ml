@@ -57,8 +57,6 @@ type 'loc virtual_reason_desc =
   | RSymbol
   | RExports
   | RNullOrVoid
-  | RLongStringLit of int (* Max length *)
-  (* TODO String literals should not be able to include internal names *)
   | RStringLit of name
   | RStringPrefix of { prefix: string }
   | RStringWithoutPrefix of { prefix: string }
@@ -286,12 +284,12 @@ type reason_desc = ALoc.t virtual_reason_desc
 
 let rec map_desc_locs f = function
   | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid
-    | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RLongStringLit _ | RStringLit _
-    | RStringPrefix _ | RStringWithoutPrefix _ | RStringSuffix _ | RStringWithoutSuffix _
-    | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit
-    | RObjectLit_UNSOUND | RObjectType | RInterfaceType | RArray | RArrayLit | RArrayLit_UNSOUND
-    | RConstArrayLit | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole
-    | RROArrayType | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
+    | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RStringLit _ | RStringPrefix _
+    | RStringWithoutPrefix _ | RStringSuffix _ | RStringWithoutSuffix _ | RNumberLit _
+    | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit | RObjectLit_UNSOUND
+    | RObjectType | RInterfaceType | RArray | RArrayLit | RArrayLit_UNSOUND | RConstArrayLit
+    | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole | RROArrayType
+    | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
     | RTupleUnknownElementFromInexact | RFunction _ | RFunctionType | RFunctionBody
     | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _
     | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized
@@ -565,9 +563,7 @@ let prettify_react_util s =
 let rec string_of_desc = function
   | RNumber -> "number"
   | RBigInt -> "bigint"
-  | RString
-  | RLongStringLit _ ->
-    "string"
+  | RString -> "string"
   | RBoolean -> "boolean"
   | RMixed -> "mixed"
   | REmpty -> "empty"
@@ -1364,7 +1360,6 @@ let classification_of_reason_desc desc =
   | RString
   | RSymbol
   | RBoolean
-  | RLongStringLit _
   | RStringLit _
   | RStringPrefix _
   | RStringWithoutPrefix _
