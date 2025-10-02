@@ -106,7 +106,9 @@ module Operators = struct
     let check_base cx = function
       | (DefT (_, (StrGeneralT _ | SingletonStrT _)), DefT (_, (StrGeneralT _ | SingletonStrT _)))
       | (DefT (_, (NumGeneralT _ | SingletonNumT _)), DefT (_, (NumGeneralT _ | SingletonNumT _)))
-      | (DefT (_, BigIntGeneralT _), DefT (_, BigIntGeneralT _))
+      | ( DefT (_, (BigIntGeneralT _ | SingletonBigIntT _)),
+          DefT (_, (BigIntGeneralT _ | SingletonBigIntT _))
+        )
       | (DefT (_, EmptyT), _)
       | (_, DefT (_, EmptyT))
       | (AnyT _, _)
