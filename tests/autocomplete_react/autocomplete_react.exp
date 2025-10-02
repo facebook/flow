@@ -182,7 +182,7 @@ Flags: --pretty
     {"name":"Key","type":"type Key = React$Key"},
     {
       "name":"MixedElement",
-      "type":"type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>"
+      "type":"type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>"
     },
     {"name":"Node","type":"type Node = React$Node"},
     {"name":"Portal","type":"type Portal = React$Portal"},

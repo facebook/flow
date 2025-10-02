@@ -1140,19 +1140,19 @@ Cannot cast `b` to `ExactReactElement_DEPRECATED` because component [1] is incom
 type argument `ElementType` [3]. [incompatible-type]
 
    jsx.js:5:1
-     5| b as ExactReactElement_DEPRECATED<'div'>; // error
-        ^
+    5| b as ExactReactElement_DEPRECATED<'div'>; // error
+       ^
 
 References:
-   <BUILTINS>/react.js:975:54
-   975|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
-                                                             ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:94:52
+   94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                          ^^^^^^^^^^^^^^^^^ [1]
    jsx.js:5:35
-     5| b as ExactReactElement_DEPRECATED<'div'>; // error
-                                          ^^^^^ [2]
+    5| b as ExactReactElement_DEPRECATED<'div'>; // error
+                                         ^^^^^ [2]
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [3]
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------- jsx.js:5:1
@@ -1161,19 +1161,19 @@ Cannot cast `b` to `ExactReactElement_DEPRECATED` because string literal `div` [
 type argument `ElementType` [3]. [incompatible-type]
 
    jsx.js:5:1
-     5| b as ExactReactElement_DEPRECATED<'div'>; // error
-        ^
+    5| b as ExactReactElement_DEPRECATED<'div'>; // error
+       ^
 
 References:
    jsx.js:5:35
-     5| b as ExactReactElement_DEPRECATED<'div'>; // error
-                                          ^^^^^ [1]
-   <BUILTINS>/react.js:975:54
-   975|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
-                                                             ^^^^^^^^^^^^^^^^^ [2]
+    5| b as ExactReactElement_DEPRECATED<'div'>; // error
+                                         ^^^^^ [1]
+   <BUILTINS>/react.js:94:52
+   94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                          ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [3]
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+                                                         ^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------- jsx.js:6:1

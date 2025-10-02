@@ -512,9 +512,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
                 ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:975:54
-   975|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
-                                                             ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:94:52
+    94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                           ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:155:10
    155|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -545,9 +545,9 @@ Cannot call `React.cloneElement` because: [incompatible-type]
                  ^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:975:54
-    975|     type MixedElement = ExactReactElement_DEPRECATED<React$ElementType>;
-                                                              ^^^^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:94:52
+     94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                            ^^^^^^^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:1002:4
    1002|   [string]: {
             ^^^^^^ [2]
