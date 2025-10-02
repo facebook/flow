@@ -324,7 +324,6 @@ module Kit (Flow : Flow_common.S) : OBJECT = struct
           let config_props = NameUtils.Map.remove (OrdinaryName "key") config_props in
           let config_props =
             match ref_manipulation with
-            | FilterRef -> NameUtils.Map.remove (OrdinaryName "ref") config_props
             | KeepRef -> config_props
             | AddRef prop_t ->
               NameUtils.Map.add

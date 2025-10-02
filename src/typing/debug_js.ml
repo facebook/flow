@@ -589,7 +589,6 @@ and dump_use_t_ (depth, tvars) cx t =
             | Config _ -> "Config"
             | Defaults _ -> "Defaults")
             (match ref_manipulation with
-            | FilterRef -> "filter"
             | KeepRef -> "keep"
             | AddRef _ -> "add")
         )

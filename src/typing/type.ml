@@ -3063,7 +3063,6 @@ and Object : sig
       | Defaults of { config: resolved }
 
     type ref_manipulation =
-      | FilterRef
       | KeepRef
       | AddRef of TypeTerm.t
   end

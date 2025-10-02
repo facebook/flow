@@ -455,7 +455,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | Object.Partial
       | Object.Required
       | Object.ObjectRep
-      | Object.ReactConfig { ref_manipulation = Object.ReactConfig.FilterRef; _ }
       | Object.ReactConfig { ref_manipulation = Object.ReactConfig.KeepRef; _ } ->
         identity_reverse_upper_bound cx seen tvar tout
       | Object.ReactConfig { ref_manipulation = Object.ReactConfig.AddRef ref_t; _ } ->
