@@ -212,7 +212,7 @@ class implicit_instantiation_literal_mapper ~singleton_action =
         convert_literal_type cx ~singleton_action t
       else
         match t with
-        | EvalT (x, TypeDestructorT (op, r, d), _) ->
+        | EvalT { type_ = x; defer_use_t = TypeDestructorT (op, r, d); id = _ } ->
           let x' = self#type_ cx map_cx x in
           let d' = self#destructor cx map_cx d in
           if x == x' && d == d' then

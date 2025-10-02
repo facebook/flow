@@ -131,7 +131,7 @@ let visitor =
     method type_ cx =
       function
       | OpenT (_, id) -> self#tvar cx id
-      | EvalT (t, _, id) -> self#eval_t cx t id
+      | EvalT { type_ = t; defer_use_t = _; id } -> self#eval_t cx t id
       (* Non-concrete (fallthrough) constructors *)
       | AnnotT (_, t, _)
       | DefT (_, PolyT { t_out = t; _ })

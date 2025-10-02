@@ -32,7 +32,7 @@ let union_flatten =
       let void_t = VoidT.why_with_use_desc ~use_desc r in
       void_t :: flatten cx seen t
     | DefT (_, EmptyT) -> []
-    | EvalT (_, TypeDestructorT (_, _, ValuesType), id) ->
+    | EvalT { type_ = _; defer_use_t = TypeDestructorT (_, _, ValuesType); id } ->
       (match Eval.Map.find_opt id (Context.evaluated cx) with
       | Some cached_t -> flatten cx seen cached_t
       | None -> [t])
@@ -61,14 +61,14 @@ class virtual ['a] t =
           t
         else
           DefT (r, t'')
-      | EvalT (t', dt, id) ->
+      | EvalT { type_ = t'; defer_use_t = dt; id } ->
         let t'' = self#type_ cx map_cx t' in
         let dt' = self#defer_use_type cx map_cx dt in
         let id' = self#eval_id cx map_cx id in
         if t' == t'' && dt == dt' && id' == id then
           t
         else
-          EvalT (t'', dt', id')
+          EvalT { type_ = t''; defer_use_t = dt'; id = id' }
       | ThisInstanceT (r, t', i, n) ->
         let t'' = self#instance_type cx map_cx t' in
         if t'' == t' then

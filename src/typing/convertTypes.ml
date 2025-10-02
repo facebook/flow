@@ -120,7 +120,7 @@ and type_to_json : Context.t -> int -> t -> json =
           ("def", def_t_to_json cx depth def_t);
           ("reason", JSON_String (Reason.string_of_reason r ~strip_root:(Some (Context.root cx))));
         ]
-    | EvalT (t, defer_use_t, _) ->
+    | EvalT { type_ = t; defer_use_t; id = _ } ->
       json_with_type
         "Eval"
         [

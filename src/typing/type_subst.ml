@@ -327,7 +327,7 @@ let substituter =
                * were substituted. *)
               let use_op = Base.Option.value use_op ~default:op in
               TypeAppT { reason; use_op; type_ = type_'; targs = targs'; from_value; use_desc }
-          | EvalT (x, TypeDestructorT (op, r, d), _) ->
+          | EvalT { type_ = x; defer_use_t = TypeDestructorT (op, r, d); id = _ } ->
             let x' = self#type_ cx map_cx x in
             let d' = self#destructor cx map_cx d in
             if x == x' && d == d' then

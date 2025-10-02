@@ -111,7 +111,7 @@ end = struct
         (* EvalT(t, d, _) behaves like TypeAppT, not everything there will be unconditionally
          * evaluated, but if we do have the eval result, we should visit it, since at that point,
          * the EvalT behaves like an OpenT. *)
-        | EvalT (_, _, id) ->
+        | EvalT { type_ = _; defer_use_t = _; id } ->
           (match Eval.Map.find_opt id (Context.evaluated cx) with
           | None -> acc
           | Some t -> this#type_ cx pole acc t)
@@ -3072,19 +3072,29 @@ let wraps_utility_type cx tin =
   let seen_eval_id = ref Eval.Set.empty in
   let rec loop t =
     match t with
-    | EvalT (GenericT _, TypeDestructorT (_, _, ReadOnlyType), _)
-    | EvalT (_, TypeDestructorT (_, _, ConditionalType { true_t = GenericT _; _ }), _)
-    | EvalT (_, TypeDestructorT (_, _, ConditionalType { false_t = GenericT _; _ }), _) ->
+    | EvalT { type_ = GenericT _; defer_use_t = TypeDestructorT (_, _, ReadOnlyType); _ }
+    | EvalT
+        {
+          type_ = _;
+          defer_use_t = TypeDestructorT (_, _, ConditionalType { true_t = GenericT _; _ });
+          id = _;
+        }
+    | EvalT
+        {
+          type_ = _;
+          defer_use_t = TypeDestructorT (_, _, ConditionalType { false_t = GenericT _; _ });
+          id = _;
+        } ->
       (* Handles special cases targeting tests/typeapp_opt/stylex.js *)
       true
-    | EvalT (t, TypeDestructorT (_, _, ReadOnlyType), id) ->
+    | EvalT { type_ = t; defer_use_t = TypeDestructorT (_, _, ReadOnlyType); id } ->
       if Eval.Set.mem id !seen_eval_id then
         false
       else (
         seen_eval_id := Eval.Set.add id !seen_eval_id;
         loop t
       )
-    | EvalT (_, TypeDestructorT (_, _, MappedType _), _) -> true
+    | EvalT { type_ = _; defer_use_t = TypeDestructorT (_, _, MappedType _); id = _ } -> true
     | DefT (_, TypeT (_, t)) -> loop t
     | OpenT (_, id) ->
       let (root_id, constraints) = Context.find_constraints cx id in

@@ -368,12 +368,18 @@ struct
         (********)
         (* eval *)
         (********)
-        | (EvalT (_, _, id1), UseT (_, EvalT (_, _, id2))) when Type.Eval.equal_id id1 id2 ->
+        | ( EvalT { type_ = _; defer_use_t = _; id = id1 },
+            UseT (_, EvalT { type_ = _; defer_use_t = _; id = id2 })
+          )
+          when Type.Eval.equal_id id1 id2 ->
           if Context.is_verbose cx then prerr_endline "EvalT ~> EvalT fast path"
-        | (EvalT (t, TypeDestructorT (use_op', reason, d), id), _) ->
+        | (EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op', reason, d); id }, _) ->
           let result = mk_type_destructor cx ~trace use_op' reason t d id in
           rec_flow cx trace (result, u)
-        | (_, UseT (use_op, EvalT (t, TypeDestructorT (use_op', reason, d), id))) ->
+        | ( _,
+            UseT
+              (use_op, EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op', reason, d); id })
+          ) ->
           let result = mk_type_destructor cx ~trace use_op' reason t d id in
           rec_flow cx trace (result, ReposUseT (reason, false, use_op, l))
         (******************)
@@ -6738,14 +6744,14 @@ struct
     )
 
   and mk_possibly_evaluated_destructor cx use_op reason t d id =
-    let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
+    let eval_t = EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, d); id } in
     ( if Subst_name.Set.is_empty (Type_subst.free_var_finder cx eval_t) then
       let evaluated = Context.evaluated cx in
       match Eval.Map.find_opt id evaluated with
       | Some _ -> ()
       | None ->
         let trace = DepthTrace.dummy_trace in
-        let eval_t = EvalT (t, TypeDestructorT (use_op, reason, d), id) in
+        let eval_t = EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, d); id } in
         if Flow_js_utils.TvarVisitors.has_unresolved_tvars cx eval_t then
           ignore
           @@ Tvar.mk_no_wrap_where cx reason (fun tvar ->
@@ -8981,7 +8987,7 @@ struct
                     (t_open, ReposLowerT { reason; use_desc; use_t = UseT (unknown_use, tvar) })
               )
         end
-      | EvalT (root, (TypeDestructorT (_, _, d) as defer_use_t), id) as t ->
+      | EvalT { type_ = root; defer_use_t = TypeDestructorT (_, _, d) as defer_use_t; id } as t ->
         (* Modifying the reason of `EvalT`, as we do for other types, is not
            enough, since it will only affect the reason of the resulting tvar.
            Instead, repositioning a `EvalT` should simulate repositioning the

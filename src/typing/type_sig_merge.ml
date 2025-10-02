@@ -505,11 +505,13 @@ let merge_exports =
 let make_hooklike file hooklike t =
   if hooklike && Context.hook_compatibility file.cx then
     Type.EvalT
-      ( t,
-        Type.TypeDestructorT
-          (Type.unknown_use (* not used *), TypeUtil.reason_of_t t, Type.MakeHooklike),
-        Type.Eval.generate_id ()
-      )
+      {
+        type_ = t;
+        defer_use_t =
+          Type.TypeDestructorT
+            (Type.unknown_use (* not used *), TypeUtil.reason_of_t t, Type.MakeHooklike);
+        id = Type.Eval.generate_id ();
+      }
   else
     t
 
@@ -631,7 +633,7 @@ and merge_annot env file = function
         elems_rev
     in
     let mk_type_destructor _cx use_op reason t destructor id =
-      Type.(EvalT (t, TypeDestructorT (use_op, reason, destructor), id))
+      Type.(EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, destructor); id })
     in
     let id = eval_id_of_aloc file loc in
     Flow_js_utils.mk_tuple_type file.cx ~id ~mk_type_destructor ~inexact reason unresolved
@@ -692,10 +694,12 @@ and merge_annot env file = function
     let id = eval_id_of_aloc file loc in
     Type.(
       EvalT
-        ( obj,
-          TypeDestructorT (use_op, reason, Type.PropertyType { name = Reason.OrdinaryName prop }),
-          id
-        )
+        {
+          type_ = obj;
+          defer_use_t =
+            TypeDestructorT (use_op, reason, Type.PropertyType { name = Reason.OrdinaryName prop });
+          id;
+        }
     )
   | ElementType { loc; obj; elem } ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$ElementType")) loc) in
@@ -703,7 +707,14 @@ and merge_annot env file = function
     let obj = merge env file obj in
     let index_type = merge env file elem in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (obj, TypeDestructorT (use_op, reason, Type.ElementType { index_type }), id))
+    Type.(
+      EvalT
+        {
+          type_ = obj;
+          defer_use_t = TypeDestructorT (use_op, reason, Type.ElementType { index_type });
+          id;
+        }
+    )
   | EnumValue (loc, t) ->
     let reason = Reason.(mk_annot_reason (REnum { name = None }) loc) in
     let representation_t = merge env file t in
@@ -713,7 +724,7 @@ and merge_annot env file = function
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, Type.EnumType), id))
+    Type.(EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, Type.EnumType); id })
   | OptionalIndexedAccessNonMaybeType { loc; obj; index } ->
     let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
     let object_type = merge env file obj in
@@ -731,29 +742,33 @@ and merge_annot env file = function
       | _ -> Type.OptionalIndexedAccessTypeIndex index_type
     in
     Type.EvalT
-      ( object_type,
-        Type.TypeDestructorT (use_op, reason, Type.OptionalIndexedAccessNonMaybeType { index }),
-        id
-      )
+      {
+        type_ = object_type;
+        defer_use_t =
+          Type.TypeDestructorT (use_op, reason, Type.OptionalIndexedAccessNonMaybeType { index });
+        id;
+      }
   | OptionalIndexedAccessResultType { loc; non_maybe_result; void_loc } ->
     let reason = Reason.(mk_reason (RIndexedAccess { optional = true }) loc) in
     let void_reason = Reason.(mk_reason RVoid void_loc) in
     let non_maybe_result_type = merge env file non_maybe_result in
     Type.EvalT
-      ( non_maybe_result_type,
-        Type.TypeDestructorT
-          ( Type.unknown_use (* not used *),
-            reason,
-            Type.OptionalIndexedAccessResultType { void_reason }
-          ),
-        Type.Eval.generate_id ()
-      )
+      {
+        type_ = non_maybe_result_type;
+        defer_use_t =
+          Type.TypeDestructorT
+            ( Type.unknown_use (* not used *),
+              reason,
+              Type.OptionalIndexedAccessResultType { void_reason }
+            );
+        id = Type.Eval.generate_id ();
+      }
   | NonMaybeType (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "$NonMaybeType")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, Type.NonMaybeType), id))
+    Type.(EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, Type.NonMaybeType); id })
   | Omit (loc, t1, t2) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "Omit")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
@@ -763,43 +778,53 @@ and merge_annot env file = function
     let t2 =
       Type.(
         EvalT
-          ( t2,
-            TypeDestructorT
-              ( unknown_use,
-                reason,
-                (* `{[K in Keys]: mixed}` *)
-                MappedType
-                  {
-                    homomorphic = Unspecialized;
-                    property_type = MixedT.make reason;
-                    mapped_type_flags = { optional = KeepOptionality; variance = Polarity.Neutral };
-                    distributive_tparam_name = None;
-                  }
-              ),
-            Type.Eval.generate_id ()
-          )
+          {
+            type_ = t2;
+            defer_use_t =
+              TypeDestructorT
+                ( unknown_use,
+                  reason,
+                  (* `{[K in Keys]: mixed}` *)
+                  MappedType
+                    {
+                      homomorphic = Unspecialized;
+                      property_type = MixedT.make reason;
+                      mapped_type_flags =
+                        { optional = KeepOptionality; variance = Polarity.Neutral };
+                      distributive_tparam_name = None;
+                    }
+                );
+            id = Type.Eval.generate_id ();
+          }
       )
     in
 
-    Type.(EvalT (t1, TypeDestructorT (use_op, reason, RestType (Object.Rest.Omit, t2)), id))
+    Type.(
+      EvalT
+        {
+          type_ = t1;
+          defer_use_t = TypeDestructorT (use_op, reason, RestType (Object.Rest.Omit, t2));
+          id;
+        }
+    )
   | ReadOnly (loc, t) ->
     let reason = Reason.(mk_reason RReadOnlyType loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), id))
+    Type.(EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, ReadOnlyType); id })
   | Partial (loc, t) ->
     let t = merge env file t in
     let reason = Reason.(mk_reason (RPartialOf (TypeUtil.desc_of_t t)) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, PartialType), id))
+    Type.(EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, PartialType); id })
   | Required (loc, t) ->
     let t = merge env file t in
     let reason = Reason.(mk_reason (RRequiredOf (TypeUtil.desc_of_t t)) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, RequiredType), id))
+    Type.(EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, RequiredType); id })
   | Keys (loc, t) ->
     let reason = Reason.(mk_reason RKeySet loc) in
     let t = merge env file t in
@@ -809,7 +834,7 @@ and merge_annot env file = function
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, ValuesType), id))
+    Type.(EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, ValuesType); id })
   | Exact (loc, t) ->
     let t = merge env file t in
     let desc = TypeUtil.desc_of_t t in
@@ -817,7 +842,7 @@ and merge_annot env file = function
     let t = TypeUtil.push_type_alias_reason reason t in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, ExactType), id))
+    Type.(EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, ExactType); id })
   | ExportsT (loc, ref) ->
     let reason = Reason.(mk_annot_reason (RModule ref) loc) in
     let symbol = FlowSymbol.mk_module_symbol ~name:ref ~def_loc:loc in
@@ -873,15 +898,17 @@ and merge_annot env file = function
       let false_t = merge env file false_type in
       Type.(
         EvalT
-          ( check_t,
-            TypeDestructorT
-              ( unknown_use,
-                reason,
-                ConditionalType
-                  { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }
-              ),
-            id
-          )
+          {
+            type_ = check_t;
+            defer_use_t =
+              TypeDestructorT
+                ( unknown_use,
+                  reason,
+                  ConditionalType
+                    { distributive_tparam_name; infer_tparams; extends_t; true_t; false_t }
+                );
+            id;
+          }
       )
     in
     (match distributive_tparam with
@@ -892,7 +919,10 @@ and merge_annot env file = function
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let obj = merge env file obj in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (obj, TypeDestructorT (use_op, reason, TypeMap ObjectKeyMirror), id))
+    Type.(
+      EvalT
+        { type_ = obj; defer_use_t = TypeDestructorT (use_op, reason, TypeMap ObjectKeyMirror); id }
+    )
   | ClassT (loc, t) ->
     let t = merge env file t in
     let desc = TypeUtil.desc_of_t t in
@@ -906,13 +936,18 @@ and merge_annot env file = function
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementPropsType), id))
+    Type.(
+      EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, ReactElementPropsType); id }
+    )
   | ReactElementConfig (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementConfig")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
     let t = merge env file t in
     let id = eval_id_of_aloc file loc in
-    Type.(EvalT (t, TypeDestructorT (use_op, reason, ReactElementConfigType), id))
+    Type.(
+      EvalT
+        { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, ReactElementConfigType); id }
+    )
   | Renders { loc; arg; variant } ->
     let t = merge { env with in_renders_arg = true } file arg in
     let reason =
@@ -1012,7 +1047,13 @@ and merge_annot env file = function
     in
     let id = eval_id_of_aloc file loc in
     Type.(
-      EvalT (t, TypeDestructorT (unknown_use, reason, SpreadType (target, todo_rev, head_slice)), id)
+      EvalT
+        {
+          type_ = t;
+          defer_use_t =
+            TypeDestructorT (unknown_use, reason, SpreadType (target, todo_rev, head_slice));
+          id;
+        }
     )
   | InlineInterface (loc, def) ->
     let reason = Reason.(mk_annot_reason RInterfaceType loc) in
@@ -1074,14 +1115,17 @@ and merge_annot env file = function
     in
     Type.(
       EvalT
-        ( source_type,
-          TypeDestructorT
-            ( unknown_use,
-              reason,
-              MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name }
-            ),
-          id
-        )
+        {
+          type_ = source_type;
+          defer_use_t =
+            TypeDestructorT
+              ( unknown_use,
+                reason,
+                MappedType
+                  { property_type; mapped_type_flags; homomorphic; distributive_tparam_name }
+              );
+          id;
+        }
     )
 
 and merge_value ?(as_const = false) ?(const_decl = false) env file = function
@@ -1757,14 +1801,16 @@ and merge_component
         | Options.ReactRefAsProp.FullSupport -> true
       in
       EvalT
-        ( rest_t,
-          TypeDestructorT
-            ( unknown_use,
-              config_reason,
-              ReactCheckComponentConfig { props = pmap; allow_ref_in_spread }
-            ),
-          Eval.generate_id ()
-        )
+        {
+          type_ = rest_t;
+          defer_use_t =
+            TypeDestructorT
+              ( unknown_use,
+                config_reason,
+                ReactCheckComponentConfig { props = pmap; allow_ref_in_spread }
+              );
+          id = Eval.generate_id ();
+        }
     in
     let renders = merge env file renders in
     let component_kind =

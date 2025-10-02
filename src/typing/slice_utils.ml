@@ -523,7 +523,13 @@ let spread_mk_object
   let open Object.Spread in
   let mk_dro t =
     match flags.react_dro with
-    | Some l -> EvalT (t, TypeDestructorT (unknown_use, reason, ReactDRO l), Eval.generate_id ())
+    | Some l ->
+      EvalT
+        {
+          type_ = t;
+          defer_use_t = TypeDestructorT (unknown_use, reason, ReactDRO l);
+          id = Eval.generate_id ();
+        }
     | None -> t
   in
   let (obj_kind, as_const, frozen_seal) =

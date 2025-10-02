@@ -72,7 +72,11 @@ module rec TypeTerm : sig
        When defer_use_t is evaluated, id points to a tvar containing the result
        of evaluation. The explicit form simplifies other tasks, like
        substitution, but otherwise works in much the same way as usual. *)
-    | EvalT of t * defer_use_t * Eval.id
+    | EvalT of {
+        type_: t;
+        defer_use_t: defer_use_t;
+        id: Eval.id;
+      }
     (* bound type variable *)
     | GenericT of {
         reason: reason;

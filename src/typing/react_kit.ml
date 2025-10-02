@@ -430,10 +430,11 @@ module Kit (Flow : Flow_common.S) : REACT = struct
          * constraint tin <: props. *)
         let props =
           EvalT
-            ( c,
-              TypeDestructorT (unknown_use, reason_op, ReactElementConfigType),
-              Eval.generate_id ()
-            )
+            {
+              type_ = c;
+              defer_use_t = TypeDestructorT (unknown_use, reason_op, ReactElementConfigType);
+              id = Eval.generate_id ();
+            }
         in
         rec_flow_t ~use_op:unknown_use cx trace (tin, props)
         (* Stateless functional components. *)
@@ -491,19 +492,21 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       | DefT (_, SingletonStrT _) as c ->
         let props =
           EvalT
-            ( c,
-              TypeDestructorT (unknown_use, reason_op, ReactElementConfigType),
-              Eval.generate_id ()
-            )
+            {
+              type_ = c;
+              defer_use_t = TypeDestructorT (unknown_use, reason_op, ReactElementConfigType);
+              id = Eval.generate_id ();
+            }
         in
         rec_flow_t ~use_op:unknown_use cx trace (tin, props)
       | DefT (_, StrGeneralT _) as c ->
         let props =
           EvalT
-            ( c,
-              TypeDestructorT (unknown_use, reason_op, ReactElementConfigType),
-              Eval.generate_id ()
-            )
+            {
+              type_ = c;
+              defer_use_t = TypeDestructorT (unknown_use, reason_op, ReactElementConfigType);
+              id = Eval.generate_id ();
+            }
         in
         rec_flow_t ~use_op:unknown_use cx trace (tin, props)
       | AnyT (reason, source) ->

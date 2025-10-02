@@ -491,24 +491,40 @@ module rec ConsGen : S = struct
 
   and elab_t cx ?(seen = ISet.empty) t op =
     match (t, op) with
-    | (EvalT (t, TypeDestructorT (use_op, reason, ReadOnlyType), _), _) ->
+    | (EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, ReadOnlyType); id = _ }, _)
+      ->
       let t = make_readonly cx use_op reason t in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (_, reason, ReactDRO (dro_loc, dro_kind)), _), _) ->
+    | ( EvalT
+          {
+            type_ = t;
+            defer_use_t = TypeDestructorT (_, reason, ReactDRO (dro_loc, dro_kind));
+            id = _;
+          },
+        _
+      ) ->
       let t = elab_t cx t (Annot_DeepReadOnlyT (reason, dro_loc, dro_kind)) in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (_, _, MakeHooklike), _), _) -> t
-    | (EvalT (t, TypeDestructorT (_, r, ExactType), _), _) ->
+    | (EvalT { type_ = t; defer_use_t = TypeDestructorT (_, _, MakeHooklike); id = _ }, _) -> t
+    | (EvalT { type_ = t; defer_use_t = TypeDestructorT (_, r, ExactType); id = _ }, _) ->
       let t = make_exact cx r t in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (use_op, reason, PartialType), _), _) ->
+    | (EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, PartialType); id = _ }, _)
+      ->
       let t = make_partial cx use_op reason t in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (use_op, reason, RequiredType), _), _) ->
+    | (EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, RequiredType); id = _ }, _)
+      ->
       let t = make_required cx use_op reason t in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (use_op, reason, SpreadType (target, todo_rev, head_slice)), _), _)
-      ->
+    | ( EvalT
+          {
+            type_ = t;
+            defer_use_t = TypeDestructorT (use_op, reason, SpreadType (target, todo_rev, head_slice));
+            id = _;
+          },
+        _
+      ) ->
       let state =
         {
           Object.Spread.todo_rev;
@@ -522,17 +538,22 @@ module rec ConsGen : S = struct
 
       let t = object_spread cx use_op reason target state t in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (use_op, reason, RestType (options, r)), _), _) ->
+    | ( EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, RestType (options, r)); _ },
+        _
+      ) ->
       let state = Object.Rest.One r in
       let t = object_rest cx use_op reason options state t in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (_, reason, TypeMap ObjectKeyMirror), _), _) ->
+    | (EvalT { type_ = t; defer_use_t = TypeDestructorT (_, reason, TypeMap ObjectKeyMirror); _ }, _)
+      ->
       let t = elab_t cx t (Annot_ObjKeyMirror reason) in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (_, reason, ValuesType), _), _) ->
+    | (EvalT { type_ = t; defer_use_t = TypeDestructorT (_, reason, ValuesType); _ }, _) ->
       let t = elab_t cx t (Annot_GetValuesT reason) in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (use_op, reason, PropertyType { name }), _), _) ->
+    | ( EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, PropertyType { name }); _ },
+        _
+      ) ->
       let reason_op = replace_desc_reason (RProperty (Some name)) reason in
       let t =
         elab_t
@@ -548,13 +569,21 @@ module rec ConsGen : S = struct
           )
       in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (use_op, reason, ElementType { index_type }), _), _) ->
+    | ( EvalT
+          {
+            type_ = t;
+            defer_use_t = TypeDestructorT (use_op, reason, ElementType { index_type });
+            _;
+          },
+        _
+      ) ->
       let t = elab_t cx t (Annot_GetElemT (reason, use_op, index_type)) in
       elab_t cx t op
-    | (EvalT (t, TypeDestructorT (_, reason, EnumType), _), _) ->
+    | (EvalT { type_ = t; defer_use_t = TypeDestructorT (_, reason, EnumType); _ }, _) ->
       let t = elab_t cx t (Annot_GetEnumT reason) in
       elab_t cx t op
-    | (EvalT (_, TypeDestructorT (_, reason, _), _), _) -> error_unsupported cx reason op
+    | (EvalT { defer_use_t = TypeDestructorT (_, reason, _); _ }, _) ->
+      error_unsupported cx reason op
     | (OpenT (reason, id), Annot_ConcretizeForInspection (_, _)) ->
       let t = elab_open cx ~seen reason id op in
       (match t with

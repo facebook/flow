@@ -208,7 +208,7 @@ end = struct
       check_polarity cx ?trace seen tparams polarity t
     | DefT (_, RendersT (IntrinsicRenders _ | DefaultRenders)) -> ()
     | KeysT (_, t) -> check_polarity cx ?trace seen tparams Polarity.Positive t
-    | EvalT (t, TypeDestructorT (use_op, r, ReadOnlyType), id) ->
+    | EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, r, ReadOnlyType); id } ->
       if Eval.Set.mem id seen then
         ()
       else

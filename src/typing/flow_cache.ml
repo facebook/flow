@@ -54,13 +54,13 @@ module Eval = struct
   let id cx t defer_use =
     let (eval_id_cache, id_cache) = Context.eval_id_cache cx in
     match t with
-    | EvalT (_, d, i) when d = defer_use ->
+    | EvalT { type_ = _; defer_use_t = d; id = i } when d = defer_use ->
       (match Type.EvalIdCacheMap.find_opt i !eval_id_cache with
       | Some t -> t
       | None ->
         let i = Type.Eval.generate_id () in
         eval_id_cache := Type.EvalIdCacheMap.add i t !eval_id_cache;
-        EvalT (t, defer_use, i))
+        EvalT { type_ = t; defer_use_t = defer_use; id = i })
     | _ ->
       let cache_key = (t, defer_use) in
       let id =
@@ -71,7 +71,7 @@ module Eval = struct
           id_cache := Type.IdCacheMap.add cache_key i !id_cache;
           i
       in
-      EvalT (t, defer_use, id)
+      EvalT { type_ = t; defer_use_t = defer_use; id }
 
   let find_repos cx t defer_use id =
     let repos_cache = Context.eval_repos_cache cx in

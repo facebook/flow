@@ -392,7 +392,7 @@ module Make (I : INPUT) : S = struct
     | OpenT (r, id) ->
       Flow_js_utils.merge_tvar_opt Env.(env.genv.cx) r id
       |> Base.Option.bind ~f:(unwrap_unless_aliased ~env)
-    | EvalT (_, _, id) when should_eval_skip_aliases ~env () ->
+    | EvalT { type_ = _; defer_use_t = _; id } when should_eval_skip_aliases ~env () ->
       Eval.Map.find_opt id (Context.evaluated Env.(env.genv.cx))
       |> Base.Option.bind ~f:(unwrap_unless_aliased ~env)
     | t ->
@@ -779,7 +779,7 @@ module Make (I : INPUT) : S = struct
             type_variable ~env ~cont:type__ root_id
       | GenericT { bound; reason; name; _ } -> generic_t env bound reason name t
       | AnnotT (_, t, _) -> type__ ~env ?id t
-      | EvalT (t, d, id') ->
+      | EvalT { type_ = t; defer_use_t = d; id = id' } ->
         if id = Some (EvalKey id') then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
         else
@@ -2415,7 +2415,7 @@ module Make (I : INPUT) : S = struct
         I.typeapp (Env.get_cx env) ~cont ~type_ ~app:app_on_generic ~from_value reason c targs
       | DefT (_, TypeT (_, t)) -> type__ ~env ~inherited ~source ~imode t
       | OptionalT { type_ = t; _ } -> optional_t ~env ?id ~cont:(type__ ~inherited ~source ~imode) t
-      | EvalT (t, d, id') ->
+      | EvalT { type_ = t; defer_use_t = d; id = id' } ->
         if id = Some (EvalKey id') then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
         else
@@ -2497,7 +2497,7 @@ module Make (I : INPUT) : S = struct
           reason
           t
           targs
-      | EvalT (t, d, id') ->
+      | EvalT { type_ = t; defer_use_t = d; id = id' } ->
         if id = Some (EvalKey id') then
           return Ty.(Bot (NoLowerWithUpper NoUpper))
         else
