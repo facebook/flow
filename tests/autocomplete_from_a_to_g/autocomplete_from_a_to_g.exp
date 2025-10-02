@@ -60,6 +60,26 @@ comments.js:6:8
 Flags: --pretty
 {"result":[]}
 
+dispose.js:4:5
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"{\"@@asyncDispose\": Promise<void>, ...}"},
+    {"name":"foo","type":"{\"@@dispose\": void, ...}"},
+    {"name":"Symbol.dispose","type":"void"}
+  ]
+}
+
+dispose.js:8:5
+Flags: --pretty
+{
+  "result":[
+    {"name":"bar","type":"{\"@@asyncDispose\": Promise<void>, ...}"},
+    {"name":"foo","type":"{\"@@dispose\": void, ...}"},
+    {"name":"Symbol.asyncDispose","type":"Promise<void>"}
+  ]
+}
+
 enum-id.js:9:5
 Flags: --pretty
 {

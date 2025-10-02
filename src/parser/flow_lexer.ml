@@ -778,7 +778,9 @@ let token (env : Lex_env.t) lexbuf : result =
   (* TODO: Use [Symbol.iterator] instead of @@iterator. *)
   (* `@` is not a valid unicode name *)
   | "@@iterator"
-  | "@@asyncIterator" ->
+  | "@@asyncIterator"
+  | "@@dispose"
+  | "@@asyncDispose" ->
     let loc = loc_of_lexbuf env lexbuf in
     let raw = lexeme lexbuf in
     Token (env, T_IDENTIFIER { loc; value = raw; raw })

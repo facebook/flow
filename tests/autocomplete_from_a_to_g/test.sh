@@ -12,6 +12,7 @@ queries_in_file autocomplete "class_declaration_name.js" --pretty
 queries_in_file autocomplete "class_extends.js" --pretty
 queries_in_file autocomplete "class_members.js" --pretty
 queries_in_file autocomplete "comments.js" --pretty
+queries_in_file autocomplete "dispose.js" --pretty
 queries_in_file autocomplete "enum-id.js" --pretty
 queries_in_file autocomplete "enum-key.js" --lsp
 queries_in_file autocomplete "enums.js" --lsp

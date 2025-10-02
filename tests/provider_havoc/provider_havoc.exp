@@ -201,8 +201,8 @@ References:
    provider_edge_cases.js:5:28
       5| if (((x: mixed) => 42) === console.log) { // constant-condition error
                                     ^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:2865:5
-   2865|     log(...data: Array<any>): void,
+   <BUILTINS>/core.js:2877:5
+   2877|     log(...data: Array<any>): void,
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 

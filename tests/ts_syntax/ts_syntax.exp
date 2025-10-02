@@ -6,299 +6,299 @@ The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [d
          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:727:35
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:739:35
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   727|     concat<S = T>(...items: Array<$ReadOnlyArray<S> | S>): Array<T | S>;
+   739|     concat<S = T>(...items: Array<$ReadOnlyArray<S> | S>): Array<T | S>;
                                           ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:740:75
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:752:75
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   740|     every<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): boolean;
+   752|     every<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): boolean;
                                                                                   ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:752:81
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:764:81
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   752|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+   764|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): Array<S>;
                                                                                         ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:758:76
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:770:76
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   758|     filter<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg : This): Array<T>;
+   770|     filter<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg : This): Array<T>;
                                                                                    ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:768:80
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:780:80
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   768|     find<This, S: T>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): S | void;
+   780|     find<This, S: T>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): S | void;
                                                                                        ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:778:74
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:790:74
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   778|     find<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): T | void;
+   790|     find<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): T | void;
                                                                                  ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:788:79
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:800:79
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   788|     findIndex<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): number;
+   800|     findIndex<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): number;
                                                                                       ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:798:78
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:810:78
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   798|     findLast<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): T | void;
+   810|     findLast<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): T | void;
                                                                                      ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:808:83
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:820:83
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   808|     findLastIndex<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): number;
+   820|     findLastIndex<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): number;
                                                                                           ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:814:77
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:826:77
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   814|     forEach<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): void;
+   826|     forEach<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): void;
                                                                                     ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:847:76
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:859:76
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   847|     map<U, This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => U, thisArg: This): Array<U>;
+   859|     map<U, This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => U, thisArg: This): Array<U>;
                                                                                    ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:858:80
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:870:80
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   858|     flatMap<U, This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => $ReadOnlyArray<U> | U, thisArg: This): Array<U>;
+   870|     flatMap<U, This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => $ReadOnlyArray<U> | U, thisArg: This): Array<U>;
                                                                                        ^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:858:102
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:870:102
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   858|     flatMap<U, This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => $ReadOnlyArray<U> | U, thisArg: This): Array<U>;
+   870|     flatMap<U, This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => $ReadOnlyArray<U> | U, thisArg: This): Array<U>;
                                                                                                              ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:872:44
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:884:44
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   872|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
+   884|     flat(depth: void | 1): Array<T extends $ReadOnlyArray<infer E> ? E : T>;
                                                    ^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:885:84
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:897:84
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   885|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: $ReadOnlyArray<T>) => T,
+   897|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: $ReadOnlyArray<T>) => T,
                                                                                            ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:893:84
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:905:84
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   893|       callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: $ReadOnlyArray<T>) => U,
+   905|       callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: $ReadOnlyArray<T>) => U,
                                                                                            ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:901:84
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:913:84
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   901|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: $ReadOnlyArray<T>) => T,
+   913|       callbackfn: (previousValue: T, currentValue: T, currentIndex: number, array: $ReadOnlyArray<T>) => T,
                                                                                            ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:909:84
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:921:84
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   909|       callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: $ReadOnlyArray<T>) => U,
+   921|       callbackfn: (previousValue: U, currentValue: T, currentIndex: number, array: $ReadOnlyArray<T>) => U,
                                                                                            ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:926:74
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:938:74
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   926|     some<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): boolean;
+   938|     some<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This): boolean;
                                                                                  ^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1013:81
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1025:81
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   1013|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): Array<S>;
+   1025|     filter<This, S: T>(callbackfn: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg: This): Array<S>;
                                                                                          ^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1072:93
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1084:93
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   1072|     flatMap<U, This>(callbackfn: (this : This, value: T, index: number, array: Array<T>) => $ReadOnlyArray<U> | U, thisArg: This): Array<U>;
+   1084|     flatMap<U, This>(callbackfn: (this : This, value: T, index: number, array: Array<T>) => $ReadOnlyArray<U> | U, thisArg: This): Array<U>;
                                                                                                      ^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:1192:9
+Error ---------------------------------------------------------------------------------------- <BUILTINS>/core.js:1204:9
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   1192|   +raw: $ReadOnlyArray<string>;
+   1204|   +raw: $ReadOnlyArray<string>;
                  ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1454:45
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1466:45
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   1454|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
+   1466|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
                                                      ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1454:88
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1466:88
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   1454|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
+   1466|     static raw: (callSite: interface {+raw: $ReadOnlyArray<string>}, ...substitutions: $ReadOnlyArray<mixed>) => string;
                                                                                                 ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1792:66
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:1804:66
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   1792|         value: null | string | number | boolean | interface {} | $ReadOnlyArray<mixed>,
+   1804|         value: null | string | number | boolean | interface {} | $ReadOnlyArray<mixed>,
                                                                           ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2036:43
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2048:43
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   2036| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
+   2048| type WeaklyReferenceable = interface {} | $ReadOnlyArray<mixed>;
                                                    ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2250:17
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2262:17
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   2250|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   2262|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2260:17
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2272:17
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   2260|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
+   2272|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: $SettledPromiseResult<Awaited<T[K]>>} :
                          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2771:45
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2783:45
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   2771| declare function queueMicrotask<TArguments: $ReadOnlyArray<mixed>>(
+   2783| declare function queueMicrotask<TArguments: $ReadOnlyArray<mixed>>(
                                                      ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:2996:70
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3008:70
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   2996|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
+   3008|   static (value: boolean | string | number | bigint | interface {} | $ReadOnlyArray<mixed>): bigint;
                                                                               ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3025:31
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3037:31
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   3025| type ReturnType<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
+   3037| type ReturnType<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
                                        ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3025:81
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3037:81
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   3025| type ReturnType<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
+   3037| type ReturnType<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
                                                                                          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3026:23
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3038:23
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   3026|   T extends (...args: $ReadOnlyArray<empty>) => infer Return ? Return :
+   3038|   T extends (...args: $ReadOnlyArray<empty>) => infer Return ? Return :
                                ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3027:28
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3039:28
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   3027|   T extends hook (...args: $ReadOnlyArray<empty>) => infer Return ? Return : any;
+   3039|   T extends hook (...args: $ReadOnlyArray<empty>) => infer Return ? Return : any;
                                     ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3030:31
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3042:31
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   3030| type Parameters<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
+   3042| type Parameters<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
                                        ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3030:81
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3042:81
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   3030| type Parameters<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
+   3042| type Parameters<T: ((...args: $ReadOnlyArray<empty>) => mixed) | hook (...args: $ReadOnlyArray<empty>) => mixed> =
                                                                                          ^^^^^^^^^^^^^^^^^^^^^
 
 
-Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3113:47
+Error --------------------------------------------------------------------------------------- <BUILTINS>/core.js:3125:47
 
 The utility type `$ReadOnlyArray` is deprecated, use `ReadonlyArray` instead. [deprecated-utility]
 
-   3113| type Object$Assign = (target: any, ...source: $ReadOnlyArray<any>) => any;
+   3125| type Object$Assign = (target: any, ...source: $ReadOnlyArray<any>) => any;
                                                        ^^^^^^^^^^^^^^^^^^^
 
 
