@@ -64,13 +64,12 @@ let make_hooklike cx t =
     match t with
     | DefT (_, TypeT _) -> t
     | _ ->
-      Flow_js.mk_possibly_evaluated_destructor
-        cx
-        unknown_use
-        (TypeUtil.reason_of_t t)
-        t
-        MakeHooklike
-        (Eval.generate_id ())
+      let reason = TypeUtil.reason_of_t t in
+      Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
+          Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tvar ->
+              Flow_js.flow cx (t, HooklikeT tvar)
+          )
+      )
   else
     t
 
