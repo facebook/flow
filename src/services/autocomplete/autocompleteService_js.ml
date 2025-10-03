@@ -1880,7 +1880,7 @@ let autocomplete_jsx_attribute ~typing ~used_attr_names ~has_value ~edit_locs ~t
   let open Flow_js in
   let reason =
     let (loc, name) = attribute in
-    Reason.mk_reason (Reason.RCustom name) (ALoc.of_loc loc)
+    Reason.mk_reason Reason.(RProperty (Some (OrdinaryName name))) (ALoc.of_loc loc)
   in
   let props_object =
     Tvar.mk_where cx reason (fun tvar ->

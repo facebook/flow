@@ -62,7 +62,7 @@ let rec process_request ~loc_of_aloc ~cx ~is_legit_require ~ast ~typed_ast_opt ~
   | Get_def_request.(Member { prop_name = name; object_type = (_loc, t); force_instance }) ->
     extract_member_def ~loc_of_aloc ~cx ~file_sig ~typed_ast_opt ~force_instance t name
   | Get_def_request.JsxAttribute { component_t = (_, component_t); name; loc } ->
-    let reason = Reason.mk_reason (Reason.RCustom name) loc in
+    let reason = Reason.mk_reason Reason.(RProperty (Some (OrdinaryName name))) loc in
     let props_object =
       Tvar.mk_where cx reason (fun tvar ->
           let use_op = Type.Op Type.UnknownUse in

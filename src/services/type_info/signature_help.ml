@@ -334,7 +334,7 @@ module Callee_finder = struct
         | Some arguments ->
           let get_callee_type () =
             let open Reason in
-            let reason = mk_reason (RCustom "signature help get constructor") callee_loc in
+            let reason = mk_reason (TypeUtil.desc_of_t class_t) callee_loc in
             Tvar.mk_where cx reason (fun t_out ->
                 let open Type in
                 let instance =
