@@ -89,8 +89,6 @@ module type BASE = sig
 
   val mk_react_dro : Context.t -> Type.use_op -> Type.react_dro -> Type.t -> Type.t
 
-  val mk_hooklike : Context.t -> Type.use_op -> Type.t -> Type.t
-
   val possible_concrete_types_for_inspection : Context.t -> Reason.reason -> Type.t -> Type.t list
 end
 

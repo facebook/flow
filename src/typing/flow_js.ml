@@ -250,10 +250,6 @@ struct
     let id = Eval.generate_id () in
     FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t (ReactDRO dro) id
 
-  let mk_hooklike cx use_op t =
-    let id = Eval.generate_id () in
-    FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t MakeHooklike id
-
   module Get_prop_helper = struct
     type r = Type.tvar -> unit
 
@@ -305,7 +301,9 @@ struct
 
     let mk_react_dro = mk_react_dro
 
-    let mk_hooklike = mk_hooklike
+    let mk_hooklike cx use_op t =
+      let id = Eval.generate_id () in
+      FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t MakeHooklike id
 
     let prop_overlaps_with_indexer =
       Some
