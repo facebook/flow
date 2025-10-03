@@ -2018,10 +2018,8 @@ let merge_def ~const_decl file reason = function
       (Some (id_loc, name))
   | Variable { id_loc = _; name; def } ->
     merge ~const_decl ~hooklike:(Flow_ast_utils.hook_name name) (mk_merge_env SMap.empty) file def
-  | Parameter { id_loc = _; name; def; tparams } ->
-    let t (env, _targs) =
-      merge ~const_decl ~hooklike:(Flow_ast_utils.hook_name name) env file def
-    in
+  | Parameter { id_loc = _; name = _; def; tparams } ->
+    let t (env, _targs) = merge ~const_decl env file def in
     merge_tparams_targs (mk_merge_env SMap.empty) file reason t tparams
   | DisabledComponentBinding _
   | DisabledEnumBinding _ ->

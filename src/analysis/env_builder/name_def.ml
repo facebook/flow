@@ -1197,7 +1197,6 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           Contextual { reason; hints; optional; default_expression }
       in
       let record_identifier loc name binding =
-        let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
         this#add_ordinary_binding
           loc
           (mk_reason (RIdentifier (OrdinaryName name)) loc)
@@ -1426,7 +1425,6 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           UnannotatedParameter reason
       in
       let record_identifier loc name binding =
-        let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
         this#add_ordinary_binding
           loc
           (mk_reason (RIdentifier (OrdinaryName name)) loc)
@@ -1490,7 +1488,6 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           UnannotatedParameter reason
       in
       let record_identifier loc name binding =
-        let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
         this#add_ordinary_binding
           loc
           (mk_reason (RIdentifier (OrdinaryName name)) loc)

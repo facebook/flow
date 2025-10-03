@@ -57,8 +57,8 @@ const [useXB, {w: useXC}] = ((42: any): [() => void, { w: () => void }])
         useValidator?: string => boolean,
         w: { useXD: () => void}
       ) {
-        const actionItems = useNodeActionItems(1); // no error
-        const validator = useValidator?.(""); // no error
+        const actionItems = useNodeActionItems(1); // error: params won't get `MakeHookLike` transform. Higher order hooks are not supported.
+        const validator = useValidator?.(""); // // error: params won't get `MakeHookLike` transform. Higher order hooks are not supported.
         useXA(); // no error
         useXB(); // no error
         useXC(); // no error
