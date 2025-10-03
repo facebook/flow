@@ -1117,7 +1117,7 @@ References:
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
    tabs.js:16:5
    16|   | boolean
@@ -1142,7 +1142,7 @@ References:
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
    tabs.js:68:9
    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
@@ -1176,7 +1176,7 @@ References:
    10| class Tab extends React.Component<{}, void> {}
              ^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
    tabs.js:73:3
    73|   <NotTab/>

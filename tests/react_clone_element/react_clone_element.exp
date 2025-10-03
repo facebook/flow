@@ -126,7 +126,7 @@ References:
    25| (React.cloneElement(a): ExactReactElement_DEPRECATED<Class<B>>); // Error: A ~> B
                                                                   ^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
 
 
@@ -149,7 +149,7 @@ References:
    1002|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [3]
    test.js:31:23
      31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
@@ -177,7 +177,7 @@ References:
    1002|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [3]
    test.js:32:29
      32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
@@ -205,7 +205,7 @@ References:
    1002|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [3]
    test.js:38:29
      38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
@@ -233,7 +233,7 @@ References:
    1002|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [3]
    test.js:44:34
      44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
@@ -261,7 +261,7 @@ References:
    1002|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:160:6
               v--------------------------------------------------------------------------
@@ -290,7 +290,7 @@ References:
    155|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:160:6
              v--------------------------------------------------------------------------
@@ -319,7 +319,7 @@ References:
    155|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:160:6
              v--------------------------------------------------------------------------
@@ -348,7 +348,7 @@ References:
    1002|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [3]
    test.js:54:34
      54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
@@ -376,7 +376,7 @@ References:
    1002|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [3]
    test.js:56:27
      56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
@@ -404,7 +404,7 @@ References:
    155|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [3]
    test.js:57:34
     57| React.cloneElement(d, undefined, 42); // Error: `children` is an array.
@@ -432,7 +432,7 @@ References:
    155|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [3]
    test.js:58:29
     58| React.cloneElement(d, null, 42); // Error: `children` is an array.
@@ -460,7 +460,7 @@ References:
    1002|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [3]
    test.js:70:40
      70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
@@ -489,7 +489,7 @@ References:
    1002|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [3]
    test.js:76:27
      76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
@@ -519,7 +519,7 @@ References:
    155|   & (<C: $Keys<$JSXIntrinsics>, E: ExactReactElement_DEPRECATED<C>>(
                  ^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:160:17
    160|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
@@ -552,7 +552,7 @@ References:
    1002|   [string]: {
             ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                            ^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:160:17
     160|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(

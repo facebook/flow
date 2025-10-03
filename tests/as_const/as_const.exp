@@ -1151,7 +1151,7 @@ References:
     5| b as ExactReactElement_DEPRECATED<'div'>; // error
                                          ^^^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
 
 
@@ -1172,7 +1172,7 @@ References:
    94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
                                                           ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
 
 

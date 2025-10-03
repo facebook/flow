@@ -51,7 +51,7 @@ References:
     5| function Component2(props: {| bar: number |}): React.Node { return null }
                                   ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                                                           ^ [3]
 
 
@@ -72,7 +72,7 @@ References:
     5| function Component2(props: {| bar: number |}): React.Node { return null }
                                   ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                                                           ^ [3]
 
 
@@ -93,7 +93,7 @@ References:
     4| function Component(props: Props): React.Node { return null }
                                  ^^^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
 
 
@@ -114,7 +114,7 @@ References:
     4| function Component(props: Props): React.Node { return null }
                                  ^^^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
 
 

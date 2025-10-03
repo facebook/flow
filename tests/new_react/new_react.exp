@@ -198,7 +198,7 @@ References:
    39| var foo: $jsx<number> = <Foo/>;
                      ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
 
 

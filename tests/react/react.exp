@@ -126,58 +126,6 @@ References:
              ^^^ [2]
 
 
-Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:3
-
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in property `ref` of type argument `P` [1]:
-[incompatible-type]
- - Either `SpanInstance` [2] is incompatible with `DivInstance` [3] in the first parameter.
- - Or `SpanInstance` [2] is incompatible with null [4] in the first parameter.
-
-   createElement_invalid_implicit.js:2:3
-     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
-          ^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:84
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                                           ^ [1]
-   flow-typed/jsx.js:21:15
-    21|     instance: SpanInstance,
-                      ^^^^^^^^^^^^ [2]
-   flow-typed/jsx.js:17:15
-    17|     instance: DivInstance,
-                      ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:105:13
-   105|     | ((T | null) => mixed)
-                    ^^^^ [4]
-
-
-Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:3
-
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in property `ref` of type argument `P` [1]:
-[incompatible-type]
- - Either `SpanInstance` [2] is incompatible with `DivInstance` [3] in property `current`.
- - Or `SpanInstance` [2] is incompatible with null [4] in property `current`.
-
-   createElement_invalid_implicit.js:2:3
-     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
-          ^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:84
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                                           ^ [1]
-   flow-typed/jsx.js:21:15
-    21|     instance: SpanInstance,
-                      ^^^^^^^^^^^^ [2]
-   flow-typed/jsx.js:17:15
-    17|     instance: DivInstance,
-                      ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:104:23
-   104|     | { -current: T | null, ... }
-                              ^^^^ [4]
-
-
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:4
 
 Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `div` [1] is incompatible with string literal `span` [2]
@@ -192,8 +140,31 @@ References:
     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
                                                  ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:4
+
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `void | RefSetter<DivInstance>` [1] is not exactly the
+same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. 
+
+The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
+- Either make `{ref?: RefSetter<DivInstance>, ...}` [1] and `{ref?: RefSetter<SpanInstance>, ...}` [2] exactly the same
+- Or make property `ref` in props of string literal `span` [2] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+
+   createElement_invalid_implicit.js:2:4
+    2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
+          ^^^ [1]
+
+References:
+   createElement_invalid_implicit.js:2:43
+    2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
+                                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                          ^ [3]
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:3
@@ -202,58 +173,6 @@ Cannot resolve name `React`. [cannot-resolve-name]
 
    2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
         ^^^^^^^
-
-
-Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:3
-
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in property `ref` of type argument `P` [1]:
-[incompatible-type]
- - Either `SpanInstance` [2] is incompatible with `DivInstance` [3] in the first parameter.
- - Or `SpanInstance` [2] is incompatible with null [4] in the first parameter.
-
-   createElement_invalid_implicit.js:7:3
-     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
-          ^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:84
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                                           ^ [1]
-   flow-typed/jsx.js:21:15
-    21|     instance: SpanInstance,
-                      ^^^^^^^^^^^^ [2]
-   flow-typed/jsx.js:17:15
-    17|     instance: DivInstance,
-                      ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:105:13
-   105|     | ((T | null) => mixed)
-                    ^^^^ [4]
-
-
-Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:3
-
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in property `ref` of type argument `P` [1]:
-[incompatible-type]
- - Either `SpanInstance` [2] is incompatible with `DivInstance` [3] in property `current`.
- - Or `SpanInstance` [2] is incompatible with null [4] in property `current`.
-
-   createElement_invalid_implicit.js:7:3
-     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
-          ^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:84
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                                           ^ [1]
-   flow-typed/jsx.js:21:15
-    21|     instance: SpanInstance,
-                      ^^^^^^^^^^^^ [2]
-   flow-typed/jsx.js:17:15
-    17|     instance: DivInstance,
-                      ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:104:23
-   104|     | { -current: T | null, ... }
-                              ^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
@@ -270,8 +189,31 @@ References:
     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
                                                  ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
+
+
+Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
+
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `void | RefSetter<DivInstance>` [1] is not exactly the
+same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. 
+
+The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
+- Either make `{ref?: RefSetter<DivInstance>, ...}` [1] and `{ref?: RefSetter<SpanInstance>, ...}` [2] exactly the same
+- Or make property `ref` in props of string literal `span` [2] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+
+   createElement_invalid_implicit.js:7:4
+    7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
+          ^^^ [1]
+
+References:
+   createElement_invalid_implicit.js:7:43
+    7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
+                                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                          ^ [3]
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
@@ -304,58 +246,6 @@ References:
               ^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:3
-
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in property `ref` of type argument `P` [1]:
-[incompatible-type]
- - Either `SpanInstance` [2] is incompatible with `DivInstance` [3] in the first parameter.
- - Or `SpanInstance` [2] is incompatible with null [4] in the first parameter.
-
-   createElement_invalid_implicit.js:12:3
-    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
-          ^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:84
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                                           ^ [1]
-   flow-typed/jsx.js:21:15
-    21|     instance: SpanInstance,
-                      ^^^^^^^^^^^^ [2]
-   flow-typed/jsx.js:17:15
-    17|     instance: DivInstance,
-                      ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:105:13
-   105|     | ((T | null) => mixed)
-                    ^^^^ [4]
-
-
-Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:3
-
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in property `ref` of type argument `P` [1]:
-[incompatible-type]
- - Either `SpanInstance` [2] is incompatible with `DivInstance` [3] in property `current`.
- - Or `SpanInstance` [2] is incompatible with null [4] in property `current`.
-
-   createElement_invalid_implicit.js:12:3
-    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
-          ^^^^^^^
-
-References:
-   <BUILTINS>/react.js:58:84
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
-                                                                                           ^ [1]
-   flow-typed/jsx.js:21:15
-    21|     instance: SpanInstance,
-                      ^^^^^^^^^^^^ [2]
-   flow-typed/jsx.js:17:15
-    17|     instance: DivInstance,
-                      ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:104:23
-   104|     | { -current: T | null, ... }
-                              ^^^^ [4]
-
-
 Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:4
 
 Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `div` [1] is incompatible with string literal `span` [2]
@@ -370,8 +260,31 @@ References:
    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
                                                  ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                          ^^^^^^^^^^^ [3]
+
+
+Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:4
+
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `void | RefSetter<DivInstance>` [1] is not exactly the
+same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. 
+
+The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
+- Either make `{ref?: RefSetter<DivInstance>, ...}` [1] and `{ref?: RefSetter<SpanInstance>, ...}` [2] exactly the same
+- Or make property `ref` in props of string literal `span` [2] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+
+   createElement_invalid_implicit.js:12:4
+   12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
+          ^^^ [1]
+
+References:
+   createElement_invalid_implicit.js:12:43
+   12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
+                                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:58:84
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                                                          ^ [3]
 
 
 Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:3
@@ -659,7 +572,7 @@ References:
     6| (<Foo a={42}/>: ExactReactElement_DEPRECATED<React.ComponentType<{b: number}>>); // Error
                                                                         ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:84
-   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+   58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                                                           ^ [3]
 
 
@@ -683,7 +596,7 @@ References:
    242|   declare export type ComponentType<-P: {...}> = component(...P);
                                              ^ [3]
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementProps<ElementType>>: {...};
+    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [4]
 
 
@@ -2543,7 +2456,7 @@ References:
 
 
 
-Found 145 errors
+Found 142 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

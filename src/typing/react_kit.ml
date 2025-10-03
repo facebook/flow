@@ -659,7 +659,10 @@ module Kit (Flow : Flow_common.S) : REACT = struct
           elem_reason
           ~use_desc:true
           "ExactReactElement_DEPRECATED"
-          [component; Tvar.mk_where cx reason_op props_to_tout]
+          [
+            component;
+            Tvar.mk_where cx reason_op (get_config cx trace l ~use_op ~reason_op u Polarity.Positive);
+          ]
       in
       (* Concretize to an ObjT so that we can asssociate the monomorphized component with the props id *)
       let elem =
