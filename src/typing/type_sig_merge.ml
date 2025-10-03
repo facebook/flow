@@ -502,19 +502,6 @@ let merge_exports =
       in
       lazy_module
 
-let make_hooklike file hooklike t =
-  if hooklike && Context.hook_compatibility file.cx then
-    Type.EvalT
-      {
-        type_ = t;
-        defer_use_t =
-          Type.TypeDestructorT
-            (Type.unknown_use (* not used *), TypeUtil.reason_of_t t, Type.MakeHooklike);
-        id = Type.Eval.generate_id ();
-      }
-  else
-    t
-
 type merge_env = {
   tps: Type.t SMap.t;
   infer_tps: (ALoc.t * Type.t) SMap.t;
@@ -525,23 +512,19 @@ type merge_env = {
 let mk_merge_env ?(infer_tps = SMap.empty) ?(in_no_infer = false) ?(in_renders_arg = false) tps =
   { tps; infer_tps; in_no_infer; in_renders_arg }
 
-let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env file = function
+let rec merge ?(as_const = false) ?(const_decl = false) env file = function
   | Pack.Annot t ->
     let t = merge_annot env file t in
-    make_hooklike file hooklike t
+    t
   | Pack.Value t ->
     let t = merge_value ~as_const ~const_decl env file t in
-    make_hooklike file hooklike t
+    t
   | Pack.Ref ref ->
     (* Let's have the property retain the precise type in
      *   export const FOO = "foo";
      *   export const OBJ = { FOO } as const;
      *)
-    merge_ref
-      ~const_decl:(as_const || const_decl)
-      file
-      (fun t ~ref_loc:_ ~def_loc:_ _ -> make_hooklike file hooklike t)
-      ref
+    merge_ref ~const_decl:(as_const || const_decl) file (fun t ~ref_loc:_ ~def_loc:_ _ -> t) ref
   | Pack.TyRef name ->
     let f t ref_loc (name, _) =
       let reason = Reason.(mk_annot_reason (RType (Reason.OrdinaryName name)) ref_loc) in
@@ -570,7 +553,7 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
     let t = merge ?as_const ?const_decl env file t in
     let op = merge_op env file op in
     let t = eval file loc t op in
-    make_hooklike file hooklike t
+    t
   | Pack.Require { loc; index } -> require file loc index ~standard_cjs_esm_interop:false
   | Pack.ImportDynamic { loc; index } ->
     let (mref, _) = Module_refs.get file.dependencies index in
@@ -578,12 +561,12 @@ let rec merge ?(hooklike = false) ?(as_const = false) ?(const_decl = false) env 
     let ns_t = import_ns file ns_reason (Flow_import_specifier.unwrap_userland mref) loc index in
     let reason = Reason.(mk_annot_reason RAsyncImport loc) in
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "Promise" [ns_t] in
-    make_hooklike file hooklike t
+    t
   | Pack.ModuleRef { loc; index } ->
     let t = require file loc index ~standard_cjs_esm_interop:true in
     let reason = Reason.(mk_reason RModuleReference loc) in
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t] in
-    make_hooklike file hooklike t
+    t
 
 and merge_annot env file = function
   | Any loc -> Type.AnyT.at Type.AnnotatedAny loc
@@ -2016,8 +1999,7 @@ let merge_def ~const_decl file reason = function
       ~is_annotation:false
       def
       (Some (id_loc, name))
-  | Variable { id_loc = _; name; def } ->
-    merge ~const_decl ~hooklike:(Flow_ast_utils.hook_name name) (mk_merge_env SMap.empty) file def
+  | Variable { id_loc = _; name = _; def } -> merge ~const_decl (mk_merge_env SMap.empty) file def
   | Parameter { id_loc = _; name = _; def; tparams } ->
     let t (env, _targs) = merge ~const_decl env file def in
     merge_tparams_targs (mk_merge_env SMap.empty) file reason t tparams
