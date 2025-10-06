@@ -311,7 +311,7 @@ Cannot read `current` from `ref` [1] because `ref` values may not be read during
 
 Error ---------------------------------------------------- error.invalid-use-ref-added-to-dep-without-type-info.js:14:23
 
-Cannot read `current` from expression [1] because `ref` values may not be read during render.
+Cannot read `current` from `val.ref` [1] because `ref` values may not be read during render.
 (https://react.dev/reference/react/useRef). [react-rule-unsafe-ref]
 
    14|   const x = { a, val: val.ref.current }; // Error

@@ -362,9 +362,9 @@ module Type_at_pos = struct
         else
           super#implicit impl
 
-      method! jsx_attribute_name_identifier (((loc, _), _) as id) =
+      method! jsx_attribute_name_identifier (((loc, _), { Ast.JSX.Identifier.name; _ }) as id) =
         if self#covers_target loc then
-          let reason = Reason.mk_reason (Reason.RCustom "jsx attr") loc in
+          let reason = Reason.mk_reason Reason.(RProperty (Some (OrdinaryName name))) loc in
           let (_, lazy_hint) = Type_env.get_hint cx loc in
           lazy_hint reason ~expected_only:false
           |> Type_hint.with_hint_result

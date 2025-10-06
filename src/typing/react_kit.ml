@@ -135,7 +135,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         | `Props -> "props"
         | `Instance -> "instance"
       in
-      let reason = replace_desc_reason (RCustom name) reason_op in
+      let reason = replace_desc_reason (RProperty (Some (OrdinaryName name))) reason_op in
       mk_named_prop ~reason (OrdinaryName name)
     in
     (* TODO: if intrinsic is null, we will treat it like prototype termination,

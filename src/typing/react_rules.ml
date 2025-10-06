@@ -642,7 +642,7 @@ let effect_visitor cx ~is_hook rrid tast =
           match exp with
           | Ast.Expression.Identifier (loc, { Ast.Identifier.name; _ }) ->
             mk_reason (RIdentifier (OrdinaryName name)) loc
-          | _ -> mk_reason (RCustom "expression") loc
+          | _ -> mk_expression_reason expr
         in
         if Context.react_rule_enabled cx Options.ValidateRefAccessDuringRender then begin
           let ty = ALocMap.find loc type_map in
