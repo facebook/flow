@@ -965,6 +965,21 @@ References:
            ^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:19:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
+
+   test.js:19:5
+   19|     useY(); // error: unsupported hook compatibility
+           ^^^^^^
+
+References:
+   test.js:19:5
+   19|     useY(); // error: unsupported hook compatibility
+           ^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------------- test.js:20:5
 
 Cannot call `useX` because number [1] is not a function. [not-a-function]
@@ -991,6 +1006,21 @@ Cannot call `useV` because a call signature declaring the expected parameter / r
 References:
    exp2.js
    ^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:29:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
+
+   test.js:29:5
+   29|     bag_o_hooks.useR(); // error: unsupported hook compatibility
+           ^^^^^^^^^^^^^^^^^^
+
+References:
+   test.js:29:5
+   29|     bag_o_hooks.useR(); // error: unsupported hook compatibility
+           ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:38:20
@@ -1054,5 +1084,20 @@ References:
                                  ^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:65:9
 
-Found 70 errors
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
+
+   test.js:65:9
+   65|         w.useXD(); // error: unsupported hook compatibility
+               ^^^^^^^^^
+
+References:
+   test.js:65:9
+   65|         w.useXD(); // error: unsupported hook compatibility
+               ^^^^^^^ [1]
+
+
+
+Found 73 errors

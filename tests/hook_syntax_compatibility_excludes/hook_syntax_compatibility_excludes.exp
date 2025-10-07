@@ -45,6 +45,21 @@ References:
            ^^^^^^^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------- __tests__/included-test.js:15:5
+
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
+
+   __tests__/included-test.js:15:5
+   15|     XP.useBar(); // error: unsupported hook compatibility
+           ^^^^^^^^^^^
+
+References:
+   __tests__/included-test.js:15:5
+   15|     XP.useBar(); // error: unsupported hook compatibility
+           ^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- exclude.js:6:5
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
@@ -92,5 +107,20 @@ References:
            ^^^^^^^^^ [1]
 
 
+Error -------------------------------------------------------------------------------------------------- include.js:15:5
 
-Found 6 errors
+Cannot call function because callee [1] has a name that indicates it is a React hook (starting with `use`) but it is not
+defined with hook syntax. (https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook-non-hook-syntax]
+
+   include.js:15:5
+   15|     XP.useBar(); // error: unsupported hook compatibility
+           ^^^^^^^^^^^
+
+References:
+   include.js:15:5
+   15|     XP.useBar(); // error: unsupported hook compatibility
+           ^^^^^^^^^ [1]
+
+
+
+Found 8 errors

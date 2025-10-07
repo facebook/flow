@@ -2479,13 +2479,6 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         | Some dro when not (is_exception_to_react_dro propref) -> F.mk_react_dro cx use_op dro t
         | _ -> t
       in
-      let t =
-        match propref with
-        | Named { name = OrdinaryName name; _ }
-          when Context.hook_compatibility cx && Flow_ast_utils.hook_name name ->
-          F.mk_hooklike cx use_op t
-        | _ -> t
-      in
       F.return cx trace ~use_op:unknown_use (F.reposition cx ~trace loc t)
     | None ->
       let (reason_prop, prop_name) =

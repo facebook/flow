@@ -12,6 +12,6 @@ component Component() {
     IP.useFoo(); // ok
     IP.useBar(); // ok
     XP.useFoo(); // ok
-    XP.useBar(); // ok
+    XP.useBar(); // error: unsupported hook compatibility
     return null;
 }

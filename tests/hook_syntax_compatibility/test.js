@@ -16,7 +16,7 @@ const bag_o_hooks = {
 };
 
 component C(...{ useY }: { useY: () => void}) {
-    useY(); // no error
+    useY(); // error: unsupported hook compatibility
     useX(); // error for calling number but no hook error
     useZ(); // no error
     useW(); // no error
@@ -26,7 +26,7 @@ component C(...{ useY }: { useY: () => void}) {
     useT<mixed>(); // no error
     useS(); // no error
     useS<mixed>(); // no error
-    bag_o_hooks.useR(); // no error
+    bag_o_hooks.useR(); // error: unsupported hook compatibility
     return 42;
 }
 
@@ -62,7 +62,7 @@ const [useXB, {w: useXC}] = ((42: any): [() => void, { w: () => void }])
         useXA(); // no error
         useXB(); // no error
         useXC(); // no error
-        w.useXD(); // no error
+        w.useXD(); // error: unsupported hook compatibility
         return null;
       }
 }
