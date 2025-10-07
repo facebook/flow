@@ -824,7 +824,7 @@ type 'loc message =
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }
-  | MessageInvalidCatchParameterAnnotation
+  | MessageInvalidCatchParameterAnnotation of { ts_utility_syntax: bool }
   | MessageInvalidComponentRestParam
   | MessageInvalidEnumMemberCheck of {
       enum_reason: 'loc virtual_reason;

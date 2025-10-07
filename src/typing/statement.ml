@@ -1177,7 +1177,11 @@ module Make
               let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
               (t, Ast.Type.Available ast_annot)
             | Ast.Type.Available (_, (loc, _)) ->
-              Flow.add_output cx (Error_message.EInvalidCatchParameterAnnotation loc);
+              Flow.add_output
+                cx
+                (Error_message.EInvalidCatchParameterAnnotation
+                   { loc; ts_utility_syntax = Context.ts_utility_syntax cx }
+                );
               ( AnyT.why CatchAny (mk_reason RAnyImplicit loc),
                 Tast_utils.error_mapper#type_annotation_hint annot
               )

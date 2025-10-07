@@ -3309,13 +3309,15 @@ let to_printable_error :
       ]
     | MessageInvalidArgument { lower; upper } ->
       [ref lower; text " is not a valid argument of "; ref upper]
-    | MessageInvalidCatchParameterAnnotation ->
+    | MessageInvalidCatchParameterAnnotation { ts_utility_syntax } ->
       [
         text "Invalid catch parameter type annotation. ";
         text "Annotation must be ";
         code "any";
         text " or ";
-        code "mixed";
+        (match ts_utility_syntax with
+        | true -> code "unknown"
+        | false -> code "mixed");
         text " if specified.";
       ]
     | MessageInvalidComponentRestParam ->

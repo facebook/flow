@@ -624,7 +624,10 @@ and 'loc t' =
     }
   | EBigIntRShift3 of 'loc virtual_reason
   | EBigIntNumCoerce of 'loc virtual_reason
-  | EInvalidCatchParameterAnnotation of 'loc
+  | EInvalidCatchParameterAnnotation of {
+      loc: 'loc;
+      ts_utility_syntax: bool;
+    }
   | ETSSyntax of {
       kind: ts_syntax_kind;
       loc: 'loc;
@@ -1728,7 +1731,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EInvalidComponentRestParam loc -> EInvalidComponentRestParam (f loc)
   | EBigIntRShift3 r -> EBigIntRShift3 (map_reason r)
   | EBigIntNumCoerce r -> EBigIntNumCoerce (map_reason r)
-  | EInvalidCatchParameterAnnotation loc -> EInvalidCatchParameterAnnotation (f loc)
+  | EInvalidCatchParameterAnnotation { loc; ts_utility_syntax } ->
+    EInvalidCatchParameterAnnotation { loc = f loc; ts_utility_syntax }
   | ETSSyntax { kind; loc } -> ETSSyntax { kind; loc = f loc }
   | EInvalidBinaryArith { reason_out; reason_l; reason_r; kind } ->
     EInvalidBinaryArith
@@ -2369,7 +2373,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidGraphQL (loc, _)
   | EAnnotationInference (loc, _, _, _)
   | ETrivialRecursiveDefinition (loc, _)
-  | EInvalidCatchParameterAnnotation loc
+  | EInvalidCatchParameterAnnotation { loc; _ }
   | EInvalidMappedType { loc; _ }
   | ETSSyntax { loc; _ }
   | EReferenceInAnnotation (loc, _, _)
@@ -3563,7 +3567,8 @@ let friendly_message_of_msg = function
   | EInvalidComponentRestParam _ -> Normal MessageInvalidComponentRestParam
   | EBigIntRShift3 reason -> Normal (MessageCannotPerformBigIntRShift3 reason)
   | EBigIntNumCoerce reason -> Normal (MessageCannotPerformBigIntUnaryPlus reason)
-  | EInvalidCatchParameterAnnotation _ -> Normal MessageInvalidCatchParameterAnnotation
+  | EInvalidCatchParameterAnnotation { ts_utility_syntax; _ } ->
+    Normal (MessageInvalidCatchParameterAnnotation { ts_utility_syntax })
   | ETSSyntax { kind; _ } -> begin
     match kind with
     | TSUnknown -> Normal MessageTSUnknownType

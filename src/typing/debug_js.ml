@@ -1957,8 +1957,8 @@ let dump_error_message =
     | EReactRefInRender _ -> "EReactRefInRender _"
     | EBigIntRShift3 reason -> spf "EBigIntRShift3 (%s)" (dump_reason cx reason)
     | EBigIntNumCoerce reason -> spf "EBigIntNumCoerce (%s)" (dump_reason cx reason)
-    | EInvalidCatchParameterAnnotation loc ->
-      spf "EInvalidCatchParameterAnnotation (%s)" (string_of_aloc loc)
+    | EInvalidCatchParameterAnnotation { loc; ts_utility_syntax } ->
+      spf "EInvalidCatchParameterAnnotation {%s; %b}" (string_of_aloc loc) ts_utility_syntax
     | ETSSyntax { loc; _ } -> spf "ETSSyntax (%s)" (string_of_aloc loc)
     | EInvalidBinaryArith { reason_out; reason_l; reason_r; kind } ->
       spf
