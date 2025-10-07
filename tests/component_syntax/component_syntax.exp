@@ -2990,8 +2990,8 @@ References:
    refs.js:8:36
      8| component Baz(ref: React.RefSetter<typeof Reffed>) { return null };
                                            ^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:258:34
-   258|   declare export type RefSetter<-T> = React.RefSetter<T>;
+   <BUILTINS>/react.js:257:34
+   257|   declare export type RefSetter<-T> = React.RefSetter<T>;
                                          ^ [3]
 
 

@@ -37,7 +37,6 @@ let string_of_destructor = function
   | ValuesType -> "Values"
   | ConditionalType _ -> "ConditionalType"
   | TypeMap ObjectKeyMirror -> "ObjectKeyMirror"
-  | ReactElementPropsType -> "ReactElementProps"
   | ReactElementConfigType -> "ReactElementConfig"
   | MappedType _ -> "MappedType"
 
@@ -435,7 +434,6 @@ and dump_use_t_ (depth, tvars) cx t =
           } ->
         p ~extra:(spf "CreateElement (%s) => %s" (kid jsx_props) (kid tout)) t
       | ConfigCheck { props } -> spf "ConfigCheck (%s)" (kid props)
-      | GetProps tout -> spf "GetProps (%s)" (kid tout)
       | GetConfig { tout } -> spf "GetConfig (%s)" (kid tout)
     )
   in

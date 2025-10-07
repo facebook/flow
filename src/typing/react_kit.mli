@@ -34,7 +34,7 @@ module type REACT = sig
     Type.t ->
     unit
 
-  val err_incompatible : Context.t -> use_op:use_op -> reason -> Type.React.tool -> unit
+  val err_incompatible : Context.t -> use_op:use_op -> reason -> unit
 end
 
 module Kit (_ : Flow_common.S) : REACT

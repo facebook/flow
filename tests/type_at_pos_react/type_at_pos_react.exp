@@ -5,7 +5,7 @@ lazy_ref.js:14:9 = {
 }
 = {default: component(...empty) renders null}
 
-'RefSetter' defined at (lib) react.js:979:9
+'RefSetter' defined at (lib) react.js:977:9
 
 lazy_ref.js:14:9,14:9
 lazy_ref.js:19:9 = Promise<
@@ -13,7 +13,7 @@ lazy_ref.js:19:9 = Promise<
 >
 
 'ExactReactElement_DEPRECATED' defined at (lib) react.js:58:20
-'Node' defined at (lib) react.js:259:22
+'Node' defined at (lib) react.js:258:22
 'Promise' defined at (lib) core.js:2199:14
 'Props' defined at exports-component.js:5:5
 
@@ -32,7 +32,7 @@ react_component.js:13:33 =
 **@see**  https://react.dev/reference/react/Component
 class Component<Props, State = void>
 
-'Component' defined at (lib) react.js:602:18
+'Component' defined at (lib) react.js:600:18
 
 react_component.js:13:29,13:37
 react_component.js:18:17 = State
@@ -47,7 +47,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:707:5,709:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:705:5,707:22"},
           "name":"Fragment"
         },
         "typeParams":[
@@ -84,7 +84,7 @@ react_component.js:31:7 = {
       "expanded":{
         "kind":"NominalComponentDecl",
         "name":{
-          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:707:5,709:22"},
+          "provenance":{"kind":"Library (Remote)","loc":"[LIB] react.js:705:5,707:22"},
           "name":"Fragment"
         },
         "typeParams":[
@@ -187,7 +187,7 @@ Flags:
 **@see**  https://react.dev/reference/react/createElement
 React$CreateElement
 
-'React$CreateElement' defined at (lib) react.js:152:20
+'React$CreateElement' defined at (lib) react.js:151:20
 
 react.js:4:7,4:19
 

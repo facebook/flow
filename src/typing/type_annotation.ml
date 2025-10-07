@@ -1144,31 +1144,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               let reason = mk_annot_reason RFunctionType loc in
               reconstruct_ast (FunProtoBindT reason) None
           )
-        | "React$ElementProps" ->
-          if not (Context.is_lib_file cx) then
-            Flow_js_utils.add_output
-              cx
-              (Error_message.EInternalType
-                 ( loc,
-                   Flow_intermediate_error_types.ReactDollarUtilityTypesWithNonDollarAliases
-                     "ElementProps"
-                 )
-              );
-          check_type_arg_arity cx loc t_ast targs 1 (fun () ->
-              let (ts, targs) = convert_type_params () in
-              let t = List.hd ts in
-              let reason = mk_reason (RType (OrdinaryName "React$ElementProps")) loc in
-              reconstruct_ast
-                (mk_type_destructor
-                   cx
-                   (use_op reason)
-                   reason
-                   t
-                   ReactElementPropsType
-                   (mk_eval_id cx loc)
-                )
-                targs
-          )
         | "React$ElementConfig" ->
           if not (Context.is_lib_file cx) then
             Flow_js_utils.add_output

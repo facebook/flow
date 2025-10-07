@@ -36,22 +36,15 @@ module type REACT = sig
     Type.t ->
     unit
 
-  val err_incompatible : Context.t -> use_op:use_op -> reason -> Type.React.tool -> unit
+  val err_incompatible : Context.t -> use_op:use_op -> reason -> unit
 end
 
 module Kit (Flow : Flow_common.S) : REACT = struct
   include Flow
   module RendersKit = Renders_kit.Make (Flow)
 
-  let err_incompatible cx ~use_op reason tool =
-    let err =
-      match tool with
-      | GetProps _
-      | GetConfig _
-      | CreateElement _
-      | ConfigCheck _ ->
-        Error_message.ENotAReactComponent { reason; use_op }
-    in
+  let err_incompatible cx ~use_op reason =
+    let err = Error_message.ENotAReactComponent { reason; use_op } in
     Flow_js_utils.add_output cx err
 
   let component_class cx reason props =
@@ -282,7 +275,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         |> Base.Option.value_map ~f:snd ~default:(Obj_type.mk ~obj_kind:Exact cx r)
         |> fun t -> rec_flow_t ~use_op:unknown_use cx trace (t, tout)
       | _ ->
-        err_incompatible cx ~use_op:unknown_use r (React.GetProps tout);
+        err_incompatible cx ~use_op:unknown_use r;
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout))
     | DefT (r, ObjT { call_t = Some id; _ }) ->
       (match Context.find_call cx id with
@@ -300,7 +293,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         (* Keep the object's reason for better error reporting *)
         props_to_tout cx trace (mod_reason_of_t (Fun.const r) fun_t) ~use_op ~reason_op u tout
       | _ ->
-        err_incompatible cx ~use_op:unknown_use r (React.GetProps tout);
+        err_incompatible cx ~use_op:unknown_use r;
         rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout))
     (* Special case for intrinsic components. *)
     | DefT (_, SingletonStrT { value = name; _ }) ->
@@ -359,7 +352,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       rec_flow cx trace (config, ConvertEmptyPropsToMixedT (reason, tout))
     (* ...otherwise, error. *)
     | _ ->
-      err_incompatible cx ~use_op (reason_of_t component) u;
+      err_incompatible cx ~use_op (reason_of_t component);
       rec_flow_t ~use_op:unknown_use cx trace (AnyT.error reason_op, tout)
 
   (* Creates the type that we expect for a React config by diffing out default
@@ -414,7 +407,7 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         ))
 
   let run cx trace ~use_op reason_op l u =
-    let err_incompatible ?(use_op = use_op) reason = err_incompatible cx ~use_op reason u in
+    let err_incompatible ?(use_op = use_op) reason = err_incompatible cx ~use_op reason in
     (* This function creates a constraint *from* tin *to* props so that props is
      * an upper bound on tin. This is important because when the type of a
      * component's props is inferred (such as when a stateless functional
@@ -517,7 +510,6 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         err_incompatible reason;
         rec_flow_t ~use_op:unknown_use cx trace (tin, AnyT.error reason)
     in
-    let props_to_tout = props_to_tout cx trace l ~use_op ~reason_op u in
     let config_check use_op ~jsx_props =
       (* Create a type variable for our props. *)
       let (component_props, component_default_props) =
@@ -779,6 +771,5 @@ module Kit (Flow : Flow_common.S) : REACT = struct
         specialized_component
         tout
     | ConfigCheck { props = jsx_props } -> config_check use_op ~jsx_props
-    | GetProps tout -> props_to_tout tout
     | GetConfig { tout } -> get_config tout
 end

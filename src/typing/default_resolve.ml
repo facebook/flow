@@ -63,7 +63,6 @@ let rec default_resolve_touts ~flow ?resolve_callee cx loc u =
     match tool with
     | CreateElement { tout; _ }
     | ConfigCheck { props = tout }
-    | GetProps tout
     | GetConfig { tout } ->
       resolve tout
   in

@@ -21,8 +21,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:602:28
-   602|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:600:28
+   600|     declare class Component<Props, State = void> {
                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -35,8 +35,8 @@ Cannot use `React.Component` [1] with fewer than 1 type argument. [missing-type-
                          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:602:28
-   602|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:600:28
+   600|     declare class Component<Props, State = void> {
                                    ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -74,8 +74,8 @@ References:
    classes.js:7:19
      7| class Foo extends React.Component<Props, State> {
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:611:23
-   611|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:609:23
+   609|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -94,8 +94,8 @@ References:
    classes.js:7:19
      7| class Foo extends React.Component<Props, State> {
                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:611:53
-   611|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:609:53
+   609|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
@@ -341,8 +341,8 @@ Cannot get `this.state.x` because property `x` is missing in undefined [1]. [inc
                               ^
 
 References:
-   <BUILTINS>/react.js:602:44
-   602|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:600:44
+   600|     declare class Component<Props, State = void> {
                                                    ^^^^ [1]
 
 
@@ -366,8 +366,8 @@ References:
    state6.js:5:34
      5| type State = {|foo: number, bar: number|};
                                          ^^^^^^ [2]
-   <BUILTINS>/react.js:611:23
-   611|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:609:23
+   609|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
@@ -416,8 +416,8 @@ References:
    state6.js:11:59
     11| class MyComponent extends React.Component<{prop: number}, State> {
                                                                   ^^^^^ [2]
-   <BUILTINS>/react.js:611:23
-   611|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
+   <BUILTINS>/react.js:609:23
+   609|         partialState: ?$ReadOnly<Partial<State>> | ((State, Props) => ?$ReadOnly<Partial<State>>),
                               ^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 

@@ -211,7 +211,6 @@ class ['a] t =
       | PartialType
       | RequiredType
       | EnumType
-      | ReactElementPropsType
       | ReactElementConfigType ->
         acc
       | ReactCheckComponentConfig { props = map; allow_ref_in_spread = _ } ->

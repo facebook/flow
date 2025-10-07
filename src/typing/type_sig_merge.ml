@@ -914,14 +914,6 @@ and merge_annot env file = function
   | Function_bind loc ->
     let reason = Reason.(mk_annot_reason RFunctionType loc) in
     Type.FunProtoBindT reason
-  | ReactElementProps (loc, t) ->
-    let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementProps")) loc) in
-    let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in
-    let t = merge env file t in
-    let id = eval_id_of_aloc file loc in
-    Type.(
-      EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, ReactElementPropsType); id }
-    )
   | ReactElementConfig (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementConfig")) loc) in
     let use_op = Type.Op (Type.TypeApplication { type_ = reason }) in

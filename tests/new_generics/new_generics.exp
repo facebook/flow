@@ -1074,8 +1074,8 @@ References:
    react.js:13:28
     13|   a as React.ComponentType<{a: number}>; // nope, contravariance
                                    ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:242:38
-   242|   declare export type ComponentType<-P: {...}> = component(...P);
+   <BUILTINS>/react.js:241:38
+   241|   declare export type ComponentType<-P: {...}> = component(...P);
                                              ^ [3]
 
 
@@ -1095,8 +1095,8 @@ References:
    react.js:14:24
     14|   b as React.Component<Props>; // nope
                                ^^^^^ [2]
-   <BUILTINS>/react.js:602:29
-   602|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:600:29
+   600|     declare class Component<Props, State = void> {
                                     ^^^^^ [3]
 
 

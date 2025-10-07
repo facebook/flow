@@ -1580,7 +1580,6 @@ module rec TypeTerm : sig
         false_t: t;
       }
     | TypeMap of type_map
-    | ReactElementPropsType
     | ReactElementConfigType
     | ReactCheckComponentConfig of {
         props: Property.t NameUtils.Map.t;
@@ -3108,7 +3107,6 @@ and React : sig
         specialized_component: TypeTerm.specialized_callee option;
       }
     | ConfigCheck of { props: TypeTerm.t }
-    | GetProps of TypeTerm.t_out
     | GetConfig of { tout: TypeTerm.t_out }
 end =
   React

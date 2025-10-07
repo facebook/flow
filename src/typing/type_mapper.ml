@@ -689,9 +689,7 @@ class virtual ['a] t =
               mapped_type_flags;
               homomorphic = homomorphic';
             }
-      | ReactElementPropsType
-      | ReactElementConfigType ->
-        t
+      | ReactElementConfigType -> t
 
     method object_kit_spread_operand_slice
         cx map_cx ({ Object.Spread.reason; prop_map; dict; generics; reachable_targs } as slice) =

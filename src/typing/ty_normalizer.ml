@@ -448,7 +448,6 @@ module Make (I : INPUT) : S = struct
     | ValuesType
     | ConditionalType _
     | TypeMap _
-    | ReactElementPropsType
     | ReactElementConfigType
     | ReactCheckComponentConfig _
     | ReactDRO _
@@ -491,7 +490,6 @@ module Make (I : INPUT) : S = struct
         | ValuesType
         | TypeMap _
         | EnumType
-        | ReactElementPropsType
         | ReactElementConfigType ->
           false)
       )
@@ -1725,7 +1723,6 @@ module Make (I : INPUT) : S = struct
         tuple_spread ~env ~inexact ty resolved_rev unresolved
       | T.ReactCheckComponentConfig { props; allow_ref_in_spread = _ } ->
         check_component ~env ty props
-      | T.ReactElementPropsType -> return (Ty.Utility (Ty.ReactElementPropsType ty))
       | T.ReactElementConfigType -> return (Ty.Utility (Ty.ReactElementConfigType ty))
       | T.RestType ((T.Object.Rest.SpreadReversal | T.Object.Rest.ReactConfigMerge _), _) as d ->
         terr ~kind:BadEvalT ~msg:(Debug_js.string_of_destructor d) None

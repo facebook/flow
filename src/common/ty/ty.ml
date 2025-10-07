@@ -285,7 +285,6 @@ and utility =
       remainder: t option;
     }
   (* React utils *)
-  | ReactElementPropsType of t
   | ReactElementConfigType of t
 
 and component_props =
@@ -683,7 +682,6 @@ class ['A] comparator_ty =
       | ElementType _ -> 7
       | NonMaybeType _ -> 8
       | Class _ -> 13
-      | ReactElementPropsType _ -> 18
       | ReactElementConfigType _ -> 19
       | ObjKeyMirror _ -> 22
       | Partial _ -> 23
@@ -850,7 +848,6 @@ let string_of_utility_ctor = function
   | Class _ -> "Class"
   | StringPrefix _ -> "StringPrefix"
   | StringSuffix _ -> "StringSuffix"
-  | ReactElementPropsType _ -> "React$ElementProps"
   | ReactElementConfigType _ -> "React$ElementConfig"
 
 let types_of_utility = function
@@ -872,7 +869,6 @@ let types_of_utility = function
   | StringPrefix { prefix = arg; remainder = Some t }
   | StringSuffix { suffix = arg; remainder = Some t } ->
     Some [StrLit (Reason.OrdinaryName arg); t]
-  | ReactElementPropsType t -> Some [t]
   | ReactElementConfigType t -> Some [t]
 
 let string_of_prop_source = function

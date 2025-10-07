@@ -2443,11 +2443,7 @@ struct
           in
           rec_flow cx trace (t_, u)
         | ( DefT (r, ObjT { call_t = Some id; _ }),
-            ReactKitT
-              ( _,
-                _,
-                (React.CreateElement _ | React.GetProps _ | React.GetConfig _ | React.ConfigCheck _)
-              )
+            ReactKitT (_, _, (React.CreateElement _ | React.GetConfig _ | React.ConfigCheck _))
           )
           when match Context.find_call cx id with
                | DefT (_, PolyT { t_out = DefT (_, FunT _); _ }) as fun_t ->
@@ -2456,7 +2452,7 @@ struct
                | _ -> false ->
           ()
         | ( DefT (reason_tapp, PolyT { tparams_loc = _; tparams; t_out; _ }),
-            ReactKitT (use_op, reason_op, (React.GetProps _ | React.GetConfig _))
+            ReactKitT (use_op, reason_op, React.GetConfig _)
           ) ->
           let t_ =
             ImplicitInstantiationKit.run_monomorphize
@@ -6680,8 +6676,6 @@ struct
           in
           rec_flow cx trace (t, u)
         | TypeMap tmap -> rec_flow cx trace (t, MapTypeT (use_op, reason, tmap, OpenT tout))
-        | ReactElementPropsType ->
-          rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetProps (OpenT tout)))
         | ReactElementConfigType ->
           rec_flow cx trace (t, ReactKitT (use_op, reason, React.GetConfig { tout = OpenT tout }))
         | MappedType { property_type; mapped_type_flags; homomorphic; distributive_tparam_name } ->

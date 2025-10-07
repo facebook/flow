@@ -39,8 +39,8 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:258:39
-   258|   declare export type RefSetter<-T> = React.RefSetter<T>;
+   <BUILTINS>/react.js:257:39
+   257|   declare export type RefSetter<-T> = React.RefSetter<T>;
                                               ^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:104:7
    104|     | { -current: T | null, ... }
@@ -67,8 +67,8 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:258:39
-   258|   declare export type RefSetter<-T> = React.RefSetter<T>;
+   <BUILTINS>/react.js:257:39
+   257|   declare export type RefSetter<-T> = React.RefSetter<T>;
                                               ^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:105:8
    105|     | ((T | null) => mixed)
@@ -91,8 +91,8 @@ References:
    main.js:3:47
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
                                                       ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:602:29
-   602|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:600:29
+   600|     declare class Component<Props, State = void> {
                                     ^^^^^ [3]
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
@@ -115,8 +115,8 @@ References:
    main.js:10:59
     10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
                                                                   ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:602:29
-   602|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:600:29
+   600|     declare class Component<Props, State = void> {
                                     ^^^^^ [3]
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
@@ -164,8 +164,8 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:258:39
-   258|   declare export type RefSetter<-T> = React.RefSetter<T>;
+   <BUILTINS>/react.js:257:39
+   257|   declare export type RefSetter<-T> = React.RefSetter<T>;
                                               ^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:104:7
    104|     | { -current: T | null, ... }
@@ -192,8 +192,8 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:258:39
-   258|   declare export type RefSetter<-T> = React.RefSetter<T>;
+   <BUILTINS>/react.js:257:39
+   257|   declare export type RefSetter<-T> = React.RefSetter<T>;
                                               ^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:105:8
    105|     | ((T | null) => mixed)

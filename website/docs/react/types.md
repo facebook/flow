@@ -231,10 +231,12 @@ type *of* a React component so you need to use `typeof` as in
 `React.ElementProps<typeof MyComponent>`.
 
 
-## `React.ElementProps<typeof Component>` {#toc-react-elementprops}
+## `React.ElementProps<typeof Component>` <UntilVersion version="0.287" /> {#toc-react-elementprops}
 
-> **Note:** Because [`React.ElementProps`](#toc-react-elementprops) does not preserve the optionality of `defaultProps`, [`React.ElementConfig`](#toc-react-elementconfig) (which does) is more often the right choice, especially for simple props pass-through as with [higher-order components](../hoc/#toc-supporting-defaultprops-with-react-elementconfig).
-You probably should not use ElementProps.
+:::warning
+Because [`React.ElementProps`](#toc-react-elementprops) does not preserve the optionality of `defaultProps`, [`React.ElementConfig`](#toc-react-elementconfig) (which does) is the right choice, especially for simple props pass-through as with [higher-order components](../hoc/#toc-supporting-defaultprops-with-react-elementconfig).
+Therefore, this type was removed in 0.288.0.
+:::
 
 Gets the props for a React element type, *without* preserving the optionality of `defaultProps`.
 `typeof Component` could be the type of a React class component, a function component, or a JSX intrinsic string.
