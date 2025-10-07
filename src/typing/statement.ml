@@ -1171,7 +1171,8 @@ module Make
                   AnyT.why CatchAny (mk_reason RAnyImplicit loc)
               in
               (t, Ast.Type.Missing (mloc, t))
-            | Ast.Type.Available ((_, (_, (Ast.Type.Any _ | Ast.Type.Mixed _))) as annot) ->
+            | Ast.Type.Available
+                ((_, (_, (Ast.Type.Any _ | Ast.Type.Mixed _ | Ast.Type.Unknown _))) as annot) ->
               (* Not relevant with our limited accepted annotations. *)
               let tparams_map = Subst_name.Map.empty in
               let (t, ast_annot) = Anno.mk_type_available_annotation cx tparams_map annot in
