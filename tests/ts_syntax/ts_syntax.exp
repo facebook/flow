@@ -521,6 +521,14 @@ The utility type `mixed` is deprecated, use `unknown` instead. [deprecated-utili
                ^^^^^
 
 
+Error --------------------------------------------------------------------------------------- deprecated/unknown.js:9:15
+
+The utility type `mixed` is deprecated, use `unknown` instead. [deprecated-utility]
+
+   9|     catch (e: mixed) {} // ERROR
+                    ^^^^^
+
+
 Error ---------------------------------------------------------------------------------------- deprecated/values.js:3:11
 
 The utility type `$Values` is deprecated, use `Values` instead. [deprecated-utility]
@@ -726,4 +734,4 @@ types. [ts-syntax]
 
 
 
-Found 85 errors
+Found 86 errors
