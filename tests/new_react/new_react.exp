@@ -8,8 +8,8 @@ Cannot assign `3` to `x.foo` because property `foo` is missing in function [1]. 
 
 References:
    argless_function.js:9:18
-    9| declare const x: React.ElementProps<typeof Component>;
-                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+    9| declare const x: React.ElementConfig<typeof Component>;
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- bad_default_props.js:15:18
@@ -285,19 +285,19 @@ References:
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- object_component.js:23:57
+Error ---------------------------------------------------------------------------------------- object_component.js:23:58
 
 Cannot assign object literal to `_badProps2` because property `baz` is extra in object literal [1] but missing in object
 type [2]. Exact objects do not accept extra props. [incompatible-type]
 
-   object_component.js:23:57
-   23| const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
-                                                               ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   object_component.js:23:58
+   23| const _badProps2: React.ElementConfig<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
+                                                                ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    object_component.js:23:19
-   23| const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
-                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   23| const _badProps2: React.ElementConfig<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- props4.js:6:11

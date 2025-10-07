@@ -18,8 +18,8 @@ const _d = <Component foo={3} bar={3} baz={3} />; // Error, baz is not in the co
 const _x: React.ElementRef<ObjectComponent> = undefined; // ok
 const _y: React.ElementRef<ObjectComponent> = null; // Error, ref is undefined
 
-const _props: React.ElementProps<ObjectComponent> = {foo: 3, bar: 3};
-const _badProps: React.ElementProps<ObjectComponent> = {bar: 3}; // ok
-const _badProps2: React.ElementProps<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
+const _props: React.ElementConfig<ObjectComponent> = {foo: 3, bar: 3};
+const _badProps: React.ElementConfig<ObjectComponent> = {bar: 3}; // ok
+const _badProps2: React.ElementConfig<ObjectComponent> = {bar: 3, foo: 3, baz: 3}; // Error extra baz
 
 const AC: component(bar: number, foo?: number) = Component;

@@ -843,24 +843,6 @@ References:
                 ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- config.js:7:1
-
-Cannot cast `props` to object type because property `n` is read-only in props of component Foo [1] but writable in
-object type [2]. [incompatible-variance]
-
-   config.js:7:1
-   7| props as {n: number | string}; // error: n is not read-only in {n: number | string}
-      ^^^^^
-
-References:
-   config.js:6:27
-   6| declare export var props: React.ElementProps<typeof Foo>;
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   config.js:7:10
-   7| props as {n: number | string}; // error: n is not read-only in {n: number | string}
-               ^^^^^^^^^^^^^^^^^^^^ [2]
-
-
 Error ------------------------------------------------------------------------------------------- config_imported.js:3:1
 
 Cannot cast `config` to object type because property `n` is read-only in props of component Foo [1] but writable in
@@ -877,24 +859,6 @@ References:
    config_imported.js:3:11
    3| config as {n: number | string}; // error: n is not read-only in {n: number | string}
                 ^^^^^^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------------------- config_imported.js:5:1
-
-Cannot cast `props` to object type because property `n` is read-only in props of component Foo [1] but writable in
-object type [2]. [incompatible-variance]
-
-   config_imported.js:5:1
-   5| props as {n: number | string}; // error: n is not read-only in {n: number | string}
-      ^^^^^
-
-References:
-   config.js:6:27
-   6| declare export var props: React.ElementProps<typeof Foo>;
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   config_imported.js:5:10
-   5| props as {n: number | string}; // error: n is not read-only in {n: number | string}
-               ^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- cycle1.js:15:1
@@ -3620,7 +3584,7 @@ Strict mode function may not have duplicate parameter names [ParseError]
 
 
 
-Found 234 errors
+Found 232 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

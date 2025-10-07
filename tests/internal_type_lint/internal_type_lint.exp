@@ -24,36 +24,28 @@ Error --------------------------------------------------------------------------
 
 Error ---------------------------------------------------------------------------------------------------- test.js:13:15
 
-`React$ElementProps` is an internal Flow type. Use `React.ElementProps` instead. [internal-type]
-
-   13| type T5_bad = React$ElementProps<C>; // error
-                     ^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------------------- test.js:15:15
-
 `$ReactDeepReadOnly` is a secret internal Flow type exposed for testing purposes. There will be no stability guarantees.
 [internal-type]
 
-   15| type T6_bad = $ReactDeepReadOnly<{}>; // error
+   13| type T5_bad = $ReactDeepReadOnly<{}>; // error
                      ^^^^^^^^^^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:16:15
+Error ---------------------------------------------------------------------------------------------------- test.js:14:15
 
 `React$Node` is an internal Flow type. Use `React.Node` instead. [internal-type]
 
-   16| type T7_bad = React$Node; // error
+   14| type T6_bad = React$Node; // error
                      ^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:19:15
+Error ---------------------------------------------------------------------------------------------------- test.js:17:15
 
 `$Omit` is an internal Flow type. Use `Omit` instead. [internal-type]
 
-   19| type T8_bad = $Omit<{}, empty>; // error
+   17| type T7_bad = $Omit<{}, empty>; // error
                      ^^^^^^^^^^^^^^^^
 
 
 
-Found 7 errors
+Found 6 errors

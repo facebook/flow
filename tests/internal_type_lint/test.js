@@ -10,11 +10,9 @@ type C = component();
 type T3_good = React.ElementRef<C>; // ok
 type T4_bad = React$ElementConfig<C>; // error
 type T4_good = React.ElementConfig<C>; // ok
-type T5_bad = React$ElementProps<C>; // error
-type T5_good = React.ElementProps<C>; // ok
-type T6_bad = $ReactDeepReadOnly<{}>; // error
-type T7_bad = React$Node; // error
-type T7_good = React.Node; // ok
+type T5_bad = $ReactDeepReadOnly<{}>; // error
+type T6_bad = React$Node; // error
+type T6_good = React.Node; // ok
 
-type T8_bad = $Omit<{}, empty>; // error
-type T8_good = Omit<{}, empty>; // ok
+type T7_bad = $Omit<{}, empty>; // error
+type T7_good = Omit<{}, empty>; // ok
