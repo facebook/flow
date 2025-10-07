@@ -246,9 +246,9 @@ struct
         add_output cx (Error_message.EPropNotReadable { reason_prop; prop_name; use_op })
     end
 
-  let mk_react_dro cx use_op dro t =
+  let mk_react_dro _cx use_op dro t =
     let id = Eval.generate_id () in
-    FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t (ReactDRO dro) id
+    EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason_of_t t, ReactDRO dro); id }
 
   module Get_prop_helper = struct
     type r = Type.tvar -> unit
@@ -2568,13 +2568,17 @@ struct
               | HookDecl _
               | HookAnnot ->
                 if Context.react_rule_enabled cx Options.DeepReadOnlyHookReturns then
-                  mk_possibly_evaluated_destructor
-                    cx
-                    unknown_use
-                    (TypeUtil.reason_of_t return_t)
-                    return_t
-                    (ReactDRO (def_loc_of_reason reason_fundef, HookReturn))
-                    (Eval.generate_id ())
+                  EvalT
+                    {
+                      type_ = return_t;
+                      defer_use_t =
+                        TypeDestructorT
+                          ( unknown_use,
+                            TypeUtil.reason_of_t return_t,
+                            ReactDRO (def_loc_of_reason reason_fundef, HookReturn)
+                          );
+                      id = Eval.generate_id ();
+                    }
                 else
                   return_t
               | ArbitraryEffect
@@ -2766,7 +2770,7 @@ struct
                 let destructor =
                   SpreadType (Object.Spread.Annot { make_exact = false }, [], None)
                 in
-                mk_possibly_evaluated_destructor cx unknown_use reason t destructor id
+                EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, destructor); id }
               in
               rec_unify
                 cx
