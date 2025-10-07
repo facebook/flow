@@ -499,7 +499,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           let leading = Peek.comments env in
           Eat.token env;
           let trailing = Eat.trailing_comments env in
-          let argument = _type env in
+          let argument = prefix env in
           Type.Keyof
             { Type.Keyof.argument; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
         env
