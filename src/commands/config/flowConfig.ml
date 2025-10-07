@@ -1175,7 +1175,6 @@ module Opts = struct
         enum
           [
             ("legacy", Options.ReactRefAsProp.Legacy);
-            ("experimental.store_ref_in_props", Options.ReactRefAsProp.Legacy);
             ("experimental.full_support", Options.ReactRefAsProp.FullSupport);
           ]
           (fun opts react_ref_as_prop -> Ok { opts with react_ref_as_prop })
