@@ -452,7 +452,6 @@ module Make (I : INPUT) : S = struct
     | ReactElementConfigType
     | ReactCheckComponentConfig _
     | ReactDRO _
-    | MakeHooklike
     | MappedType _
     | EnumType ->
       false
@@ -483,7 +482,6 @@ module Make (I : INPUT) : S = struct
         | ExactType
         | ReadOnlyType
         | ReactDRO _
-        | MakeHooklike
         | PartialType
         | RequiredType
         | SpreadType _
@@ -500,9 +498,7 @@ module Make (I : INPUT) : S = struct
     | Env.EvaluateCustom f -> f d
     | Env.EvaluateAll ->
       (match d with
-      | T.ReactDRO _
-      | T.MakeHooklike ->
-        false
+      | T.ReactDRO _ -> false
       | _ -> true)
 
   (* Arguments:
@@ -1691,9 +1687,7 @@ module Make (I : INPUT) : S = struct
     and type_destructor_unevaluated ~env t d =
       let%bind ty = type__ ~env t in
       match d with
-      | T.MakeHooklike
-      | T.ReactDRO _ ->
-        return ty
+      | T.ReactDRO _ -> return ty
       | T.NonMaybeType -> return (Ty.Utility (Ty.NonMaybeType ty))
       | T.ExactType -> return (Ty.Utility (Ty.Exact ty))
       | T.ReadOnlyType -> return (Ty.Utility (Ty.ReadOnly ty))

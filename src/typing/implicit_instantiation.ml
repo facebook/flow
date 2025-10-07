@@ -309,7 +309,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
       | ExactType
       | ReadOnlyType
       | ReactDRO _
-      | MakeHooklike
       | PartialType
       | RequiredType ->
         merge_lower_or_upper_bounds (OpenT tout)

@@ -301,10 +301,6 @@ struct
 
     let mk_react_dro = mk_react_dro
 
-    let mk_hooklike cx use_op t =
-      let id = Eval.generate_id () in
-      FlowJs.mk_possibly_evaluated_destructor cx use_op (reason_of_t t) t MakeHooklike id
-
     let prop_overlaps_with_indexer =
       Some
         (fun cx name reason_name key ->
@@ -6656,7 +6652,6 @@ struct
             (t, Object.(ObjKitT (use_op, reason, Resolve Next, ReadOnly, OpenT tout)))
         | ReactDRO (dro_loc, dro_type) ->
           rec_flow cx trace (t, DeepReadOnlyT (tout, (dro_loc, dro_type)))
-        | MakeHooklike -> rec_flow cx trace (t, HooklikeT tout)
         | PartialType ->
           rec_flow cx trace (t, Object.(ObjKitT (use_op, reason, Resolve Next, Partial, OpenT tout)))
         | RequiredType ->

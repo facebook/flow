@@ -753,7 +753,6 @@ and json_of_destructor cx depth destructor =
           | DebugAnnot -> JSON_String "DebugAnnot"
         );
       ]
-  | MakeHooklike -> JSON_Object [("kind", JSON_String "MakeHooklike")]
   | MappedType { homomorphic; distributive_tparam_name; property_type; mapped_type_flags } ->
     JSON_Object
       [

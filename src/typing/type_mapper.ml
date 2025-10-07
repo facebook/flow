@@ -557,7 +557,6 @@ class virtual ['a] t =
         else
           ReactCheckComponentConfig { props = props'; allow_ref_in_spread }
       | ReactDRO _
-      | MakeHooklike
       | NonMaybeType
       | PropertyType _
       | OptionalIndexedAccessResultType _

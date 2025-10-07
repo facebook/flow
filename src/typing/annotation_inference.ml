@@ -347,8 +347,6 @@ module rec ConsGen : S = struct
     let mk_react_dro cx _use_op (props_loc, dro_t) t =
       ConsGen.elab_t cx t (Annot_DeepReadOnlyT (reason_of_t t, props_loc, dro_t))
 
-    let mk_hooklike _cx _use_op t = t
-
     let prop_overlaps_with_indexer = None
   end
 
@@ -505,7 +503,6 @@ module rec ConsGen : S = struct
       ) ->
       let t = elab_t cx t (Annot_DeepReadOnlyT (reason, dro_loc, dro_kind)) in
       elab_t cx t op
-    | (EvalT { type_ = t; defer_use_t = TypeDestructorT (_, _, MakeHooklike); id = _ }, _) -> t
     | (EvalT { type_ = t; defer_use_t = TypeDestructorT (_, r, ExactType); id = _ }, _) ->
       let t = make_exact cx r t in
       elab_t cx t op

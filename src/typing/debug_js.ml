@@ -20,7 +20,6 @@ let string_of_selector = function
 
 let string_of_destructor = function
   | ReactDRO _ -> "ReactDRO"
-  | MakeHooklike -> "MakeHooklike"
   | NonMaybeType -> "NonMaybeType"
   | PropertyType { name; _ } -> spf "PropertyType %s" (display_string_of_name name)
   | ElementType _ -> "ElementType"

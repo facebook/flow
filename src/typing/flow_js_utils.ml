@@ -2445,8 +2445,6 @@ module type Get_prop_helper_sig = sig
 
   val mk_react_dro : Context.t -> use_op -> ALoc.t * Type.dro_type -> Type.t -> Type.t
 
-  val mk_hooklike : Context.t -> use_op -> Type.t -> Type.t
-
   val return : Context.t -> use_op:use_op -> Type.DepthTrace.t -> Type.t -> r
 
   val error_type : Context.t -> Type.DepthTrace.t -> Reason.t -> r

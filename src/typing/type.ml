@@ -1587,7 +1587,6 @@ module rec TypeTerm : sig
         allow_ref_in_spread: bool;
       }
     | ReactDRO of react_dro
-    | MakeHooklike
     | MappedType of {
         (* Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
          * bound by $Keys/keyof: type Homomorphic<Keys: $Keys<O>> = {[key in O]: T *)
