@@ -89,7 +89,7 @@ let resolve_annotation cx tparams_map ?(react_deep_read_only = None) anno =
         | DebugAnnot -> true
       in
       if enabled then
-        Flow_js.mk_possibly_evaluated_destructor
+        Flow_js.mk_possibly_evaluated_destructor_for_annotations
           cx
           unknown_use
           (TypeUtil.reason_of_t t)

@@ -6734,7 +6734,7 @@ struct
       | t -> t
     )
 
-  and mk_possibly_evaluated_destructor cx use_op reason t d id =
+  and mk_possibly_evaluated_destructor_for_annotations cx use_op reason t d id =
     let eval_t = EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, d); id } in
     ( if Subst_name.Set.is_empty (Type_subst.free_var_finder cx eval_t) then
       let evaluated = Context.evaluated cx in

@@ -149,7 +149,7 @@ module Make
     in
     let config =
       Type.(
-        Flow_js.mk_possibly_evaluated_destructor
+        Flow_js.mk_possibly_evaluated_destructor_for_annotations
           cx
           unknown_use
           config_reason
