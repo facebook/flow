@@ -302,7 +302,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `SingularTest` element because in property `optionalUser`: [incompatible-type]
  - Either null [1] is incompatible with undefined [2].
- - Or null [1] is incompatible with undefined [2].
+ - Or null [1] is incompatible with object type [3].
 
    more.js:139:17
    139|   optionalUser={null}
@@ -312,6 +312,9 @@ References:
    more.js:31:63
     31| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
                                                                       ^^^^^^^^ [2]
+   more.js:35:7
+    35|     ? {+__fragments: FragmentReference<V>}
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:144:34
@@ -399,7 +402,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `PluralTest` element because in property `optionalUsers`: [incompatible-type]
  - Either null [1] is incompatible with undefined [2].
- - Or null [1] is incompatible with undefined [2].
+ - Or null [1] is incompatible with read-only array type [3].
 
    more.js:187:66
    187| <PluralTest users={usersRef} nullableUsers={null} optionalUsers={null} />;
@@ -409,6 +412,9 @@ References:
    more.js:31:63
     31| type MapRelayProps<Props> = {[K in keyof Props]: MapRelayProp<Props[K]>};
                                                                       ^^^^^^^^ [2]
+   more.js:37:9
+    37|       ? $ReadOnlyArray<MapRelayProp<T[number]>> : T;
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- more.js:190:24

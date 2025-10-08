@@ -415,9 +415,9 @@ References:
    errors_intersection.js:52:38
    52| any as {} & ({} & ({} & boolean)) as 42; // Error: number ~> boolean
                                             ^^ [2]
-   errors_intersection.js:52:20
+   errors_intersection.js:52:8
    52| any as {} & ({} & ({} & boolean)) as 42; // Error: number ~> boolean
-                          ^^ [3]
+              ^^ [3]
 
 
 Error -------------------------------------------------------------------------------------- errors_intersection.js:54:1
@@ -1706,9 +1706,9 @@ References:
    errors_union.js:40:24
    40| 42 as {} | ({} | ({} | boolean)); // Error: number ~> boolean
                               ^^^^^^^ [2]
-   errors_union.js:40:19
+   errors_union.js:40:7
    40| 42 as {} | ({} | ({} | boolean)); // Error: number ~> boolean
-                         ^^ [3]
+             ^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- errors_union.js:43:2
