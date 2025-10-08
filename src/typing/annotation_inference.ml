@@ -70,8 +70,6 @@ let get_builtin_typeapp cx reason x targs =
   TypeUtil.typeapp ~from_value:false ~use_desc:false reason t targs
 
 module type S = sig
-  val error_on_bad_global_shadow : Context.t -> string -> loc:ALoc.t -> def_loc:ALoc.t -> unit
-
   val force_module_type_thunk :
     Context.t -> Constraint.ForcingState.module_type -> unit -> (Type.moduletype, Type.t) result
 
@@ -196,22 +194,6 @@ module rec ConsGen : S = struct
   let dst_cx_ref = ref None
 
   let set_dst_cx cx = dst_cx_ref := Some cx
-
-  let error_on_bad_global_shadow src_cx =
-    let to_concrete_aloc aloc =
-      aloc |> ALoc.to_loc_with_tables (Context.aloc_tables src_cx) |> ALoc.of_loc
-    in
-    fun n ~loc ~def_loc ->
-      match !dst_cx_ref with
-      | None -> assert false
-      | Some dst_cx ->
-        Flow_js_utils.add_annot_inference_error
-          ~src_cx
-          ~dst_cx
-          Error_message.(
-            EBindingError
-              (EGlobalAlreadyDeclared, loc, Reason.OrdinaryName n, to_concrete_aloc def_loc)
-          )
 
   (* Errors created with [error_unsupported] are actually reported. Compare this to
    * errors created with Flow_js_utils.add_output which are recorded in the context
