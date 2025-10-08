@@ -38,8 +38,7 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FancyButton` element because in property `ref`: [incompatible-type]
  - Either `ButtonInstance` [1] is incompatible with `DivInstance` [2] in property `current`.
- - Or `React.RefObject` [3] is incompatible with function type [4]. Non-callable objects are not compatible with
-   functions.
+ - Or `ButtonInstance` [1] is incompatible with null [3] in property `current`.
 
    forwardRef.js:19:38
     19| const _e = <FancyButton foo={3} ref={badRef} />; // Incorrect ref type
@@ -52,12 +51,9 @@ References:
    forwardRef.js:18:32
     18| const badRef = React.createRef<DivInstance>();
                                        ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:576:8
+   <BUILTINS>/react.js:576:28
    576|     ): React$RefObject<T | null>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [4]
+                                   ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- forwardRef.js:22:38
@@ -87,29 +83,21 @@ Error --------------------------------------------------------------------------
 Cannot create `UnionRef` element because in property `ref`: [incompatible-type]
  - Either `AInstance` [1] is incompatible with `ButtonInstance` [2] in property `current`.
  - Or `AInstance` [1] is incompatible with `DivInstance` [3] in property `current`.
- - Or `React.RefObject` [4] is incompatible with function type [5]. Non-callable objects are not compatible with
-   functions.
 
    forwardRef.js:42:35
-    42| const _j = <UnionRef foo={3} ref={badUnionRef} />; // Error bad ref
-                                          ^^^^^^^^^^^
+   42| const _j = <UnionRef foo={3} ref={badUnionRef} />; // Error bad ref
+                                         ^^^^^^^^^^^
 
 References:
    forwardRef.js:28:20
-    28|   ButtonInstance | AInstance,
-                           ^^^^^^^^^ [1]
+   28|   ButtonInstance | AInstance,
+                          ^^^^^^^^^ [1]
    forwardRef.js:41:37
-    41| const badUnionRef = React.createRef<ButtonInstance | DivInstance>();
-                                            ^^^^^^^^^^^^^^ [2]
+   41| const badUnionRef = React.createRef<ButtonInstance | DivInstance>();
+                                           ^^^^^^^^^^^^^^ [2]
    forwardRef.js:41:54
-    41| const badUnionRef = React.createRef<ButtonInstance | DivInstance>();
-                                                             ^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:576:8
-   576|     ): React$RefObject<T | null>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [5]
+   41| const badUnionRef = React.createRef<ButtonInstance | DivInstance>();
+                                                            ^^^^^^^^^^^ [3]
 
 
 

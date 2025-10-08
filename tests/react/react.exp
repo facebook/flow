@@ -1395,22 +1395,22 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either `FooExact` [1] is incompatible with `Bar` [2] in the first parameter.
- - Or function [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
+ - Or `FooExact` [1] is incompatible with null [3] in the first parameter.
 
    ref.js:24:16
-    24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
-                       ^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
+                      ^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
    ref.js:15:7
-    15| class FooExact extends React.Component<{||}, void> {}
-              ^^^^^^^^ [1]
+   15| class FooExact extends React.Component<{||}, void> {}
+             ^^^^^^^^ [1]
    ref.js:24:22
-    24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
-                             ^^^ [2]
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
+                            ^^^ [2]
+   ref.js:24:28
+   24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
+                                  ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------- undefined_prop.js:5:21
@@ -1748,50 +1748,44 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useImperativeHandle` with `ref` bound to `ref` because: [incompatible-type]
  - Either property `focus` is missing in object literal [1] but exists in `Interface` [2] in property `current`.
- - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
+ - Or object literal [1] is incompatible with null [3] in property `current`.
 
    useImperativeHandle_hook.js:29:29
-    29|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
-                                    ^^^
+   29|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+                                   ^^^
 
 References:
    useImperativeHandle_hook.js:29:41
-    29|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
-                                                ^^ [1]
+   29|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+                                               ^^ [1]
    useImperativeHandle_hook.js:28:31
-    28|   const ref: {current: null | Interface } = React.createRef();
-                                      ^^^^^^^^^ [2]
-   useImperativeHandle_hook.js:28:14
-    28|   const ref: {current: null | Interface } = React.createRef();
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [4]
+   28|   const ref: {current: null | Interface } = React.createRef();
+                                     ^^^^^^^^^ [2]
+   useImperativeHandle_hook.js:28:24
+   28|   const ref: {current: null | Interface } = React.createRef();
+                              ^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:32:29
 
 Cannot call `React.useImperativeHandle` with `refSetter` bound to `ref` because: [incompatible-type]
  - Either property `focus` is missing in object literal [1] but exists in `Interface` [2] in the first parameter.
- - Or function [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
+ - Or object literal [1] is incompatible with null [3] in the first parameter.
 
    useImperativeHandle_hook.js:32:29
-    32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
-                                    ^^^^^^^^^
+   32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+                                   ^^^^^^^^^
 
 References:
    useImperativeHandle_hook.js:32:47
-    32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
-                                                      ^^ [1]
+   32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
+                                                     ^^ [1]
    useImperativeHandle_hook.js:31:39
-    31|   const refSetter = (instance: null | Interface) => {};
-                                              ^^^^^^^^^ [2]
-   useImperativeHandle_hook.js:31:21
-    31|   const refSetter = (instance: null | Interface) => {};
-                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   31|   const refSetter = (instance: null | Interface) => {};
+                                             ^^^^^^^^^ [2]
+   useImperativeHandle_hook.js:31:32
+   31|   const refSetter = (instance: null | Interface) => {};
+                                      ^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------- useLayoutEffect_hook.js:4:9

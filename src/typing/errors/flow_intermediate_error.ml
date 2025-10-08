@@ -26,9 +26,11 @@ let tuple_element_frame_score = type_arg_frame_score * 2
  * score_of_msg to learn more about scores.
  *
  * Calculated by taking the count of all the frames. *)
-let score_of_use_op use_op =
+let rec score_of_use_op use_op =
   fold_use_op
-    (fun _ -> 0)
+    (function
+      | Speculation use_op -> score_of_use_op use_op
+      | _ -> 0)
     (fun acc frame ->
       acc
       +

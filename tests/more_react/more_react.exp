@@ -123,8 +123,8 @@ References:
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
 
 Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either `D` [1] is incompatible with `Component` [2].
- - Or class `D` [1] is incompatible with string [3].
+ - Either class `D` [1] is incompatible with string [2].
+ - Or `D` [1] is incompatible with `Component` [3].
 
    subclassComponent.js:29:2
     29| <D></D>; // error
@@ -134,12 +134,12 @@ References:
    subclassComponent.js:21:15
     21| declare class D extends React$Component2<Props2, void> {}
                       ^ [1]
-   <BUILTINS>/react.js:600:19
-   600|     declare class Component<Props, State = void> {
-                          ^^^^^^^^^ [2]
    <BUILTINS>/react.js:43:5
     43|   | string
-            ^^^^^^ [3]
+            ^^^^^^ [2]
+   <BUILTINS>/react.js:600:19
+   600|     declare class Component<Props, State = void> {
+                          ^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:29:2
@@ -176,8 +176,8 @@ References:
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
 
 Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either `E` [1] is incompatible with `Component` [2].
- - Or class `E` [1] is incompatible with string [3].
+ - Either class `E` [1] is incompatible with string [2].
+ - Or `E` [1] is incompatible with `Component` [3].
 
    subclassComponent.js:30:2
     30| <E></E>; // error
@@ -187,12 +187,12 @@ References:
    subclassComponent.js:23:15
     23| declare class E extends D {}
                       ^ [1]
-   <BUILTINS>/react.js:600:19
-   600|     declare class Component<Props, State = void> {
-                          ^^^^^^^^^ [2]
    <BUILTINS>/react.js:43:5
     43|   | string
-            ^^^^^^ [3]
+            ^^^^^^ [2]
+   <BUILTINS>/react.js:600:19
+   600|     declare class Component<Props, State = void> {
+                          ^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:30:2
@@ -229,8 +229,8 @@ References:
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2
 
 Cannot instantiate React element because in type argument `ElementType`: [incompatible-type]
- - Either `F` [1] is incompatible with `Component` [2].
- - Or class `F` [1] is incompatible with string [3].
+ - Either class `F` [1] is incompatible with string [2].
+ - Or `F` [1] is incompatible with `Component` [3].
 
    subclassComponent.js:31:2
     31| <F></F>; // error
@@ -240,12 +240,12 @@ References:
    subclassComponent.js:25:15
     25| declare class F {
                       ^ [1]
-   <BUILTINS>/react.js:600:19
-   600|     declare class Component<Props, State = void> {
-                          ^^^^^^^^^ [2]
    <BUILTINS>/react.js:43:5
     43|   | string
-            ^^^^^^ [3]
+            ^^^^^^ [2]
+   <BUILTINS>/react.js:600:19
+   600|     declare class Component<Props, State = void> {
+                          ^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- subclassComponent.js:31:2

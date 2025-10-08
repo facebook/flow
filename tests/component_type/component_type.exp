@@ -35,62 +35,53 @@ References:
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:9:1
 
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
- - Either function type [1] is incompatible with object type [2]. Functions without statics are not compatible with
-   objects.
- - Or `Foo` [3] is incompatible with string [4] in the first parameter.
+ - Either `Foo` [1] is incompatible with string [2] in the first parameter.
+ - Or `Foo` [1] is incompatible with null [3] in the first parameter.
 
    class_to_component_type.js:9:1
      9| Foo as component( // error: Foo ~> string
         ^^^
 
 References:
-   class_to_component_type.js:11:10
-    11|     ref: React.RefSetter<string>
-                 ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    class_to_component_type.js:3:15
      3| declare class Foo extends React.Component<{bar: string}> {}
-                      ^^^ [3]
+                      ^^^ [1]
    class_to_component_type.js:11:26
     11|     ref: React.RefSetter<string>
-                                 ^^^^^^ [4]
+                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:105:13
+   105|     | ((T | null) => mixed)
+                    ^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:9:1
 
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
- - Either object type [1] is incompatible with function type [2]. Non-callable objects are not compatible with
-   functions.
- - Or `Foo` [3] is incompatible with string [4] in property `current`.
+ - Either `Foo` [1] is incompatible with string [2] in property `current`.
+ - Or `Foo` [1] is incompatible with null [3] in property `current`.
 
    class_to_component_type.js:9:1
      9| Foo as component( // error: Foo ~> string
         ^^^
 
 References:
-   class_to_component_type.js:11:10
-    11|     ref: React.RefSetter<string>
-                 ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [2]
    class_to_component_type.js:3:15
      3| declare class Foo extends React.Component<{bar: string}> {}
-                      ^^^ [3]
+                      ^^^ [1]
    class_to_component_type.js:11:26
     11|     ref: React.RefSetter<string>
-                                 ^^^^^^ [4]
+                                 ^^^^^^ [2]
+   <BUILTINS>/react.js:104:23
+   104|     | { -current: T | null, ... }
+                              ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------- class_to_component_type.js:13:1
 
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
- - Either `ImNotARefSetter` [1] is not a subtype of object type [2]. Class instances are not subtypes of object types;
-   consider rewriting object type [2] as an interface.
- - Or `ImNotARefSetter` [1] is incompatible with function type [3]. Non-callable objects are not compatible with
+ - Either `ImNotARefSetter` [1] is incompatible with function type [2]. Non-callable objects are not compatible with
    functions.
+ - Or `ImNotARefSetter` [1] is incompatible with null [3].
 
    class_to_component_type.js:13:1
     13| Foo as component( // error again due to bad ref
@@ -100,12 +91,12 @@ References:
    class_to_component_type.js:15:10
     15|     ref: ImNotARefSetter // ok: ref prop in component type can be arbitrary
                  ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:105:8
    105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [3]
+               ^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:106:7
+   106|     | null
+              ^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- classes_lower.js:17:1
@@ -166,7 +157,7 @@ Error --------------------------------------------------------------------------
 
 Cannot cast `ComponentNarrower` to component because in property `ref`: [incompatible-type]
  - Either `ComponentNarrower` [1] is incompatible with `Component` [2] in the first parameter.
- - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
+ - Or `ComponentNarrower` [1] is incompatible with null [3] in the first parameter.
 
    classes_lower.js:19:1
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
@@ -179,19 +170,16 @@ References:
    classes_lower.js:19:53
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
                                                             ^^^^^^^^^ [2]
-   classes_lower.js:19:37
-    19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:105:13
+   105|     | ((T | null) => mixed)
+                    ^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- classes_lower.js:19:1
 
 Cannot cast `ComponentNarrower` to component because in property `ref`: [incompatible-type]
  - Either `ComponentNarrower` [1] is incompatible with `Component` [2] in property `current`.
- - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
+ - Or `ComponentNarrower` [1] is incompatible with null [3] in property `current`.
 
    classes_lower.js:19:1
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
@@ -204,12 +192,9 @@ References:
    classes_lower.js:19:53
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
                                                             ^^^^^^^^^ [2]
-   classes_lower.js:19:37
-    19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [4]
+   <BUILTINS>/react.js:104:23
+   104|     | { -current: T | null, ... }
+                              ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------- component_to_component.js:22:10
@@ -326,24 +311,23 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:22:41
 
 Cannot create `C` element because in property `ref`: [incompatible-type]
- - Either `React.RefObject` [1] is incompatible with function type [2]. Non-callable objects are not compatible with
-   functions.
- - Or `React.RefObject` [1] is incompatible with null [3].
+ - Either number [1] is incompatible with string [2] in property `current`.
+ - Or number [1] is incompatible with null [3] in property `current`.
 
    create_element.js:22:41
     22| const _f = <C bar="string" baz={4} ref={refBad} />; // Error bad ref
                                                 ^^^^^^
 
 References:
-   <BUILTINS>/react.js:576:8
+   create_element.js:6:25
+     6|   ref?: React.RefSetter<number>,
+                                ^^^^^^ [1]
+   create_element.js:21:32
+    21| const refBad = React.createRef<string>();
+                                       ^^^^^^ [2]
+   <BUILTINS>/react.js:576:28
    576|     ): React$RefObject<T | null>;
-               ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:106:7
-   106|     | null
-              ^^^^ [3]
+                                   ^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ create_element.js:25:49

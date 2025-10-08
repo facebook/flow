@@ -3000,28 +3000,21 @@ Error --------------------------------------------------------------------------
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
  - Either `CommonInstance` [1] is incompatible with nullable `InputInstance` [2] in the first parameter.
  - Or `CommonInstance` [1] is incompatible with `InputInstance` [3] in the first parameter.
- - Or function type [4] is incompatible with object type [5]. Functions without statics are not compatible with objects.
 
    refs.js:64:53
-    64|                 <MyNestedInput {...otherProps} ref={ref} />
-                                                            ^^^
+   64|                 <MyNestedInput {...otherProps} ref={ref} />
+                                                           ^^^
 
 References:
    refs.js:56:66
-    56|     component MyNestedInput(other: string, ref: React.RefSetter<?CommonInstance>) {
-                                                                         ^^^^^^^^^^^^^^ [1]
+   56|     component MyNestedInput(other: string, ref: React.RefSetter<?CommonInstance>) {
+                                                                        ^^^^^^^^^^^^^^ [1]
    refs.js:60:59
-    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                  ^^^^^^^^^^^^^^ [2]
+   60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                 ^^^^^^^^^^^^^^ [2]
    refs.js:60:60
-    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                   ^^^^^^^^^^^^^ [3]
-   refs.js:60:43
-    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                  ^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
@@ -3029,35 +3022,28 @@ Error --------------------------------------------------------------------------
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
  - Either `CommonInstance` [1] is incompatible with nullable `InputInstance` [2] in property `current`.
  - Or `CommonInstance` [1] is incompatible with `InputInstance` [3] in property `current`.
- - Or object type [4] is incompatible with function type [5]. Non-callable objects are not compatible with functions.
 
    refs.js:64:53
-    64|                 <MyNestedInput {...otherProps} ref={ref} />
-                                                            ^^^
+   64|                 <MyNestedInput {...otherProps} ref={ref} />
+                                                           ^^^
 
 References:
    refs.js:56:66
-    56|     component MyNestedInput(other: string, ref: React.RefSetter<?CommonInstance>) {
-                                                                         ^^^^^^^^^^^^^^ [1]
+   56|     component MyNestedInput(other: string, ref: React.RefSetter<?CommonInstance>) {
+                                                                        ^^^^^^^^^^^^^^ [1]
    refs.js:60:59
-    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                  ^^^^^^^^^^^^^^ [2]
+   60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                 ^^^^^^^^^^^^^^ [2]
    refs.js:60:60
-    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                                   ^^^^^^^^^^^^^ [3]
-   refs.js:60:43
-    60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [5]
+   60|     component MyInput(label: string, ref: React.RefSetter<?InputInstance>, ...otherProps: { other: string}) {
+                                                                  ^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:92:13
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2] in property `bar` of the first parameter.
- - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
+ - Or object type [3] is incompatible with null [4] in the first parameter.
 
    refs.js:92:13
     92|   <Foo ref={badRef} />; // error
@@ -3070,19 +3056,19 @@ References:
    refs.js:90:60
     90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                                                    ^^^^^^^ [2]
-   refs.js:90:25
-    90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   refs.js:88:47
+    88|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:105:13
+   105|     | ((T | null) => mixed)
+                    ^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:92:13
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either number [1] is incompatible with boolean [2] in property `bar` of property `current`.
- - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
+ - Or object type [3] is incompatible with null [4] in property `current`.
 
    refs.js:92:13
     92|   <Foo ref={badRef} />; // error
@@ -3095,12 +3081,12 @@ References:
    refs.js:90:60
     90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
                                                                    ^^^^^^^ [2]
-   refs.js:90:25
-    90|   declare const badRef: React.RefSetter<{foo: string, bar: boolean}>;
-                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [4]
+   refs.js:88:47
+    88|   declare component Foo(ref?: React.RefSetter<{foo: string, bar: number}>)
+                                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/react.js:104:23
+   104|     | { -current: T | null, ... }
+                              ^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------------- refs.js:105:23
@@ -3125,23 +3111,23 @@ References:
 Error --------------------------------------------------------------------------------------------------- refs.js:108:23
 
 Cannot create `GenericRef2` element because in property `ref`: [incompatible-type]
- - Either function [1] is incompatible with object type [2]. Functions without statics are not compatible with objects.
- - Or array type [3] is incompatible with string [4] in the first parameter.
+ - Either array type [1] is incompatible with string [2] in the first parameter.
+ - Or array type [1] is incompatible with null [3] in the first parameter.
 
    refs.js:108:23
    108|     <GenericRef2 ref={(r: string | null) => {}} />; // error
-                              ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+                              ^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    refs.js:101:51
    101|     component GenericRef2<T>(ref: React.RefSetter<Array<Array<Array<T>>>>) { return null };
-                                                          ^^^^^^^^^^^^^^^^^^^^^^ [3]
+                                                          ^^^^^^^^^^^^^^^^^^^^^^ [1]
    refs.js:108:27
    108|     <GenericRef2 ref={(r: string | null) => {}} />; // error
-                                  ^^^^^^ [4]
+                                  ^^^^^^ [2]
+   refs.js:108:36
+   108|     <GenericRef2 ref={(r: string | null) => {}} />; // error
+                                           ^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------- refs_without_react.js:1:1
