@@ -6743,29 +6743,29 @@ struct
       | None ->
         let trace = DepthTrace.dummy_trace in
         let eval_t = EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, d); id } in
-        if Flow_js_utils.TvarVisitors.has_unresolved_tvars cx eval_t then
-          ignore
-          @@ Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                 Context.set_evaluated cx (Eval.Map.add id (OpenT tvar) evaluated);
-                 evaluate_type_destructor cx ~trace use_op reason t d tvar
-             )
-        else if Flow_js_utils.TvarVisitors.has_placeholders cx eval_t then
-          ignore
-          @@ Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                 Context.set_evaluated cx (Eval.Map.add id (OpenT tvar) evaluated);
-                 evaluate_type_destructor cx ~trace use_op reason t d tvar;
-                 Tvar_resolver.resolve cx (OpenT tvar)
-             )
-        else
-          let result =
-            Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
-                Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where
-                  cx
-                  reason
-                  (evaluate_type_destructor cx ~trace use_op reason t d)
-            )
-          in
-          Context.set_evaluated cx (Eval.Map.add id result evaluated)
+        let () =
+          if Flow_js_utils.TvarVisitors.has_unresolved_tvars cx eval_t then
+            assert_false
+              (spf
+                 "There are unresolved tvars in the evaluated type from annotations: %s"
+                 (Debug_js.dump_t cx ~depth:3 eval_t)
+              )
+          else if Flow_js_utils.TvarVisitors.has_placeholders cx eval_t then
+            assert_false
+              (spf
+                 "There are placeholders in the evaluated type from annotations: %s"
+                 (Debug_js.dump_t cx ~depth:3 eval_t)
+              )
+        in
+        let result =
+          Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
+              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where
+                cx
+                reason
+                (evaluate_type_destructor cx ~trace use_op reason t d)
+          )
+        in
+        Context.set_evaluated cx (Eval.Map.add id result evaluated)
     );
     eval_t
 
