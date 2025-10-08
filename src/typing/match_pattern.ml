@@ -193,20 +193,23 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
       if invalid_syntax_default_keyword then
         Flow_js.add_output cx (Error_message.EMatchInvalidWildcardSyntax loc);
       WildcardPattern x
-    | ArrayPattern { ArrayPattern.elements; rest; comments } ->
-      let rest = rest_pattern cx ~on_binding ~in_or_pattern acc rest in
-      let elements =
-        array_elements cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc elements
-      in
-      ArrayPattern { ArrayPattern.elements; rest; comments }
-    | ObjectPattern { ObjectPattern.properties; rest; comments } ->
-      let rest = rest_pattern cx ~on_binding ~in_or_pattern acc rest in
-      let properties =
-        object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc properties
-      in
-      ObjectPattern { ObjectPattern.properties; rest; comments }
+    | ArrayPattern pattern ->
+      ArrayPattern
+        (array_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc pattern)
+    | ObjectPattern pattern ->
+      ObjectPattern
+        (object_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc pattern)
   in
   (loc, p)
+
+and array_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc pattern =
+  let open Ast.MatchPattern.ArrayPattern in
+  let { elements; rest; comments } = pattern in
+  let rest = rest_pattern cx ~on_binding ~in_or_pattern acc rest in
+  let elements =
+    array_elements cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc elements
+  in
+  { elements; rest; comments }
 
 and array_elements cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc elements =
   let open Ast.MatchPattern.ArrayPattern in
@@ -216,6 +219,15 @@ and array_elements cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern a
       let p = pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc (loc, p) in
       { Element.pattern = p; index })
     elements
+
+and object_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc pattern =
+  let open Ast.MatchPattern.ObjectPattern in
+  let { properties; rest; comments } = pattern in
+  let rest = rest_pattern cx ~on_binding ~in_or_pattern acc rest in
+  let properties =
+    object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc properties
+  in
+  { properties; rest; comments }
 
 and object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc props =
   let open Ast.MatchPattern.ObjectPattern in
