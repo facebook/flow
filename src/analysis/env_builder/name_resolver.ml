@@ -3090,6 +3090,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           | (loc, IdentifierPattern _)
           | (loc, MemberPattern _)
           | (loc, ObjectPattern _)
+          | (loc, InstancePattern _)
           | (loc, ArrayPattern _) ->
             Some loc
           | (_, NumberPattern _)
@@ -3251,6 +3252,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             check_or (List.rev patterns) bindings
           | (loc, ObjectPattern pattern) -> object_pattern acc (loc, pattern) bindings
           | (loc, ArrayPattern pattern) -> array_pattern acc (loc, pattern) bindings
+          | (_, InstancePattern _) -> failwith "TODO: upcoming diff"
         and array_pattern acc (loc, { ArrayPattern.elements; rest; comments = _ }) bindings =
           (match RefinementKey.of_expression acc with
           | Some key ->

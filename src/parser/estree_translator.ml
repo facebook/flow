@@ -751,8 +751,22 @@ with type t = Impl.t = struct
       | BindingPattern binding -> match_binding_pattern (loc, binding)
       | IdentifierPattern id -> match_identifier_pattern id
       | MemberPattern member -> match_member_pattern member
-      | ObjectPattern obj -> match_object_pattern (loc, obj)
+      | ObjectPattern obj -> match_object_pattern "MatchObjectPattern" (loc, obj)
       | ArrayPattern arr -> match_array_pattern (loc, arr)
+      | InstancePattern { InstancePattern.constructor; fields; comments } ->
+        let constructor =
+          match constructor with
+          | InstancePattern.IdentifierConstructor id -> match_identifier_pattern id
+          | InstancePattern.MemberConstructor member -> match_member_pattern member
+        in
+        node
+          ?comments
+          "MatchInstancePattern"
+          loc
+          [
+            ("constructor", constructor);
+            ("fields", match_object_pattern "MatchInstanceObjectPattern" fields);
+          ]
       | OrPattern { OrPattern.patterns; comments } ->
         node ?comments "MatchOrPattern" loc [("patterns", array_of_list match_pattern patterns)]
       | AsPattern { AsPattern.pattern; target; comments } ->
@@ -795,7 +809,7 @@ with type t = Impl.t = struct
           ("elements", array_of_list (fun { Element.pattern; _ } -> match_pattern pattern) elements);
           ("rest", option match_rest_pattern rest);
         ]
-    and match_object_pattern (loc, { MatchPattern.ObjectPattern.properties; rest; comments }) =
+    and match_object_pattern kind (loc, { MatchPattern.ObjectPattern.properties; rest; comments }) =
       let open MatchPattern.ObjectPattern in
       let property_key key =
         match key with
@@ -827,7 +841,7 @@ with type t = Impl.t = struct
       in
       node
         ?comments:(format_internal_comments comments)
-        "MatchObjectPattern"
+        kind
         loc
         [
           ("properties", array_of_list property properties); ("rest", option match_rest_pattern rest);

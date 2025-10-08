@@ -2765,6 +2765,14 @@ let tests =
            assert_expression_string ~ctxt "match(x){[1,...]=>x}";
            assert_expression_string ~ctxt "match(x){[1,...const x]=>x}"
          );
+         ( "match_pattern_instnace" >:: fun ctxt ->
+           assert_expression_string ~ctxt "match(x){Point{x:1,y:2}=>0}";
+           assert_expression_string
+             ~ctxt
+             ~pretty:true
+             "match (x) {\n  Point {x: 1, const y} => y,\n}";
+           assert_expression_string ~ctxt "match(x){Point{x:1,...const r}=>r}"
+         );
          ( "match_pattern_or_as" >:: fun ctxt ->
            assert_expression_string ~ctxt "match(x){1|2|3=>true}";
            assert_expression_string ~ctxt "match(x){{foo:1|2|3}=>true}";

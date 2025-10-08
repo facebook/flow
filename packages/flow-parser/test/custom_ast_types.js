@@ -301,6 +301,20 @@ function custom_ast_types(fork) {
     .field('elements', [def('MatchPattern')])
     .field('rest', or(def('MatchRestPattern'), null));
 
+  def('MatchInstancePattern')
+    .bases('MatchPattern')
+    .build('constructor', 'fields')
+    .field(
+      'constructor',
+      or(def('MatchIdentifierPattern'), def('MatchMemberPattern')),
+    )
+    .field('fields', def('MatchInstanceObjectPattern'));
+
+  def('MatchInstanceObjectPattern')
+    .build('properties', 'rest')
+    .field('properties', [def('MatchObjectPatternProperty')])
+    .field('rest', or(def('MatchRestPattern'), null));
+
   def('MatchOrPattern')
     .bases('MatchPattern')
     .build('patterns')

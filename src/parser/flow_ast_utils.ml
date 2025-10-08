@@ -114,6 +114,8 @@ let rec match_pattern_has_binding =
     || List.exists
          (fun { ArrayPattern.Element.pattern; _ } -> match_pattern_has_binding pattern)
          elements
+  | (_, InstancePattern { InstancePattern.fields = (fields_loc, fields); _ }) ->
+    match_pattern_has_binding (fields_loc, ObjectPattern fields)
   | (_, OrPattern { OrPattern.patterns; _ }) -> List.exists match_pattern_has_binding patterns
   | (_, AsPattern _) -> true
 

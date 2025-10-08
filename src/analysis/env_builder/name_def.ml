@@ -344,6 +344,14 @@ end = struct
       array_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc pattern
     | ObjectPattern pattern ->
       object_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc pattern
+    | InstancePattern { InstancePattern.constructor; fields = (fields_loc, fields); comments = _ }
+      ->
+      (match constructor with
+      | InstancePattern.IdentifierConstructor ident ->
+        visit_expression (loc, Ast.Expression.Identifier ident)
+      | InstancePattern.MemberConstructor mem ->
+        ignore @@ Flow_ast_utils.expression_of_match_member_pattern ~visit_expression mem);
+      object_pattern ~visit_binding ~visit_expression ~visit_intermediate fields_loc acc fields
     | OrPattern { OrPattern.patterns; comments = _ } ->
       Base.List.iter
         patterns

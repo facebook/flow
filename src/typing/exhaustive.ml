@@ -781,6 +781,7 @@ end = struct
         | Some i -> add_tuple cx ~length:(Int.of_float i) pattern_union obj
       in
       (pattern_union, next_i)
+    | InstancePattern _ -> failwith "TODO: upcoming diff"
 
   let of_patterns_ast cx patterns_ast =
     let last_i = Base.List.length patterns_ast - 1 in

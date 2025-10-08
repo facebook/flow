@@ -2161,6 +2161,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | BindingPattern x -> BindingPattern (this#match_binding_pattern x)
         | ObjectPattern x -> ObjectPattern (this#match_object_pattern x)
         | ArrayPattern x -> ArrayPattern (this#match_array_pattern x)
+        | InstancePattern x -> InstancePattern (this#match_instance_pattern x)
         | OrPattern x -> OrPattern (this#match_or_pattern x)
         | AsPattern x -> AsPattern (this#match_as_pattern x)
       )
@@ -2266,6 +2267,19 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let pattern' = this#match_pattern pattern in
       let index' = this#on_loc_annot index in
       { pattern = pattern'; index = index' }
+
+    method match_instance_pattern (instance_pattern : ('M, 'T) Ast.MatchPattern.InstancePattern.t)
+        : ('N, 'U) Ast.MatchPattern.InstancePattern.t =
+      let open Ast.MatchPattern.InstancePattern in
+      let { constructor; fields = (fields_loc, fields); comments } = instance_pattern in
+      let constructor' =
+        match constructor with
+        | IdentifierConstructor ident -> IdentifierConstructor (this#t_identifier ident)
+        | MemberConstructor member -> MemberConstructor (this#match_member_pattern member)
+      in
+      let fields' = (this#on_loc_annot fields_loc, this#match_object_pattern fields) in
+      let comments' = this#syntax_opt comments in
+      { constructor = constructor'; fields = fields'; comments = comments' }
 
     method match_rest_pattern (rest : ('M, 'T) Ast.MatchPattern.RestPattern.t')
         : ('N, 'U) Ast.MatchPattern.RestPattern.t' =

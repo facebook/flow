@@ -2633,9 +2633,11 @@ class ['loc] mapper =
       | (loc, BindingPattern x) ->
         id_loc this#match_binding_pattern loc x pattern (fun x -> (loc, BindingPattern x))
       | (loc, ObjectPattern x) ->
-        id this#match_object_pattern x pattern (fun x -> (loc, ObjectPattern x))
+        id_loc this#match_object_pattern loc x pattern (fun x -> (loc, ObjectPattern x))
       | (loc, ArrayPattern x) ->
         id this#match_array_pattern x pattern (fun x -> (loc, ArrayPattern x))
+      | (loc, InstancePattern x) ->
+        id this#match_instance_pattern x pattern (fun x -> (loc, InstancePattern x))
       | (loc, OrPattern x) -> id this#match_or_pattern x pattern (fun x -> (loc, OrPattern x))
       | (loc, AsPattern x) -> id this#match_as_pattern x pattern (fun x -> (loc, AsPattern x))
 
@@ -2702,7 +2704,8 @@ class ['loc] mapper =
       else
         { id = id'; kind; comments = comments' }
 
-    method match_object_pattern (object_pattern : ('loc, 'loc) Ast.MatchPattern.ObjectPattern.t) =
+    method match_object_pattern _loc (object_pattern : ('loc, 'loc) Ast.MatchPattern.ObjectPattern.t)
+        =
       let open Ast.MatchPattern.ObjectPattern in
       let { properties; rest; comments } = object_pattern in
       let properties' = map_list this#match_object_pattern_property properties in
@@ -2764,6 +2767,27 @@ class ['loc] mapper =
         element
       else
         { pattern = pattern'; index }
+
+    method match_instance_pattern
+        (instance_pattern : ('loc, 'loc) Ast.MatchPattern.InstancePattern.t) =
+      let open Ast.MatchPattern.InstancePattern in
+      let { constructor; fields; comments } = instance_pattern in
+      let constructor' = this#match_instance_pattern_constructor constructor in
+      let fields' = map_loc this#match_object_pattern fields in
+      let comments' = this#syntax_opt comments in
+      if constructor' == constructor && fields' == fields && comments' == comments then
+        instance_pattern
+      else
+        { constructor = constructor'; fields = fields'; comments = comments' }
+
+    method match_instance_pattern_constructor
+        (constructor : ('loc, 'loc) Ast.MatchPattern.InstancePattern.constructor) =
+      let open Ast.MatchPattern.InstancePattern in
+      match constructor with
+      | IdentifierConstructor ident ->
+        id this#identifier ident constructor (fun x -> IdentifierConstructor x)
+      | MemberConstructor member ->
+        id this#match_member_pattern member constructor (fun x -> MemberConstructor x)
 
     method match_rest_pattern _loc (rest : ('loc, 'loc) Ast.MatchPattern.RestPattern.t') =
       let open Ast.MatchPattern.RestPattern in

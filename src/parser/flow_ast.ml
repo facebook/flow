@@ -2081,6 +2081,19 @@ and MatchPattern : sig
     [@@deriving show]
   end
 
+  module InstancePattern : sig
+    type ('M, 'T) constructor =
+      | IdentifierConstructor of ('M, 'T) Identifier.t
+      | MemberConstructor of ('M, 'T) MemberPattern.t
+
+    and ('M, 'T) t = {
+      constructor: ('M, 'T) constructor;
+      fields: 'M * ('M, 'T) ObjectPattern.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module OrPattern : sig
     type ('M, 'T) t = {
       patterns: ('M, 'T) MatchPattern.t list;
@@ -2125,6 +2138,7 @@ and MatchPattern : sig
     | MemberPattern of ('M, 'T) MemberPattern.t
     | ObjectPattern of ('M, 'T) ObjectPattern.t
     | ArrayPattern of ('M, 'T) ArrayPattern.t
+    | InstancePattern of ('M, 'T) InstancePattern.t
     | OrPattern of ('M, 'T) OrPattern.t
     | AsPattern of ('M, 'T) AsPattern.t
   [@@deriving show]

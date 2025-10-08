@@ -200,12 +200,28 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
               env
           in
           member (MemberPattern.BaseMember mem)
-        | _ ->
-          (match acc with
-          | MemberPattern.BaseIdentifier ((loc, _) as id) -> (loc, IdentifierPattern id)
-          | MemberPattern.BaseMember (loc, member) -> (loc, MemberPattern (loc, member)))
+        | _ -> acc
       in
-      member (MemberPattern.BaseIdentifier id)
+      let base = member (MemberPattern.BaseIdentifier id) in
+      (match Peek.token env with
+      | T_LCURLY ->
+        with_loc
+          ~start_loc
+          (fun env ->
+            let fields = with_loc (fun env -> object_pattern env) env in
+            let constructor =
+              match base with
+              | MemberPattern.BaseIdentifier id -> InstancePattern.IdentifierConstructor id
+              | MemberPattern.BaseMember member -> InstancePattern.MemberConstructor member
+            in
+            let trailing = Eat.trailing_comments env in
+            let comments = Flow_ast_utils.mk_comments_opt ~trailing () in
+            InstancePattern { InstancePattern.constructor; fields; comments })
+          env
+      | _ ->
+        (match base with
+        | MemberPattern.BaseIdentifier ((loc, _) as id) -> (loc, IdentifierPattern id)
+        | MemberPattern.BaseMember (loc, member) -> (loc, MemberPattern (loc, member))))
     | t ->
       let leading = Peek.comments env in
       let loc = Peek.loc env in
@@ -428,6 +444,8 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
         ObjectPattern { p with ObjectPattern.comments = merge_comments_with_internal comments }
       | ArrayPattern ({ ArrayPattern.comments; _ } as p) ->
         ArrayPattern { p with ArrayPattern.comments = merge_comments_with_internal comments }
+      | InstancePattern ({ InstancePattern.comments; _ } as p) ->
+        InstancePattern { p with InstancePattern.comments = merge_comments comments }
       | OrPattern ({ OrPattern.comments; _ } as p) ->
         OrPattern { p with OrPattern.comments = merge_comments comments }
       | AsPattern ({ AsPattern.comments; _ } as p) ->

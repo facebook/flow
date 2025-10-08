@@ -199,6 +199,23 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
     | ObjectPattern pattern ->
       ObjectPattern
         (object_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc pattern)
+    | InstancePattern { InstancePattern.constructor; fields = (fields_loc, fields); comments } ->
+      let open InstancePattern in
+      let constructor =
+        match constructor with
+        | IdentifierConstructor (loc, x) ->
+          let t = on_identifier ~encl_ctx:OtherTestContext cx x loc in
+          IdentifierConstructor ((loc, t), x)
+        | MemberConstructor mem ->
+          let (_, mem) = member cx ~on_identifier ~on_expression mem in
+          MemberConstructor mem
+      in
+      let fields =
+        ( fields_loc,
+          object_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc fields
+        )
+      in
+      InstancePattern { constructor; fields; comments }
   in
   (loc, p)
 
