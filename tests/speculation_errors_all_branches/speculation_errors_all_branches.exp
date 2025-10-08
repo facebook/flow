@@ -539,45 +539,45 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:59:1
 
 Cannot call `f` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
- - Or property `p` is missing in array type [3] but exists in interface type [4].
- - Or number [5] is incompatible with string [6] in array element.
- - Or object type [7] is incompatible with read-only array type [8].
- - Or array type [3] has an unknown number of elements, so is incompatible with tuple type [9].
- - Or object type [7] is incompatible with tuple type [9].
+ - Either number [1] is incompatible with string [2] in array element.
+ - Or number [3] is incompatible with string [4] in property `p`.
+ - Or property `p` is missing in array type [5] but exists in interface type [6].
+ - Or array type [5] has an unknown number of elements, so is incompatible with tuple type [7].
+ - Or object type [8] is incompatible with read-only array type [9].
+ - Or object type [8] is incompatible with tuple type [7].
 
    intersection-function.js:59:1
    59| f(((null: any): Array<number> & {p: number}));
        ^
 
 References:
-   intersection-function.js:59:37
-   59| f(((null: any): Array<number> & {p: number}));
-                                           ^^^^^^ [1]
-   intersection-function.js:48:37
-   48| declare function f(x: interface {p: string}): void;
-                                           ^^^^^^ [2]
-   intersection-function.js:59:17
-   59| f(((null: any): Array<number> & {p: number}));
-                       ^^^^^^^^^^^^^ [3]
-   intersection-function.js:48:23
-   48| declare function f(x: interface {p: string}): void;
-                             ^^^^^^^^^^^^^^^^^^^^^ [4]
    intersection-function.js:59:23
    59| f(((null: any): Array<number> & {p: number}));
-                             ^^^^^^ [5]
+                             ^^^^^^ [1]
    intersection-function.js:49:38
    49| declare function f(x: $ReadOnlyArray<string>): void;
-                                            ^^^^^^ [6]
-   intersection-function.js:59:33
+                                            ^^^^^^ [2]
+   intersection-function.js:59:37
    59| f(((null: any): Array<number> & {p: number}));
-                                       ^^^^^^^^^^^ [7]
-   intersection-function.js:49:23
-   49| declare function f(x: $ReadOnlyArray<string>): void;
-                             ^^^^^^^^^^^^^^^^^^^^^^ [8]
+                                           ^^^^^^ [3]
+   intersection-function.js:48:37
+   48| declare function f(x: interface {p: string}): void;
+                                           ^^^^^^ [4]
+   intersection-function.js:59:17
+   59| f(((null: any): Array<number> & {p: number}));
+                       ^^^^^^^^^^^^^ [5]
+   intersection-function.js:48:23
+   48| declare function f(x: interface {p: string}): void;
+                             ^^^^^^^^^^^^^^^^^^^^^ [6]
    intersection-function.js:50:23
    50| declare function f(x: [string, string]): void;
-                             ^^^^^^^^^^^^^^^^ [9]
+                             ^^^^^^^^^^^^^^^^ [7]
+   intersection-function.js:59:33
+   59| f(((null: any): Array<number> & {p: number}));
+                                       ^^^^^^^^^^^ [8]
+   intersection-function.js:49:23
+   49| declare function f(x: $ReadOnlyArray<string>): void;
+                             ^^^^^^^^^^^^^^^^^^^^^^ [9]
 
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:63:1
@@ -1256,45 +1256,45 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:49:16
 
 Cannot cast `null` to `F` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
- - Or property `p` is missing in array type [3] but exists in interface type [4].
- - Or number [5] is incompatible with string [6] in array element.
- - Or object type [7] is incompatible with read-only array type [8].
- - Or array type [3] has an unknown number of elements, so is incompatible with tuple type [9].
- - Or object type [7] is incompatible with tuple type [9].
+ - Either number [1] is incompatible with string [2] in array element.
+ - Or number [3] is incompatible with string [4] in property `p`.
+ - Or property `p` is missing in array type [5] but exists in interface type [6].
+ - Or array type [5] has an unknown number of elements, so is incompatible with tuple type [7].
+ - Or object type [8] is incompatible with read-only array type [9].
+ - Or object type [8] is incompatible with tuple type [7].
 
    union.js:49:16
    49| (((null: any): Array<number> & {p: number}): F);
                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   union.js:49:36
-   49| (((null: any): Array<number> & {p: number}): F);
-                                          ^^^^^^ [1]
-   union.js:40:24
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                              ^^^^^^ [2]
-   union.js:49:16
-   49| (((null: any): Array<number> & {p: number}): F);
-                      ^^^^^^^^^^^^^ [3]
-   union.js:40:10
-   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                ^^^^^^^^^^^^^^^^^^^^^ [4]
    union.js:49:22
    49| (((null: any): Array<number> & {p: number}): F);
-                            ^^^^^^ [5]
+                            ^^^^^^ [1]
    union.js:40:49
    40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                       ^^^^^^ [6]
-   union.js:49:32
+                                                       ^^^^^^ [2]
+   union.js:49:36
    49| (((null: any): Array<number> & {p: number}): F);
-                                      ^^^^^^^^^^^ [7]
-   union.js:40:34
+                                          ^^^^^^ [3]
+   union.js:40:24
    40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                        ^^^^^^^^^^^^^^^^^^^^^^ [8]
+                              ^^^^^^ [4]
+   union.js:49:16
+   49| (((null: any): Array<number> & {p: number}): F);
+                      ^^^^^^^^^^^^^ [5]
+   union.js:40:10
+   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+                ^^^^^^^^^^^^^^^^^^^^^ [6]
    union.js:40:59
    40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
-                                                                 ^^^^^^^^^^^^^^^^ [9]
+                                                                 ^^^^^^^^^^^^^^^^ [7]
+   union.js:49:32
+   49| (((null: any): Array<number> & {p: number}): F);
+                                      ^^^^^^^^^^^ [8]
+   union.js:40:34
+   40| type F = interface {p: string} | $ReadOnlyArray<string> | [string, string];
+                                        ^^^^^^^^^^^^^^^^^^^^^^ [9]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:52:2

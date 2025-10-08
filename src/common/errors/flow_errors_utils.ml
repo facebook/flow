@@ -338,83 +338,41 @@ module Friendly = struct
       else
         text leading_sep :: explanations
     in
-    let rec flatten_speculation_branches
-        ~show_all_branches ~hidden_branches ~high_score acc_frames acc_explanations acc = function
-      | [] -> (hidden_branches, high_score, acc)
-      | (score, error) :: branches ->
-        (match error.message with
-        (* If we have a speculation error with no frames and no root then we want
-         * to flatten the branches of that error.
-         *
-         * We ignore the score for these errors. Instead propagating the
-         * high_score we already have. *)
-        | Speculation { branches = nested_branches; frames; explanations; _ }
-          when Base.Option.is_none error.root ->
-          (* We don't perform tail-call recursion here, but it's unlikely that
-           * speculations will be so deeply nested that we blow the stack. *)
-          let (hidden_branches, high_score, acc) =
-            flatten_speculation_branches
-              ~show_all_branches
-              ~hidden_branches
-              ~high_score
-              (frames :: acc_frames)
-              (explanations :: acc_explanations)
-              acc
-              (ListUtils.dedup nested_branches)
-          in
-          (* Resume recursion in our branches list. *)
-          flatten_speculation_branches
-            ~show_all_branches
-            ~hidden_branches
-            ~high_score
-            acc_frames
-            acc_explanations
-            acc
-            branches
-        (* We add every other error if it has an appropriate score. *)
-        | _ ->
-          let (high_score, hidden_branches, acc) =
-            if show_all_branches then
-              (* If we are configured to show all branches then always add our
-               * error to acc. *)
-              (high_score, hidden_branches, (acc_frames, acc_explanations, error) :: acc)
-            else if
-              (* If this message has a better score then throw away all old
-               * messages. We are now hiding some messages. *)
-              score > high_score
-            then
-              let hidden_branches =
-                match acc with
-                | hidden_branch :: _ -> Some (high_score, hidden_branch)
-                | [] -> None
-              in
-              (score, hidden_branches, [(acc_frames, acc_explanations, error)])
-            (* If this message has the same score as our high score then add
-             * it to acc and keep our high score. *)
-            else if score = high_score then
-              (high_score, hidden_branches, (acc_frames, acc_explanations, error) :: acc)
-            (* If this message has a lower score then our high score we skip
-             * the error. We are now hiding at least one message. *)
-            else
-              let hidden_branches =
-                match hidden_branches with
-                | None -> Some (score, (acc_frames, acc_explanations, error))
-                (* Keep one hidden branch with the higher score. *)
-                | Some (hidden_branch_score, _) when score > hidden_branch_score ->
-                  Some (score, (acc_frames, acc_explanations, error))
-                | _ -> hidden_branches
-              in
-              (high_score, hidden_branches, acc)
-          in
-          (* Recurse... *)
-          flatten_speculation_branches
-            ~show_all_branches
-            ~hidden_branches
-            ~high_score
-            acc_frames
-            acc_explanations
-            acc
-            branches)
+    let partition_into_visible_and_hidden_branches ~show_all_branches =
+      Base.List.fold
+        ~init:(min_int, None, [])
+        ~f:(fun (high_score, hidden_branches, acc) (score, error) ->
+          if show_all_branches then
+            (* If we are configured to show all branches then always add our
+             * error to acc. *)
+            (high_score, hidden_branches, error :: acc)
+          else if
+            (* If this message has a better score then throw away all old
+             * messages. We are now hiding some messages. *)
+            score > high_score
+          then
+            let hidden_branches =
+              match acc with
+              | hidden_branch :: _ -> Some (high_score, hidden_branch)
+              | [] -> None
+            in
+            (score, hidden_branches, [error])
+          (* If this message has the same score as our high score then add
+           * it to acc and keep our high score. *)
+          else if score = high_score then
+            (high_score, hidden_branches, error :: acc)
+          (* If this message has a lower score then our high score we skip
+           * the error. We are now hiding at least one message. *)
+          else
+            let hidden_branches =
+              match hidden_branches with
+              | None -> Some (score, error)
+              (* Keep one hidden branch with the higher score. *)
+              | Some (hidden_branch_score, _) when score > hidden_branch_score -> Some (score, error)
+              | _ -> hidden_branches
+            in
+            (high_score, hidden_branches, acc)
+      )
     in
     let rec loop
         ~show_root
@@ -512,15 +470,8 @@ module Friendly = struct
       | Speculation { frames; explanations; branches } ->
         (* Loop through our speculation branches. We will flatten out relevant
          * union branches and hide branches with a low score in this loop. *)
-        let (hidden_branches, _, speculation_errors_rev) =
-          flatten_speculation_branches
-            ~show_all_branches
-            ~high_score:min_int
-            ~hidden_branches:None
-            []
-            []
-            []
-            (ListUtils.dedup branches)
+        let (_, hidden_branches, speculation_errors_rev) =
+          partition_into_visible_and_hidden_branches ~show_all_branches (ListUtils.dedup branches)
         in
         (* If there is only one branch in acc and we have a hidden branch,
          * show that hidden branch as well. If we improve our scoring logic
@@ -534,8 +485,7 @@ module Friendly = struct
         (* When there is only one branch in acc (we had one branch with a
          * "high score") and this error does not have a root then loop while
          * adding the frames from this speculation error message. *)
-        | [(acc_frames', acc_explanations', speculation_error)]
-          when Base.Option.is_none speculation_error.root ->
+        | [speculation_error] when Base.Option.is_none speculation_error.root ->
           loop
             ~show_root
             ~show_all_branches
@@ -544,8 +494,8 @@ module Friendly = struct
             ~error_code
             ~error_kind
             ~show_code
-            (frames :: (acc_frames' @ acc_frames))
-            (explanations :: (acc_explanations' @ acc_explanations))
+            (frames :: acc_frames)
+            (explanations :: acc_explanations)
             { speculation_error with root = error.root; loc = error.loc }
         (* If there were more then one branches with high scores add them all
          * together in an error message group. *)
@@ -599,7 +549,7 @@ module Friendly = struct
           (* Get the message group for all of our speculation errors. *)
           let (hidden_branches, group_message_list) =
             List.fold_left
-              (fun (hidden_branches, group_message_list) (acc_frames', acc_explanations', error) ->
+              (fun (hidden_branches, group_message_list) error ->
                 let (hidden_branches, _, message_group) =
                   loop
                     ~show_root:true
@@ -609,8 +559,8 @@ module Friendly = struct
                     ~hidden_branches
                     ~error_code
                     ~error_kind
-                    acc_frames'
-                    acc_explanations'
+                    []
+                    []
                     error
                 in
                 (hidden_branches, message_group :: group_message_list))
@@ -824,9 +774,7 @@ let mk_speculation_error
     ?(kind = InferError) ~loc ~root ~frames ~explanations ~error_code speculation_errors =
   Friendly.(
     let branches =
-      speculation_errors
-      |> Base.List.map ~f:(fun (score, (_, error)) -> (score, error))
-      |> Base.List.sort ~compare:(fun (s1, _) (s2, _) -> Int.compare s1 s2)
+      speculation_errors |> Base.List.map ~f:(fun (score, (_, error)) -> (score, error))
     in
     ( kind,
       {

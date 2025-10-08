@@ -335,12 +335,64 @@ let mk_speculation_error
     ~explanations
     ~error_code
     speculation_errors =
+  (* Flatten the speculation branches to remove nested speculation errors with no root *)
+  let branches =
+    let rec flatten_speculation_branches acc_frames acc_explanations acc = function
+      | [] -> acc
+      | (score, error) :: branches ->
+        (match error.message with
+        (* If we have a speculation error with no frames and no root then we want
+         * to flatten the branches of that error. *)
+        | SpeculationMessage
+            { branches = nested_branches; frames = inner_frames; explanations = inner_explanations }
+          when Base.Option.is_none error.root ->
+          (* We don't perform tail-call recursion here, but it's unlikely that
+           * speculations will be so deeply nested that we blow the stack. *)
+          let acc =
+            flatten_speculation_branches
+              (inner_frames :: acc_frames)
+              (inner_explanations :: acc_explanations)
+              acc
+              nested_branches
+          in
+          flatten_speculation_branches acc_frames acc_explanations acc branches
+        | SpeculationMessage
+            { branches = nested_branches; frames = inner_frames; explanations = inner_explanations }
+          ->
+          let frames = Base.List.concat (List.rev (inner_frames :: acc_frames)) in
+          let explanations = Base.List.concat (List.rev (inner_explanations :: acc_explanations)) in
+          let message = SpeculationMessage { branches = nested_branches; frames; explanations } in
+          let acc = (score, { error with message }) :: acc in
+          flatten_speculation_branches acc_frames acc_explanations acc branches
+        | SingletonMessage { message; frames = inner_frames; explanations = inner_explanations } ->
+          let frames =
+            match (inner_frames, acc_frames) with
+            | (Some inner_frames, _) ->
+              Some (Base.List.concat (List.rev (inner_frames :: acc_frames)))
+            | (None, _ :: _) -> Some (Base.List.concat (List.rev acc_frames))
+            | (None, []) -> None
+          in
+          let explanations =
+            match (inner_explanations, acc_explanations) with
+            | (Some inner_explanations, _) ->
+              Some (Base.List.concat (List.rev (inner_explanations :: acc_explanations)))
+            | (None, _ :: _) -> Some (Base.List.concat (List.rev acc_explanations))
+            | (None, []) -> None
+          in
+          let message = SingletonMessage { message; frames; explanations } in
+          let acc = (score, { error with message }) :: acc in
+          flatten_speculation_branches acc_frames acc_explanations acc branches)
+    in
+    flatten_speculation_branches [] [] [] speculation_errors
+    |> Base.List.rev
+    |> Base.List.stable_sort ~compare:(fun (s1, _) (s2, _) -> Int.compare s1 s2)
+  in
   {
     kind;
     loc;
     root;
     error_code;
-    message = SpeculationMessage { frames; explanations; branches = speculation_errors };
+    message = SpeculationMessage { frames; explanations; branches };
     misplaced_source_file = None;
     unsuppressable = false;
   }
