@@ -3249,111 +3249,111 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 bindings
             in
             check_or (List.rev patterns) bindings
-          | (loc, ObjectPattern { ObjectPattern.properties; rest; comments = _ }) ->
-            (match RefinementKey.of_expression acc with
-            | Some key ->
-              (* typeof x === 'object' && x !== null *)
-              let refi = AndR (ObjectR, NotR NullR) in
-              this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
-            | None -> ());
-            let bindings =
-              Base.List.fold properties ~init:bindings ~f:(fun bindings -> function
-                | ( loc,
-                    ObjectPattern.Property.Valid
-                      { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }
-                  ) ->
-                  let (property, propname) =
-                    match key with
-                    | ObjectPattern.Property.Identifier ((_, { Ast.Identifier.name; _ }) as id) ->
-                      (Ast.Expression.Member.PropertyIdentifier id, name)
-                    | ObjectPattern.Property.StringLiteral
-                        (loc, ({ Ast.StringLiteral.value; _ } as lit)) ->
-                      ( Ast.Expression.Member.PropertyExpression
-                          (loc, Ast.Expression.StringLiteral lit),
-                        value
-                      )
-                    | ObjectPattern.Property.NumberLiteral
-                        (loc, ({ Ast.NumberLiteral.value; _ } as lit)) ->
-                      let name = Dtoa.ecma_string_of_float value in
-                      ( Ast.Expression.Member.PropertyExpression
-                          (loc, Ast.Expression.NumberLiteral lit),
-                        name
-                      )
-                    | ObjectPattern.Property.BigIntLiteral
-                        (loc, ({ Ast.BigIntLiteral.raw; _ } as lit)) ->
-                      ( Ast.Expression.Member.PropertyExpression
-                          (loc, Ast.Expression.BigIntLiteral lit),
-                        raw
-                      )
-                  in
-                  let member =
+          | (loc, ObjectPattern pattern) -> object_pattern acc (loc, pattern) bindings
+          | (loc, ArrayPattern pattern) -> array_pattern acc (loc, pattern) bindings
+        and array_pattern acc (loc, { ArrayPattern.elements; rest; comments = _ }) bindings =
+          (match RefinementKey.of_expression acc with
+          | Some key ->
+            let refis = this#start_refinement key ~refining_locs:(L.LSet.singleton loc) IsArrayR in
+            (* Check the length *)
+            let refis =
+              this#extend_refinement
+                key
+                ~refining_locs:(L.LSet.singleton loc)
+                (ArrLenR
+                   {
+                     op =
+                       ( if Base.Option.is_some rest then
+                         ArrLenGreaterThanEqual
+                       else
+                         ArrLenEqual
+                       );
+                     n = Base.List.length elements;
+                   }
+                )
+                refis
+            in
+            this#commit_refinement refis
+          | None -> ());
+          let number_of_i i =
+            Ast.Expression.NumberLiteral
+              { Ast.NumberLiteral.value = float i; raw = string_of_int i; comments = None }
+          in
+          let bindings =
+            Base.List.foldi
+              elements
+              ~init:bindings
+              ~f:(fun i bindings { ArrayPattern.Element.pattern; index } ->
+                let (pat_loc, _) = pattern in
+                let member =
+                  ( index,
                     let open Ast.Expression in
-                    (loc, Member { Member._object = acc; property; comments = None })
-                  in
-                  (match needs_prop_exists_refi pattern with
-                  | Some loc ->
-                    (match RefinementKey.of_expression acc with
-                    | Some key ->
-                      let refi = PropExistsR { propname; loc } in
-                      this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
-                    | None -> ())
-                  | None -> ());
-                  recurse member pattern bindings
-                | (_, ObjectPattern.Property.InvalidShorthand _) -> bindings
-              )
-            in
-            bindings_of_rest bindings rest
-          | (loc, ArrayPattern { ArrayPattern.elements; rest; comments = _ }) ->
-            (match RefinementKey.of_expression acc with
-            | Some key ->
-              let refis =
-                this#start_refinement key ~refining_locs:(L.LSet.singleton loc) IsArrayR
-              in
-              (* Check the length *)
-              let refis =
-                this#extend_refinement
-                  key
-                  ~refining_locs:(L.LSet.singleton loc)
-                  (ArrLenR
-                     {
-                       op =
-                         ( if Base.Option.is_some rest then
-                           ArrLenGreaterThanEqual
-                         else
-                           ArrLenEqual
-                         );
-                       n = Base.List.length elements;
-                     }
+                    Member
+                      {
+                        Member._object = acc;
+                        property = Member.PropertyExpression (pat_loc, number_of_i i);
+                        comments = None;
+                      }
                   )
-                  refis
-              in
-              this#commit_refinement refis
-            | None -> ());
-            let number_of_i i =
-              Ast.Expression.NumberLiteral
-                { Ast.NumberLiteral.value = float i; raw = string_of_int i; comments = None }
-            in
-            let bindings =
-              Base.List.foldi
-                elements
-                ~init:bindings
-                ~f:(fun i bindings { ArrayPattern.Element.pattern; index } ->
-                  let (pat_loc, _) = pattern in
-                  let member =
-                    ( index,
-                      let open Ast.Expression in
-                      Member
-                        {
-                          Member._object = acc;
-                          property = Member.PropertyExpression (pat_loc, number_of_i i);
-                          comments = None;
-                        }
+                in
+                recurse member pattern bindings
+            )
+          in
+          bindings_of_rest bindings rest
+        and object_pattern acc (loc, { ObjectPattern.properties; rest; comments = _ }) bindings =
+          (match RefinementKey.of_expression acc with
+          | Some key ->
+            (* typeof x === 'object' && x !== null *)
+            let refi = AndR (ObjectR, NotR NullR) in
+            this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
+          | None -> ());
+          let bindings =
+            Base.List.fold properties ~init:bindings ~f:(fun bindings -> function
+              | ( loc,
+                  ObjectPattern.Property.Valid
+                    { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }
+                ) ->
+                let (property, propname) =
+                  match key with
+                  | ObjectPattern.Property.Identifier ((_, { Ast.Identifier.name; _ }) as id) ->
+                    (Ast.Expression.Member.PropertyIdentifier id, name)
+                  | ObjectPattern.Property.StringLiteral
+                      (loc, ({ Ast.StringLiteral.value; _ } as lit)) ->
+                    ( Ast.Expression.Member.PropertyExpression
+                        (loc, Ast.Expression.StringLiteral lit),
+                      value
                     )
-                  in
-                  recurse member pattern bindings
-              )
-            in
-            bindings_of_rest bindings rest
+                  | ObjectPattern.Property.NumberLiteral
+                      (loc, ({ Ast.NumberLiteral.value; _ } as lit)) ->
+                    let name = Dtoa.ecma_string_of_float value in
+                    ( Ast.Expression.Member.PropertyExpression
+                        (loc, Ast.Expression.NumberLiteral lit),
+                      name
+                    )
+                  | ObjectPattern.Property.BigIntLiteral (loc, ({ Ast.BigIntLiteral.raw; _ } as lit))
+                    ->
+                    ( Ast.Expression.Member.PropertyExpression
+                        (loc, Ast.Expression.BigIntLiteral lit),
+                      raw
+                    )
+                in
+                let member =
+                  let open Ast.Expression in
+                  (loc, Member { Member._object = acc; property; comments = None })
+                in
+                (match needs_prop_exists_refi pattern with
+                | Some loc ->
+                  (match RefinementKey.of_expression acc with
+                  | Some key ->
+                    let refi = PropExistsR { propname; loc } in
+                    this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
+                  | None -> ())
+                | None -> ());
+                recurse member pattern bindings
+              | (_, ObjectPattern.Property.InvalidShorthand _) -> bindings
+            )
+          in
+          bindings_of_rest bindings rest
         in
         recurse arg root_pattern SMap.empty
         |> SMap.iter (fun _ bindings ->

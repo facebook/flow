@@ -340,30 +340,10 @@ end = struct
         (loc, Ast.Expression.Unary { Ast.Expression.Unary.operator; argument; comments })
     | MemberPattern mem ->
       ignore @@ Flow_ast_utils.expression_of_match_member_pattern ~visit_expression mem
-    | ArrayPattern { ArrayPattern.elements; rest; comments = _ } ->
-      visit_intermediate loc acc;
-      let used_elements =
-        array_elements ~visit_binding ~visit_expression ~visit_intermediate (loc, acc) elements
-      in
-      Base.Option.iter rest ~f:(function (_, { RestPattern.argument; comments = _ }) ->
-          Base.Option.iter argument ~f:(function
-              | (_, { BindingPattern.id; kind = _; comments = _ }) ->
-              let acc = array_rest (loc, acc) used_elements in
-              binding ~visit_binding acc id
-              )
-          )
-    | ObjectPattern { ObjectPattern.properties; rest; comments = _ } ->
-      visit_intermediate loc acc;
-      let used_props =
-        object_properties ~visit_binding ~visit_expression ~visit_intermediate (loc, acc) properties
-      in
-      Base.Option.iter rest ~f:(function (_, { RestPattern.argument; comments = _ }) ->
-          Base.Option.iter argument ~f:(function
-              | (_, { BindingPattern.id; kind = _; comments = _ }) ->
-              let acc = object_rest (loc, acc) used_props in
-              binding ~visit_binding acc id
-              )
-          )
+    | ArrayPattern pattern ->
+      array_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc pattern
+    | ObjectPattern pattern ->
+      object_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc pattern
     | OrPattern { OrPattern.patterns; comments = _ } ->
       Base.List.iter
         patterns
@@ -375,12 +355,40 @@ end = struct
       | AsPattern.Identifier id ->
         binding ~visit_binding acc id)
 
+  and array_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc pattern =
+    let { ArrayPattern.elements; rest; comments = _ } = pattern in
+    visit_intermediate loc acc;
+    let used_elements =
+      array_elements ~visit_binding ~visit_expression ~visit_intermediate (loc, acc) elements
+    in
+    Base.Option.iter rest ~f:(function (_, { RestPattern.argument; comments = _ }) ->
+        Base.Option.iter argument ~f:(function
+            | (_, { BindingPattern.id; kind = _; comments = _ }) ->
+            let acc = array_rest (loc, acc) used_elements in
+            binding ~visit_binding acc id
+            )
+        )
+
   and array_elements ~visit_binding ~visit_expression ~visit_intermediate acc elements =
     Base.List.fold elements ~init:0 ~f:(fun i { ArrayPattern.Element.pattern; _ } ->
         let acc = array_element acc i in
         visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc pattern;
         i + 1
     )
+
+  and object_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc pattern =
+    let { ObjectPattern.properties; rest; comments = _ } = pattern in
+    visit_intermediate loc acc;
+    let used_props =
+      object_properties ~visit_binding ~visit_expression ~visit_intermediate (loc, acc) properties
+    in
+    Base.Option.iter rest ~f:(function (_, { RestPattern.argument; comments = _ }) ->
+        Base.Option.iter argument ~f:(function
+            | (_, { BindingPattern.id; kind = _; comments = _ }) ->
+            let acc = object_rest (loc, acc) used_props in
+            binding ~visit_binding acc id
+            )
+        )
 
   and object_properties ~visit_binding ~visit_expression ~visit_intermediate acc properties =
     Base.List.fold properties ~init:[] ~f:(fun used_props prop ->
