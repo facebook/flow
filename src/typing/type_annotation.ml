@@ -317,7 +317,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
 
   (* converter *)
 
-  let mk_type_destructor = Flow.mk_possibly_evaluated_destructor
+  let mk_type_destructor = Flow.mk_possibly_evaluated_destructor_for_annotations
 
   let error_on_unsupported_variance_annotation cx ~kind tparams =
     Base.Option.iter tparams ~f:(fun (_, { Ast.Type.TypeParams.params; _ }) ->

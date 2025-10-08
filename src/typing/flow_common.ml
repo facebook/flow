@@ -280,7 +280,7 @@ module type EVAL = sig
     Type.Eval.id ->
     Type.t
 
-  val mk_possibly_evaluated_destructor :
+  val mk_possibly_evaluated_destructor_for_annotations :
     Context.t -> Type.use_op -> Reason.reason -> Type.t -> Type.destructor -> Type.Eval.id -> Type.t
 end
 
