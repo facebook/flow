@@ -31,6 +31,10 @@ let string_of_kind = function
   | RecursionLimitError -> "RecursionLimitError"
   | LintError lint_kind -> "LintError" ^ "-" ^ Lints.string_of_kind lint_kind
 
+type root_kind =
+  | OperationRoot
+  | ShortExplanationRoot
+
 let string_of_error_code ~error_code ~error_kind =
   match error_code with
   | Some code -> Error_codes.string_of_code code
@@ -94,6 +98,7 @@ module Friendly = struct
 
   and 'a error_root = {
     root_loc: 'a;
+    root_kind: root_kind;
     root_message: 'a message;
   }
 
@@ -395,7 +400,10 @@ module Friendly = struct
          * the root. *)
         let message =
           match error.root with
-          | Some { root_message; _ } when show_root -> root_message @ (text " because " :: message)
+          | Some { root_message; root_kind = OperationRoot; _ } when show_root ->
+            root_message @ (text " because " :: message)
+          | Some { root_message; root_kind = ShortExplanationRoot; _ } when show_root ->
+            root_message @ (text ": " :: message)
           | _ -> message
         in
         let message =
@@ -446,7 +454,10 @@ module Friendly = struct
          * the root. *)
         let message =
           match error.root with
-          | Some { root_message; _ } when show_root -> root_message @ (text " because " :: message)
+          | Some { root_message; root_kind = OperationRoot; _ } when show_root ->
+            root_message @ (text " because " :: message)
+          | Some { root_message; root_kind = ShortExplanationRoot; _ } when show_root ->
+            root_message @ (text ": " :: message)
           | _ -> message
         in
         (* Finish our error message with a period. But only if frames
@@ -529,11 +540,16 @@ module Friendly = struct
                * show the root. *)
               let message =
                 match error.root with
-                | Some { root_message; _ } when show_root ->
+                | Some { root_message; root_kind = OperationRoot; _ } when show_root ->
                   if message = [] then
                     root_message @ [text " because"]
                   else
                     root_message @ (text " because " :: message)
+                | Some { root_message; root_kind = ShortExplanationRoot; _ } when show_root ->
+                  if message = [] then
+                    root_message
+                  else
+                    root_message @ (text ". More specifically, " :: message)
                 | _ -> message
               in
               (* Finish our error message with a colon. *)
@@ -754,7 +770,7 @@ let infos_to_messages infos = Base.List.(infos >>= info_to_messages)
 
 let mk_error
     ?(kind = InferError)
-    ?(root : ('loc * 'loc Friendly.message) option)
+    ?(root : ('loc * root_kind * 'loc Friendly.message) option)
     ?(frames : 'loc Friendly.message list option)
     ?(explanations : 'loc Friendly.message list option)
     (loc : 'loc)
@@ -764,7 +780,10 @@ let mk_error
     ( kind,
       {
         loc;
-        root = Base.Option.map root ~f:(fun (root_loc, root_message) -> { root_loc; root_message });
+        root =
+          Base.Option.map root ~f:(fun (root_loc, root_kind, root_message) ->
+              { root_loc; root_kind; root_message }
+          );
         code = error_code;
         message = Normal { message; frames; explanations };
       }
@@ -779,7 +798,10 @@ let mk_speculation_error
     ( kind,
       {
         loc;
-        root = Base.Option.map root ~f:(fun (root_loc, root_message) -> { root_loc; root_message });
+        root =
+          Base.Option.map root ~f:(fun (root_loc, root_kind, root_message) ->
+              { root_loc; root_kind; root_message }
+          );
         code = error_code;
         message = Speculation { frames; explanations; branches };
       }

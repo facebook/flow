@@ -519,9 +519,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- consistency.js:55:35
 
-Cannot use string [1] as type prediate for parameter `x` because string [1] is incompatible with number [2]. 
-
-A user defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
+The type predicate string [1] needs to be compatible with parameter `x`'s type: string [1] is incompatible with
+number [2]. [incompatible-type-guard]
 
    consistency.js:55:35
    55|   const tes1 = (x: ?number): x is string => ( // error on string because string ~/> ?number
@@ -583,9 +582,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- consistency.js:71:24
 
-Cannot use string [1] as type prediate for parameter `x` because string [1] is incompatible with number [2]. 
-
-A user defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
+The type predicate string [1] needs to be compatible with parameter `x`'s type: string [1] is incompatible with
+number [2]. [incompatible-type-guard]
 
    consistency.js:71:24
    71|   arr.filter((x): x is string => ( // error on string because string ~/> ?number
@@ -3596,9 +3594,8 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:15:30
 
-Cannot use `B` [1] as type prediate for parameter `x` because `B` [1] is incompatible with `A` [2]. 
-
-A user defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
+The type predicate `B` [1] needs to be compatible with parameter `x`'s type: `B` [1] is incompatible with `A` [2].
+[incompatible-type-guard]
 
    type_guard_compatibility.js:15:30
    15| function error_1(x: A): x is B { // error B ~> A
@@ -3612,10 +3609,9 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:19:59
 
-Cannot use array type [1] as type prediate for parameter `x` because `mixed` [2] is not exactly the same as `X` [3] in
-array element. 
+The type predicate array type [1] needs to be compatible with parameter `x`'s type: `mixed` [2] is not exactly the same
+as `X` [3] in array element. 
 
-A user defined type guard needs to be compatible with its parameter's type.
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
@@ -3640,9 +3636,8 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:27:33
 
-Cannot use `B` [1] as type prediate for parameter `x` because `B` [1] is incompatible with `A` [2]. 
-
-A user defined type guard needs to be compatible with its parameter's type. [incompatible-type-guard]
+The type predicate `B` [1] needs to be compatible with parameter `x`'s type: `B` [1] is incompatible with `A` [2].
+[incompatible-type-guard]
 
    type_guard_compatibility.js:27:33
    27| type F_error_1 = (x: A) => x is B; // error B ~> A
@@ -3656,10 +3651,9 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:29:54
 
-Cannot use array type [1] as type prediate for parameter `x` because `mixed` [2] is not exactly the same as `X` [3] in
-array element. 
+The type predicate array type [1] needs to be compatible with parameter `x`'s type: `mixed` [2] is not exactly the same
+as `X` [3] in array element. 
 
-A user defined type guard needs to be compatible with its parameter's type.
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
@@ -3684,10 +3678,9 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:30:54
 
-Cannot use array type [1] as type prediate for parameter `x` because `mixed` [2] is not exactly the same as `X` [3] in
-array element. 
+The type predicate array type [1] needs to be compatible with parameter `x`'s type: `mixed` [2] is not exactly the same
+as `X` [3] in array element. 
 
-A user defined type guard needs to be compatible with its parameter's type.
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.

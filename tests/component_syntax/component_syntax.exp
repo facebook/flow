@@ -1078,11 +1078,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:50:29
 
-Cannot declare ref because: [incompatible-type]
+The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either number [1] is incompatible with object type [2].
  - Or number [1] is incompatible with function type [3].
-
-The `ref` parameter must be a subtype of `React.RefSetter`.
 
    declared.js:50:29
     50| declare component InlineRef(ref: number); // error
@@ -2048,11 +2046,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- names.js:22:24
 
-Cannot declare ref because: [incompatible-type]
+The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either string [1] is incompatible with object type [2].
  - Or string [1] is incompatible with function type [3].
-
-The `ref` parameter must be a subtype of `React.RefSetter`.
 
    names.js:22:24
     22| export component NoRef(ref: string) { return <div /> }; // Error
@@ -2643,11 +2639,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:3:15
 
-Cannot declare ref because: [incompatible-type]
+The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either null [1] is incompatible with component Reffed [2] in property `current`.
  - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
-
-The `ref` parameter must be a subtype of `React.RefSetter`.
 
    refs.js:3:15
      3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2670,11 +2664,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:5:15
 
-Cannot declare ref because: [incompatible-type]
+The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either component Reffed [1] is incompatible with null [2] in the first parameter.
  - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
-
-The `ref` parameter must be a subtype of `React.RefSetter`.
 
    refs.js:5:15
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };
