@@ -1452,6 +1452,8 @@ let make_options
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.pattern_matching_includes flowconfig);
+    opt_enable_pattern_matching_instance_patterns =
+      Base.Option.value ~default:false (FlowConfig.pattern_matching_instance_patterns flowconfig);
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);

@@ -119,6 +119,7 @@ module Opts = struct
     opaque_type_new_bound_syntax: bool;
     pattern_matching: bool option;
     pattern_matching_includes: string list;
+    pattern_matching_instance_patterns: bool option;
     projects: string list;
     projects_overlap_mapping: SSet.t SMap.t;
     projects_path_mapping: (string * string list) list;
@@ -263,6 +264,7 @@ module Opts = struct
       node_resolver_root_relative_dirnames = [(None, "")];
       pattern_matching = None;
       pattern_matching_includes = [];
+      pattern_matching_instance_patterns = None;
       opaque_type_new_bound_syntax = false;
       projects = ["default"];
       projects_overlap_mapping = SMap.empty;
@@ -1078,6 +1080,9 @@ module Opts = struct
           ~multiple:true
           (fun opts v ->
             Ok { opts with pattern_matching_includes = v :: opts.pattern_matching_includes })
+      );
+      ( "experimental.pattern_matching.instance_patterns",
+        boolean (fun opts v -> Ok { opts with pattern_matching_instance_patterns = Some v })
       );
       ("experimental.projects", projects_parser);
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
@@ -1982,6 +1987,8 @@ let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_r
 let pattern_matching c = c.options.Opts.pattern_matching
 
 let pattern_matching_includes c = c.options.Opts.pattern_matching_includes
+
+let pattern_matching_instance_patterns c = c.options.Opts.pattern_matching_instance_patterns
 
 let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
 

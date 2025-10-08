@@ -121,6 +121,7 @@ type t = {
   opt_enable_const_params: bool;
   opt_enable_jest_integration: bool;
   opt_enable_pattern_matching: bool;
+  opt_enable_pattern_matching_instance_patterns: bool;
   opt_enable_relay_integration: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enums: bool;
@@ -259,6 +260,9 @@ let enable_const_params opts = opts.opt_enable_const_params
 let enable_jest_integration opts = opts.opt_enable_jest_integration
 
 let enable_pattern_matching opts = opts.opt_enable_pattern_matching
+
+let enable_pattern_matching_instance_patterns opts =
+  opts.opt_enable_pattern_matching_instance_patterns
 
 let pattern_matching_includes opts = opts.opt_pattern_matching_includes
 

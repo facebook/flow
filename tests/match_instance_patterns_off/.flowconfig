@@ -1,0 +1,4 @@
+[options]
+all=true
+experimental.pattern_matching=true
+experimental.pattern_matching.instance_patterns=false

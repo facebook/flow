@@ -218,6 +218,8 @@ val pattern_matching : config -> bool option
 
 val pattern_matching_includes : config -> string list
 
+val pattern_matching_instance_patterns : config -> bool option
+
 val projects : config -> string Nel.t
 
 val projects_overlap_mapping : config -> SSet.t SMap.t
