@@ -23,7 +23,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `<CustomComponent />` to `b` because in property `ref` of type argument `P` [1]: [incompatible-type]
  - Either `CustomComponentNope` [2] is incompatible with `CustomComponent` [3] in the first parameter.
- - Or function type [4] is incompatible with object type [5]. Functions without statics are not compatible with objects.
+ - Or `CustomComponentNope` [2] is incompatible with null [4] in the first parameter.
 
    main.js:9:4
      9|   <CustomComponent prop="asdf" />; // Error: Bad class type
@@ -39,19 +39,16 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:257:39
-   257|   declare export type RefSetter<-T> = React.RefSetter<T>;
-                                              ^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:105:13
+   105|     | ((T | null) => mixed)
+                    ^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------ main.js:9:4
 
 Cannot assign `<CustomComponent />` to `b` because in property `ref` of type argument `P` [1]: [incompatible-type]
  - Either `CustomComponentNope` [2] is incompatible with `CustomComponent` [3] in property `current`.
- - Or object type [4] is incompatible with function type [5]. Non-callable objects are not compatible with functions.
+ - Or `CustomComponentNope` [2] is incompatible with null [4] in property `current`.
 
    main.js:9:4
      9|   <CustomComponent prop="asdf" />; // Error: Bad class type
@@ -67,12 +64,9 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:257:39
-   257|   declare export type RefSetter<-T> = React.RefSetter<T>;
-                                              ^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:104:23
+   104|     | { -current: T | null, ... }
+                              ^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
@@ -148,7 +142,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `<CustomComponent />` to `c` because in property `ref` of type argument `P` [1]: [incompatible-type]
  - Either `Component` [2] is incompatible with `CustomComponent` [3] in the first parameter.
- - Or function type [4] is incompatible with object type [5]. Functions without statics are not compatible with objects.
+ - Or `Component` [2] is incompatible with null [4] in the first parameter.
 
    main.js:11:4
     11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
@@ -164,19 +158,16 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:257:39
-   257|   declare export type RefSetter<-T> = React.RefSetter<T>;
-                                              ^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:105:13
+   105|     | ((T | null) => mixed)
+                    ^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
 
 Cannot assign `<CustomComponent />` to `c` because in property `ref` of type argument `P` [1]: [incompatible-type]
  - Either `Component` [2] is incompatible with `CustomComponent` [3] in property `current`.
- - Or object type [4] is incompatible with function type [5]. Non-callable objects are not compatible with functions.
+ - Or `Component` [2] is incompatible with null [4] in property `current`.
 
    main.js:11:4
     11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
@@ -192,12 +183,9 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:257:39
-   257|   declare export type RefSetter<-T> = React.RefSetter<T>;
-                                              ^^^^^^^^^^^^^^^^^^ [4]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
-               ^^^^^^^^^^^^^^^^^^^ [5]
+   <BUILTINS>/react.js:104:23
+   104|     | { -current: T | null, ... }
+                              ^^^^ [4]
 
 
 

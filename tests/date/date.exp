@@ -35,8 +35,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- date.js:18:5
 
 Cannot call `Date` because: [incompatible-type]
- - Either object literal [1] is incompatible with number [2].
- - Or no arguments are expected by function type [3].
+ - Either object literal [1] is incompatible with `Date` [2].
+ - Or object literal [1] is incompatible with number [3].
 
    date.js:18:5
      18| new Date({});
@@ -46,12 +46,12 @@ References:
    date.js:18:10
      18| new Date({});
                   ^^ [1]
-   <BUILTINS>/core.js:1528:23
-   1528|     constructor(year: number, month: number, day?: number, hour?: number, minute?: number, second?: number, millisecond?: number): void;
-                               ^^^^^^ [2]
-   <BUILTINS>/core.js:1526:5
-   1526|     constructor(): void;
-             ^^^^^^^^^^^^^^^^^^^ [3]
+   <BUILTINS>/core.js:1527:33
+   1527|     constructor(value: number | Date | string): void;
+                                         ^^^^ [2]
+   <BUILTINS>/core.js:1527:24
+   1527|     constructor(value: number | Date | string): void;
+                                ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- date.js:19:5
