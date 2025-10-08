@@ -750,79 +750,9 @@ with type t = Impl.t = struct
           [("operator", string operator); ("argument", argument)]
       | BindingPattern binding -> match_binding_pattern (loc, binding)
       | IdentifierPattern id -> match_identifier_pattern id
-      | MemberPattern mem ->
-        let rec member (loc, { MemberPattern.base; property; comments }) =
-          let member_base = function
-            | MemberPattern.BaseIdentifier id -> match_identifier_pattern id
-            | MemberPattern.BaseMember mem -> member mem
-          in
-          let member_property = function
-            | MemberPattern.PropertyString lit -> string_literal lit
-            | MemberPattern.PropertyNumber lit -> number_literal lit
-            | MemberPattern.PropertyBigInt lit -> bigint_literal lit
-            | MemberPattern.PropertyIdentifier id -> identifier id
-          in
-          node
-            ?comments
-            "MatchMemberPattern"
-            loc
-            [("base", member_base base); ("property", member_property property)]
-        in
-        member mem
-      | ObjectPattern { ObjectPattern.properties; rest; comments } ->
-        let property_key key =
-          match key with
-          | ObjectPattern.Property.StringLiteral lit -> string_literal lit
-          | ObjectPattern.Property.NumberLiteral lit -> number_literal lit
-          | ObjectPattern.Property.BigIntLiteral lit -> bigint_literal lit
-          | ObjectPattern.Property.Identifier id -> identifier id
-        in
-        let property = function
-          | ( loc,
-              ObjectPattern.Property.Valid
-                { ObjectPattern.Property.key; pattern; shorthand; comments }
-            ) ->
-            node
-              ?comments
-              "MatchObjectPatternProperty"
-              loc
-              [
-                ("key", property_key key);
-                ("pattern", match_pattern pattern);
-                ("shorthand", bool shorthand);
-              ]
-          | (loc, ObjectPattern.Property.InvalidShorthand id) ->
-            node
-              "MatchObjectPatternProperty"
-              loc
-              [
-                ("key", identifier id);
-                ("pattern", match_identifier_pattern id);
-                ("shorthand", bool true);
-              ]
-        in
-
-        node
-          ?comments:(format_internal_comments comments)
-          "MatchObjectPattern"
-          loc
-          [
-            ("properties", array_of_list property properties);
-            ("rest", option match_rest_pattern rest);
-          ]
-      | ArrayPattern { ArrayPattern.elements; rest; comments } ->
-        node
-          ?comments:(format_internal_comments comments)
-          "MatchArrayPattern"
-          loc
-          [
-            ( "elements",
-              array_of_list
-                (fun { ArrayPattern.Element.pattern; _ } -> match_pattern pattern)
-                elements
-            );
-            ("rest", option match_rest_pattern rest);
-          ]
+      | MemberPattern member -> match_member_pattern member
+      | ObjectPattern obj -> match_object_pattern (loc, obj)
+      | ArrayPattern arr -> match_array_pattern (loc, arr)
       | OrPattern { OrPattern.patterns; comments } ->
         node ?comments "MatchOrPattern" loc [("patterns", array_of_list match_pattern patterns)]
       | AsPattern { AsPattern.pattern; target; comments } ->
@@ -835,9 +765,73 @@ with type t = Impl.t = struct
     and match_identifier_pattern id =
       let (loc, _) = id in
       node "MatchIdentifierPattern" loc [("id", identifier id)]
+    and match_member_pattern (loc, { MatchPattern.MemberPattern.base; property; comments }) =
+      let open MatchPattern.MemberPattern in
+      let member_base = function
+        | BaseIdentifier id -> match_identifier_pattern id
+        | BaseMember member -> match_member_pattern member
+      in
+      let member_property = function
+        | PropertyString lit -> string_literal lit
+        | PropertyNumber lit -> number_literal lit
+        | PropertyBigInt lit -> bigint_literal lit
+        | PropertyIdentifier id -> identifier id
+      in
+      node
+        ?comments
+        "MatchMemberPattern"
+        loc
+        [("base", member_base base); ("property", member_property property)]
     and match_binding_pattern (loc, { MatchPattern.BindingPattern.kind; id; comments }) =
       let kind = Flow_ast_utils.string_of_variable_kind kind in
       node ?comments "MatchBindingPattern" loc [("id", identifier id); ("kind", string kind)]
+    and match_array_pattern (loc, { MatchPattern.ArrayPattern.elements; rest; comments }) =
+      let open MatchPattern.ArrayPattern in
+      node
+        ?comments:(format_internal_comments comments)
+        "MatchArrayPattern"
+        loc
+        [
+          ("elements", array_of_list (fun { Element.pattern; _ } -> match_pattern pattern) elements);
+          ("rest", option match_rest_pattern rest);
+        ]
+    and match_object_pattern (loc, { MatchPattern.ObjectPattern.properties; rest; comments }) =
+      let open MatchPattern.ObjectPattern in
+      let property_key key =
+        match key with
+        | Property.StringLiteral lit -> string_literal lit
+        | Property.NumberLiteral lit -> number_literal lit
+        | Property.BigIntLiteral lit -> bigint_literal lit
+        | Property.Identifier id -> identifier id
+      in
+      let property = function
+        | (loc, Property.Valid { Property.key; pattern; shorthand; comments }) ->
+          node
+            ?comments
+            "MatchObjectPatternProperty"
+            loc
+            [
+              ("key", property_key key);
+              ("pattern", match_pattern pattern);
+              ("shorthand", bool shorthand);
+            ]
+        | (loc, Property.InvalidShorthand id) ->
+          node
+            "MatchObjectPatternProperty"
+            loc
+            [
+              ("key", identifier id);
+              ("pattern", match_identifier_pattern id);
+              ("shorthand", bool true);
+            ]
+      in
+      node
+        ?comments:(format_internal_comments comments)
+        "MatchObjectPattern"
+        loc
+        [
+          ("properties", array_of_list property properties); ("rest", option match_rest_pattern rest);
+        ]
     and match_rest_pattern (loc, { MatchPattern.RestPattern.argument; comments }) =
       node ?comments "MatchRestPattern" loc [("argument", option match_binding_pattern argument)]
     and function_declaration
