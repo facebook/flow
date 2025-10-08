@@ -1033,15 +1033,12 @@ let map_loc_of_explanation (f : 'a -> 'b) =
       }
   | ExplanationReactComponentPropsDeepReadOnly loc ->
     ExplanationReactComponentPropsDeepReadOnly (f loc)
-  | ExplanationReactComponentRefRequirement -> ExplanationReactComponentRefRequirement
   | ExplanationReactHookArgsDeepReadOnly loc -> ExplanationReactHookArgsDeepReadOnly (f loc)
   | ExplanationReactHookIncompatibleWithEachOther -> ExplanationReactHookIncompatibleWithEachOther
   | ExplanationReactHookIncompatibleWithNormalFunctions ->
     ExplanationReactHookIncompatibleWithNormalFunctions
   | ExplanationReactHookReturnDeepReadOnly loc -> ExplanationReactHookReturnDeepReadOnly (f loc)
   | ExplanationIncompatibleReactDeepReadOnly -> ExplanationIncompatibleReactDeepReadOnly
-  | ExplanationRenderTypeRequirement -> ExplanationRenderTypeRequirement
-  | ExplanationTypeGuardCompatibility -> ExplanationTypeGuardCompatibility
   | ExplanationTypeGuardPositiveConsistency { return; param; guard_type; is_return_false_statement }
     ->
     ExplanationTypeGuardPositiveConsistency

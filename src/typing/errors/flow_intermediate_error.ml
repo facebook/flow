@@ -528,22 +528,13 @@ let rec make_intermediate_error :
           (loc_of_aloc self_module_loc)
           (loc_of_aloc self_sig_loc)
           (RootCannotConformToCommonInterface { originate_from_import })
-      | Op (DeclareComponentRef { op }) ->
-        let frames =
-          let (all_frames, explanations) = frames in
-          (all_frames, ExplanationReactComponentRefRequirement :: explanations)
-        in
-        root loc frames op RootCannotDeclareRef
+      | Op (DeclareComponentRef { op }) -> root loc frames op RootCannotDeclareRef
       | Op (FunCall { op; fn; _ }) ->
         root_with_specific_reason loc frames op fn (RootCannotCall (desc fn))
       | Op (FunCallMethod { op; fn; prop; _ }) ->
         root_with_specific_reason loc frames op prop (RootCannotCall (desc fn))
       | Op (RenderTypeInstantiation { render_type }) ->
-        let frames =
-          let (all_frames, explanations) = frames in
-          (all_frames, ExplanationRenderTypeRequirement :: explanations)
-        in
-        root loc frames render_type (RootCannotInstantiateRenderType render_type)
+        root loc frames render_type RootCannotInstantiateRenderType
       | Frame
           ( FunParam _,
             (Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as use_op)
@@ -580,11 +571,7 @@ let rec make_intermediate_error :
       | Op (IndexedTypeAccess { _object; index }) ->
         root loc frames index (RootCannotAccessIndex { index = desc index; object_ = desc _object })
       | Op (InferBoundCompatibilityCheck { bound; infer }) ->
-        root
-          loc
-          frames
-          bound
-          (RootCannotUseInferTypeBound { bound = desc bound; infer = desc infer })
+        root loc frames bound (RootCannotUseInferTypeBound { infer = desc infer })
       | Frame (FunParam _, Op (JSXCreateElement { op; component; _ }))
       | Op (JSXCreateElement { op; component; _ })
       | Op (ReactCreateElementCall { op; component; _ }) ->
@@ -620,8 +607,6 @@ let rec make_intermediate_error :
       | Op (EvalMappedType { mapped_type }) ->
         root loc frames mapped_type (RootCannotInstantiateEval mapped_type)
       | Op (TypeGuardIncompatibility { guard_type; param_name }) ->
-        let (all_frames, explanations) = frames in
-        let frames = (all_frames, ExplanationTypeGuardCompatibility :: explanations) in
         root loc frames guard_type (RootCannotUseTypeGuard { guard_type; param_name })
       | Op (ComponentRestParamCompatibility { rest_param = _ }) ->
         (* Special-cased incompatibility error. This should be unreachable, but just in case
@@ -1298,14 +1283,6 @@ let to_printable_error :
           text
             "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
         ]
-    | ExplanationReactComponentRefRequirement ->
-      [text "The "; code "ref"; text " parameter must be a subtype of "; code "React.RefSetter"]
-    | ExplanationRenderTypeRequirement ->
-      [
-        text "Render types must be a subtype of ";
-        code "React.Node";
-        text " or a reference to a component-syntax component";
-      ]
     | ExplanationIncompatibleReactDeepReadOnly -> [text "Consider using "; code "React.Immutable<>"]
     | ExplanationInvariantSubtypingDueToMutableArray
         { lower_array_loc; upper_array_loc; lower_array_desc; upper_array_desc; upper_array_reason }
@@ -1454,8 +1431,6 @@ let to_printable_error :
           text
             "https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number";
         ]
-    | ExplanationTypeGuardCompatibility ->
-      [text "A user defined type guard needs to be compatible with its parameter's type"]
     | ExplanationTypeGuardPositiveConsistency
         { return; param; guard_type; is_return_false_statement } ->
       [
@@ -1582,83 +1557,113 @@ let to_printable_error :
     | FrameTypePredicate -> [text "the type predicate"]
     | FrameReturnValue -> [text "the return value"]
   in
-  let root_msg_to_friendly_msgs = function
+  let root_msg_to_root_kind_and_friendly_msgs = function
     | RootCannotAccessIndex { index; object_ } ->
-      [text "Cannot access "; desc index; text " on "; desc object_]
-    | RootCannotAddComputedProperty -> [text "Cannot add computed property"]
+      (OperationRoot, [text "Cannot access "; desc index; text " on "; desc object_])
+    | RootCannotAddComputedProperty -> (OperationRoot, [text "Cannot add computed property"])
     | RootCannotAssign { init; target = None } ->
-      [text "Cannot assign "; desc init; text " to variable"]
+      (OperationRoot, [text "Cannot assign "; desc init; text " to variable"])
     | RootCannotAssign { init; target = Some target } ->
-      [text "Cannot assign "; desc init; text " to "; desc target]
-    | RootCannotCall fn -> [text "Cannot call "; desc fn]
+      (OperationRoot, [text "Cannot assign "; desc init; text " to "; desc target])
+    | RootCannotCall fn -> (OperationRoot, [text "Cannot call "; desc fn])
     | RootCannotCallWithNamedParam { fn; lower; name } ->
-      [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; code name]
+      ( OperationRoot,
+        [text "Cannot call "; desc fn; text " with "; desc lower; text " bound to "; code name]
+      )
     | RootCannotCallWithNthParam { fn; lower; n : int } ->
-      [
-        text "Cannot call ";
-        desc fn;
-        text " with ";
-        desc lower;
-        text " bound to ";
-        text (spf "the %s parameter" (Utils_js.ordinal n));
-      ]
-    | RootCannotCallObjectAssign op -> [text "Incorrect arguments passed to "; desc op]
-    | RootCannotCast { lower; upper } -> [text "Cannot cast "; desc lower; text " to "; desc upper]
+      ( OperationRoot,
+        [
+          text "Cannot call ";
+          desc fn;
+          text " with ";
+          desc lower;
+          text " bound to ";
+          text (spf "the %s parameter" (Utils_js.ordinal n));
+        ]
+      )
+    | RootCannotCallObjectAssign op ->
+      (OperationRoot, [text "Incorrect arguments passed to "; desc op])
+    | RootCannotCast { lower; upper } ->
+      (OperationRoot, [text "Cannot cast "; desc lower; text " to "; desc upper])
     | RootCannotCheckAgainst { test; discriminant } ->
-      [text "Invalid check of "; desc test; text " against "; ref discriminant]
+      (OperationRoot, [text "Invalid check of "; desc test; text " against "; ref discriminant])
     | RootCannotCheckAgainstSwitchDiscriminant discriminant_loc ->
-      [
-        text "Invalid check of case test against ";
-        hardcoded_string_desc_ref "switch discriminant" discriminant_loc;
-      ]
+      ( OperationRoot,
+        [
+          text "Invalid check of case test against ";
+          hardcoded_string_desc_ref "switch discriminant" discriminant_loc;
+        ]
+      )
     | RootCannotCoerce { from; target } ->
-      [text "Cannot coerce "; desc from; text " to "; desc target]
+      (OperationRoot, [text "Cannot coerce "; desc from; text " to "; desc target])
     | RootCannotConformToCommonInterface { originate_from_import = true } ->
-      [text "The import resolves to a forked module that has implementations of conflicting types"]
+      ( OperationRoot,
+        [
+          text "The import resolves to a forked module that has implementations of conflicting types";
+        ]
+      )
     | RootCannotConformToCommonInterface { originate_from_import = false } ->
-      [text "Cannot conform to common interface module"]
-    | RootCannotCreateElement component -> [text "Cannot create "; desc component; text " element"]
-    | RootCannotDeclareRef -> [text "Cannot declare ref"]
+      (OperationRoot, [text "Cannot conform to common interface module"])
+    | RootCannotCreateElement component ->
+      (OperationRoot, [text "Cannot create "; desc component; text " element"])
+    | RootCannotDeclareRef ->
+      ( ShortExplanationRoot,
+        [text "The "; code "ref"; text " parameter must be a subtype of "; code "React.RefSetter"]
+      )
     | RootCannotDeclareTypeGuard { type_guard_loc; fn } ->
-      [
-        text "Cannot declare a ";
-        hardcoded_string_desc_ref "type guard" type_guard_loc;
-        text " for ";
-        ref fn;
-      ]
+      ( OperationRoot,
+        [
+          text "Cannot declare a ";
+          hardcoded_string_desc_ref "type guard" type_guard_loc;
+          text " for ";
+          ref fn;
+        ]
+      )
     | RootCannotDefineClassMethod { method_; name } ->
-      [text "Cannot define "; ref method_; text " on "; desc name]
-    | RootCannotDefineShadowedProtoProperty -> [text "Cannot define shadowed proto property"]
-    | RootCannotDelete prop -> [text "Cannot delete "; desc prop]
+      (OperationRoot, [text "Cannot define "; ref method_; text " on "; desc name])
+    | RootCannotDefineShadowedProtoProperty ->
+      (OperationRoot, [text "Cannot define shadowed proto property"])
+    | RootCannotDelete prop -> (OperationRoot, [text "Cannot delete "; desc prop])
     | RootCannotExpectImplicitReturn { upper; fn } ->
-      [text "Cannot expect "; desc upper; text " as the return type of "; desc fn]
+      (OperationRoot, [text "Cannot expect "; desc upper; text " as the return type of "; desc fn])
     | RootCannotExtendClass { extends; def } ->
-      [text "Cannot extend "; ref extends; text " with "; desc def]
-    | RootCannotGetProp prop -> [text "Cannot get "; desc prop]
-    | RootCannotGetRest op -> [text "Cannot get rest of "; desc op]
+      (OperationRoot, [text "Cannot extend "; ref extends; text " with "; desc def])
+    | RootCannotGetProp prop -> (OperationRoot, [text "Cannot get "; desc prop])
+    | RootCannotGetRest op -> (OperationRoot, [text "Cannot get rest of "; desc op])
     | RootCannotImplementClass { implements; def } ->
-      [text "Cannot implement "; ref implements; text " with "; desc def]
+      (OperationRoot, [text "Cannot implement "; ref implements; text " with "; desc def])
     | RootCannotInitializeField { field; body } ->
-      [text "Cannot initialize "; desc field; text " with "; desc body]
-    | RootCannotInstantiateEval type_ -> [text "Cannot instantiate "; ref type_]
-    | RootCannotInstantiateTypeApp type_ -> [text "Cannot instantiate "; desc type_]
-    | RootCannotInstantiateRenderType type_ ->
-      [text "Cannot use "; ref type_; text " as a render type"]
-    | RootCannotReturn value -> [text "Cannot return "; desc value]
-    | RootCannotShadowProto proto -> [text "Cannot shadow proto "; ref proto]
-    | RootCannotShadowProtoProperty -> [text "Cannot shadow proto property"]
-    | RootCannotSpread op -> [text "Cannot spread "; desc op]
-    | RootCannotUpdate prop -> [text "Cannot update "; desc prop]
-    | RootCannotUseInferTypeBound { bound; infer } ->
-      [text "Cannot use "; desc bound; text " as the bound of infer type "; desc infer]
+      (OperationRoot, [text "Cannot initialize "; desc field; text " with "; desc body])
+    | RootCannotInstantiateEval type_ -> (OperationRoot, [text "Cannot instantiate "; ref type_])
+    | RootCannotInstantiateTypeApp type_ -> (OperationRoot, [text "Cannot instantiate "; desc type_])
+    | RootCannotInstantiateRenderType ->
+      ( ShortExplanationRoot,
+        [
+          text "Render types must be a subtype of ";
+          code "React.Node";
+          text " or a reference to a component-syntax component";
+        ]
+      )
+    | RootCannotReturn value -> (OperationRoot, [text "Cannot return "; desc value])
+    | RootCannotShadowProto proto -> (OperationRoot, [text "Cannot shadow proto "; ref proto])
+    | RootCannotShadowProtoProperty -> (OperationRoot, [text "Cannot shadow proto property"])
+    | RootCannotSpread op -> (OperationRoot, [text "Cannot spread "; desc op])
+    | RootCannotUpdate prop -> (OperationRoot, [text "Cannot update "; desc prop])
+    | RootCannotUseInferTypeBound { infer } ->
+      ( ShortExplanationRoot,
+        [text "The infer type "; desc infer; text " must have consistent bounds"]
+      )
     | RootCannotUseTypeGuard { guard_type; param_name } ->
-      [
-        text "Cannot use ";
-        ref guard_type;
-        text (spf " as type prediate for parameter `%s`" param_name);
-      ]
-    | RootPositiveTypeGuardConsistency -> [text "Inconsistent type guard declaration"]
-    | RootCannotYield value -> [text "Cannot yield "; desc value]
+      ( ShortExplanationRoot,
+        [
+          text "The type predicate ";
+          ref guard_type;
+          text " needs to be compatible with parameter `";
+          text param_name;
+          text "`'s type";
+        ]
+      )
+    | RootCannotYield value -> (OperationRoot, [text "Cannot yield "; desc value])
   in
   let msg_to_friendly_msgs = function
     | MessagePlainTextReservedForInternalErrorOnly s -> [text s]
@@ -4920,7 +4925,12 @@ let to_printable_error :
 
   let rec convert_error_message
       { kind; loc; error_code; root; message; misplaced_source_file = _; unsuppressable = _ } =
-    let root = Base.Option.map root ~f:(fun (loc, msg) -> (loc, root_msg_to_friendly_msgs msg)) in
+    let root =
+      Base.Option.map root ~f:(fun (loc, msg) ->
+          let (kind, msg) = root_msg_to_root_kind_and_friendly_msgs msg in
+          (loc, kind, msg)
+      )
+    in
     match message with
     | SingletonMessage { message; frames; explanations } ->
       let frames = Option.map (List.map frame_to_friendly_msgs) frames in

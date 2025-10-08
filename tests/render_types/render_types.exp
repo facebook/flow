@@ -1811,30 +1811,25 @@ References:
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:31:65
 
-Cannot use renders? `T` [1] as a render type because: [incompatible-type]
- - Either `Error` [2] is incompatible with `ExactReactElement_DEPRECATED` [3].
- - Or `Error` [2] is incompatible with `React.Portal` [4].
- - Or property `@@iterator` is missing in `Error` [2] but exists in `$Iterable` [5].
-
-Render types must be a subtype of `React.Node` or a reference to a component-syntax component.
+Render types must be a subtype of `React.Node` or a reference to a component-syntax component: [incompatible-type]
+ - Either `Error` [1] is incompatible with `ExactReactElement_DEPRECATED` [2].
+ - Or `Error` [1] is incompatible with `React.Portal` [3].
+ - Or property `@@iterator` is missing in `Error` [1] but exists in `$Iterable` [4].
 
    validation/validation.js:31:65
    31| component BannedGenericRenders1<T: Error>(children: T) renders? T { return children } // error
-                                                                       ^ [2]
+                                                                       ^ [1]
 
 References:
-   validation/validation.js:31:56
-   31| component BannedGenericRenders1<T: Error>(children: T) renders? T { return children } // error
-                                                              ^^^^^^^^^^ [1]
    <BUILTINS>/react.js:21:5
    21|   | ExactReactElement_DEPRECATED<any>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:22:5
    22|   | React$Portal
-           ^^^^^^^^^^^^ [4]
+           ^^^^^^^^^^^^ [3]
    <BUILTINS>/react.js:23:5
    23|   | Iterable<?React$Node>;
-           ^^^^^^^^^^^^^^^^^^^^^ [5]
+           ^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------- validation/validation.js:32:71

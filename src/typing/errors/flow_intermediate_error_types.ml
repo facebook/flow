@@ -337,14 +337,11 @@ type 'loc explanation =
       upper_object_reason: 'loc virtual_reason;
     }
   | ExplanationReactComponentPropsDeepReadOnly of 'loc
-  | ExplanationReactComponentRefRequirement
   | ExplanationReactHookArgsDeepReadOnly of 'loc
   | ExplanationReactHookIncompatibleWithEachOther
   | ExplanationReactHookIncompatibleWithNormalFunctions
   | ExplanationReactHookReturnDeepReadOnly of 'loc
   | ExplanationIncompatibleReactDeepReadOnly
-  | ExplanationRenderTypeRequirement
-  | ExplanationTypeGuardCompatibility
   | ExplanationTypeGuardPositiveConsistency of {
       return: 'loc virtual_reason;
       param: 'loc virtual_reason;
@@ -443,23 +440,19 @@ type 'loc root_message =
       body: 'loc virtual_reason_desc;
     }
   | RootCannotInstantiateEval of 'loc virtual_reason
-  | RootCannotInstantiateRenderType of 'loc virtual_reason
+  | RootCannotInstantiateRenderType
   | RootCannotInstantiateTypeApp of 'loc virtual_reason_desc
   | RootCannotReturn of 'loc virtual_reason_desc
   | RootCannotShadowProto of 'loc virtual_reason
   | RootCannotShadowProtoProperty
   | RootCannotSpread of 'loc virtual_reason_desc
   | RootCannotUpdate of 'loc virtual_reason_desc
-  | RootCannotUseInferTypeBound of {
-      bound: 'loc virtual_reason_desc;
-      infer: 'loc virtual_reason_desc;
-    }
+  | RootCannotUseInferTypeBound of { infer: 'loc virtual_reason_desc }
   | RootCannotUseTypeGuard of {
       guard_type: 'loc virtual_reason;
       param_name: string;
     }
   | RootCannotYield of 'loc virtual_reason_desc
-  | RootPositiveTypeGuardConsistency
 
 type 'loc message =
   | MessagePlainTextReservedForInternalErrorOnly of string

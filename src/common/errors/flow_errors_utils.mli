@@ -19,6 +19,10 @@ type error_kind =
   | RecursionLimitError
   | LintError of Lints.lint_kind
 
+type root_kind =
+  | OperationRoot
+  | ShortExplanationRoot
+
 val string_of_kind : error_kind -> string
 
 (** simple structure for callers to specify message content.
@@ -77,7 +81,7 @@ type 'loc printable_error
 
 val mk_error :
   ?kind:error_kind ->
-  ?root:Loc.t * Loc.t Friendly.message ->
+  ?root:Loc.t * root_kind * Loc.t Friendly.message ->
   ?frames:Loc.t Friendly.message list ->
   ?explanations:Loc.t Friendly.message list ->
   Loc.t ->
@@ -88,7 +92,7 @@ val mk_error :
 val mk_speculation_error :
   ?kind:error_kind ->
   loc:Loc.t ->
-  root:(Loc.t * Loc.t Friendly.message) option ->
+  root:(Loc.t * root_kind * Loc.t Friendly.message) option ->
   frames:Loc.t Friendly.message list ->
   explanations:Loc.t Friendly.message list ->
   error_code:Error_codes.error_code option ->
