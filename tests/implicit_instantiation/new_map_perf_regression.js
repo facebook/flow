@@ -15,11 +15,11 @@ interface $Iterable_<+Yield,+Return,-Next> {
 
 type Iterable_<+T> = $Iterable_<T,void,void>;
 
-declare class $ReadOnlyMap<K, +V> {
+declare class $CustomReadOnlyMap<K, +V> {
   @@iterator(): Iterator_<[K, V]>;
 }
 
-declare class Map<K, V> extends $ReadOnlyMap<K, V> {
+declare class Map<K, V> extends $CustomReadOnlyMap<K, V> {
   @@iterator(): Iterator_<[K, V]>;
   constructor(iterable: Iterable_<[K, V]>): void;
 }

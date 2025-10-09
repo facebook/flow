@@ -734,6 +734,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
   let error_for_assignment_kind
       cx name assignment_loc def_loc_opt stored_binding_kind pattern_write_kind v =
+    let is_bundled_in_core_dot_js =
+      match name with
+      | "ReadonlyMap"
+      | "ReadonlySet"
+      | "$ReadOnlyMap"
+      | "$ReadOnlySet" ->
+        true
+      | _ -> false
+    in
     match def_loc_opt with
     (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
     | None -> None
@@ -741,6 +750,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       (* We use the pattern_write_kind to decide if we should emit an error saying
        * "you cannot re-declare X" vs. "you cannot reassign const X" *)
       (match (stored_binding_kind, pattern_write_kind) with
+      | (_, _) when is_bundled_in_core_dot_js ->
+        Some
+          Error_message.(
+            EBindingError (ENameAlreadyBoundInCoreJs, assignment_loc, OrdinaryName name, def_loc)
+          )
       | (Bindings.(Const | DeclaredConst), AssignmentWrite) ->
         Some
           Error_message.(

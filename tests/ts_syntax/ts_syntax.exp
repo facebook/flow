@@ -669,6 +669,70 @@ References:
                ^ [2]
 
 
+Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:2:19
+
+Cannot declare `$ReadOnlyMap` [1] because the name is a core builtin type. [name-already-bound]
+
+   2|     declare class $ReadOnlyMap {}
+                        ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:3:19
+
+Cannot declare `$ReadOnlySet` [1] because the name is a core builtin type. [name-already-bound]
+
+   3|     declare class $ReadOnlySet {}
+                        ^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:4:19
+
+Cannot declare `ReadonlyMap` [1] because the name is a core builtin type. [name-already-bound]
+
+   4|     declare class ReadonlyMap {}
+                        ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:5:19
+
+Cannot declare `ReadonlySet` [1] because the name is a core builtin type. [name-already-bound]
+
+   5|     declare class ReadonlySet {}
+                        ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:9:11
+
+Cannot declare `$ReadOnlyMap` [1] because the name is a core builtin type. [name-already-bound]
+
+   9|     class $ReadOnlyMap {}
+                ^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- reserved_core_js_type.js:10:11
+
+Cannot declare `$ReadOnlySet` [1] because the name is a core builtin type. [name-already-bound]
+
+   10|     class $ReadOnlySet {}
+                 ^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- reserved_core_js_type.js:11:11
+
+Cannot declare `ReadonlyMap` [1] because the name is a core builtin type. [name-already-bound]
+
+   11|     class ReadonlyMap {}
+                 ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- reserved_core_js_type.js:12:11
+
+Cannot declare `ReadonlySet` [1] because the name is a core builtin type. [name-already-bound]
+
+   12|     class ReadonlySet {}
+                 ^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ satisfies.js:4:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
@@ -734,4 +798,4 @@ types. [ts-syntax]
 
 
 
-Found 86 errors
+Found 94 errors
