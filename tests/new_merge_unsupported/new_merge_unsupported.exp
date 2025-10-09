@@ -225,10 +225,16 @@ References:
 
 Error ---------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:8:26
 
-Cannot access object with computed property using string [1]. [invalid-computed-prop]
+Cannot access mapped type [1] with computed property using string [2]. [invalid-computed-prop]
 
+   ops_on_eval_mapped_type.js:8:26
    8| export const x3 = t[('': string)]; // error: unsafe string key access
-                               ^^^^^^ [1]
+                               ^^^^^^ [2]
+
+References:
+   ops_on_eval_mapped_type.js:2:16
+   2| declare var t: T;
+                     ^ [1]
 
 
 Error --------------------------------------------------------------------------------- ops_on_eval_mapped_type.js:11:19
@@ -368,16 +374,24 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:17:19
 
-Cannot get `t['']` because Cannot access object with computed property using string [1]. [incompatible-use]
+Cannot get `t['']` because: [incompatible-use]
+ - Either cannot access statics of `C` [1] with computed property using string [2].
+ - Or cannot access statics of `D` [3] with computed property using string [2].
 
    ops_on_intersection.js:17:19
    17| export const x3 = t[('': string)];
                          ^^^^^^^^^^^^^^^
 
 References:
+   ops_on_intersection.js:4:10
+    4| type T = typeof C & typeof D;
+                ^^^^^^^^ [1]
    ops_on_intersection.js:17:26
    17| export const x3 = t[('': string)];
-                                ^^^^^^ [1]
+                                ^^^^^^ [2]
+   ops_on_intersection.js:4:21
+    4| type T = typeof C & typeof D;
+                           ^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_intersection.js:17:19
@@ -576,10 +590,16 @@ References:
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:16:26
 
-Cannot access object with computed property using string [1]. [invalid-computed-prop]
+Cannot access object type [1] with computed property using string [2]. [invalid-computed-prop]
 
+   ops_on_react_config.js:16:26
    16| export const x3 = t[('': string)];
-                                ^^^^^^ [1]
+                                ^^^^^^ [2]
+
+References:
+   ops_on_react_config.js:7:16
+    7| declare var t: T;
+                      ^ [1]
 
 
 Error ------------------------------------------------------------------------------------- ops_on_react_config.js:19:19

@@ -1,23 +1,26 @@
 Error -------------------------------------------------------------------------------- bad_interaction_with_evalt.js:4:5
 
 Cannot call `bad.get` because: [incompatible-type]
- - Either cannot access object with computed property using string [1].
- - Or function type [2] requires another argument from call of method `get` [3].
+ - Either cannot access `Obj2` [1] with computed property using string [2].
+ - Or function type [3] requires another argument from call of method `get` [4].
 
    bad_interaction_with_evalt.js:4:5
    4| bad.get() as Obj2; // error: TODO should not error here, since annotation error should be non-speculative
           ^^^
 
 References:
+   exported_bad_evalt.js:8:21
+   8| export type Bad = C<Obj2[string]>;
+                          ^^^^ [1]
    exported_bad_evalt.js:8:26
    8| export type Bad = C<Obj2[string]>;
-                               ^^^^^^ [1]
+                               ^^^^^^ [2]
    exported_bad_evalt.js:3:3
    3|   get(v: T): T;
-        ^^^^^^^^^^^^ [2]
+        ^^^^^^^^^^^^ [3]
    bad_interaction_with_evalt.js:4:1
    4| bad.get() as Obj2; // error: TODO should not error here, since annotation error should be non-speculative
-      ^^^^^^^^^ [3]
+      ^^^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------- bad_interaction_with_evalt.js:5:5
@@ -2495,10 +2498,16 @@ References:
 
 Error --------------------------------------------------------------------------------------- exported_bad_evalt.js:8:26
 
-Cannot access object with computed property using string [1]. [invalid-computed-prop]
+Cannot access object type [1] with computed property using string [2]. [invalid-computed-prop]
 
+   exported_bad_evalt.js:8:26
    8| export type Bad = C<Obj2[string]>;
-                               ^^^^^^ [1]
+                               ^^^^^^ [2]
+
+References:
+   exported_bad_evalt.js:8:21
+   8| export type Bad = C<Obj2[string]>;
+                          ^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ intersection-function.js:19:1

@@ -357,7 +357,11 @@ and 'loc t' =
   | EArithmeticOperand of 'loc virtual_reason
   | EForInRHS of 'loc virtual_reason
   | EInstanceofRHS of 'loc virtual_reason
-  | EObjectComputedPropertyAccess of ('loc virtual_reason * 'loc virtual_reason * InvalidObjKey.t)
+  | EObjectComputedPropertyAccess of {
+      reason_obj: 'loc virtual_reason;
+      reason_prop: 'loc virtual_reason;
+      kind: InvalidObjKey.t;
+    }
   | EObjectComputedPropertyAssign of
       ('loc virtual_reason * 'loc virtual_reason option * InvalidObjKey.t)
   | EObjectComputedPropertyPotentialOverwrite of {
@@ -1467,8 +1471,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EArithmeticOperand r -> EArithmeticOperand (map_reason r)
   | EForInRHS r -> EForInRHS (map_reason r)
   | EInstanceofRHS r -> EInstanceofRHS (map_reason r)
-  | EObjectComputedPropertyAccess (r1, r2, kind) ->
-    EObjectComputedPropertyAccess (map_reason r1, map_reason r2, kind)
+  | EObjectComputedPropertyAccess { reason_obj; reason_prop; kind } ->
+    EObjectComputedPropertyAccess
+      { reason_obj = map_reason reason_obj; reason_prop = map_reason reason_prop; kind }
   | EObjectComputedPropertyAssign (r1, r2, kind) ->
     EObjectComputedPropertyAssign (map_reason r1, Base.Option.map ~f:map_reason r2, kind)
   | EObjectComputedPropertyPotentialOverwrite { key_loc; overwritten_locs } ->
@@ -2228,7 +2233,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EReactRefInRender { usage = reason; _ }
   | EUnsupportedImplements reason
   | EObjectComputedPropertyAssign (reason, _, _)
-  | EObjectComputedPropertyAccess (_, reason, _)
+  | EObjectComputedPropertyAccess { reason_prop = reason; _ }
   | EForInRHS reason
   | EBinaryInRHS reason
   | EBinaryInLHS reason
@@ -3196,8 +3201,8 @@ let friendly_message_of_msg = function
   | EBinaryInRHS reason -> Normal (MessageCannotUseInOperatorDueToBadRHS reason)
   | EForInRHS reason -> Normal (MessageCannotIterateWithForIn reason)
   | EInstanceofRHS reason -> Normal (MessageCannotUseInstanceOfOperatorDueToBadRHS reason)
-  | EObjectComputedPropertyAccess (_, reason_prop, kind) ->
-    Normal (MessageCannotAccessObjectWithComputedProp { reason_prop; kind })
+  | EObjectComputedPropertyAccess { reason_obj; reason_prop; kind } ->
+    Normal (MessageCannotAccessObjectWithComputedProp { reason_obj; reason_prop; kind })
   | EObjectComputedPropertyAssign (reason_prop, Some reason_key, kind) ->
     Normal (MessageCannotAssignToObjectWithComputedPropWithKey { reason_prop; reason_key; kind })
   | EObjectComputedPropertyAssign (reason_prop, None, _) ->

@@ -248,16 +248,19 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- computed.js:5:8
 
-Cannot access object with computed property using string [1]. [invalid-computed-prop]
+Cannot access object literal [1] with computed property using string [2]. [invalid-computed-prop]
 
    computed.js:5:8
    5| var { [key]: val2 } = { key: "val" }; // error: unsafe string key access
              ^^^
 
 References:
+   computed.js:5:23
+   5| var { [key]: val2 } = { key: "val" }; // error: unsafe string key access
+                            ^^^^^^^^^^^^^^ [1]
    computed.js:4:10
    4| var key: string = "key";
-               ^^^^^^ [1]
+               ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- computed.js:9:2

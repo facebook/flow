@@ -658,16 +658,27 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- get_set_elem.js:5:3
 
-Cannot access object with computed property using string [1]. [invalid-computed-prop]
+Cannot access `React.AbstractComponentStatics` [1] with computed property using string [2]. [invalid-computed-prop]
 
    get_set_elem.js:5:3
-   5| x[y]; // error
-        ^
+    5| x[y]; // error
+         ^
 
 References:
+   <BUILTINS>/react.js:25:47
+                                                     v
+   25| declare type React$AbstractComponentStatics = {
+   26|   displayName?: ?string,
+   27|   // This is only on function components, but trying to access name when
+   28|   // displayName is undefined is a common pattern.
+   29|   name?: ?string,
+   30|   propTypes?: {[string] : any, ...},
+   31|   ...
+   32| };
+       ^ [1]
    get_set_elem.js:4:16
-   4| declare var y: string;
-                     ^^^^^^ [1]
+    4| declare var y: string;
+                      ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- get_set_elem.js:6:3

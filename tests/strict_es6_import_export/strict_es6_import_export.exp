@@ -364,10 +364,15 @@ References:
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:37:27
 
-Cannot access object with computed property using number [1]. [invalid-computed-prop]
+Cannot access module `./foo` [1] with computed property using number [2]. [invalid-computed-prop]
 
+   import_star_invalid_use.js:37:27
    37| const {named1: renamed4, [1 + 2]: computed1} = Foo;
-                                 ^^^^^ [1]
+                                 ^^^^^ [2]
+
+References:
+   foo.js
+   ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:37:48
@@ -387,10 +392,15 @@ References:
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:38:15
 
-Cannot access object with computed property using number [1]. [invalid-computed-prop]
+Cannot access module `./foo` [1] with computed property using number [2]. [invalid-computed-prop]
 
+   import_star_invalid_use.js:38:15
    38| ({named1: x, [1 + 2]: z}) = Foo;
-                     ^^^^^ [1]
+                     ^^^^^ [2]
+
+References:
+   foo.js
+   ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------- import_star_invalid_use.js:38:29

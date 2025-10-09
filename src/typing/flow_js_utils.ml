@@ -2693,7 +2693,9 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
         | DefT (_, SingletonNumT { value = (value, _); _ }) ->
           let reason_prop = reason_of_t elem_t in
           let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
-          add_output cx (Error_message.EObjectComputedPropertyAccess (reason_op, reason_prop, kind));
+          add_output
+            cx
+            (Error_message.EObjectComputedPropertyAccess { reason_obj; reason_prop; kind });
           F.error_type cx trace reason_op
         | AnyT (_, src) -> F.return cx trace ~use_op:unknown_use (AnyT.why src reason_op)
         | _ ->
@@ -2701,7 +2703,7 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
           add_output
             cx
             (Error_message.EObjectComputedPropertyAccess
-               (reason_op, reason_prop, Flow_intermediate_error_types.InvalidObjKey.Other)
+               { reason_obj; reason_prop; kind = Flow_intermediate_error_types.InvalidObjKey.Other }
             );
           F.error_type cx trace reason_op))
 end

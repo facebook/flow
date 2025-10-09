@@ -474,6 +474,7 @@ type 'loc message =
       enum_reason: 'loc virtual_reason;
     }
   | MessageCannotAccessObjectWithComputedProp of {
+      reason_obj: 'loc virtual_reason;
       reason_prop: 'loc virtual_reason;
       kind: InvalidObjKey.t;
     }

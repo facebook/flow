@@ -1745,9 +1745,15 @@ let to_printable_error :
           )
       | None ->
         [text " on "; ref enum_reason; text " because computed access is not allowed on enums."])
-    | MessageCannotAccessObjectWithComputedProp { reason_prop; kind } ->
+    | MessageCannotAccessObjectWithComputedProp { reason_obj; reason_prop; kind } ->
       let suffix = Base.Option.value ~default:[] (msg_of_invalid_obj_key_kind kind) in
-      [text "Cannot access object with computed property using "; ref reason_prop; text "."]
+      [
+        text "Cannot access ";
+        ref reason_obj;
+        text " with computed property using ";
+        ref reason_prop;
+        text ".";
+      ]
       @ suffix
     | MessageCannotAccessReactRefInRender { usage; in_hook } ->
       let context =

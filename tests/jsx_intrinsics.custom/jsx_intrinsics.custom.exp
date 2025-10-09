@@ -86,16 +86,24 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- strings.js:11:2
 
-Cannot access object with computed property using string [1]. [invalid-computed-prop]
+Cannot access `$JSXIntrinsics` [1] with computed property using string [2]. [invalid-computed-prop]
 
    strings.js:11:2
    11| <Str />; // Error: string ~> keys of JSXIntrinsics
         ^^^
 
 References:
+   lib/jsx.js:3:23
+                             v
+    3| type $JSXIntrinsics = {
+    4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
+    5|   span: $JSXIntrinsic<{id: string, class: string, ...}>,
+    6|   ...
+    7| };
+       ^ [1]
    strings.js:7:10
     7| var Str: string = 'str';
-                ^^^^^^ [1]
+                ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- strings.js:13:2
@@ -154,16 +162,24 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- strings.js:15:2
 
-Cannot access object with computed property using string [1]. [invalid-computed-prop]
+Cannot access `$JSXIntrinsics` [1] with computed property using string [2]. [invalid-computed-prop]
 
    strings.js:15:2
    15| <Str />; // Error: string ~> keys of JSXIntrinsics
         ^^^
 
 References:
+   lib/jsx.js:3:23
+                             v
+    3| type $JSXIntrinsics = {
+    4|   div: $JSXIntrinsic<{id: string, [StringPrefix<'data-'>]: string}>,
+    5|   span: $JSXIntrinsic<{id: string, class: string, ...}>,
+    6|   ...
+    7| };
+       ^ [1]
    strings.js:7:10
     7| var Str: string = 'str';
-                ^^^^^^ [1]
+                ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- strings.js:18:10

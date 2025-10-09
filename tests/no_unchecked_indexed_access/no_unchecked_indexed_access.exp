@@ -147,16 +147,19 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- obj_test.js:6:11
 
-Cannot access object with computed property using string [1]. [invalid-computed-prop]
+Cannot access object type [1] with computed property using string [2]. [invalid-computed-prop]
 
    obj_test.js:6:11
    6| recordObj[key] as string; // error: bad key
                 ^^^
 
 References:
+   obj_test.js:1:26
+   1| declare const recordObj: {foo: string};
+                               ^^^^^^^^^^^^^ [1]
    obj_test.js:4:20
    4| declare const key: string;
-                         ^^^^^^ [1]
+                         ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- obj_test.js:7:1
@@ -223,16 +226,19 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ obj_test.js:11:14
 
-Cannot access object with computed property using string [1]. [invalid-computed-prop]
+Cannot access object type [1] with computed property using string [2]. [invalid-computed-prop]
 
    obj_test.js:11:14
    11| protoDictObj[key] as string; // error: cannot access, proto ignored
                     ^^^
 
 References:
+   obj_test.js:3:29
+    3| declare const protoDictObj: {__proto__: {[string]: string}};
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    obj_test.js:4:20
     4| declare const key: string;
-                          ^^^^^^ [1]
+                          ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ obj_test.js:13:14

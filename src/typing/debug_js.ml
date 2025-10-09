@@ -1605,12 +1605,12 @@ let dump_error_message =
     | EArithmeticOperand reason -> spf "EArithmeticOperand (%s)" (dump_reason cx reason)
     | EForInRHS reason -> spf "EForInRHS (%s)" (dump_reason cx reason)
     | EInstanceofRHS reason -> spf "EInstanceofRHS (%s)" (dump_reason cx reason)
-    | EObjectComputedPropertyAccess (reason1, reason2, kind) ->
+    | EObjectComputedPropertyAccess { reason_obj; reason_prop; kind } ->
       let kind = Flow_intermediate_error_types.InvalidObjKey.str_of_kind kind in
       spf
-        "EObjectComputedPropertyAccess (%s, %s, %s)"
-        (dump_reason cx reason1)
-        (dump_reason cx reason2)
+        "EObjectComputedPropertyAccess (reason_obj=%s, reason_prop=%s, kind=%s)"
+        (dump_reason cx reason_obj)
+        (dump_reason cx reason_prop)
         kind
     | EObjectComputedPropertyAssign (reason1, reason2, kind) ->
       let kind = Flow_intermediate_error_types.InvalidObjKey.str_of_kind kind in
