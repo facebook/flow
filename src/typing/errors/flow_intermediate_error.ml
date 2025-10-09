@@ -2051,6 +2051,8 @@ let to_printable_error :
       ]
     | MessageCannotDeclareAlreadyBoundName x ->
       [text "Cannot declare "; Friendly.ref x; text " because the name is already bound."]
+    | MessageCannotDeclareAlreadyBoundNameInCoreJs x ->
+      [text "Cannot declare "; Friendly.ref x; text " because the name is a core builtin type."]
     | MessageCannotDeclareAlreadyBoundNameInNamespace x ->
       [
         text "Cannot declare the name in the namespace because the name ";

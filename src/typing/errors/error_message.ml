@@ -780,6 +780,7 @@ and ref_in_render_kind =
 and binding_error =
   | EGlobalAlreadyDeclared
   | ENameAlreadyBound
+  | ENameAlreadyBoundInCoreJs
   | EVarRedeclaration
   | EReferencedBeforeDeclaration
   | EReferencedThisSuperBeforeSuperCall
@@ -3131,6 +3132,7 @@ let friendly_message_of_msg = function
       match binding_error with
       | EGlobalAlreadyDeclared -> MessageCannotDeclareAlreadyBoundGlobal x
       | ENameAlreadyBound -> MessageCannotDeclareAlreadyBoundName x
+      | ENameAlreadyBoundInCoreJs -> MessageCannotDeclareAlreadyBoundNameInCoreJs x
       | EVarRedeclaration -> MessageCannotRedeclareVar x
       | EReferencedBeforeDeclaration -> MessageCannotUseBeforeDeclaration x
       | EReferencedThisSuperBeforeSuperCall -> MessageCannotUseThisSuperBeforeSuperCall x
@@ -3757,6 +3759,7 @@ let error_code_of_message err : error_code option =
     match binding_error with
     | EGlobalAlreadyDeclared -> Some NameAlreadyBound
     | ENameAlreadyBound -> Some NameAlreadyBound
+    | ENameAlreadyBoundInCoreJs -> Some NameAlreadyBound
     | EVarRedeclaration -> Some NameAlreadyBound
     | EReferencedBeforeDeclaration -> Some ReferenceBeforeDeclaration
     | EReferencedThisSuperBeforeSuperCall -> Some ReferenceBeforeDeclaration
