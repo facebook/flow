@@ -2182,6 +2182,7 @@ and Opaque : sig
     | StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType of { name: name }
     | StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType
     | StuckEvalForOptionalIndexedAccessResultType
+    | StuckEvalForConditionalType
 
   type id =
     (* We also track the name so that we can do common interface conformance check, where we check
@@ -2201,6 +2202,7 @@ end = struct
     | StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType of { name: name }
     | StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType
     | StuckEvalForOptionalIndexedAccessResultType
+    | StuckEvalForConditionalType
 
   type id =
     | UserDefinedOpaqueTypeId of ALoc.id * string
@@ -2227,6 +2229,7 @@ end = struct
       "StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType"
     | StuckEval StuckEvalForOptionalIndexedAccessResultType ->
       "StuckEvalForOptionalIndexedAccessResultType"
+    | StuckEval StuckEvalForConditionalType -> "StuckEvalForConditionalType"
 end
 
 and Eval : sig

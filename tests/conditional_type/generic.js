@@ -39,7 +39,7 @@ function generic_conditional_type_subtyping<T, S>(
   z: string extends T ? boolean : number,
 ) {
   x = y; // expected error
-  x = z; // unfortunate error, but this is sound.
+  x = z; // ok
 }
 
 function definitely_assignable_choose_true_branch<T>(x: T): Array<T> extends $ReadOnlyArray<infer X> ? X : number {

@@ -1762,14 +1762,18 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                   Subst_name.Map.add tparam.name (AnyT.placeholder reason) acc
               )
             in
-            let check_t = Type_subst.subst cx ~use_op:unknown_use any_subst_map check_t in
-            let extends_t = Type_subst.subst cx ~use_op:unknown_use any_subst_map extends_t in
+            let any_substituted_check_t =
+              Type_subst.subst cx ~use_op:unknown_use any_subst_map check_t
+            in
+            let any_substituted_extends_t =
+              Type_subst.subst cx ~use_op:unknown_use any_subst_map extends_t
+            in
             (match
                SpeculationKit.try_singleton_throw_on_failure
                  cx
                  trace
-                 check_t
-                 (UseT (use_op, extends_t))
+                 any_substituted_check_t
+                 (UseT (use_op, any_substituted_extends_t))
              with
             | exception Flow_js_utils.SpeculationSingletonError _ ->
               (* When all the GenericT and infer types are replaced with any, and subtyping
@@ -1786,14 +1790,26 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
               (* A conditional type with GenericTs in check type and extends type is tricky.
                  We cannot conservatively decide which branch we will take. To maintain
                  soundness in this general case, we make the type abstract. *)
-              let name =
-                Subst_name.Synthetic
-                  { name = "conditional type"; op_kind = Some Subst_name.Conditional; ts = [] }
-              in
-              let id = Context.make_generic_id cx name (loc_of_reason reason) in
-              let reason = update_desc_reason invalidate_rtype_alias reason in
               let bound = UnionT (reason, UnionRep.make true_t false_t []) in
-              GenericT { reason; name; id; bound; no_infer = false })
+              let opaque_type_args =
+                Base.List.mapi [check_t; extends_t; true_t; false_t] ~f:(fun i t ->
+                    ( Subst_name.Synthetic { name = string_of_int i; op_kind = None; ts = [] },
+                      TypeUtil.reason_of_t t,
+                      t,
+                      Polarity.Neutral
+                    )
+                )
+              in
+              OpaqueT
+                ( reason,
+                  {
+                    opaque_id = Opaque.(StuckEval StuckEvalForConditionalType);
+                    underlying_t = None;
+                    lower_t = None;
+                    upper_t = Some bound;
+                    opaque_type_args;
+                  }
+                ))
       in
       reposition cx ~trace (loc_of_reason reason) t
 end
