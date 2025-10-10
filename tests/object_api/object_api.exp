@@ -1536,7 +1536,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- proto.js:13:2
 
-Cannot cast `C1_proto.bind` to empty because function type [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `C1_proto.bind` to empty because function prototype [1] is incompatible with empty [2]. [incompatible-type]
 
    proto.js:13:2
    13| (C1_proto.bind: empty); // error: function ~> empty

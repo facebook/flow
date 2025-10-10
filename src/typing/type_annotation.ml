@@ -1141,7 +1141,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           )
         | "Function$Prototype$Bind" ->
           check_type_arg_arity cx loc t_ast targs 0 (fun () ->
-              let reason = mk_annot_reason RFunctionType loc in
+              let reason = mk_annot_reason RFunctionPrototype loc in
               reconstruct_ast (FunProtoBindT reason) None
           )
         | "React$ElementConfig" ->

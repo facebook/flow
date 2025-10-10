@@ -912,7 +912,7 @@ and merge_annot env file = function
     let reason = Reason.(mk_reason (RStatics desc) loc) in
     Type.DefT (reason, Type.ClassT t)
   | Function_bind loc ->
-    let reason = Reason.(mk_annot_reason RFunctionType loc) in
+    let reason = Reason.(mk_annot_reason RFunctionPrototype loc) in
     Type.FunProtoBindT reason
   | ReactElementConfig (loc, t) ->
     let reason = Reason.(mk_reason (RType (OrdinaryName "React$ElementConfig")) loc) in

@@ -303,7 +303,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:34:2
 
-Cannot call `test.bind.apply` because function type [1] is incompatible with function type [2]. [incompatible-type]
+Cannot call `test.bind.apply` because function prototype [1] is incompatible with function type [2]. [incompatible-type]
 
    apply.js:34:2
     34| (test.bind.apply(test, [0, 123]): (b: number) => number);
