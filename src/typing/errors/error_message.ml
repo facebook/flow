@@ -1016,7 +1016,6 @@ let map_loc_of_explanation (f : 'a -> 'b) =
         properties;
       }
   | ExplanationMultiplatform -> ExplanationMultiplatform
-  | ExplanationNonCallableObjectToFunction -> ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping -> ExplanationPropertyInvariantTyping
   | ExplanationPropertyMissingDueToNeutralOptionalProperty
       {

@@ -600,9 +600,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:56:3
 
-Cannot create `Fun` element because React element [1] is incompatible with `Fn` [2] in property `children`. 
-
-Non-callable objects are not compatible with functions. [incompatible-type]
+Cannot create `Fun` element because React element [1] is incompatible with `Fn` [2] in property `children`.
+[incompatible-type]
 
    fun.js:56:3
    56|   <intrinsic />
@@ -991,7 +990,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- fun.js:149:3
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either React element [1] is incompatible with `Fn` [2]. Non-callable objects are not compatible with functions.
+ - Either React element [1] is incompatible with `Fn` [2].
  - Or React element [1] is incompatible with array type [3].
 
    fun.js:149:3

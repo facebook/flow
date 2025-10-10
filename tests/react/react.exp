@@ -1687,7 +1687,7 @@ References:
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:22:30
 
 Cannot call `React.useEffect` with async function bound to `create` because in the return value: [incompatible-type]
- - Either `Promise` [1] is incompatible with function type [2]. Non-callable objects are not compatible with functions.
+ - Either `Promise` [1] is incompatible with function type [2].
  - Or `Promise` [1] is incompatible with undefined [3].
 
    useEffect_hook.js:22:30
@@ -1840,7 +1840,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `React.useLayoutEffect` with async function bound to `create` because in the return value:
 [incompatible-type]
- - Either `Promise` [1] is incompatible with function type [2]. Non-callable objects are not compatible with functions.
+ - Either `Promise` [1] is incompatible with function type [2].
  - Or `Promise` [1] is incompatible with undefined [3].
 
    useLayoutEffect_hook.js:22:36

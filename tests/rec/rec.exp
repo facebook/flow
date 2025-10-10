@@ -460,9 +460,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test3.js:13:10
 
-Cannot return `x` because `Q` [1] is incompatible with `P` [2] in the return value. 
-
-Non-callable objects are not compatible with functions. [incompatible-type]
+Cannot return `x` because `Q` [1] is incompatible with `P` [2] in the return value. [incompatible-type]
 
    test3.js:13:10
    13|   return x; // terminate despite expanding types, error

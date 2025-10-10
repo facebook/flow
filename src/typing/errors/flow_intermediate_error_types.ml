@@ -326,7 +326,6 @@ type 'loc explanation =
       properties: name list;
     }
   | ExplanationMultiplatform
-  | ExplanationNonCallableObjectToFunction
   | ExplanationPropertyInvariantTyping
   | ExplanationPropertyMissingDueToNeutralOptionalProperty of {
       props_plural: bool;

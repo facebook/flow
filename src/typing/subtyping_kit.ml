@@ -2171,13 +2171,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | _ ->
           let error_message =
             Error_message.EIncompatibleWithUseOp
-              {
-                reason_lower = reason;
-                reason_upper = reason_op;
-                use_op;
-                explanation =
-                  Some Flow_intermediate_error_types.ExplanationNonCallableObjectToFunction;
-              }
+              { reason_lower = reason; reason_upper = reason_op; use_op; explanation = None }
           in
           add_output cx error_message;
           AnyT.error reason_op

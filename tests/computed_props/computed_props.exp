@@ -204,9 +204,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- hints.js:42:24
 
-Cannot assign object literal to `obj7` because object literal [1] is incompatible with function type [2]. 
-
-Non-callable objects are not compatible with functions. [incompatible-type]
+Cannot assign object literal to `obj7` because object literal [1] is incompatible with function type [2].
+[incompatible-type]
 
    hints.js:42:24
                               v---------------------

@@ -79,8 +79,7 @@ References:
 Error ---------------------------------------------------------------------------------- class_to_component_type.js:13:1
 
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
- - Either `ImNotARefSetter` [1] is incompatible with function type [2]. Non-callable objects are not compatible with
-   functions.
+ - Either `ImNotARefSetter` [1] is incompatible with function type [2].
  - Or `ImNotARefSetter` [1] is incompatible with null [3].
 
    class_to_component_type.js:13:1

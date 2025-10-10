@@ -170,9 +170,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:23:10
 
-Cannot return `x` because object type [1] is incompatible with function type [2]. 
-
-Non-callable objects are not compatible with functions. [incompatible-type]
+Cannot return `x` because object type [1] is incompatible with function type [2]. [incompatible-type]
 
    C.js:23:10
    23|   return x;
@@ -432,9 +430,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- use_ops.js:4:2
 
-Cannot cast `a` to `B` because object type [1] is incompatible with function type [2] in property `p`. 
-
-Non-callable objects are not compatible with functions. [incompatible-type]
+Cannot cast `a` to `B` because object type [1] is incompatible with function type [2] in property `p`.
+[incompatible-type]
 
    use_ops.js:4:2
    4| (a: B); // error HERE and preserve use ops

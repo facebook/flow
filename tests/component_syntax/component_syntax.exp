@@ -2641,7 +2641,7 @@ Error --------------------------------------------------------------------------
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either null [1] is incompatible with component Reffed [2] in property `current`.
- - Or object type [3] is incompatible with function type [4]. Non-callable objects are not compatible with functions.
+ - Or object type [3] is incompatible with function type [4].
 
    refs.js:3:15
      3| component Foo(ref: {current: typeof Reffed}) { return null };
@@ -2909,7 +2909,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because undefined [1] is incompatible with function type [2] in property `ref`.
+Cannot cast `Bar` to component because object type [1] is incompatible with function type [2] in property `ref`.
 [incompatible-type]
 
    refs.js:15:2
@@ -2927,9 +2927,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because object type [1] is incompatible with function type [2] in property `ref`. 
-
-Non-callable objects are not compatible with functions. [incompatible-type]
+Cannot cast `Bar` to component because undefined [1] is incompatible with function type [2] in property `ref`.
+[incompatible-type]
 
    refs.js:15:2
    15| (Bar: component(ref: React.RefSetter<string>)); // err
