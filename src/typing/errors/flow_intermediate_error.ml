@@ -897,7 +897,12 @@ let rec make_intermediate_error :
        * In flip_contravariant we flip upper/lower for all FunImplicitReturn. So
        * reverse those back as well. *)
       | FunImplicitReturn { upper = return; _ } ->
-        make_error lower (MessageIncompatibleImplicitReturn { lower; upper; return })
+        if loc_of_reason upper = loc_of_reason return then
+          make_error
+            lower
+            (MessageIncompatibleImplicitReturn { lower; upper = desc_of_reason upper })
+        else
+          make_error lower (MessageIncompatibleGeneral { lower; upper })
       | ComponentRestParamCompatibility { rest_param } ->
         mk_no_frame_or_explanation_error
           rest_param
@@ -3186,15 +3191,8 @@ let to_printable_error :
           text " has ";
           text (str_of_arity ~inexact:upper_inexact upper_arity);
         ]
-    | MessageIncompatibleImplicitReturn { lower; upper; return } ->
-      let upper_loc = loc_of_aloc (loc_of_reason upper) in
-      let return_loc = loc_of_aloc (loc_of_reason return) in
-      [ref lower; text " is incompatible with "]
-      @
-      if Loc.compare return_loc upper_loc = 0 then
-        [text "implicitly-returned "; desc (desc_of_reason upper)]
-      else
-        [ref upper]
+    | MessageIncompatibleImplicitReturn { lower; upper } ->
+      [ref lower; text " is incompatible with "; text "implicitly-returned "; desc upper]
     | MessageIncompatibleClassToObject { reason_class; reason_obj } ->
       [
         ref reason_class;

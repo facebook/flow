@@ -753,8 +753,7 @@ type 'loc message =
     }
   | MessageIncompatibleImplicitReturn of {
       lower: 'loc virtual_reason;
-      upper: 'loc virtual_reason;
-      return: 'loc virtual_reason;
+      upper: 'loc virtual_reason_desc;
     }
   | MessageIncompatibleClassToObject of {
       reason_class: 'loc virtual_reason;
