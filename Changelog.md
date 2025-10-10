@@ -1,3 +1,22 @@
+### 0.288.0
+
+Likely to cause new Flow errors:
+* [`React.ElementProps`](https://flow.org/en/docs/react/types/#toc-react-elementprops) is removed. You should use [`React.ElementConfig`](https://flow.org/en/docs/react/types/#toc-react-elementconfig) instead.
+* For a function named as a hook but not annotated as a hook, it will no longer be treated like a hook when you try to use it from property access or property destructuring in component syntax components and hook syntax hooks. They will now cause `react-rule-hook-non-hook-syntax` errors. To fix, annotate them with hook annotation. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiStnsAAIAKpZHgAIXYEoAvBLgAAdKASiWUgCytAAEsQtsgJQAKACUyoAfKqBRq7VANZARIxoBYJQAVdoSACMpqsAeAuoNRoFJuA2rIesNEGNZstSptwAFEoFlvVmq10tlJAVbCswZjWwtAG4JQB6csSkyUXkarOR7DRo2litVmt1zNalgSISUKAl+0a2pGxte+x+oNRkOxsOqxvN2Mmi3W22p9P1rMyuDy9gF6dF1uV6vUTsNwst81l48dyib7u7PsDoeO18j2MLmfF9MO8USbM7iQADixBsMqqqbhesYvk66Sul8Piet6ABM-qBlBWxzhGGEmu+WzxquybrhBXYATwIEQPmGFHlW0GkdRV5tietZ3qRPZPoOUAOnhY4oaaU5Nl+WGfkWuGjiuiZrmmJENtu5GgfugmHoxx50eeB6XtetFbPeErsf2nEOrkIANCYJBwNASQZPYJggAKQA)
+* Calling functions passed to function and component with hook like name but not annotated as hook will now error. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSkBEjGgFgABAAxYgAIXYAApKQBZWgACWIW2Q0uVAEppQBeAB80oASqxlFYAHIQDRG4AAHSg0vd0pYEiElDd6q1OsNAG5pQB6UPSkyUXmugWu13iyVfHxy4gAcWIbFVZA12oguultR1+qNZst1pi9sd0pdbo9Xp9fpzAfzwdjrtyIAaJhIcGgSQy9hMIAFQA).
+* `React$RefSetter<...>` and and `React$Context` are removed. It continues to be available in the form of `React.RefSetter<...>` and `React.Context<...>`, regardless of whether you have imported `React`.
+* `React$ElementRef<...>` was removed. It continues to be available in the form of `React.ElementRef<...>`, regardless of whether you have imported `React`.
+
+Breaking Changes:
+* The config option `max_literal_length` was removed. Flow will always decide whether to infer a specific or general  type of string literal based on the [natural inference algorithm](https://medium.com/flow-type/flow-natural-inference-for-primitives-df27149109bb).
+
+Notable bug fixes:
+* You can now use `@@dispose` and `@@asyncDispose` in your library typings. You can access the respective properties with `obj[Symbol.dispose]` and `obj[Symbol.asyncDispose]`.
+* Allow comparisons of bigint singletons
+
+Library Definitions:
+* The second type argument of `ExactReactElement` will be populated by `React.ElementConfig<C>` instead of `React.ElementProps<C>`. Most of the code that doesn't depend on exact react element types won't be affected.
+
 ### 0.287.0
 
 Breaking Changes:
