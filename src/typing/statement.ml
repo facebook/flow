@@ -987,7 +987,7 @@ module Make
             (name, reason, t, polarity))
           (TypeParams.to_list tparams)
       in
-      let opaque_id = Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id cx name_loc) in
+      let opaque_id = Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id cx name_loc, name) in
       let opaquetype =
         {
           underlying_t;
@@ -995,7 +995,6 @@ module Make
           upper_t = upper_bound_t;
           opaque_id;
           opaque_type_args;
-          opaque_name = name;
         }
       in
       let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in

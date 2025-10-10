@@ -1486,7 +1486,6 @@ module rec TypeTerm : sig
     lower_t: t option;
     upper_t: t option;
     opaque_type_args: (Subst_name.t * reason * t * Polarity.t) list;
-    opaque_name: string;
   }
 
   and exporttypes = {
@@ -2178,7 +2177,9 @@ end
 
 and Opaque : sig
   type id =
-    | UserDefinedOpaqueTypeId of ALoc.id
+    (* We also track the name so that we can do common interface conformance check, where we check
+     * the structural subtyping for nominal constructs defined in impl and interface files. *)
+    | UserDefinedOpaqueTypeId of ALoc.id * string
     (* A special norminal type to test t ~> union optimization *)
     | InternalEnforceUnionOptimized
 
@@ -2187,17 +2188,17 @@ and Opaque : sig
   val string_of_id : id -> string
 end = struct
   type id =
-    | UserDefinedOpaqueTypeId of ALoc.id
+    | UserDefinedOpaqueTypeId of ALoc.id * string
     | InternalEnforceUnionOptimized
 
   let equal_id id1 id2 =
     match (id1, id2) with
-    | (UserDefinedOpaqueTypeId id1, UserDefinedOpaqueTypeId id2) -> ALoc.equal_id id1 id2
+    | (UserDefinedOpaqueTypeId (id1, _), UserDefinedOpaqueTypeId (id2, _)) -> ALoc.equal_id id1 id2
     | (InternalEnforceUnionOptimized, InternalEnforceUnionOptimized) -> true
     | _ -> false
 
   let string_of_id = function
-    | UserDefinedOpaqueTypeId id -> "user-defined " ^ ALoc.show_id id
+    | UserDefinedOpaqueTypeId (id, name) -> "user-defined " ^ name ^ " (" ^ ALoc.show_id id ^ ")"
     | InternalEnforceUnionOptimized -> "InternalEnforceUnionOptimized"
 end
 

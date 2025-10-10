@@ -1426,14 +1426,20 @@ module Make (I : INPUT) : S = struct
           | t :: ts -> Ty.mk_union ~from_bounds:true (t, ts))
 
     and opaque_t ~env reason opaque_type =
-      let { Type.opaque_type_args = targs; opaque_name; _ } = opaque_type in
-      let opaque_symbol = symbol_from_reason env reason (Reason.OrdinaryName opaque_name) in
-      let%map targs =
-        match targs with
-        | [] -> return None
-        | _ -> optMapM (fun (_, _, t, _) -> type__ ~env t) (Some targs)
-      in
-      generic_talias opaque_symbol targs
+      let { Type.opaque_id; opaque_type_args = targs; _ } = opaque_type in
+      match opaque_id with
+      | Type.Opaque.UserDefinedOpaqueTypeId (_, name) ->
+        let opaque_symbol = symbol_from_reason env reason (Reason.OrdinaryName name) in
+        let%map targs =
+          match targs with
+          | [] -> return None
+          | _ -> optMapM (fun (_, _, t, _) -> type__ ~env t) (Some targs)
+        in
+        generic_talias opaque_symbol targs
+      | Type.Opaque.InternalEnforceUnionOptimized ->
+        (* InternalEnforceUnionOptimized is a special opaque type that only appears in upper
+         * bound position to test optimization. It should never be visible to users. *)
+        error (UnsupportedTypeCtor, "Special InternalEnforceUnionOptimized upper bound")
 
     and subst_name ~env loc t bound name =
       match name with
@@ -1773,7 +1779,11 @@ module Make (I : INPUT) : S = struct
      *)
     let opaque_type_t ~env reason opaque_type tparams =
       let open Type in
-      let name = opaque_type.opaque_name in
+      let name =
+        match opaque_type.opaque_id with
+        | Opaque.UserDefinedOpaqueTypeId (_, name) -> name
+        | Opaque.InternalEnforceUnionOptimized -> "InternalEnforceUnionOptimized"
+      in
       let current_source = Context.file (Env.get_cx env) in
       let opaque_source = ALoc.source (def_loc_of_reason reason) in
       let name = symbol_from_reason env reason (Reason.OrdinaryName name) in

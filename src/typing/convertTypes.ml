@@ -232,7 +232,6 @@ and type_to_json : Context.t -> int -> t -> json =
                        opaquetype.opaque_type_args
                     )
                 );
-                ("opaque_name", JSON_String opaquetype.opaque_name);
               ]
           );
         ]

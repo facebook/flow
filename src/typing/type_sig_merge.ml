@@ -1820,14 +1820,7 @@ let merge_opaque_type file reason id name tparams lower_bound upper_bound body =
     let upper_t = Option.map ~f:(merge env file) upper_bound in
     let body = Option.map ~f:(merge env file) body in
     let opaquetype =
-      {
-        underlying_t = body;
-        lower_t;
-        upper_t;
-        opaque_id = id;
-        opaque_type_args = targs;
-        opaque_name = name;
-      }
+      { underlying_t = body; lower_t; upper_t; opaque_id = id; opaque_type_args = targs }
     in
     DefT (reason, TypeT (OpaqueKind, OpaqueT (opaque_reason, opaquetype)))
   in
@@ -1963,7 +1956,7 @@ let merge_declare_fun file defs =
 let merge_def ~const_decl file reason = function
   | TypeAlias { id_loc = _; name; tparams; body } -> merge_type_alias file reason name tparams body
   | OpaqueType { id_loc; name; tparams; body; lower_bound; upper_bound } ->
-    let id = Type.Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id file.cx id_loc) in
+    let id = Type.Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id file.cx id_loc, name) in
     merge_opaque_type file reason id name tparams lower_bound upper_bound body
   | Interface { id_loc; name; tparams; def } ->
     let id = Context.make_aloc_id file.cx id_loc in

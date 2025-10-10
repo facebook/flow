@@ -1408,7 +1408,13 @@ struct
         (* Store the opaque type when doing `ToStringT`, so we can use that
            rather than just `string` if the underlying is `string`. *)
         | ( OpaqueT
-              (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId opaque_id; underlying_t = Some t; _ }),
+              ( _,
+                {
+                  opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _);
+                  underlying_t = Some t;
+                  _;
+                }
+              ),
             ToStringT { reason; t_out; _ }
           )
           when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
@@ -1425,7 +1431,13 @@ struct
         (* If the type is still in the same file it was defined, we allow it to
          * expose its underlying type information *)
         | ( OpaqueT
-              (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId opaque_id; underlying_t = Some t; _ }),
+              ( _,
+                {
+                  opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _);
+                  underlying_t = Some t;
+                  _;
+                }
+              ),
             _
           )
           when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
@@ -6393,7 +6405,7 @@ struct
                 OpaqueT
                   ( _,
                     {
-                      opaque_id = Opaque.UserDefinedOpaqueTypeId opaque_id;
+                      opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _);
                       underlying_t = Some t;
                       _;
                     }
@@ -6415,7 +6427,10 @@ struct
           d
           tout
       | (OpaqueT (r, opaquetype), ReactDRO _) -> destruct_and_preserve_opaque_t r opaquetype
-      | (OpaqueT (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId id; underlying_t = Some t; _ }), _)
+      | ( OpaqueT
+            (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId (id, _); underlying_t = Some t; _ }),
+          _
+        )
         when ALoc.source (id :> ALoc.t) = Some (Context.file cx) ->
         eval_destructor cx ~trace use_op reason t d tout
       (* Specialize TypeAppTs before evaluating them so that we can handle special

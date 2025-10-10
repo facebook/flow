@@ -736,7 +736,6 @@ let enforce_optimize cx loc t =
           lower_t = None;
           upper_t = None;
           opaque_type_args = [];
-          opaque_name = "InternalEnforceUnionOptimized";
         }
       )
   in

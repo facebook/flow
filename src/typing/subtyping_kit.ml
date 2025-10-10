@@ -1078,8 +1078,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | ( OpaqueT
           ( lreason,
             {
-              opaque_id = Opaque.UserDefinedOpaqueTypeId id1;
-              opaque_name = name1;
+              opaque_id = Opaque.UserDefinedOpaqueTypeId (id1, name1);
               opaque_type_args = ltargs;
               lower_t = lower_1;
               upper_t = upper_1;
@@ -1089,8 +1088,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         OpaqueT
           ( ureason,
             {
-              opaque_id = Opaque.UserDefinedOpaqueTypeId id2;
-              opaque_name = name2;
+              opaque_id = Opaque.UserDefinedOpaqueTypeId (id2, name2);
               opaque_type_args = utargs;
               lower_t = lower_2;
               upper_t = upper_2;
@@ -1144,7 +1142,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* If the type is still in the same file it was defined, we allow it to
      * expose its underlying type information *)
     | ( OpaqueT
-          (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId opaque_id; underlying_t = Some t; _ }),
+          ( _,
+            { opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _); underlying_t = Some t; _ }
+          ),
         _
       )
       when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
@@ -1153,7 +1153,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * we expose the underlying type information *)
     | ( _,
         OpaqueT
-          (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId opaque_id; underlying_t = Some t; _ })
+          ( _,
+            { opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _); underlying_t = Some t; _ }
+          )
       )
       when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
       rec_flow_t cx trace ~use_op (l, t)
