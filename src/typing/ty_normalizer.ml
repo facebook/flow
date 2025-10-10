@@ -1440,6 +1440,11 @@ module Make (I : INPUT) : S = struct
         (* InternalEnforceUnionOptimized is a special opaque type that only appears in upper
          * bound position to test optimization. It should never be visible to users. *)
         error (UnsupportedTypeCtor, "Special InternalEnforceUnionOptimized upper bound")
+      | Type.Opaque.StuckEval _ ->
+        (* If we are under the mode when we never evaluate EvalT, then we will never get here.
+         * When we do evaluate EvalT, there is no good way to show that the EvalT is stuck,
+         * so it's better to error, so that only the unevaluated form is shown. *)
+        error (UnsupportedTypeCtor, "Stuck EvalT")
 
     and subst_name ~env loc t bound name =
       match name with
@@ -1779,10 +1784,17 @@ module Make (I : INPUT) : S = struct
      *)
     let opaque_type_t ~env reason opaque_type tparams =
       let open Type in
-      let name =
+      let%bind name =
         match opaque_type.opaque_id with
-        | Opaque.UserDefinedOpaqueTypeId (_, name) -> name
-        | Opaque.InternalEnforceUnionOptimized -> "InternalEnforceUnionOptimized"
+        | Opaque.UserDefinedOpaqueTypeId (_, name) -> return name
+        (* The following cases should error, for the same reason as in opaque_t *)
+        | Opaque.InternalEnforceUnionOptimized ->
+          error (UnsupportedTypeCtor, "Special InternalEnforceUnionOptimized upper bound")
+        | Type.Opaque.StuckEval _ ->
+          (* If we are under the mode when we never evaluate EvalT, then we will never get here.
+           * When we do evaluate EvalT, there is no good way to show that the EvalT is stuck,
+           * so it's better to error, so that only the unevaluated form is shown. *)
+          error (UnsupportedTypeCtor, "Stuck EvalT")
       in
       let current_source = Context.file (Env.get_cx env) in
       let opaque_source = ALoc.source (def_loc_of_reason reason) in

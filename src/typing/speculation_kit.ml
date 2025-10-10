@@ -48,6 +48,8 @@ module type OUTPUT = sig
   val try_singleton_throw_on_failure :
     Context.t -> Type.DepthTrace.t -> Type.t -> Type.use_t -> unit
 
+  val try_singleton_custom_throw_on_failure : Context.t -> (unit -> unit) -> unit
+
   val try_unify : Context.t -> Type.DepthTrace.t -> Type.t -> Type.use_op -> Type.t -> unit
 end
 
@@ -70,6 +72,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       }
     | SingletonCase of Type.t * Type.use_t
     | SingletonUnifyCase of Type.t * Type.use_op * Type.t
+    | SingletonCustomCase of (unit -> unit)
     | CustomCases of {
         use_op: use_op option;
         no_match_error_loc: ALoc.t;
@@ -217,6 +220,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
   and try_singleton_throw_on_failure cx trace t u =
     speculative_matches cx trace (SingletonCase (t, u))
 
+  and try_singleton_custom_throw_on_failure cx f =
+    speculative_matches cx DepthTrace.dummy_trace (SingletonCustomCase f)
+
   and try_unify cx trace t1 use_op t2 =
     speculative_matches cx trace (SingletonUnifyCase (t1, use_op, t2))
 
@@ -339,6 +345,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
              { use_op; reason; op_reasons = (r, List.map reason_of_t us); branches = msgs }
           )
       | SingletonCase _
+      | SingletonCustomCase _
       | SingletonUnifyCase _ ->
         (match msgs with
         | [msg] -> raise (SpeculationSingletonError msg)
@@ -397,6 +404,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         ls
     | SingletonCase (l, u) ->
       [(0, FlowCase (l, mod_use_op_of_use_t (fun use_op -> Op (Speculation use_op)) u))]
+    | SingletonCustomCase f -> [(0, CustomCase f)]
     | SingletonUnifyCase (t1, use_op, t2) -> [(0, UnifyCase (t1, Op (Speculation use_op), t2))]
     | CustomCases { use_op = _; no_match_error_loc = _; use_t = _; default_resolve = _; cases } ->
       Base.List.mapi cases ~f:(fun i f -> (i, CustomCase f))
@@ -503,6 +511,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | IntersectionCases _
     | CustomCases _
     | SingletonCase _
+    | SingletonCustomCase _
     | SingletonUnifyCase _ ->
       false
 

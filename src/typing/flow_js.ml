@@ -6751,27 +6751,26 @@ struct
 
   and mk_possibly_evaluated_destructor_for_annotations cx use_op reason t d id =
     let eval_t = EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, d); id } in
-    ( if Subst_name.Set.is_empty (Type_subst.free_var_finder cx eval_t) then
-      let evaluated = Context.evaluated cx in
-      match Eval.Map.find_opt id evaluated with
-      | Some _ -> ()
-      | None ->
+    let evaluated = Context.evaluated cx in
+    (match Eval.Map.find_opt id evaluated with
+    | Some _ -> ()
+    | None ->
+      let () =
+        if Flow_js_utils.TvarVisitors.has_unresolved_tvars cx eval_t then
+          assert_false
+            (spf
+               "There are unresolved tvars in the evaluated type from annotations: %s"
+               (Debug_js.dump_t cx ~depth:3 eval_t)
+            )
+        else if Flow_js_utils.TvarVisitors.has_placeholders cx eval_t then
+          assert_false
+            (spf
+               "There are placeholders in the evaluated type from annotations: %s"
+               (Debug_js.dump_t cx ~depth:3 eval_t)
+            )
+      in
+      if Subst_name.Set.is_empty (Type_subst.free_var_finder cx eval_t) then
         let trace = DepthTrace.dummy_trace in
-        let eval_t = EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, d); id } in
-        let () =
-          if Flow_js_utils.TvarVisitors.has_unresolved_tvars cx eval_t then
-            assert_false
-              (spf
-                 "There are unresolved tvars in the evaluated type from annotations: %s"
-                 (Debug_js.dump_t cx ~depth:3 eval_t)
-              )
-          else if Flow_js_utils.TvarVisitors.has_placeholders cx eval_t then
-            assert_false
-              (spf
-                 "There are placeholders in the evaluated type from annotations: %s"
-                 (Debug_js.dump_t cx ~depth:3 eval_t)
-              )
-        in
         let result =
           Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where
@@ -6781,7 +6780,76 @@ struct
           )
         in
         Context.set_evaluated cx (Eval.Map.add id result evaluated)
-    );
+      else
+        let try_evaluate ~stuck_eval_kind ~stuck_eval_targs =
+          let trace = DepthTrace.dummy_trace in
+          let try_evaluate t d tvar =
+            try
+              SpeculationKit.try_singleton_custom_throw_on_failure cx (fun () ->
+                  evaluate_type_destructor cx ~trace use_op reason t d tvar
+              )
+            with
+            | Flow_js_utils.SpeculationSingletonError _ ->
+              let opaque_type_args =
+                Base.List.mapi stuck_eval_targs ~f:(fun i t ->
+                    ( Subst_name.Synthetic { name = string_of_int i; op_kind = None; ts = [] },
+                      reason_of_t t,
+                      t,
+                      Polarity.Neutral
+                    )
+                )
+              in
+              let stuck =
+                OpaqueT
+                  ( reason,
+                    {
+                      opaque_id = Opaque.StuckEval stuck_eval_kind;
+                      underlying_t = None;
+                      lower_t = None;
+                      upper_t = None;
+                      opaque_type_args;
+                    }
+                  )
+              in
+              rec_flow_t cx trace ~use_op:unknown_use (stuck, OpenT tvar)
+          in
+          let result =
+            Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
+                Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (try_evaluate t d)
+            )
+          in
+          Context.set_evaluated cx (Eval.Map.add id result evaluated)
+        in
+        (match d with
+        (* For the following indexed-access-related generic EvalTs, if they can be successfully
+         * evaluated, then we will take that as the eval result. While it's certainly unsafe
+         * (See https://fburl.com/flow-generic-indexed-access-unsafe), TS has the same issue, and
+         * too much code already depends on the broken behavior.
+         *
+         * However, if they cannot be successfully evaluated, we should turn them into the stuck form
+         * (e.g. `T['foo']`) where `T` has no upper bound) *)
+        | PropertyType { name } ->
+          try_evaluate
+            ~stuck_eval_kind:(Opaque.StuckEvalForPropertyType { name })
+            ~stuck_eval_targs:[t]
+        | ElementType { index_type } ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForElementType
+            ~stuck_eval_targs:[t; index_type]
+        | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex name } ->
+          try_evaluate
+            ~stuck_eval_kind:
+              (Opaque.StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType { name })
+            ~stuck_eval_targs:[t]
+        | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index } ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType
+            ~stuck_eval_targs:[t; index]
+        | OptionalIndexedAccessResultType { void_reason = _ } ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForOptionalIndexedAccessResultType
+            ~stuck_eval_targs:[t]
+        | _ -> ()));
     eval_t
 
   (* Instantiate a polymorphic definition given tparam instantiations in a Call or

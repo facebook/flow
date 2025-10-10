@@ -2176,30 +2176,57 @@ end = struct
 end
 
 and Opaque : sig
+  type stuck_eval_kind =
+    | StuckEvalForPropertyType of { name: name }
+    | StuckEvalForElementType
+    | StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType of { name: name }
+    | StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType
+    | StuckEvalForOptionalIndexedAccessResultType
+
   type id =
     (* We also track the name so that we can do common interface conformance check, where we check
      * the structural subtyping for nominal constructs defined in impl and interface files. *)
     | UserDefinedOpaqueTypeId of ALoc.id * string
     (* A special norminal type to test t ~> union optimization *)
     | InternalEnforceUnionOptimized
+    | StuckEval of stuck_eval_kind
 
   val equal_id : id -> id -> bool
 
   val string_of_id : id -> string
 end = struct
+  type stuck_eval_kind =
+    | StuckEvalForPropertyType of { name: name }
+    | StuckEvalForElementType
+    | StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType of { name: name }
+    | StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType
+    | StuckEvalForOptionalIndexedAccessResultType
+
   type id =
     | UserDefinedOpaqueTypeId of ALoc.id * string
     | InternalEnforceUnionOptimized
+    | StuckEval of stuck_eval_kind
 
   let equal_id id1 id2 =
     match (id1, id2) with
     | (UserDefinedOpaqueTypeId (id1, _), UserDefinedOpaqueTypeId (id2, _)) -> ALoc.equal_id id1 id2
     | (InternalEnforceUnionOptimized, InternalEnforceUnionOptimized) -> true
+    | (StuckEval k1, StuckEval k2) -> k1 = k2
     | _ -> false
 
   let string_of_id = function
     | UserDefinedOpaqueTypeId (id, name) -> "user-defined " ^ name ^ " (" ^ ALoc.show_id id ^ ")"
     | InternalEnforceUnionOptimized -> "InternalEnforceUnionOptimized"
+    | StuckEval (StuckEvalForPropertyType { name }) ->
+      "StuckEvalForPropertyType " ^ Reason.display_string_of_name name
+    | StuckEval StuckEvalForElementType -> "StuckEvalForElementType"
+    | StuckEval (StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType { name }) ->
+      "StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType "
+      ^ Reason.display_string_of_name name
+    | StuckEval StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType ->
+      "StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType"
+    | StuckEval StuckEvalForOptionalIndexedAccessResultType ->
+      "StuckEvalForOptionalIndexedAccessResultType"
 end
 
 and Eval : sig

@@ -1072,7 +1072,22 @@ module Make (Flow : INPUT) : OUTPUT = struct
         OpaqueT (ureason, { opaque_id = id2; opaque_type_args = utargs; _ })
       )
       when Opaque.equal_id id1 id2 ->
-      flow_type_args cx trace ~use_op lreason ureason ltargs utargs
+      (match id1 with
+      (* When we are subtyping between two stuck EvalT, we just want to give a simple yes/no answer.
+       * Complex subtyping on these stuck EvalTs is not supported. *)
+      | Opaque.StuckEval _ when not (Context.in_implicit_instantiation cx) ->
+        (try
+           SpeculationKit.try_singleton_custom_throw_on_failure cx (fun () ->
+               flow_type_args cx trace ~use_op lreason ureason ltargs utargs
+           )
+         with
+        | SpeculationSingletonError _ ->
+          add_output
+            cx
+            (Error_message.EIncompatibleWithUseOp
+               { reason_lower = lreason; reason_upper = ureason; use_op; explanation = None }
+            ))
+      | _ -> flow_type_args cx trace ~use_op lreason ureason ltargs utargs)
     (* If the opaque type are from the same logical module, we need to do some structural validation
        in additional to type_args check. *)
     | ( OpaqueT

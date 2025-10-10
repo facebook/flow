@@ -221,11 +221,31 @@ end = struct
         let seen = Eval.Set.add id seen in
         Flow.possible_concrete_types_for_inspection cx r out
         |> Base.List.iter ~f:(check_polarity cx ?trace seen tparams Polarity.Positive)
+    | OpaqueT (_, { opaque_type_args; _ }) ->
+      let (tps, targs) =
+        Base.List.fold
+          opaque_type_args
+          ~init:([], [])
+          ~f:(fun (tps, targs) (subst_name, reason, t, polarity) ->
+            ( {
+                reason;
+                name = subst_name;
+                bound = MixedT.why reason;
+                polarity;
+                default = None;
+                is_this = false;
+                is_const = false;
+              }
+              :: tps,
+              t :: targs
+            )
+        )
+      in
+      variance_check cx ~trace tparams polarity (tps, targs)
     (* TODO *)
     | EvalT _ -> ()
     (* We only expect types which can appear in annotations. *)
-    | (DefT (_, TypeT _) | OpaqueT _ | ThisInstanceT _) as t ->
-      raise (UnexpectedType (Debug_js.dump_t cx t))
+    | (DefT (_, TypeT _) | ThisInstanceT _) as t -> raise (UnexpectedType (Debug_js.dump_t cx t))
 
   and check_polarity_propmap cx ?trace ?(skip_ctor = false) seen tparams polarity id =
     let pmap = Context.find_props cx id in

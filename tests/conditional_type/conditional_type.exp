@@ -821,21 +821,20 @@ References:
 Error ------------------------------------------------------------------------------------------------- generic.js:76:31
 
 Cannot return `getConditionalWithInfer(...)` because: [incompatible-type]
- - Either cannot access number literal `0` on `T` because an index signature declaring the expected key / value type is
-   missing in mixed [1].
- - Or mixed [2] is incompatible with string literal `other` [3].
+ - Either mixed [1] is incompatible with indexed access [2].
+ - Or mixed [1] is incompatible with string literal `other` [3].
 
    generic.js:76:31
    76|   <T>(t:T): T[0] | 'other' => getConditionalWithInfer(t); // error
                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   generic.js:76:13
-   76|   <T>(t:T): T[0] | 'other' => getConditionalWithInfer(t); // error
-                   ^ [1]
    generic.js:75:54
    75|   declare function getConditionalWithInfer<T>(v: T): ConditionalWithInfer<T>;
-                                                            ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+                                                            ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   generic.js:76:13
+   76|   <T>(t:T): T[0] | 'other' => getConditionalWithInfer(t); // error
+                   ^^^^ [2]
    generic.js:76:20
    76|   <T>(t:T): T[0] | 'other' => getConditionalWithInfer(t); // error
                           ^^^^^^^ [3]
