@@ -142,10 +142,10 @@ Cannot assign `42` to `v2[1].a` because property `a` is not writable. [cannot-wr
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:32:7
 
-Cannot assign `42` to `x.y` because property `y` is not writable. 
+Cannot assign `42` to `x.y` because property `y` is not writable. [react-rule-unsafe-mutation]
 
 React component properties [1] and their nested props and elements cannot be written to.
-(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
 
    dro.js:32:7
    32|     x.y = 42 // error;
@@ -159,10 +159,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- dro.js:36:10
 
-Cannot assign `42` to `rest.bar` because property `bar` is not writable. 
+Cannot assign `42` to `rest.bar` because property `bar` is not writable. [react-rule-unsafe-mutation]
 
 React component properties [1] and their nested props and elements cannot be written to.
-(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
 
    dro.js:36:10
    36|     rest.bar = 42; // error;
@@ -176,10 +176,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:37:5
 
-Cannot call `rest.baz.push` because property `push` is not readable. 
+Cannot call `rest.baz.push` because property `push` is not readable. [react-rule-unsafe-mutation]
 
 React component properties [1] and their nested props and elements cannot be written to.
-(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
 
    dro.js:37:5
    37|     rest.baz.push("hello"); // error
@@ -193,10 +193,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:38:5
 
-Cannot assign `42` to `rest.qux[0]` because read-only arrays cannot be written to. 
+Cannot assign `42` to `rest.qux[0]` because read-only arrays cannot be written to. [react-rule-unsafe-mutation]
 
 React component properties [1] and their nested props and elements cannot be written to.
-(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
 
    dro.js:38:5
    38|     rest.qux[0] = 42; // error
@@ -210,10 +210,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:39:5
 
-Cannot call `rest.qux[1].pop` because property `pop` is not readable. 
+Cannot call `rest.qux[1].pop` because property `pop` is not readable. [react-rule-unsafe-mutation]
 
 React component properties [1] and their nested props and elements cannot be written to.
-(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
 
    dro.js:39:5
    39|     rest.qux[1].pop(); // error
@@ -227,10 +227,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:56:9
 
-Cannot assign `0` to `obj.prop` because property `prop` is not writable. 
+Cannot assign `0` to `obj.prop` because property `prop` is not writable. [react-rule-unsafe-mutation]
 
 React component properties [1] and their nested props and elements cannot be written to.
-(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
 
    dro.js:56:9
    56|     obj.prop = 0; // error
@@ -249,10 +249,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ dro.js:61:3
 
-Cannot call `arr.sort` because property `sort` is not readable. 
+Cannot call `arr.sort` because property `sort` is not readable. [react-rule-unsafe-mutation]
 
 React component properties [1] and their nested props and elements cannot be written to.
-(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props). [react-rule-unsafe-mutation]
+(https://react.dev/reference/rules/components-and-hooks-must-be-pure#props).
 
    dro.js:61:3
    61|   arr.sort((a, b) => { // only dro error

@@ -188,9 +188,9 @@ References:
 
 Error ------------------------------------------------------------------------------------- abstract-enum-value.js:51:23
 
-Cannot assign `x` to `s` because `EnumValue` [1] is incompatible with string [2]. 
+Cannot assign `x` to `s` because `EnumValue` [1] is incompatible with string [2]. [incompatible-type]
 
-You can explicitly cast your enum value to its representation type using `<expr>.valueOf()`. [incompatible-type]
+You can explicitly cast your enum value to its representation type using `<expr>.valueOf()`.
 
    abstract-enum-value.js:51:23
    51|     const s: string = x; // ERROR
@@ -207,9 +207,9 @@ References:
 
 Error ------------------------------------------------------------------------------------- abstract-enum-value.js:79:21
 
-Cannot assign `x` to `c` because `EnumValue` [1] is incompatible with string [2]. 
+Cannot assign `x` to `c` because `EnumValue` [1] is incompatible with string [2]. [incompatible-type]
 
-You can explicitly cast your enum value to its representation type using `<expr>.valueOf()`. [incompatible-type]
+You can explicitly cast your enum value to its representation type using `<expr>.valueOf()`.
 
    abstract-enum-value.js:79:21
    79|   const c: string = x; // ERROR
@@ -362,9 +362,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- cast.js:36:1
 
-Cannot cast `S.A` to nullable string because `S` [1] is incompatible with string [2]. 
+Cannot cast `S.A` to nullable string because `S` [1] is incompatible with string [2]. [incompatible-type]
 
-You can explicitly cast your enum value to a string using `<expr> as string`. [incompatible-type]
+You can explicitly cast your enum value to a string using `<expr> as string`.
 
    cast.js:36:1
    36| S.A as ?string; // Error: if casting to representation type, must cast to exactly it
@@ -467,8 +467,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- cast.js:65:1
 
 Cannot cast `BS.A` to union type because: [incompatible-type]
- - Either `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value to a boolean using
-   `<expr> as boolean`.
+ - Either `B` [1] is incompatible with boolean [2].
+    - You can explicitly cast your enum value to a boolean using `<expr> as boolean`.
  - Or `B` [1] is incompatible with string [3].
 
    cast.js:65:1
@@ -490,8 +490,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- cast.js:65:1
 
 Cannot cast `BS.A` to union type because: [incompatible-type]
- - Either `S` [1] is incompatible with string [2]. You can explicitly cast your enum value to a string using
-   `<expr> as string`.
+ - Either `S` [1] is incompatible with string [2].
+    - You can explicitly cast your enum value to a string using `<expr> as string`.
  - Or `S` [1] is incompatible with boolean [3].
 
    cast.js:65:1
@@ -513,8 +513,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- cast.js:68:1
 
 Cannot cast `sb` to union type because: [incompatible-type]
- - Either `S` [1] is incompatible with string [2]. You can explicitly cast your enum value to a string using
-   `<expr> as string`.
+ - Either `S` [1] is incompatible with string [2].
+    - You can explicitly cast your enum value to a string using `<expr> as string`.
  - Or `S` [1] is incompatible with boolean [3].
 
    cast.js:68:1
@@ -536,8 +536,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- cast.js:68:1
 
 Cannot cast `sb` to union type because: [incompatible-type]
- - Either `B` [1] is incompatible with boolean [2]. You can explicitly cast your enum value to a boolean using
-   `<expr> as boolean`.
+ - Either `B` [1] is incompatible with boolean [2].
+    - You can explicitly cast your enum value to a boolean using `<expr> as boolean`.
  - Or `B` [1] is incompatible with string [3].
 
    cast.js:68:1
@@ -1337,9 +1337,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error-coercion.js:8:19
 
-Cannot assign `E.A` to `a` because `E` [1] is incompatible with string [2]. 
+Cannot assign `E.A` to `a` because `E` [1] is incompatible with string [2]. [incompatible-type]
 
-You can explicitly cast your enum value to a string using `<expr> as string`. [incompatible-type]
+You can explicitly cast your enum value to a string using `<expr> as string`.
 
    error-coercion.js:8:19
    8| const a: string = E.A; // Error: cannot implicitly coerce enum to its representation type
@@ -1387,9 +1387,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error-coercion.js:17:26
 
-Cannot assign `B.A` to `boolean` because `B` [1] is incompatible with boolean [2]. 
+Cannot assign `B.A` to `boolean` because `B` [1] is incompatible with boolean [2]. [incompatible-type]
 
-You can explicitly cast your enum value to a boolean using `<expr> as boolean`. [incompatible-type]
+You can explicitly cast your enum value to a boolean using `<expr> as boolean`.
 
    error-coercion.js:17:26
    17| const boolean: boolean = B.A; // Error, with suggestion
@@ -1423,9 +1423,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error-coercion.js:23:21
 
-Cannot assign `N.A` to `num` because `N` [1] is incompatible with number [2]. 
+Cannot assign `N.A` to `num` because `N` [1] is incompatible with number [2]. [incompatible-type]
 
-You can explicitly cast your enum value to a number using `<expr> as number`. [incompatible-type]
+You can explicitly cast your enum value to a number using `<expr> as number`.
 
    error-coercion.js:23:21
    23| const num: number = N.A; // Error, with suggestion
@@ -1459,9 +1459,9 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error-coercion.js:29:21
 
-Cannot assign `S.A` to `sym` because `S` [1] is incompatible with symbol [2]. 
+Cannot assign `S.A` to `sym` because `S` [1] is incompatible with symbol [2]. [incompatible-type]
 
-You can explicitly cast your enum value to a symbol using `<expr> as symbol`. [incompatible-type]
+You can explicitly cast your enum value to a symbol using `<expr> as symbol`.
 
    error-coercion.js:29:21
    29| const sym: symbol = S.A; // Error, with suggestion

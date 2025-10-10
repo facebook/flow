@@ -145,12 +145,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because `"a"` [1] is not exactly the same as
-`"b"` [2] in property `kind`. 
+`"b"` [2] in property `kind`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
 - Either make `A` [3] and `B` [4] exactly the same
 - Or make property `kind` in `B` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -177,12 +177,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because `"a"` [1] is not exactly the same as
-`"c"` [2] in property `kind`. 
+`"c"` [2] in property `kind`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
 - Either make `A` [3] and `C` [4] exactly the same
 - Or make property `kind` in `C` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -209,12 +209,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because `"b"` [1] is not exactly the same as
-`"a"` [2] in property `kind`. 
+`"a"` [2] in property `kind`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
 - Either make `B` [3] and `A` [4] exactly the same
 - Or make property `kind` in `A` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -241,12 +241,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because `"b"` [1] is not exactly the same as
-`"c"` [2] in property `kind`. 
+`"c"` [2] in property `kind`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
 - Either make `B` [3] and `C` [4] exactly the same
 - Or make property `kind` in `C` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -273,12 +273,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because `"c"` [1] is not exactly the same as
-`"a"` [2] in property `kind`. 
+`"a"` [2] in property `kind`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
 - Either make `C` [3] and `A` [4] exactly the same
 - Or make property `kind` in `A` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);
@@ -305,12 +305,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue6155.js:15:39
 
 Cannot call `cases[type.kind]` with `type` bound to the first parameter because `"c"` [1] is not exactly the same as
-`"b"` [2] in property `kind`. 
+`"b"` [2] in property `kind`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
 - Either make `C` [3] and `B` [4] exactly the same
 - Or make property `kind` in `B` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    issue6155.js:15:39
    15|     return (type) => cases[type.kind](type);

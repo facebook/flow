@@ -2599,10 +2599,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- provider.js:4:9
 
-Cannot assign `42` to `x` because number [1] is incompatible with string [2]. 
+Cannot assign `42` to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initial assignment [3]. Add an annotation to `x` [4] if a
-different type is desired. [incompatible-type]
+different type is desired.
 
    provider.js:4:9
    4|     x = 42;
@@ -2666,7 +2666,8 @@ Error --------------------------------------------------------------------------
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
  - Either component Reffed [1] is incompatible with null [2] in the first parameter.
- - Or function type [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
+ - Or function type [3] is incompatible with object type [4].
+    - Functions without statics are not compatible with objects.
 
    refs.js:5:15
      5| component Bar(ref: ((typeof Reffed) => mixed)) { return null };

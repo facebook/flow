@@ -1,10 +1,10 @@
 Error ------------------------------------------------------------------------------------------------------- b.js:13:17
 
 Cannot assign object literal to `data` because property `z` is extra in object literal [1] but missing in object
-literal [2]. Exact objects do not accept extra props. 
+literal [2]. Exact objects do not accept extra props. [incompatible-type]
 
 All writes to `data` must be compatible with the type of its initializer [3]. Add an annotation to `data` [3] if a
-different type is desired. [incompatible-type]
+different type is desired.
 
    b.js:13:17
    13|   if (b) data = { x: 0, z: 0 }; // constrained write error

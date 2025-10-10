@@ -95,12 +95,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ obj.js:19:3
 
-Cannot cast `y` to `IHasXString` because `number` [1] is not exactly the same as `string` [2] in property `x`. 
+Cannot cast `y` to `IHasXString` because `number` [1] is not exactly the same as `string` [2] in property `x`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{[key: string]: number}` [3] and `{x: string, ...}` [4] exactly the same
 - Or make property `x` in `IHasXString` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    obj.js:19:3
    19|   y as IHasXString; // error: string != number

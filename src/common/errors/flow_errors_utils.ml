@@ -334,9 +334,10 @@ module Friendly = struct
       Base.List.concat (Base.List.intersperse (List.rev frames) ~sep:[text " of "])
     in
     let message_of_explanations ~leading_sep ~sep explanations acc_explanations =
+      let explanations = Base.List.map explanations ~f:(fun e -> e @ [text "."]) in
       let explanations = Base.List.concat (List.rev (explanations :: acc_explanations)) in
       let explanations =
-        Base.List.concat (Base.List.intersperse (List.rev explanations) ~sep:[text "."; text sep])
+        Base.List.concat (Base.List.intersperse (List.rev explanations) ~sep:[text sep])
       in
       if Base.List.is_empty explanations then
         []
@@ -439,16 +440,10 @@ module Friendly = struct
                 if in_speculation then
                   ("", "")
                 else
-                  ("\n\n", "\n")
+                  ("\n", "\n")
               in
               message_of_explanations ~leading_sep ~sep explanations acc_explanations)
             explanations
-        in
-        let message =
-          if explanations = [] then
-            message
-          else
-            message @ (text ". " :: explanations)
         in
         (* Add the root to our error message when we are configured to show
          * the root. *)
@@ -470,9 +465,15 @@ module Friendly = struct
           else
             message
         in
+        let group_message_post =
+          if explanations = [] then
+            None
+          else
+            Some explanations
+        in
         ( hidden_branches,
           primary_loc,
-          { group_message = message; group_message_list = []; group_message_post = None }
+          { group_message = message; group_message_list = []; group_message_post }
         )
       (* When we have a speculation error, do some work to create a message
        * group. Flatten out nested speculation errors with no frames. Hide
@@ -600,7 +601,7 @@ module Friendly = struct
               let group_message_post =
                 let explanations =
                   if List.length explanations > 0 then
-                    (text "\n\n" :: explanations) @ [text "."]
+                    text "\n\n" :: explanations
                   else
                     explanations
                 in
@@ -614,7 +615,7 @@ module Friendly = struct
             else
               ( group_message_list,
                 if List.length explanations > 0 then
-                  Some ((text "\n" :: explanations) @ [text "."])
+                  Some (text "\n" :: explanations)
                 else
                   None
               )
@@ -2674,7 +2675,14 @@ module Cli_output = struct
           in
           let acc = loop_list ~indentation:(indentation + 1) acc message_group.group_message_list in
           Base.Option.value_map
-            ~f:(fun post -> print_message_friendly ~flags ~colors ~indentation post :: acc)
+            ~f:(fun post ->
+              let indentation =
+                if indentation = 0 then
+                  indentation
+                else
+                  indentation + 1
+              in
+              print_message_friendly ~flags ~colors ~indentation post :: acc)
             ~default:acc
             message_group.group_message_post
         and loop_list ~indentation acc message_group_list =

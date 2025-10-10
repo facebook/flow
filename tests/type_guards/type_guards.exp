@@ -93,11 +93,10 @@ Cannot find type guard parameter `y` [1] in the parameters of this function (typ
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:14
 
-Cannot return `(typeof x) === 'number'` because number [1] is incompatible with string [2]. 
+Cannot return `(typeof x) === 'number'` because number [1] is incompatible with string [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `(typeof x) === 'number'` [1] needs to be compatible with the guard type
 string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
-[incompatible-type-guard]
 
    classes.js:23:14
    23|       return typeof x === 'number'; // error number ~> string
@@ -206,10 +205,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:52:14
 
-Cannot return `true` because mixed [1] is incompatible with number [2]. 
+Cannot return `true` because mixed [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    classes.js:52:14
    52|       return true; // error mixed ~> number
@@ -338,10 +337,10 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ classes.js:119:14
 
-Cannot return `true` because mixed [1] is incompatible with number [2]. 
+Cannot return `true` because mixed [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    classes.js:119:14
    119|       return true; // error mixed ~> number
@@ -393,10 +392,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- consistency.js:10:12
 
-Cannot return `true` because mixed [1] is incompatible with number [2]. 
+Cannot return `true` because mixed [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:10:12
    10|     return true; // error x: mixed ~> number
@@ -416,10 +415,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- consistency.js:15:12
 
-Cannot return `true` because mixed [1] is incompatible with number [2]. 
+Cannot return `true` because mixed [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:15:12
    15|     return true; // error in this branch x: mixed ~> number
@@ -456,11 +455,11 @@ References:
 Error ---------------------------------------------------------------------------------------------- consistency.js:45:3
 
 Cannot return `((typeof x) === 'number') || ((typeof x) === 'string')` because string [1] is incompatible with
-number [2]. 
+number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `((typeof x) === 'number') || ((typeof x) === 'string')` [4] needs to be
 compatible with the guard type number [2]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:45:3
    45|   typeof x === 'string' // error x: string ~> number
@@ -482,11 +481,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- consistency.js:50:12
 
-Cannot return `(typeof x) === 'string'` because string [1] is incompatible with number [2]. 
+Cannot return `(typeof x) === 'string'` because string [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `(typeof x) === 'string'` [1] needs to be compatible with the guard type
 number [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
-[incompatible-type-guard]
 
    consistency.js:50:12
    50|     return typeof x === 'string'; // error x: string ~> number and (negation) number ~> empty
@@ -534,11 +532,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- consistency.js:56:5
 
-Cannot return `x != null` because number [1] is incompatible with string [2]. 
+Cannot return `x != null` because number [1] is incompatible with string [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `x != null` [4] needs to be compatible with the guard type string [2]. See
 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
-[incompatible-type-guard]
 
    consistency.js:56:5
    56|     x != null // error number ~> string
@@ -558,11 +555,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- consistency.js:60:5
 
-Cannot return `x !== null` because null or undefined [1] is incompatible with number [2]. 
+Cannot return `x !== null` because null or undefined [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `x !== null` [4] needs to be compatible with the guard type number [2]. See
 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
-[incompatible-type-guard]
 
    consistency.js:60:5
    60|     x !== null // error null | undefined ~> string
@@ -597,11 +593,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- consistency.js:72:5
 
-Cannot return `x != null` because number [1] is incompatible with string [2]. 
+Cannot return `x != null` because number [1] is incompatible with string [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `x != null` [4] needs to be compatible with the guard type string [2]. See
 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
-[incompatible-type-guard]
 
    consistency.js:72:5
    72|     x != null // error number ~> string
@@ -621,11 +616,10 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- consistency.js:76:5
 
-Cannot return `x !== null` because null or undefined [1] is incompatible with number [2]. 
+Cannot return `x !== null` because null or undefined [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `x !== null` [4] needs to be compatible with the guard type number [2]. See
 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
-[incompatible-type-guard]
 
    consistency.js:76:5
    76|     x !== null // error null | undefined ~> string
@@ -661,11 +655,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- consistency.js:99:23
 
-Cannot return `x instanceof A` because `A` [1] is incompatible with `B` [2]. 
+Cannot return `x instanceof A` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `x instanceof A` [4] needs to be compatible with the guard type `B` [2].
 See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
-[incompatible-type-guard]
 
    consistency.js:99:23
    99|   return x instanceof A; // error A ~> B
@@ -686,11 +679,11 @@ References:
 Error -------------------------------------------------------------------------------------------- consistency.js:125:10
 
 Cannot return `Array.isArray(...)` because array element of refined mixed [1] is incompatible with `A` [2] in array
-element. 
+element. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `Array.isArray(...)` [4] needs to be compatible with the guard type
 read-only array type [5]. See 1. in
-https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions. [incompatible-type-guard]
+https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:125:10
    125|   return Array.isArray(x);
@@ -814,11 +807,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- consistency.js:176:25
 
-Cannot return `x instanceof A` because `A` [1] is incompatible with `B` [2]. 
+Cannot return `x instanceof A` because `A` [1] is incompatible with `B` [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `x instanceof A` [4] needs to be compatible with the guard type `B` [2].
 See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
-[incompatible-type-guard]
 
    consistency.js:176:25
    176|     return x instanceof A; // error A ~> B
@@ -855,11 +847,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- consistency.js:213:12
 
-Cannot return `this.#prop(...)` because number [1] is incompatible with string [2]. 
+Cannot return `this.#prop(...)` because number [1] is incompatible with string [2]. [incompatible-type-guard]
 
 The type of `value` [3] at the return expression `this.#prop(...)` [4] needs to be compatible with the guard type
 string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
-[incompatible-type-guard]
 
    consistency.js:213:12
    213|     return this.#prop(value); // no prop-missing error
@@ -893,11 +884,10 @@ References:
 
 Error -------------------------------------------------------------------------------------------- consistency.js:226:12
 
-Cannot return `remote.#prop(...)` because mixed [1] is incompatible with string [2]. 
+Cannot return `remote.#prop(...)` because mixed [1] is incompatible with string [2]. [incompatible-type-guard]
 
 The type of `value` [3] at the return expression `remote.#prop(...)` [4] needs to be compatible with the guard type
 string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
-[incompatible-type-guard]
 
    consistency.js:226:12
    226|     return remote.#prop(value); // error prop-missing
@@ -1902,13 +1892,14 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:61:8
 
-Cannot cast `x` to `B` because properties `foo` and `tag` of `A` [1] are not exactly the same as those of `B` [2]. 
+Cannot cast `x` to `B` because properties `foo` and `tag` of `A` [1] are not exactly the same as those of `B` [2].
+[incompatible-type]
 
 The above-mentioned two types must be the same because properties `foo` and `tag` are invariantly typed. To fix the
 error,
 - Either make `A` [3] and `B` [4] exactly the same
 - Or make properties `foo` and `tag` in `B` [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    refinement.js:61:8
    61|       (x: B); // error A ~> B
@@ -2866,13 +2857,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- subtyping.js:66:10
 
 Cannot return `f` because `(x: mixed) => x is C` [1] is not exactly the same as `(x: mixed) => x is A` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<(x: mixed) => x is C>` [3] and `Array<(x: mixed) => x is A>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    subtyping.js:66:10
    66|   return f; // error C ~ A
@@ -2896,13 +2886,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- subtyping.js:70:10
 
 Cannot return `f` because `(x: mixed) => x is A` [1] is not exactly the same as `(x: mixed) => x is B` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<(x: mixed) => x is A>` [3] and `Array<(x: mixed) => x is B>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    subtyping.js:70:10
    70|   return f; // errors A ~> B, B ~> A
@@ -2926,13 +2915,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- subtyping.js:74:10
 
 Cannot return `f` because `(x: mixed) => x is A` [1] is not exactly the same as `(x: mixed) => x is C` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<(x: mixed) => x is A>` [3] and `Array<(x: mixed) => x is C>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    subtyping.js:74:10
    74|   return f; // error A ~> C
@@ -2956,13 +2944,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- subtyping.js:82:10
 
 Cannot return `f` because `(x: mixed) => x is A` [1] is not exactly the same as `(x: mixed) => implies x is A` [2] in
-array element. 
+array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<(x: mixed) => x is A>` [3] and `Array<(x: mixed) => implies x is A>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    subtyping.js:82:10
    82|   return f; // error
@@ -3610,13 +3597,12 @@ References:
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:19:59
 
 The type predicate array type [1] needs to be compatible with parameter `x`'s type: `mixed` [2] is not exactly the same
-as `X` [3] in array element. 
+as `X` [3] in array element. [incompatible-type-guard]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type-guard]
 
    type_guard_compatibility.js:19:59
    19| declare function error_poly_1<X>(x: Array<X>): x is Array<mixed>; // error mixed ~> X
@@ -3652,13 +3638,12 @@ References:
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:29:54
 
 The type predicate array type [1] needs to be compatible with parameter `x`'s type: `mixed` [2] is not exactly the same
-as `X` [3] in array element. 
+as `X` [3] in array element. [incompatible-type-guard]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type-guard]
 
    type_guard_compatibility.js:29:54
    29| type F_error_poly_1 = <X>(x: Array<X>) => x is Array<mixed>; // error mixed ~> X
@@ -3679,13 +3664,12 @@ References:
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:30:54
 
 The type predicate array type [1] needs to be compatible with parameter `x`'s type: `mixed` [2] is not exactly the same
-as `X` [3] in array element. 
+as `X` [3] in array element. [incompatible-type-guard]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type-guard]
 
    type_guard_compatibility.js:30:54
    30| type F_error_poly_2<X> = (x: Array<X>) => x is Array<mixed>; // error mixed ~> X

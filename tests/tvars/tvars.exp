@@ -8,13 +8,13 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ------------------------------------------------------------------------------- fully_resolved_unification.js:20:2
 
-Cannot cast `x` to array type because `empty` [1] is not exactly the same as `{bar: string}` [2] in array element. 
+Cannot cast `x` to array type because `empty` [1] is not exactly the same as `{bar: string}` [2] in array element.
+[incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<empty>` [1] and `Array<{bar: string}>` [3] exactly the same
 - Or make array type [3] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    fully_resolved_unification.js:20:2
    20| (x: Array<{bar: string}>); // ERROR

@@ -2434,13 +2434,12 @@ References:
 Error ------------------------------------------------------------------------------------------------ variance.js:43:15
 
 Cannot call `f` with `n` bound to the first parameter because `readonly [n: number]` [1] is not exactly the same as
-`[number]` [2] in array element. 
+`[number]` [2] in array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<readonly [n: number]>` [3] and `Array<[number]>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    variance.js:43:15
    43| const res = f(n); // ERROR

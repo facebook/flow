@@ -379,11 +379,10 @@ References:
 Error --------------------------------------------------------------------------------------------- conditional.js:30:22
 
 Cannot call `foo` with function bound to the first parameter because string [1] is incompatible with string literal
-`x` [1] in array element of the return value. 
+`x` [1] in array element of the return value. [incompatible-type]
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    conditional.js:30:22
    30|   foo(() => (false ? [] : ['x'])); // TODO(T225768659) okay, [] is contextually typed
@@ -398,11 +397,10 @@ References:
 Error --------------------------------------------------------------------------------------------- conditional.js:31:30
 
 Cannot call `foo` with function bound to the first parameter because string [1] is incompatible with string literal
-`x` [1] in array element of the return value. 
+`x` [1] in array element of the return value. [incompatible-type]
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    conditional.js:31:30
    31|   foo(() => (false ? ['x'] : [])); // TODO(T225768659) okay, [] is contextually typed

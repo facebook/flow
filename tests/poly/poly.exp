@@ -481,12 +481,12 @@ References:
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
 
 Cannot return `f` because properties `a` and `b` of `{a: S, b: T}` [1] are not exactly the same as those of
-`{a: T, b: S}` [2] in the return value. 
+`{a: T, b: S}` [2] in the return value. [incompatible-type]
 
 The above-mentioned two types must be the same because properties `a` and `b` are invariantly typed. To fix the error,
 - Either make `{a: S, b: T}` [1] and `{a: T, b: S}` [2] exactly the same
 - Or make properties `a` and `b` in object type [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    subtyping.js:73:51
    73|   : <T: number, S: string>() => { a: S, b: T } => f; // ideally ok, known error

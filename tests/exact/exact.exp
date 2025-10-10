@@ -33,12 +33,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error_continues.js:3:12
 
-Cannot cast `any` to object type because `number` [1] is not exactly the same as `string` [2] in property `p`. 
+Cannot cast `any` to object type because `number` [1] is not exactly the same as `string` [2] in property `p`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: number, ...}` [3] and `{p: string}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    error_continues.js:3:12
    3| ((any: {p: number}): {|p: string|}); // We should get two errors here!
@@ -552,12 +553,12 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:1:47
 
-Cannot return `x` because property `p` is missing in object type [1] but exists in object type [2]. 
+Cannot return `x` because property `p` is missing in object type [1] but exists in object type [2]. [incompatible-type]
 
 This optional property of object type [2] is invariantly typed. To fix,
 - Either make `{}` [1] and `{p?: number, ...}` [2] exactly the same
 - Or make object type [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    optional.js:1:47
    1| function foo1(x: {||}): {p?: number} { return x; } // error, p must be read-only
@@ -688,12 +689,13 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- use_ops.js:2:31
 
-Cannot assign `a` to `b` because `{q: null, ...}` [1] is not exactly the same as `{q: null}` [2] in property `p`. 
+Cannot assign `a` to `b` because `{q: null, ...}` [1] is not exactly the same as `{q: null}` [2] in property `p`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: {q: null, ...}, ...}` [3] and `{p: {q: null}, ...}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    use_ops.js:2:31
    2| var b: { p: {| q: null |} } = a; // error a != b, with nested info for a.p != b.p

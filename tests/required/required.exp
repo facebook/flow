@@ -1,12 +1,12 @@
 Error ------------------------------------------------------------------------------------ required-positioning.js:18:26
 
 Cannot call `register` because `number` [1] is not exactly the same as `RecursiveProp` [2] in property `foo` of type
-argument `T`. 
+argument `T`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo: number}` [3] and `{[string]: RecursiveProp}` [4] exactly the same
 - Or make property `foo` in object type [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    required-positioning.js:18:26
    18| register(() => (x: {foo: number}) => null); // ERROR!

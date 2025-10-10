@@ -124,13 +124,12 @@ References:
 Error ---------------------------------------------------------------------------------------------- dictionary.js:91:36
 
 Cannot assign `x` to `a` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: A}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: A}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:91:36
    91|   let a: Array<{[k: string]: A}> = x; // error
@@ -154,13 +153,12 @@ References:
 Error ---------------------------------------------------------------------------------------------- dictionary.js:96:36
 
 Cannot assign `x` to `c` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: C}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: C}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:96:36
    96|   let c: Array<{[k: string]: C}> = x; // error
@@ -200,12 +198,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:101:29
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in the indexer property. 
+Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in the indexer property. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: A}` [4] exactly the same
 - Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:101:29
    101|   let a: {[k: string]: A} = x; // error
@@ -228,12 +226,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:106:29
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in the indexer property. 
+Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in the indexer property. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: C}` [4] exactly the same
 - Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:106:29
    106|   let c: {[k: string]: C} = x; // error
@@ -315,13 +313,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:136:33
 
-Cannot assign `x` to `a` because `{[k: B]: any}` [1] is not exactly the same as `{[k: A]: any}` [2] in array element. 
+Cannot assign `x` to `a` because `{[k: B]: any}` [1] is not exactly the same as `{[k: A]: any}` [2] in array element.
+[incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: B]: any}>` [3] and `Array<{[k: A]: any}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:136:33
    136|   let a: Array<{[k: A]: any}> = x; // error
@@ -344,13 +342,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:138:33
 
-Cannot assign `x` to `c` because `{[k: B]: any}` [1] is not exactly the same as `{[k: C]: any}` [2] in array element. 
+Cannot assign `x` to `c` because `{[k: B]: any}` [1] is not exactly the same as `{[k: C]: any}` [2] in array element.
+[incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: B]: any}>` [3] and `Array<{[k: C]: any}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:138:33
    138|   let c: Array<{[k: C]: any}> = x; // error
@@ -373,12 +371,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:142:26
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in the indexer property's key. 
+Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in the indexer property's key.
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: B]: any}` [3] and `{[k: A]: any}` [4] exactly the same
 - Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:142:26
    142|   let a: {[k: A]: any} = x; // error
@@ -401,12 +400,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:144:26
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in the indexer property's key. 
+Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in the indexer property's key.
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: B]: any}` [3] and `{[k: C]: any}` [4] exactly the same
 - Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:144:26
    144|   let c: {[k: C]: any} = x; // error
@@ -430,13 +430,12 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:150:42
 
 Cannot assign `x` to `a` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: B, p: A}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: A}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:150:42
    150|   let a: Array<{[k: string]: B, p: A}> = x; // error: A ~> B
@@ -460,13 +459,12 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:155:42
 
 Cannot assign `x` to `c` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: B, p: C}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: C}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:155:42
    155|   let c: Array<{[k: string]: B, p: C}> = x; // error
@@ -507,13 +505,12 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:164:36
 
 Cannot assign `xa` to `a` because `{[k: string]: A, p: B}` [1] is not exactly the same as `{[k: string]: A}` [2] in
-array element. 
+array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: A, p: B}>` [3] and `Array<{[k: string]: A}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:164:36
    164|   let a: Array<{[k: string]: A}> = xa; // error
@@ -537,13 +534,12 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:169:36
 
 Cannot assign `xc` to `c` because `{[k: string]: C, p: B}` [1] is not exactly the same as `{[k: string]: C}` [2] in
-array element. 
+array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: C, p: B}>` [3] and `Array<{[k: string]: C}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:169:36
    169|   let c: Array<{[k: string]: C}> = xc; // error
@@ -583,12 +579,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:174:35
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. 
+Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: A}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:174:35
    174|   let a: {[k: string]: B, p: A} = x; // error: A ~> B
@@ -611,12 +607,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:179:35
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. 
+Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: C}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:179:35
    179|   let c: {[k: string]: B, p: C} = x; // error
@@ -656,12 +652,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:188:29
 
-Cannot assign `xa` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. 
+Cannot assign `xa` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: A, p: B}` [3] and `{[k: string]: A}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:188:29
    188|   let a: {[k: string]: A} = xa; // error
@@ -684,12 +680,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:193:29
 
-Cannot assign `xc` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. 
+Cannot assign `xc` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: C, p: B}` [3] and `{[k: string]: C}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:193:29
    193|   let c: {[k: string]: C} = xc; // error
@@ -729,13 +725,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:198:10
 
-Cannot return `x` because `{[k: string]: X}` [1] is not exactly the same as `{p: X, ...}` [2] in array element. 
+Cannot return `x` because `{[k: string]: X}` [1] is not exactly the same as `{p: X, ...}` [2] in array element.
+[incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: X}>` [3] and `Array<{p: X, ...}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:198:10
    198|   return x; // error: if allowed, could write {p:X,q:Y} into `x`
@@ -758,13 +754,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:202:10
 
-Cannot return `x` because `{p: X, ...}` [1] is not exactly the same as `{[k: string]: X}` [2] in array element. 
+Cannot return `x` because `{p: X, ...}` [1] is not exactly the same as `{[k: string]: X}` [2] in array element.
+[incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: X, ...}>` [3] and `Array<{[k: string]: X}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:202:10
    202|   return x; // error: if allowed, could write {p:X,q:Y} into returned array
@@ -787,12 +783,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:206:19
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. 
+Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p: A, ...}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:206:19
    206|   let a: {p: A} = x; // error
@@ -815,12 +811,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:211:19
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. 
+Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p: C, ...}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:211:19
    211|   let c: {p: C} = x; // error
@@ -860,12 +856,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:216:29
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. 
+Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B}` [3] and `{[k: string]: A}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:216:29
    216|   let a: {[k: string]: A} = x; // error
@@ -888,12 +884,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:221:29
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. 
+Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B}` [3] and `{[k: string]: C}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:221:29
    221|   let c: {[k: string]: C} = x; // error
@@ -933,12 +929,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:228:35
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. 
+Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B, x: X}` [3] and `{[k: string]: A, x: X}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:228:35
    228|   let a: {[k: string]: A, x: X} = x; // error (as above), but exclusive of x
@@ -961,12 +957,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:230:35
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. 
+Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B, x: X}` [3] and `{[k: string]: C, x: X}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:230:35
    230|   let c: {[k: string]: C, x: X} = x; // error (as above), but exclusive of x
@@ -990,13 +986,12 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:234:42
 
 Cannot assign `x` to `a` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: B, p: A}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: A}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:234:42
    234|   let a: Array<{[k: string]: B, p: A}> = x; // error
@@ -1020,13 +1015,12 @@ References:
 Error --------------------------------------------------------------------------------------------- dictionary.js:236:42
 
 Cannot assign `x` to `c` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: B, p: C}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: C}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    dictionary.js:236:42
    236|   let c: Array<{[k: string]: B, p: C}> = x; // error
@@ -1049,12 +1043,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:240:35
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. 
+Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: A}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:240:35
    240|   let a: {[k: string]: B, p: A} = x; // error
@@ -1077,12 +1071,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:242:35
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. 
+Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: C}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:242:35
    242|   let c: {[k: string]: B, p: C} = x; // error
@@ -1105,12 +1099,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:246:20
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. 
+Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p?: A, ...}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:246:20
    246|   let a: {p?: A} = x; // error
@@ -1133,12 +1127,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:254:20
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. 
+Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p?: C, ...}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:254:20
    254|   let c: {p?: C} = x; // error
@@ -1161,12 +1155,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:259:10
 
-Cannot return `x` because `A` [1] is not exactly the same as `B` [2] in property `p`. 
+Cannot return `x` because `A` [1] is not exactly the same as `B` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p?: A}` [3] and `{[k: string]: B}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:259:10
    259|   return x;
@@ -1189,12 +1183,12 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:269:10
 
-Cannot return `x` because `C` [1] is not exactly the same as `B` [2] in property `p`. 
+Cannot return `x` because `C` [1] is not exactly the same as `B` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p?: C}` [3] and `{[k: string]: B}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    dictionary.js:269:10
    269|   return x;
@@ -1231,12 +1225,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:4:34
 
-Cannot assign `x` to `y` because `string` [1] is not exactly the same as `number` [2] in the indexer property. 
+Cannot assign `x` to `y` because `string` [1] is not exactly the same as `number` [2] in the indexer property.
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[key: string]: string}` [3] and `{[key: string]: number}` [4] exactly the same
 - Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    incompatible.js:4:34
    4| var y: {[key: string]: number} = x; // 2 errors, number !~> string & vice versa
@@ -1259,12 +1254,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:5:34
 
-Cannot assign `x` to `z` because `string` [1] is not exactly the same as `number` [2] in the indexer property's key. 
+Cannot assign `x` to `z` because `string` [1] is not exactly the same as `number` [2] in the indexer property's key.
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[key: string]: string}` [3] and `{[key: number]: string}` [4] exactly the same
 - Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    incompatible.js:5:34
    5| var z: {[key: number]: string} = x; // 2 errors, string !~> number & vice versa
@@ -1287,12 +1283,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:8:34
 
-Cannot assign `a` to `b` because `?string` [1] is not exactly the same as `string` [2] in the indexer property. 
+Cannot assign `a` to `b` because `?string` [1] is not exactly the same as `string` [2] in the indexer property.
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[key: string]: ?string}` [3] and `{[key: string]: string}` [4] exactly the same
 - Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    incompatible.js:8:34
    8| var b: {[key: string]: string} = a; // 2 errors (null & undefined)
@@ -1315,12 +1312,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:9:35
 
-Cannot assign `b` to `c` because `string` [1] is not exactly the same as `?string` [2] in the indexer property. 
+Cannot assign `b` to `c` because `string` [1] is not exactly the same as `?string` [2] in the indexer property.
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[key: string]: string}` [3] and `{[key: string]: ?string}` [4] exactly the same
 - Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    incompatible.js:9:35
    9| var c: {[key: string]: ?string} = b; // 2 errors, since c['x'] = null updates b
@@ -1344,13 +1342,12 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:15:10
 
 Cannot return `x` because `{[key: string]: number}` [1] is not exactly the same as `{[key: string]: string}` [2] in
-array element. 
+array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: number}>` [3] and `Array<{[key: string]: string}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    incompatible.js:15:10
    15|   return x;
@@ -1374,14 +1371,13 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:22:10
 
 Cannot return `x` because `{[key: string]: number}` [1] is not exactly the same as
-`{[key: string]: number, fooBar: string}` [2] in array element. 
+`{[key: string]: number, fooBar: string}` [2] in array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: number}>` [3] and `Array<{[key: string]: number, fooBar: string}>` [4] exactly the
 same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    incompatible.js:22:10
    22|   return x;
@@ -1405,14 +1401,13 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:29:10
 
 Cannot return `x` because `{[key: string]: mixed}` [1] is not exactly the same as
-`{[key: string]: mixed, fooBar: string}` [2] in array element. 
+`{[key: string]: mixed, fooBar: string}` [2] in array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: mixed}>` [3] and `Array<{[key: string]: mixed, fooBar: string}>` [4] exactly the
 same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    incompatible.js:29:10
    29|   return x; // error: mixed ~> string
@@ -1435,12 +1430,12 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:42:10
 
-Cannot return `x` because `number` [1] is not exactly the same as `string` [2] in property `foo`. 
+Cannot return `x` because `number` [1] is not exactly the same as `string` [2] in property `foo`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{[key: string]: number}` [3] and `{[key: string]: number, foo: string}` [4] exactly the same
 - Or make property `foo` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    incompatible.js:42:10
    42|   return x;
@@ -1468,13 +1463,12 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:47:10
 
 Cannot return `x` because `{[key: string]: number}` [1] is not exactly the same as `{foo: number, ...}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: number}>` [3] and `Array<{foo: number, ...}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    incompatible.js:47:10
    47|   return x;
@@ -1498,13 +1492,12 @@ References:
 Error -------------------------------------------------------------------------------------------- incompatible.js:52:10
 
 Cannot return `x` because `{foo: number, ...}` [1] is not exactly the same as `{[key: string]: number}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{foo: number, ...}>` [3] and `Array<{[key: string]: number}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    incompatible.js:52:10
    52|   return x;

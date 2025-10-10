@@ -147,12 +147,12 @@ References:
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:4
 
 Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `void | RefSetter<DivInstance>` [1] is not exactly the
-same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. 
+same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
 - Either make `{ref?: RefSetter<DivInstance>, ...}` [1] and `{ref?: RefSetter<SpanInstance>, ...}` [2] exactly the same
 - Or make property `ref` in props of string literal `span` [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    createElement_invalid_implicit.js:2:4
     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
@@ -196,12 +196,12 @@ References:
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
 
 Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `void | RefSetter<DivInstance>` [1] is not exactly the
-same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. 
+same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
 - Either make `{ref?: RefSetter<DivInstance>, ...}` [1] and `{ref?: RefSetter<SpanInstance>, ...}` [2] exactly the same
 - Or make property `ref` in props of string literal `span` [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    createElement_invalid_implicit.js:7:4
     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
@@ -267,12 +267,12 @@ References:
 Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:4
 
 Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `void | RefSetter<DivInstance>` [1] is not exactly the
-same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. 
+same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
 - Either make `{ref?: RefSetter<DivInstance>, ...}` [1] and `{ref?: RefSetter<SpanInstance>, ...}` [2] exactly the same
 - Or make property `ref` in props of string literal `span` [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    createElement_invalid_implicit.js:12:4
    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
@@ -1271,7 +1271,8 @@ Error --------------------------------------------------------------------------
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
  - Either number [1] is incompatible with `Foo` [2] in the first parameter.
- - Or function [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
+ - Or function [3] is incompatible with object type [4].
+    - Functions without statics are not compatible with objects.
 
    ref.js:10:11
     10| <Foo ref={(foo: number) => {}} />; // Error: `Foo` is not a `number`.
@@ -1351,7 +1352,8 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either number [1] is incompatible with `FooExact` [2] in the first parameter.
- - Or function [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
+ - Or function [3] is incompatible with object type [4].
+    - Functions without statics are not compatible with objects.
 
    ref.js:21:16
     21| <FooExact ref={(foo: number) => {}} />; // Error: `FooExact` is not a `number`.
@@ -1373,7 +1375,8 @@ Error --------------------------------------------------------------------------
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
  - Either `FooExact` [1] is incompatible with null [2] in the first parameter.
- - Or function [3] is incompatible with object type [4]. Functions without statics are not compatible with objects.
+ - Or function [3] is incompatible with object type [4].
+    - Functions without statics are not compatible with objects.
 
    ref.js:22:16
     22| <FooExact ref={(foo: FooExact) => {}} />; // Error: `FooExact` may be null.

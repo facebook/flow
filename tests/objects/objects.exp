@@ -1,12 +1,12 @@
 Error --------------------------------------------------------------------------------------------- compatibility.js:3:9
 
 Cannot assign `y` to `x` because `{bar: number, ...}` [1] is not exactly the same as `{foo: string, ...}` [2] in
-property `x`. 
+property `x`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {bar: number, ...}, ...}` [3] and `{x: {foo: string, ...}, ...}` [4] exactly the same
 - Or make property `x` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    compatibility.js:3:9
    3|     x = y; // 2 errors: `foo` not found in y.x; `bar` not found in x.x
@@ -29,12 +29,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------- compatibility.js:7:9
 
-Cannot assign `y` to `x` because `number` [1] is not exactly the same as `string` [2] in property `foo`. 
+Cannot assign `y` to `x` because `number` [1] is not exactly the same as `string` [2] in property `foo`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo: number, ...}` [3] and `{foo: string, ...}` [4] exactly the same
 - Or make property `foo` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    compatibility.js:7:9
    7|     x = y; // 2 errors: string !~> number; number !~> string
@@ -58,12 +59,12 @@ References:
 Error -------------------------------------------------------------------------------------------- compatibility.js:11:9
 
 Cannot assign `y` to `x` because `{foo: number, ...}` [1] is not exactly the same as `{foo: string, ...}` [2] in
-property `x`. 
+property `x`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {foo: number, ...}, ...}` [3] and `{x: {foo: string, ...}, ...}` [4] exactly the same
 - Or make property `x` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    compatibility.js:11:9
    11|     x = y; // 2 errors: string !~> number; number !~> string
@@ -104,12 +105,12 @@ References:
 Error -------------------------------------------------------------------------------------------- compatibility.js:19:9
 
 Cannot assign `y` to `x` because `{+foo: number, ...}` [1] is not exactly the same as `{+foo: string, ...}` [2] in
-property `x`. 
+property `x`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {+foo: number, ...}, ...}` [3] and `{x: {+foo: string, ...}, ...}` [4] exactly the same
 - Or make property `x` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    compatibility.js:19:9
    19|     x = y; // 2 errors: string !~> number; number !~> string
@@ -150,12 +151,12 @@ References:
 Error -------------------------------------------------------------------------------------------- compatibility.js:27:9
 
 Cannot assign `y` to `x` because `{-foo: number, ...}` [1] is not exactly the same as `{-foo: string, ...}` [2] in
-property `x`. 
+property `x`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {-foo: number, ...}, ...}` [3] and `{x: {-foo: string, ...}, ...}` [4] exactly the same
 - Or make property `x` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    compatibility.js:27:9
    27|     x = y; // 2 errors: string !~> number; number !~> string

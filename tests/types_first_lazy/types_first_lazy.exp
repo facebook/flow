@@ -74,12 +74,12 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:12:2
 
 Cannot cast `o` to `O` because properties `x` and `y` of object literal [1] are not exactly the same as those of
-`O` [2]. 
+`O` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because properties `x` and `y` are invariantly typed. To fix the error,
 - Either annotate object literal [3] with `O` [4]
 - Or make properties `x` and `y` in `O` [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:12:2
    12| (o: O); // error: number (property x) <~/~> string
@@ -108,12 +108,12 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:13:2
 
 Cannot cast `o.y` to `O` because properties `x` and `y` of object literal [1] are not exactly the same as those of
-`O` [2]. 
+`O` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because properties `x` and `y` are invariantly typed. To fix the error,
 - Either annotate object literal [3] with `O` [4]
 - Or make properties `x` and `y` in `O` [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:13:2
    13| (o.y: O); // error: number (property x) <~/~> string

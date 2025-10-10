@@ -65,10 +65,10 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:20:6
 
 Cannot extend `C` [1] with `D` because an index signature declaring the expected key / value type is missing in object
-type [2] but exists in object type [3] in property `x`. 
+type [2] but exists in object type [3] in property `x`. [incompatible-type]
 
 This property is invariantly typed. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:20:6
    20|   x: { foo: number, qux: boolean }; // error: qux not found

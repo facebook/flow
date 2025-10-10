@@ -29,12 +29,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:59
 
-Cannot assign object literal to `o3` because property `y` is missing in object type [1] but exists in object type [2]. 
+Cannot assign object literal to `o3` because property `y` is missing in object type [1] but exists in object type [2].
+[incompatible-type]
 
 This optional property of object type [2] is invariantly typed. To fix,
 - Either make `{x: number, ...}` [1] and `{x: number, y?: string, ...}` [2] exactly the same
 - Or make object type [2] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:7:59
    7| var o3: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; ... });
@@ -77,12 +78,13 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:19:80
 
-Cannot assign object literal to `o7` because `number` [1] is not exactly the same as `string` [2] in property `y`. 
+Cannot assign object literal to `o7` because `number` [1] is not exactly the same as `string` [2] in property `y`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `y` is invariantly typed. To fix the error,
 - Either make `{[_: any]: number, x: number}` [3] and `{x: number, y?: string, ...}` [4] exactly the same
 - Or make property `y` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:19:80
    19| var o7: { x: number; y?: string; ... } = ({ x: 0, y: 0 }: { x: number; [_:any]:number}); // error

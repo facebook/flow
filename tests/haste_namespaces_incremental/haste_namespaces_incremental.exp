@@ -75,10 +75,10 @@ References:
 
 Error ------------------------------------------------------------------------------- common/JsFlowConflict.js.flow:2:16
 
-Cannot conform to common interface module because string [1] is incompatible with number [2] in property `default`. 
+Cannot conform to common interface module because string [1] is incompatible with number [2] in property `default`.
+[incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[incompatible-type]
 
    common/JsFlowConflict.js.flow:2:16
    2| export default foo;

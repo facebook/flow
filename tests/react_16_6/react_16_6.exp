@@ -75,9 +75,9 @@ References:
 Error ---------------------------------------------------------------------------------------------------- lazy.js:11:34
 
 Cannot call `React.lazy` with function bound to `component` because function [1] is incompatible with object type [2] in
-type argument `R` [3] of the return value. 
+type argument `R` [3] of the return value. [incompatible-type]
 
-Functions without statics are not compatible with objects. [incompatible-type]
+Functions without statics are not compatible with objects.
 
    lazy.js:11:34
      11| React.lazy(() => Promise.resolve(FunctionComponent)); // Error property default is missing

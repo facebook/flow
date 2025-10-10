@@ -85,12 +85,13 @@ References:
 
 Error --------------------------------------------------------------------------------------- non_literal_number.js:22:3
 
-Cannot cast `o2` to object type because `boolean` [1] is not exactly the same as `true` [2] in the indexer property. 
+Cannot cast `o2` to object type because `boolean` [1] is not exactly the same as `true` [2] in the indexer property.
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{[number]: true}` [4]
 - Or make the indexer in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    non_literal_number.js:22:3
    22|   o2 as {[number]: true}; // OK
@@ -215,12 +216,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
-Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `true` [2] in property `1`. 
+Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `true` [2] in property `1`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `1` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{[number]: false, "1": true}` [4]
 - Or make property `1` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:20:3
    20|   o as {'1': true, [number]: false}; // OK
@@ -247,12 +249,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
-Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `false` [2] in property `2`. 
+Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `false` [2] in property `2`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `2` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{[number]: false, "1": true}` [4]
 - Or make property `2` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:20:3
    20|   o as {'1': true, [number]: false}; // OK
@@ -279,12 +282,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
 
-Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `true` [2] in property `1`. 
+Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `true` [2] in property `1`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `1` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{[number]: true, "1": true}` [4]
 - Or make property `1` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:21:3
    21|   o as {'1': true, [number]: true}; // ERROR
@@ -311,12 +315,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
 
-Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `true` [2] in property `2`. 
+Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `true` [2] in property `2`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `2` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{[number]: true, "1": true}` [4]
 - Or make property `2` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:21:3
    21|   o as {'1': true, [number]: true}; // ERROR
@@ -372,13 +377,12 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:28:3
 
 Cannot cast `Object.keys(...)` to array type because `"2" | "1"` [1] is not exactly the same as `number` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"2" | "1">` [1] and `Array<number>` [3] exactly the same
 - Or make array type [3] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    test.js:28:3
    28|   Object.keys(o) as Array<number>; // ERROR

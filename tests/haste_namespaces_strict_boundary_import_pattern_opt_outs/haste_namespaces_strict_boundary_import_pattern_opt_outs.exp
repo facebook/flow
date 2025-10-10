@@ -1,10 +1,9 @@
 Error ---------------------------------------------------------------------------------------------- common/test.js:1:17
 
 The import resolves to a forked module that has implementations of conflicting types because number [1] is incompatible
-with string [2] in property `default`. 
+with string [2] in property `default`. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[incompatible-type]
 
    common/test.js:1:17
    1| import gql from 'a.graphql'; // error: conformance error

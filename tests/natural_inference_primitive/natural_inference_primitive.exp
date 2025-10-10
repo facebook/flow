@@ -759,12 +759,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:159:3
 
-Cannot cast `obj` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`. 
+Cannot cast `obj` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: 1}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    imported.js:159:3
    159|   obj as {f: 1}; // error number ~> 1
@@ -787,12 +788,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:172:3
 
-Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `1` [2] in property `f`. 
+Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `1` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: 1}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    imported.js:172:3
    172|   obj1 as {f: 1}; // error number ~> 1
@@ -815,12 +817,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:173:3
 
-Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `2` [2] in property `f`. 
+Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `2` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: 2}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    imported.js:173:3
    173|   obj1 as {f: 2}; // error number ~> 2
@@ -843,12 +846,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:178:3
 
-Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`. 
+Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: 1}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    imported.js:178:3
    178|   obj2 as {f: 1}; // error number ~> 1
@@ -871,12 +875,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:179:3
 
-Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `2` [2] in property `f`. 
+Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `2` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: 2}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    imported.js:179:3
    179|   obj2 as {f: 2}; // error number ~> 2
@@ -1145,12 +1150,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:367:3
 
-Cannot cast `o1` to object type because `string` [1] is not exactly the same as `"abc"` [2] in property `f`. 
+Cannot cast `o1` to object type because `string` [1] is not exactly the same as `"abc"` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: "abc"}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    imported.js:367:3
    367|   o1 as {f: 'abc'}; // error string ~> 'abc'
@@ -1930,12 +1936,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:154:3
 
-Cannot cast `obj` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`. 
+Cannot cast `obj` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: 1}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    local.js:154:3
    154|   obj as {f: 1}; // error number ~> 1
@@ -1958,12 +1965,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:167:3
 
-Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `1` [2] in property `f`. 
+Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `1` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: 1}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    local.js:167:3
    167|   obj1 as {f: 1}; // error number ~> 1
@@ -1986,12 +1994,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:168:3
 
-Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `2` [2] in property `f`. 
+Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `2` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: 2}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    local.js:168:3
    168|   obj1 as {f: 2}; // error number ~> 2
@@ -2014,12 +2023,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:173:3
 
-Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`. 
+Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: 1}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    local.js:173:3
    173|   obj2 as {f: 1}; // error number ~> 1
@@ -2042,12 +2052,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:174:3
 
-Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `2` [2] in property `f`. 
+Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `2` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: 2}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    local.js:174:3
    174|   obj2 as {f: 2}; // error number ~> 2
@@ -2452,12 +2463,13 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:433:3
 
-Cannot cast `o1` to object type because `string` [1] is not exactly the same as `"abc"` [2] in property `f`. 
+Cannot cast `o1` to object type because `string` [1] is not exactly the same as `"abc"` [2] in property `f`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{f: "abc"}` [4]
 - Or make property `f` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    local.js:433:3
    433|   o1 as {f: 'abc'}; // error string ~> 'abc'

@@ -308,10 +308,10 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test6.js:11:5
 
 Cannot assign object literal to `p` because property `abc` is extra in object literal [1] but missing in object
-literal [2]. Exact objects do not accept extra props. 
+literal [2]. Exact objects do not accept extra props. [incompatible-type]
 
 All writes to `p` must be compatible with the type of its initializer [3]. Add an annotation to `p` [3] if a different
-type is desired. [incompatible-type]
+type is desired.
 
    test6.js:11:5
    11| p = {...p, abc: 'def'}; // error, p doesn't have `abc` yet

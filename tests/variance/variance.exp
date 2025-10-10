@@ -72,12 +72,12 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:61:4
 
-Cannot cast `rwB` to `RWA` because `B` [1] is not exactly the same as `A` [2] in property `p`. 
+Cannot cast `rwB` to `RWA` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `RWB` [3] and `RWA` [4] exactly the same
 - Or make property `p` in `RWA` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:61:4
    61|   (rwB: RWA); // error
@@ -103,12 +103,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:4
 
-Cannot cast `drwB` to `dRWA` because `B` [1] is not exactly the same as `A` [2] in the indexer property. 
+Cannot cast `drwB` to `dRWA` because `B` [1] is not exactly the same as `A` [2] in the indexer property.
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `dRWB` [3] and `dRWA` [4] exactly the same
 - Or make the indexer in `dRWA` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:62:4
    62|   (drwB: dRWA); // error
@@ -480,12 +481,12 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:150:4
 
-Cannot cast `rwA` to `RWB` because `A` [1] is not exactly the same as `B` [2] in property `p`. 
+Cannot cast `rwA` to `RWB` because `A` [1] is not exactly the same as `B` [2] in property `p`. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `RWA` [3] and `RWB` [4] exactly the same
 - Or make property `p` in `RWB` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:150:4
    150|   (rwA: RWB); // error
@@ -511,12 +512,13 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:151:4
 
-Cannot cast `drwA` to `dRWB` because `A` [1] is not exactly the same as `B` [2] in the indexer property. 
+Cannot cast `drwA` to `dRWB` because `A` [1] is not exactly the same as `B` [2] in the indexer property.
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `dRWA` [3] and `dRWB` [4] exactly the same
 - Or make the indexer in `dRWB` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    test.js:151:4
    151|   (drwA: dRWB); // error
@@ -817,13 +819,12 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:207:18
 
 Cannot cast array literal to array type because `{+p: A, ...}` [1] is not exactly the same as `{p: A, ...}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{+p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    test.js:207:18
    207|   (([roA]: Array<{+p:A,...}>): Array<{p:A,...}>); // error
@@ -844,13 +845,12 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:209:18
 
 Cannot cast array literal to array type because `{-p: A, ...}` [1] is not exactly the same as `{p: A, ...}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{-p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    test.js:209:18
    209|   (([woA]: Array<{-p:A,...}>): Array<{p:A,...}>); // error
@@ -871,13 +871,12 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:211:18
 
 Cannot cast array literal to array type because `{p: A, ...}` [1] is not exactly the same as `{+p: A, ...}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    test.js:211:18
    211|   (([rwA]: Array<{p:A,...}>): Array<{+p:A,...}>); // error
@@ -898,13 +897,12 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:215:18
 
 Cannot cast array literal to array type because `{-p: A, ...}` [1] is not exactly the same as `{+p: A, ...}` [2] in
-array element. 
+array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{-p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    test.js:215:18
    215|   (([woA]: Array<{-p:A,...}>): Array<{+p:A,...}>); // error
@@ -925,13 +923,12 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:217:18
 
 Cannot cast array literal to array type because `{p: A, ...}` [1] is not exactly the same as `{-p: A, ...}` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    test.js:217:18
    217|   (([rwA]: Array<{p:A,...}>): Array<{-p:A,...}>); // error
@@ -952,13 +949,12 @@ References:
 Error --------------------------------------------------------------------------------------------------- test.js:219:18
 
 Cannot cast array literal to array type because `{+p: A, ...}` [1] is not exactly the same as `{-p: A, ...}` [2] in
-array element. 
+array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{+p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    test.js:219:18
    219|   (([roA]: Array<{+p:A,...}>): Array<{-p:A,...}>); // error

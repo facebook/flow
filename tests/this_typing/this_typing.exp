@@ -374,12 +374,13 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:32:18
 
-Cannot call `{...}.method` because `number` [1] is not exactly the same as `boolean` [2] in property `prop`. 
+Cannot call `{...}.method` because `number` [1] is not exactly the same as `boolean` [2] in property `prop`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: boolean, ...}` [4]
 - Or make property `prop` in interface type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    class_method.js:32:18
    32| let _5 = {prop : 123, method : A.staticMethod }.method();// Error - boolean ~> number
@@ -414,12 +415,13 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:39:18
 
-Cannot call `{...}.method` because `number` [1] is not exactly the same as `boolean` [2] in property `prop`. 
+Cannot call `{...}.method` because `number` [1] is not exactly the same as `boolean` [2] in property `prop`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: boolean, ...}` [4]
 - Or make property `prop` in interface type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    class_method.js:39:18
    39| let _8 = {prop : 123, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
@@ -454,12 +456,13 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_method.js:46:19
 
-Cannot call `{...}.method` because `number` [1] is not exactly the same as `boolean` [2] in property `prop`. 
+Cannot call `{...}.method` because `number` [1] is not exactly the same as `boolean` [2] in property `prop`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: boolean, ...}` [4]
 - Or make property `prop` in interface type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    class_method.js:46:19
    46| let _11 = {prop : 123, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
@@ -891,12 +894,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:24:18
 
-Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`. 
+Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: number, ...}` [4]
 - Or make property `prop` in interface type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    declare_class_method.js:24:18
    24| let _5 = {prop : true, method : A.staticMethod }.method();// Error - boolean ~> number
@@ -931,12 +935,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:31:18
 
-Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`. 
+Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: number, ...}` [4]
 - Or make property `prop` in interface type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    declare_class_method.js:31:18
    31| let _8 = {prop : true, method : (new A()).propUnboundNonMethod }.method(); // Error - boolean ~> number
@@ -971,12 +976,13 @@ References:
 
 Error ------------------------------------------------------------------------------------ declare_class_method.js:38:19
 
-Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`. 
+Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: number, ...}` [4]
 - Or make property `prop` in interface type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    declare_class_method.js:38:19
    38| let _11 = {prop : true, method : A.staticPropUnboundNonMethod }.method();// Error - boolean ~> number
@@ -1547,12 +1553,13 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- interface.js:21:18
 
-Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`. 
+Cannot call `{...}.method` because `boolean` [1] is not exactly the same as `number` [2] in property `prop`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `prop` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{prop: number, ...}` [4]
 - Or make property `prop` in interface type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    interface.js:21:18
    21| let _5 = {prop : true, method : AImpl.propUnboundNonMethod }.method(); // Error - boolean ~> number

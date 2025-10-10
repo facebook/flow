@@ -1,13 +1,12 @@
 Error ------------------------------------------------------------------------------------------------------ api.js:14:4
 
 Cannot call `na` with `Children.map(...)` bound to `x` because `$NonMaybeType<string>` [1] is not exactly the same as
-`number` [2] in array element. 
+`number` [2] in array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<$NonMaybeType<string>>` [3] and `Array<number>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    api.js:14:4
     14| na(Children.map(a, (x: string) => x as string)); // Error
@@ -61,13 +60,12 @@ References:
 Error ------------------------------------------------------------------------------------------------------ api.js:15:4
 
 Cannot call `sa` with `Children.map(...)` bound to `x` because `$NonMaybeType<number>` [1] is not exactly the same as
-`string` [2] in array element. 
+`string` [2] in array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<$NonMaybeType<number>>` [3] and `Array<string>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    api.js:15:4
     15| sa(Children.map(a, (x: number) => x as number)); // Error
@@ -235,13 +233,12 @@ References:
 Error ------------------------------------------------------------------------------------------------------ api.js:28:4
 
 Cannot call `sa` with `Children.toArray(...)` bound to `x` because `$NonMaybeType<?number>` [1] is not exactly the same
-as `string` [2] in array element. 
+as `string` [2] in array element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<$NonMaybeType<?number>>` [3] and `Array<string>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    api.js:28:4
     28| sa(Children.toArray(a)); // Error

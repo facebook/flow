@@ -226,9 +226,9 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- E.js:2:32
 
-Cannot assign function to `a` because function [1] is incompatible with object type [2]. 
+Cannot assign function to `a` because function [1] is incompatible with object type [2]. [incompatible-type]
 
-Functions without statics are not compatible with objects. [incompatible-type]
+Functions without statics are not compatible with objects.
 
    E.js:2:32
    2| var a : { someProp: number } = function () {};

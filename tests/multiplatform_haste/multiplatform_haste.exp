@@ -1,10 +1,9 @@
 Error ----------------------------------------------------------------------------------------- shadowing.android.js:1:1
 
 Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
-interface [2]. 
+interface [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[incompatible-type]
 
    shadowing.android.js:1:1
    1|
@@ -18,10 +17,9 @@ References:
 Error -------------------------------------------------------------------------------------------- shadowing.ios.js:1:14
 
 Cannot conform to common interface module because property `myValue` is missing in self [1] but exists in common
-interface [2]. 
+interface [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[incompatible-type]
 
    shadowing.ios.js:1:14
    1| export const iosOnly = true;
@@ -70,10 +68,10 @@ References:
 
 Error ----------------------------------------------------------------------- with_platform_specific_js_flow.ios.js:2:19
 
-Cannot conform to common interface module because string [1] is incompatible with number [2] in property `foo`. 
+Cannot conform to common interface module because string [1] is incompatible with number [2] in property `foo`.
+[incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
-[incompatible-type]
 
    with_platform_specific_js_flow.ios.js:2:19
    2| export const foo: string = ''; // weird but ok: no conformance error against .ios.js.flow because this file is completely shadowed by js.flow file, but against .js.flow

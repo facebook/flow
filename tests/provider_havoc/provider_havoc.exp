@@ -1,10 +1,10 @@
 Error --------------------------------------------------------------------------------------------------- empty.js:14:17
 
 Cannot assign `si.add(...)` to `si` because null or undefined [1] is incompatible with empty [2] in type argument
-`T` [3]. 
+`T` [3]. [incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
-type is desired. [incompatible-type]
+type is desired.
 
    empty.js:14:17
    14|     si = si.add(x);
@@ -27,10 +27,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:14:17
 
-Cannot assign `si.add(...)` to `si` because string [1] is incompatible with empty [2] in type argument `T` [3]. 
+Cannot assign `si.add(...)` to `si` because string [1] is incompatible with empty [2] in type argument `T` [3].
+[incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
-type is desired. [incompatible-type]
+type is desired.
 
    empty.js:14:17
    14|     si = si.add(x);
@@ -118,10 +119,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:74:16
 
-Cannot assign `new Set<...>()` to `si` because string [1] is incompatible with number [2] in type argument `T` [3]. 
+Cannot assign `new Set<...>()` to `si` because string [1] is incompatible with number [2] in type argument `T` [3].
+[incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
-type is desired. [incompatible-type]
+type is desired.
 
    empty.js:74:16
    74|   si = new Set<string>(); // error
@@ -162,10 +164,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:88:15
 
-Cannot assign `si.add(...)` to `si` because number [1] is incompatible with empty [2] in type argument `T` [3]. 
+Cannot assign `si.add(...)` to `si` because number [1] is incompatible with empty [2] in type argument `T` [3].
+[incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
-type is desired. [incompatible-type]
+type is desired.
 
    empty.js:88:15
    88|   si = si.add(42); // error
@@ -402,10 +405,11 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:46:20
 
-Cannot assign `{...}` to `x` because inexact object type [1] is incompatible with exact object literal [2]. 
+Cannot assign `{...}` to `x` because inexact object type [1] is incompatible with exact object literal [2].
+[incompatible-exact]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
-type is desired. [incompatible-exact]
+type is desired.
 
    test.js:46:20
    46|     x = {a: 42} as {a: number, ...}; // error here
@@ -423,10 +427,10 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:46:20
 
 Cannot assign `{...}` to `x` because property `a` is extra in object type [1] but missing in object literal [2]. Exact
-objects do not accept extra props. 
+objects do not accept extra props. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
-type is desired. [incompatible-type]
+type is desired.
 
    test.js:46:20
    46|     x = {a: 42} as {a: number, ...}; // error here

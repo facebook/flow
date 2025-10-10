@@ -18,12 +18,13 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type-decls-neg.js:29:3
 
-Cannot cast `data` to `SystemData` because `"user"` [1] is not exactly the same as `"system"` [2] in property `kind`. 
+Cannot cast `data` to `SystemData` because `"user"` [1] is not exactly the same as `"system"` [2] in property `kind`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,
 - Either make `UserData` [3] and `SystemData` [4] exactly the same
 - Or make property `kind` in `SystemData` [5] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    type-decls-neg.js:29:3
    29|   data as SystemData;

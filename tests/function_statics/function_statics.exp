@@ -65,9 +65,9 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrow.js:33:43
 
-Cannot assign function to `f` because function [1] is incompatible with object type [2]. 
+Cannot assign function to `f` because function [1] is incompatible with object type [2]. [incompatible-type]
 
-Functions without statics are not compatible with objects. [incompatible-type]
+Functions without statics are not compatible with objects.
 
    arrow.js:33:43
    33|   const f: {(): number, a: string, ...} = () => 1; // ERROR on assignment
@@ -256,9 +256,9 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_expression.js:41:43
 
-Cannot assign function to `f` because function [1] is incompatible with object type [2]. 
+Cannot assign function to `f` because function [1] is incompatible with object type [2]. [incompatible-type]
 
-Functions without statics are not compatible with objects. [incompatible-type]
+Functions without statics are not compatible with objects.
 
    function_expression.js:41:43
    41|   const f: {(): number, a: string, ...} = function () { return 1}; // ERROR on assignment
@@ -300,9 +300,10 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:33:2
 
-Cannot cast `add` to `InexactCallableObj` because function [1] is incompatible with `InexactCallableObj` [2]. 
+Cannot cast `add` to `InexactCallableObj` because function [1] is incompatible with `InexactCallableObj` [2].
+[incompatible-type]
 
-Functions without statics are not compatible with objects. [incompatible-type]
+Functions without statics are not compatible with objects.
 
    used_as_callable_object.js:33:2
    33| (add: InexactCallableObj); // error prop 'bar' missing
@@ -354,9 +355,9 @@ References:
 
 Error ---------------------------------------------------------------------------------- used_as_callable_object.js:36:2
 
-Cannot cast `add` to `I` because function [1] is incompatible with `I` [2]. 
+Cannot cast `add` to `I` because function [1] is incompatible with `I` [2]. [incompatible-type]
 
-Functions without statics are not compatible with objects. [incompatible-type]
+Functions without statics are not compatible with objects.
 
    used_as_callable_object.js:36:2
    36| (add: I); // error prop 'bar' missing

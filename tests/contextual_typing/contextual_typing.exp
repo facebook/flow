@@ -436,13 +436,12 @@ References:
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:61:29
 
 Cannot assign `z3.concat(...)` to `z5` because `string | 1` [1] is not exactly the same as `string` [2] in array
-element. 
+element. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<string | 1>` [3] and `Array<string>` [4] exactly the same
 - Or make array type [4] a `$ReadOnlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
-[incompatible-type]
 
    implicit_instantiation.js:61:29
     61|   const z5: Array<string> = z3.concat(1); // Only one error on 1 ~> string

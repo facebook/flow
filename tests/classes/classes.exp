@@ -253,12 +253,13 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:10:1
 
-Cannot cast `C` to object type because `string` [1] is not exactly the same as `number` [2] in property `p`. 
+Cannot cast `C` to object type because `string` [1] is not exactly the same as `number` [2] in property `p`.
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{name: string, p: string, ...}` [3] and `{p: number, ...}` [4] exactly the same
 - Or make property `p` in object type [4] readonly. See
-https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number. [incompatible-type]
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    statics.js:10:1
    10| C as {p: number}; // errors, string ~> number & vice versa (unify)
