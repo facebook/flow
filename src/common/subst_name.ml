@@ -9,7 +9,8 @@ type op_kind =
   | Spread
   | MakeExact
   | ReadOnly
-  | Mapped
+  | MappedObject
+  | MappedArray
   | Partial
   | Required
   | CheckConfig

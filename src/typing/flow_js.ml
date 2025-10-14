@@ -3761,7 +3761,7 @@ struct
             )
           in
           let mapped_generic_t =
-            Generic.make_op_id Subst_name.Mapped t_generic_id
+            Generic.make_op_id Subst_name.MappedArray t_generic_id
             |> Base.Option.value_map ~default:t ~f:(fun id ->
                    GenericT
                      {

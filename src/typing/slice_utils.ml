@@ -1822,7 +1822,7 @@ let map_object
     ~invalidate_aliases:true
     ~interface
     ~reachable_targs
-    ~kind:Subst_name.Mapped
+    ~kind:Subst_name.MappedObject
     flags
     call
     id
