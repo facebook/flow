@@ -229,12 +229,13 @@ let substituter =
       else
         let t_out =
           match t with
-          | GenericT { name = Subst_name.Synthetic { name; op_kind = _; ts = ids }; reason; _ } ->
+          | GenericT { name = Subst_name.Synthetic { name; op_kind; ts = ids }; reason; _ } ->
             if Base.List.exists ~f:(fun name -> Subst_name.Map.mem name map) ids then
               failwith
                 (Utils_js.spf
-                   "Cannot substitute through synthetic name %s at %s."
+                   "Cannot substitute through synthetic name %s(kind=%s) at %s."
                    name
+                   (Base.Option.value_map op_kind ~default:"None" ~f:Subst_name.show_op_kind)
                    (Debug_js.dump_reason cx reason)
                 )
             else
