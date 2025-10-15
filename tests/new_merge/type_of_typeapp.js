@@ -2,7 +2,7 @@
 
 declare class RecordInstance<T> {}
 
-type RecordFactory<Values> = Class<RecordInstance<Values>>;
+type RecordFactory<T> = Class<RecordInstance<T>>;
 
 declare class BaseStore<TState> { getState(): TState; }
 
