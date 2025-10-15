@@ -184,6 +184,7 @@ type error_code =
   | TypeParamConstCode
   | IllegalAssertOperator
   | ConstantCondition
+  | ReservedKeyword
 
 let code_of_lint : Lints.lint_kind -> error_code = function
   | Lints.ReactIntrinsicOverlap -> ReactIntrinsicOverlap
@@ -399,3 +400,4 @@ let string_of_code : error_code -> string = function
   | TypeParamConstCode -> "incompatible-type-param-const"
   | IllegalAssertOperator -> "illegal-assert-operator"
   | ConstantCondition -> "constant-condition"
+  | ReservedKeyword -> "reserved-keyword"

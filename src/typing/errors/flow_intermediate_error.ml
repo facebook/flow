@@ -2068,6 +2068,14 @@ let to_printable_error :
         ref x;
         text " is already bound.";
       ]
+    | MessageCannotDeclareReservedType { reason; keyword } ->
+      [
+        text "Cannot declare ";
+        Friendly.ref reason;
+        text ", because ";
+        code (IncorrectType.incorrect_of_kind keyword);
+        text " is a reserved type name.";
+      ]
     | MessageCannotDelete expr ->
       [
         text "Cannot delete ";

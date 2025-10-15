@@ -797,6 +797,7 @@ and binding_error =
   | EConstParamReassigned
   | EImportReassigned
   | EEnumReassigned
+  | EReservedKeyword of { keyword: IncorrectType.t }
 
 and internal_error =
   | MethodNotAFunction
@@ -3151,6 +3152,7 @@ let friendly_message_of_msg = function
         MessageCannotReassignConstant x
       | EImportReassigned -> MessageCannotReassignImport x
       | EEnumReassigned -> MessageCannotReassignEnum x
+      | EReservedKeyword { keyword } -> MessageCannotDeclareReservedType { reason = x; keyword }
     in
     Normal msg
   | ERecursionLimit _ -> Normal MessageRecursionLimitExceeded
@@ -3773,6 +3775,7 @@ let error_code_of_message err : error_code option =
       Some ReassignConst
     | EImportReassigned -> Some ReassignImport
     | EEnumReassigned -> Some ReassignEnum
+    | EReservedKeyword _ -> Some ReservedKeyword
   end
   | EBuiltinNameLookupFailed _ -> Some CannotResolveName
   | EBuiltinModuleLookupFailed _ -> Some CannotResolveModule

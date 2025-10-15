@@ -537,6 +537,10 @@ type 'loc message =
   | MessageCannotDeclareAlreadyBoundName of concrete_reason
   | MessageCannotDeclareAlreadyBoundNameInCoreJs of concrete_reason
   | MessageCannotDeclareAlreadyBoundNameInNamespace of 'loc virtual_reason
+  | MessageCannotDeclareReservedType of {
+      keyword: IncorrectType.t;
+      reason: concrete_reason;
+    }
   | MessageCannotDelete of 'loc virtual_reason
   | MessageCannotDetermineEmptyArrayLiteralType
   | MessageCannotDetermineModuleType
