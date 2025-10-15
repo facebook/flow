@@ -733,6 +733,118 @@ Cannot declare `ReadonlySet` [1] because the name is a core builtin type. [name-
                  ^^^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------- reserved_type.js:2:9
+
+Cannot declare `$NonMaybeType` [1], because `$NonMaybeType` is a reserved type name. [reserved-keyword]
+
+   2|    type $NonMaybeType = string | number;
+              ^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- reserved_type.js:3:9
+
+Cannot declare `NonNullable` [1], because `NonNullable` is a reserved type name. [reserved-keyword]
+
+   3|    type NonNullable = number;
+              ^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- reserved_type.js:4:9
+
+Cannot declare `$ReadOnly` [1], because `$ReadOnly` is a reserved type name. [reserved-keyword]
+
+   4|    type $ReadOnly = string;
+              ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- reserved_type.js:5:9
+
+Cannot declare `Readonly` [1], because `Readonly` is a reserved type name. [reserved-keyword]
+
+   5|    type Readonly = string;
+              ^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- reserved_type.js:6:9
+
+Cannot declare `$Keys` [1], because `$Keys` is a reserved type name. [reserved-keyword]
+
+   6|    type $Keys = string;
+              ^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- reserved_type.js:7:9
+
+Cannot declare `$Values` [1], because `$Values` is a reserved type name. [reserved-keyword]
+
+   7|    type $Values<T> = Array<T>;
+              ^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- reserved_type.js:8:9
+
+Cannot declare `Values` [1], because `Values` is a reserved type name. [reserved-keyword]
+
+   8|    type Values = Array<string>;
+              ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:11:17
+
+Cannot declare `$NonMaybeType` [1], because `$NonMaybeType` is a reserved type name. [reserved-keyword]
+
+   11|    declare type $NonMaybeType = string | number;
+                       ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:12:17
+
+Cannot declare `NonNullable` [1], because `NonNullable` is a reserved type name. [reserved-keyword]
+
+   12|    declare type NonNullable = number;
+                       ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:13:17
+
+Cannot declare `$ReadOnly` [1], because `$ReadOnly` is a reserved type name. [reserved-keyword]
+
+   13|    declare type $ReadOnly = string;
+                       ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:14:17
+
+Cannot declare `Readonly` [1], because `Readonly` is a reserved type name. [reserved-keyword]
+
+   14|    declare type Readonly = string;
+                       ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:15:17
+
+Cannot declare `$Keys` [1], because `$Keys` is a reserved type name. [reserved-keyword]
+
+   15|    declare type $Keys = string;
+                       ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:16:17
+
+Cannot declare `$Values` [1], because `$Values` is a reserved type name. [reserved-keyword]
+
+   16|    declare type $Values<T> = Array<T>;
+                       ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:17:17
+
+Cannot declare `Values` [1], because `Values` is a reserved type name. [reserved-keyword]
+
+   17|    declare type Values = Array<string>;
+                       ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ satisfies.js:4:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
@@ -798,4 +910,4 @@ types. [ts-syntax]
 
 
 
-Found 94 errors
+Found 108 errors

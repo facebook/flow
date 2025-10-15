@@ -157,6 +157,27 @@ module IncorrectType = struct
     | DollarValues
     | Mixed
 
+  let is_type_reserved = function
+    | DollarNonMaybeType
+    | TSNonNullable
+    | DollarReadOnly
+    | TSReadonly
+    | DollarKeys
+    | Values
+    | DollarValues ->
+      true
+    | _ -> false
+
+  let from_str = function
+    | "$NonMaybeType" -> Some DollarNonMaybeType
+    | "NonNullable" -> Some TSNonNullable
+    | "$ReadOnly" -> Some DollarReadOnly
+    | "Readonly" -> Some TSReadonly
+    | "$Keys" -> Some DollarKeys
+    | "Values" -> Some Values
+    | "$Values" -> Some DollarValues
+    | _ -> None
+
   let incorrect_of_kind = function
     | Partial -> "$Partial"
     | Shape -> "$Shape"

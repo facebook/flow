@@ -1983,39 +1983,60 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let (loc, { Flow_ast.Identifier.name; comments = _ }) = ident in
         let { kind; def_loc; _ } = this#env_read name in
         let error =
-          match def_loc with
-          (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
-          | None -> None
-          | Some def_loc ->
-            (match kind with
-            | Bindings.Type _
-            | Bindings.DeclaredClass
-            | Bindings.DeclaredVar
-            | Bindings.DeclaredLet
-            | Bindings.DeclaredConst
-              when not (ALoc.equal loc def_loc) ->
-              (* Types are already bind in hoister,
-                 so we only check for rebind in different locations. *)
-              Some Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
-            | Bindings.Type _ -> None
-            | Bindings.Var
-            | Bindings.Const
-            | Bindings.Let
-            | Bindings.Class
-            | Bindings.Function
-            | Bindings.Component
-            | Bindings.Parameter
-            | Bindings.ComponentParameter
-            | Bindings.Import ->
-              Some Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
-            | _ -> None)
+          let reserved_keyword_error =
+            let open Flow_intermediate_error_types in
+            match IncorrectType.from_str name with
+            | Some keyword when IncorrectType.is_type_reserved keyword ->
+              (match kind with
+              | Bindings.Type _ ->
+                Some
+                  Error_message.(
+                    EBindingError (EReservedKeyword { keyword }, loc, OrdinaryName name, loc)
+                  )
+              | _ -> None)
+            | _ -> None
+          in
+          match reserved_keyword_error with
+          | Some error -> Some error
+          | _ ->
+            (match def_loc with
+            (* Identifiers with no binding can never reintroduce "cannot reassign binding" errors *)
+            | None -> None
+            | Some def_loc ->
+              (match kind with
+              | Bindings.Type _
+              | Bindings.DeclaredClass
+              | Bindings.DeclaredVar
+              | Bindings.DeclaredLet
+              | Bindings.DeclaredConst
+                when not (ALoc.equal loc def_loc) ->
+                (* Types are already bind in hoister,
+                   so we only check for rebind in different locations. *)
+                Some
+                  Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+              | Bindings.Type _ -> None
+              | Bindings.Var
+              | Bindings.Const
+              | Bindings.Let
+              | Bindings.Class
+              | Bindings.Function
+              | Bindings.Component
+              | Bindings.Parameter
+              | Bindings.ComponentParameter
+              | Bindings.Import ->
+                Some
+                  Error_message.(EBindingError (ENameAlreadyBound, loc, OrdinaryName name, def_loc))
+              | _ -> None))
         in
         Base.Option.iter error ~f:(fun error ->
             add_output error;
-            let write_entries =
-              EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
-            in
-            env_state <- { env_state with write_entries }
+            match error with
+            | Error_message.(EBindingError (EReservedKeyword _, _, _, _)) -> ()
+            | _ ->
+              let write_entries =
+                EnvMap.add_ordinary loc Env_api.NonAssigningWrite env_state.write_entries
+              in
+              env_state <- { env_state with write_entries }
         );
         super#identifier ident
 
