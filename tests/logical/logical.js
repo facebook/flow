@@ -601,7 +601,7 @@ function logical22() {
  */
 
 declare class RecordInstance<X> {}
-type RecordOf<Values: Object> = RecordInstance<Values> & Values;
+type RecordOf<T: Object> = RecordInstance<T> & T;
 type Rec = RecordOf<{f: number}>;
 
 function logical7f(a: ?Rec, b: Rec): Rec {
