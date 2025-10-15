@@ -143,7 +143,17 @@ module Make
           { key_loc; key; value = (value_loc, value); named_set_opt; reason_obj = _ } ->
         let overlapping_name_map =
           match named_set_opt with
-          | None -> acc.obj_pmap
+          | None ->
+            NameUtils.Map.filter
+              (fun prop _ ->
+                let prop_t =
+                  DefT
+                    ( mk_reason (RStringLit prop) key_loc,
+                      SingletonStrT { from_annot = false; value = prop }
+                    )
+                in
+                Speculation_flow.is_subtyping_successful cx prop_t key)
+              acc.obj_pmap
           | Some named_set ->
             NameUtils.Map.filter (fun n _ -> not (NameUtils.Set.mem n named_set)) acc.obj_pmap
         in
@@ -2538,6 +2548,7 @@ module Make
       | Computed key ->
         (match key with
         | DefT (_, StrGeneralT _)
+        | StrUtilT _
         | DefT (_, NumGeneralT _)
         | DefT (_, EnumValueT _)
         | AnyT _ ->
@@ -2606,7 +2617,7 @@ module Make
     let obj_proto = ObjProtoT reason in
     let mk_computed k key value =
       let (key_loc, _e) = k in
-      let concretized_keys = Flow.all_possible_concrete_types cx reason key in
+      let concretized_keys = Flow.possible_concrete_types_for_operators_checking cx reason key in
       let reason = reason_of_t key in
       let reason_key = Reason.mk_expression_reason k in
       let reason_obj = reason in
