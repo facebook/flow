@@ -293,19 +293,5 @@ References:
                      ^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- readonly.js:6:46
 
-Inexact `T` [1] is incompatible with exact object type [2]. [incompatible-exact]
-
-   readonly.js:6:46
-   6| type TriggersEval<+T: {...}> = $ReadOnly<{...T}>; // error: inexact vs exact
-                                                   ^ [1]
-
-References:
-   readonly.js:6:42
-   6| type TriggersEval<+T: {...}> = $ReadOnly<{...T}>; // error: inexact vs exact
-                                               ^^^^^^ [2]
-
-
-
-Found 23 errors
+Found 22 errors

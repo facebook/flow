@@ -6781,7 +6781,7 @@ struct
         in
         Context.set_evaluated cx (Eval.Map.add id result evaluated)
       else
-        let try_evaluate ~stuck_eval_kind ~stuck_eval_targs =
+        let try_evaluate ~stuck_eval_kind ~stuck_eval_targs ~upper_t =
           let trace = DepthTrace.dummy_trace in
           let try_evaluate t d tvar =
             try
@@ -6806,7 +6806,7 @@ struct
                       opaque_id = Opaque.StuckEval stuck_eval_kind;
                       underlying_t = None;
                       lower_t = None;
-                      upper_t = None;
+                      upper_t;
                       opaque_type_args;
                     }
                   )
@@ -6821,34 +6821,64 @@ struct
           Context.set_evaluated cx (Eval.Map.add id result evaluated)
         in
         (match d with
-        (* For the following indexed-access-related generic EvalTs, if they can be successfully
+        (* For the following generic EvalTs, if they can be successfully
          * evaluated, then we will take that as the eval result. While it's certainly unsafe
          * (See https://fburl.com/flow-generic-indexed-access-unsafe), TS has the same issue, and
          * too much code already depends on the broken behavior.
          *
          * However, if they cannot be successfully evaluated, we should turn them into the stuck form
          * (e.g. `T['foo']`) where `T` has no upper bound) *)
+        | NonMaybeType ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForNonMaybeType
+            ~stuck_eval_targs:[t]
+            ~upper_t:(Some t)
         | PropertyType { name } ->
           try_evaluate
             ~stuck_eval_kind:(Opaque.StuckEvalForPropertyType { name })
             ~stuck_eval_targs:[t]
+            ~upper_t:None
         | ElementType { index_type } ->
           try_evaluate
             ~stuck_eval_kind:Opaque.StuckEvalForElementType
             ~stuck_eval_targs:[t; index_type]
+            ~upper_t:None
         | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessStrLitIndex name } ->
           try_evaluate
             ~stuck_eval_kind:
               (Opaque.StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType { name })
             ~stuck_eval_targs:[t]
+            ~upper_t:None
         | OptionalIndexedAccessNonMaybeType { index = OptionalIndexedAccessTypeIndex index } ->
           try_evaluate
             ~stuck_eval_kind:Opaque.StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType
             ~stuck_eval_targs:[t; index]
+            ~upper_t:None
         | OptionalIndexedAccessResultType { void_reason = _ } ->
           try_evaluate
             ~stuck_eval_kind:Opaque.StuckEvalForOptionalIndexedAccessResultType
             ~stuck_eval_targs:[t]
+            ~upper_t:None
+        | ExactType ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForExactType
+            ~stuck_eval_targs:[t]
+            ~upper_t:None
+        | ReadOnlyType ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForReadOnlyType
+            ~stuck_eval_targs:[t]
+            ~upper_t:(Some t)
+        | PartialType ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForPartialType
+            ~stuck_eval_targs:[t]
+            ~upper_t:None
+        | RequiredType ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForRequiredType
+            ~stuck_eval_targs:[t]
+            ~upper_t:None
         | _ -> ()));
     eval_t
 

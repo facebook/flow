@@ -2177,11 +2177,16 @@ end
 
 and Opaque : sig
   type stuck_eval_kind =
+    | StuckEvalForNonMaybeType
     | StuckEvalForPropertyType of { name: name }
     | StuckEvalForElementType
     | StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType of { name: name }
     | StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType
     | StuckEvalForOptionalIndexedAccessResultType
+    | StuckEvalForExactType
+    | StuckEvalForReadOnlyType
+    | StuckEvalForPartialType
+    | StuckEvalForRequiredType
     | StuckEvalForConditionalType
 
   type id =
@@ -2197,11 +2202,16 @@ and Opaque : sig
   val string_of_id : id -> string
 end = struct
   type stuck_eval_kind =
+    | StuckEvalForNonMaybeType
     | StuckEvalForPropertyType of { name: name }
     | StuckEvalForElementType
     | StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType of { name: name }
     | StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType
     | StuckEvalForOptionalIndexedAccessResultType
+    | StuckEvalForExactType
+    | StuckEvalForReadOnlyType
+    | StuckEvalForPartialType
+    | StuckEvalForRequiredType
     | StuckEvalForConditionalType
 
   type id =
@@ -2219,6 +2229,7 @@ end = struct
   let string_of_id = function
     | UserDefinedOpaqueTypeId (id, name) -> "user-defined " ^ name ^ " (" ^ ALoc.show_id id ^ ")"
     | InternalEnforceUnionOptimized -> "InternalEnforceUnionOptimized"
+    | StuckEval StuckEvalForNonMaybeType -> "StuckEvalForNonMaybeType"
     | StuckEval (StuckEvalForPropertyType { name }) ->
       "StuckEvalForPropertyType " ^ Reason.display_string_of_name name
     | StuckEval StuckEvalForElementType -> "StuckEvalForElementType"
@@ -2229,6 +2240,10 @@ end = struct
       "StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType"
     | StuckEval StuckEvalForOptionalIndexedAccessResultType ->
       "StuckEvalForOptionalIndexedAccessResultType"
+    | StuckEval StuckEvalForExactType -> "StuckEvalForExactType"
+    | StuckEval StuckEvalForReadOnlyType -> "StuckEvalForReadOnlyType"
+    | StuckEval StuckEvalForPartialType -> "StuckEvalForPartialType"
+    | StuckEval StuckEvalForRequiredType -> "StuckEvalForRequiredType"
     | StuckEval StuckEvalForConditionalType -> "StuckEvalForConditionalType"
 end
 
