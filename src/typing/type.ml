@@ -2187,7 +2187,11 @@ and Opaque : sig
     | StuckEvalForReadOnlyType
     | StuckEvalForPartialType
     | StuckEvalForRequiredType
+    | StuckEvalForValuesType
     | StuckEvalForConditionalType
+    | StuckEvalForKeyMirrorType
+    | StuckEvalForReactDRO of TypeTerm.dro_type
+    | StuckEvalForEnumType
 
   type id =
     (* We also track the name so that we can do common interface conformance check, where we check
@@ -2212,7 +2216,11 @@ end = struct
     | StuckEvalForReadOnlyType
     | StuckEvalForPartialType
     | StuckEvalForRequiredType
+    | StuckEvalForValuesType
     | StuckEvalForConditionalType
+    | StuckEvalForKeyMirrorType
+    | StuckEvalForReactDRO of TypeTerm.dro_type
+    | StuckEvalForEnumType
 
   type id =
     | UserDefinedOpaqueTypeId of ALoc.id * string
@@ -2244,7 +2252,11 @@ end = struct
     | StuckEval StuckEvalForReadOnlyType -> "StuckEvalForReadOnlyType"
     | StuckEval StuckEvalForPartialType -> "StuckEvalForPartialType"
     | StuckEval StuckEvalForRequiredType -> "StuckEvalForRequiredType"
+    | StuckEval StuckEvalForValuesType -> "StuckEvalForValuesType"
     | StuckEval StuckEvalForConditionalType -> "StuckEvalForConditionalType"
+    | StuckEval StuckEvalForKeyMirrorType -> "StuckEvalForKeyMirrorType"
+    | StuckEval (StuckEvalForReactDRO _) -> "StuckEvalForReactDRO"
+    | StuckEval StuckEvalForEnumType -> "StuckEvalForEnumType"
 end
 
 and Eval : sig

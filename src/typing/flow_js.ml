@@ -6879,6 +6879,26 @@ struct
             ~stuck_eval_kind:Opaque.StuckEvalForRequiredType
             ~stuck_eval_targs:[t]
             ~upper_t:None
+        | ValuesType ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForValuesType
+            ~stuck_eval_targs:[t]
+            ~upper_t:None
+        | TypeMap ObjectKeyMirror ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForKeyMirrorType
+            ~stuck_eval_targs:[t]
+            ~upper_t:None
+        | ReactDRO (_loc, dro_type) ->
+          try_evaluate
+            ~stuck_eval_kind:(Opaque.StuckEvalForReactDRO dro_type)
+            ~stuck_eval_targs:[t]
+            ~upper_t:(Some t)
+        | EnumType ->
+          try_evaluate
+            ~stuck_eval_kind:Opaque.StuckEvalForEnumType
+            ~stuck_eval_targs:[t]
+            ~upper_t:None
         | _ -> ()));
     eval_t
 
