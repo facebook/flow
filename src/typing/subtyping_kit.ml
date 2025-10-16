@@ -309,7 +309,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                         SpeculationKit.try_unify cx trace lt use_op ut;
                         false
                       with
-                      | Flow_js_utils.SpeculationSingletonError _ -> true
+                      | Flow_js_utils.SpeculationSingletonError -> true
                     then
                       (name, lt, ut) :: invariant_subtyping_failed_prop_names
                     else
@@ -1081,7 +1081,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                flow_type_args cx trace ~use_op lreason ureason ltargs utargs
            )
          with
-        | SpeculationSingletonError _ ->
+        | SpeculationSingletonError ->
           add_output
             cx
             (Error_message.EIncompatibleWithUseOp

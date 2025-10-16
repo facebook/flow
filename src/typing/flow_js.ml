@@ -175,7 +175,7 @@ struct
         l
         (UseT (unknown_use, u))
     with
-    | exception Flow_js_utils.SpeculationSingletonError _ -> false
+    | exception Flow_js_utils.SpeculationSingletonError -> false
     | _ -> true
 
   (* get prop *)
@@ -6789,7 +6789,7 @@ struct
                   evaluate_type_destructor cx ~trace use_op reason t d tvar
               )
             with
-            | Flow_js_utils.SpeculationSingletonError _ ->
+            | Flow_js_utils.SpeculationSingletonError ->
               let opaque_type_args =
                 Base.List.mapi stuck_eval_targs ~f:(fun i t ->
                     ( Subst_name.Synthetic { name = string_of_int i; op_kind = None; ts = [] },
@@ -7760,7 +7760,7 @@ struct
         && not (TvarVisitors.has_unresolved_tvars cx t2)
       then
         try SpeculationKit.try_unify cx trace t1 use_op t2 with
-        | Flow_js_utils.SpeculationSingletonError _ ->
+        | Flow_js_utils.SpeculationSingletonError ->
           let explanation =
             let open Flow_intermediate_error_types in
             match unify_cause with

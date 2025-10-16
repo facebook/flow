@@ -348,7 +348,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       | SingletonCustomCase _
       | SingletonUnifyCase _ ->
         (match msgs with
-        | [msg] -> raise (SpeculationSingletonError msg)
+        | [_msg] -> raise SpeculationSingletonError
         | _ ->
           failwith
             ("SingletonCase should not have exactly one error, but we got "
