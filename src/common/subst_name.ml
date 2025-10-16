@@ -16,7 +16,6 @@ type op_kind =
   | CheckConfig
   | CreateElement
   | ReactConfig
-  | Conditional
 [@@deriving eq, ord, show]
 
 module Name = struct
