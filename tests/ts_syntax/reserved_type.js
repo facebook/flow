@@ -16,3 +16,23 @@
    declare type $Values<T> = Array<T>;
    declare type Values = Array<string>;
 }
+
+{
+   declare class $NonMaybeType {}
+   declare class NonNullable {}
+   declare class $ReadOnly {}
+   declare class Readonly {}
+   declare class $Keys<TT> {}
+   declare class $Values<T> {}
+   declare class Values {}
+}
+
+{
+   class $NonMaybeType {}
+   class NonNullable {}
+   class $ReadOnly {}
+   class Readonly {}
+   class $Keys<TT> {}
+   class $Values<T> {}
+   class Values {}
+}

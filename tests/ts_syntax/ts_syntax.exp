@@ -845,6 +845,118 @@ Cannot declare `Values` [1], because `Values` is a reserved type name. [reserved
                        ^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- reserved_type.js:21:18
+
+Cannot declare `$NonMaybeType` [1], because `$NonMaybeType` is a reserved type name. [reserved-keyword]
+
+   21|    declare class $NonMaybeType {}
+                        ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:22:18
+
+Cannot declare `NonNullable` [1], because `NonNullable` is a reserved type name. [reserved-keyword]
+
+   22|    declare class NonNullable {}
+                        ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:23:18
+
+Cannot declare `$ReadOnly` [1], because `$ReadOnly` is a reserved type name. [reserved-keyword]
+
+   23|    declare class $ReadOnly {}
+                        ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:24:18
+
+Cannot declare `Readonly` [1], because `Readonly` is a reserved type name. [reserved-keyword]
+
+   24|    declare class Readonly {}
+                        ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:25:18
+
+Cannot declare `$Keys` [1], because `$Keys` is a reserved type name. [reserved-keyword]
+
+   25|    declare class $Keys<TT> {}
+                        ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:26:18
+
+Cannot declare `$Values` [1], because `$Values` is a reserved type name. [reserved-keyword]
+
+   26|    declare class $Values<T> {}
+                        ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:27:18
+
+Cannot declare `Values` [1], because `Values` is a reserved type name. [reserved-keyword]
+
+   27|    declare class Values {}
+                        ^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:31:10
+
+Cannot declare `$NonMaybeType` [1], because `$NonMaybeType` is a reserved type name. [reserved-keyword]
+
+   31|    class $NonMaybeType {}
+                ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:32:10
+
+Cannot declare `NonNullable` [1], because `NonNullable` is a reserved type name. [reserved-keyword]
+
+   32|    class NonNullable {}
+                ^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:33:10
+
+Cannot declare `$ReadOnly` [1], because `$ReadOnly` is a reserved type name. [reserved-keyword]
+
+   33|    class $ReadOnly {}
+                ^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:34:10
+
+Cannot declare `Readonly` [1], because `Readonly` is a reserved type name. [reserved-keyword]
+
+   34|    class Readonly {}
+                ^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:35:10
+
+Cannot declare `$Keys` [1], because `$Keys` is a reserved type name. [reserved-keyword]
+
+   35|    class $Keys<TT> {}
+                ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:36:10
+
+Cannot declare `$Values` [1], because `$Values` is a reserved type name. [reserved-keyword]
+
+   36|    class $Values<T> {}
+                ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- reserved_type.js:37:10
+
+Cannot declare `Values` [1], because `Values` is a reserved type name. [reserved-keyword]
+
+   37|    class Values {}
+                ^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ satisfies.js:4:18
 
 Cannot build a typed interface for this module. You should annotate the exports of this module with types. Cannot
@@ -910,4 +1022,4 @@ types. [ts-syntax]
 
 
 
-Found 108 errors
+Found 122 errors

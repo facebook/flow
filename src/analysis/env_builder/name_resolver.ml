@@ -4519,14 +4519,32 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         class_stack <- class_stack_old;
         cls
 
+      method private check_class_name name_loc name =
+        let open Flow_intermediate_error_types in
+        match IncorrectType.from_str name with
+        | Some keyword when IncorrectType.is_type_reserved keyword ->
+          add_output
+            Error_message.(
+              EBindingError (EReservedKeyword { keyword }, name_loc, OrdinaryName name, name_loc)
+            )
+        | _ -> ()
+
+      method! class_identifier ((name_loc, { Ast.Identifier.name; comments = _ }) as id) =
+        (* Called by `declare class` *)
+        this#check_class_name name_loc name;
+        super#class_identifier id
+
       method! class_identifier_opt ~class_loc:loc id =
         let (class_write_loc, class_self_reason) =
           match id with
           | Some ((name_loc, { Ast.Identifier.name; comments = _ }) as id) ->
+            (* Process `class <name> {}` *)
+            this#check_class_name name_loc name;
             this#bind_pattern_identifier_customized ~kind:ClassBinding name_loc name;
             ignore @@ super#identifier id;
             (name_loc, mk_reason (RType (OrdinaryName name)) name_loc)
           | None ->
+            (* Process annonymous class *)
             let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in
             env_state <-
               {
