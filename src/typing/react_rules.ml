@@ -226,9 +226,9 @@ module ConditionalState : sig
 
   val reset_label : t -> string -> saved_cond -> t
 
-  val enter_switch : t -> (t -> unit) -> saved_cond * saved_switch
+  val enter_switch_or_loop : t -> (t -> unit) -> saved_cond * saved_switch
 
-  val reset_switch : t -> saved_cond -> saved_switch -> t
+  val reset_switch_or_loop : t -> saved_cond -> saved_switch -> t
 
   val break : t -> string option -> t
 
@@ -250,7 +250,7 @@ end = struct
     broken: bool;
     return_seen: bool;
     label_scopes: bool SMap.t;
-    switch_scope: bool;
+    switch_or_loop_scope: bool;
     try_state: try_state;
   }
 
@@ -276,7 +276,7 @@ end = struct
       broken = false;
       return_seen = false;
       label_scopes = SMap.empty;
-      switch_scope = false;
+      switch_or_loop_scope = false;
       try_state = NotInTry;
     }
 
@@ -292,7 +292,7 @@ end = struct
           return_seen;
           try_state;
           label_scopes = _;
-          switch_scope = _;
+          switch_or_loop_scope = _;
           conditional_context = _;
         } as t
       )
@@ -308,8 +308,8 @@ end = struct
     setter { t with label_scopes = SMap.add s false label_scopes };
     conditional_context
 
-  let reset_broken ({ label_scopes; switch_scope; _ } as t) =
-    { t with broken = SMap.fold (fun _ -> ( || )) label_scopes switch_scope }
+  let reset_broken ({ label_scopes; switch_or_loop_scope; _ } as t) =
+    { t with broken = SMap.fold (fun _ -> ( || )) label_scopes switch_or_loop_scope }
 
   let reset_label ({ label_scopes; _ } as t) s conditional =
     let label_broken = SMap.find s label_scopes in
@@ -320,13 +320,13 @@ end = struct
     else
       t
 
-  let enter_switch ({ conditional_context; switch_scope; _ } as t) setter =
-    setter { t with switch_scope = false };
-    (conditional_context, switch_scope)
+  let enter_switch_or_loop ({ conditional_context; switch_or_loop_scope; _ } as t) setter =
+    setter { t with switch_or_loop_scope = false };
+    (conditional_context, switch_or_loop_scope)
 
-  let reset_switch ({ switch_scope; _ } as t) conditional cur_switch =
-    let t = { t with switch_scope = cur_switch } in
-    if switch_scope then
+  let reset_switch_or_loop ({ switch_or_loop_scope; _ } as t) conditional cur_switch_or_loop =
+    let t = { t with switch_or_loop_scope = cur_switch_or_loop } in
+    if switch_or_loop_scope then
       let t = reset_broken t in
       reset_conditional t conditional
     else
@@ -335,7 +335,7 @@ end = struct
   let break t s =
     let ({ label_scopes; _ } as t) = { t with broken = true; conditional_context = true } in
     match s with
-    | None -> { t with switch_scope = true }
+    | None -> { t with switch_or_loop_scope = true }
     | Some s -> { t with label_scopes = SMap.add s true label_scopes }
 
   let enter_try ({ conditional_context; try_state; _ } as t) setter =
@@ -361,7 +361,7 @@ end = struct
         broken = b1;
         return_seen = r1;
         label_scopes = l1;
-        switch_scope = s1;
+        switch_or_loop_scope = s1;
         try_state = t1;
       }
       {
@@ -369,7 +369,7 @@ end = struct
         broken = b2;
         return_seen = r2;
         label_scopes = l2;
-        switch_scope = s2;
+        switch_or_loop_scope = s2;
         try_state = t2;
       } =
     {
@@ -386,7 +386,7 @@ end = struct
             | (None, None) -> None)
           l1
           l2;
-      switch_scope = s1 || s2;
+      switch_or_loop_scope = s1 || s2;
       try_state = max_try t1 t2;
       return_seen = r1 || r2;
     }
@@ -1243,9 +1243,10 @@ and component_ast_visitor tast cx rrid =
 
     method! switch stmt =
       let (cur, cur_switch) =
-        ConditionalState.enter_switch conditional_state (fun state -> conditional_state <- state)
+        ConditionalState.enter_switch_or_loop conditional_state (fun state ->
+            conditional_state <- state
+        )
       in
-
       let { Ast.Statement.Switch.discriminant; cases; comments = _; exhaustive_out = _ } = stmt in
       let (_ : _ Ast.Expression.t) = this#expression discriminant in
       let (_ : _ list) =
@@ -1254,7 +1255,7 @@ and component_ast_visitor tast cx rrid =
           cases
       in
 
-      conditional_state <- ConditionalState.reset_switch conditional_state cur cur_switch;
+      conditional_state <- ConditionalState.reset_switch_or_loop conditional_state cur cur_switch;
       stmt
 
     method visit_switch_case ~is_last ({ Ast.Statement.Switch.Case.test; _ } as case) =
@@ -1315,28 +1316,52 @@ and component_ast_visitor tast cx rrid =
       let { Ast.Statement.ForIn.left; right; body; _ } = stmt in
       let _left' : _ Ast.Statement.ForIn.left = this#for_in_statement_lhs left in
       let _right' : _ Ast.Expression.t = this#expression right in
+      let (cur, cur_loop) =
+        ConditionalState.enter_switch_or_loop conditional_state (fun state ->
+            conditional_state <- state
+        )
+      in
       let _body' : _ Ast.Statement.t = this#in_conditional this#statement body in
+      conditional_state <- ConditionalState.reset_switch_or_loop conditional_state cur cur_loop;
       stmt
 
     method! for_of_statement stmt =
       let { Ast.Statement.ForOf.left; right; body; _ } = stmt in
       let _left' : _ Ast.Statement.ForOf.left = this#for_of_statement_lhs left in
       let _right' : _ Ast.Expression.t = this#expression right in
+      let (cur, cur_loop) =
+        ConditionalState.enter_switch_or_loop conditional_state (fun state ->
+            conditional_state <- state
+        )
+      in
       let _body' : _ Ast.Statement.t = this#in_conditional this#statement body in
+      conditional_state <- ConditionalState.reset_switch_or_loop conditional_state cur cur_loop;
       stmt
 
     method! for_statement stmt =
       let { Ast.Statement.For.init; test; update; body; _ } = stmt in
       let _init' : _ option = Base.Option.map ~f:this#for_statement_init init in
+      let (cur, cur_loop) =
+        ConditionalState.enter_switch_or_loop conditional_state (fun state ->
+            conditional_state <- state
+        )
+      in
       let _test' : _ option = Base.Option.map ~f:this#predicate_expression test in
       let _update' : _ option = Base.Option.map ~f:(this#in_conditional this#expression) update in
       let _body' : _ Ast.Statement.t = this#in_conditional this#statement body in
+      conditional_state <- ConditionalState.reset_switch_or_loop conditional_state cur cur_loop;
       stmt
 
     method! while_ stmt =
       let { Ast.Statement.While.test; body; _ } = stmt in
+      let (cur, cur_loop) =
+        ConditionalState.enter_switch_or_loop conditional_state (fun state ->
+            conditional_state <- state
+        )
+      in
       let _test' : _ Ast.Expression.t = this#predicate_expression test in
       let _body' : _ Ast.Statement.t = this#in_conditional this#statement body in
+      conditional_state <- ConditionalState.reset_switch_or_loop conditional_state cur cur_loop;
       stmt
 
     method function_component_body = super#function_body_any

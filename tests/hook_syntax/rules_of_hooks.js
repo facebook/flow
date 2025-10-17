@@ -795,7 +795,7 @@ hook useBreakInUnlabeledForLoop() {
   for (let i = 0; i < 10; i++) {
     break;
   }
-  useState(); // bad error. Not actually conditional
+  useState(); // ok
 }
 
 // Currently invalid.
