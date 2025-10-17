@@ -791,6 +791,13 @@ hook useLabeledBlock() {
 }
 /* [conditionalError('useHook')] */
 
+hook useBreakInUnlabeledForLoop() {
+  for (let i = 0; i < 10; i++) {
+    break;
+  }
+  useState(); // bad error. Not actually conditional
+}
+
 // Currently invalid.
 // These are variations capturing the current heuristic--
 // we only allow hooks in PascalCase or useFoo functions.
