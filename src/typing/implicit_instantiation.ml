@@ -1763,10 +1763,20 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
               )
             in
             let any_substituted_check_t =
-              Type_subst.subst cx ~use_op:unknown_use any_subst_map check_t
+              Type_subst.subst
+                cx
+                ~use_op:unknown_use
+                ~purpose:Type_subst.Purpose.ConditionalTypeAnySubst
+                any_subst_map
+                check_t
             in
             let any_substituted_extends_t =
-              Type_subst.subst cx ~use_op:unknown_use any_subst_map extends_t
+              Type_subst.subst
+                cx
+                ~use_op:unknown_use
+                ~purpose:Type_subst.Purpose.ConditionalTypeAnySubst
+                any_subst_map
+                extends_t
             in
             (match
                SpeculationKit.try_singleton_throw_on_failure

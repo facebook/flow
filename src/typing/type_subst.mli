@@ -69,11 +69,18 @@ val free_var_finder_in_destructor :
 
 val new_name : Subst_name.t -> Subst_name.Set.t -> Subst_name.t
 
+module Purpose : sig
+  type t =
+    | Normal
+    | ConditionalTypeAnySubst
+end
+
 val subst :
   Context.t ->
   ?use_op:Type.use_op ->
   ?force:bool ->
   ?placeholder_no_infer:bool ->
+  ?purpose:Purpose.t ->
   Type.t Subst_name.Map.t ->
   Type.t ->
   Type.t
@@ -83,6 +90,7 @@ val subst_destructor :
   ?use_op:Type.use_op ->
   ?force:bool ->
   ?placeholder_no_infer:bool ->
+  ?purpose:Purpose.t ->
   Type.t Subst_name.Map.t ->
   Type.destructor ->
   Type.destructor
@@ -92,6 +100,7 @@ val subst_instance_type :
   ?use_op:Type.use_op ->
   ?force:bool ->
   ?placeholder_no_infer:bool ->
+  ?purpose:Purpose.t ->
   Type.t Subst_name.Map.t ->
   Type.instance_t ->
   Type.instance_t

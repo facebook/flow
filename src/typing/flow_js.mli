@@ -59,7 +59,13 @@ val resolve_spread_list :
 (* polymorphism *)
 
 val subst :
-  Context.t -> ?use_op:Type.use_op -> ?force:bool -> Type.t Subst_name.Map.t -> Type.t -> Type.t
+  Context.t ->
+  ?use_op:Type.use_op ->
+  ?force:bool ->
+  ?purpose:Type_subst.Purpose.t ->
+  Type.t Subst_name.Map.t ->
+  Type.t ->
+  Type.t
 
 (* destructors *)
 
