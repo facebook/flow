@@ -78,8 +78,10 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
 
-Cannot assign `<Component />` to `z` because property `bar` is extra in object type [1] but missing in `Props` [2].
-Exact objects do not accept extra props in the first parameter of type argument `ElementType` [3]. [incompatible-type]
+Cannot assign `<Component />` to `z` because: [incompatible-type]
+ - in the first parameter: object type [1] is incompatible with `Props` [2]
+    - in type argument `ElementType` [3]: property `bar` is extra in object type [1] but missing in `Props` [2]. Exact
+      objects do not accept extra props
 
    test.js:9:61
     9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
@@ -99,8 +101,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
 
-Cannot assign `<Component />` to `z` because property `foo` is missing in object type [1] but exists in `Props` [2] in
-the first parameter of type argument `ElementType` [3]. [incompatible-type]
+Cannot assign `<Component />` to `z` because: [incompatible-type]
+ - in the first parameter: object type [1] is incompatible with `Props` [2]
+    - in type argument `ElementType` [3]: property `foo` is missing in object type [1] but exists in `Props` [2]
 
    test.js:9:61
     9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar

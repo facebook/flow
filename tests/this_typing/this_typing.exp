@@ -1700,6 +1700,29 @@ References:
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:56:2
 
+Cannot cast `cft` to `I_Method_this` because: [method-unbinding]
+ - in property `x` > the `this` parameter: `I_Method_this` [1] is incompatible with `C_Function_this` [2]
+    - in property `x` > the `this` parameter: function type [3] cannot be unbound from the context [1] where it was
+      defined
+
+   object_interface_subtyping.js:56:2
+   56| (cft : I_Method_this); // error, contravariant
+        ^^^
+
+References:
+   object_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
+                    ^^^^^^^^^^^^^ [1]
+   object_interface_subtyping.js:24:18
+   24|     +x : (this : C_Function_this) => void
+                        ^^^^^^^^^^^^^^^ [2]
+   object_interface_subtyping.js:6:5
+    6|     x(this : I_Method_this) : void
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:56:2
+
 Cannot cast `cft` to `I_Method_this` because `I_Method_this` [1] is not a subtype of `C_Function_this` [2]. Class
 instances are not subtypes of object types; consider rewriting `C_Function_this` [2] as an interface in the `this`
 parameter of property `x`. [class-object-subtyping]
@@ -1715,24 +1738,6 @@ References:
    object_interface_subtyping.js:24:18
    24|     +x : (this : C_Function_this) => void
                         ^^^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:56:2
-
-Cannot cast `cft` to `I_Method_this` because function type [1] cannot be unbound from the context [2] where it was
-defined in the `this` parameter of property `x` of the `this` parameter of property `x`. [method-unbinding]
-
-   object_interface_subtyping.js:56:2
-   56| (cft : I_Method_this); // error, contravariant
-        ^^^
-
-References:
-   object_interface_subtyping.js:6:5
-    6|     x(this : I_Method_this) : void
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:6:14
-    6|     x(this : I_Method_this) : void
-                    ^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:57:2
@@ -1792,6 +1797,29 @@ References:
 
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:62:2
 
+Cannot cast `cmt` to `I_Method_this` because: [method-unbinding]
+ - in property `x` > the `this` parameter: `I_Method_this` [1] is incompatible with `C_Method_this` [2]
+    - in property `x` > the `this` parameter: function type [3] cannot be unbound from the context [1] where it was
+      defined
+
+   object_interface_subtyping.js:62:2
+   62| (cmt : I_Method_this);  // error, contravariant
+        ^^^
+
+References:
+   object_interface_subtyping.js:6:14
+    6|     x(this : I_Method_this) : void
+                    ^^^^^^^^^^^^^ [1]
+   object_interface_subtyping.js:28:14
+   28|     x(this : C_Method_this) : void
+                    ^^^^^^^^^^^^^ [2]
+   object_interface_subtyping.js:6:5
+    6|     x(this : I_Method_this) : void
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------- object_interface_subtyping.js:62:2
+
 Cannot cast `cmt` to `I_Method_this` because `I_Method_this` [1] is not a subtype of `C_Method_this` [2]. Class
 instances are not subtypes of object types; consider rewriting `C_Method_this` [2] as an interface in the `this`
 parameter of property `x`. [class-object-subtyping]
@@ -1806,24 +1834,6 @@ References:
                     ^^^^^^^^^^^^^ [1]
    object_interface_subtyping.js:28:14
    28|     x(this : C_Method_this) : void
-                    ^^^^^^^^^^^^^ [2]
-
-
-Error ------------------------------------------------------------------------------- object_interface_subtyping.js:62:2
-
-Cannot cast `cmt` to `I_Method_this` because function type [1] cannot be unbound from the context [2] where it was
-defined in the `this` parameter of property `x` of the `this` parameter of property `x`. [method-unbinding]
-
-   object_interface_subtyping.js:62:2
-   62| (cmt : I_Method_this);  // error, contravariant
-        ^^^
-
-References:
-   object_interface_subtyping.js:6:5
-    6|     x(this : I_Method_this) : void
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   object_interface_subtyping.js:6:14
-    6|     x(this : I_Method_this) : void
                     ^^^^^^^^^^^^^ [2]
 
 

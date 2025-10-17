@@ -377,21 +377,45 @@ type 'loc explanation =
 
 type 'loc frame =
   | FrameAnonymous
-  | FrameArrayElement
-  | FrameCallableSignature
+  | FrameArrayElement of {
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
+  | FrameCallableSignature of {
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
   | FrameEnumRepresentationType
-  | FrameFunNthArgument of int
-  | FrameFunThisArgument
-  | FrameFunNthParam of int
-  | FrameFunThisParam
-  | FrameIndexerProperty
-  | FrameIndexerPropertyKey
-  | FrameProperty of name Nel.t
-  | FrameTupleIndex of int
+  | FrameFunNthArgument of {
+      n: int;
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
+  | FrameFunThisArgument of {
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
+  | FrameFunNthParam of {
+      n: int;
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
+  | FrameFunThisParam of {
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
+  | FrameIndexerProperty of {
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
+  | FrameIndexerPropertyKey of {
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
+  | FrameProperty of {
+      props: name Nel.t;
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
+  | FrameTupleIndex of {
+      index: int;
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
   | FrameTypeArgument of 'loc virtual_reason
   | FrameTypeParameterBound of string
   | FrameTypePredicate
-  | FrameReturnValue
+  | FrameReturnValue of { incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option }
 
 type 'loc root_message =
   | RootCannotAccessIndex of {

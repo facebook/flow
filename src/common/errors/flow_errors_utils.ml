@@ -106,6 +106,7 @@ module Friendly = struct
     | Normal of {
         message: 'a message;
         frames: 'a message list option;
+        parent_frames: ('a message * 'a message list) list;
         explanations: 'a message list option;
       }
     | Speculation of {
@@ -388,6 +389,7 @@ module Friendly = struct
         ~error_code
         ~error_kind
         ~in_speculation
+        ~unicode
         acc_frames
         acc_explanations
         error =
@@ -396,17 +398,8 @@ module Friendly = struct
        * have one) and return. We can safely ignore acc_frames. If a message has
        * frames set to None then the message is not equipped to handle
        * extra frames. *)
-      | Normal { message; frames = None; explanations = None } ->
-        (* Add the root to our error message when we are configured to show
-         * the root. *)
-        let message =
-          match error.root with
-          | Some { root_message; root_kind = OperationRoot; _ } when show_root ->
-            root_message @ (text " because " :: message)
-          | Some { root_message; root_kind = ShortExplanationRoot; _ } when show_root ->
-            root_message @ (text ": " :: message)
-          | _ -> message
-        in
+      | Normal { message; frames = None; parent_frames; explanations = None } ->
+        assert (Base.List.is_empty parent_frames);
         let message =
           if show_code then
             message @ msg_of_error_code_suffix_for_display ~error_code ~error_kind
@@ -418,7 +411,7 @@ module Friendly = struct
           { group_message = message; group_message_list = []; group_message_post = None }
         )
       (* Create normal error messages. *)
-      | Normal { message; frames; explanations } ->
+      | Normal { message; frames; parent_frames = []; explanations } ->
         (* Add the frames to our error message. *)
         let frames =
           Base.Option.value_map
@@ -475,6 +468,75 @@ module Friendly = struct
           primary_loc,
           { group_message = message; group_message_list = []; group_message_post }
         )
+      (* Create normal error messages with parent frames. *)
+      | Normal { message; frames; parent_frames = _ :: _ as parent_frames; explanations } ->
+        let frames = Base.Option.value_exn frames in
+        let explanations =
+          Base.Option.value_map
+            ~default:[]
+            ~f:(fun explanations ->
+              let (leading_sep, sep) =
+                if in_speculation then
+                  ("", "")
+                else
+                  ("\n", "\n")
+              in
+              message_of_explanations ~leading_sep ~sep explanations acc_explanations)
+            explanations
+        in
+        let stack_item incompatibility_msg frames =
+          let frame_msg =
+            let sep =
+              [
+                ( if unicode then
+                  text " › "
+                else
+                  text " > "
+                );
+              ]
+            in
+            Base.List.concat (Base.List.intersperse frames ~sep)
+          in
+          (text "in " :: frame_msg) @ [text ": "] @ incompatibility_msg
+        in
+        let primary_loc = error.loc in
+        let group_message =
+          let group_message =
+            Base.List.fold
+              parent_frames
+              ~init:
+                {
+                  group_message = stack_item message frames;
+                  group_message_list = [];
+                  group_message_post = None;
+                }
+              ~f:(fun acc (incompatibility_msg, frames) ->
+                let message = stack_item incompatibility_msg frames in
+                { group_message = message; group_message_list = [acc]; group_message_post = None })
+          in
+          let message =
+            match error.root with
+            | Some { root_message; root_kind = OperationRoot; _ } when show_root ->
+              root_message @ [text " because:"]
+            | Some { root_message; root_kind = ShortExplanationRoot; _ } when show_root ->
+              root_message @ [text ":"]
+            | _ -> []
+          in
+          let message =
+            if show_code then
+              message @ msg_of_error_code_suffix_for_display ~error_code ~error_kind
+            else
+              message
+          in
+          let group_message_post =
+            if explanations = [] then
+              None
+            else
+              Some explanations
+          in
+          { group_message = message; group_message_list = [group_message]; group_message_post }
+        in
+        (hidden_branches, primary_loc, group_message)
       (* When we have a speculation error, do some work to create a message
        * group. Flatten out nested speculation errors with no frames. Hide
        * frames with low scores. Use a single message_group if we hide all but
@@ -506,6 +568,7 @@ module Friendly = struct
             ~error_code
             ~error_kind
             ~show_code
+            ~unicode
             (frames :: acc_frames)
             (explanations :: acc_explanations)
             { speculation_error with root = error.root; loc = error.loc }
@@ -573,6 +636,7 @@ module Friendly = struct
                     ~show_code:false
                     ~show_all_branches
                     ~in_speculation:true
+                    ~unicode
                     ~hidden_branches
                     ~error_code
                     ~error_kind
@@ -758,6 +822,7 @@ module Friendly = struct
         ~show_all_branches:false
         ~show_root:true
         ~show_code:true
+        ~unicode:false (* Not super important for legacy error format *)
         ~error_kind
         error
     in
@@ -805,23 +870,82 @@ let infos_to_messages infos = Base.List.(infos >>= info_to_messages)
 let mk_error
     ?(kind = InferError)
     ?(root : ('loc * root_kind * 'loc Friendly.message) option)
-    ?(frames : 'loc Friendly.message list option)
+    ?(frames : (Loc.t Friendly.message option * Loc.t Friendly.message) list option)
     ?(explanations : 'loc Friendly.message list option)
     (loc : 'loc)
     (error_code : Error_codes.error_code option)
     (message : 'loc Friendly.message) : 'loc printable_error =
-  Friendly.
-    ( kind,
-      {
-        loc;
-        root =
-          Base.Option.map root ~f:(fun (root_loc, root_kind, root_message) ->
-              { root_loc; root_kind; root_message }
-          );
-        code = error_code;
-        message = Normal { message; frames; explanations };
-      }
-    )
+  let open Friendly in
+  let (inner_most_frames, parent_frames) =
+    let rec loop_to_partition_parent_frames
+        (current_stack_incompatibility_msg, acc_current_stack_frames, acc_processed_stack) frames =
+      match frames with
+      | (None, frame_msg) :: frames ->
+        loop_to_partition_parent_frames
+          ( current_stack_incompatibility_msg,
+            frame_msg :: acc_current_stack_frames,
+            acc_processed_stack
+          )
+          frames
+      | (Some incompatibility_msg, frame_msg) :: frames ->
+        loop_to_partition_parent_frames
+          ( incompatibility_msg,
+            [frame_msg],
+            (current_stack_incompatibility_msg, List.rev acc_current_stack_frames)
+            :: acc_processed_stack
+          )
+          frames
+      | [] ->
+        (current_stack_incompatibility_msg, List.rev acc_current_stack_frames)
+        :: acc_processed_stack
+    in
+    (* The inner most frames and the parent frames should be treated differently.
+     * Consider the following input of mk_error:
+     *
+     * frames (from outer to inner):
+               (None, frame1) > (None, frame2) -> (Some m1, frame3) >
+     *         (None, frame4) > (None, frame5) -> (Some m2, frame6) >
+     *         (None, frame7) > (None, frame8)
+     * message
+     *
+     * We should partition them into
+     * inner_most: message, frame7 > frame8
+     * parent_frames: (frame1 > frame2 > frame3: m1) > (frame1 > frame2 > frame3: m2)
+     *
+     * Note from the illustrating example above, the inner most frame takes the message
+     * from the param of mk_error, while parent frames' message comes from the most inner
+     * frame of the stack item.
+     *)
+    let rec loop_to_partition_inner_most_and_parent_frames acc frames =
+      match frames with
+      | (None, frame_msg) :: rest_frames ->
+        loop_to_partition_inner_most_and_parent_frames (frame_msg :: acc) rest_frames
+      | [] -> (Some (List.rev acc), [])
+      | (Some incompatibility_msg, frame_msg) :: rest_frames ->
+        ( Some (List.rev acc),
+          loop_to_partition_parent_frames (incompatibility_msg, [frame_msg], []) rest_frames
+        )
+    in
+    match Base.Option.value frames ~default:[] with
+    | [] -> (None, [])
+    | (_, frame_msg) :: rest ->
+      (* For the inner most message, we already have an incompatibility message
+       * (from the message param in mk_error). Therefore, we don't need another
+       * incompatibility message from the frame. *)
+      loop_to_partition_inner_most_and_parent_frames [] ((None, frame_msg) :: rest)
+  in
+  let message = Normal { message; frames = inner_most_frames; parent_frames; explanations } in
+  ( kind,
+    {
+      loc;
+      root =
+        Base.Option.map root ~f:(fun (root_loc, root_kind, root_message) ->
+            { root_loc; root_kind; root_message }
+        );
+      code = error_code;
+      message;
+    }
+  )
 
 let mk_speculation_error
     ?(kind = InferError) ~loc ~root ~frames ~explanations ~error_code speculation_errors =
@@ -1116,16 +1240,27 @@ let rec compare compare_loc =
     )
   in
   let compare_friendly_message m1 m2 =
+    let compare_parent_frame (m1, frame1) (m2, frame2) =
+      let k = (compare_lists compare_message_feature) m1 m2 in
+      if k = 0 then
+        compare_lists (compare_lists compare_message_feature) frame1 frame2
+      else
+        k
+    in
     Friendly.(
       match (m1, m2) with
-      | ( Normal { frames = fs1; explanations = ex1; message = m1 },
-          Normal { frames = fs2; explanations = ex2; message = m2 }
+      | ( Normal { frames = fs1; explanations = ex1; parent_frames = pf1; message = m1 },
+          Normal { frames = fs2; explanations = ex2; parent_frames = pf2; message = m2 }
         ) ->
         let k = compare_option (compare_lists (compare_lists compare_message_feature)) fs1 fs2 in
         if k = 0 then
           let k = compare_option (compare_lists (compare_lists compare_message_feature)) ex1 ex2 in
           if k = 0 then
-            compare_lists compare_message_feature m1 m2
+            let k = compare_lists compare_message_feature m1 m2 in
+            if k = 0 then
+              compare_lists compare_parent_frame pf1 pf2
+            else
+              k
           else
             k
         else
@@ -2797,6 +2932,7 @@ module Cli_output = struct
             ~show_all_branches
             ~show_root:true
             ~show_code:true
+            ~unicode:flags.unicode
             ~error_kind
             error
         in
@@ -3191,6 +3327,7 @@ module Json_output = struct
             ~show_all_branches:false
             ~show_root:true
             ~show_code:true
+            ~unicode:false (* Not super important for json APIs *)
             ~error_kind
             error
         in
@@ -3515,6 +3652,7 @@ module Lsp_output = struct
         ~show_all_branches:false
         ~show_root:true
         ~show_code:false
+        ~unicode:true
         ~error_kind:kind
         friendly
     in

@@ -82,7 +82,7 @@ type 'loc printable_error
 val mk_error :
   ?kind:error_kind ->
   ?root:Loc.t * root_kind * Loc.t Friendly.message ->
-  ?frames:Loc.t Friendly.message list ->
+  ?frames:(Loc.t Friendly.message option * Loc.t Friendly.message) list ->
   ?explanations:Loc.t Friendly.message list ->
   Loc.t ->
   Error_codes.error_code option ->

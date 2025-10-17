@@ -480,6 +480,30 @@ let rec make_intermediate_error :
       Loc.t ->
       'loc virtual_use_op ->
       (Loc.t * 'loc root_message) option * Loc.t * 'loc frame list * 'loc explanation list =
+    (* We will optionally include lower and upper pair to provide a TS-like stacked errors.
+     * We only do this if the upper bound has a nice name. *)
+    let opt_incompatibility_pair use_op ((_lower, upper) as pair) =
+      let is_named_type = function
+        | REnum { name = Some _ }
+        | RType _
+        | RTypeAlias (_, Some _, _) ->
+          true
+        | _ -> false
+      in
+      if is_named_type (desc_of_reason upper) then
+        match use_op with
+        | Op (AssignVar { var = Some _; _ })
+        | Op (Cast _)
+        | Op (ClassExtendsCheck _)
+        | Op (ClassImplementsCheck _) ->
+          (* For these roots, the upper bound is already a named type, so there is no point of
+           * repeating the incompatibility in the outer most frame. It helps to prevent error
+           * messages like `Cannot extends A with B because B is incompatible with A in ...` *)
+          None
+        | _ -> Some pair
+      else
+        None
+    in
     let rec loop loc frames use_op =
       match use_op with
       | Op UnknownUse -> unknown_root loc frames
@@ -642,38 +666,79 @@ let rec make_intermediate_error :
         explanation loc frames use_op (ExplanationConstrainedAssign { name; declaration; providers })
       | Frame (UnifyFlip, (Frame (ArrayElementCompatibility _, _) as use_op)) ->
         explanation loc frames use_op ExplanationArrayInvariantTyping
-      | Frame (ArrayElementCompatibility { lower; _ }, use_op) ->
-        unwrap_frame loc frames lower use_op FrameArrayElement
-      | Frame (FunParam { n; lower; name; _ }, (Frame (FunCompatibility _, _) as use_op)) ->
+      | Frame (ArrayElementCompatibility { lower; upper }, use_op) ->
+        unwrap_frame
+          loc
+          frames
+          lower
+          use_op
+          (FrameArrayElement
+             { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+          )
+      | Frame (FunParam { n; lower; upper; name }, (Frame (FunCompatibility _, _) as use_op)) ->
         let arg =
           match name with
-          | Some "this" -> FrameFunThisParam
-          | _ -> FrameFunNthParam n
+          | Some "this" ->
+            FrameFunThisParam
+              { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+          | _ ->
+            FrameFunNthParam
+              { n; incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
         in
         unwrap_frame loc frames lower use_op arg
-      | Frame (FunParam { n; lower; name; _ }, use_op) ->
+      | Frame (FunParam { n; lower; upper; name }, use_op) ->
+        let incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) in
         let arg =
           match name with
-          | Some "this" -> FrameFunThisArgument
-          | _ -> FrameFunNthArgument n
+          | Some "this" -> FrameFunThisArgument { incompatibility_pair }
+          | _ -> FrameFunNthArgument { n; incompatibility_pair }
         in
         unwrap_frame loc frames lower use_op arg
       | Frame (FunRestParam _, use_op) -> loop loc frames use_op
-      | Frame (FunReturn _, use_op) -> unwrap_frame_without_loc loc frames use_op FrameReturnValue
-      | Frame (IndexerKeyCompatibility { lower; _ }, use_op) ->
-        unwrap_frame loc frames lower use_op FrameIndexerPropertyKey
+      | Frame (FunReturn { lower; upper }, use_op) ->
+        unwrap_frame_without_loc
+          loc
+          frames
+          use_op
+          (FrameReturnValue
+             { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+          )
+      | Frame (IndexerKeyCompatibility { lower; upper }, use_op) ->
+        unwrap_frame
+          loc
+          frames
+          lower
+          use_op
+          (FrameIndexerPropertyKey
+             { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+          )
       | Frame (OpaqueTypeLowerBoundCompatibility { lower; _ }, use_op)
       | Frame (OpaqueTypeUpperBoundCompatibility { lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op FrameAnonymous
-      | Frame (PropertyCompatibility { prop = None; lower; _ }, use_op) ->
-        unwrap_frame loc frames lower use_op FrameIndexerProperty
-      | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; _ }, use_op) ->
-        unwrap_frame loc frames lower use_op FrameCallableSignature
+      | Frame (PropertyCompatibility { prop = None; lower; upper }, use_op) ->
+        unwrap_frame
+          loc
+          frames
+          lower
+          use_op
+          (FrameIndexerProperty
+             { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+          )
+      | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; upper }, use_op)
+        ->
+        unwrap_frame
+          loc
+          frames
+          lower
+          use_op
+          (FrameCallableSignature
+             { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+          )
       | Frame (EnumRepresentationTypeCompatibility { lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op FrameEnumRepresentationType
       | Frame (UnifyFlip, (Frame (PropertyCompatibility _, _) as use_op)) ->
         explanation loc frames use_op ExplanationPropertyInvariantTyping
-      | Frame (PropertyCompatibility { prop = Some prop; lower; _ }, use_op) ->
+      | Frame (PropertyCompatibility { prop = Some prop; lower; upper; _ }, use_op) ->
         let loc_of_prop_compatibility_reason loc reason = function
           (* If we are checking class extensions or implementations then the
            * object reason will point to the class name. So don't reposition with
@@ -685,9 +750,11 @@ let rec make_intermediate_error :
         let rec loop lower_loc = function
           (* Don't match $call properties since they have special
            * meaning. As defined above. *)
-          | Frame (PropertyCompatibility { prop = Some prop; lower = lower'; _ }, use_op)
+          | Frame
+              (PropertyCompatibility { prop = Some prop; lower = lower'; upper = upper'; _ }, use_op)
           (* TODO the $-prefixed names should be internal *)
-            when prop <> OrdinaryName "$call" ->
+            when prop <> OrdinaryName "$call"
+                 && Base.Option.is_none (opt_incompatibility_pair use_op (lower', upper')) ->
             let lower_loc' = loc_of_prop_compatibility_reason lower_loc lower' use_op in
             (* Perform the same frame location unwrapping as we do in our
              * general code. *)
@@ -705,9 +772,26 @@ let rec make_intermediate_error :
         (* Loop through our parent use_op to get our property path. *)
         let lower_loc = loc_of_prop_compatibility_reason loc lower use_op in
         let (lower_loc, props, use_op) = loop lower_loc use_op in
-        unwrap_frame_with_loc loc frames lower_loc use_op (FrameProperty (prop, props))
-      | Frame (TupleElementCompatibility { n; lower; _ }, use_op) ->
-        unwrap_frame loc frames lower use_op (FrameTupleIndex n)
+        unwrap_frame_with_loc
+          loc
+          frames
+          lower_loc
+          use_op
+          (FrameProperty
+             {
+               props = (prop, props);
+               incompatibility_pair = opt_incompatibility_pair use_op (lower, upper);
+             }
+          )
+      | Frame (TupleElementCompatibility { n; lower; upper; _ }, use_op) ->
+        unwrap_frame
+          loc
+          frames
+          lower
+          use_op
+          (FrameTupleIndex
+             { index = n; incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+          )
       | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op (FrameTypeArgument targ)
       | Frame (TypeParamBound { name }, use_op) ->
@@ -1533,32 +1617,51 @@ let to_printable_error :
         )
       @ [text " that are not included in type "; ref right]
   in
-  let frame_to_friendly_msgs = function
-    | FrameAnonymous -> []
-    | FrameArrayElement -> [text "array element"]
-    | FrameCallableSignature -> [text "the callable signature"]
-    | FrameEnumRepresentationType -> [text "the enum's representation type"]
-    | FrameFunNthArgument n -> [text "the "; text (Utils_js.ordinal n); text " argument"]
-    | FrameFunThisArgument -> [text "the "; code "this"; text " argument"]
-    | FrameFunNthParam n -> [text "the "; text (Utils_js.ordinal n); text " parameter"]
-    | FrameFunThisParam -> [text "the "; code "this"; text " parameter"]
-    | FrameIndexerProperty -> [text "the indexer property"]
-    | FrameIndexerPropertyKey -> [text "the indexer property's key"]
-    | FrameProperty (prop, props) ->
-      [
-        text "property ";
-        code
-          (List.fold_left
-             (fun acc prop -> display_string_of_name prop ^ "." ^ acc)
-             (display_string_of_name prop)
-             props
-          );
-      ]
-    | FrameTupleIndex n -> [text "index "; text (string_of_int n)]
-    | FrameTypeArgument targ -> [text "type argument "; ref targ]
-    | FrameTypeParameterBound name -> [text "type argument "; code name]
-    | FrameTypePredicate -> [text "the type predicate"]
-    | FrameReturnValue -> [text "the return value"]
+  let frame_to_friendly_msgs ~include_incompatibility_pair =
+    let map =
+      if include_incompatibility_pair then
+        Base.Option.map ~f:(fun (l, u) -> [ref l; text " is incompatible with "; ref u])
+      else
+        Base.Fn.const None
+    in
+    function
+    | FrameAnonymous -> (None, [])
+    | FrameArrayElement { incompatibility_pair } ->
+      (map incompatibility_pair, [text "array element"])
+    | FrameCallableSignature { incompatibility_pair } ->
+      (map incompatibility_pair, [text "the callable signature"])
+    | FrameEnumRepresentationType -> (None, [text "the enum's representation type"])
+    | FrameFunNthArgument { n; incompatibility_pair } ->
+      (map incompatibility_pair, [text "the "; text (Utils_js.ordinal n); text " argument"])
+    | FrameFunThisArgument { incompatibility_pair } ->
+      (map incompatibility_pair, [text "the "; code "this"; text " argument"])
+    | FrameFunNthParam { n; incompatibility_pair } ->
+      (map incompatibility_pair, [text "the "; text (Utils_js.ordinal n); text " parameter"])
+    | FrameFunThisParam { incompatibility_pair } ->
+      (map incompatibility_pair, [text "the "; code "this"; text " parameter"])
+    | FrameIndexerProperty { incompatibility_pair } ->
+      (map incompatibility_pair, [text "the indexer property"])
+    | FrameIndexerPropertyKey { incompatibility_pair } ->
+      (map incompatibility_pair, [text "the indexer property's key"])
+    | FrameProperty { props = (prop, props); incompatibility_pair } ->
+      ( map incompatibility_pair,
+        [
+          text "property ";
+          code
+            (List.fold_left
+               (fun acc prop -> display_string_of_name prop ^ "." ^ acc)
+               (display_string_of_name prop)
+               props
+            );
+        ]
+      )
+    | FrameTupleIndex { index = n; incompatibility_pair } ->
+      (map incompatibility_pair, [text "index "; text (string_of_int n)])
+    | FrameTypeArgument targ -> (None, [text "type argument "; ref targ])
+    | FrameTypeParameterBound name -> (None, [text "type argument "; code name])
+    | FrameTypePredicate -> (None, [text "the type predicate"])
+    | FrameReturnValue { incompatibility_pair } ->
+      (map incompatibility_pair, [text "the return value"])
   in
   let root_msg_to_root_kind_and_friendly_msgs = function
     | RootCannotAccessIndex { index; object_ } ->
@@ -4945,7 +5048,9 @@ let to_printable_error :
     in
     match message with
     | SingletonMessage { message; frames; explanations } ->
-      let frames = Option.map (List.map frame_to_friendly_msgs) frames in
+      let frames =
+        Option.map (List.map (frame_to_friendly_msgs ~include_incompatibility_pair:true)) frames
+      in
       let explanations = Option.map (List.map explanation_to_friendly_msgs) explanations in
       mk_error ~kind ?root ?frames ?explanations loc error_code (msg_to_friendly_msgs message)
     | SpeculationMessage { frames; explanations; branches } ->
@@ -4953,7 +5058,11 @@ let to_printable_error :
         ~kind
         ~loc
         ~root
-        ~frames:(List.map frame_to_friendly_msgs frames)
+        ~frames:
+          (List.map
+             (fun f -> snd (frame_to_friendly_msgs ~include_incompatibility_pair:false f))
+             frames
+          )
         ~explanations:(List.map explanation_to_friendly_msgs explanations)
         ~error_code
         (Base.List.map branches ~f:(fun (i, e) -> (i, convert_error_message e)))

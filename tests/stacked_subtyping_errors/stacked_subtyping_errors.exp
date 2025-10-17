@@ -1,0 +1,112 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:5:29
+
+Cannot call `ouchWithNamed` with object literal bound to `foo` because: [incompatible-type]
+ - in index 0 > property `baz` > array element: array literal [1] is incompatible with `Bar` [2]
+    - in property `bar`: number [3] is incompatible with string [4]
+
+   test.js:5:29
+   5| ouchWithNamed({bar: [{baz: [3]}]});
+                                  ^ [3]
+
+References:
+   test.js:5:21
+   5| ouchWithNamed({bar: [{baz: [3]}]});
+                          ^^^^^^^^^^^^ [1]
+   test.js:2:18
+   2| type Foo = {bar: Bar};
+                       ^^^ [2]
+   test.js:1:25
+   1| type Bar = [{baz: Array<string>}];
+                              ^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:30
+
+Cannot call `ouchWithNamed2` with object literal bound to `foo` because: [incompatible-type]
+ - in index 0 > property `baz` > array element: array literal [1] is incompatible with `Bar` [2]
+    - in property `bar`: number [3] is incompatible with string [4]
+
+   test.js:9:30
+   9| ouchWithNamed2({bar: [{baz: [3]}], bus: [{baz: [3]}]});
+                                   ^ [3]
+
+References:
+   test.js:9:22
+   9| ouchWithNamed2({bar: [{baz: [3]}], bus: [{baz: [3]}]});
+                           ^^^^^^^^^^^^ [1]
+   test.js:7:19
+   7| type Foo2 = {bar: Bar, bus: Bar};
+                        ^^^ [2]
+   test.js:1:25
+   1| type Bar = [{baz: Array<string>}];
+                              ^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:9:49
+
+Cannot call `ouchWithNamed2` with object literal bound to `foo` because: [incompatible-type]
+ - in index 0 > property `baz` > array element: array literal [1] is incompatible with `Bar` [2]
+    - in property `bus`: number [3] is incompatible with string [4]
+
+   test.js:9:49
+   9| ouchWithNamed2({bar: [{baz: [3]}], bus: [{baz: [3]}]});
+                                                      ^ [3]
+
+References:
+   test.js:9:41
+   9| ouchWithNamed2({bar: [{baz: [3]}], bus: [{baz: [3]}]});
+                                              ^^^^^^^^^^^^ [1]
+   test.js:7:29
+   7| type Foo2 = {bar: Bar, bus: Bar};
+                                  ^^^ [2]
+   test.js:1:25
+   1| type Bar = [{baz: Array<string>}];
+                              ^^^^^^ [4]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:15:35
+
+Cannot call `ouchWithNamed3` with object literal bound to `foo` because: [incompatible-type]
+ - in property `baz`: object literal [1] is incompatible with `Bar2` [2]
+    - in property `ouch`: object literal [3] is incompatible with `Baz` [4]
+       - in property `bar`: number [5] is incompatible with string [6]
+
+   test.js:15:35
+   15| ouchWithNamed3({bar: {baz: {ouch: 3}}});
+                                         ^ [5]
+
+References:
+   test.js:15:22
+   15| ouchWithNamed3({bar: {baz: {ouch: 3}}});
+                            ^^^^^^^^^^^^^^^^ [1]
+   test.js:11:19
+   11| type Foo3 = {bar: Bar2};
+                         ^^^^ [2]
+   test.js:15:28
+   15| ouchWithNamed3({bar: {baz: {ouch: 3}}});
+                                  ^^^^^^^^^ [3]
+   test.js:12:19
+   12| type Bar2 = {baz: Baz};
+                         ^^^ [4]
+   test.js:13:19
+   13| type Baz = {ouch: string};
+                         ^^^^^^ [6]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:18:27
+
+Cannot call `ouchUnnamed` with object literal bound to `foo` because number [1] is incompatible with string [2] in array
+element of property `baz` of index 0 of property `bar`. [incompatible-type]
+
+   test.js:18:27
+   18| ouchUnnamed({bar: [{baz: [3]}]});
+                                 ^ [1]
+
+References:
+   test.js:17:54
+   17| declare function ouchUnnamed(foo: {bar: [{baz: Array<string>}]}): void;
+                                                            ^^^^^^ [2]
+
+
+
+Found 5 errors
