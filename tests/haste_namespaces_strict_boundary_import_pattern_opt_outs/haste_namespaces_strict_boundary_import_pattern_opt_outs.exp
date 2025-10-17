@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------- common/test.js:1:17
 
-The import resolves to a forked module that has implementations of conflicting types because number [1] is incompatible
-with string [2] in property `default`. [incompatible-type]
+The import resolves to a forked module that has implementations of conflicting types because in property `default`:
+number [1] is incompatible with string [2]. [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 

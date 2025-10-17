@@ -14,7 +14,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- D.js:7:5
 
-Cannot assign `y` to `x` because `{bar: number}` [1] is not exactly the same as `{foo: string}` [2] in property `x`.
+Cannot assign `y` to `x` because in property `x`: `{bar: number}` [1] is not exactly the same as `{foo: string}` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,

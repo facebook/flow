@@ -92,7 +92,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:54:7
 
-Cannot cast function to `functionFoo1T` because undefined [1] is incompatible with number [2] in the return value.
+Cannot cast function to `functionFoo1T` because in the return value: undefined [1] is incompatible with number [2].
 [incompatible-type]
 
    import_typeof.js:54:7
@@ -107,7 +107,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:63:7
 
-Cannot cast function to `functionFoo2T` because undefined [1] is incompatible with number [2] in the return value.
+Cannot cast function to `functionFoo2T` because in the return value: undefined [1] is incompatible with number [2].
 [incompatible-type]
 
    import_typeof.js:63:7
@@ -122,7 +122,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:72:7
 
-Cannot cast function to `functionFoo3T` because undefined [1] is incompatible with number [2] in the return value.
+Cannot cast function to `functionFoo3T` because in the return value: undefined [1] is incompatible with number [2].
 [incompatible-type]
 
    import_typeof.js:72:7
@@ -137,7 +137,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import_typeof.js:81:7
 
-Cannot cast function to `functionFoo4T` because undefined [1] is incompatible with number [2] in the return value.
+Cannot cast function to `functionFoo4T` because in the return value: undefined [1] is incompatible with number [2].
 [incompatible-type]
 
    import_typeof.js:81:7
@@ -217,7 +217,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ import_typeof.js:139:39
 
-Cannot assign object literal to `j2` because number [1] is incompatible with string [2] in property `str`.
+Cannot assign object literal to `j2` because in property `str`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    import_typeof.js:139:39

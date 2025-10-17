@@ -36,7 +36,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- function_typeof.js:24:20
 
-Cannot call `f4` because string [1] is incompatible with number [2] in array element. [incompatible-type]
+Cannot call `f4` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
 
    function_typeof.js:24:20
    24| f4({f: [1, 2, 3]}, '1'); // error
@@ -120,7 +120,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:46:1
 
-Cannot cast `r1` to function type because number [1] is incompatible with string [2] in the return value.
+Cannot cast `r1` to function type because in the return value: number [1] is incompatible with string [2].
 [incompatible-type]
 
    function_typeof.js:46:1
@@ -138,7 +138,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:49:1
 
-Cannot cast `r2` to function type because number [1] is incompatible with string [2] in the return value.
+Cannot cast `r2` to function type because in the return value: number [1] is incompatible with string [2].
 [incompatible-type]
 
    function_typeof.js:49:1
@@ -156,7 +156,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:54:1
 
-Cannot cast `r4` to function type because mixed [1] is incompatible with empty [2] in the return value.
+Cannot cast `r4` to function type because in the return value: mixed [1] is incompatible with empty [2].
 [incompatible-type]
 
    function_typeof.js:54:1
@@ -174,8 +174,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:57:1
 
-Cannot cast `r5` to function type because `X` [1] is not exactly the same as `empty` [2] in property `f` of the return
-value. [incompatible-type]
+Cannot cast `r5` to function type because in the return value > property `f`: `X` [1] is not exactly the same as
+`empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
 - Either make `{f: X}` [3] and `{f: empty}` [4] exactly the same
@@ -203,7 +203,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:60:1
 
-Cannot cast `r6` to function type because number [1] is incompatible with string [2] in the return value.
+Cannot cast `r6` to function type because in the return value: number [1] is incompatible with string [2].
 [incompatible-type]
 
    function_typeof.js:60:1
@@ -221,7 +221,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:63:1
 
-Cannot cast `r7` to function type because mixed [1] is incompatible with empty [2] in the return value.
+Cannot cast `r7` to function type because in the return value: mixed [1] is incompatible with empty [2].
 [incompatible-type]
 
    function_typeof.js:63:1
@@ -239,8 +239,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:66:1
 
-Cannot cast `r8` to function type because `X` [1] is not exactly the same as `empty` [2] in array element of the return
-value. [incompatible-type]
+Cannot cast `r8` to function type because in the return value > array element: `X` [1] is not exactly the same as
+`empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<X>` [3] and `Array<empty>` [4] exactly the same
@@ -332,7 +332,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- function_typeof_import.js:26:20
 
-Cannot call `f4` because string [1] is incompatible with number [2] in array element. [incompatible-type]
+Cannot call `f4` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
 
    function_typeof_import.js:26:20
    26| f4({f: [1, 2, 3]}, '1'); // error
@@ -416,7 +416,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:38:1
 
-Cannot cast `r1` to function type because number [1] is incompatible with string [2] in the return value.
+Cannot cast `r1` to function type because in the return value: number [1] is incompatible with string [2].
 [incompatible-type]
 
    function_typeof_import.js:38:1
@@ -434,7 +434,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:41:1
 
-Cannot cast `r2` to function type because number [1] is incompatible with string [2] in the return value.
+Cannot cast `r2` to function type because in the return value: number [1] is incompatible with string [2].
 [incompatible-type]
 
    function_typeof_import.js:41:1
@@ -452,7 +452,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:52:1
 
-Cannot cast `r6` to function type because number [1] is incompatible with string [2] in the return value.
+Cannot cast `r6` to function type because in the return value: number [1] is incompatible with string [2].
 [incompatible-type]
 
    function_typeof_import.js:52:1
@@ -470,7 +470,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:55:1
 
-Cannot cast `r7` to function type because mixed [1] is incompatible with empty [2] in the return value.
+Cannot cast `r7` to function type because in the return value: mixed [1] is incompatible with empty [2].
 [incompatible-type]
 
    function_typeof_import.js:55:1
@@ -674,7 +674,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ with-targs.js:9:1
 
-Cannot cast `new FooClass()` to `Foo` because string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot cast `new FooClass()` to `Foo` because in type argument `T` [1]: string [2] is incompatible with number [3].
 [incompatible-type]
 
    with-targs.js:9:1
@@ -682,15 +682,15 @@ Cannot cast `new FooClass()` to `Foo` because string [1] is incompatible with nu
       ^^^^^^^^^^^^^^
 
 References:
-   with-targs.js:4:36
-   4| declare const FooClass: typeof Foo<string>;
-                                         ^^^^^^ [1]
-   with-targs.js:9:23
-   9| new FooClass() as Foo<number>; // error: string ~> number
-                            ^^^^^^ [2]
    with-targs.js:3:11
    3| class Foo<T> {}
-                ^ [3]
+                ^ [1]
+   with-targs.js:4:36
+   4| declare const FooClass: typeof Foo<string>;
+                                         ^^^^^^ [2]
+   with-targs.js:9:23
+   9| new FooClass() as Foo<number>; // error: string ~> number
+                            ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:10:1
@@ -712,23 +712,23 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:11:1
 
-Cannot cast `new FooClassStringExported()` to `FooClassExported` because string [1] is incompatible with number [2] in
-type argument `T` [3]. [incompatible-type]
+Cannot cast `new FooClassStringExported()` to `FooClassExported` because in type argument `T` [1]: string [2] is
+incompatible with number [3]. [incompatible-type]
 
    with-targs.js:11:1
    11| new FooClassStringExported() as FooClassExported<number>; // error: string ~> number
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   with-targs-exported.js:2:70
-    2| declare export const FooClassStringExported: typeof FooClassExported<string>;
-                                                                            ^^^^^^ [1]
-   with-targs.js:11:50
-   11| new FooClassStringExported() as FooClassExported<number>; // error: string ~> number
-                                                        ^^^^^^ [2]
    with-targs-exported.js:1:31
     1| export class FooClassExported<T> {}
-                                     ^ [3]
+                                     ^ [1]
+   with-targs-exported.js:2:70
+    2| declare export const FooClassStringExported: typeof FooClassExported<string>;
+                                                                            ^^^^^^ [2]
+   with-targs.js:11:50
+   11| new FooClassStringExported() as FooClassExported<number>; // error: string ~> number
+                                                        ^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- with-targs.js:12:1
@@ -835,8 +835,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:32:26
 
-Cannot call `barGeneric` with function bound to `cb` because number [1] is incompatible with string [2] in the return
-value. [incompatible-type]
+Cannot call `barGeneric` with function bound to `cb` because in the return value: number [1] is incompatible with
+string [2]. [incompatible-type]
 
    with-targs.js:32:26
    32| barGeneric<string>(() => 1); // error: number ~> string
@@ -867,8 +867,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- with-targs.js:36:34
 
-Cannot call `barGenericExported` with function bound to `cb` because number [1] is incompatible with string [2] in the
-return value. [incompatible-type]
+Cannot call `barGenericExported` with function bound to `cb` because in the return value: number [1] is incompatible
+with string [2]. [incompatible-type]
 
    with-targs.js:36:34
    36| barGenericExported<string>(() => 1); // error: number ~> string

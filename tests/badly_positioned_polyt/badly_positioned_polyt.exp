@@ -1,28 +1,28 @@
 Error ----------------------------------------------------------------------------------------------- concretize.js:8:16
 
-Cannot create `C1` element because `C1` [1] is incompatible with `B` [2] in type argument `T` [3] of the first parameter
-of property `onKeyDown`. [incompatible-type]
+Cannot create `C1` element because in property `onKeyDown` > the first parameter > type argument `T` [1]: `C1` [2] is
+incompatible with `B` [3]. [incompatible-type]
 
    concretize.js:8:16
    8| <C1 onKeyDown={_onKeyDown} />;
                      ^^^^^^^^^^
 
 References:
-   concretize.js:7:47
-   7| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
-                                                    ^^ [1]
-   flow-typed/libdefs.js:2:46
-   2| declare class SyntheticKeyboardEvent<+T: B = B> {}
-                                                   ^ [2]
    flow-typed/libdefs.js:2:39
    2| declare class SyntheticKeyboardEvent<+T: B = B> {}
-                                            ^ [3]
+                                            ^ [1]
+   concretize.js:7:47
+   7| function _onKeyDown(e: SyntheticKeyboardEvent<C1>): void {};
+                                                    ^^ [2]
+   flow-typed/libdefs.js:2:46
+   2| declare class SyntheticKeyboardEvent<+T: B = B> {}
+                                                   ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- concretize.js:8:16
 
-Cannot create `C1` element because `B` [1] is incompatible with `C1` [2] in type argument `T` of the first parameter of
-property `onKeyDown`. [incompatible-type]
+Cannot create `C1` element because in property `onKeyDown` > the first parameter > type argument `T`: `B` [1] is
+incompatible with `C1` [2]. [incompatible-type]
 
    concretize.js:8:16
    8| <C1 onKeyDown={_onKeyDown} />;

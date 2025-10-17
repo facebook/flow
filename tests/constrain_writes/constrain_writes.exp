@@ -209,8 +209,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:22:15
 
-Cannot assign function to `Component` because property `other_prop` is missing in `Props` [1] but exists in
-`OtherProps` [2] in the first parameter. [incompatible-type]
+Cannot assign function to `Component` because in the first parameter: property `other_prop` is missing in `Props` [1]
+but exists in `OtherProps` [2]. [incompatible-type]
 
 All writes to `Component` must be compatible with the type of its initializer [3]. Add an annotation to `Component` [3]
 if a different type is desired.
@@ -233,8 +233,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- wiki_examples.js:22:15
 
-Cannot assign function to `Component` because property `prop` is extra in `Props` [1] but missing in `OtherProps` [2].
-Exact objects do not accept extra props in the first parameter. [incompatible-type]
+Cannot assign function to `Component` because in the first parameter: property `prop` is extra in `Props` [1] but
+missing in `OtherProps` [2]. Exact objects do not accept extra props. [incompatible-type]
 
 All writes to `Component` must be compatible with the type of its initializer [3]. Add an annotation to `Component` [3]
 if a different type is desired.

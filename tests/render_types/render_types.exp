@@ -275,7 +275,7 @@ in renders. If you want to express the idea of rendering zero or one item, pleas
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:33:5
 
-Cannot create `FooContainer` element because `Fragment` element [1] does not render `Foo` [2] in property `children`.
+Cannot create `FooContainer` element because in property `children`: `Fragment` element [1] does not render `Foo` [2].
 [incompatible-type]
 
    poly.js:33:5

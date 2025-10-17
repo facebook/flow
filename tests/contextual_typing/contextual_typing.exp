@@ -435,8 +435,8 @@ References:
 
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:61:29
 
-Cannot assign `z3.concat(...)` to `z5` because `string | 1` [1] is not exactly the same as `string` [2] in array
-element. [incompatible-type]
+Cannot assign `z3.concat(...)` to `z5` because in array element: `string | 1` [1] is not exactly the same as
+`string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<string | 1>` [3] and `Array<string>` [4] exactly the same
@@ -479,42 +479,44 @@ References:
 
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:147:4
 
-Cannot cast `a` to `Set` because string [1] is incompatible with empty [2] in type argument `T` [3]. [incompatible-type]
+Cannot cast `a` to `Set` because in type argument `T` [1]: string [2] is incompatible with empty [3].
+[incompatible-type]
 
    implicit_instantiation.js:147:4
     147|   (a: Set<empty>); // error Set<string> ~> Set<empty>
             ^
 
 References:
-   implicit_instantiation.js:144:29
-    144| function test12(foo: ?Array<string>) {
-                                     ^^^^^^ [1]
-   implicit_instantiation.js:147:11
-    147|   (a: Set<empty>); // error Set<string> ~> Set<empty>
-                   ^^^^^ [2]
    <BUILTINS>/core.js:2153:19
    2153| declare class Set<T> extends $ReadOnlySet<T> {
-                           ^ [3]
+                           ^ [1]
+   implicit_instantiation.js:144:29
+    144| function test12(foo: ?Array<string>) {
+                                     ^^^^^^ [2]
+   implicit_instantiation.js:147:11
+    147|   (a: Set<empty>); // error Set<string> ~> Set<empty>
+                   ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:148:4
 
-Cannot cast `b` to `Set` because string [1] is incompatible with empty [2] in type argument `T` [3]. [incompatible-type]
+Cannot cast `b` to `Set` because in type argument `T` [1]: string [2] is incompatible with empty [3].
+[incompatible-type]
 
    implicit_instantiation.js:148:4
     148|   (b: Set<empty>); // error Set<string> ~> Set<empty>
             ^
 
 References:
-   implicit_instantiation.js:144:29
-    144| function test12(foo: ?Array<string>) {
-                                     ^^^^^^ [1]
-   implicit_instantiation.js:148:11
-    148|   (b: Set<empty>); // error Set<string> ~> Set<empty>
-                   ^^^^^ [2]
    <BUILTINS>/core.js:2153:19
    2153| declare class Set<T> extends $ReadOnlySet<T> {
-                           ^ [3]
+                           ^ [1]
+   implicit_instantiation.js:144:29
+    144| function test12(foo: ?Array<string>) {
+                                     ^^^^^^ [2]
+   implicit_instantiation.js:148:11
+    148|   (b: Set<empty>); // error Set<string> ~> Set<empty>
+                   ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------- implicit_instantiation.js:156:48
@@ -754,23 +756,23 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ----------------------------------------------------------------------------------------------------- lits.js:52:3
 
-Cannot cast `s2.values()` to `Iterator` because number [1] is incompatible with string [2] in type argument `Yield` [3].
-[incompatible-type]
+Cannot cast `s2.values()` to `Iterator` because in type argument `Yield` [1]: number [2] is incompatible with
+string [3]. [incompatible-type]
 
    lits.js:52:3
      52|   s2.values() as Iterator<string>; // error number ~> string
            ^^^^^^^^^^^
 
 References:
-   lits.js:50:17
-     50|   const s2: Set<number> = new Set([]);
-                         ^^^^^^ [1]
-   lits.js:52:27
-     52|   s2.values() as Iterator<string>; // error number ~> string
-                                   ^^^^^^ [2]
    <BUILTINS>/core.js:1843:25
    1843| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
-                                 ^^^^^ [3]
+                                 ^^^^^ [1]
+   lits.js:50:17
+     50|   const s2: Set<number> = new Set([]);
+                         ^^^^^^ [2]
+   lits.js:52:27
+     52|   s2.values() as Iterator<string>; // error number ~> string
+                                   ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ misplaced_error.js:9:31

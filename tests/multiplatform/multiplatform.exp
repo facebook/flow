@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------- android_and_common.android.js:1:27
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `foo`.
+Cannot conform to common interface module because in property `foo`: number [1] is incompatible with string [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -43,7 +43,7 @@ flow config. [invalid-supports-platform]
 
 Error --------------------------------------------------------------------------- cjs_conformance_errors.android.js:1:16
 
-Cannot conform to common interface module because exports [1] is incompatible with string [2] in property `default`.
+Cannot conform to common interface module because in property `default`: exports [1] is incompatible with string [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -62,7 +62,7 @@ References:
 
 Error ------------------------------------------------------------------------------- cjs_conformance_errors.ios.js:1:18
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `default`.
+Cannot conform to common interface module because in property `default`: number [1] is incompatible with string [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -111,8 +111,8 @@ References:
 Error --------------------------------------------------------------------------- esm_conformance_errors.android.js:1:16
 
 Cannot conform to common interface module because in property `foo`: [incompatible-type]
- - Either boolean [1] is incompatible with string [2] in the return value.
- - Or number [3] is incompatible with string [2] in the return value.
+ - Either in the return value: boolean [1] is incompatible with string [2].
+ - Or in the return value: number [3] is incompatible with string [2].
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -135,8 +135,8 @@ References:
 Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:14
 
 Cannot conform to common interface module because in property `foo`: [incompatible-type]
- - Either string [1] is incompatible with number [2] in the return value.
- - Or boolean [3] is incompatible with number [2] in the return value.
+ - Either in the return value: string [1] is incompatible with number [2].
+ - Or in the return value: boolean [3] is incompatible with number [2].
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
 
@@ -158,7 +158,7 @@ References:
 
 Error ------------------------------------------------------------------------------- esm_conformance_errors.ios.js:1:18
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `a`.
+Cannot conform to common interface module because in property `a`: number [1] is incompatible with string [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.

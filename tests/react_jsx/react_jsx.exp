@@ -72,7 +72,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:91:12
 
-Cannot create `Class_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
+Cannot create `Class_ManyProps` element because in property `string1`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:91:12
@@ -87,7 +87,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:92:12
 
-Cannot create `Class_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
+Cannot create `Class_ManyProps` element because in property `string2`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:92:12
@@ -102,7 +102,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:93:13
 
-Cannot create `Class_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
+Cannot create `Class_ManyProps` element because in property `boolean1`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:93:13
@@ -117,7 +117,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:94:13
 
-Cannot create `Class_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
+Cannot create `Class_ManyProps` element because in property `boolean2`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:94:13
@@ -132,7 +132,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:95:11
 
-Cannot create `Class_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
+Cannot create `Class_ManyProps` element because in property `number`: null [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:95:11
@@ -169,8 +169,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:130:54
 
-Cannot create `Class_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
-`number`. [incompatible-type]
+Cannot create `Class_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:130:54
    130|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -230,7 +230,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:153:12
 
-Cannot create `ClassExact_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
+Cannot create `ClassExact_ManyProps` element because in property `string1`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:153:12
@@ -245,7 +245,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:154:12
 
-Cannot create `ClassExact_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
+Cannot create `ClassExact_ManyProps` element because in property `string2`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:154:12
@@ -260,7 +260,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:155:13
 
-Cannot create `ClassExact_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
+Cannot create `ClassExact_ManyProps` element because in property `boolean1`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:155:13
@@ -275,7 +275,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:156:13
 
-Cannot create `ClassExact_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
+Cannot create `ClassExact_ManyProps` element because in property `boolean2`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:156:13
@@ -290,7 +290,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:157:11
 
-Cannot create `ClassExact_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
+Cannot create `ClassExact_ManyProps` element because in property `number`: null [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:157:11
@@ -352,8 +352,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:192:54
 
-Cannot create `ClassExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
-`number`. [incompatible-type]
+Cannot create `ClassExact_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:192:54
    192|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -385,7 +385,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:215:12
 
-Cannot create `ClassPure_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
+Cannot create `ClassPure_ManyProps` element because in property `string1`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:215:12
@@ -400,7 +400,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:216:12
 
-Cannot create `ClassPure_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
+Cannot create `ClassPure_ManyProps` element because in property `string2`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:216:12
@@ -415,7 +415,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:217:13
 
-Cannot create `ClassPure_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
+Cannot create `ClassPure_ManyProps` element because in property `boolean1`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:217:13
@@ -430,7 +430,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:218:13
 
-Cannot create `ClassPure_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
+Cannot create `ClassPure_ManyProps` element because in property `boolean2`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:218:13
@@ -445,7 +445,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:219:11
 
-Cannot create `ClassPure_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
+Cannot create `ClassPure_ManyProps` element because in property `number`: null [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:219:11
@@ -482,8 +482,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:254:54
 
-Cannot create `ClassPure_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
-`number`. [incompatible-type]
+Cannot create `ClassPure_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:254:54
    254|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -515,7 +515,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:277:12
 
-Cannot create `Function_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
+Cannot create `Function_ManyProps` element because in property `string1`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:277:12
@@ -530,7 +530,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:278:12
 
-Cannot create `Function_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
+Cannot create `Function_ManyProps` element because in property `string2`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:278:12
@@ -545,7 +545,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:279:13
 
-Cannot create `Function_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
+Cannot create `Function_ManyProps` element because in property `boolean1`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:279:13
@@ -560,7 +560,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:280:13
 
-Cannot create `Function_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
+Cannot create `Function_ManyProps` element because in property `boolean2`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:280:13
@@ -575,7 +575,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:281:11
 
-Cannot create `Function_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
+Cannot create `Function_ManyProps` element because in property `number`: null [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:281:11
@@ -612,8 +612,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:316:54
 
-Cannot create `Function_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
-`number`. [incompatible-type]
+Cannot create `Function_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:316:54
    316|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -673,7 +673,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:339:12
 
-Cannot create `FunctionExact_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
+Cannot create `FunctionExact_ManyProps` element because in property `string1`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:339:12
@@ -688,7 +688,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:340:12
 
-Cannot create `FunctionExact_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
+Cannot create `FunctionExact_ManyProps` element because in property `string2`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:340:12
@@ -703,8 +703,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:341:13
 
-Cannot create `FunctionExact_ManyProps` element because null [1] is incompatible with boolean [2] in property
-`boolean1`. [incompatible-type]
+Cannot create `FunctionExact_ManyProps` element because in property `boolean1`: null [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    test.js:341:13
    341|   boolean1={null}
@@ -718,8 +718,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:342:13
 
-Cannot create `FunctionExact_ManyProps` element because null [1] is incompatible with boolean [2] in property
-`boolean2`. [incompatible-type]
+Cannot create `FunctionExact_ManyProps` element because in property `boolean2`: null [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    test.js:342:13
    342|   boolean2={null}
@@ -733,7 +733,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:343:11
 
-Cannot create `FunctionExact_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
+Cannot create `FunctionExact_ManyProps` element because in property `number`: null [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:343:11
@@ -795,8 +795,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:378:54
 
-Cannot create `FunctionExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in
-property `number`. [incompatible-type]
+Cannot create `FunctionExact_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:378:54
    378|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -828,7 +828,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:401:12
 
-Cannot create `Abstract_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
+Cannot create `Abstract_ManyProps` element because in property `string1`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:401:12
@@ -843,7 +843,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:402:12
 
-Cannot create `Abstract_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
+Cannot create `Abstract_ManyProps` element because in property `string2`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:402:12
@@ -858,7 +858,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:403:13
 
-Cannot create `Abstract_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean1`.
+Cannot create `Abstract_ManyProps` element because in property `boolean1`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:403:13
@@ -873,7 +873,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:404:13
 
-Cannot create `Abstract_ManyProps` element because null [1] is incompatible with boolean [2] in property `boolean2`.
+Cannot create `Abstract_ManyProps` element because in property `boolean2`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:404:13
@@ -888,7 +888,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:405:11
 
-Cannot create `Abstract_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
+Cannot create `Abstract_ManyProps` element because in property `number`: null [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:405:11
@@ -925,8 +925,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:440:54
 
-Cannot create `Abstract_ManyProps` element because null or undefined [1] is incompatible with number [2] in property
-`number`. [incompatible-type]
+Cannot create `Abstract_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:440:54
    440|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -986,7 +986,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:464:12
 
-Cannot create `AbstractExact_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
+Cannot create `AbstractExact_ManyProps` element because in property `string1`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:464:12
@@ -1001,7 +1001,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:465:12
 
-Cannot create `AbstractExact_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
+Cannot create `AbstractExact_ManyProps` element because in property `string2`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:465:12
@@ -1016,8 +1016,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:466:13
 
-Cannot create `AbstractExact_ManyProps` element because null [1] is incompatible with boolean [2] in property
-`boolean1`. [incompatible-type]
+Cannot create `AbstractExact_ManyProps` element because in property `boolean1`: null [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    test.js:466:13
    466|   boolean1={null}
@@ -1031,8 +1031,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:467:13
 
-Cannot create `AbstractExact_ManyProps` element because null [1] is incompatible with boolean [2] in property
-`boolean2`. [incompatible-type]
+Cannot create `AbstractExact_ManyProps` element because in property `boolean2`: null [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    test.js:467:13
    467|   boolean2={null}
@@ -1046,7 +1046,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:468:11
 
-Cannot create `AbstractExact_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
+Cannot create `AbstractExact_ManyProps` element because in property `number`: null [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:468:11
@@ -1108,8 +1108,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:503:54
 
-Cannot create `AbstractExact_ManyProps` element because null or undefined [1] is incompatible with number [2] in
-property `number`. [incompatible-type]
+Cannot create `AbstractExact_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:503:54
    503|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -1141,7 +1141,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:526:12
 
-Cannot create `Member_ManyProps.prop` element because null [1] is incompatible with string [2] in property `string1`.
+Cannot create `Member_ManyProps.prop` element because in property `string1`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:526:12
@@ -1156,7 +1156,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:527:12
 
-Cannot create `Member_ManyProps.prop` element because null [1] is incompatible with string [2] in property `string2`.
+Cannot create `Member_ManyProps.prop` element because in property `string2`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:527:12
@@ -1171,7 +1171,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:528:13
 
-Cannot create `Member_ManyProps.prop` element because null [1] is incompatible with boolean [2] in property `boolean1`.
+Cannot create `Member_ManyProps.prop` element because in property `boolean1`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:528:13
@@ -1186,7 +1186,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:529:13
 
-Cannot create `Member_ManyProps.prop` element because null [1] is incompatible with boolean [2] in property `boolean2`.
+Cannot create `Member_ManyProps.prop` element because in property `boolean2`: null [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:529:13
@@ -1201,7 +1201,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:530:11
 
-Cannot create `Member_ManyProps.prop` element because null [1] is incompatible with number [2] in property `number`.
+Cannot create `Member_ManyProps.prop` element because in property `number`: null [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:530:11
@@ -1238,8 +1238,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:565:54
 
-Cannot create `Member_ManyProps.prop` element because null or undefined [1] is incompatible with number [2] in property
-`number`. [incompatible-type]
+Cannot create `Member_ManyProps.prop` element because in property `number`: null or undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:565:54
    565|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -1271,7 +1271,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:588:12
 
-Cannot create `EnhancedClass_ManyProps` element because null [1] is incompatible with string [2] in property `string1`.
+Cannot create `EnhancedClass_ManyProps` element because in property `string1`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:588:12
@@ -1286,7 +1286,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:589:12
 
-Cannot create `EnhancedClass_ManyProps` element because null [1] is incompatible with string [2] in property `string2`.
+Cannot create `EnhancedClass_ManyProps` element because in property `string2`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:589:12
@@ -1301,8 +1301,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:590:13
 
-Cannot create `EnhancedClass_ManyProps` element because null [1] is incompatible with boolean [2] in property
-`boolean1`. [incompatible-type]
+Cannot create `EnhancedClass_ManyProps` element because in property `boolean1`: null [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    test.js:590:13
    590|   boolean1={null}
@@ -1316,8 +1316,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:591:13
 
-Cannot create `EnhancedClass_ManyProps` element because null [1] is incompatible with boolean [2] in property
-`boolean2`. [incompatible-type]
+Cannot create `EnhancedClass_ManyProps` element because in property `boolean2`: null [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    test.js:591:13
    591|   boolean2={null}
@@ -1331,7 +1331,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:592:11
 
-Cannot create `EnhancedClass_ManyProps` element because null [1] is incompatible with number [2] in property `number`.
+Cannot create `EnhancedClass_ManyProps` element because in property `number`: null [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:592:11
@@ -1368,8 +1368,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:627:54
 
-Cannot create `EnhancedClass_ManyProps` element because null or undefined [1] is incompatible with number [2] in
-property `number`. [incompatible-type]
+Cannot create `EnhancedClass_ManyProps` element because in property `number`: null or undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:627:54
    627|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -1401,8 +1401,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:650:12
 
-Cannot create `EnhancedFunction_ManyProps` element because null [1] is incompatible with string [2] in property
-`string1`. [incompatible-type]
+Cannot create `EnhancedFunction_ManyProps` element because in property `string1`: null [1] is incompatible with
+string [2]. [incompatible-type]
 
    test.js:650:12
    650|   string1={null}
@@ -1416,8 +1416,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:651:12
 
-Cannot create `EnhancedFunction_ManyProps` element because null [1] is incompatible with string [2] in property
-`string2`. [incompatible-type]
+Cannot create `EnhancedFunction_ManyProps` element because in property `string2`: null [1] is incompatible with
+string [2]. [incompatible-type]
 
    test.js:651:12
    651|   string2={null}
@@ -1431,8 +1431,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:652:13
 
-Cannot create `EnhancedFunction_ManyProps` element because null [1] is incompatible with boolean [2] in property
-`boolean1`. [incompatible-type]
+Cannot create `EnhancedFunction_ManyProps` element because in property `boolean1`: null [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    test.js:652:13
    652|   boolean1={null}
@@ -1446,8 +1446,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:653:13
 
-Cannot create `EnhancedFunction_ManyProps` element because null [1] is incompatible with boolean [2] in property
-`boolean2`. [incompatible-type]
+Cannot create `EnhancedFunction_ManyProps` element because in property `boolean2`: null [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    test.js:653:13
    653|   boolean2={null}
@@ -1461,8 +1461,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:654:11
 
-Cannot create `EnhancedFunction_ManyProps` element because null [1] is incompatible with number [2] in property
-`number`. [incompatible-type]
+Cannot create `EnhancedFunction_ManyProps` element because in property `number`: null [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:654:11
    654|   number={null}
@@ -1498,8 +1498,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:689:54
 
-Cannot create `EnhancedFunction_ManyProps` element because null or undefined [1] is incompatible with number [2] in
-property `number`. [incompatible-type]
+Cannot create `EnhancedFunction_ManyProps` element because in property `number`: null or undefined [1] is incompatible
+with number [2]. [incompatible-type]
 
    test.js:689:54
    689|   {...{string1: 'foo', string2: 'bar', number: (any: ?number)}}
@@ -1531,7 +1531,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:707:7
 
-Cannot create `Class_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `Class_OptionalProps` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:707:7
@@ -1546,7 +1546,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:712:7
 
-Cannot create `Class_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `Class_OptionalProps` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:712:7
@@ -1579,7 +1579,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:725:7
 
-Cannot create `ClassExact_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `ClassExact_OptionalProps` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:725:7
@@ -1594,7 +1594,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:730:7
 
-Cannot create `ClassExact_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `ClassExact_OptionalProps` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:730:7
@@ -1627,7 +1627,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:743:7
 
-Cannot create `ClassPure_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `ClassPure_OptionalProps` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:743:7
@@ -1642,7 +1642,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:748:7
 
-Cannot create `ClassPure_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `ClassPure_OptionalProps` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:748:7
@@ -1675,7 +1675,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:760:7
 
-Cannot create `Function_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `Function_OptionalProps` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:760:7
@@ -1690,7 +1690,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:765:7
 
-Cannot create `Function_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `Function_OptionalProps` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:765:7
@@ -1723,8 +1723,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:777:7
 
-Cannot create `FunctionExact_OptionalProps` element because string [1] is incompatible with number [2] in property
-`foo`. [incompatible-type]
+Cannot create `FunctionExact_OptionalProps` element because in property `foo`: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:777:7
    777|   foo="nope"
@@ -1738,8 +1738,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:782:7
 
-Cannot create `FunctionExact_OptionalProps` element because string [1] is incompatible with number [2] in property
-`bar`. [incompatible-type]
+Cannot create `FunctionExact_OptionalProps` element because in property `bar`: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:782:7
    782|   bar="nope"
@@ -1771,7 +1771,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:794:7
 
-Cannot create `Abstract_OptionalProps` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `Abstract_OptionalProps` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:794:7
@@ -1786,7 +1786,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:799:7
 
-Cannot create `Abstract_OptionalProps` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `Abstract_OptionalProps` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:799:7
@@ -1819,8 +1819,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:812:7
 
-Cannot create `AbstractExact_OptionalProps` element because string [1] is incompatible with number [2] in property
-`foo`. [incompatible-type]
+Cannot create `AbstractExact_OptionalProps` element because in property `foo`: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:812:7
    812|   foo="nope"
@@ -1834,8 +1834,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:817:7
 
-Cannot create `AbstractExact_OptionalProps` element because string [1] is incompatible with number [2] in property
-`bar`. [incompatible-type]
+Cannot create `AbstractExact_OptionalProps` element because in property `bar`: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:817:7
    817|   bar="nope"
@@ -1867,7 +1867,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:829:7
 
-Cannot create `Member_OptionalProps.prop` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `Member_OptionalProps.prop` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:829:7
@@ -1882,7 +1882,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:834:7
 
-Cannot create `Member_OptionalProps.prop` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `Member_OptionalProps.prop` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:834:7
@@ -1915,8 +1915,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:846:7
 
-Cannot create `EnhancedClass_OptionalProps` element because string [1] is incompatible with number [2] in property
-`foo`. [incompatible-type]
+Cannot create `EnhancedClass_OptionalProps` element because in property `foo`: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:846:7
    846|   foo="nope"
@@ -1930,8 +1930,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:851:7
 
-Cannot create `EnhancedClass_OptionalProps` element because string [1] is incompatible with number [2] in property
-`bar`. [incompatible-type]
+Cannot create `EnhancedClass_OptionalProps` element because in property `bar`: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:851:7
    851|   bar="nope"
@@ -1963,8 +1963,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:863:7
 
-Cannot create `EnhancedFunction_OptionalProps` element because string [1] is incompatible with number [2] in property
-`foo`. [incompatible-type]
+Cannot create `EnhancedFunction_OptionalProps` element because in property `foo`: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:863:7
    863|   foo="nope"
@@ -1978,8 +1978,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:868:7
 
-Cannot create `EnhancedFunction_OptionalProps` element because string [1] is incompatible with number [2] in property
-`bar`. [incompatible-type]
+Cannot create `EnhancedFunction_OptionalProps` element because in property `bar`: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:868:7
    868|   bar="nope"

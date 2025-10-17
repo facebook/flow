@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------- interfaces-neg.js:25:3
 
-Cannot cast `data` to `ISystemData` because string literal `user` [1] is incompatible with string literal `system` [2]
-in property `kind`. [incompatible-type]
+Cannot cast `data` to `ISystemData` because in property `kind`: string literal `user` [1] is incompatible with string
+literal `system` [2]. [incompatible-type]
 
    interfaces-neg.js:25:3
    25|   data as ISystemData;
@@ -18,7 +18,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- type-decls-neg.js:29:3
 
-Cannot cast `data` to `SystemData` because `"user"` [1] is not exactly the same as `"system"` [2] in property `kind`.
+Cannot cast `data` to `SystemData` because in property `kind`: `"user"` [1] is not exactly the same as `"system"` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `kind` is invariantly typed. To fix the error,

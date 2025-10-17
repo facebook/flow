@@ -50,8 +50,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:16:24
 
-Cannot create `Consumer` element because union type [1] is incompatible with string [2] in the first parameter of
-property `children`. [incompatible-type]
+Cannot create `Consumer` element because in property `children` > the first parameter: union type [1] is incompatible
+with string [2]. [incompatible-type]
 
    createContext.js:16:24
    16|                 {(Tag: 'div' | 'span' | 'img') => <Tag />}
@@ -65,8 +65,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- createContext.js:22:22
 
-Cannot create `Consumer` element because union type [1] is incompatible with string [2] in the first parameter of
-property `children`. [incompatible-type]
+Cannot create `Consumer` element because in property `children` > the first parameter: union type [1] is incompatible
+with string [2]. [incompatible-type]
 
    createContext.js:22:22
    22|               {(Tag: 'div' | 'span' | 'img') => <Tag />}
@@ -128,43 +128,43 @@ References:
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:4
 
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `div` [1] is incompatible with string literal `span` [2]
-in type argument `ElementType` [3]. [incompatible-type]
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `ElementType` [1]: `div` [2] is
+incompatible with string literal `span` [3]. [incompatible-type]
 
    createElement_invalid_implicit.js:2:4
     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
-          ^^^ [1]
+          ^^^ [2]
 
 References:
-   createElement_invalid_implicit.js:2:43
-    2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
-                                                 ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   createElement_invalid_implicit.js:2:43
+    2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
+                                                 ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:4
 
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `void | RefSetter<DivInstance>` [1] is not exactly the
-same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. [incompatible-type]
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `P` [1] > property `ref`:
+`void | RefSetter<DivInstance>` [2] is not exactly the same as `void | RefSetter<SpanInstance>` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
-- Either make `{ref?: RefSetter<DivInstance>, ...}` [1] and `{ref?: RefSetter<SpanInstance>, ...}` [2] exactly the same
-- Or make property `ref` in props of string literal `span` [2] readonly. See
+- Either make `{ref?: RefSetter<DivInstance>, ...}` [2] and `{ref?: RefSetter<SpanInstance>, ...}` [3] exactly the same
+- Or make property `ref` in props of string literal `span` [3] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    createElement_invalid_implicit.js:2:4
     2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
-          ^^^ [1]
+          ^^^ [2]
 
 References:
-   createElement_invalid_implicit.js:2:43
-    2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
-                                                 ^^^^^^ [2]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [3]
+                                                                                          ^ [1]
+   createElement_invalid_implicit.js:2:43
+    2|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing React, jsx still checked
+                                                 ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:2:3
@@ -177,43 +177,43 @@ Cannot resolve name `React`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
 
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `div` [1] is incompatible with string literal `span` [2]
-in type argument `ElementType` [3]. [incompatible-type]
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `ElementType` [1]: `div` [2] is
+incompatible with string literal `span` [3]. [incompatible-type]
 
    createElement_invalid_implicit.js:7:4
     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
-          ^^^ [1]
+          ^^^ [2]
 
 References:
-   createElement_invalid_implicit.js:7:43
-    7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
-                                                 ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   createElement_invalid_implicit.js:7:43
+    7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
+                                                 ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
 
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `void | RefSetter<DivInstance>` [1] is not exactly the
-same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. [incompatible-type]
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `P` [1] > property `ref`:
+`void | RefSetter<DivInstance>` [2] is not exactly the same as `void | RefSetter<SpanInstance>` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
-- Either make `{ref?: RefSetter<DivInstance>, ...}` [1] and `{ref?: RefSetter<SpanInstance>, ...}` [2] exactly the same
-- Or make property `ref` in props of string literal `span` [2] readonly. See
+- Either make `{ref?: RefSetter<DivInstance>, ...}` [2] and `{ref?: RefSetter<SpanInstance>, ...}` [3] exactly the same
+- Or make property `ref` in props of string literal `span` [3] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    createElement_invalid_implicit.js:7:4
     7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
-          ^^^ [1]
+          ^^^ [2]
 
 References:
-   createElement_invalid_implicit.js:7:43
-    7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
-                                                 ^^^^^^ [2]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [3]
+                                                                                          ^ [1]
+   createElement_invalid_implicit.js:7:43
+    7|   <div /> as ExactReactElement_DEPRECATED<'span'>; // missing createElement, jsx still checked
+                                                 ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------- createElement_invalid_implicit.js:7:4
@@ -248,43 +248,43 @@ References:
 
 Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:4
 
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `div` [1] is incompatible with string literal `span` [2]
-in type argument `ElementType` [3]. [incompatible-type]
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `ElementType` [1]: `div` [2] is
+incompatible with string literal `span` [3]. [incompatible-type]
 
    createElement_invalid_implicit.js:12:4
    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
-          ^^^ [1]
+          ^^^ [2]
 
 References:
-   createElement_invalid_implicit.js:12:43
-   12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
-                                                 ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   createElement_invalid_implicit.js:12:43
+   12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
+                                                 ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:4
 
-Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because `void | RefSetter<DivInstance>` [1] is not exactly the
-same as `void | RefSetter<SpanInstance>` [2] in property `ref` of type argument `P` [3]. [incompatible-type]
+Cannot cast `<div />` to `ExactReactElement_DEPRECATED` because in type argument `P` [1] > property `ref`:
+`void | RefSetter<DivInstance>` [2] is not exactly the same as `void | RefSetter<SpanInstance>` [3]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `ref` is invariantly typed. To fix the error,
-- Either make `{ref?: RefSetter<DivInstance>, ...}` [1] and `{ref?: RefSetter<SpanInstance>, ...}` [2] exactly the same
-- Or make property `ref` in props of string literal `span` [2] readonly. See
+- Either make `{ref?: RefSetter<DivInstance>, ...}` [2] and `{ref?: RefSetter<SpanInstance>, ...}` [3] exactly the same
+- Or make property `ref` in props of string literal `span` [3] readonly. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
 
    createElement_invalid_implicit.js:12:4
    12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
-          ^^^ [1]
+          ^^^ [2]
 
 References:
-   createElement_invalid_implicit.js:12:43
-   12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
-                                                 ^^^^^^ [2]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [3]
+                                                                                          ^ [1]
+   createElement_invalid_implicit.js:12:43
+   12|   <div /> as ExactReactElement_DEPRECATED<'span'>; // bad createElement, jsx still checked
+                                                 ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------- createElement_invalid_implicit.js:12:3
@@ -305,7 +305,7 @@ References:
 
 Error ---------------------------------------------------------------------------------- default_props_undefined.js:8:10
 
-Cannot create `Foo` element because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
+Cannot create `Foo` element because in property `bar`: string [1] is incompatible with number [2]. [incompatible-type]
 
    default_props_undefined.js:8:10
    8| <Foo bar="42"/>; // Error
@@ -319,8 +319,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ element_config.js:15:43
 
-Cannot initialize property `defaultProps` with object literal because string [1] is incompatible with number [2] in
-property `p`. [incompatible-type]
+Cannot initialize property `defaultProps` with object literal because in property `p`: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    element_config.js:15:43
    15|   static defaultProps: {p: ?number} = {p: 'foo'}; // Error: string ~> number
@@ -377,7 +377,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:52:6
 
-Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    element_config.js:52:6
@@ -392,7 +392,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:56:6
 
-Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    element_config.js:56:6
@@ -422,7 +422,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:60:6
 
-Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    element_config.js:60:6
@@ -452,7 +452,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:64:6
 
-Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    element_config.js:64:6
@@ -497,7 +497,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:76:6
 
-Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    element_config.js:76:6
@@ -512,7 +512,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:80:6
 
-Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    element_config.js:80:6
@@ -527,7 +527,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:84:6
 
-Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    element_config.js:84:6
@@ -542,7 +542,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- element_config.js:88:6
 
-Cannot cast object literal to `React.ElementConfig` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `React.ElementConfig` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    element_config.js:88:6
@@ -557,47 +557,47 @@ References:
 
 Error ------------------------------------------------------------------------------- element_with_component_type.js:6:2
 
-Cannot cast `<Foo />` to `ExactReactElement_DEPRECATED` because property `b` is missing in object type [1] but exists in
-object type [2] in type argument `P` [3]. [incompatible-type]
+Cannot cast `<Foo />` to `ExactReactElement_DEPRECATED` because in type argument `P` [1]: property `b` is missing in
+object type [2] but exists in object type [3]. [incompatible-type]
 
    element_with_component_type.js:6:2
     6| (<Foo a={42}/>: ExactReactElement_DEPRECATED<React.ComponentType<{b: number}>>); // Error
         ^^^^^^^^^^^^^
 
 References:
-   element_with_component_type.js:3:40
-    3| declare const Foo: React.ComponentType<{a: number}>
-                                              ^^^^^^^^^^^ [1]
-   element_with_component_type.js:6:66
-    6| (<Foo a={42}/>: ExactReactElement_DEPRECATED<React.ComponentType<{b: number}>>); // Error
-                                                                        ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [3]
+                                                                                          ^ [1]
+   element_with_component_type.js:3:40
+    3| declare const Foo: React.ComponentType<{a: number}>
+                                              ^^^^^^^^^^^ [2]
+   element_with_component_type.js:6:66
+    6| (<Foo a={42}/>: ExactReactElement_DEPRECATED<React.ComponentType<{b: number}>>); // Error
+                                                                        ^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- element_with_component_type.js:6:3
 
-Cannot cast `<Foo />` to `ExactReactElement_DEPRECATED` because property `a` is missing in object type [1] but exists in
-object type [2] in type argument `P` [3] of type argument `ElementType` [4]. [incompatible-type]
+Cannot cast `<Foo />` to `ExactReactElement_DEPRECATED` because in type argument `ElementType` [1] > type argument
+`P` [2]: property `a` is missing in object type [3] but exists in object type [4]. [incompatible-type]
 
    element_with_component_type.js:6:3
      6| (<Foo a={42}/>: ExactReactElement_DEPRECATED<React.ComponentType<{b: number}>>); // Error
           ^^^
 
 References:
-   element_with_component_type.js:6:66
-     6| (<Foo a={42}/>: ExactReactElement_DEPRECATED<React.ComponentType<{b: number}>>); // Error
-                                                                         ^^^^^^^^^^^ [1]
-   element_with_component_type.js:3:40
-     3| declare const Foo: React.ComponentType<{a: number}>
-                                               ^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:241:38
-   241|   declare export type ComponentType<-P: {...}> = component(...P);
-                                             ^ [3]
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [4]
+                                                          ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:241:38
+   241|   declare export type ComponentType<-P: {...}> = component(...P);
+                                             ^ [2]
+   element_with_component_type.js:6:66
+     6| (<Foo a={42}/>: ExactReactElement_DEPRECATED<React.ComponentType<{b: number}>>); // Error
+                                                                         ^^^^^^^^^^^ [3]
+   element_with_component_type.js:3:40
+     3| declare const Foo: React.ComponentType<{a: number}>
+                                               ^^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------------- hoc.js:9:8
@@ -638,8 +638,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- hoc.js:33:13
 
-Cannot call `myHOC` with `class { ... }` bound to `Component` because string [1] is incompatible with number [2] in
-property `foo`. [incompatible-type]
+Cannot call `myHOC` with `class { ... }` bound to `Component` because in property `foo`: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    hoc.js:33:13
    33| myHOC(class Empty extends React.Component<{foo: string}, void> {}); // Error
@@ -656,8 +656,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ hoc.js:34:7
 
-Cannot call `myHOC` with function bound to `Component` because number [1] is incompatible with string [2] in property
-`foo`. [incompatible-type]
+Cannot call `myHOC` with function bound to `Component` because in property `foo`: number [1] is incompatible with
+string [2]. [incompatible-type]
 
    hoc.js:34:7
    34| myHOC(function Empty(props: {foo: string}) {}); // Error
@@ -746,7 +746,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:26:24
 
-Cannot create `MyEnhancedComponent` element because string [1] is incompatible with number [2] in property `a`.
+Cannot create `MyEnhancedComponent` element because in property `a`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    hoc2.js:26:24
@@ -784,7 +784,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc2.js:30:32
 
-Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
+Cannot create `MyEnhancedFunctionComponent` element because in property `a`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    hoc2.js:30:32
@@ -817,7 +817,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc3.js:26:24
 
-Cannot create `MyEnhancedComponent` element because string [1] is incompatible with number [2] in property `a`.
+Cannot create `MyEnhancedComponent` element because in property `a`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    hoc3.js:26:24
@@ -850,7 +850,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc3.js:30:32
 
-Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
+Cannot create `MyEnhancedFunctionComponent` element because in property `a`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    hoc3.js:30:32
@@ -883,7 +883,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc4.js:26:24
 
-Cannot create `MyEnhancedComponent` element because string [1] is incompatible with number [2] in property `a`.
+Cannot create `MyEnhancedComponent` element because in property `a`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    hoc4.js:26:24
@@ -916,7 +916,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc4.js:30:32
 
-Cannot create `MyEnhancedFunctionComponent` element because string [1] is incompatible with number [2] in property `a`.
+Cannot create `MyEnhancedFunctionComponent` element because in property `a`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    hoc4.js:30:32
@@ -949,7 +949,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:23:19
 
-Cannot create `MyComponent1` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `MyComponent1` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    hoc5.js:23:19
@@ -964,7 +964,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:25:29
 
-Cannot create `MyComponent1` element because number [1] is incompatible with string [2] in property `foo`.
+Cannot create `MyComponent1` element because in property `foo`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    hoc5.js:25:29
@@ -997,7 +997,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:32:27
 
-Cannot create `MyEnhancedComponent1` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `MyEnhancedComponent1` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    hoc5.js:32:27
@@ -1012,7 +1012,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hoc5.js:34:37
 
-Cannot create `MyEnhancedComponent1` element because number [1] is incompatible with string [2] in property `foo`.
+Cannot create `MyEnhancedComponent1` element because in property `foo`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    hoc5.js:34:37
@@ -1067,7 +1067,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- jsx_spread.js:9:15
 
-Cannot create `Foo` element because number [1] is incompatible with string [2] in property `bar`. [incompatible-type]
+Cannot create `Foo` element because in property `bar`: number [1] is incompatible with string [2]. [incompatible-type]
 
    jsx_spread.js:9:15
    9| const blah = <Foo {...props} />; // error bar, number given string expected
@@ -1270,7 +1270,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:10:11
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
- - Either number [1] is incompatible with `Foo` [2] in the first parameter.
+ - Either in the first parameter: number [1] is incompatible with `Foo` [2].
  - Or function [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
 
@@ -1351,7 +1351,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:21:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
- - Either number [1] is incompatible with `FooExact` [2] in the first parameter.
+ - Either in the first parameter: number [1] is incompatible with `FooExact` [2].
  - Or function [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
 
@@ -1374,7 +1374,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:22:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
- - Either `FooExact` [1] is incompatible with null [2] in the first parameter.
+ - Either in the first parameter: `FooExact` [1] is incompatible with null [2].
  - Or function [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
 
@@ -1397,8 +1397,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- ref.js:24:16
 
 Cannot create `FooExact` element because in property `ref`: [incompatible-type]
- - Either `FooExact` [1] is incompatible with `Bar` [2] in the first parameter.
- - Or `FooExact` [1] is incompatible with null [3] in the first parameter.
+ - Either in the first parameter: `FooExact` [1] is incompatible with `Bar` [2].
+ - Or in the first parameter: `FooExact` [1] is incompatible with null [3].
 
    ref.js:24:16
    24| <FooExact ref={(foo: Bar | null) => {}} />; // Error: `FooExact` is not `Bar`.
@@ -1418,7 +1418,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- undefined_prop.js:5:21
 
-Cannot create `MyComponent` element because undefined [1] is incompatible with string [2] in property `title`.
+Cannot create `MyComponent` element because in property `title`: undefined [1] is incompatible with string [2].
 [incompatible-type]
 
    undefined_prop.js:5:21
@@ -1433,7 +1433,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ useCallback_hook.js:4:9
 
-Cannot call `React.useCallback` because undefined [1] is incompatible with function type [2] in type argument `T`.
+Cannot call `React.useCallback` because in type argument `T`: undefined [1] is incompatible with function type [2].
 [incompatible-type]
 
    useCallback_hook.js:4:9
@@ -1709,7 +1709,7 @@ References:
 Error ------------------------------------------------------------------------------------------ useEffect_hook.js:23:25
 
 Cannot call `React.useEffect` with function bound to `create` because in the return value: [incompatible-type]
- - Either number [1] is incompatible with undefined [2] in the return value.
+ - Either in the return value: number [1] is incompatible with undefined [2].
  - Or function [3] is incompatible with undefined [4].
 
    useEffect_hook.js:23:25
@@ -1750,8 +1750,8 @@ References:
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:29:29
 
 Cannot call `React.useImperativeHandle` with `ref` bound to `ref` because: [incompatible-type]
- - Either property `focus` is missing in object literal [1] but exists in `Interface` [2] in property `current`.
- - Or object literal [1] is incompatible with null [3] in property `current`.
+ - Either in property `current`: property `focus` is missing in object literal [1] but exists in `Interface` [2].
+ - Or in property `current`: object literal [1] is incompatible with null [3].
 
    useImperativeHandle_hook.js:29:29
    29|   React.useImperativeHandle(ref, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -1772,8 +1772,8 @@ References:
 Error -------------------------------------------------------------------------------- useImperativeHandle_hook.js:32:29
 
 Cannot call `React.useImperativeHandle` with `refSetter` bound to `ref` because: [incompatible-type]
- - Either property `focus` is missing in object literal [1] but exists in `Interface` [2] in the first parameter.
- - Or object literal [1] is incompatible with null [3] in the first parameter.
+ - Either in the first parameter: property `focus` is missing in object literal [1] but exists in `Interface` [2].
+ - Or in the first parameter: object literal [1] is incompatible with null [3].
 
    useImperativeHandle_hook.js:32:29
    32|   React.useImperativeHandle(refSetter, () => ({})); // Error: inexact object literal is incompatible with exact Interface
@@ -1862,7 +1862,7 @@ References:
 Error ------------------------------------------------------------------------------------ useLayoutEffect_hook.js:23:31
 
 Cannot call `React.useLayoutEffect` with function bound to `create` because in the return value: [incompatible-type]
- - Either number [1] is incompatible with undefined [2] in the return value.
+ - Either in the return value: number [1] is incompatible with undefined [2].
  - Or function [3] is incompatible with undefined [4].
 
    useLayoutEffect_hook.js:23:31

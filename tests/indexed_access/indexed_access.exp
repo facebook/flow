@@ -784,7 +784,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:89:8
 
-Cannot cast function to indexed access because boolean [1] is incompatible with number [2] in the return value.
+Cannot cast function to indexed access because in the return value: boolean [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:89:8

@@ -360,8 +360,8 @@ Missing an annotation on return. [missing-local-annot]
 
 Error ---------------------------------------------------------------------------------------------- conditional.js:22:3
 
-Cannot cast `test3` to read-only array type because number [1] is incompatible with string [2] in the first parameter of
-array element. [incompatible-type]
+Cannot cast `test3` to read-only array type because in array element > the first parameter: number [1] is incompatible
+with string [2]. [incompatible-type]
 
    conditional.js:22:3
    22|   test3 as $ReadOnlyArray<(string) => void>; // error should be number => void
@@ -378,8 +378,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- conditional.js:30:22
 
-Cannot call `foo` with function bound to the first parameter because string [1] is incompatible with string literal
-`x` [1] in array element of the return value. [incompatible-type]
+Cannot call `foo` with function bound to the first parameter because in array element: string [1] is incompatible with
+string literal `x` [1]. [incompatible-type]
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
@@ -396,8 +396,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- conditional.js:31:30
 
-Cannot call `foo` with function bound to the first parameter because string [1] is incompatible with string literal
-`x` [1] in array element of the return value. [incompatible-type]
+Cannot call `foo` with function bound to the first parameter because in array element: string [1] is incompatible with
+string literal `x` [1]. [incompatible-type]
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.

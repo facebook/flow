@@ -85,7 +85,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- non_literal_number.js:22:3
 
-Cannot cast `o2` to object type because `boolean` [1] is not exactly the same as `true` [2] in the indexer property.
+Cannot cast `o2` to object type because in the indexer property: `boolean` [1] is not exactly the same as `true` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -216,7 +216,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
-Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `true` [2] in property `1`.
+Cannot cast `o` to object type because in property `1`: `boolean` [1] is not exactly the same as `true` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `1` is invariantly typed. To fix the error,
@@ -249,7 +249,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:20:3
 
-Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `false` [2] in property `2`.
+Cannot cast `o` to object type because in property `2`: `boolean` [1] is not exactly the same as `false` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `2` is invariantly typed. To fix the error,
@@ -282,7 +282,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
 
-Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `true` [2] in property `1`.
+Cannot cast `o` to object type because in property `1`: `boolean` [1] is not exactly the same as `true` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `1` is invariantly typed. To fix the error,
@@ -315,7 +315,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:3
 
-Cannot cast `o` to object type because `boolean` [1] is not exactly the same as `true` [2] in property `2`.
+Cannot cast `o` to object type because in property `2`: `boolean` [1] is not exactly the same as `true` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `2` is invariantly typed. To fix the error,
@@ -376,8 +376,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:28:3
 
-Cannot cast `Object.keys(...)` to array type because `"2" | "1"` [1] is not exactly the same as `number` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.keys(...)` to array type because in array element: `"2" | "1"` [1] is not exactly the same as
+`number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"2" | "1">` [1] and `Array<number>` [3] exactly the same
@@ -441,7 +441,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:47:17
 
-Cannot call `f` because string `1` [1] is incompatible with number [2] in type argument `Key`. [incompatible-type]
+Cannot call `f` because in type argument `Key`: string `1` [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:47:17
    47|     const x = f(o); // ERROR
@@ -462,7 +462,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:47:17
 
-Cannot call `f` because string `2` [1] is incompatible with number [2] in type argument `Key`. [incompatible-type]
+Cannot call `f` because in type argument `Key`: string `2` [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:47:17
    47|     const x = f(o); // ERROR
@@ -517,7 +517,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:82:3
 
-Cannot cast `o` to object type because boolean [1] is incompatible with string [2] in the indexer property.
+Cannot cast `o` to object type because in the indexer property: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:82:3
@@ -535,7 +535,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:82:3
 
-Cannot cast `o` to object type because number [1] is incompatible with string [2] in the indexer property's key.
+Cannot cast `o` to object type because in the indexer property's key: number [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:82:3

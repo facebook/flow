@@ -126,8 +126,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:21:4
 
-Cannot create `Com` element because property `bar` is extra in props [1] but missing in object type [2]. Exact objects
-do not accept extra props in the second argument. [incompatible-type]
+Cannot create `Com` element because in the second argument: property `bar` is extra in props [1] but missing in object
+type [2]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:21:4
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
@@ -144,7 +144,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:13
 
-Cannot create `Com` element because number [1] is incompatible with string [2] in property `foo` of the second argument.
+Cannot create `Com` element because in the second argument > property `foo`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:21:13
@@ -159,8 +159,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:24
 
-Cannot create `Com` element because number literal `2` [1] is incompatible with number literal `1` [2] in the third
-argument. [incompatible-type]
+Cannot create `Com` element because in the third argument: number literal `2` [1] is incompatible with number literal
+`1` [2]. [incompatible-type]
 
    test.js:21:24
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error
@@ -174,8 +174,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:21:27
 
-Cannot create `Com` element because number literal `3` [1] is incompatible with number literal `2` [2] in the fourth
-argument. [incompatible-type]
+Cannot create `Com` element because in the fourth argument: number literal `3` [1] is incompatible with number literal
+`2` [2]. [incompatible-type]
 
    test.js:21:27
    21|   <Com foo={3} bar="">{2}{3}</Com> as 4; // error

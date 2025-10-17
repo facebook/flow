@@ -163,8 +163,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:40:5
 
-Cannot extend `C` [1] with `D1` because function [2], a non-type-guard function, is incompatible with function [3],
-which is a type-guard function in property `m`. [function-predicate]
+Cannot extend `C` [1] with `D1` because in property `m`: function [2], a non-type-guard function, is incompatible with
+function [3], which is a type-guard function. [function-predicate]
 
    classes.js:40:5
            v----------------------------------------------------
@@ -187,7 +187,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:46:23
 
-Cannot extend `C` [1] with `D2` because mixed [2] is incompatible with number [3] in the type predicate of property `m`.
+Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: mixed [2] is incompatible with number [3].
 [incompatible-type]
 
    classes.js:46:23
@@ -228,8 +228,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:67:23
 
-Cannot implement `I` [1] with `E1` because number [2] is incompatible with string [3] in the type predicate of property
-`n`. [incompatible-type]
+Cannot implement `I` [1] with `E1` because in property `n` > the type predicate: number [2] is incompatible with
+string [3]. [incompatible-type]
 
    classes.js:67:23
    67|     n(x: mixed): x is number { // error number ~> string
@@ -246,8 +246,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:81:23
 
-Cannot implement `IP` [1] with `E2` because string [2] is incompatible with number [3] in the type predicate of property
-`n`. [incompatible-type]
+Cannot implement `IP` [1] with `E2` because in property `n` > the type predicate: string [2] is incompatible with
+number [3]. [incompatible-type]
 
    classes.js:81:23
    81|     n(x: mixed): x is string { // error number ~> string
@@ -298,8 +298,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:107:5
 
-Cannot extend `C` [1] with `D1` because function [2], a non-type-guard function, is incompatible with function type [3],
-which is a type-guard function in property `m`. [function-predicate]
+Cannot extend `C` [1] with `D1` because in property `m`: function [2], a non-type-guard function, is incompatible with
+function type [3], which is a type-guard function. [function-predicate]
 
    classes.js:107:5
             v----------------------------------------------------
@@ -319,7 +319,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ classes.js:113:23
 
-Cannot extend `C` [1] with `D2` because mixed [2] is incompatible with number [3] in the type predicate of property `m`.
+Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: mixed [2] is incompatible with number [3].
 [incompatible-type]
 
    classes.js:113:23
@@ -678,8 +678,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- consistency.js:125:10
 
-Cannot return `Array.isArray(...)` because array element of refined mixed [1] is incompatible with `A` [2] in array
-element. [incompatible-type-guard]
+Cannot return `Array.isArray(...)` because in array element: array element of refined mixed [1] is incompatible with
+`A` [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `Array.isArray(...)` [4] needs to be compatible with the guard type
 read-only array type [5]. See 1. in
@@ -907,8 +907,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:18:23
 
-Cannot call `takesGuard` with function bound to `fn` because string [1] is incompatible with number [2] in the type
-predicate. [incompatible-type]
+Cannot call `takesGuard` with function bound to `fn` because in the type predicate: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    inferred.js:18:23
    18|   takesGuard(value => typeof value === "string"); // error wrong guard type
@@ -922,8 +922,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:19:32
 
-Cannot call `takesGuard` with function bound to `fn` because string [1] is incompatible with number [2] in the type
-predicate. [incompatible-type]
+Cannot call `takesGuard` with function bound to `fn` because in the type predicate: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    inferred.js:19:32
    19|   takesGuard((value: mixed) => typeof value === "string"); // error wrong guard type
@@ -979,8 +979,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:38:32
 
-Cannot call `takesGuardTwoParams` with function bound to `fn` because string [1] is incompatible with number [2] in the
-type predicate. [incompatible-type]
+Cannot call `takesGuardTwoParams` with function bound to `fn` because in the type predicate: string [1] is incompatible
+with number [2]. [incompatible-type]
 
    inferred.js:38:32
    38|   takesGuardTwoParams(value => typeof value === "string"); // error wrong guard type
@@ -994,8 +994,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:39:41
 
-Cannot call `takesGuardTwoParams` with function bound to `fn` because string [1] is incompatible with number [2] in the
-type predicate. [incompatible-type]
+Cannot call `takesGuardTwoParams` with function bound to `fn` because in the type predicate: string [1] is incompatible
+with number [2]. [incompatible-type]
 
    inferred.js:39:41
    39|   takesGuardTwoParams((value: mixed) => typeof value === "string"); // error wrong guard type
@@ -1244,8 +1244,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- inferred.js:142:12
 
-Cannot call `takesGuard` with function bound to `guard` because number [1] is incompatible with boolean [2] in the
-return value. [incompatible-type]
+Cannot call `takesGuard` with function bound to `guard` because in the return value: number [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    inferred.js:142:12
    142|     (z) => z, // error non type guard function
@@ -1280,7 +1280,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:161:3
 
-Cannot cast `fn1` to `typeof fn` because null or undefined [1] is incompatible with number [2] in the type predicate.
+Cannot cast `fn1` to `typeof fn` because in the type predicate: null or undefined [1] is incompatible with number [2].
 [incompatible-type]
 
    inferred.js:161:3
@@ -1316,8 +1316,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:186:3
 
-Cannot cast `fn` to function type because undefined (result of null short-circuiting an optional chain) [1] is
-incompatible with boolean [2] in the return value. [incompatible-type]
+Cannot cast `fn` to function type because in the return value: undefined (result of null short-circuiting an optional
+chain) [1] is incompatible with boolean [2]. [incompatible-type]
 
    inferred.js:186:3
    186|   fn as (x: mixed) => implies x is mixed; // error non-type guard function
@@ -1388,23 +1388,23 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ intersect.js:43:5
 
-Cannot cast `x` to `KB` because string literal `C` [1] is incompatible with string literal `B` [2] in type argument
-`X` [3]. [incompatible-type]
+Cannot cast `x` to `KB` because in type argument `X` [1]: string literal `C` [2] is incompatible with string literal
+`B` [3]. [incompatible-type]
 
    intersect.js:43:5
    43|     x as KB; // error KC ~> KB
            ^
 
 References:
-   intersect.js:34:15
-   34|   type KC = K<'C'>;
-                     ^^^ [1]
-   intersect.js:33:15
-   33|   type KB = K<'B'>;
-                     ^^^ [2]
    intersect.js:37:11
    37|   class K<X: $Keys<AllTypes>>  extends S<X> {}
-                 ^ [3]
+                 ^ [1]
+   intersect.js:34:15
+   34|   type KC = K<'C'>;
+                     ^^^ [2]
+   intersect.js:33:15
+   33|   type KB = K<'B'>;
+                     ^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- invalid.js:6:22
@@ -1641,8 +1641,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- objects.js:29:4
 
-Cannot cast `obj` to object type because number [1] is incompatible with string [2] in the type predicate of property
-`m`. [incompatible-type]
+Cannot cast `obj` to object type because in property `m` > the type predicate: number [1] is incompatible with
+string [2]. [incompatible-type]
 
    objects.js:29:4
    29|   (obj: { // error number ~> string
@@ -1846,8 +1846,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:47:35
 
 Cannot call `arr.filter` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in array element.
- - Or mixed [3] is incompatible with string [2] in array element.
+ - Either in array element: number [1] is incompatible with string [2].
+ - Or in array element: mixed [3] is incompatible with string [2].
 
    refinement.js:47:35
    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
@@ -1868,7 +1868,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:48:35
 
 Cannot call `arr.filter` because: [incompatible-type]
- - Either mixed [1] is incompatible with string [2] in array element.
+ - Either in array element: mixed [1] is incompatible with string [2].
  - Or function [3] is incompatible with class `Boolean` [4].
 
    refinement.js:48:35
@@ -1920,7 +1920,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- refinement.js:72:8
 
 Cannot cast `x` to `A` because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in property `foo`.
+ - Either in property `foo`: string [1] is incompatible with number [2].
  - Or inexact object type [3] is incompatible with exact `A` [4].
 
    refinement.js:72:8
@@ -1945,7 +1945,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- refinement.js:73:8
 
 Cannot cast `x` to `B` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `foo`.
+ - Either in property `foo`: number [1] is incompatible with string [2].
  - Or inexact object type [3] is incompatible with exact `B` [4].
 
    refinement.js:73:8
@@ -1969,7 +1969,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:86:8
 
-Cannot cast `x` to `B` because number [1] is incompatible with string [2] in property `foo`. [incompatible-type]
+Cannot cast `x` to `B` because in property `foo`: number [1] is incompatible with string [2]. [incompatible-type]
 
    refinement.js:86:8
    86|       (x: B); // error A ~> B
@@ -1986,7 +1986,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:86:8
 
-Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in property `tag`.
+Cannot cast `x` to `B` because in property `tag`: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
    refinement.js:86:8
@@ -2005,7 +2005,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- refinement.js:97:8
 
 Cannot cast `x` to `A` because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in property `foo`.
+ - Either in property `foo`: string [1] is incompatible with number [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
 
    refinement.js:97:8
@@ -2030,7 +2030,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- refinement.js:98:8
 
 Cannot cast `x` to `B` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `foo`.
+ - Either in property `foo`: number [1] is incompatible with string [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
 
    refinement.js:98:8
@@ -2055,7 +2055,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:110:8
 
 Cannot cast `x` to `A` because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in property `foo`.
+ - Either in property `foo`: string [1] is incompatible with number [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
 
    refinement.js:110:8
@@ -2080,7 +2080,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:111:8
 
 Cannot cast `x` to `B` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `foo`.
+ - Either in property `foo`: number [1] is incompatible with string [2].
  - Or inexact object type [3] is incompatible with exact object type [4].
 
    refinement.js:111:8
@@ -2104,7 +2104,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:117:8
 
-Cannot cast `x` to `B` because number [1] is incompatible with string [2] in property `foo`. [incompatible-type]
+Cannot cast `x` to `B` because in property `foo`: number [1] is incompatible with string [2]. [incompatible-type]
 
    refinement.js:117:8
    117|       (x: B); // error A ~> B
@@ -2121,7 +2121,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:117:8
 
-Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in property `tag1`.
+Cannot cast `x` to `B` because in property `tag1`: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
    refinement.js:117:8
@@ -2139,7 +2139,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:122:8
 
-Cannot cast `x` to `A` because string [1] is incompatible with number [2] in property `foo`. [incompatible-type]
+Cannot cast `x` to `A` because in property `foo`: string [1] is incompatible with number [2]. [incompatible-type]
 
    refinement.js:122:8
    122|       (x: A); // error B ~> A
@@ -2156,7 +2156,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:122:8
 
-Cannot cast `x` to `A` because string literal `B` [1] is incompatible with string literal `A` [2] in property `tag1`.
+Cannot cast `x` to `A` because in property `tag1`: string literal `B` [1] is incompatible with string literal `A` [2].
 [incompatible-type]
 
    refinement.js:122:8
@@ -2174,7 +2174,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:123:8
 
-Cannot cast `x` to `B` because number [1] is incompatible with string [2] in property `foo`. [incompatible-type]
+Cannot cast `x` to `B` because in property `foo`: number [1] is incompatible with string [2]. [incompatible-type]
 
    refinement.js:123:8
    123|       (x: B); // error A ~> B
@@ -2191,7 +2191,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:123:8
 
-Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in property `tag1`.
+Cannot cast `x` to `B` because in property `tag1`: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
    refinement.js:123:8
@@ -2487,8 +2487,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:249:7
 
 Cannot call `arr.filter` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in the type predicate.
- - Or mixed [3] is incompatible with string [2] in array element.
+ - Either in the type predicate: number [1] is incompatible with string [2].
+ - Or in array element: mixed [3] is incompatible with string [2].
 
    refinement.js:249:7
    249|   arr.filter(fn) as Array<string>; // error number ~> string
@@ -2509,8 +2509,8 @@ References:
 Error --------------------------------------------------------------------------------------------- refinement.js:253:10
 
 Cannot call `ro_arr.filter` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in the type predicate.
- - Or mixed [3] is incompatible with string [2] in array element.
+ - Either in the type predicate: number [1] is incompatible with string [2].
+ - Or in array element: mixed [3] is incompatible with string [2].
 
    refinement.js:253:10
    253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
@@ -2531,8 +2531,8 @@ References:
 Error --------------------------------------------------------------------------------------------- refinement.js:257:10
 
 Cannot call `rw_arr.filter` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in the type predicate.
- - Or mixed [3] is incompatible with string [2] in array element.
+ - Either in the type predicate: number [1] is incompatible with string [2].
+ - Or in array element: mixed [3] is incompatible with string [2].
 
    refinement.js:257:10
    257|   rw_arr.filter(fn) as Array<string>; // error number ~> string
@@ -2552,8 +2552,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:275:7
 
-Cannot cast `item` to `TypeA` because string literal `TypeB` [1] is incompatible with string literal `TypeA` [2] in
-property `type`. [incompatible-type]
+Cannot cast `item` to `TypeA` because in property `type`: string literal `TypeB` [1] is incompatible with string literal
+`TypeA` [2]. [incompatible-type]
 
    refinement.js:275:7
    275|       item as TypeA; // error
@@ -2570,8 +2570,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:276:7
 
-Cannot cast `item` to `TypeB` because string literal `TypeA` [1] is incompatible with string literal `TypeB` [2] in
-property `type`. [incompatible-type]
+Cannot cast `item` to `TypeB` because in property `type`: string literal `TypeA` [1] is incompatible with string literal
+`TypeB` [2]. [incompatible-type]
 
    refinement.js:276:7
    276|       item as TypeB; // error
@@ -2588,8 +2588,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:277:7
 
-Cannot cast `item` to `TypeC` because string literal `TypeA` [1] is incompatible with string literal `TypeC` [2] in
-property `type`. [incompatible-type]
+Cannot cast `item` to `TypeC` because in property `type`: string literal `TypeA` [1] is incompatible with string literal
+`TypeC` [2]. [incompatible-type]
 
    refinement.js:277:7
    277|       item as TypeC; // error
@@ -2606,8 +2606,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:277:7
 
-Cannot cast `item` to `TypeC` because string literal `TypeB` [1] is incompatible with string literal `TypeC` [2] in
-property `type`. [incompatible-type]
+Cannot cast `item` to `TypeC` because in property `type`: string literal `TypeB` [1] is incompatible with string literal
+`TypeC` [2]. [incompatible-type]
 
    refinement.js:277:7
    277|       item as TypeC; // error
@@ -2625,8 +2625,8 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:280:7
 
 Cannot cast `item` to `SpecialTypes` because: [incompatible-type]
- - Either string literal `TypeC` [1] is incompatible with string literal `TypeA` [2] in property `type`.
- - Or string literal `TypeC` [1] is incompatible with string literal `TypeB` [3] in property `type`.
+ - Either in property `type`: string literal `TypeC` [1] is incompatible with string literal `TypeA` [2].
+ - Or in property `type`: string literal `TypeC` [1] is incompatible with string literal `TypeB` [3].
 
    refinement.js:280:7
    280|       item as SpecialTypes; // error TypeC ~> SpecialType
@@ -2646,8 +2646,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:282:7
 
-Cannot cast `item` to `TypeA` because string literal `TypeC` [1] is incompatible with string literal `TypeA` [2] in
-property `type`. [incompatible-type]
+Cannot cast `item` to `TypeA` because in property `type`: string literal `TypeC` [1] is incompatible with string literal
+`TypeA` [2]. [incompatible-type]
 
    refinement.js:282:7
    282|       item as TypeA; // error
@@ -2664,8 +2664,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:283:7
 
-Cannot cast `item` to `TypeB` because string literal `TypeC` [1] is incompatible with string literal `TypeB` [2] in
-property `type`. [incompatible-type]
+Cannot cast `item` to `TypeB` because in property `type`: string literal `TypeC` [1] is incompatible with string literal
+`TypeB` [2]. [incompatible-type]
 
    refinement.js:283:7
    283|       item as TypeB; // error
@@ -2716,8 +2716,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:6:10
 
-Cannot return `f` because type guard parameter `x` [1] does not appear in the same position as type guard parameter
-`x` [2] in the type predicate. [function-predicate]
+Cannot return `f` because in the type predicate: type guard parameter `x` [1] does not appear in the same position as
+type guard parameter `x` [2]. [function-predicate]
 
    subtyping.js:6:10
    6|   return f; // error 'x' is not in the same position as 'y'
@@ -2752,7 +2752,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:20:10
 
-Cannot return `f` because `A` [1] is incompatible with `B` [2] in the type predicate. [incompatible-type]
+Cannot return `f` because in the type predicate: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    subtyping.js:20:10
    20|   return f; // error A ~> B
@@ -2769,7 +2769,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:24:10
 
-Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate. [incompatible-type]
+Cannot return `f` because in the type predicate: `A` [1] is incompatible with `C` [2]. [incompatible-type]
 
    subtyping.js:24:10
    24|   return f; // error A ~> C
@@ -2786,7 +2786,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:28:10
 
-Cannot return `f` because read-only array type [1] is incompatible with array type [2] in the type predicate.
+Cannot return `f` because in the type predicate: read-only array type [1] is incompatible with array type [2].
 [incompatible-type]
 
    subtyping.js:28:10
@@ -2804,7 +2804,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:32:10
 
-Cannot return `f` because `A` [1] is incompatible with `C` [2] in the type predicate. [incompatible-type]
+Cannot return `f` because in the type predicate: `A` [1] is incompatible with `C` [2]. [incompatible-type]
 
    subtyping.js:32:10
    32|   return f; // error C <~> A
@@ -2821,7 +2821,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:36:10
 
-Cannot return `f` because read-only array type [1] is incompatible with array type [2] in the type predicate.
+Cannot return `f` because in the type predicate: read-only array type [1] is incompatible with array type [2].
 [incompatible-type]
 
    subtyping.js:36:10
@@ -2856,8 +2856,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:66:10
 
-Cannot return `f` because `(x: mixed) => x is C` [1] is not exactly the same as `(x: mixed) => x is A` [2] in array
-element. [incompatible-type]
+Cannot return `f` because in array element: `(x: mixed) => x is C` [1] is not exactly the same as
+`(x: mixed) => x is A` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<(x: mixed) => x is C>` [3] and `Array<(x: mixed) => x is A>` [4] exactly the same
@@ -2885,8 +2885,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:70:10
 
-Cannot return `f` because `(x: mixed) => x is A` [1] is not exactly the same as `(x: mixed) => x is B` [2] in array
-element. [incompatible-type]
+Cannot return `f` because in array element: `(x: mixed) => x is A` [1] is not exactly the same as
+`(x: mixed) => x is B` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<(x: mixed) => x is A>` [3] and `Array<(x: mixed) => x is B>` [4] exactly the same
@@ -2914,8 +2914,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:74:10
 
-Cannot return `f` because `(x: mixed) => x is A` [1] is not exactly the same as `(x: mixed) => x is C` [2] in array
-element. [incompatible-type]
+Cannot return `f` because in array element: `(x: mixed) => x is A` [1] is not exactly the same as
+`(x: mixed) => x is C` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<(x: mixed) => x is A>` [3] and `Array<(x: mixed) => x is C>` [4] exactly the same
@@ -2943,8 +2943,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:82:10
 
-Cannot return `f` because `(x: mixed) => x is A` [1] is not exactly the same as `(x: mixed) => implies x is A` [2] in
-array element. [incompatible-type]
+Cannot return `f` because in array element: `(x: mixed) => x is A` [1] is not exactly the same as
+`(x: mixed) => implies x is A` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<(x: mixed) => x is A>` [3] and `Array<(x: mixed) => implies x is A>` [4] exactly the same
@@ -2990,7 +2990,7 @@ declare class or interface methods. [function-predicate]
 
 Error ----------------------------------------------------------------------------------------------------- this.js:28:5
 
-Cannot extend `A` [1] with `E` because `B` [2] is incompatible with `C` [3] in the type predicate of property `isB`.
+Cannot extend `A` [1] with `E` because in property `isB` > the type predicate: `B` [2] is incompatible with `C` [3].
 [incompatible-type]
 
    this.js:28:5
@@ -3225,68 +3225,68 @@ Cannot resolve name `Unresolved`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------------------------------- this.js:143:5
 
-Cannot cast `x` to `D` because number [1] is incompatible with string [2] in type argument `X` [3]. [incompatible-type]
+Cannot cast `x` to `D` because in type argument `X` [1]: number [2] is incompatible with string [3]. [incompatible-type]
 
    this.js:143:5
    143|     x as D<string>; // error number ~> string
             ^
 
 References:
-   this.js:139:20
-   139|   declare var x: C<number>;
-                           ^^^^^^ [1]
-   this.js:143:12
-   143|     x as D<string>; // error number ~> string
-                   ^^^^^^ [2]
    this.js:137:20
    137|   declare class D<+X> extends C<X> {}
-                           ^ [3]
+                           ^ [1]
+   this.js:139:20
+   139|   declare var x: C<number>;
+                           ^^^^^^ [2]
+   this.js:143:12
+   143|     x as D<string>; // error number ~> string
+                   ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- this.js:152:5
 
-Cannot cast `x` to `D` because number [1] is incompatible with string [2] in type argument `X` [3]. [incompatible-type]
+Cannot cast `x` to `D` because in type argument `X` [1]: number [2] is incompatible with string [3]. [incompatible-type]
 
    this.js:152:5
    152|     x as D<string>; // error number ~> string
             ^
 
 References:
-   this.js:150:12
-   150|   if (x.m2<number>()) {
-                   ^^^^^^ [1]
-   this.js:152:12
-   152|     x as D<string>; // error number ~> string
-                   ^^^^^^ [2]
    this.js:137:20
    137|   declare class D<+X> extends C<X> {}
-                           ^ [3]
+                           ^ [1]
+   this.js:150:12
+   150|   if (x.m2<number>()) {
+                   ^^^^^^ [2]
+   this.js:152:12
+   152|     x as D<string>; // error number ~> string
+                   ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- this.js:157:5
 
-Cannot cast `x` to `D` because number [1] is incompatible with string [2] in type argument `X` [3]. [incompatible-type]
+Cannot cast `x` to `D` because in type argument `X` [1]: number [2] is incompatible with string [3]. [incompatible-type]
 
    this.js:157:5
    157|     x as D<string>; // error number ~> string
             ^
 
 References:
-   this.js:155:12
-   155|   if (x.m3(1)) {
-                   ^ [1]
-   this.js:157:12
-   157|     x as D<string>; // error number ~> string
-                   ^^^^^^ [2]
    this.js:137:20
    137|   declare class D<+X> extends C<X> {}
-                           ^ [3]
+                           ^ [1]
+   this.js:155:12
+   155|   if (x.m3(1)) {
+                   ^ [2]
+   this.js:157:12
+   157|     x as D<string>; // error number ~> string
+                   ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- this.js:181:6
 
-Cannot call `fn` with `new B` bound to `cb` because function type [1], a non-type-guard function, is incompatible with
-function type [2], which is a type-guard function in property `m`. [function-predicate]
+Cannot call `fn` with `new B` bound to `cb` because in property `m`: function type [1], a non-type-guard function, is
+incompatible with function type [2], which is a type-guard function. [function-predicate]
 
    this.js:181:6
    181|   fn(new B); // error no type-guard
@@ -3303,8 +3303,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- this.js:186:5
 
-Cannot extend `AImported` [1] with `E` because `B` [2] is incompatible with `C` [3] in the type predicate of property
-`isB`. [incompatible-type]
+Cannot extend `AImported` [1] with `E` because in property `isB` > the type predicate: `B` [2] is incompatible with
+`C` [3]. [incompatible-type]
 
    this.js:186:5
    186|     isB(): this is CImported; // error type guard is in invariant position
@@ -3476,7 +3476,7 @@ declare class or interface methods. [function-predicate]
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:11:7
 
-Cannot cast `x` to `B` because string literal `A` [1] is incompatible with string literal `B` [2] in index 0.
+Cannot cast `x` to `B` because in index 0: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
    tuple_refinement.js:11:7
@@ -3494,7 +3494,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:11:7
 
-Cannot cast `x` to `B` because number [1] is incompatible with string [2] in index 1. [incompatible-type]
+Cannot cast `x` to `B` because in index 1: number [1] is incompatible with string [2]. [incompatible-type]
 
    tuple_refinement.js:11:7
    11|       x as B; // ERROR: A ~> B
@@ -3511,7 +3511,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:31:7
 
-Cannot cast `x` to `ROB` because string literal `A` [1] is incompatible with string literal `B` [2] in index 0.
+Cannot cast `x` to `ROB` because in index 0: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
    tuple_refinement.js:31:7
@@ -3529,7 +3529,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:31:7
 
-Cannot cast `x` to `ROB` because number [1] is incompatible with string [2] in index 1. [incompatible-type]
+Cannot cast `x` to `ROB` because in index 1: number [1] is incompatible with string [2]. [incompatible-type]
 
    tuple_refinement.js:31:7
    31|       x as ROB; // ERROR: A ~> B
@@ -3546,7 +3546,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:51:7
 
-Cannot cast `x` to `MTB` because string literal `A` [1] is incompatible with string literal `B` [2] in index 0.
+Cannot cast `x` to `MTB` because in index 0: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
    tuple_refinement.js:51:7
@@ -3564,7 +3564,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:51:7
 
-Cannot cast `x` to `MTB` because number [1] is incompatible with string [2] in index 2. [incompatible-type]
+Cannot cast `x` to `MTB` because in index 2: number [1] is incompatible with string [2]. [incompatible-type]
 
    tuple_refinement.js:51:7
    51|       x as MTB; // ERROR: A ~> B
@@ -3596,8 +3596,8 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:19:59
 
-The type predicate array type [1] needs to be compatible with parameter `x`'s type: `mixed` [2] is not exactly the same
-as `X` [3] in array element. [incompatible-type-guard]
+The type predicate array type [1] needs to be compatible with parameter `x`'s type: in array element: `mixed` [2] is not
+exactly the same as `X` [3]. [incompatible-type-guard]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
@@ -3637,8 +3637,8 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:29:54
 
-The type predicate array type [1] needs to be compatible with parameter `x`'s type: `mixed` [2] is not exactly the same
-as `X` [3] in array element. [incompatible-type-guard]
+The type predicate array type [1] needs to be compatible with parameter `x`'s type: in array element: `mixed` [2] is not
+exactly the same as `X` [3]. [incompatible-type-guard]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same
@@ -3663,8 +3663,8 @@ References:
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:30:54
 
-The type predicate array type [1] needs to be compatible with parameter `x`'s type: `mixed` [2] is not exactly the same
-as `X` [3] in array element. [incompatible-type-guard]
+The type predicate array type [1] needs to be compatible with parameter `x`'s type: in array element: `mixed` [2] is not
+exactly the same as `X` [3]. [incompatible-type-guard]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<X>` [4] exactly the same

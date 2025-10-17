@@ -230,7 +230,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- jsx_checking.js:7:24
 
-Cannot create `FnWithoutRefProp` element because number [1] is incompatible with string [2] in property `foo`.
+Cannot create `FnWithoutRefProp` element because in property `foo`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    jsx_checking.js:7:24
@@ -305,7 +305,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- jsx_checking.js:17:26
 
-Cannot create `CompWithoutRefProp` element because number [1] is incompatible with string [2] in property `foo`.
+Cannot create `CompWithoutRefProp` element because in property `foo`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    jsx_checking.js:17:26

@@ -15,7 +15,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ test.js:9:8
 
-Cannot implement `IFoo` [1] with `C2` because number [2] is incompatible with string [3] in property `foo`.
+Cannot implement `IFoo` [1] with `C2` because in property `foo`: number [2] is incompatible with string [3].
 [incompatible-type]
 
    test.js:9:8

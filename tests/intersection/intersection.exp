@@ -50,8 +50,8 @@ References:
 Error ------------------------------------------------------------------------------------------------ test_obj.js:29:12
 
 Cannot assign `c` to `e` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in the indexer property.
- - Or number [3] is incompatible with string [2] in the indexer property.
+ - Either in the indexer property: number [1] is incompatible with string [2].
+ - Or in the indexer property: number [3] is incompatible with string [2].
 
    test_obj.js:29:12
    29| var e: E = c; // error

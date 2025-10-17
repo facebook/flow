@@ -137,7 +137,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:67:2
 
-Cannot cast array literal to array type because number [1] is incompatible with string [2] in array element.
+Cannot cast array literal to array type because in array element: number [1] is incompatible with string [2].
 [incompatible-type]
 
    spread.js:67:2
@@ -155,7 +155,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- subtyping.js:5:4
 
-Cannot cast `arr` to array type because `Dog` [1] is not exactly the same as `Animal` [2] in array element.
+Cannot cast `arr` to array type because in array element: `Dog` [1] is not exactly the same as `Animal` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -184,8 +184,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:10:4
 
-Cannot cast `arr` to array type because `{foo: string, ...}` [1] is not exactly the same as `{...}` [2] in array
-element. [incompatible-type]
+Cannot cast `arr` to array type because in array element: `{foo: string, ...}` [1] is not exactly the same as
+`{...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{foo: string, ...}>` [3] and `Array<{...}>` [4] exactly the same
@@ -213,7 +213,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:15:4
 
-Cannot cast `arr` to array type because `{foo: string}` [1] is not exactly the same as `{}` [2] in array element.
+Cannot cast `arr` to array type because in array element: `{foo: string}` [1] is not exactly the same as `{}` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,

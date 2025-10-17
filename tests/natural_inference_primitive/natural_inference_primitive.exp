@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------- custom-jsx.js:16:13
 
-Cannot create `Foo` element because number literal `43` [1] is incompatible with number literal `42` [2] in property
-`bar`. [incompatible-type]
+Cannot create `Foo` element because in property `bar`: number literal `43` [1] is incompatible with number literal
+`42` [2]. [incompatible-type]
 
    custom-jsx.js:16:13
    16|   <Foo bar={43 /* error 43 ~> 42 */} foo={'b' /* error 'b' ~> 'a' */}>
@@ -15,8 +15,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- custom-jsx.js:16:43
 
-Cannot create `Foo` element because string literal `b` [1] is incompatible with string literal `a` [2] in property
-`foo`. [incompatible-type]
+Cannot create `Foo` element because in property `foo`: string literal `b` [1] is incompatible with string literal
+`a` [2]. [incompatible-type]
 
    custom-jsx.js:16:43
    16|   <Foo bar={43 /* error 43 ~> 42 */} foo={'b' /* error 'b' ~> 'a' */}>
@@ -759,7 +759,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:159:3
 
-Cannot cast `obj` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`.
+Cannot cast `obj` to object type because in property `f`: `number` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -788,7 +788,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:172:3
 
-Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `1` [2] in property `f`.
+Cannot cast `obj1` to object type because in property `f`: `number | 1` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -817,7 +817,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:173:3
 
-Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `2` [2] in property `f`.
+Cannot cast `obj1` to object type because in property `f`: `number | 1` [1] is not exactly the same as `2` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -846,7 +846,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:178:3
 
-Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`.
+Cannot cast `obj2` to object type because in property `f`: `number` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -875,7 +875,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:179:3
 
-Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `2` [2] in property `f`.
+Cannot cast `obj2` to object type because in property `f`: `number` [1] is not exactly the same as `2` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -904,8 +904,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:205:11
 
-Cannot call `set` with object literal bound to `y` because number [1] is incompatible with union type [2] in property
-`f`. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: number [1] is incompatible with union
+type [2]. [incompatible-type]
 
    imported.js:205:11
    205|   set({f: 3}); // error 3 ~> 1|2
@@ -952,8 +952,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:225:11
 
-Cannot call `set` with object literal bound to `y` because number literal `2` [1] is incompatible with number literal
-`1` [2] in property `f`. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: number literal `2` [1] is incompatible with
+number literal `1` [2]. [incompatible-type]
 
    imported.js:225:11
    225|   set({f: 2}); // error
@@ -967,7 +967,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:233:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
+Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    imported.js:233:11
@@ -982,7 +982,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:241:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
+Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    imported.js:241:11
@@ -997,7 +997,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:247:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
+Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    imported.js:247:11
@@ -1012,8 +1012,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:249:11
 
-Cannot call `set` with object literal bound to `y` because number literal `2` [1] is incompatible with number literal
-`1` [2] in property `f`. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: number literal `2` [1] is incompatible with
+number literal `1` [2]. [incompatible-type]
 
    imported.js:249:11
    249|   set({f: 2}); // error 2 ~> 1
@@ -1027,8 +1027,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- imported.js:250:11
 
-Cannot call `set` with object literal bound to `y` because number literal `3` [1] is incompatible with number literal
-`1` [2] in property `f`. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: number literal `3` [1] is incompatible with
+number literal `1` [2]. [incompatible-type]
 
    imported.js:250:11
    250|   set({f: 3}); // error 3 ~> 1
@@ -1150,7 +1150,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ imported.js:367:3
 
-Cannot cast `o1` to object type because `string` [1] is not exactly the same as `"abc"` [2] in property `f`.
+Cannot cast `o1` to object type because in property `f`: `string` [1] is not exactly the same as `"abc"` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -1207,8 +1207,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- jsx_pragma.js:12:27
 
-Cannot create `C` element because string literal `BAK` [1] is incompatible with string literal `BAZ` [2] in property
-`bar` of array element of property `foo`. [incompatible-type]
+Cannot create `C` element because in property `foo` > array element > property `bar`: string literal `BAK` [1] is
+incompatible with string literal `BAZ` [2]. [incompatible-type]
 
    jsx_pragma.js:12:27
    12| const c2 = <C foo={[{bar: 'BAK'}]} />; // error 'BAZ' != 'BAK'
@@ -1936,7 +1936,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:154:3
 
-Cannot cast `obj` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`.
+Cannot cast `obj` to object type because in property `f`: `number` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -1965,7 +1965,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:167:3
 
-Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `1` [2] in property `f`.
+Cannot cast `obj1` to object type because in property `f`: `number | 1` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -1994,7 +1994,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:168:3
 
-Cannot cast `obj1` to object type because `number | 1` [1] is not exactly the same as `2` [2] in property `f`.
+Cannot cast `obj1` to object type because in property `f`: `number | 1` [1] is not exactly the same as `2` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -2023,7 +2023,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:173:3
 
-Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `1` [2] in property `f`.
+Cannot cast `obj2` to object type because in property `f`: `number` [1] is not exactly the same as `1` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -2052,7 +2052,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:174:3
 
-Cannot cast `obj2` to object type because `number` [1] is not exactly the same as `2` [2] in property `f`.
+Cannot cast `obj2` to object type because in property `f`: `number` [1] is not exactly the same as `2` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -2133,7 +2133,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- local.js:200:3
 
 Cannot cast `o3.f` to union type because: [incompatible-type]
- - Either string [1] is incompatible with string literal `a` [2] in property `a`.
+ - Either in property `a`: string [1] is incompatible with string literal `a` [2].
  - Or object literal [3] is incompatible with string literal `foo` [4].
 
    local.js:200:3
@@ -2157,8 +2157,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:217:11
 
-Cannot call `set` with object literal bound to `y` because number [1] is incompatible with union type [2] in property
-`f`. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: number [1] is incompatible with union
+type [2]. [incompatible-type]
 
    local.js:217:11
    217|   set({f: 3}); // error 3 ~> 1|2
@@ -2205,8 +2205,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:237:11
 
-Cannot call `set` with object literal bound to `y` because number literal `2` [1] is incompatible with number literal
-`1` [2] in property `f`. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: number literal `2` [1] is incompatible with
+number literal `1` [2]. [incompatible-type]
 
    local.js:237:11
    237|   set({f: 2}); // error
@@ -2220,7 +2220,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:245:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
+Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    local.js:245:11
@@ -2235,7 +2235,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:253:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
+Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    local.js:253:11
@@ -2250,7 +2250,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:259:11
 
-Cannot call `set` with object literal bound to `y` because string [1] is incompatible with number [2] in property `f`.
+Cannot call `set` with object literal bound to `y` because in property `f`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    local.js:259:11
@@ -2265,8 +2265,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:261:11
 
-Cannot call `set` with object literal bound to `y` because number literal `2` [1] is incompatible with number literal
-`1` [2] in property `f`. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: number literal `2` [1] is incompatible with
+number literal `1` [2]. [incompatible-type]
 
    local.js:261:11
    261|   set({f: 2}); // error 2 ~> 1
@@ -2280,8 +2280,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:262:11
 
-Cannot call `set` with object literal bound to `y` because number literal `3` [1] is incompatible with number literal
-`1` [2] in property `f`. [incompatible-type]
+Cannot call `set` with object literal bound to `y` because in property `f`: number literal `3` [1] is incompatible with
+number literal `1` [2]. [incompatible-type]
 
    local.js:262:11
    262|   set({f: 3}); // error 3 ~> 1
@@ -2463,7 +2463,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:433:3
 
-Cannot cast `o1` to object type because `string` [1] is not exactly the same as `"abc"` [2] in property `f`.
+Cannot cast `o1` to object type because in property `f`: `string` [1] is not exactly the same as `"abc"` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `f` is invariantly typed. To fix the error,
@@ -2492,7 +2492,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- local.js:448:9
 
-Cannot call `c.set` because string [1] is incompatible with string literal `a` [2] in type argument `K`.
+Cannot call `c.set` because in type argument `K`: string [1] is incompatible with string literal `a` [2].
 [incompatible-type]
 
    local.js:448:9
@@ -2588,8 +2588,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:484:16
 
-Cannot cast object literal to `$ReadOnly` because string literal `a` [1] is incompatible with string literal `b` [2] in
-property `a`. [incompatible-type]
+Cannot cast object literal to `$ReadOnly` because in property `a`: string literal `a` [1] is incompatible with string
+literal `b` [2]. [incompatible-type]
 
    local.js:484:16
    484|   ({[KeyName]: KeyName} as $ReadOnly<{[Name]: 'b'}>); // error 'a' ~> 'b'
@@ -2756,23 +2756,23 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:658:20
 
-Cannot call `Set` with array literal bound to `iterable` because string literal `C` [1] is incompatible with union
-type [2] in type argument `Yield` [3] of the return value of property `@@iterator`. [incompatible-type]
+Cannot call `Set` with array literal bound to `iterable` because in property `@@iterator` > the return value > type
+argument `Yield` [1]: string literal `C` [2] is incompatible with union type [3]. [incompatible-type]
 
    local.js:658:20
     658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
                             ^^^^^
 
 References:
-   local.js:658:21
-    658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
-                             ^^^ [1]
-   local.js:653:77
-    653|     fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
-                                                                                     ^^^^^^^^^ [2]
    <BUILTINS>/core.js:1833:30
    1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [3]
+                                      ^^^^^ [1]
+   local.js:658:21
+    658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
+                             ^^^ [2]
+   local.js:653:77
+    653|     fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
+                                                                                     ^^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:671:7
@@ -2820,23 +2820,23 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:16:25
 
-Cannot assign `g(...)` to `y1` because string [1] is incompatible with string literal `b` [2] in type argument `T` [3]
-of type argument `T` [3]. [incompatible-type]
+Cannot assign `g(...)` to `y1` because in type argument `T` [1] > type argument `T` [1]: string [2] is incompatible with
+string literal `b` [3]. [incompatible-type]
 
    nested_generic_calls.js:16:25
    16|   const y1: C<C<'b'>> = g(f('a')); // error 'a' ~> 'b'
                                ^^^^^^^^^
 
 References:
-   nested_generic_calls.js:16:29
-   16|   const y1: C<C<'b'>> = g(f('a')); // error 'a' ~> 'b'
-                                   ^^^ [1]
-   nested_generic_calls.js:16:17
-   16|   const y1: C<C<'b'>> = g(f('a')); // error 'a' ~> 'b'
-                       ^^^ [2]
    nested_generic_calls.js:4:19
     4|   declare class C<T> {}
-                         ^ [3]
+                         ^ [1]
+   nested_generic_calls.js:16:29
+   16|   const y1: C<C<'b'>> = g(f('a')); // error 'a' ~> 'b'
+                                   ^^^ [2]
+   nested_generic_calls.js:16:17
+   16|   const y1: C<C<'b'>> = g(f('a')); // error 'a' ~> 'b'
+                       ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:27:47
@@ -2856,8 +2856,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:33:58
 
-Cannot call `f` with object literal bound to `literalValue` because number literal `42` [1] is incompatible with number
-literal `43` [2] in index 0 of property `f`. [incompatible-type]
+Cannot call `f` with object literal bound to `literalValue` because in property `f` > index 0: number literal `42` [1]
+is incompatible with number literal `43` [2]. [incompatible-type]
 
    nested_generic_calls.js:33:58
    33|   const x6: {f: {f: <V>(V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error
@@ -2871,8 +2871,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:85:37
 
-Cannot assign `object(...)` to `example3` because string literal `C` [1] is incompatible with union type [2] in property
-`format` of type argument `V` [3]. [incompatible-type]
+Cannot assign `object(...)` to `example3` because in type argument `V` [1] > property `format`: string literal `C` [2]
+is incompatible with union type [3]. [incompatible-type]
 
    nested_generic_calls.js:85:37
                                            v---------------------------------
@@ -2882,20 +2882,20 @@ Cannot assign `object(...)` to `example3` because string literal `C` [1] is inco
          -^
 
 References:
-   nested_generic_calls.js:75:28
-   75|     [K in keyof Wrappers]: MapWrapper<Wrappers[K]>,
-                                  ^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   nested_generic_calls.js:81:36
-   81|   type Params = $ReadOnly<{format: 'A' | 'B'}>;
-                                          ^^^^^^^^^ [2]
    nested_generic_calls.js:67:17
    67|   type Wrapper<+V> = (value: mixed) => $ReadOnly<{value: V}>;
-                       ^ [3]
+                       ^ [1]
+   nested_generic_calls.js:75:28
+   75|     [K in keyof Wrappers]: MapWrapper<Wrappers[K]>,
+                                  ^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   nested_generic_calls.js:81:36
+   81|   type Params = $ReadOnly<{format: 'A' | 'B'}>;
+                                          ^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- react.js:7:9
 
-Cannot create `MyDiv` element because number [1] is incompatible with string [2] in property `id`. [incompatible-type]
+Cannot create `MyDiv` element because in property `id`: number [1] is incompatible with string [2]. [incompatible-type]
 
    react.js:7:9
    7|     id={1} // error on id number ~> string

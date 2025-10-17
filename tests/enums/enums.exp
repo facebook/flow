@@ -1,6 +1,6 @@
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:11:3
 
-Cannot cast `x` to `EnumValue` because string [1] is incompatible with number [2] in the enum's representation type.
+Cannot cast `x` to `EnumValue` because in the enum's representation type: string [1] is incompatible with number [2].
 [incompatible-type]
 
    abstract-enum-value.js:11:3
@@ -18,8 +18,8 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:12:3
 
-Cannot cast `x` to `EnumValue` because string [1] is incompatible with object type [2] in the enum's representation
-type. [incompatible-type]
+Cannot cast `x` to `EnumValue` because in the enum's representation type: string [1] is incompatible with object
+type [2]. [incompatible-type]
 
    abstract-enum-value.js:12:3
    12|   x as EnumValue<{foo: 1}>; // ERROR
@@ -135,7 +135,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:35:3
 
-Cannot cast `x` to `EnumValue` because number [1] is incompatible with boolean [2] in the enum's representation type.
+Cannot cast `x` to `EnumValue` because in the enum's representation type: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    abstract-enum-value.js:35:3
@@ -153,7 +153,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- abstract-enum-value.js:35:3
 
-Cannot cast `x` to `EnumValue` because string [1] is incompatible with boolean [2] in the enum's representation type.
+Cannot cast `x` to `EnumValue` because in the enum's representation type: string [1] is incompatible with boolean [2].
 [incompatible-type]
 
    abstract-enum-value.js:35:3
@@ -226,7 +226,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- abstract-enum.js:10:15
 
-Cannot instantiate `Enum` because boolean [1] is incompatible with `EnumValue` [2] in type argument `TEnumValue`.
+Cannot instantiate `Enum` because in type argument `TEnumValue`: boolean [1] is incompatible with `EnumValue` [2].
 [incompatible-type]
 
    abstract-enum.js:10:15
@@ -258,31 +258,31 @@ References:
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:19:3
 
-Cannot cast `x` to `Enum` because string [1] is incompatible with boolean [2] in type argument `TRepresentationType` [3]
-of type argument `TEnumValue` [4]. [incompatible-type]
+Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1] > type argument `TRepresentationType` [2]:
+string [3] is incompatible with boolean [4]. [incompatible-type]
 
    abstract-enum.js:19:3
      19|   x as Enum<EnumValue<boolean>>; // ERROR
            ^
 
 References:
-   abstract-enum.js:15:35
-     15|   declare const x: Enum<EnumValue<string>>;
-                                           ^^^^^^ [1]
-   abstract-enum.js:19:23
-     19|   x as Enum<EnumValue<boolean>>; // ERROR
-                               ^^^^^^^ [2]
-   <BUILTINS>/core.js:3105:4
-   3105|   +TRepresentationType: EnumRepresentationTypes = EnumRepresentationTypes
-            ^^^^^^^^^^^^^^^^^^^ [3]
    <BUILTINS>/core.js:3123:12
    3123| type Enum<+TEnumValue: EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
-                    ^^^^^^^^^^ [4]
+                    ^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3105:4
+   3105|   +TRepresentationType: EnumRepresentationTypes = EnumRepresentationTypes
+            ^^^^^^^^^^^^^^^^^^^ [2]
+   abstract-enum.js:15:35
+     15|   declare const x: Enum<EnumValue<string>>;
+                                           ^^^^^^ [3]
+   abstract-enum.js:19:23
+     19|   x as Enum<EnumValue<boolean>>; // ERROR
+                               ^^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:20:3
 
-Cannot cast `x` to `Enum` because `EnumValue` [1] is incompatible with `E` [2] in type argument `TEnumValue` [3].
+Cannot cast `x` to `Enum` because in type argument `TEnumValue` [1]: `EnumValue` [2] is incompatible with `E` [3].
 [incompatible-type]
 
    abstract-enum.js:20:3
@@ -290,15 +290,15 @@ Cannot cast `x` to `Enum` because `EnumValue` [1] is incompatible with `E` [2] i
            ^
 
 References:
-   abstract-enum.js:15:25
-     15|   declare const x: Enum<EnumValue<string>>;
-                                 ^^^^^^^^^^^^^^^^^ [1]
-   abstract-enum.js:20:13
-     20|   x as Enum<E>; // ERROR
-                     ^ [2]
    <BUILTINS>/core.js:3123:12
    3123| type Enum<+TEnumValue: EnumValue<> = EnumValue<>> = $Enum<TEnumValue>;
-                    ^^^^^^^^^^ [3]
+                    ^^^^^^^^^^ [1]
+   abstract-enum.js:15:25
+     15|   declare const x: Enum<EnumValue<string>>;
+                                 ^^^^^^^^^^^^^^^^^ [2]
+   abstract-enum.js:20:13
+     20|   x as Enum<E>; // ERROR
+                     ^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:36:5
@@ -332,7 +332,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:42:3
 
-Cannot call `f` because boolean [1] is incompatible with `EnumValue` [2] in type argument `TEnumValue`.
+Cannot call `f` because in type argument `TEnumValue`: boolean [1] is incompatible with `EnumValue` [2].
 [incompatible-type]
 
    abstract-enum.js:42:3
@@ -347,7 +347,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- abstract-enum.js:42:3
 
-Cannot call `f` because boolean [1] is incompatible with `EnumValue` [2] in type argument `TEnumValue`.
+Cannot call `f` because in type argument `TEnumValue`: boolean [1] is incompatible with `EnumValue` [2].
 [incompatible-type]
 
    abstract-enum.js:42:3
@@ -592,7 +592,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- computed-property.js:14:1
 
-Cannot cast `o` to object type because string `A` [1] is incompatible with `E` [2] in the indexer property's key.
+Cannot cast `o` to object type because in the indexer property's key: string `A` [1] is incompatible with `E` [2].
 [incompatible-type]
 
    computed-property.js:14:1
@@ -683,7 +683,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- computed-property.js:28:1
 
-Cannot cast `k` to read-only array type because string [1] is incompatible with `E` [2] in array element.
+Cannot cast `k` to read-only array type because in array element: string [1] is incompatible with `E` [2].
 [incompatible-type]
 
    computed-property.js:28:1
@@ -1779,17 +1779,17 @@ undefined. [incompatible-type]
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:201:36
 
-Cannot expect `Generator` as the return type of generator function because number [1] is incompatible with
-implicitly-returned undefined in type argument `Return` [2]. [incompatible-type]
+Cannot expect `Generator` as the return type of generator function because in type argument `Return` [1]: number [2] is
+incompatible with implicitly-returned undefined. [incompatible-type]
 
    exhaustive-check-implicit-return.js:201:36
     201| function* u(x: E): Generator<void, number, void> { // Error: switch isn't exhaustive
-                                            ^^^^^^ [1]
+                                            ^^^^^^ [2]
 
 References:
    <BUILTINS>/core.js:1963:24
    1963| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
-                                ^^^^^^ [2]
+                                ^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:202:11
@@ -1809,17 +1809,17 @@ References:
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:208:33
 
-Cannot expect `Promise` as the return type of async function because number [1] is incompatible with implicitly-returned
-undefined in type argument `R` [2]. [incompatible-type]
+Cannot expect `Promise` as the return type of async function because in type argument `R` [1]: number [2] is
+incompatible with implicitly-returned undefined. [incompatible-type]
 
    exhaustive-check-implicit-return.js:208:33
     208| async function v(x: E): Promise<number> { // Error: switch isn't exhaustive
-                                         ^^^^^^ [1]
+                                         ^^^^^^ [2]
 
 References:
    <BUILTINS>/core.js:2199:24
    2199| declare class Promise<+R = mixed> {
-                                ^ [2]
+                                ^ [1]
 
 
 Error ----------------------------------------------------------------------- exhaustive-check-implicit-return.js:209:11

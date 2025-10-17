@@ -223,8 +223,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:33
 
-Cannot call `functionWithTypeof` with object literal bound to the third parameter because number [1] is incompatible
-with string [2] in property `boz`. [incompatible-type]
+Cannot call `functionWithTypeof` with object literal bound to the third parameter because in property `boz`: number [1]
+is incompatible with string [2]. [incompatible-type]
 
    test.js:20:33
    20| functionWithTypeof('', 3, {boz: 3}); // error: number ~> string

@@ -47,7 +47,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:13:13
 
-Cannot cast `any` to object type because boolean [1] is incompatible with number literal `2` [2] in property `b`.
+Cannot cast `any` to object type because in property `b`: boolean [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
    errors_intersection.js:13:13
@@ -62,7 +62,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:13:26
 
-Cannot cast `any` to object type because boolean [1] is incompatible with number literal `1` [2] in property `a`.
+Cannot cast `any` to object type because in property `a`: boolean [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    errors_intersection.js:13:26
@@ -77,7 +77,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:13:39
 
-Cannot cast `any` to object type because boolean [1] is incompatible with number literal `3` [2] in property `c`.
+Cannot cast `any` to object type because in property `c`: boolean [1] is incompatible with number literal `3` [2].
 [incompatible-type]
 
    errors_intersection.js:13:39
@@ -195,7 +195,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:23:13
 
-Cannot cast `any` to object type because boolean [1] is incompatible with number literal `2` [2] in property `b`.
+Cannot cast `any` to object type because in property `b`: boolean [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
    errors_intersection.js:23:13
@@ -210,7 +210,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:23:48
 
-Cannot cast `any` to object type because boolean [1] is incompatible with number literal `3` [2] in property `c`.
+Cannot cast `any` to object type because in property `c`: boolean [1] is incompatible with number literal `3` [2].
 [incompatible-type]
 
    errors_intersection.js:23:48
@@ -247,7 +247,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:30:35
 
-Cannot cast `any` to object type because boolean [1] is incompatible with number literal `1` [2] in property `a`.
+Cannot cast `any` to object type because in property `a`: boolean [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    errors_intersection.js:30:35
@@ -262,7 +262,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:30:48
 
-Cannot cast `any` to object type because boolean [1] is incompatible with number literal `3` [2] in property `c`.
+Cannot cast `any` to object type because in property `c`: boolean [1] is incompatible with number literal `3` [2].
 [incompatible-type]
 
    errors_intersection.js:30:48
@@ -299,7 +299,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:37:13
 
-Cannot cast `any` to object type because boolean [1] is incompatible with number literal `2` [2] in property `b`.
+Cannot cast `any` to object type because in property `b`: boolean [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
    errors_intersection.js:37:13
@@ -314,7 +314,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:37:26
 
-Cannot cast `any` to object type because boolean [1] is incompatible with number literal `1` [2] in property `a`.
+Cannot cast `any` to object type because in property `a`: boolean [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    errors_intersection.js:37:26
@@ -329,7 +329,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:44:18
 
-Cannot cast `any` to object type because boolean [1] is incompatible with number literal `42` [2] in property `a.b`.
+Cannot cast `any` to object type because in property `a.b`: boolean [1] is incompatible with number literal `42` [2].
 [incompatible-type]
 
    errors_intersection.js:44:18
@@ -345,8 +345,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:48:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either boolean [1] is incompatible with number literal `42` [2] in property `b`.
- - Or object type [3] is incompatible with number literal `42` [2] in property `b`.
+ - Either in property `b`: boolean [1] is incompatible with number literal `42` [2].
+ - Or in property `b`: object type [3] is incompatible with number literal `42` [2].
 
    errors_intersection.js:48:8
    48| any as {+a: boolean & {+b: boolean & {}}} as {+a: {+b: 42}};
@@ -648,8 +648,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2] in index 0.
- - Or string [3] is incompatible with boolean literal `true` [2] in index 0.
+ - Either in index 0: number [1] is incompatible with boolean literal `true` [2].
+ - Or in index 0: string [3] is incompatible with boolean literal `true` [2].
 
    errors_intersection.js:74:8
               v
@@ -676,8 +676,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2] in index 0.
- - Or string [3] is incompatible with boolean literal `true` [2] in index 0.
+ - Either in index 0: number [1] is incompatible with boolean literal `true` [2].
+ - Or in index 0: string [3] is incompatible with boolean literal `true` [2].
 
    errors_intersection.js:74:8
               v
@@ -704,8 +704,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
 
 Cannot cast `any` to object type because in property `c`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2] in index 0.
- - Or string [3] is incompatible with boolean literal `true` [2] in index 0.
+ - Either in index 0: number [1] is incompatible with boolean literal `true` [2].
+ - Or in index 0: string [3] is incompatible with boolean literal `true` [2].
 
    errors_intersection.js:74:8
               v
@@ -732,8 +732,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
 
 Cannot cast `any` to object type because in property `d`: [incompatible-type]
- - Either number [1] is incompatible with boolean literal `true` [2] in index 0.
- - Or string [3] is incompatible with boolean literal `true` [2] in index 0.
+ - Either in index 0: number [1] is incompatible with boolean literal `true` [2].
+ - Or in index 0: string [3] is incompatible with boolean literal `true` [2].
 
    errors_intersection.js:74:8
               v
@@ -1150,10 +1150,10 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:103:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either `A` [1] is incompatible with number [2] in index 1 of index 0.
- - Or `B` [3] is incompatible with number [2] in index 1 of index 0.
- - Or `C` [4] is incompatible with number [2] in index 1 of index 0.
- - Or `D` [5] is incompatible with number [2] in index 1 of index 0.
+ - Either in index 0 > index 1: `A` [1] is incompatible with number [2].
+ - Or in index 0 > index 1: `B` [3] is incompatible with number [2].
+ - Or in index 0 > index 1: `C` [4] is incompatible with number [2].
+ - Or in index 0 > index 1: `D` [5] is incompatible with number [2].
 
    errors_intersection.js:103:1
    103| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
@@ -1180,9 +1180,9 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:106:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either `A` [1] is incompatible with number [2] in index 1 of index 0.
- - Or `C` [3] is incompatible with number [2] in index 1 of index 0.
- - Or `D` [4] is incompatible with number [2] in index 1 of index 0.
+ - Either in index 0 > index 1: `A` [1] is incompatible with number [2].
+ - Or in index 0 > index 1: `C` [3] is incompatible with number [2].
+ - Or in index 0 > index 1: `D` [4] is incompatible with number [2].
 
    errors_intersection.js:106:1
    106| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
@@ -1206,8 +1206,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:109:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either `A` [1] is incompatible with number [2] in index 1 of index 0.
- - Or `C` [3] is incompatible with number [2] in index 1 of index 0.
+ - Either in index 0 > index 1: `A` [1] is incompatible with number [2].
+ - Or in index 0 > index 1: `C` [3] is incompatible with number [2].
 
    errors_intersection.js:109:1
    109| any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
@@ -1228,8 +1228,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:112:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either `C` [1] is incompatible with number [2] in index 1 of index 0.
- - Or object type [3] is incompatible with tuple type [4] in index 0.
+ - Either in index 0 > index 1: `C` [1] is incompatible with number [2].
+ - Or in index 0: object type [3] is incompatible with tuple type [4].
 
    errors_intersection.js:112:1
    112| any as {} & [[null, C] & {}] as [[null, number]];
@@ -1378,7 +1378,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- errors_union.js:13:6
 
-Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `b`.
+Cannot cast object literal to object type because in property `b`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    errors_union.js:13:6
@@ -1393,7 +1393,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:13:12
 
-Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `a`.
+Cannot cast object literal to object type because in property `a`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    errors_union.js:13:12
@@ -1408,7 +1408,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:13:18
 
-Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `c`.
+Cannot cast object literal to object type because in property `c`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    errors_union.js:13:18
@@ -1480,7 +1480,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- errors_union.js:23:6
 
-Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `b`.
+Cannot cast object literal to object type because in property `b`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    errors_union.js:23:6
@@ -1514,7 +1514,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:23:18
 
-Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `c`.
+Cannot cast object literal to object type because in property `c`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    errors_union.js:23:18
@@ -1548,7 +1548,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:26:12
 
-Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `a`.
+Cannot cast object literal to object type because in property `a`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    errors_union.js:26:12
@@ -1563,7 +1563,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:26:18
 
-Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `c`.
+Cannot cast object literal to object type because in property `c`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    errors_union.js:26:18
@@ -1578,7 +1578,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- errors_union.js:29:6
 
-Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `b`.
+Cannot cast object literal to object type because in property `b`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    errors_union.js:29:6
@@ -1593,7 +1593,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:29:12
 
-Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `a`.
+Cannot cast object literal to object type because in property `a`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    errors_union.js:29:12
@@ -1627,7 +1627,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- errors_union.js:32:10
 
-Cannot cast object literal to object type because number [1] is incompatible with boolean [2] in property `a.b`.
+Cannot cast object literal to object type because in property `a.b`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    errors_union.js:32:10
@@ -1643,8 +1643,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:36:6
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2] in property `b`.
- - Or number [1] is incompatible with object type [3] in property `b`.
+ - Either in property `b`: number [1] is incompatible with boolean [2].
+ - Or in property `b`: number [1] is incompatible with object type [3].
 
    errors_union.js:36:6
    36| ({a: {b: 42}}) as {a: boolean | {b: boolean | {}}};
@@ -1717,8 +1717,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:43:2
 
 Cannot cast object literal to union type because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in property `y`.
- - Or number [3] is incompatible with string [4] in property `x`.
+ - Either in property `y`: string [1] is incompatible with number [2].
+ - Or in property `x`: number [3] is incompatible with string [4].
 
    errors_union.js:43:2
    43| ({x: 123, y: 'abc'}) as {x: number, y: number} | {x: string, y: string}; // Error
@@ -1742,8 +1742,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:48:2
 
 Cannot cast object literal to union type because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in property `y`.
- - Or number [3] is incompatible with string [4] in property `x`.
+ - Either in property `y`: string [1] is incompatible with number [2].
+ - Or in property `x`: number [3] is incompatible with string [4].
 
    errors_union.js:48:2
    48| ({x: 123, y: 'abc'}) as number | NumberPoint | StringPoint; // Error
@@ -1767,8 +1767,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:52:2
 
 Cannot cast object literal to `Point` because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in property `y`.
- - Or number [3] is incompatible with string [4] in property `x`.
+ - Either in property `y`: string [1] is incompatible with number [2].
+ - Or in property `x`: number [3] is incompatible with string [4].
 
    errors_union.js:52:2
    52| ({x: 123, y: 'abc'}) as Point; // Error
@@ -1963,8 +1963,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:75:6
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2] in index 0.
- - Or boolean [1] is incompatible with string [3] in index 0.
+ - Either in index 0: boolean [1] is incompatible with number [2].
+ - Or in index 0: boolean [1] is incompatible with string [3].
 
    errors_union.js:75:6
    75|   a: [true], // Error: should be grouped
@@ -1985,8 +1985,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:76:6
 
 Cannot cast object literal to object type because in property `b`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2] in index 0.
- - Or boolean [1] is incompatible with string [3] in index 0.
+ - Either in index 0: boolean [1] is incompatible with number [2].
+ - Or in index 0: boolean [1] is incompatible with string [3].
 
    errors_union.js:76:6
    76|   b: [true], // Error: should be grouped, should not show the [{}] branch
@@ -2007,8 +2007,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:77:6
 
 Cannot cast object literal to object type because in property `c`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2] in index 0.
- - Or boolean [1] is incompatible with string [3] in index 0.
+ - Either in index 0: boolean [1] is incompatible with number [2].
+ - Or in index 0: boolean [1] is incompatible with string [3].
 
    errors_union.js:77:6
    77|   c: [true], // Error: should be grouped, should not show the [{}] branch
@@ -2029,8 +2029,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:78:6
 
 Cannot cast object literal to object type because in property `d`: [incompatible-type]
- - Either boolean [1] is incompatible with number [2] in index 0.
- - Or boolean [1] is incompatible with string [3] in index 0.
+ - Either in index 0: boolean [1] is incompatible with number [2].
+ - Or in index 0: boolean [1] is incompatible with string [3].
 
    errors_union.js:78:6
    78|   d: [true], // Error: should be grouped, should not show the [{}] branch
@@ -2396,10 +2396,10 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:103:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either number [1] is incompatible with `A` [2] in index 1 of index 0.
- - Or number [1] is incompatible with `B` [3] in index 1 of index 0.
- - Or number [1] is incompatible with `C` [4] in index 1 of index 0.
- - Or number [1] is incompatible with `D` [5] in index 1 of index 0.
+ - Either in index 0 > index 1: number [1] is incompatible with `A` [2].
+ - Or in index 0 > index 1: number [1] is incompatible with `B` [3].
+ - Or in index 0 > index 1: number [1] is incompatible with `C` [4].
+ - Or in index 0 > index 1: number [1] is incompatible with `D` [5].
 
    errors_union.js:103:8
    103| any as [[null, number]] as [[null, A] | [null, B]] | [[null, C] | [null, D]];
@@ -2426,9 +2426,9 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:106:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either number [1] is incompatible with `A` [2] in index 1 of index 0.
- - Or number [1] is incompatible with `C` [3] in index 1 of index 0.
- - Or number [1] is incompatible with `D` [4] in index 1 of index 0.
+ - Either in index 0 > index 1: number [1] is incompatible with `A` [2].
+ - Or in index 0 > index 1: number [1] is incompatible with `C` [3].
+ - Or in index 0 > index 1: number [1] is incompatible with `D` [4].
 
    errors_union.js:106:8
    106| any as [[null, number]] as [[null, A] | {}] | [[null, C] | [null, D]];
@@ -2452,8 +2452,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:109:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either number [1] is incompatible with `A` [2] in index 1 of index 0.
- - Or number [1] is incompatible with `C` [3] in index 1 of index 0.
+ - Either in index 0 > index 1: number [1] is incompatible with `A` [2].
+ - Or in index 0 > index 1: number [1] is incompatible with `C` [3].
 
    errors_union.js:109:8
    109| any as [[null, number]] as [[null, A] | {}] | [[null, C] | {}];
@@ -2474,8 +2474,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:112:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either number [1] is incompatible with `C` [2] in index 1 of index 0.
- - Or tuple type [3] is incompatible with object type [4] in index 0.
+ - Either in index 0 > index 1: number [1] is incompatible with `C` [2].
+ - Or in index 0: tuple type [3] is incompatible with object type [4].
 
    errors_union.js:112:8
    112| any as [[null, number]] as {} | [[null, C] | {}];
@@ -2557,7 +2557,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:24:1
 
 Cannot call `b` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: number [1] is incompatible with string [2].
  - Or object literal [3] is incompatible with string [4].
 
    intersection-function.js:24:1
@@ -2604,8 +2604,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:31:1
 
 Cannot call `c` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `a.b`.
- - Or number [1] is incompatible with boolean [3] in property `a.b`.
+ - Either in property `a.b`: number [1] is incompatible with string [2].
+ - Or in property `a.b`: number [1] is incompatible with boolean [3].
 
    intersection-function.js:31:1
    31| c({a: {b: 42}});
@@ -2648,8 +2648,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:37:1
 
 Cannot call `d` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `a`.
- - Or number [1] is incompatible with object type [3] in property `a`.
+ - Either in property `a`: number [1] is incompatible with string [2].
+ - Or in property `a`: number [1] is incompatible with object type [3].
 
    intersection-function.js:37:1
    37| d({a: 42});
@@ -2670,8 +2670,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:38:1
 
 Cannot call `d` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `a.b`.
- - Or object literal [3] is incompatible with string [4] in property `a`.
+ - Either in property `a.b`: number [1] is incompatible with string [2].
+ - Or in property `a`: object literal [3] is incompatible with string [4].
 
    intersection-function.js:38:1
    38| d({a: {b: 42}});
@@ -2718,7 +2718,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:44:1
 
 Cannot call `e` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: number [1] is incompatible with string [2].
  - Or `Y` [3] is incompatible with `X` [4].
 
    intersection-function.js:44:1
@@ -2765,7 +2765,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:46:1
 
 Cannot call `e` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: boolean [1] is incompatible with string [2].
  - Or object literal [3] is incompatible with `X` [4].
 
    intersection-function.js:46:1
@@ -2813,7 +2813,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:52:1
 
 Cannot call `f` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: number [1] is incompatible with string [2].
  - Or object literal [3] is incompatible with read-only array type [4].
 
    intersection-function.js:52:1
@@ -2860,7 +2860,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:54:1
 
 Cannot call `f` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: number [1] is incompatible with string [2].
  - Or `Y` [3] is incompatible with `$ReadOnlyArray` [4].
 
    intersection-function.js:54:1
@@ -2907,7 +2907,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:56:1
 
 Cannot call `f` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in array element.
+ - Either in array element: number [1] is incompatible with string [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
    intersection-function.js:56:1
@@ -2932,8 +2932,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:57:1
 
 Cannot call `f` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in index 0.
- - Or number [1] is incompatible with string [3] in array element.
+ - Either in index 0: number [1] is incompatible with string [2].
+ - Or in array element: number [1] is incompatible with string [3].
 
    intersection-function.js:57:1
    57| f([1, 2] as [number, number]);
@@ -2954,7 +2954,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:58:1
 
 Cannot call `f` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in array element.
+ - Either in array element: number [1] is incompatible with string [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
    intersection-function.js:58:1
@@ -2979,8 +2979,8 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:59:1
 
 Cannot call `f` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in array element.
- - Or number [3] is incompatible with string [4] in property `p`.
+ - Either in array element: number [1] is incompatible with string [2].
+ - Or in property `p`: number [3] is incompatible with string [4].
 
    intersection-function.js:59:1
    59| f(null as any as Array<number> & {p: number});
@@ -3120,7 +3120,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:80:1
 
 Cannot call `k` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: number [1] is incompatible with string [2].
  - Or number [3] is incompatible with string [4].
 
    intersection-function.js:80:1
@@ -3145,23 +3145,23 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:84:1
 
 Cannot call `m` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in type argument `T` [3].
- - Or number [1] is incompatible with string [4] in property `p`.
+ - Either in type argument `T` [1]: number [2] is incompatible with string [3].
+ - Or in property `p`: number [2] is incompatible with string [4].
 
    intersection-function.js:84:1
    84| m(new W() as W<number>);
        ^
 
 References:
-   intersection-function.js:84:16
-   84| m(new W() as W<number>);
-                      ^^^^^^ [1]
-   intersection-function.js:82:25
-   82| declare function m(x: W<string>): void;
-                               ^^^^^^ [2]
    intersection-function.js:13:9
    13| class W<T> {
-               ^ [3]
+               ^ [1]
+   intersection-function.js:84:16
+   84| m(new W() as W<number>);
+                      ^^^^^^ [2]
+   intersection-function.js:82:25
+   82| declare function m(x: W<string>): void;
+                               ^^^^^^ [3]
    intersection-function.js:83:37
    83| declare function m(x: interface {p: string}): void;
                                            ^^^^^^ [4]
@@ -3408,7 +3408,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ sentinel.js:11:17
 
-Cannot cast object literal to `X` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `X` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    sentinel.js:11:17
@@ -3476,7 +3476,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:22:2
 
 Cannot cast object literal to `B` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: number [1] is incompatible with string [2].
  - Or object literal [3] is incompatible with string [4].
 
    union.js:22:2
@@ -3517,8 +3517,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:26:2
 
 Cannot cast object literal to `C` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `a.b`.
- - Or number [1] is incompatible with boolean [3] in property `a.b`.
+ - Either in property `a.b`: number [1] is incompatible with string [2].
+ - Or in property `a.b`: number [1] is incompatible with boolean [3].
 
    union.js:26:2
    26| ({a: {b: 42}}) as C;
@@ -3558,8 +3558,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:30:2
 
 Cannot cast object literal to `D` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `a`.
- - Or number [1] is incompatible with object type [3] in property `a`.
+ - Either in property `a`: number [1] is incompatible with string [2].
+ - Or in property `a`: number [1] is incompatible with object type [3].
 
    union.js:30:2
    30| ({a: 42}) as D;
@@ -3580,8 +3580,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:31:2
 
 Cannot cast object literal to `D` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `a.b`.
- - Or object literal [3] is incompatible with string [4] in property `a`.
+ - Either in property `a.b`: number [1] is incompatible with string [2].
+ - Or in property `a`: object literal [3] is incompatible with string [4].
 
    union.js:31:2
    31| ({a: {b: 42}}) as D;
@@ -3625,7 +3625,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:36:1
 
 Cannot cast `new Y()` to `E` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: number [1] is incompatible with string [2].
  - Or `Y` [3] is incompatible with `X` [4].
 
    union.js:36:1
@@ -3666,7 +3666,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:38:2
 
 Cannot cast object literal to `E` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: boolean [1] is incompatible with string [2].
  - Or object literal [3] is incompatible with `X` [4].
 
    union.js:38:2
@@ -3708,7 +3708,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:42:2
 
 Cannot cast object literal to `F` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: number [1] is incompatible with string [2].
  - Or object literal [3] is incompatible with read-only array type [4].
 
    union.js:42:2
@@ -3749,7 +3749,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:44:1
 
 Cannot cast `new Y()` to `F` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `p`.
+ - Either in property `p`: number [1] is incompatible with string [2].
  - Or `Y` [3] is incompatible with `$ReadOnlyArray` [4].
 
    union.js:44:1
@@ -3790,7 +3790,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:46:8
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in array element.
+ - Either in array element: number [1] is incompatible with string [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
    union.js:46:8
@@ -3812,8 +3812,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:47:11
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in index 0.
- - Or number [1] is incompatible with string [3] in array element.
+ - Either in index 0: number [1] is incompatible with string [2].
+ - Or in array element: number [1] is incompatible with string [3].
 
    union.js:47:11
    47| [1, 2] as [number, number] as F;
@@ -3834,7 +3834,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:48:14
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in array element.
+ - Either in array element: number [1] is incompatible with string [2].
  - Or property `p` is missing in tuple type [3] but exists in interface type [4].
 
    union.js:48:14
@@ -3856,8 +3856,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:49:16
 
 Cannot cast `null` to `F` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in array element.
- - Or number [3] is incompatible with string [4] in property `p`.
+ - Either in array element: number [1] is incompatible with string [2].
+ - Or in property `p`: number [3] is incompatible with string [4].
 
    union.js:49:16
    49| null as any as Array<number> & {p: number} as F;
@@ -3919,23 +3919,23 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:56:12
 
 Cannot cast `new W()` to `M` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in type argument `T` [3].
- - Or number [1] is incompatible with string [4] in property `p`.
+ - Either in type argument `T` [1]: number [2] is incompatible with string [3].
+ - Or in property `p`: number [2] is incompatible with string [4].
 
    union.js:56:12
    56| new W() as W<number> as M;
                   ^^^^^^^^^
 
 References:
-   union.js:56:14
-   56| new W() as W<number> as M;
-                    ^^^^^^ [1]
-   union.js:55:12
-   55| type M = W<string> | interface {p: string};
-                  ^^^^^^ [2]
    union.js:13:9
    13| class W<T> {
-               ^ [3]
+               ^ [1]
+   union.js:56:14
+   56| new W() as W<number> as M;
+                    ^^^^^^ [2]
+   union.js:55:12
+   55| type M = W<string> | interface {p: string};
+                  ^^^^^^ [3]
    union.js:55:36
    55| type M = W<string> | interface {p: string};
                                           ^^^^^^ [4]

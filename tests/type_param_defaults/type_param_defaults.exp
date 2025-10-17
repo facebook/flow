@@ -51,7 +51,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:21:17
 
-Cannot instantiate `C` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-type]
+Cannot instantiate `C` because in type argument `T`: number [1] is incompatible with string [2]. [incompatible-type]
 
    classes.js:21:17
    21| var c_number: C<number> = new C(123); // Error number ~> ?string
@@ -65,7 +65,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:21:31
 
-Cannot call `C` because number [1] is incompatible with string [2] in type argument `T`. [incompatible-type]
+Cannot call `C` because in type argument `T`: number [1] is incompatible with string [2]. [incompatible-type]
 
    classes.js:21:31
    21| var c_number: C<number> = new C(123); // Error number ~> ?string

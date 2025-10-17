@@ -34,7 +34,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:13:24
 
-Cannot assign `a.reverse()` to `e` because `number` [1] is not exactly the same as `string` [2] in array element.
+Cannot assign `a.reverse()` to `e` because in array element: `number` [1] is not exactly the same as `string` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -63,8 +63,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:26:24
 
-Cannot assign `h.concat(...)` to `n` because `number | "a" | "b" | "c"` [1] is not exactly the same as `number` [2] in
-array element. [incompatible-type]
+Cannot assign `h.concat(...)` to `n` because in array element: `number | "a" | "b" | "c"` [1] is not exactly the same as
+`number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<number | "a" | "b" | "c">` [3] and `Array<number>` [4] exactly the same
@@ -126,8 +126,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ array_lib.js:71:3
 
-Cannot cast `Array.from(...)` to array type because `string` [1] is not exactly the same as `empty` [2] in array
-element. [incompatible-type]
+Cannot cast `Array.from(...)` to array type because in array element: `string` [1] is not exactly the same as
+`empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<string>` [3] and `Array<empty>` [4] exactly the same
@@ -155,7 +155,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:80:57
 
-Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-type]
+Cannot call `Array.of` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
 
    array_lib.js:80:57
    80|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
@@ -169,7 +169,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- array_lib.js:80:60
 
-Cannot call `Array.of` because number [1] is incompatible with string [2] in array element. [incompatible-type]
+Cannot call `Array.of` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
 
    array_lib.js:80:60
    80|   var incompatibleTypeNotOkay: Array<string> = Array.of(1, 2);
@@ -255,8 +255,8 @@ References:
 Error ----------------------------------------------------------------------------- filter_error_msg_quality_test.js:3:9
 
 Cannot call `str_arr.filter` because: [incompatible-type]
- - Either number [1] is incompatible with boolean [2] in the return value.
- - Or string [3] is incompatible with boolean [4] in array element.
+ - Either in the return value: number [1] is incompatible with boolean [2].
+ - Or in array element: string [3] is incompatible with boolean [4].
 
    filter_error_msg_quality_test.js:3:9
       3| str_arr.filter(s => s.length) as Array<boolean>;
@@ -280,7 +280,7 @@ References:
 Error ---------------------------------------------------------------------------- filter_error_msg_quality_test.js:7:18
 
 Cannot call `nullable_str_arr.filter` because: [incompatible-type]
- - Either null or undefined [1] is incompatible with string [2] in array element.
+ - Either in array element: null or undefined [1] is incompatible with string [2].
  - Or function [3] is incompatible with class `Boolean` [4].
 
    filter_error_msg_quality_test.js:7:18
@@ -304,8 +304,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:3:34
 
-Cannot assign `arr1.flat()` to `result1_1` because `number extends $ReadOnlyArray<infer E> ? E : T` [1] is not exactly
-the same as `string` [2] in array element. [incompatible-type]
+Cannot assign `arr1.flat()` to `result1_1` because in array element:
+`number extends $ReadOnlyArray<infer E> ? E : T` [1] is not exactly the same as `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<number extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<string>` [4] exactly the same
@@ -333,7 +333,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:5:43
 
-Cannot assign `arr1.flat()` to `result1_3` because number [1] is incompatible with string [2] in array element.
+Cannot assign `arr1.flat()` to `result1_3` because in array element: number [1] is incompatible with string [2].
 [incompatible-type]
 
    flat.js:5:43
@@ -351,8 +351,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:9:34
 
-Cannot assign `arr2.flat()` to `result2_1` because `Array<number> extends $ReadOnlyArray<infer E> ? E : T` [1] is not
-exactly the same as `string` [2] in array element. [incompatible-type]
+Cannot assign `arr2.flat()` to `result2_1` because in array element:
+`Array<number> extends $ReadOnlyArray<infer E> ? E : T` [1] is not exactly the same as `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<Array<number> extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<string>` [4] exactly the
@@ -381,8 +381,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:11:34
 
-Cannot assign `arr2.flat(...)` to `result2_3` because `Array<number>` [1] is not exactly the same as `number` [2] in
-array element. [incompatible-type]
+Cannot assign `arr2.flat(...)` to `result2_3` because in array element: `Array<number>` [1] is not exactly the same as
+`number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<Array<number>>` [3] and `Array<number>` [4] exactly the same
@@ -410,8 +410,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:13:34
 
-Cannot assign `arr2.flat(...)` to `result2_5` because `Array<number> extends $ReadOnlyArray<infer E> ? E : T` [1] is not
-exactly the same as `string` [2] in array element. [incompatible-type]
+Cannot assign `arr2.flat(...)` to `result2_5` because in array element:
+`Array<number> extends $ReadOnlyArray<infer E> ? E : T` [1] is not exactly the same as `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<Array<number> extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<string>` [4] exactly the
@@ -440,8 +440,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:17:34
 
-Cannot assign `arr3.flat()` to `result3_1` because `Array<Array<number>> extends $ReadOnlyArray<infer E> ? E : T` [1] is
-not exactly the same as `number` [2] in array element. [incompatible-type]
+Cannot assign `arr3.flat()` to `result3_1` because in array element:
+`Array<Array<number>> extends $ReadOnlyArray<infer E> ? E : T` [1] is not exactly the same as `number` [2].
+[incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<Array<Array<number>> extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<number>` [4] exactly
@@ -470,8 +471,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:20:34
 
-Cannot assign `arr3.flat(...)` to `result3_2` because `mixed` [1] is not exactly the same as `number` [2] in array
-element. [incompatible-type]
+Cannot assign `arr3.flat(...)` to `result3_2` because in array element: `mixed` [1] is not exactly the same as
+`number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [3] and `Array<number>` [4] exactly the same
@@ -499,8 +500,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:25:34
 
-Cannot assign `arr2.flat(...)` to `result2_6` because `mixed` [1] is not exactly the same as `number` [2] in array
-element. [incompatible-type]
+Cannot assign `arr2.flat(...)` to `result2_6` because in array element: `mixed` [1] is not exactly the same as
+`number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [3] and `Array<number>` [4] exactly the same
@@ -528,9 +529,9 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- flat.js:30:41
 
-Cannot assign `arr4.flat()` to `result4_1` because
-`(number | Array<number>) extends $ReadOnlyArray<infer E> ? E : T` [1] is not exactly the same as `Array<number>` [2] in
-array element. [incompatible-type]
+Cannot assign `arr4.flat()` to `result4_1` because in array element:
+`(number | Array<number>) extends $ReadOnlyArray<infer E> ? E : T` [1] is not exactly the same as `Array<number>` [2].
+[incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<(number | Array<number>) extends $ReadOnlyArray<infer E> ? E : T>` [3] and

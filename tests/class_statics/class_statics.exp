@@ -57,7 +57,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:10:13
 
-Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in property `x`. [incompatible-type]
+Cannot extend `A` [1] with `B` because in property `x`: string [2] is incompatible with number [3]. [incompatible-type]
 
    test.js:10:13
    10|   static x: string; // error
@@ -74,8 +74,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:11:17
 
-Cannot extend `A` [1] with `B` because string [2] is incompatible with number [3] in the first parameter of property
-`foo`. [incompatible-type]
+Cannot extend `A` [1] with `B` because in property `foo` > the first parameter: string [2] is incompatible with
+number [3]. [incompatible-type]
 
    test.js:11:17
    11|   static foo(x: string) { } // error

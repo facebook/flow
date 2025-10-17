@@ -1,7 +1,7 @@
 Error ---------------------------------------------------------------------------------------------------- apply.js:10:7
 
-Cannot call `apply` with `noRest1` bound to `fn` because number [1] is incompatible with number literal `123` [2] in the
-second argument. [incompatible-type]
+Cannot call `apply` with `noRest1` bound to `fn` because in the second argument: number [1] is incompatible with number
+literal `123` [2]. [incompatible-type]
 
    apply.js:10:7
    10| apply(noRest1, ['hi', 456]); // Error - 456 ~> 123
@@ -36,8 +36,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:17:7
 
-Cannot call `apply` with `withRest1` bound to `fn` because number [1] is incompatible with number literal `123` [2] in
-index 1. [incompatible-type]
+Cannot call `apply` with `withRest1` bound to `fn` because in index 1: number [1] is incompatible with number literal
+`123` [2]. [incompatible-type]
 
    apply.js:17:7
    17| apply(withRest1, ['hi', 456]); // Error - 456 ~> 123
@@ -90,8 +90,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:29:11
 
-Cannot call `applyType` with `noRest2` bound to `fn` because number [1] is incompatible with number literal `123` [2] in
-the second argument. [incompatible-type]
+Cannot call `applyType` with `noRest2` bound to `fn` because in the second argument: number [1] is incompatible with
+number literal `123` [2]. [incompatible-type]
 
    apply.js:29:11
    29| applyType(noRest2, ['hi', 456]); // Error - 456 ~> 123
@@ -126,8 +126,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:36:11
 
-Cannot call `applyType` with `withRest2` bound to `fn` because number [1] is incompatible with number literal `123` [2]
-in index 1. [incompatible-type]
+Cannot call `applyType` with `withRest2` bound to `fn` because in index 1: number [1] is incompatible with number
+literal `123` [2]. [incompatible-type]
 
    apply.js:36:11
    36| applyType(withRest2, ['hi', 456]); // Error - 456 ~> 123
@@ -180,7 +180,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:30:3
 
-Cannot create `AcceptsWhatever` element because string [1] is incompatible with number [2] in the return value.
+Cannot create `AcceptsWhatever` element because in the return value: string [1] is incompatible with number [2].
 [incompatible-use]
 
    jsx.js:30:3
@@ -199,7 +199,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:31:3
 
 Cannot create `AcceptsWhatever` element because: [incompatible-use]
- - Either string [1] is incompatible with number [2] in the return value.
+ - Either in the return value: string [1] is incompatible with number [2].
  - Or props [3] is incompatible with null [4].
 
    jsx.js:31:3
@@ -224,7 +224,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:34:2
 
 Cannot create `ExpectsProps` element because: [incompatible-use]
- - Either property `name` is missing in object type [1] but exists in object type [2] in the first parameter.
+ - Either in the first parameter: property `name` is missing in object type [1] but exists in object type [2].
  - Or null [3] is incompatible with object type [2].
 
    jsx.js:34:2
@@ -246,7 +246,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------ jsx.js:35:3
 
 Cannot create `ExpectsProps` element because: [incompatible-use]
- - Either string [1] is incompatible with number [2] in the return value.
+ - Either in the return value: string [1] is incompatible with number [2].
  - Or props [3] is incompatible with null [4].
 
    jsx.js:35:3
@@ -288,7 +288,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:40:2
 
-Cannot create `ExpectsChildrenTuple` element because number [1] is incompatible with string [2] in index 0.
+Cannot create `ExpectsChildrenTuple` element because in index 0: number [1] is incompatible with string [2].
 [incompatible-use]
 
    jsx.js:40:2
@@ -324,7 +324,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:49:2
 
-Cannot create `ExpectsChildrenArray` element because number [1] is incompatible with string [2] in array element.
+Cannot create `ExpectsChildrenArray` element because in array element: number [1] is incompatible with string [2].
 [incompatible-use]
 
    jsx.js:49:2
@@ -414,7 +414,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:26:37
 
-Cannot call `funWithRestArray` because string [1] is incompatible with number [2] in array element. [incompatible-type]
+Cannot call `funWithRestArray` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
 
    spread.js:26:37
    26| funWithRestArray('hi', ...arrOf123, 'bye', ...arrOf123);

@@ -34,7 +34,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:8:12
 
-Cannot cast object literal to `O` because number [1] is incompatible with string [2] in property `q`.
+Cannot cast object literal to `O` because in property `q`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    annot.js:8:12
@@ -49,7 +49,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:9:24
 
-Cannot cast object literal to `O` because number [1] is incompatible with string [2] in property `q`.
+Cannot cast object literal to `O` because in property `q`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    annot.js:9:24

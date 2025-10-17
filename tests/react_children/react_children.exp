@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------ api.js:14:4
 
-Cannot call `na` with `Children.map(...)` bound to `x` because `$NonMaybeType<string>` [1] is not exactly the same as
-`number` [2] in array element. [incompatible-type]
+Cannot call `na` with `Children.map(...)` bound to `x` because in array element: `$NonMaybeType<string>` [1] is not
+exactly the same as `number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<$NonMaybeType<string>>` [3] and `Array<number>` [4] exactly the same
@@ -29,8 +29,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:14:24
 
-Cannot call `Children.map` with function bound to `fn` because string [1] is incompatible with number [2] in the first
-parameter. [incompatible-type]
+Cannot call `Children.map` with function bound to `fn` because in the first parameter: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    api.js:14:24
    14| na(Children.map(a, (x: string) => x as string)); // Error
@@ -44,8 +44,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:14:24
 
-Cannot call `Children.map` with function bound to `fn` because string [1] is incompatible with number [2] in the first
-parameter. [incompatible-type]
+Cannot call `Children.map` with function bound to `fn` because in the first parameter: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    api.js:14:24
    14| na(Children.map(a, (x: string) => x as string)); // Error
@@ -59,8 +59,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ api.js:15:4
 
-Cannot call `sa` with `Children.map(...)` bound to `x` because `$NonMaybeType<number>` [1] is not exactly the same as
-`string` [2] in array element. [incompatible-type]
+Cannot call `sa` with `Children.map(...)` bound to `x` because in array element: `$NonMaybeType<number>` [1] is not
+exactly the same as `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<$NonMaybeType<number>>` [3] and `Array<string>` [4] exactly the same
@@ -88,8 +88,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:17:25
 
-Cannot call `Children.forEach` with function bound to `fn` because number [1] is incompatible with nullable number [2]
-in the first parameter. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: number [1] is incompatible
+with nullable number [2]. [incompatible-type]
 
    api.js:17:25
    17| Children.forEach(a, (x: number) => {}); // Error
@@ -103,8 +103,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:17:25
 
-Cannot call `Children.forEach` with function bound to `fn` because number [1] is incompatible with null or undefined [2]
-in the first parameter. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: number [1] is incompatible
+with null or undefined [2]. [incompatible-type]
 
    api.js:17:25
    17| Children.forEach(a, (x: number) => {}); // Error
@@ -118,8 +118,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:19:25
 
-Cannot call `Children.forEach` with function bound to `fn` because string [1] is incompatible with nullable number [2]
-in the first parameter. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
+with nullable number [2]. [incompatible-type]
 
    api.js:19:25
    19| Children.forEach(a, (x: string) => {}); // Error
@@ -133,8 +133,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:19:25
 
-Cannot call `Children.forEach` with function bound to `fn` because string [1] is incompatible with number [2] in the
-first parameter. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
+with number [2]. [incompatible-type]
 
    api.js:19:25
    19| Children.forEach(a, (x: string) => {}); // Error
@@ -148,8 +148,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:19:25
 
-Cannot call `Children.forEach` with function bound to `fn` because string [1] is incompatible with null or undefined [2]
-in the first parameter. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
+with null or undefined [2]. [incompatible-type]
 
    api.js:19:25
    19| Children.forEach(a, (x: string) => {}); // Error
@@ -163,8 +163,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- api.js:19:25
 
-Cannot call `Children.forEach` with function bound to `fn` because string [1] is incompatible with number [2] in the
-first parameter. [incompatible-type]
+Cannot call `Children.forEach` with function bound to `fn` because in the first parameter: string [1] is incompatible
+with number [2]. [incompatible-type]
 
    api.js:19:25
    19| Children.forEach(a, (x: string) => {}); // Error
@@ -232,8 +232,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ api.js:28:4
 
-Cannot call `sa` with `Children.toArray(...)` bound to `x` because `$NonMaybeType<?number>` [1] is not exactly the same
-as `string` [2] in array element. [incompatible-type]
+Cannot call `sa` with `Children.toArray(...)` bound to `x` because in array element: `$NonMaybeType<?number>` [1] is not
+exactly the same as `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<$NonMaybeType<?number>>` [3] and `Array<string>` [4] exactly the same
@@ -379,7 +379,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:27:6
 
-Cannot create `Fun` element because children array [1] is incompatible with `Fn` [2] in property `children`.
+Cannot create `Fun` element because in property `children`: children array [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:27:6
@@ -398,7 +398,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:32:6
 
-Cannot create `Fun` element because children array [1] is incompatible with `Fn` [2] in property `children`.
+Cannot create `Fun` element because in property `children`: children array [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:32:6
@@ -413,7 +413,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:33:6
 
-Cannot create `Fun` element because children array [1] is incompatible with `Fn` [2] in property `children`.
+Cannot create `Fun` element because in property `children`: children array [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:33:6
@@ -428,8 +428,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:43:12
 
-Cannot create `Fun` element because string [1] is incompatible with number [2] in the return value of property
-`children`. [incompatible-type]
+Cannot create `Fun` element because in property `children` > the return value: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    fun.js:43:12
    43|     return '42'; // Error: Must return a number.
@@ -510,7 +510,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:49:7
 
-Cannot create `Fun` element because undefined [1] is incompatible with `Fn` [2] in property `children`.
+Cannot create `Fun` element because in property `children`: undefined [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:49:7
@@ -525,7 +525,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:50:7
 
-Cannot create `Fun` element because null [1] is incompatible with `Fn` [2] in property `children`. [incompatible-type]
+Cannot create `Fun` element because in property `children`: null [1] is incompatible with `Fn` [2]. [incompatible-type]
 
    fun.js:50:7
    50| <Fun>{null}</Fun>; // Error: `null` is not allowed.
@@ -539,7 +539,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:51:7
 
-Cannot create `Fun` element because boolean [1] is incompatible with `Fn` [2] in property `children`.
+Cannot create `Fun` element because in property `children`: boolean [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:51:7
@@ -554,7 +554,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:52:7
 
-Cannot create `Fun` element because boolean [1] is incompatible with `Fn` [2] in property `children`.
+Cannot create `Fun` element because in property `children`: boolean [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:52:7
@@ -569,7 +569,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:53:7
 
-Cannot create `Fun` element because number [1] is incompatible with `Fn` [2] in property `children`. [incompatible-type]
+Cannot create `Fun` element because in property `children`: number [1] is incompatible with `Fn` [2].
+[incompatible-type]
 
    fun.js:53:7
    53| <Fun>{0}</Fun>; // Error: `number`s are not allowed.
@@ -583,7 +584,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:54:7
 
-Cannot create `Fun` element because number [1] is incompatible with `Fn` [2] in property `children`. [incompatible-type]
+Cannot create `Fun` element because in property `children`: number [1] is incompatible with `Fn` [2].
+[incompatible-type]
 
    fun.js:54:7
    54| <Fun>{42}</Fun>; // Error: `number`s are not allowed.
@@ -597,7 +599,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:56:3
 
-Cannot create `Fun` element because React element [1] is incompatible with `Fn` [2] in property `children`.
+Cannot create `Fun` element because in property `children`: React element [1] is incompatible with `Fn` [2].
 [incompatible-type]
 
    fun.js:56:3
@@ -630,7 +632,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:63:13
 
-Cannot create `Obj` element because string [1] is incompatible with number [2] in property `children.foo`.
+Cannot create `Obj` element because in property `children.foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    fun.js:63:13
@@ -645,7 +647,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:63:23
 
-Cannot create `Obj` element because string [1] is incompatible with number [2] in property `children.bar`.
+Cannot create `Obj` element because in property `children.bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    fun.js:63:23
@@ -660,7 +662,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:64:6
 
-Cannot create `Obj` element because children array [1] is incompatible with `Data` [2] in property `children`.
+Cannot create `Obj` element because in property `children`: children array [1] is incompatible with `Data` [2].
 [incompatible-type]
 
    fun.js:64:6
@@ -679,7 +681,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:69:6
 
-Cannot create `Obj` element because children array [1] is incompatible with `Data` [2] in property `children`.
+Cannot create `Obj` element because in property `children`: children array [1] is incompatible with `Data` [2].
 [incompatible-type]
 
    fun.js:69:6
@@ -694,7 +696,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:70:6
 
-Cannot create `Obj` element because children array [1] is incompatible with `Data` [2] in property `children`.
+Cannot create `Obj` element because in property `children`: children array [1] is incompatible with `Data` [2].
 [incompatible-type]
 
    fun.js:70:6
@@ -709,7 +711,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:75:16
 
-Cannot create `FunArrayOnly` element because function [1] is incompatible with array type [2] in property `children`.
+Cannot create `FunArrayOnly` element because in property `children`: function [1] is incompatible with array type [2].
 [incompatible-type]
 
    fun.js:75:16
@@ -724,8 +726,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:85:4
 
-Cannot create `FunArrayOnly` element because array literal [1] is incompatible with `Fn` [2] in array element of
-property `children`. [incompatible-type]
+Cannot create `FunArrayOnly` element because in property `children` > array element: array literal [1] is incompatible
+with `Fn` [2]. [incompatible-type]
 
    fun.js:85:4
    85|   {[() => 42, () => 42]}
@@ -739,8 +741,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:86:4
 
-Cannot create `FunArrayOnly` element because array literal [1] is incompatible with `Fn` [2] in array element of
-property `children`. [incompatible-type]
+Cannot create `FunArrayOnly` element because in property `children` > array element: array literal [1] is incompatible
+with `Fn` [2]. [incompatible-type]
 
    fun.js:86:4
    86|   {[() => 42, () => 42]}
@@ -754,8 +756,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:91:4
 
-Cannot create `FunArrayOnly` element because array literal [1] is incompatible with `Fn` [2] in array element of
-property `children`. [incompatible-type]
+Cannot create `FunArrayOnly` element because in property `children` > array element: array literal [1] is incompatible
+with `Fn` [2]. [incompatible-type]
 
    fun.js:91:4
    91|   {[() => 42, () => 42]}
@@ -769,7 +771,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- fun.js:96:16
 
-Cannot create `FunArrayOnly` element because function [1] is incompatible with array type [2] in property `children`.
+Cannot create `FunArrayOnly` element because in property `children`: function [1] is incompatible with array type [2].
 [incompatible-type]
 
    fun.js:96:16
@@ -785,7 +787,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- fun.js:116:11
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either array literal [1] is incompatible with `Fn` [2] in array element.
+ - Either in array element: array literal [1] is incompatible with `Fn` [2].
  - Or children array [3] is incompatible with `Fn` [4].
 
    fun.js:116:11
@@ -811,7 +813,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- fun.js:122:11
 
 Cannot create `FunArray` element because in property `children`: [incompatible-type]
- - Either array literal [1] is incompatible with `Fn` [2] in array element.
+ - Either in array element: array literal [1] is incompatible with `Fn` [2].
  - Or children array [3] is incompatible with `Fn` [4].
 
    fun.js:122:11
@@ -1032,8 +1034,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:30:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either string [1] is incompatible with boolean [2] in array element.
- - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3] in array element.
+ - Either in array element: string [1] is incompatible with boolean [2].
+ - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
    tabs.js:30:9
    30| <TabBar>  <Tab/><Tab/></TabBar>; // Error: Spaces are strings.
@@ -1054,8 +1056,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:31:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either string [1] is incompatible with boolean [2] in array element.
- - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3] in array element.
+ - Either in array element: string [1] is incompatible with boolean [2].
+ - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
    tabs.js:31:9
    31| <TabBar><Tab/>  <Tab/></TabBar>; // Error: Spaces are strings.
@@ -1076,8 +1078,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:32:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either string [1] is incompatible with boolean [2] in array element.
- - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3] in array element.
+ - Either in array element: string [1] is incompatible with boolean [2].
+ - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
    tabs.js:32:9
    32| <TabBar><Tab/><Tab/>  </TabBar>; // Error: Spaces are strings.
@@ -1098,7 +1100,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:67:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either `NotTab` [1] is incompatible with `Tab` [2] in type argument `ElementType` [3].
+ - Either in type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
  - Or React element [4] is incompatible with boolean [5].
 
    tabs.js:67:9
@@ -1106,15 +1108,15 @@ Cannot create `TabBar` element because in property `children`: [incompatible-typ
                ^^^^^^^^^ [4]
 
 References:
-   tabs.js:11:7
-   11| class NotTab extends React.Component<{}, void> {}
-             ^^^^^^ [1]
-   tabs.js:10:7
-   10| class Tab extends React.Component<{}, void> {}
-             ^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   tabs.js:11:7
+   11| class NotTab extends React.Component<{}, void> {}
+             ^^^^^^ [2]
+   tabs.js:10:7
+   10| class Tab extends React.Component<{}, void> {}
+             ^^^ [3]
    tabs.js:16:5
    16|   | boolean
            ^^^^^^^ [5]
@@ -1123,23 +1125,23 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:68:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either `NotTab` [1] is incompatible with `Tab` [2] in type argument `ElementType` [3] of array element.
- - Or React element [4] is incompatible with boolean [5] in array element.
+ - Either in array element > type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
+ - Or in array element: React element [4] is incompatible with boolean [5].
 
    tabs.js:68:9
    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
                ^^^^^^^^^^^^^^^^^^
 
 References:
-   tabs.js:11:7
-   11| class NotTab extends React.Component<{}, void> {}
-             ^^^^^^ [1]
-   tabs.js:10:7
-   10| class Tab extends React.Component<{}, void> {}
-             ^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   tabs.js:11:7
+   11| class NotTab extends React.Component<{}, void> {}
+             ^^^^^^ [2]
+   tabs.js:10:7
+   10| class Tab extends React.Component<{}, void> {}
+             ^^^ [3]
    tabs.js:68:9
    68| <TabBar><NotTab/><NotTab/></TabBar>; // Error: We can only have tab components.
                ^^^^^^^^^ [4]
@@ -1151,8 +1153,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- tabs.js:71:9
 
 Cannot create `TabBar` element because in property `children`: [incompatible-type]
- - Either `NotTab` [1] is incompatible with `Tab` [2] in type argument `ElementType` [3] of array element.
- - Or React element [4] is incompatible with boolean [5] in array element.
+ - Either in array element > type argument `ElementType` [1]: `NotTab` [2] is incompatible with `Tab` [3].
+ - Or in array element: React element [4] is incompatible with boolean [5].
 
    tabs.js:71:9
                v
@@ -1165,15 +1167,15 @@ Cannot create `TabBar` element because in property `children`: [incompatible-typ
        ^
 
 References:
-   tabs.js:11:7
-   11| class NotTab extends React.Component<{}, void> {}
-             ^^^^^^ [1]
-   tabs.js:10:7
-   10| class Tab extends React.Component<{}, void> {}
-             ^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   tabs.js:11:7
+   11| class NotTab extends React.Component<{}, void> {}
+             ^^^^^^ [2]
+   tabs.js:10:7
+   10| class Tab extends React.Component<{}, void> {}
+             ^^^ [3]
    tabs.js:73:3
    73|   <NotTab/>
          ^^^^^^^^^ [4]
@@ -1274,7 +1276,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:20:8
 
-Cannot create `Text` element because undefined [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: undefined [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:20:8
@@ -1289,7 +1291,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:21:8
 
-Cannot create `Text` element because null [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:21:8
@@ -1304,7 +1306,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:22:8
 
-Cannot create `Text` element because boolean [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:22:8
@@ -1319,7 +1321,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:23:8
 
-Cannot create `Text` element because boolean [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:23:8
@@ -1334,7 +1336,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:24:8
 
-Cannot create `Text` element because number [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:24:8
@@ -1349,7 +1351,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:25:8
 
-Cannot create `Text` element because number [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:25:8
@@ -1364,7 +1366,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:26:7
 
-Cannot create `Text` element because React element [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: React element [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:26:7
@@ -1379,7 +1381,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:35:7
 
-Cannot create `Text` element because children array [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: children array [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:35:7
@@ -1394,7 +1396,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:36:7
 
-Cannot create `Text` element because children array [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: children array [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:36:7
@@ -1409,7 +1411,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:37:7
 
-Cannot create `Text` element because children array [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: children array [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:37:7
@@ -1424,7 +1426,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- text.js:38:7
 
-Cannot create `Text` element because children array [1] is incompatible with string [2] in property `children`.
+Cannot create `Text` element because in property `children`: children array [1] is incompatible with string [2].
 [incompatible-type]
 
    text.js:38:7
@@ -1439,7 +1441,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:48:14
 
-Cannot create `TextLiteral` element because JSX text [1] is incompatible with union type [2] in property `children`.
+Cannot create `TextLiteral` element because in property `children`: JSX text [1] is incompatible with union type [2].
 [incompatible-type]
 
    text.js:48:14
@@ -1454,8 +1456,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:49:15
 
-Cannot create `TextLiteral` element because string literal `buz` [1] is incompatible with union type [2] in property
-`children`. [incompatible-type]
+Cannot create `TextLiteral` element because in property `children`: string literal `buz` [1] is incompatible with union
+type [2]. [incompatible-type]
 
    text.js:49:15
    49| <TextLiteral>{'buz'}</TextLiteral>; // Error: `buz` is not allowed.
@@ -1469,7 +1471,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:50:14
 
-Cannot create `TextLiteral` element because JSX text [1] is incompatible with union type [2] in property `children`.
+Cannot create `TextLiteral` element because in property `children`: JSX text [1] is incompatible with union type [2].
 [incompatible-type]
 
    text.js:50:14
@@ -1484,7 +1486,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:51:14
 
-Cannot create `TextLiteral` element because JSX text [1] is incompatible with union type [2] in property `children`.
+Cannot create `TextLiteral` element because in property `children`: JSX text [1] is incompatible with union type [2].
 [incompatible-type]
 
    text.js:51:14
@@ -1499,8 +1501,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:52:14
 
-Cannot create `TextLiteral` element because children array [1] is incompatible with union type [2] in property
-`children`. [incompatible-type]
+Cannot create `TextLiteral` element because in property `children`: children array [1] is incompatible with union
+type [2]. [incompatible-type]
 
    text.js:52:14
    52| <TextLiteral>{'foo'}  </TextLiteral>; // Error: Spaces are not trimmed.
@@ -1514,8 +1516,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- text.js:53:14
 
-Cannot create `TextLiteral` element because children array [1] is incompatible with union type [2] in property
-`children`. [incompatible-type]
+Cannot create `TextLiteral` element because in property `children`: children array [1] is incompatible with union
+type [2]. [incompatible-type]
 
    text.js:53:14
    53| <TextLiteral>  {'foo'}</TextLiteral>; // Error: Spaces are not trimmed.
@@ -1547,8 +1549,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:12:8
 
-Cannot create `Tuple` element because children array [1] has 4 elements but tuple type [2] has 3 elements in property
-`children`. [invalid-tuple-arity]
+Cannot create `Tuple` element because in property `children`: children array [1] has 4 elements but tuple type [2] has 3
+elements. [invalid-tuple-arity]
 
    tuple.js:12:8
    12| <Tuple>{true}{'foo'}{42}{null}</Tuple>; // Error: One to many.
@@ -1562,8 +1564,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:13:8
 
-Cannot create `Tuple` element because children array [1] has 4 elements but tuple type [2] has 3 elements in property
-`children`. [invalid-tuple-arity]
+Cannot create `Tuple` element because in property `children`: children array [1] has 4 elements but tuple type [2] has 3
+elements. [invalid-tuple-arity]
 
    tuple.js:13:8
    13| <Tuple>  {true}foo{42}</Tuple>; // Error: Spaces add items.
@@ -1577,8 +1579,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:14:8
 
-Cannot create `Tuple` element because children array [1] has 4 elements but tuple type [2] has 3 elements in property
-`children`. [invalid-tuple-arity]
+Cannot create `Tuple` element because in property `children`: children array [1] has 4 elements but tuple type [2] has 3
+elements. [invalid-tuple-arity]
 
    tuple.js:14:8
    14| <Tuple>{true}foo{42}  </Tuple>; // Error: Spaces add items.
@@ -1592,8 +1594,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:16:8
 
-Cannot create `Tuple` element because children array [1] has 2 elements but tuple type [2] has 3 elements in property
-`children`. [invalid-tuple-arity]
+Cannot create `Tuple` element because in property `children`: children array [1] has 2 elements but tuple type [2] has 3
+elements. [invalid-tuple-arity]
 
    tuple.js:16:8
    16| <Tuple>{[true, 'foo', 42]}{[true, 'foo', 42]}</Tuple>; // Error: There may only
@@ -1607,8 +1609,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- tuple.js:18:9
 
-Cannot create `Tuple` element because array literal [1] has 4 elements but tuple type [2] has 3 elements in property
-`children`. [invalid-tuple-arity]
+Cannot create `Tuple` element because in property `children`: array literal [1] has 4 elements but tuple type [2] has 3
+elements. [invalid-tuple-arity]
 
    tuple.js:18:9
    18| <Tuple>{[true, 'foo', 42, null]}</Tuple>; // Error: One to many
@@ -1622,7 +1624,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuple.js:34:12
 
-Cannot create `TupleOne` element because boolean [1] is incompatible with tuple type [2] in property `children`.
+Cannot create `TupleOne` element because in property `children`: boolean [1] is incompatible with tuple type [2].
 [incompatible-type]
 
    tuple.js:34:12
@@ -1714,8 +1716,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:38:7
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2] in array element.
- - Or number [1] is incompatible with `ExactReactElement_DEPRECATED` [3] in array element.
+ - Either in array element: number [1] is incompatible with boolean [2].
+ - Or in array element: number [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
    view.js:38:7
    38| <View>{1}{2}{3}</View>; // Error: Numbers are not allowed as children.
@@ -1736,8 +1738,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:39:8
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either string [1] is incompatible with boolean [2] in array element.
- - Or string [1] is incompatible with `ExactReactElement_DEPRECATED` [3] in array element.
+ - Either in array element: string [1] is incompatible with boolean [2].
+ - Or in array element: string [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
    view.js:39:8
    39| <View>{['a', 'b', 'c']}</View>; // Error: Strings are not allowed deeply.
@@ -1758,8 +1760,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- view.js:40:8
 
 Cannot create `View` element because in property `children`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2] in array element.
- - Or number [1] is incompatible with `ExactReactElement_DEPRECATED` [3] in array element.
+ - Either in array element: number [1] is incompatible with boolean [2].
+ - Or in array element: number [1] is incompatible with `ExactReactElement_DEPRECATED` [3].
 
    view.js:40:8
    40| <View>{[1, 2, 3]}</View>; // Error: Numbers are not allowed deeply.

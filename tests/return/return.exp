@@ -32,17 +32,17 @@ Cannot expect number as the return type of async function because number [1] is 
 
 Error ------------------------------------------------------------------------------------------------- implicit.js:7:30
 
-Cannot expect `Promise` as the return type of async function because number [1] is incompatible with implicitly-returned
-undefined in type argument `R` [2]. [incompatible-type]
+Cannot expect `Promise` as the return type of async function because in type argument `R` [1]: number [2] is
+incompatible with implicitly-returned undefined. [incompatible-type]
 
    implicit.js:7:30
       7| async function g2(): Promise<number> {}
-                                      ^^^^^^ [1]
+                                      ^^^^^^ [2]
 
 References:
    <BUILTINS>/core.js:2199:24
    2199| declare class Promise<+R = mixed> {
-                                ^ [2]
+                                ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ implicit_void.js:185:19

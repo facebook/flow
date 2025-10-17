@@ -124,7 +124,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- omit.js:65:43
 
-Cannot instantiate `Omit` because property `xxx` is missing in object type [1] in type argument `Keys`. [prop-missing]
+Cannot instantiate `Omit` because in type argument `Keys`: property `xxx` is missing in object type [1]. [prop-missing]
 
    omit.js:65:43
    65|   declare const x: Omit<{foo: 1, bar: 2}, 'xxx'>; // ERROR

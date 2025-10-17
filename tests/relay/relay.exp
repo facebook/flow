@@ -68,8 +68,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- Profile.js:27:24
 
-Cannot create `ProfilePic` element because object literal [1] is incompatible with `ProfilePic_imageRef` [2] in property
-`image`. [incompatible-type]
+Cannot create `ProfilePic` element because in property `image`: object literal [1] is incompatible with
+`ProfilePic_imageRef` [2]. [incompatible-type]
 
    Profile.js:27:24
    27|     <ProfilePic image={{url: 'https://facebook.com'}} />; // Error: object ~> opaque type
@@ -136,7 +136,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:17:29
 
-Cannot create `Profile` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `Profile` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    main.js:17:29
@@ -169,7 +169,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:19:16
 
-Cannot create `Profile` element because object type [1] is incompatible with `Profile_userRef` [2] in property `user`.
+Cannot create `Profile` element because in property `user`: object type [1] is incompatible with `Profile_userRef` [2].
 [incompatible-type]
 
    main.js:19:16
@@ -187,7 +187,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:20:16
 
-Cannot create `Profile` element because object type [1] is incompatible with `Profile_userRef` [2] in property `user`.
+Cannot create `Profile` element because in property `user`: object type [1] is incompatible with `Profile_userRef` [2].
 [incompatible-type]
 
    main.js:20:16
@@ -205,7 +205,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:20:26
 
-Cannot create `Profile` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `Profile` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    main.js:20:26
@@ -220,7 +220,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:21:24
 
-Cannot create `Profile` element because mixed [1] is incompatible with `Profile_userRef` [2] in property `user`.
+Cannot create `Profile` element because in property `user`: mixed [1] is incompatible with `Profile_userRef` [2].
 [incompatible-type]
 
    main.js:21:24
@@ -235,7 +235,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:21:44
 
-Cannot create `Profile` element because mixed [1] is incompatible with number [2] in property `foo`. [incompatible-type]
+Cannot create `Profile` element because in property `foo`: mixed [1] is incompatible with number [2].
+[incompatible-type]
 
    main.js:21:44
    21| <Profile user={null as mixed} foo={null as mixed} />; // Error: mixed ~> ref and mixed ~> number
@@ -249,7 +250,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- more.js:105:45
 
-Cannot create `SingularTest` element because null [1] is incompatible with object type [2] in property `user`.
+Cannot create `SingularTest` element because in property `user`: null [1] is incompatible with object type [2].
 [incompatible-type]
 
    more.js:105:45
@@ -282,8 +283,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- more.js:111:45
 
-Cannot create `SingularTest` element because `BadFragmentReference` [1] is incompatible with `FragmentReference` [2] in
-property `user.__fragments`. [incompatible-type]
+Cannot create `SingularTest` element because in property `user.__fragments`: `BadFragmentReference` [1] is incompatible
+with `FragmentReference` [2]. [incompatible-type]
 
    more.js:111:45
    111| <SingularTest onClick={cb} string="x" user={nonUserRef} nullableUser={null} />;
@@ -319,8 +320,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- more.js:144:34
 
-Cannot instantiate `FragmentReference` because object type [1] is incompatible with `FragmentTypeof` [2] in type
-argument `T`. [incompatible-type]
+Cannot instantiate `FragmentReference` because in type argument `T`: object type [1] is incompatible with
+`FragmentTypeof` [2]. [incompatible-type]
 
    more.js:144:34
    144|   __fragments: FragmentReference<{thing1: true}> &
@@ -334,8 +335,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- more.js:146:23
 
-Cannot instantiate `FragmentReference` because object type [1] is incompatible with `FragmentTypeof` [2] in type
-argument `T`. [incompatible-type]
+Cannot instantiate `FragmentReference` because in type argument `T`: object type [1] is incompatible with
+`FragmentTypeof` [2]. [incompatible-type]
 
    more.js:146:23
    146|     FragmentReference<{thing2: true}>,
@@ -349,7 +350,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- more.js:157:20
 
-Cannot create `PluralTest` element because null [1] is incompatible with read-only array type [2] in property `users`.
+Cannot create `PluralTest` element because in property `users`: null [1] is incompatible with read-only array type [2].
 [incompatible-type]
 
    more.js:157:20
@@ -382,8 +383,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- more.js:163:21
 
-Cannot create `PluralTest` element because `BadFragmentReference` [1] is incompatible with `FragmentReference` [2] in
-property `__fragments` of array element of property `users`. [incompatible-type]
+Cannot create `PluralTest` element because in property `users` > array element > property `__fragments`:
+`BadFragmentReference` [1] is incompatible with `FragmentReference` [2]. [incompatible-type]
 
    more.js:163:21
    163| <PluralTest users={[nonUserRef]} nullableUsers={null} />;
@@ -419,7 +420,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- more.js:190:24
 
-Cannot create `SingularTest` element because string [1] is incompatible with function type [2] in property `onClick`.
+Cannot create `SingularTest` element because in property `onClick`: string [1] is incompatible with function type [2].
 [incompatible-type]
 
    more.js:190:24
@@ -434,7 +435,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- more.js:193:36
 
-Cannot create `SingularTest` element because number [1] is incompatible with string [2] in property `string`.
+Cannot create `SingularTest` element because in property `string`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    more.js:193:36

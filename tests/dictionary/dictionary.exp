@@ -17,8 +17,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- compatible.js:14:10
 
-Cannot return `x` because function type [1] cannot be unbound from the context [1] where it was defined in the `this`
-parameter of property `toString`. [method-unbinding]
+Cannot return `x` because in property `toString` > the `this` parameter: function type [1] cannot be unbound from the
+context [1] where it was defined. [method-unbinding]
 
    compatible.js:14:10
     14|   return x;
@@ -94,8 +94,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:80:10
 
-Cannot return `o` because function type [1] cannot be unbound from the context [1] where it was defined in the `this`
-parameter of property `toString`. [method-unbinding]
+Cannot return `o` because in property `toString` > the `this` parameter: function type [1] cannot be unbound from the
+context [1] where it was defined. [method-unbinding]
 
    dictionary.js:80:10
     80|   return o; // ok
@@ -123,8 +123,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:91:36
 
-Cannot assign `x` to `a` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: A}` [2] in array
-element. [incompatible-type]
+Cannot assign `x` to `a` because in array element: `{[k: string]: B}` [1] is not exactly the same as
+`{[k: string]: A}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: A}>` [4] exactly the same
@@ -152,8 +152,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:96:36
 
-Cannot assign `x` to `c` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: C}` [2] in array
-element. [incompatible-type]
+Cannot assign `x` to `c` because in array element: `{[k: string]: B}` [1] is not exactly the same as
+`{[k: string]: C}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: C}>` [4] exactly the same
@@ -198,7 +198,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:101:29
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in the indexer property. [incompatible-type]
+Cannot assign `x` to `a` because in the indexer property: `B` [1] is not exactly the same as `A` [2].
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: A}` [4] exactly the same
@@ -226,7 +227,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:106:29
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in the indexer property. [incompatible-type]
+Cannot assign `x` to `c` because in the indexer property: `B` [1] is not exactly the same as `C` [2].
+[incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: C}` [4] exactly the same
@@ -271,7 +273,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:118:8
 
-Cannot assign object literal to `b` because `A` [1] is incompatible with `B` [2] in property `a`. [incompatible-type]
+Cannot assign object literal to `b` because in property `a`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    dictionary.js:118:8
    118|     a: new A(), // error, A not <: B
@@ -285,7 +287,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:124:8
 
-Cannot assign object literal to `c` because `A` [1] is incompatible with `C` [2] in property `a`. [incompatible-type]
+Cannot assign object literal to `c` because in property `a`: `A` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:124:8
    124|     a: new A(), // error, A not <: C
@@ -299,7 +301,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- dictionary.js:125:8
 
-Cannot assign object literal to `c` because `B` [1] is incompatible with `C` [2] in property `b`. [incompatible-type]
+Cannot assign object literal to `c` because in property `b`: `B` [1] is incompatible with `C` [2]. [incompatible-type]
 
    dictionary.js:125:8
    125|     b: new B(), // error, A not <: C
@@ -313,7 +315,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:136:33
 
-Cannot assign `x` to `a` because `{[k: B]: any}` [1] is not exactly the same as `{[k: A]: any}` [2] in array element.
+Cannot assign `x` to `a` because in array element: `{[k: B]: any}` [1] is not exactly the same as `{[k: A]: any}` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -342,7 +344,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:138:33
 
-Cannot assign `x` to `c` because `{[k: B]: any}` [1] is not exactly the same as `{[k: C]: any}` [2] in array element.
+Cannot assign `x` to `c` because in array element: `{[k: B]: any}` [1] is not exactly the same as `{[k: C]: any}` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -371,7 +373,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:142:26
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in the indexer property's key.
+Cannot assign `x` to `a` because in the indexer property's key: `B` [1] is not exactly the same as `A` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -400,7 +402,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:144:26
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in the indexer property's key.
+Cannot assign `x` to `c` because in the indexer property's key: `B` [1] is not exactly the same as `C` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -429,8 +431,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:150:42
 
-Cannot assign `x` to `a` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: B, p: A}` [2] in array
-element. [incompatible-type]
+Cannot assign `x` to `a` because in array element: `{[k: string]: B}` [1] is not exactly the same as
+`{[k: string]: B, p: A}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: A}>` [4] exactly the same
@@ -458,8 +460,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:155:42
 
-Cannot assign `x` to `c` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: B, p: C}` [2] in array
-element. [incompatible-type]
+Cannot assign `x` to `c` because in array element: `{[k: string]: B}` [1] is not exactly the same as
+`{[k: string]: B, p: C}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: C}>` [4] exactly the same
@@ -504,8 +506,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:164:36
 
-Cannot assign `xa` to `a` because `{[k: string]: A, p: B}` [1] is not exactly the same as `{[k: string]: A}` [2] in
-array element. [incompatible-type]
+Cannot assign `xa` to `a` because in array element: `{[k: string]: A, p: B}` [1] is not exactly the same as
+`{[k: string]: A}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: A, p: B}>` [3] and `Array<{[k: string]: A}>` [4] exactly the same
@@ -533,8 +535,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:169:36
 
-Cannot assign `xc` to `c` because `{[k: string]: C, p: B}` [1] is not exactly the same as `{[k: string]: C}` [2] in
-array element. [incompatible-type]
+Cannot assign `xc` to `c` because in array element: `{[k: string]: C, p: B}` [1] is not exactly the same as
+`{[k: string]: C}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: C, p: B}>` [3] and `Array<{[k: string]: C}>` [4] exactly the same
@@ -579,7 +581,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:174:35
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: A}` [4] exactly the same
@@ -607,7 +609,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:179:35
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the same as `C` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: C}` [4] exactly the same
@@ -652,7 +654,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:188:29
 
-Cannot assign `xa` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
+Cannot assign `xa` to `a` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: A, p: B}` [3] and `{[k: string]: A}` [4] exactly the same
@@ -680,7 +682,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:193:29
 
-Cannot assign `xc` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
+Cannot assign `xc` to `c` because in property `p`: `B` [1] is not exactly the same as `C` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: C, p: B}` [3] and `{[k: string]: C}` [4] exactly the same
@@ -725,7 +727,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:198:10
 
-Cannot return `x` because `{[k: string]: X}` [1] is not exactly the same as `{p: X, ...}` [2] in array element.
+Cannot return `x` because in array element: `{[k: string]: X}` [1] is not exactly the same as `{p: X, ...}` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -754,7 +756,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:202:10
 
-Cannot return `x` because `{p: X, ...}` [1] is not exactly the same as `{[k: string]: X}` [2] in array element.
+Cannot return `x` because in array element: `{p: X, ...}` [1] is not exactly the same as `{[k: string]: X}` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -783,7 +785,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:206:19
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p: A, ...}` [4] exactly the same
@@ -811,7 +813,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:211:19
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the same as `C` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p: C, ...}` [4] exactly the same
@@ -856,7 +858,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:216:29
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B}` [3] and `{[k: string]: A}` [4] exactly the same
@@ -884,7 +886,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:221:29
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the same as `C` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B}` [3] and `{[k: string]: C}` [4] exactly the same
@@ -929,7 +931,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:228:35
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B, x: X}` [3] and `{[k: string]: A, x: X}` [4] exactly the same
@@ -957,7 +959,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:230:35
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the same as `C` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: B, x: X}` [3] and `{[k: string]: C, x: X}` [4] exactly the same
@@ -985,8 +987,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:234:42
 
-Cannot assign `x` to `a` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: B, p: A}` [2] in array
-element. [incompatible-type]
+Cannot assign `x` to `a` because in array element: `{[k: string]: B}` [1] is not exactly the same as
+`{[k: string]: B, p: A}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: A}>` [4] exactly the same
@@ -1014,8 +1016,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:236:42
 
-Cannot assign `x` to `c` because `{[k: string]: B}` [1] is not exactly the same as `{[k: string]: B, p: C}` [2] in array
-element. [incompatible-type]
+Cannot assign `x` to `c` because in array element: `{[k: string]: B}` [1] is not exactly the same as
+`{[k: string]: B, p: C}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: C}>` [4] exactly the same
@@ -1043,7 +1045,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:240:35
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: A}` [4] exactly the same
@@ -1071,7 +1073,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:242:35
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the same as `C` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{[k: string]: B, p: C}` [4] exactly the same
@@ -1099,7 +1101,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:246:20
 
-Cannot assign `x` to `a` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `a` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p?: A, ...}` [4] exactly the same
@@ -1127,7 +1129,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:254:20
 
-Cannot assign `x` to `c` because `B` [1] is not exactly the same as `C` [2] in property `p`. [incompatible-type]
+Cannot assign `x` to `c` because in property `p`: `B` [1] is not exactly the same as `C` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{[k: string]: B}` [3] and `{p?: C, ...}` [4] exactly the same
@@ -1155,7 +1157,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:259:10
 
-Cannot return `x` because `A` [1] is not exactly the same as `B` [2] in property `p`. [incompatible-type]
+Cannot return `x` because in property `p`: `A` [1] is not exactly the same as `B` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p?: A}` [3] and `{[k: string]: B}` [4] exactly the same
@@ -1183,7 +1185,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- dictionary.js:269:10
 
-Cannot return `x` because `C` [1] is not exactly the same as `B` [2] in property `p`. [incompatible-type]
+Cannot return `x` because in property `p`: `C` [1] is not exactly the same as `B` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p?: C}` [3] and `{[k: string]: B}` [4] exactly the same
@@ -1225,7 +1227,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:4:34
 
-Cannot assign `x` to `y` because `string` [1] is not exactly the same as `number` [2] in the indexer property.
+Cannot assign `x` to `y` because in the indexer property: `string` [1] is not exactly the same as `number` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -1254,7 +1256,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:5:34
 
-Cannot assign `x` to `z` because `string` [1] is not exactly the same as `number` [2] in the indexer property's key.
+Cannot assign `x` to `z` because in the indexer property's key: `string` [1] is not exactly the same as `number` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -1283,7 +1285,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:8:34
 
-Cannot assign `a` to `b` because `?string` [1] is not exactly the same as `string` [2] in the indexer property.
+Cannot assign `a` to `b` because in the indexer property: `?string` [1] is not exactly the same as `string` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -1312,7 +1314,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- incompatible.js:9:35
 
-Cannot assign `b` to `c` because `string` [1] is not exactly the same as `?string` [2] in the indexer property.
+Cannot assign `b` to `c` because in the indexer property: `string` [1] is not exactly the same as `?string` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -1341,8 +1343,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:15:10
 
-Cannot return `x` because `{[key: string]: number}` [1] is not exactly the same as `{[key: string]: string}` [2] in
-array element. [incompatible-type]
+Cannot return `x` because in array element: `{[key: string]: number}` [1] is not exactly the same as
+`{[key: string]: string}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: number}>` [3] and `Array<{[key: string]: string}>` [4] exactly the same
@@ -1370,8 +1372,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:22:10
 
-Cannot return `x` because `{[key: string]: number}` [1] is not exactly the same as
-`{[key: string]: number, fooBar: string}` [2] in array element. [incompatible-type]
+Cannot return `x` because in array element: `{[key: string]: number}` [1] is not exactly the same as
+`{[key: string]: number, fooBar: string}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: number}>` [3] and `Array<{[key: string]: number, fooBar: string}>` [4] exactly the
@@ -1400,8 +1402,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:29:10
 
-Cannot return `x` because `{[key: string]: mixed}` [1] is not exactly the same as
-`{[key: string]: mixed, fooBar: string}` [2] in array element. [incompatible-type]
+Cannot return `x` because in array element: `{[key: string]: mixed}` [1] is not exactly the same as
+`{[key: string]: mixed, fooBar: string}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: mixed}>` [3] and `Array<{[key: string]: mixed, fooBar: string}>` [4] exactly the
@@ -1430,7 +1432,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:42:10
 
-Cannot return `x` because `number` [1] is not exactly the same as `string` [2] in property `foo`. [incompatible-type]
+Cannot return `x` because in property `foo`: `number` [1] is not exactly the same as `string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{[key: string]: number}` [3] and `{[key: string]: number, foo: string}` [4] exactly the same
@@ -1462,8 +1464,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:47:10
 
-Cannot return `x` because `{[key: string]: number}` [1] is not exactly the same as `{foo: number, ...}` [2] in array
-element. [incompatible-type]
+Cannot return `x` because in array element: `{[key: string]: number}` [1] is not exactly the same as
+`{foo: number, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: number}>` [3] and `Array<{foo: number, ...}>` [4] exactly the same
@@ -1491,8 +1493,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- incompatible.js:52:10
 
-Cannot return `x` because `{foo: number, ...}` [1] is not exactly the same as `{[key: string]: number}` [2] in array
-element. [incompatible-type]
+Cannot return `x` because in array element: `{foo: number, ...}` [1] is not exactly the same as
+`{[key: string]: number}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{foo: number, ...}>` [3] and `Array<{[key: string]: number}>` [4] exactly the same
@@ -1537,8 +1539,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:12
 
-Cannot assign object literal to `o` because number [1] is incompatible with string [2] in the return value of property
-`foo`. [incompatible-type]
+Cannot assign object literal to `o` because in property `foo` > the return value: number [1] is incompatible with
+string [2]. [incompatible-type]
 
    test.js:6:12
    6|     return params.count; // error, number ~/~ string
@@ -1555,7 +1557,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- test_client.js:3:9
 
-Cannot assign function to `o.foo` because number [1] is incompatible with string [2] in the return value.
+Cannot assign function to `o.foo` because in the return value: number [1] is incompatible with string [2].
 [incompatible-type]
 
    test_client.js:3:9

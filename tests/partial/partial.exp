@@ -16,8 +16,8 @@ The utility type `$Partial` is deprecated, use `Partial` instead. [deprecated-ut
 
 Error ------------------------------------------------------------------------------------- partial-positioning.js:18:26
 
-Cannot call `register` because `number` [1] is not exactly the same as `RecursiveProp` [2] in property `foo` of type
-argument `T`. [incompatible-type]
+Cannot call `register` because in type argument `T` > property `foo`: `number` [1] is not exactly the same as
+`RecursiveProp` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo: number}` [3] and `{[string]: RecursiveProp}` [4] exactly the same
@@ -45,7 +45,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:30
 
-Cannot assign object literal to `b7` because null [1] is incompatible with string [2] in property `x`.
+Cannot assign object literal to `b7` because in property `x`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:9:30
@@ -60,7 +60,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:10:30
 
-Cannot assign object literal to `b8` because number [1] is incompatible with string [2] in property `x`.
+Cannot assign object literal to `b8` because in property `x`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:10:30
@@ -119,7 +119,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:25:17
 
 Cannot assign `a` to `p3` because: [incompatible-type]
- - Either undefined [1] is incompatible with string [1] in property `x`.
+ - Either in property `x`: undefined [1] is incompatible with string [1].
     - This property is invariantly typed. See
       https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or `Foo` [2] is incompatible with null or undefined [3].
@@ -169,7 +169,7 @@ Cannot instantiate partial number because number [1] is not an object. [not-an-o
 
 Error ---------------------------------------------------------------------------------------------------- test.js:45:32
 
-Cannot assign object literal to `d7` because null [1] is incompatible with string [2] in property `x`.
+Cannot assign object literal to `d7` because in property `x`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:45:32
@@ -184,7 +184,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:46:32
 
-Cannot assign object literal to `d8` because number [1] is incompatible with string [2] in property `x`.
+Cannot assign object literal to `d8` because in property `x`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:46:32
@@ -199,7 +199,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:62:32
 
-Cannot assign object literal to `f9` because null [1] is incompatible with string [2] in property `x`.
+Cannot assign object literal to `f9` because in property `x`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:62:32
@@ -214,7 +214,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:63:33
 
-Cannot assign object literal to `f10` because number [1] is incompatible with string [2] in property `z`.
+Cannot assign object literal to `f10` because in property `z`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:63:33
@@ -229,7 +229,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:64:33
 
-Cannot assign object literal to `f11` because number [1] is incompatible with string [2] in property `x`.
+Cannot assign object literal to `f11` because in property `x`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:64:33

@@ -548,7 +548,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- misc.js:44:12
 
 Cannot return `g` because: [incompatible-type]
- - Either undefined [1] is incompatible with boolean [2] in the first parameter.
+ - Either in the first parameter: undefined [1] is incompatible with boolean [2].
  - Or function [3] is incompatible with `X` [4].
 
    misc.js:44:12

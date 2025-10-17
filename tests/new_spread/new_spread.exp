@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------ cross_module/app.js:4:9
 
-Cannot call `app` with object literal bound to the first parameter because string [1] is incompatible with number [2] in
-property `a`. [incompatible-type]
+Cannot call `app` with object literal bound to the first parameter because in property `a`: string [1] is incompatible
+with number [2]. [incompatible-type]
 
    cross_module/app.js:4:9
    4| app({a: 'foo', b: 2});
@@ -15,8 +15,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ cross_module/use.js:3:9
 
-Cannot call `app` with object literal bound to the first parameter because string [1] is incompatible with number [2] in
-property `a`. [incompatible-type]
+Cannot call `app` with object literal bound to the first parameter because in property `a`: string [1] is incompatible
+with number [2]. [incompatible-type]
 
    cross_module/use.js:3:9
    3| app({a: 'foo', b: 2});
@@ -93,7 +93,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:12:2
 
-Cannot cast `o1` to object type because `T` [1] is not exactly the same as `void | T` [2] in property `p`.
+Cannot cast `o1` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -137,7 +137,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:16:5
 
-Cannot cast object literal to `O1` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `O1` because in property `p`: `U` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type.js:16:5
    16| ({p:y}: O1); // error: y ~> T
@@ -154,7 +154,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:23:2
 
-Cannot cast `o2` to object type because `void | T` [1] is not exactly the same as `T` [2] in property `p`.
+Cannot cast `o2` to object type because in property `p`: `void | T` [1] is not exactly the same as `T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -183,7 +183,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:26:5
 
-Cannot cast object literal to `O2` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `O2` because in property `p`: `U` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type.js:26:5
    26| ({p:y}: O2); // error: y ~> T
@@ -247,7 +247,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:39:5
 
-Cannot cast object literal to `O4` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `O4` because in property `p`: `U` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type.js:39:5
    39| ({p:y}: O4); // error: y ~> T
@@ -282,7 +282,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:49:5
 
-Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `O5` because in property `p`: `U` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type.js:49:5
    49| ({p:y}: O5); // error: y ~> T
@@ -329,7 +329,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:57:5
 
-Cannot cast object literal to `O6` because `T` [1] is incompatible with `U` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `O6` because in property `p`: `T` [1] is incompatible with `U` [2]. [incompatible-type]
 
    type.js:57:5
    57| ({p:x}: O6); // error: x ~> U
@@ -377,7 +377,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- type.js:74:2
 
-Cannot cast `o9` to object type because `T` [1] is not exactly the same as `void | T` [2] in property `p`.
+Cannot cast `o9` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -442,7 +442,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:102:2
 
-Cannot cast `o14` to object type because `T` [1] is not exactly the same as `void | T` [2] in property `p`.
+Cannot cast `o14` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -471,7 +471,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- type.js:105:5
 
-Cannot cast object literal to `O14` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `O14` because in property `p`: `U` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type.js:105:5
    105| ({p:y}: O14); // error: U ~> T
@@ -503,7 +503,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- type_contra.js:6:2
 
-Cannot cast `o1` to object type because `mixed` [1] is not exactly the same as `void | T` [2] in property `p`.
+Cannot cast `o1` to object type because in property `p`: `mixed` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -549,7 +549,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_contra.js:12:2
 
-Cannot cast `o2` to object type because `mixed` [1] is not exactly the same as `T` [2] in the indexer property.
+Cannot cast `o2` to object type because in the indexer property: `mixed` [1] is not exactly the same as `T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -596,7 +596,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_contra.js:18:2
 
-Cannot cast `o3` to object type because `mixed` [1] is not exactly the same as `T` [2] in property `p`.
+Cannot cast `o3` to object type because in property `p`: `mixed` [1] is not exactly the same as `T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -707,7 +707,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:3:12
 
-Cannot cast `spread(...)` to object type because number [1] is incompatible with empty [2] in property `p`.
+Cannot cast `spread(...)` to object type because in property `p`: number [1] is incompatible with empty [2].
 [incompatible-type]
 
    type_generic.js:3:12
@@ -722,7 +722,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_generic.js:3:18
 
-Cannot cast `spread(...)` to object type because number [1] is incompatible with empty [2] in property `q`.
+Cannot cast `spread(...)` to object type because in property `q`: number [1] is incompatible with empty [2].
 [incompatible-type]
 
    type_generic.js:3:18
@@ -737,8 +737,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- type_instance.js:6:2
 
-Cannot cast `o1` to object type because `number & (string | number)` [1] is not exactly the same as `void | number` [2]
-in property `p`. [incompatible-type]
+Cannot cast `o1` to object type because in property `p`: `number & (string | number)` [1] is not exactly the same as
+`void | number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `{p: number & (string | number), ...}` [3] and `{p?: number, ...}` [4] exactly the same
@@ -789,7 +789,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- type_intersection.js:13:2
 
-Cannot cast `o2` to object type because `A & B` [1] is not exactly the same as `void | B` [2] in property `p`.
+Cannot cast `o2` to object type because in property `p`: `A & B` [1] is not exactly the same as `void | B` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -815,7 +815,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- type_intersection.js:15:6
 
-Cannot cast object literal to `O2` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `O2` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    type_intersection.js:15:6
    15| ({p: new A}: O2); // error: A ~> B
@@ -829,7 +829,7 @@ References:
 
 Error -------------------------------------------------------------------------------- type_intersection_optional.js:5:2
 
-Cannot cast `o1` to object type because `T & U` [1] is not exactly the same as `void | (T & U)` [2] in property `p`.
+Cannot cast `o1` to object type because in property `p`: `T & U` [1] is not exactly the same as `void | (T & U)` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -855,7 +855,7 @@ References:
 
 Error -------------------------------------------------------------------------------- type_intersection_optional.js:8:2
 
-Cannot cast `o2` to object type because `T & U` [1] is not exactly the same as `void | (T & U)` [2] in property `p`.
+Cannot cast `o2` to object type because in property `p`: `T & U` [1] is not exactly the same as `void | (T & U)` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -881,7 +881,7 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:11:2
 
-Cannot cast `o3` to object type because `T & U` [1] is not exactly the same as `void | (T & U)` [2] in property `p`.
+Cannot cast `o3` to object type because in property `p`: `T & U` [1] is not exactly the same as `void | (T & U)` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -930,7 +930,7 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:56:2
 
-Cannot cast `o18` to object type because `U` [1] is not exactly the same as `void | U` [2] in property `q`.
+Cannot cast `o18` to object type because in property `q`: `U` [1] is not exactly the same as `void | U` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `q` is invariantly typed. To fix the error,
@@ -959,7 +959,7 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:59:2
 
-Cannot cast `o19` to object type because `T` [1] is not exactly the same as `void | T` [2] in property `p`.
+Cannot cast `o19` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -988,7 +988,7 @@ References:
 
 Error ------------------------------------------------------------------------------- type_intersection_optional.js:65:2
 
-Cannot cast `o21` to object type because `U` [1] is not exactly the same as `void | U` [2] in property `q`.
+Cannot cast `o21` to object type because in property `q`: `U` [1] is not exactly the same as `void | U` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `q` is invariantly typed. To fix the error,
@@ -1139,7 +1139,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- type_statics.js:5:2
 
-Cannot cast `o1` to object type because `number` [1] is not exactly the same as `void | number` [2] in property `p`.
+Cannot cast `o1` to object type because in property `p`: `number` [1] is not exactly the same as `void | number` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -1177,7 +1177,7 @@ string literal `foo` [1] is not an object. [not-an-object]
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
 Cannot cast `o1` to union type because: [incompatible-type]
- - Either undefined [1] is incompatible with `U` [2] in property `q`.
+ - Either in property `q`: undefined [1] is incompatible with `U` [2].
     - This property is invariantly typed. See
       https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or property `p` is missing in object type [3] but exists in object type [4].
@@ -1211,7 +1211,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ type_union.js:9:2
 
 Cannot cast `o1` to union type because: [incompatible-type]
- - Either undefined [1] is incompatible with `T` [2] in property `p`.
+ - Either in property `p`: undefined [1] is incompatible with `T` [2].
     - This property is invariantly typed. See
       https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
  - Or property `q` is missing in object type [3] but exists in object type [4].
@@ -1448,7 +1448,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:41:2
 
-Cannot cast `o5` to object type because `T` [1] is not exactly the same as `void | T` [2] in property `p`.
+Cannot cast `o5` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -1492,7 +1492,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:45:5
 
-Cannot cast object literal to `O5` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `O5` because in property `p`: `U` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type_void.js:45:5
    45| ({p:y}: O5); // error: y ~> T
@@ -1509,7 +1509,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:50:2
 
-Cannot cast `o6` to object type because `T` [1] is not exactly the same as `void | T` [2] in property `p`.
+Cannot cast `o6` to object type because in property `p`: `T` [1] is not exactly the same as `void | T` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -1553,7 +1553,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ type_void.js:54:5
 
-Cannot cast object literal to `O6` because `U` [1] is incompatible with `T` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `O6` because in property `p`: `U` [1] is incompatible with `T` [2]. [incompatible-type]
 
    type_void.js:54:5
    54| ({p:y}: O6); // error: y ~> T

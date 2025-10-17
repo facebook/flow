@@ -70,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:29:22
 
-Cannot assign object literal to `l` because string [1] is incompatible with number [2] in property `prop`.
+Cannot assign object literal to `l` because in property `prop`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    importer.js:29:22
@@ -85,7 +85,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ importer.js:32:23
 
-Cannot assign object literal to `n` because number [1] is incompatible with string [2] in property `prop`.
+Cannot assign object literal to `n` because in property `prop`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    importer.js:32:23

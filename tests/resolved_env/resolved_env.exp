@@ -320,7 +320,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- emp_arr.js:9:1
 
-Cannot cast `x` to array type because `string` [1] is not exactly the same as `number` [2] in array element.
+Cannot cast `x` to array type because in array element: `string` [1] is not exactly the same as `number` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -923,8 +923,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:23:11
 
-Cannot return array literal because inexact rest of object pattern [1] is incompatible with exact `Omit` [2] in index 0.
-[incompatible-exact]
+Cannot return array literal because in index 0: inexact rest of object pattern [1] is incompatible with exact
+`Omit` [2]. [incompatible-exact]
 
    tparams.js:23:11
    23|   return [o, p];
@@ -941,7 +941,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:23:14
 
-Cannot return array literal because mixed [1] is incompatible with `B` [2] in index 1. [incompatible-type]
+Cannot return array literal because in index 1: mixed [1] is incompatible with `B` [2]. [incompatible-type]
 
    tparams.js:23:14
    23|   return [o, p];

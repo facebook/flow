@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- main.js:4:10
 
-Cannot create `div` element because number [1] is incompatible with string [2] in property `id`. [incompatible-type]
+Cannot create `div` element because in property `id`: number [1] is incompatible with string [2]. [incompatible-type]
 
    main.js:4:10
    4| <div id={42} />; // Error: (`id` prop) number ~> string
@@ -14,8 +14,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:7:12
 
-Cannot create `div` element because string `id` [1] is incompatible with string prefixed with `data-` [2] in the indexer
-property's key. [incompatible-type]
+Cannot create `div` element because in the indexer property's key: string `id` [1] is incompatible with string prefixed
+with `data-` [2]. [incompatible-type]
 
    main.js:7:12
    7| const d = <div {...dataProps} />; // OK with data props, but missing id
@@ -184,7 +184,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- strings.js:18:10
 
-Cannot create `Div` element because number [1] is incompatible with string [2] in property `id`. [incompatible-type]
+Cannot create `Div` element because in property `id`: number [1] is incompatible with string [2]. [incompatible-type]
 
    strings.js:18:10
    18| <Div id={42} />; // Not an error but should be eventually

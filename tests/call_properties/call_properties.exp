@@ -75,7 +75,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- B.js:5:56
 
-Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
+Cannot assign function to `b` because in the return value: string [1] is incompatible with number [2].
 [incompatible-type]
 
    B.js:5:56
@@ -90,7 +90,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- B.js:8:47
 
-Cannot assign function to `c` because number [1] is incompatible with string [2] in the first parameter.
+Cannot assign function to `c` because in the first parameter: number [1] is incompatible with string [2].
 [incompatible-type]
 
    B.js:8:47
@@ -119,7 +119,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- C.js:8:10
 
-Cannot return `x` because string [1] is incompatible with number [2] in the return value. [incompatible-type]
+Cannot return `x` because in the return value: string [1] is incompatible with number [2]. [incompatible-type]
 
    C.js:8:10
    8|   return x;
@@ -136,7 +136,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- C.js:13:10
 
-Cannot return `x` because number [1] is incompatible with string [2] in the first parameter. [incompatible-type]
+Cannot return `x` because in the first parameter: number [1] is incompatible with string [2]. [incompatible-type]
 
    C.js:13:10
    13|   return x;
@@ -202,7 +202,7 @@ References:
 Error ------------------------------------------------------------------------------------------------------- D.js:21:10
 
 Cannot return `x` because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in the return value.
+ - Either in the return value: string [1] is incompatible with number [2].
  - Or function type [3] requires another argument from function type [4].
 
    D.js:21:10
@@ -242,7 +242,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- F.js:6:41
 
-Cannot assign function to `b` because string [1] is incompatible with number [2] in the return value.
+Cannot assign function to `b` because in the return value: string [1] is incompatible with number [2].
 [incompatible-type]
 
    F.js:6:41
@@ -316,7 +316,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- internal_slot.js:6:2
 
-Cannot cast function to `O` because number [1] is incompatible with undefined [2] in the return value.
+Cannot cast function to `O` because in the return value: number [1] is incompatible with undefined [2].
 [incompatible-type]
 
    internal_slot.js:6:2
@@ -349,7 +349,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:14:2
 
-Cannot cast function to `I` because number [1] is incompatible with undefined [2] in the return value.
+Cannot cast function to `I` because in the return value: number [1] is incompatible with undefined [2].
 [incompatible-type]
 
    internal_slot.js:14:2
@@ -430,7 +430,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- use_ops.js:4:2
 
-Cannot cast `a` to `B` because object type [1] is incompatible with function type [2] in property `p`.
+Cannot cast `a` to `B` because in property `p`: object type [1] is incompatible with function type [2].
 [incompatible-type]
 
    use_ops.js:4:2

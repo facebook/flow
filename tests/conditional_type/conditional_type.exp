@@ -77,10 +77,10 @@ References:
 Error ---------------------------------------------------------------------------------------------- distributive.js:9:4
 
 Cannot cast `unionArr` to `ToArray` because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in array element.
+ - Either in array element: number [1] is incompatible with string [2].
     - Arrays are invariantly typed. See
       https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
- - Or string [3] is incompatible with number [4] in array element.
+ - Or in array element: string [3] is incompatible with number [4].
     - Arrays are invariantly typed. See
       https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -510,7 +510,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:63:52
 
-Cannot assign array literal to destructuring because number [1] is incompatible with boolean [2] in index 0.
+Cannot assign array literal to destructuring because in index 0: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    extraction.js:63:52
@@ -525,7 +525,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:63:57
 
-Cannot assign array literal to destructuring because boolean [1] is incompatible with string [2] in index 1.
+Cannot assign array literal to destructuring because in index 1: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    extraction.js:63:57
@@ -540,7 +540,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:63:63
 
-Cannot assign array literal to destructuring because string [1] is incompatible with number [2] in index 2.
+Cannot assign array literal to destructuring because in index 2: string [1] is incompatible with number [2].
 [incompatible-type]
 
    extraction.js:63:63

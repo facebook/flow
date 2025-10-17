@@ -534,7 +534,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:440:9
 
-Cannot return array literal because number [1] is incompatible with string [2] in property `x` of array element.
+Cannot return array literal because in array element > property `x`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    logical.js:440:9
@@ -552,7 +552,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:442:17
 
-Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
+Cannot return array literal because in array element > property `x`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    logical.js:442:17
@@ -567,7 +567,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:443:9
 
-Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
+Cannot return array literal because in array element > property `x`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    logical.js:443:9
@@ -606,7 +606,7 @@ This condition is truthy. [constant-condition]
 
 Error ------------------------------------------------------------------------------------------------- logical.js:456:9
 
-Cannot return array literal because number [1] is incompatible with string [2] in property `x` of array element.
+Cannot return array literal because in array element > property `x`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    logical.js:456:9
@@ -624,7 +624,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ logical.js:458:18
 
-Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
+Cannot return array literal because in array element > property `x`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    logical.js:458:18
@@ -639,7 +639,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- logical.js:459:9
 
-Cannot return array literal because boolean [1] is incompatible with string [2] in property `x` of array element.
+Cannot return array literal because in array element > property `x`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    logical.js:459:9

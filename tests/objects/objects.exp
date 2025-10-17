@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------- compatibility.js:3:9
 
-Cannot assign `y` to `x` because `{bar: number, ...}` [1] is not exactly the same as `{foo: string, ...}` [2] in
-property `x`. [incompatible-type]
+Cannot assign `y` to `x` because in property `x`: `{bar: number, ...}` [1] is not exactly the same as
+`{foo: string, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {bar: number, ...}, ...}` [3] and `{x: {foo: string, ...}, ...}` [4] exactly the same
@@ -29,7 +29,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- compatibility.js:7:9
 
-Cannot assign `y` to `x` because `number` [1] is not exactly the same as `string` [2] in property `foo`.
+Cannot assign `y` to `x` because in property `foo`: `number` [1] is not exactly the same as `string` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
@@ -58,8 +58,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:11:9
 
-Cannot assign `y` to `x` because `{foo: number, ...}` [1] is not exactly the same as `{foo: string, ...}` [2] in
-property `x`. [incompatible-type]
+Cannot assign `y` to `x` because in property `x`: `{foo: number, ...}` [1] is not exactly the same as
+`{foo: string, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {foo: number, ...}, ...}` [3] and `{x: {foo: string, ...}, ...}` [4] exactly the same
@@ -87,7 +87,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:15:9
 
-Cannot assign `y` to `x` because number [1] is incompatible with string [2] in property `foo`. [incompatible-type]
+Cannot assign `y` to `x` because in property `foo`: number [1] is incompatible with string [2]. [incompatible-type]
 
    compatibility.js:15:9
    15|     x = y; // 1 error: number !~> string
@@ -104,8 +104,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:19:9
 
-Cannot assign `y` to `x` because `{+foo: number, ...}` [1] is not exactly the same as `{+foo: string, ...}` [2] in
-property `x`. [incompatible-type]
+Cannot assign `y` to `x` because in property `x`: `{+foo: number, ...}` [1] is not exactly the same as
+`{+foo: string, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {+foo: number, ...}, ...}` [3] and `{x: {+foo: string, ...}, ...}` [4] exactly the same
@@ -133,7 +133,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:23:9
 
-Cannot assign `y` to `x` because string [1] is incompatible with number [2] in property `foo`. [incompatible-type]
+Cannot assign `y` to `x` because in property `foo`: string [1] is incompatible with number [2]. [incompatible-type]
 
    compatibility.js:23:9
    23|     x = y; // 1 error: string !~> number
@@ -150,8 +150,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- compatibility.js:27:9
 
-Cannot assign `y` to `x` because `{-foo: number, ...}` [1] is not exactly the same as `{-foo: string, ...}` [2] in
-property `x`. [incompatible-type]
+Cannot assign `y` to `x` because in property `x`: `{-foo: number, ...}` [1] is not exactly the same as
+`{-foo: string, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `x` is invariantly typed. To fix the error,
 - Either make `{x: {-foo: number, ...}, ...}` [3] and `{x: {-foo: string, ...}, ...}` [4] exactly the same
@@ -210,7 +210,7 @@ References:
 
 Error -------------------------------------------------------------------------- different_call_prop_no_fast_path.js:8:1
 
-Cannot cast `MyThunk` to `ThunkType` because number [1] is incompatible with string [2] in the return value.
+Cannot cast `MyThunk` to `ThunkType` because in the return value: number [1] is incompatible with string [2].
 [incompatible-type]
 
    different_call_prop_no_fast_path.js:8:1

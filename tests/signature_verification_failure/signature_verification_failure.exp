@@ -182,7 +182,7 @@ spread in array: [signature-verification-failure]
 
 Error ----------------------------------------------------------------------------------------------------- misc.js:7:22
 
-number [1] is incompatible with function type [2] in property `@@iterator`. [incompatible-type]
+In property `@@iterator`: number [1] is incompatible with function type [2]. [incompatible-type]
 
    misc.js:7:22
       7| export const d = [...c];

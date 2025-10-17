@@ -360,7 +360,7 @@ the `web` platform. Support for the `web` platform is missing. [missing-platform
 
 Error ---------------------------------------------------------------------------- xplat/all_platform_forked.ios.js:1:27
 
-Cannot conform to common interface module because string [1] is incompatible with number [2] in property `foo`.
+Cannot conform to common interface module because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -377,7 +377,7 @@ References:
 
 Error ---------------------------------------------------------------------------- xplat/all_platform_forked.web.js:1:27
 
-Cannot conform to common interface module because boolean [1] is incompatible with number [2] in property `foo`.
+Cannot conform to common interface module because in property `foo`: boolean [1] is incompatible with number [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -480,7 +480,7 @@ the following platforms: `android`, `ios`, `web`. Support for the `web` platform
 
 Error --------------------------------------------------------------------------- xplat/web_native_forked.native.js:1:27
 
-Cannot conform to common interface module because string [1] is incompatible with number [2] in property `foo`.
+Cannot conform to common interface module because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.
@@ -497,7 +497,7 @@ References:
 
 Error ------------------------------------------------------------------------------ xplat/web_native_forked.web.js:1:27
 
-Cannot conform to common interface module because boolean [1] is incompatible with number [2] in property `foo`.
+Cannot conform to common interface module because in property `foo`: boolean [1] is incompatible with number [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.

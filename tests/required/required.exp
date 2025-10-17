@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------ required-positioning.js:18:26
 
-Cannot call `register` because `number` [1] is not exactly the same as `RecursiveProp` [2] in property `foo` of type
-argument `T`. [incompatible-type]
+Cannot call `register` because in type argument `T` > property `foo`: `number` [1] is not exactly the same as
+`RecursiveProp` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo: number}` [3] and `{[string]: RecursiveProp}` [4] exactly the same
@@ -74,7 +74,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:12:6
 
-Cannot cast object literal to required of `A` because undefined [1] is incompatible with number [2] in property `x`.
+Cannot cast object literal to required of `A` because in property `x`: undefined [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:12:6
@@ -89,7 +89,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:12:20
 
-Cannot cast object literal to required of `A` because undefined [1] is incompatible with number [2] in property `y`.
+Cannot cast object literal to required of `A` because in property `y`: undefined [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:12:20
@@ -205,7 +205,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:29:2
 
 Cannot cast object literal to required of nullable `A` because: [incompatible-type]
- - Either undefined [1] is incompatible with number [2] in property `x`.
+ - Either in property `x`: undefined [1] is incompatible with number [2].
  - Or object literal [3] is incompatible with null or undefined [4].
 
    test.js:29:2
@@ -279,8 +279,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:54:6
 
-Cannot cast object literal to required of `IFace` because undefined [1] is incompatible with number [2] in property `x`.
-[incompatible-type]
+Cannot cast object literal to required of `IFace` because in property `x`: undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:54:6
    54| ({x: undefined, y: undefined}: Required<IFace>); // ERROR
@@ -294,8 +294,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:54:20
 
-Cannot cast object literal to required of `IFace` because undefined [1] is incompatible with number [2] in property `y`.
-[incompatible-type]
+Cannot cast object literal to required of `IFace` because in property `y`: undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:54:20
    54| ({x: undefined, y: undefined}: Required<IFace>); // ERROR
@@ -354,8 +354,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:71:6
 
-Cannot cast object literal to required of `JFace` because undefined [1] is incompatible with number [2] in property `x`.
-[incompatible-type]
+Cannot cast object literal to required of `JFace` because in property `x`: undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:71:6
    71| ({x: undefined, y: undefined, z: undefined}: Required<JFace>); // ERROR
@@ -369,8 +369,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:71:20
 
-Cannot cast object literal to required of `JFace` because undefined [1] is incompatible with number [2] in property `y`.
-[incompatible-type]
+Cannot cast object literal to required of `JFace` because in property `y`: undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:71:20
    71| ({x: undefined, y: undefined, z: undefined}: Required<JFace>); // ERROR
@@ -384,8 +384,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:71:34
 
-Cannot cast object literal to required of `JFace` because undefined [1] is incompatible with number [2] in property `z`.
-[incompatible-type]
+Cannot cast object literal to required of `JFace` because in property `z`: undefined [1] is incompatible with
+number [2]. [incompatible-type]
 
    test.js:71:34
    71| ({x: undefined, y: undefined, z: undefined}: Required<JFace>); // ERROR

@@ -42,8 +42,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- classes.js:23:3
 
-Cannot extend `React.Component` [1] with `Foo` because property `y_` is missing in object type [2] but exists in object
-type [3] in the first parameter of property `setState`. [incompatible-type]
+Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter: property `y_` is
+missing in object type [2] but exists in object type [3]. [incompatible-type]
 
    classes.js:23:3
    23|   setState(o: { y_: string }): void { }
@@ -63,8 +63,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
-Cannot extend `React.Component` [1] with `Foo` because object type [2] is incompatible with nullable `$ReadOnly` [3] in
-the first parameter of property `setState`. [incompatible-type]
+Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter: object type [2] is
+incompatible with nullable `$ReadOnly` [3]. [incompatible-type]
 
    classes.js:23:15
     23|   setState(o: { y_: string }): void { }
@@ -81,8 +81,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
-Cannot extend `React.Component` [1] with `Foo` because object type [2] is incompatible with function type [3] in the
-first parameter of property `setState`. [incompatible-type]
+Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter: object type [2] is
+incompatible with function type [3]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -118,7 +118,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:20:23
 
-Cannot assign object literal to `this.state` because string [1] is incompatible with number [2] in property `y`.
+Cannot assign object literal to `this.state` because in property `y`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    classes.js:20:23
@@ -183,23 +183,23 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26
 
-Cannot assign `<Foo />` to `foo` because class `Foo` [1] is incompatible with number [2] in type argument
-`ElementType` [3]. [incompatible-type]
+Cannot assign `<Foo />` to `foo` because in type argument `ElementType` [1]: class `Foo` [2] is incompatible with
+number [3]. [incompatible-type]
 
    classes.js:39:26
    39| var foo: $jsx<number> = <Foo/>;
                                 ^^^
 
 References:
-   classes.js:7:7
-    7| class Foo extends React.Component<Props, State> {
-             ^^^ [1]
-   classes.js:39:15
-   39| var foo: $jsx<number> = <Foo/>;
-                     ^^^^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   classes.js:7:7
+    7| class Foo extends React.Component<Props, State> {
+             ^^^ [2]
+   classes.js:39:15
+   39| var foo: $jsx<number> = <Foo/>;
+                     ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:39:26
@@ -222,7 +222,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-react.js:13:21
 
-Cannot create `HelloMessage` element because number [1] is incompatible with string [2] in property `name`.
+Cannot create `HelloMessage` element because in property `name`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    import-react.js:13:21
@@ -302,7 +302,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- props4.js:6:11
 
-Cannot create `JDiv` element because number [1] is incompatible with string [2] in property `id`. [incompatible-type]
+Cannot create `JDiv` element because in property `id`: number [1] is incompatible with string [2]. [incompatible-type]
 
    props4.js:6:11
    6| <JDiv id={42} />;
@@ -349,7 +349,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- state6.js:27:19
 
 Cannot call `this.setState` with function bound to `partialState` because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in property `bar` of the return value.
+ - Either in the return value > property `bar`: string [1] is incompatible with number [2].
  - Or function [3] is incompatible with nullable `$ReadOnly` [4].
 
    state6.js:27:19
@@ -402,7 +402,7 @@ References:
 Error -------------------------------------------------------------------------------------------------- state6.js:39:25
 
 Cannot call `this.setState` with `any` bound to `partialState` because: [incompatible-type]
- - Either number [1] is incompatible with `State` [2] in the first parameter.
+ - Either in the first parameter: number [1] is incompatible with `State` [2].
  - Or `StateUpdater3` [3] is incompatible with nullable `$ReadOnly` [4].
 
    state6.js:39:25

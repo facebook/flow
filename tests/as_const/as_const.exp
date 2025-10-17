@@ -83,7 +83,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:30:9
 
-Cannot cast `_` to `typeof arr1` because number [1] is incompatible with number literal `1` [2] in index 0.
+Cannot cast `_` to `typeof arr1` because in index 0: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    array.js:30:9
@@ -98,7 +98,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- array.js:30:17
 
-Cannot cast `_` to `typeof arr1` because number literal `1` [1] is incompatible with number literal `2` [2] in index 1.
+Cannot cast `_` to `typeof arr1` because in index 1: number literal `1` [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
    array.js:30:17
@@ -131,7 +131,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:44:3
 
-Cannot cast `arr4` to `$ReadOnly` because number [1] is incompatible with number literal `1` [2] in index 0.
+Cannot cast `arr4` to `$ReadOnly` because in index 0: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    array.js:44:3
@@ -149,7 +149,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:44:3
 
-Cannot cast `arr4` to `$ReadOnly` because number [1] is incompatible with number literal `2` [2] in index 1.
+Cannot cast `arr4` to `$ReadOnly` because in index 1: number [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
    array.js:44:3
@@ -167,7 +167,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:44:3
 
-Cannot cast `arr4` to `$ReadOnly` because number [1] is incompatible with number literal `3` [2] in index 2.
+Cannot cast `arr4` to `$ReadOnly` because in index 2: number [1] is incompatible with number literal `3` [2].
 [incompatible-type]
 
    array.js:44:3
@@ -257,8 +257,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:66:3
 
-Cannot cast `arr6` to tuple type because property `f` is read-only in const object literal [1] but writable in object
-type [2] in index 0. [incompatible-variance]
+Cannot cast `arr6` to tuple type because in index 0: property `f` is read-only in const object literal [1] but writable
+in object type [2]. [incompatible-variance]
 
    array.js:66:3
    66|   arr6 as [{f: 1}]; // error cast to non-readonly prop
@@ -275,8 +275,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:81:3
 
-Cannot cast `arr8` to tuple type because null or undefined [1] is incompatible with undefined (out of bounds tuple
-access at index 0) [2] in index 0. [incompatible-type]
+Cannot cast `arr8` to tuple type because in index 0: null or undefined [1] is incompatible with undefined (out of bounds
+tuple access at index 0) [2]. [incompatible-type]
 
    array.js:81:3
    81|   arr8 as [a?: ?number]; // error arity
@@ -290,8 +290,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:81:3
 
-Cannot cast `arr8` to tuple type because number [1] is incompatible with undefined (out of bounds tuple access at index
-0) [2] in index 0. [incompatible-type]
+Cannot cast `arr8` to tuple type because in index 0: number [1] is incompatible with undefined (out of bounds tuple
+access at index 0) [2]. [incompatible-type]
 
    array.js:81:3
    81|   arr8 as [a?: ?number]; // error arity
@@ -368,7 +368,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:15:9
 
-Cannot cast `_` to `typeof arr1` because number [1] is incompatible with number literal `1` [2] in index 0.
+Cannot cast `_` to `typeof arr1` because in index 0: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    import-array.js:15:9
@@ -383,7 +383,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-array.js:15:17
 
-Cannot cast `_` to `typeof arr1` because number literal `1` [1] is incompatible with number literal `2` [2] in index 1.
+Cannot cast `_` to `typeof arr1` because in index 1: number literal `1` [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
    import-array.js:15:17
@@ -434,8 +434,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:27:3
 
-Cannot cast `arr6` to `$ReadOnly` because property `f` is read-only in const object literal [1] but writable in object
-type [2] in index 0. [incompatible-variance]
+Cannot cast `arr6` to `$ReadOnly` because in index 0: property `f` is read-only in const object literal [1] but writable
+in object type [2]. [incompatible-variance]
 
    import-array.js:27:3
    27|   arr6 as readonly [{f: 1}]; // error cast to non-readonly prop
@@ -452,8 +452,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:37:3
 
-Cannot cast `arr8` to tuple type because null or undefined [1] is incompatible with undefined (out of bounds tuple
-access at index 0) [2] in index 0. [incompatible-type]
+Cannot cast `arr8` to tuple type because in index 0: null or undefined [1] is incompatible with undefined (out of bounds
+tuple access at index 0) [2]. [incompatible-type]
 
    import-array.js:37:3
    37|   arr8 as [a?: ?number]; // error arity
@@ -467,8 +467,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:37:3
 
-Cannot cast `arr8` to tuple type because number [1] is incompatible with undefined (out of bounds tuple access at index
-0) [2] in index 0. [incompatible-type]
+Cannot cast `arr8` to tuple type because in index 0: number [1] is incompatible with undefined (out of bounds tuple
+access at index 0) [2]. [incompatible-type]
 
    import-array.js:37:3
    37|   arr8 as [a?: ?number]; // error arity
@@ -545,7 +545,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import-object.js:18:12
 
-Cannot cast `_` to `typeof obj1` because number [1] is incompatible with number literal `1` [2] in property `f`.
+Cannot cast `_` to `typeof obj1` because in property `f`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    import-object.js:18:12
@@ -593,7 +593,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import-object.js:39:12
 
-Cannot cast `_` to `typeof obj3` because number [1] is incompatible with number literal `1` [2] in property `f`.
+Cannot cast `_` to `typeof obj3` because in property `f`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    import-object.js:39:12
@@ -659,7 +659,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:57:3
 
-Cannot cast `obj5` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
+Cannot cast `obj5` to object type because in property `f`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    import-object.js:57:3
@@ -728,8 +728,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- import-object.js:83:3
 
-Cannot cast `obj8` to object type because property `g` is read-only in const object literal [1] but writable in object
-type [2] in property `f`. [incompatible-variance]
+Cannot cast `obj8` to object type because in property `f`: property `g` is read-only in const object literal [1] but
+writable in object type [2]. [incompatible-variance]
 
    import-object.js:83:3
    83|   obj8 as {+f: {g: 1}}; // error cast to non-readonly g
@@ -746,8 +746,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import-object.js:91:13
 
-Cannot cast `_` to `typeof obj8` because inexact object type [1] is incompatible with exact const object literal [2] in
-property `f`. [incompatible-exact]
+Cannot cast `_` to `typeof obj8` because in property `f`: inexact object type [1] is incompatible with exact const
+object literal [2]. [incompatible-exact]
 
    import-object.js:91:13
    91|   _ as {+f: {+g: 1, ...}} as typeof obj8; // error inexact ~> exact
@@ -761,7 +761,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- import-object.js:92:16
 
-Cannot cast `_` to `typeof obj8` because number [1] is incompatible with number literal `1` [2] in property `f.g`.
+Cannot cast `_` to `typeof obj8` because in property `f.g`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    import-object.js:92:16
@@ -1136,44 +1136,44 @@ initialized with primitive literals. [unsupported-syntax]
 
 Error ------------------------------------------------------------------------------------------------------- jsx.js:5:1
 
-Cannot cast `b` to `ExactReactElement_DEPRECATED` because component [1] is incompatible with string literal `div` [2] in
-type argument `ElementType` [3]. [incompatible-type]
+Cannot cast `b` to `ExactReactElement_DEPRECATED` because in type argument `ElementType` [1]: component [2] is
+incompatible with string literal `div` [3]. [incompatible-type]
 
    jsx.js:5:1
     5| b as ExactReactElement_DEPRECATED<'div'>; // error
        ^
 
 References:
-   <BUILTINS>/react.js:94:52
-   94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
-                                                          ^^^^^^^^^^^^^^^^^ [1]
-   jsx.js:5:35
-    5| b as ExactReactElement_DEPRECATED<'div'>; // error
-                                         ^^^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:94:52
+   94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                          ^^^^^^^^^^^^^^^^^ [2]
+   jsx.js:5:35
+    5| b as ExactReactElement_DEPRECATED<'div'>; // error
+                                         ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------- jsx.js:5:1
 
-Cannot cast `b` to `ExactReactElement_DEPRECATED` because string literal `div` [1] is incompatible with string [2] in
-type argument `ElementType` [3]. [incompatible-type]
+Cannot cast `b` to `ExactReactElement_DEPRECATED` because in type argument `ElementType` [1]: string literal `div` [2]
+is incompatible with string [3]. [incompatible-type]
 
    jsx.js:5:1
     5| b as ExactReactElement_DEPRECATED<'div'>; // error
        ^
 
 References:
-   jsx.js:5:35
-    5| b as ExactReactElement_DEPRECATED<'div'>; // error
-                                         ^^^^^ [1]
-   <BUILTINS>/react.js:94:52
-   94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
-                                                          ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   jsx.js:5:35
+    5| b as ExactReactElement_DEPRECATED<'div'>; // error
+                                         ^^^^^ [2]
+   <BUILTINS>/react.js:94:52
+   94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                          ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------- jsx.js:6:1
@@ -1242,7 +1242,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- object.js:31:12
 
-Cannot cast `_` to `typeof obj1` because number [1] is incompatible with number literal `1` [2] in property `f`.
+Cannot cast `_` to `typeof obj1` because in property `f`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    object.js:31:12
@@ -1290,7 +1290,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- object.js:52:12
 
-Cannot cast `_` to `typeof obj3` because number [1] is incompatible with number literal `1` [2] in property `f`.
+Cannot cast `_` to `typeof obj3` because in property `f`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    object.js:52:12
@@ -1356,7 +1356,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:70:3
 
-Cannot cast `obj5` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
+Cannot cast `obj5` to object type because in property `f`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    object.js:70:3
@@ -1425,8 +1425,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- object.js:96:3
 
-Cannot cast `obj8` to object type because property `g` is read-only in const object literal [1] but writable in object
-type [2] in property `f`. [incompatible-variance]
+Cannot cast `obj8` to object type because in property `f`: property `g` is read-only in const object literal [1] but
+writable in object type [2]. [incompatible-variance]
 
    object.js:96:3
    96|   obj8 as {+f: {g: 1}}; // error cast to non-readonly g
@@ -1443,8 +1443,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- object.js:104:13
 
-Cannot cast `_` to `typeof obj8` because inexact object type [1] is incompatible with exact const object literal [2] in
-property `f`. [incompatible-exact]
+Cannot cast `_` to `typeof obj8` because in property `f`: inexact object type [1] is incompatible with exact const
+object literal [2]. [incompatible-exact]
 
    object.js:104:13
    104|   _ as {+f: {+g: 1, ...}} as typeof obj8; // error inexact ~> exact
@@ -1458,7 +1458,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- object.js:105:16
 
-Cannot cast `_` to `typeof obj8` because number [1] is incompatible with number literal `1` [2] in property `f.g`.
+Cannot cast `_` to `typeof obj8` because in property `f.g`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    object.js:105:16

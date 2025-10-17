@@ -68,7 +68,7 @@ References:
 
 Error ----------------------------------------------------------------------- with_platform_specific_js_flow.ios.js:2:19
 
-Cannot conform to common interface module because string [1] is incompatible with number [2] in property `foo`.
+Cannot conform to common interface module because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.

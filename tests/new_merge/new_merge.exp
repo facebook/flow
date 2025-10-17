@@ -273,7 +273,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:54:38
 
-Cannot assign `x14` to `y14` because `B14` [1] is not exactly the same as `A14` [2] in array element.
+Cannot assign `x14` to `y14` because in array element: `B14` [1] is not exactly the same as `A14` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,

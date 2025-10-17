@@ -191,8 +191,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- maybe.js:12:34
 
-Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because `?string` [1] is not exactly the same as
-`?number` [2] in the indexer property. [incompatible-type]
+Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because in the indexer property: `?string` [1] is not
+exactly the same as `?number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: ?string}` [3] and `{[string]: ?number}` [4] exactly the same
@@ -224,8 +224,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- maybe.js:12:34
 
-Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because `?number` [1] is not exactly the same as
-`?string` [2] in the indexer property. [incompatible-type]
+Cannot assign `Object.assign(...)` to `target[annotationTypeName]` because in the indexer property: `?number` [1] is not
+exactly the same as `?string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: ?number}` [3] and `{[string]: ?string}` [4] exactly the same
@@ -330,8 +330,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:5:28
 
-Cannot cast `Object.assign(...)` to object type because `void | string` [1] is not exactly the same as
-`void | number` [2] in property `foo`. [incompatible-type]
+Cannot cast `Object.assign(...)` to object type because in property `foo`: `void | string` [1] is not exactly the same
+as `void | number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo?: string}` [3] and `{foo?: number}` [4] exactly the same
@@ -356,8 +356,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:6:28
 
-Cannot cast `Object.assign(...)` to object type because `void | string` [1] is not exactly the same as
-`void | number` [2] in property `foo`. [incompatible-type]
+Cannot cast `Object.assign(...)` to object type because in property `foo`: `void | string` [1] is not exactly the same
+as `void | number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo?: string}` [3] and `{foo?: number}` [4] exactly the same
@@ -382,8 +382,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:7:42
 
-Cannot cast `Object.assign(...)` to object type because `void | number` [1] is not exactly the same as
-`void | boolean` [2] in property `bar`. [incompatible-type]
+Cannot cast `Object.assign(...)` to object type because in property `bar`: `void | number` [1] is not exactly the same
+as `void | boolean` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `bar` is invariantly typed. To fix the error,
 - Either make `{bar?: number, foo?: string}` [3] and `{bar?: boolean, foo?: string}` [4] exactly the same
@@ -408,8 +408,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:10:25
 
-Cannot cast `Object.assign(...)` to object type because `void | string` [1] is not exactly the same as `void | true` [2]
-in property `b`. [incompatible-type]
+Cannot cast `Object.assign(...)` to object type because in property `b`: `void | string` [1] is not exactly the same as
+`void | true` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `b` is invariantly typed. To fix the error,
 - Either make `{a?: number, b?: string, c?: boolean}` [3] and `{a?: number, b?: true, c?: boolean}` [4] exactly the same

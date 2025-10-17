@@ -1,6 +1,7 @@
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:7:1
 
-Cannot cast `Foo` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
+Cannot cast `Foo` to component because in property `bar`: string [1] is incompatible with number [2].
+[incompatible-type]
 
    class_to_component_type.js:7:1
    7| Foo as component(bar: number, ref: React.RefSetter<Foo>); // error: number ~> string
@@ -17,7 +18,8 @@ References:
 
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:8:1
 
-Cannot cast `Foo` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
+Cannot cast `Foo` to component because in property `bar`: string [1] is incompatible with number [2].
+[incompatible-type]
 
    class_to_component_type.js:8:1
    8| Foo as component(ref: React.RefSetter<Foo>, ...{bar: number}); // error: number ~> string
@@ -35,8 +37,8 @@ References:
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:9:1
 
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
- - Either `Foo` [1] is incompatible with string [2] in the first parameter.
- - Or `Foo` [1] is incompatible with null [3] in the first parameter.
+ - Either in the first parameter: `Foo` [1] is incompatible with string [2].
+ - Or in the first parameter: `Foo` [1] is incompatible with null [3].
 
    class_to_component_type.js:9:1
      9| Foo as component( // error: Foo ~> string
@@ -57,8 +59,8 @@ References:
 Error ----------------------------------------------------------------------------------- class_to_component_type.js:9:1
 
 Cannot cast `Foo` to component because in property `ref`: [incompatible-type]
- - Either `Foo` [1] is incompatible with string [2] in property `current`.
- - Or `Foo` [1] is incompatible with null [3] in property `current`.
+ - Either in property `current`: `Foo` [1] is incompatible with string [2].
+ - Or in property `current`: `Foo` [1] is incompatible with null [3].
 
    class_to_component_type.js:9:1
      9| Foo as component( // error: Foo ~> string
@@ -155,8 +157,8 @@ References:
 Error -------------------------------------------------------------------------------------------- classes_lower.js:19:1
 
 Cannot cast `ComponentNarrower` to component because in property `ref`: [incompatible-type]
- - Either `ComponentNarrower` [1] is incompatible with `Component` [2] in the first parameter.
- - Or `ComponentNarrower` [1] is incompatible with null [3] in the first parameter.
+ - Either in the first parameter: `ComponentNarrower` [1] is incompatible with `Component` [2].
+ - Or in the first parameter: `ComponentNarrower` [1] is incompatible with null [3].
 
    classes_lower.js:19:1
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
@@ -177,8 +179,8 @@ References:
 Error -------------------------------------------------------------------------------------------- classes_lower.js:19:1
 
 Cannot cast `ComponentNarrower` to component because in property `ref`: [incompatible-type]
- - Either `ComponentNarrower` [1] is incompatible with `Component` [2] in property `current`.
- - Or `ComponentNarrower` [1] is incompatible with null [3] in property `current`.
+ - Either in property `current`: `ComponentNarrower` [1] is incompatible with `Component` [2].
+ - Or in property `current`: `ComponentNarrower` [1] is incompatible with null [3].
 
    classes_lower.js:19:1
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
@@ -216,23 +218,23 @@ References:
 
 Error ---------------------------------------------------------------------------------- component_to_component.js:28:10
 
-Cannot return `x` because `Subcomponent` [1] is incompatible with `Component` [2] in type argument `T` [3] of property
-`ref`. [incompatible-type]
+Cannot return `x` because in property `ref` > type argument `T` [1]: `Subcomponent` [2] is incompatible with
+`Component` [3]. [incompatible-type]
 
    component_to_component.js:28:10
     28|   return x;
                  ^
 
 References:
-   component_to_component.js:27:35
-    27| ): component(ref: React.RefSetter<Subcomponent>, ...{...}) { // Error instance is covariant
-                                          ^^^^^^^^^^^^ [1]
-   component_to_component.js:26:37
-    26|   x: component(ref: React.RefSetter<Component>, ...{...}),
-                                            ^^^^^^^^^ [2]
    <BUILTINS>/react.js:257:34
    257|   declare export type RefSetter<-T> = React.RefSetter<T>;
-                                         ^ [3]
+                                         ^ [1]
+   component_to_component.js:27:35
+    27| ): component(ref: React.RefSetter<Subcomponent>, ...{...}) { // Error instance is covariant
+                                          ^^^^^^^^^^^^ [2]
+   component_to_component.js:26:37
+    26|   x: component(ref: React.RefSetter<Component>, ...{...}),
+                                            ^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------- config_HOC.js:10:1
@@ -310,8 +312,8 @@ References:
 Error ------------------------------------------------------------------------------------------ create_element.js:22:41
 
 Cannot create `C` element because in property `ref`: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `current`.
- - Or number [1] is incompatible with null [3] in property `current`.
+ - Either in property `current`: number [1] is incompatible with string [2].
+ - Or in property `current`: number [1] is incompatible with null [3].
 
    create_element.js:22:41
     22| const _f = <C bar="string" baz={4} ref={refBad} />; // Error bad ref
@@ -433,7 +435,7 @@ References:
 
 Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:10:1
 
-Cannot cast `C` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
+Cannot cast `C` to component because in property `bar`: string [1] is incompatible with number [2]. [incompatible-type]
 
    everything_implicit_instantiation.js:10:1
    10| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error
@@ -450,26 +452,26 @@ References:
 
 Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:11:1
 
-Cannot cast `C` to component because number [1] is incompatible with string [2] in type argument `T` [3] of type
-argument `T` [4] of property `ref`. [incompatible-type]
+Cannot cast `C` to component because in property `ref` > type argument `T` [1] > type argument `T` [2]: number [3] is
+incompatible with string [4]. [incompatible-type]
 
    everything_implicit_instantiation.js:11:1
      11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
          ^
 
 References:
-   everything_implicit_instantiation.js:11:41
-     11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
-                                                 ^^^^^^ [1]
-   everything_implicit_instantiation.js:6:46
-      6| declare component B(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders? A;
-                                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:2153:19
-   2153| declare class Set<T> extends $ReadOnlySet<T> {
-                           ^ [3]
    <BUILTINS>/react.js:103:19
     103|   type RefSetter<-T> =
-                           ^ [4]
+                           ^ [1]
+   <BUILTINS>/core.js:2153:19
+   2153| declare class Set<T> extends $ReadOnlySet<T> {
+                           ^ [2]
+   everything_implicit_instantiation.js:11:41
+     11| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error
+                                                 ^^^^^^ [3]
+   everything_implicit_instantiation.js:6:46
+      6| declare component B(ref: React.RefSetter<Set<string>>, foo: string, bar: number) renders? A;
+                                                      ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------ everything_implicit_instantiation.js:12:1
@@ -561,7 +563,8 @@ References:
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:5:1
 
-Cannot cast `Foo` to component because number [1] is incompatible with string [2] in property `bar`. [incompatible-type]
+Cannot cast `Foo` to component because in property `bar`: number [1] is incompatible with string [2].
+[incompatible-type]
 
    function_to_component_type.js:5:1
    5| Foo as component(bar: number); // error: number ~> string
@@ -578,7 +581,8 @@ References:
 
 Error -------------------------------------------------------------------------------- function_to_component_type.js:6:1
 
-Cannot cast `Foo` to component because number [1] is incompatible with string [2] in property `bar`. [incompatible-type]
+Cannot cast `Foo` to component because in property `bar`: number [1] is incompatible with string [2].
+[incompatible-type]
 
    function_to_component_type.js:6:1
    6| Foo as component(...{bar: number}); // error: number ~> string
@@ -784,7 +788,7 @@ References:
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:11:1
 
-Cannot cast `C` to component because string [1] is incompatible with number [2] in property `bar`. [incompatible-type]
+Cannot cast `C` to component because in property `bar`: string [1] is incompatible with number [2]. [incompatible-type]
 
    props_implicit_instantiation.js:11:1
    11| C as component(ref: React.RefSetter<Set<string>>, foo: string, bar: string); // error: string ~> number
@@ -801,31 +805,31 @@ References:
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:12:1
 
-Cannot cast `C` to component because number [1] is incompatible with string [2] in type argument `T` [3] of type
-argument `T` [4] of property `ref`. [incompatible-type]
+Cannot cast `C` to component because in property `ref` > type argument `T` [1] > type argument `T` [2]: number [3] is
+incompatible with string [4]. [incompatible-type]
 
    props_implicit_instantiation.js:12:1
      12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
          ^
 
 References:
-   props_implicit_instantiation.js:12:41
-     12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
-                                                 ^^^^^^ [1]
-   props_implicit_instantiation.js:7:46
-      7| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
-                                                      ^^^^^^ [2]
-   <BUILTINS>/core.js:2153:19
-   2153| declare class Set<T> extends $ReadOnlySet<T> {
-                           ^ [3]
    <BUILTINS>/react.js:103:19
     103|   type RefSetter<-T> =
-                           ^ [4]
+                           ^ [1]
+   <BUILTINS>/core.js:2153:19
+   2153| declare class Set<T> extends $ReadOnlySet<T> {
+                           ^ [2]
+   props_implicit_instantiation.js:12:41
+     12| C as component(ref: React.RefSetter<Set<number>>, foo: string, bar: number); // error: number ~> string
+                                                 ^^^^^^ [3]
+   props_implicit_instantiation.js:7:46
+      7| declare component A(ref: React.RefSetter<Set<string>>, foo: string, bar: number);
+                                                      ^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
 
-Cannot cast `props1` to object type because number [1] is incompatible with string [2] in property `bar`.
+Cannot cast `props1` to object type because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    props_implicit_instantiation.js:16:1
@@ -843,7 +847,7 @@ References:
 
 Error ----------------------------------------------------------------------------- props_implicit_instantiation.js:16:1
 
-Cannot cast `props1` to object type because string [1] is incompatible with number [2] in property `foo`.
+Cannot cast `props1` to object type because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    props_implicit_instantiation.js:16:1

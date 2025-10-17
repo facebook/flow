@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- apply.js:11:15
 
-Cannot call `f.apply` because property `length` is missing in `$Iterable` [1] but exists in `$ArrayLike` [2] in type
-argument `A`. [incompatible-type]
+Cannot call `f.apply` because in type argument `A`: property `length` is missing in `$Iterable` [1] but exists in
+`$ArrayLike` [2]. [incompatible-type]
 
    apply.js:11:15
     11| f.apply(null, it); // Error
@@ -18,8 +18,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:11:15
 
-Cannot call `f.apply` because `$IteratorProtocol` [1] is incompatible with `Iterator` [2] in the return value of
-property `@@iterator` of type argument `A`. [incompatible-type]
+Cannot call `f.apply` because in type argument `A` > property `@@iterator` > the return value: `$IteratorProtocol` [1]
+is incompatible with `Iterator` [2]. [incompatible-type]
 
    apply.js:11:15
      11| f.apply(null, it); // Error

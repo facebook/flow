@@ -78,7 +78,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:19:80
 
-Cannot assign object literal to `o7` because `number` [1] is not exactly the same as `string` [2] in property `y`.
+Cannot assign object literal to `o7` because in property `y`: `number` [1] is not exactly the same as `string` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `y` is invariantly typed. To fix the error,

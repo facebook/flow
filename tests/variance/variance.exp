@@ -72,7 +72,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:61:4
 
-Cannot cast `rwB` to `RWA` because `B` [1] is not exactly the same as `A` [2] in property `p`. [incompatible-type]
+Cannot cast `rwB` to `RWA` because in property `p`: `B` [1] is not exactly the same as `A` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `RWB` [3] and `RWA` [4] exactly the same
@@ -103,7 +103,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:4
 
-Cannot cast `drwB` to `dRWA` because `B` [1] is not exactly the same as `A` [2] in the indexer property.
+Cannot cast `drwB` to `dRWA` because in the indexer property: `B` [1] is not exactly the same as `A` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -189,7 +189,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:69:4
 
-Cannot cast `woB` to `RWA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast `woB` to `RWA` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:69:4
    69|   (woB: RWA); // error
@@ -224,7 +224,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:70:4
 
-Cannot cast `dwoB` to `dRWA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
+Cannot cast `dwoB` to `dRWA` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:70:4
    70|   (dwoB: dRWA); // error
@@ -349,7 +349,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:131:4
 
-Cannot cast `rwB` to `WOA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast `rwB` to `WOA` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:131:4
    131|   (rwB: WOA); // error
@@ -366,7 +366,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:132:4
 
-Cannot cast `drwB` to `dWOA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
+Cannot cast `drwB` to `dWOA` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:132:4
    132|   (drwB: dWOA); // error
@@ -419,7 +419,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:139:4
 
-Cannot cast `woB` to `WOA` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast `woB` to `WOA` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:139:4
    139|   (woB: WOA); // error
@@ -436,7 +436,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:140:4
 
-Cannot cast `dwoB` to `dWOA` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
+Cannot cast `dwoB` to `dWOA` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:140:4
    140|   (dwoB: dWOA); // error
@@ -453,7 +453,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:146:8
 
-Cannot cast object literal to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `RWB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:146:8
    146|   ({p: new A}: RWB); // error
@@ -467,7 +467,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:147:8
 
-Cannot cast object literal to `dRWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `dRWB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:147:8
    147|   ({p: new A}: dRWB); // error
@@ -481,7 +481,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:150:4
 
-Cannot cast `rwA` to `RWB` because `A` [1] is not exactly the same as `B` [2] in property `p`. [incompatible-type]
+Cannot cast `rwA` to `RWB` because in property `p`: `A` [1] is not exactly the same as `B` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
 - Either make `RWA` [3] and `RWB` [4] exactly the same
@@ -512,7 +512,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:151:4
 
-Cannot cast `drwA` to `dRWB` because `A` [1] is not exactly the same as `B` [2] in the indexer property.
+Cannot cast `drwA` to `dRWB` because in the indexer property: `A` [1] is not exactly the same as `B` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
@@ -562,7 +562,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:154:4
 
-Cannot cast `roA` to `RWB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast `roA` to `RWB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:154:4
    154|   (roA: RWB); // error
@@ -597,7 +597,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:155:4
 
-Cannot cast `droA` to `dRWB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
+Cannot cast `droA` to `dRWB` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:155:4
    155|   (droA: dRWB); // error
@@ -650,7 +650,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:165:8
 
-Cannot cast object literal to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `ROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:165:8
    165|   ({p: new A}: ROB); // error
@@ -664,7 +664,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:166:8
 
-Cannot cast object literal to `dROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast object literal to `dROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:166:8
    166|   ({p: new A}: dROB); // error
@@ -678,7 +678,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:169:4
 
-Cannot cast `rwA` to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast `rwA` to `ROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:169:4
    169|   (rwA: ROB); // error
@@ -695,7 +695,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:170:4
 
-Cannot cast `drwA` to `dROB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
+Cannot cast `drwA` to `dROB` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:170:4
    170|   (drwA: dROB); // error
@@ -712,7 +712,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:173:4
 
-Cannot cast `roA` to `ROB` because `A` [1] is incompatible with `B` [2] in property `p`. [incompatible-type]
+Cannot cast `roA` to `ROB` because in property `p`: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:173:4
    173|   (roA: ROB); // error
@@ -729,7 +729,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:174:4
 
-Cannot cast `droA` to `dROB` because `A` [1] is incompatible with `B` [2] in the indexer property. [incompatible-type]
+Cannot cast `droA` to `dROB` because in the indexer property: `A` [1] is incompatible with `B` [2]. [incompatible-type]
 
    test.js:174:4
    174|   (droA: dROB); // error
@@ -818,8 +818,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:207:18
 
-Cannot cast array literal to array type because `{+p: A, ...}` [1] is not exactly the same as `{p: A, ...}` [2] in array
-element. [incompatible-type]
+Cannot cast array literal to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
+`{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{+p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
@@ -844,8 +844,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:209:18
 
-Cannot cast array literal to array type because `{-p: A, ...}` [1] is not exactly the same as `{p: A, ...}` [2] in array
-element. [incompatible-type]
+Cannot cast array literal to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
+`{p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{-p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
@@ -870,8 +870,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:211:18
 
-Cannot cast array literal to array type because `{p: A, ...}` [1] is not exactly the same as `{+p: A, ...}` [2] in array
-element. [incompatible-type]
+Cannot cast array literal to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
+`{+p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
@@ -896,8 +896,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:215:18
 
-Cannot cast array literal to array type because `{-p: A, ...}` [1] is not exactly the same as `{+p: A, ...}` [2] in
-array element. [incompatible-type]
+Cannot cast array literal to array type because in array element: `{-p: A, ...}` [1] is not exactly the same as
+`{+p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{-p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
@@ -922,8 +922,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:217:18
 
-Cannot cast array literal to array type because `{p: A, ...}` [1] is not exactly the same as `{-p: A, ...}` [2] in array
-element. [incompatible-type]
+Cannot cast array literal to array type because in array element: `{p: A, ...}` [1] is not exactly the same as
+`{-p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
@@ -948,8 +948,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- test.js:219:18
 
-Cannot cast array literal to array type because `{+p: A, ...}` [1] is not exactly the same as `{-p: A, ...}` [2] in
-array element. [incompatible-type]
+Cannot cast array literal to array type because in array element: `{+p: A, ...}` [1] is not exactly the same as
+`{-p: A, ...}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{+p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same

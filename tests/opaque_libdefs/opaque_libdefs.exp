@@ -52,42 +52,42 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:28:10
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-type]
+Cannot return `x` because in type argument `T` [1]: number [2] is incompatible with string [3]. [incompatible-type]
 
    test.js:28:10
    28|   return x; // Error: string ~> number, number ~> string
                 ^
 
 References:
-   test.js:27:45
-   27| function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                   ^^^^^^ [1]
-   test.js:27:65
-   27| function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
-                                                                       ^^^^^^ [2]
    flow-typed/decls.js:10:38
    10| declare export opaque type PolyStack<T>;
-                                            ^ [3]
+                                            ^ [1]
+   test.js:27:45
+   27| function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
+                                                   ^^^^^^ [2]
+   test.js:27:65
+   27| function convertNumberToString(x: PolyStack<number>): PolyStack<string> {
+                                                                       ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:35:10
 
-Cannot return `x` because number [1] is incompatible with string [2] in type argument `T` [3]. [incompatible-type]
+Cannot return `x` because in type argument `T` [1]: number [2] is incompatible with string [3]. [incompatible-type]
 
    test.js:35:10
    35|   return x; // Error string ~> number
                 ^
 
 References:
-   test.js:34:30
-   34| function contraBad(x: Contra<number>): Contra<number | string> {
-                                    ^^^^^^ [1]
-   test.js:34:56
-   34| function contraBad(x: Contra<number>): Contra<number | string> {
-                                                              ^^^^^^ [2]
    flow-typed/decls.js:15:36
    15| declare export opaque type Contra<-T>;
-                                          ^ [3]
+                                          ^ [1]
+   test.js:34:30
+   34| function contraBad(x: Contra<number>): Contra<number | string> {
+                                    ^^^^^^ [2]
+   test.js:34:56
+   34| function contraBad(x: Contra<number>): Contra<number | string> {
+                                                              ^^^^^^ [3]
 
 
 

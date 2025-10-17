@@ -23,8 +23,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- enforced.js:5:1
 
-Cannot cast `bar` to object type because `number` [1] is not exactly the same as `string | number` [2] in property
-`baz`. [incompatible-type]
+Cannot cast `bar` to object type because in property `baz`: `number` [1] is not exactly the same as
+`string | number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `baz` is invariantly typed. To fix the error,
 - Either annotate object literal [3] with `{baz: string | number}` [4]
@@ -52,8 +52,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- enforced.js:8:1
 
-Cannot cast `bazArray` to array type because `{baz: number}` [1] is not exactly the same as `{baz: string | number}` [2]
-in array element. [incompatible-type]
+Cannot cast `bazArray` to array type because in array element: `{baz: number}` [1] is not exactly the same as
+`{baz: string | number}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either annotate array literal [3] with `Array<{baz: string | number}>` [4]

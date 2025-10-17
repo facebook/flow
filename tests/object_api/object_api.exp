@@ -31,8 +31,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:27:2
 
-Cannot cast `Object.entries(...)` to array type because `[key: string, value: number]` [1] is not exactly the same as
-`[string, empty]` [2] in array element. [incompatible-type]
+Cannot cast `Object.entries(...)` to array type because in array element: `[key: string, value: number]` [1] is not
+exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: number]>` [1] and `Array<[string, empty]>` [3] exactly the same
@@ -54,8 +54,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:28:2
 
-Cannot cast `Object.entries(...)` to array type because `[key: string, value: mixed]` [1] is not exactly the same as
-`[string, empty]` [2] in array element. [incompatible-type]
+Cannot cast `Object.entries(...)` to array type because in array element: `[key: string, value: mixed]` [1] is not
+exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: mixed]>` [1] and `Array<[string, empty]>` [3] exactly the same
@@ -77,8 +77,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:29:2
 
-Cannot cast `Object.entries(...)` to array type because `[key: string | "a", value: mixed]` [1] is not exactly the same
-as `[string, empty]` [2] in array element. [incompatible-type]
+Cannot cast `Object.entries(...)` to array type because in array element: `[key: string | "a", value: mixed]` [1] is not
+exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string | "a", value: mixed]>` [1] and `Array<[string, empty]>` [3] exactly the same
@@ -100,8 +100,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:30:2
 
-Cannot cast `Object.entries(...)` to array type because `[key: string, value: number | boolean]` [1] is not exactly the
-same as `[string, empty]` [2] in array element. [incompatible-type]
+Cannot cast `Object.entries(...)` to array type because in array element: `[key: string, value: number | boolean]` [1]
+is not exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: number | boolean]>` [1] and `Array<[string, empty]>` [3] exactly the same
@@ -123,8 +123,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:31:2
 
-Cannot cast `Object.entries(...)` to array type because `[key: string, value: mixed]` [1] is not exactly the same as
-`[string, empty]` [2] in array element. [incompatible-type]
+Cannot cast `Object.entries(...)` to array type because in array element: `[key: string, value: mixed]` [1] is not
+exactly the same as `[string, empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: mixed]>` [1] and `Array<[string, empty]>` [3] exactly the same
@@ -146,8 +146,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:32:2
 
-Cannot cast `Object.entries(...)` to array type because `[key: "b" | "a", value: mixed]` [1] is not exactly the same as
-`["a" | "b", empty]` [2] in array element. [incompatible-type]
+Cannot cast `Object.entries(...)` to array type because in array element: `[key: "b" | "a", value: mixed]` [1] is not
+exactly the same as `["a" | "b", empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: "b" | "a", value: mixed]>` [1] and `Array<["a" | "b", empty]>` [3] exactly the same
@@ -169,8 +169,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:33:2
 
-Cannot cast `Object.entries(...)` to array type because `[key: "b" | "a", value: mixed]` [1] is not exactly the same as
-`["a" | "b", empty]` [2] in array element. [incompatible-type]
+Cannot cast `Object.entries(...)` to array type because in array element: `[key: "b" | "a", value: mixed]` [1] is not
+exactly the same as `["a" | "b", empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: "b" | "a", value: mixed]>` [1] and `Array<["a" | "b", empty]>` [3] exactly the same
@@ -192,8 +192,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:34:2
 
-Cannot cast `Object.entries(...)` to array type because `[key: string, value: number]` [1] is not exactly the same as
-`empty` [2] in array element. [incompatible-type]
+Cannot cast `Object.entries(...)` to array type because in array element: `[key: string, value: number]` [1] is not
+exactly the same as `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<[key: string, value: number]>` [1] and `Array<empty>` [3] exactly the same
@@ -317,8 +317,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:17:2
 
-Cannot cast `Object.keys(...)` to array type because `string` [1] is not exactly the same as `number` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.keys(...)` to array type because in array element: `string` [1] is not exactly the same as
+`number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<string>` [1] and `Array<number>` [3] exactly the same
@@ -340,8 +340,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:24:2
 
-Cannot cast `Object.keys(...)` to array type because `"prop"` [1] is not exactly the same as `"error"` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.keys(...)` to array type because in array element: `"prop"` [1] is not exactly the same as
+`"error"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"prop">` [1] and `Array<"error">` [3] exactly the same
@@ -363,8 +363,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:31:2
 
-Cannot cast `Object.keys(...)` to array type because `"bar_prop"` [1] is not exactly the same as `"error"` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.keys(...)` to array type because in array element: `"bar_prop"` [1] is not exactly the same as
+`"error"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"bar_prop">` [1] and `Array<"error">` [3] exactly the same
@@ -386,8 +386,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:37:6
 
-Cannot cast `Object.keys(...)` to array type because `"hi"` [1] is not exactly the same as `"bye"` [2] in array element.
-[incompatible-type]
+Cannot cast `Object.keys(...)` to array type because in array element: `"hi"` [1] is not exactly the same as
+`"bye"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"hi">` [3] and `Array<"bye">` [4] exactly the same
@@ -412,8 +412,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:43:6
 
-Cannot cast `Object.keys(...)` to array type because `string` [1] is not exactly the same as `"123"` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.keys(...)` to array type because in array element: `string` [1] is not exactly the same as
+`"123"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<string>` [1] and `Array<"123">` [3] exactly the same
@@ -435,8 +435,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- object_keys.js:55:2
 
-Cannot cast `Object.keys(...)` to array type because `"x" | "y"` [1] is not exactly the same as `"$value" | "$key"` [2]
-in array element. [incompatible-type]
+Cannot cast `Object.keys(...)` to array type because in array element: `"x" | "y"` [1] is not exactly the same as
+`"$value" | "$key"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"x" | "y">` [1] and `Array<"$value" | "$key">` [3] exactly the same
@@ -582,8 +582,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:26:32
 
-Cannot assign `a.toString` to `aToString` because function type [1] cannot be unbound from the context [1] where it was
-defined in the `this` parameter. [method-unbinding]
+Cannot assign `a.toString` to `aToString` because in the `this` parameter: function type [1] cannot be unbound from the
+context [1] where it was defined. [method-unbinding]
 
    object_prototype.js:26:32
     26| var aToString : () => string = a.toString;
@@ -643,7 +643,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:39:33
 
-Cannot assign `x.toString` to `xToString2` because string [1] is incompatible with number [2] in the return value.
+Cannot assign `x.toString` to `xToString2` because in the return value: string [1] is incompatible with number [2].
 [incompatible-type]
 
    object_prototype.js:39:33
@@ -767,8 +767,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:63:51
 
-Cannot assign `a.hasOwnProperty` to `aHasOwnProperty` because function type [1] cannot be unbound from the context [1]
-where it was defined in the `this` parameter. [method-unbinding]
+Cannot assign `a.hasOwnProperty` to `aHasOwnProperty` because in the `this` parameter: function type [1] cannot be
+unbound from the context [1] where it was defined. [method-unbinding]
 
    object_prototype.js:63:51
     63| var aHasOwnProperty : (prop: string) => boolean = a.hasOwnProperty;
@@ -830,8 +830,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:72:51
 
-Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because boolean [1] is incompatible with number [2] in the return
-value. [incompatible-type]
+Cannot assign `x.hasOwnProperty` to `xHasOwnProperty2` because in the return value: boolean [1] is incompatible with
+number [2]. [incompatible-type]
 
    object_prototype.js:72:51
     72| var xHasOwnProperty2 : (prop: string) => number = x.hasOwnProperty; // error
@@ -896,8 +896,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------- object_prototype.js:88:57
 
-Cannot assign `a.propertyIsEnumerable` to `aPropertyIsEnumerable` because function type [1] cannot be unbound from the
-context [1] where it was defined in the `this` parameter. [method-unbinding]
+Cannot assign `a.propertyIsEnumerable` to `aPropertyIsEnumerable` because in the `this` parameter: function type [1]
+cannot be unbound from the context [1] where it was defined. [method-unbinding]
 
    object_prototype.js:88:57
     88| var aPropertyIsEnumerable : (prop: string) => boolean = a.propertyIsEnumerable;
@@ -959,8 +959,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- object_prototype.js:98:3
 
-Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because boolean [1] is incompatible with number [2]
-in the return value. [incompatible-type]
+Cannot assign `x.propertyIsEnumerable` to `xPropertyIsEnumerable2` because in the return value: boolean [1] is
+incompatible with number [2]. [incompatible-type]
 
    object_prototype.js:98:3
     98|   x.propertyIsEnumerable; // error
@@ -1103,8 +1103,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:142:38
 
-Cannot assign `a.toLocaleString` to `aToLocaleString` because function type [1] cannot be unbound from the context [1]
-where it was defined in the `this` parameter. [method-unbinding]
+Cannot assign `a.toLocaleString` to `aToLocaleString` because in the `this` parameter: function type [1] cannot be
+unbound from the context [1] where it was defined. [method-unbinding]
 
    object_prototype.js:142:38
    142| var aToLocaleString : () => string = a.toLocaleString;
@@ -1166,8 +1166,8 @@ References:
 
 Error --------------------------------------------------------------------------------------- object_prototype.js:151:39
 
-Cannot assign `x.toLocaleString` to `xToLocaleString2` because string [1] is incompatible with number [2] in the return
-value. [incompatible-type]
+Cannot assign `x.toLocaleString` to `xToLocaleString2` because in the return value: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    object_prototype.js:151:39
     151| var xToLocaleString2 : () => number = x.toLocaleString; // error
@@ -1232,8 +1232,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:27:2
 
-Cannot cast `Object.values(...)` to array type because `number` [1] is not exactly the same as `empty` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.values(...)` to array type because in array element: `number` [1] is not exactly the same as
+`empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<number>` [3] and `Array<empty>` [4] exactly the same
@@ -1258,8 +1258,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:28:2
 
-Cannot cast `Object.values(...)` to array type because `mixed` [1] is not exactly the same as `empty` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.values(...)` to array type because in array element: `mixed` [1] is not exactly the same as
+`empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<empty>` [3] exactly the same
@@ -1281,8 +1281,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:29:2
 
-Cannot cast `Object.values(...)` to array type because `mixed` [1] is not exactly the same as `empty` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.values(...)` to array type because in array element: `mixed` [1] is not exactly the same as
+`empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<empty>` [3] exactly the same
@@ -1304,8 +1304,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:30:2
 
-Cannot cast `Object.values(...)` to array type because `number | boolean` [1] is not exactly the same as `empty` [2] in
-array element. [incompatible-type]
+Cannot cast `Object.values(...)` to array type because in array element: `number | boolean` [1] is not exactly the same
+as `empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<number | boolean>` [1] and `Array<empty>` [3] exactly the same
@@ -1327,8 +1327,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:31:2
 
-Cannot cast `Object.values(...)` to array type because `mixed` [1] is not exactly the same as `empty` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.values(...)` to array type because in array element: `mixed` [1] is not exactly the same as
+`empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<empty>` [3] exactly the same
@@ -1350,8 +1350,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:32:2
 
-Cannot cast `Object.values(...)` to array type because `mixed` [1] is not exactly the same as `empty` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.values(...)` to array type because in array element: `mixed` [1] is not exactly the same as
+`empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<empty>` [3] exactly the same
@@ -1373,8 +1373,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------- object_values.js:33:2
 
-Cannot cast `Object.values(...)` to array type because `mixed` [1] is not exactly the same as `empty` [2] in array
-element. [incompatible-type]
+Cannot cast `Object.values(...)` to array type because in array element: `mixed` [1] is not exactly the same as
+`empty` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [1] and `Array<empty>` [3] exactly the same

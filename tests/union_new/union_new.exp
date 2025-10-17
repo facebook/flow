@@ -19,8 +19,8 @@ References:
 Error -------------------------------------------------------------------------------------------------- test10.js:38:11
 
 Cannot call `check_fun` with function bound to `_` because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in the return value.
- - Or number [3] is incompatible with string [4] in the return value.
+ - Either in the return value: string [1] is incompatible with number [2].
+ - Or in the return value: number [3] is incompatible with string [4].
 
    test10.js:38:11
    38| check_fun((x) => x);
@@ -74,8 +74,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- test16.js:11:5
 
 Cannot call `foo` with function bound to `x` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2] in the return value.
- - Or string [3] is incompatible with boolean [4] in the return value.
+ - Either in the return value: boolean [1] is incompatible with string [2].
+ - Or in the return value: string [3] is incompatible with boolean [4].
 
    test16.js:11:5
    11| foo(() => qux());
@@ -99,8 +99,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- test16.js:14:5
 
 Cannot call `bar` with function bound to `x` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2] in the return value.
- - Or string [3] is incompatible with boolean [4] in the return value.
+ - Either in the return value: boolean [1] is incompatible with string [2].
+ - Or in the return value: string [3] is incompatible with boolean [4].
 
    test16.js:14:5
    14| bar(() => qux());
@@ -327,7 +327,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test36.js:6:3
 
-Cannot cast `x` to array type because string [1] is incompatible with number [2] in array element. [incompatible-type]
+Cannot cast `x` to array type because in array element: string [1] is incompatible with number [2]. [incompatible-type]
 
    test36.js:6:3
    6|   x as Array<number>; // ERROR string ~> number (no Unsoundness.Any)
@@ -344,7 +344,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test36.js:6:3
 
-Cannot cast `x` to array type because string [1] is incompatible with number [2] in array element. [incompatible-type]
+Cannot cast `x` to array type because in array element: string [1] is incompatible with number [2]. [incompatible-type]
 
    test36.js:6:3
    6|   x as Array<number>; // ERROR string ~> number (no Unsoundness.Any)

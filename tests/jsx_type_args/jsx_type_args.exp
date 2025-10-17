@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:21:40
 
-Cannot create `ComponentMultipleArgs` element because boolean [1] is incompatible with string [2] in type argument `T`.
+Cannot create `ComponentMultipleArgs` element because in type argument `T`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:21:40
@@ -15,7 +15,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:40
 
-Cannot create `ComponentMultipleArgs` element because boolean [1] is incompatible with string [2] in type argument `T`.
+Cannot create `ComponentMultipleArgs` element because in type argument `T`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    test.js:22:40
@@ -30,7 +30,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:22:65
 
-Cannot create `ComponentMultipleArgs` element because string [1] is incompatible with boolean [2] in property `t`.
+Cannot create `ComponentMultipleArgs` element because in property `t`: string [1] is incompatible with boolean [2].
 [incompatible-type]
 
    test.js:22:65

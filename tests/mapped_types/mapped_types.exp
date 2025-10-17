@@ -17,7 +17,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- deep_types.js:16:4
 
-Cannot cast `b` to object type because undefined [1] is incompatible with object type [2] in property `foo`.
+Cannot cast `b` to object type because in property `foo`: undefined [1] is incompatible with object type [2].
 [incompatible-type]
 
    deep_types.js:16:4
@@ -35,7 +35,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- deep_types.js:17:4
 
-Cannot cast `b` to object type because undefined [1] is incompatible with object type [2] in property `foo.bar`.
+Cannot cast `b` to object type because in property `foo.bar`: undefined [1] is incompatible with object type [2].
 [incompatible-type]
 
    deep_types.js:17:4
@@ -53,7 +53,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- deep_types.js:18:4
 
-Cannot cast `b` to object type because undefined [1] is incompatible with string [2] in property `foo.bar.baz`.
+Cannot cast `b` to object type because in property `foo.bar.baz`: undefined [1] is incompatible with string [2].
 [incompatible-type]
 
    deep_types.js:18:4
@@ -184,7 +184,7 @@ Cannot assign `'goodbye'` to `arr[0]` because read-only arrays cannot be written
 Error -------------------------------------------------------------------------------------------- distributivity.js:8:4
 
 Cannot cast `o` to union type because: [incompatible-type]
- - Either number [1] is incompatible with empty [2] in property `bar`.
+ - Either in property `bar`: number [1] is incompatible with empty [2].
  - Or property `bar` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
    props.
 
@@ -210,7 +210,7 @@ References:
 Error -------------------------------------------------------------------------------------------- distributivity.js:8:4
 
 Cannot cast `o` to union type because: [incompatible-type]
- - Either number [1] is incompatible with empty [2] in property `foo`.
+ - Either in property `foo`: number [1] is incompatible with empty [2].
  - Or property `foo` is extra in mapped type [3] but missing in object type [4]. Exact objects do not accept extra
    props.
 
@@ -305,7 +305,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:13:6
 
-Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `a`.
+Cannot cast object literal to `Foo` because in property `a`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    identity.js:13:6
@@ -320,7 +320,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- identity.js:14:6
 
-Cannot cast object literal to `Foo` because string [1] is incompatible with number [2] in property `b`.
+Cannot cast object literal to `Foo` because in property `b`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    identity.js:14:6
@@ -456,8 +456,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- identity.js:50:2
 
 Cannot cast object literal to `IdentityMap` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2] in property `foo`.
- - Or boolean [1] is incompatible with string [2] in property `foo`.
+ - Either in property `foo`: boolean [1] is incompatible with number [2].
+ - Or in property `foo`: boolean [1] is incompatible with string [2].
 
    identity.js:50:2
         v
@@ -897,7 +897,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:18:4
 
-Cannot cast `mapped` to object type because boolean [1] is incompatible with empty [2] in property `baz`.
+Cannot cast `mapped` to object type because in property `baz`: boolean [1] is incompatible with empty [2].
 [incompatible-type]
 
    import.js:18:4
@@ -979,7 +979,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:47:4
 
-Cannot cast `mapped` to object type because boolean [1] is incompatible with empty [2] in property `baz`.
+Cannot cast `mapped` to object type because in property `baz`: boolean [1] is incompatible with empty [2].
 [incompatible-type]
 
    import.js:47:4
@@ -1037,8 +1037,8 @@ Cannot assign `false` to `readonly.baz` because property `baz` is not writable. 
 
 Error -------------------------------------------------------------------------------------------------- import.js:71:10
 
-Cannot cast object literal to `MappedNonHomomorphic` because null [1] is incompatible with number [2] in property `foo`.
-[incompatible-type]
+Cannot cast object literal to `MappedNonHomomorphic` because in property `foo`: null [1] is incompatible with
+number [2]. [incompatible-type]
 
    import.js:71:10
    71|   ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
@@ -1052,8 +1052,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:71:21
 
-Cannot cast object literal to `MappedNonHomomorphic` because null [1] is incompatible with number [2] in property `bar`.
-[incompatible-type]
+Cannot cast object literal to `MappedNonHomomorphic` because in property `bar`: null [1] is incompatible with
+number [2]. [incompatible-type]
 
    import.js:71:21
    71|   ({foo: null, bar: null}: MappedNonHomomorphic); // ERROR!
@@ -1086,7 +1086,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:85:4
 
 Cannot cast `semi` to union type because: [incompatible-type]
- - Either number [1] is incompatible with string [2] in property `foo`.
+ - Either in property `foo`: number [1] is incompatible with string [2].
  - Or property `foo` is read-only in object type [3] but writable in object type [4].
 
    import.js:85:4
@@ -1111,7 +1111,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- import.js:85:4
 
 Cannot cast `semi` to union type because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in property `foo`.
+ - Either in property `foo`: string [1] is incompatible with number [2].
  - Or property `foo` is read-only in object type [3] but writable in object type [4].
 
    import.js:85:4
@@ -1479,8 +1479,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
 
-Cannot cast `withLeftovers` to object type because number [1] is not exactly the same as `string` [2] in property `foo`.
-[incompatible-type]
+Cannot cast `withLeftovers` to object type because in property `foo`: number [1] is not exactly the same as
+`string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make mapped type [3] and `{[number]: string, foo: string}` [4] exactly the same
@@ -1508,8 +1508,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:21:4
 
-Cannot cast `withLeftovers` to object type because number [1] is not exactly the same as `string` [2] in the indexer
-property. [incompatible-type]
+Cannot cast `withLeftovers` to object type because in the indexer property: number [1] is not exactly the same as
+`string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make mapped type [3] and `{[number]: string, foo: string}` [4] exactly the same
@@ -1693,7 +1693,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- optionality.js:13:10
 
-Cannot cast object literal to `Preserve` because string [1] is incompatible with number [2] in property `foo`.
+Cannot cast object literal to `Preserve` because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    optionality.js:13:10
@@ -1708,7 +1708,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- optionality.js:13:22
 
-Cannot cast object literal to `Preserve` because number [1] is incompatible with string [2] in property `bar`.
+Cannot cast object literal to `Preserve` because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    optionality.js:13:22
@@ -1745,8 +1745,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- pick_and_omit.js:23:36
 
-Cannot instantiate `Omit` because an index signature declaring the expected key / value type is missing in `O` [1] in
-type argument `Keys`. [prop-missing]
+Cannot instantiate `Omit` because in type argument `Keys`: an index signature declaring the expected key / value type is
+missing in `O` [1]. [prop-missing]
 
    pick_and_omit.js:23:36
    23|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of $Keys<O>
@@ -1870,8 +1870,8 @@ An annotation on `o` is required because Flow cannot infer its type from local c
 
 Error ------------------------------------------------------------------------------------------------- reasons.js:10:26
 
-Cannot instantiate mapped type [1] because string literal `bar` [2] is incompatible with string literal `foo` [3] in
-type argument `T`. [incompatible-type]
+Cannot instantiate mapped type [1] because in type argument `T`: string literal `bar` [2] is incompatible with string
+literal `foo` [3]. [incompatible-type]
 
    reasons.js:10:26
    10|   type MappedFooBarObj = {[key in keyof FooBarObj]: TakesFoo<key>}; // ERROR
@@ -1896,7 +1896,7 @@ Cannot assign `3` to `a.foo` because property `foo` is not writable. [cannot-wri
 
 Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:13:28
 
-Cannot instantiate `Semi` because property `bar` is missing in `O` [1] in type argument `Keys`. [prop-missing]
+Cannot instantiate `Semi` because in type argument `Keys`: property `bar` is missing in `O` [1]. [prop-missing]
 
    semi_homomorphic.js:13:28
    13|   type MappedBad = Semi<O, 'bar'>; // ERROR HERE
@@ -1946,7 +1946,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:38:29
 
-Cannot instantiate `Semi` because number [1] is incompatible with key set [2] in type argument `Keys`.
+Cannot instantiate `Semi` because in type argument `Keys`: number [1] is incompatible with key set [2].
 [incompatible-type]
 
    semi_homomorphic.js:38:29
@@ -1961,7 +1961,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:44:32
 
-Cannot instantiate `Semi` because number [1] is incompatible with key set [2] in type argument `Keys`.
+Cannot instantiate `Semi` because in type argument `Keys`: number [1] is incompatible with key set [2].
 [incompatible-type]
 
    semi_homomorphic.js:44:32
@@ -2063,8 +2063,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:45:4
 
-Cannot cast `badVal` to `Mapped` because `{contents: string}` [1] is not exactly the same as `Box` [2] in property
-`foo`. [incompatible-type]
+Cannot cast `badVal` to `Mapped` because in property `foo`: `{contents: string}` [1] is not exactly the same as
+`Box` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make `{foo: {contents: string}}` [3] and mapped type [4] exactly the same
@@ -2098,7 +2098,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:59:4
 
-Cannot cast `badA` to `Mapped` because `{contents: string}` [1] is not exactly the same as `Box` [2] in array element.
+Cannot cast `badA` to `Mapped` because in array element: `{contents: string}` [1] is not exactly the same as `Box` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
@@ -2133,8 +2133,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:60:4
 
-Cannot cast `badB` to `Mapped` because `string` [1] is not exactly the same as `ROArr[number]` [2] in property
-`contents` of array element. [incompatible-type]
+Cannot cast `badB` to `Mapped` because in array element > property `contents`: `string` [1] is not exactly the same as
+`ROArr[number]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `contents` is invariantly typed. To fix the error,
 - Either make `{contents: string}` [3] and `{contents: ROArr[number]}` [4] exactly the same
@@ -2165,8 +2165,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:61:4
 
-Cannot cast `badC` to `Mapped` because `string` [1] is not exactly the same as `Tuple[1]` [2] in property `contents` of
-index 1. [incompatible-type]
+Cannot cast `badC` to `Mapped` because in index 1 > property `contents`: `string` [1] is not exactly the same as
+`Tuple[1]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `contents` is invariantly typed. To fix the error,
 - Either make `{contents: string}` [3] and `{contents: Tuple[1]}` [4] exactly the same
@@ -2347,8 +2347,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:132:4
 
-Cannot cast `constrained` to object type because `ConstrainedBox` [1] is not exactly the same as
-`{contents: number}` [2] in property `foo`. [incompatible-type]
+Cannot cast `constrained` to object type because in property `foo`: `ConstrainedBox` [1] is not exactly the same as
+`{contents: number}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because property `foo` is invariantly typed. To fix the error,
 - Either make mapped type [3] and `{foo: {contents: number}}` [4] exactly the same
@@ -2412,8 +2412,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- union.js:8:2
 
 Cannot cast object literal to `T` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2] in property `p`.
- - Or boolean [1] is incompatible with number [3] in property `p`.
+ - Either in property `p`: boolean [1] is incompatible with string [2].
+ - Or in property `p`: boolean [1] is incompatible with number [3].
 
    union.js:8:2
    8| ({p:false}: T); // error
@@ -2434,8 +2434,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- union.js:9:2
 
 Cannot cast object literal to `U` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2] in property `p`.
- - Or boolean [1] is incompatible with number [2] in property `p`.
+ - Either in property `p`: boolean [1] is incompatible with string [2].
+ - Or in property `p`: boolean [1] is incompatible with number [2].
 
    union.js:9:2
    9| ({p:false}: U); // error

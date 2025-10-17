@@ -336,7 +336,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:8:10
 
-Cannot extend `A1` [1] with `B1` because `B1` [2] is incompatible with `this` [3] in the return value of property `foo`.
+Cannot extend `A1` [1] with `B1` because in property `foo` > the return value: `B1` [2] is incompatible with `this` [3].
 [incompatible-type]
 
    import.js:8:10
@@ -354,7 +354,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:14:10
 
-Cannot extend `A3` [1] with `B3` because `B3` [2] is incompatible with `this` [3] in the return value of property `foo`.
+Cannot extend `A3` [1] with `B3` because in property `foo` > the return value: `B3` [2] is incompatible with `this` [3].
 [incompatible-type]
 
    import.js:14:10
@@ -387,20 +387,20 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:21:30
 
-Cannot cast `(new B3<...>()).bar()` to `A2` because string [1] is incompatible with number [2] in type argument `X` [3].
-[incompatible-type]
+Cannot cast `(new B3<...>()).bar()` to `A2` because in type argument `X` [1]: string [2] is incompatible with
+number [3]. [incompatible-type]
 
    import.js:21:30
    21| ((new B3<string>().bar(): B3<string>): A2<number>); // error
-                                    ^^^^^^ [1]
+                                    ^^^^^^ [2]
 
 References:
-   import.js:21:43
-   21| ((new B3<string>().bar(): B3<string>): A2<number>); // error
-                                                 ^^^^^^ [2]
    export.js:6:17
     6| export class A2<X> {
-                       ^ [3]
+                       ^ [1]
+   import.js:21:43
+   21| ((new B3<string>().bar(): B3<string>): A2<number>); // error
+                                                 ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- import.js:22:2
@@ -470,8 +470,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:20:10
 
-Cannot extend `Base` [1] with `Override` because `Override` [2] is incompatible with `this` [3] in the return value of
-property `bar`. [incompatible-type]
+Cannot extend `Base` [1] with `Override` because in property `bar` > the return value: `Override` [2] is incompatible
+with `this` [3]. [incompatible-type]
 
    test.js:20:10
    20|   bar(): Override { return new Override; } // error (cf. OK above)

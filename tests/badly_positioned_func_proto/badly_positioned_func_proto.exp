@@ -44,9 +44,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:7:45
 
-Cannot call `function () { ... }.apply` because number [1], a primitive, cannot be used as a subtype of
-`$ArrayLike` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of
-an interface in type argument `A`. [incompatible-type]
+Cannot call `function () { ... }.apply` because in type argument `A`: number [1], a primitive, cannot be used as a
+subtype of `$ArrayLike` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a
+subtype of an interface. [incompatible-type]
 
    test.js:7:45
      7| (function (this: any) { return this.bar; }).apply(...arr); // error
@@ -77,9 +77,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:45
 
-Cannot call `function () { ... }.apply` because number [1], a primitive, cannot be used as a subtype of
-`$ArrayLike` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of
-an interface in type argument `A`. [incompatible-type]
+Cannot call `function () { ... }.apply` because in type argument `A`: number [1], a primitive, cannot be used as a
+subtype of `$ArrayLike` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a
+subtype of an interface. [incompatible-type]
 
    test.js:8:45
      8| (function (this: any) { return this.bar; }).apply(({}: any), ...arr); // error
@@ -110,9 +110,9 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:45
 
-Cannot call `function () { ... }.apply` because number [1], a primitive, cannot be used as a subtype of
-`$ArrayLike` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a subtype of
-an interface in type argument `A`. [incompatible-type]
+Cannot call `function () { ... }.apply` because in type argument `A`: number [1], a primitive, cannot be used as a
+subtype of `$ArrayLike` [2]. You can wrap it in `new Number(...))` to turn it into an object and attempt to use it as a
+subtype of an interface. [incompatible-type]
 
    test.js:9:45
      9| (function (this: any) { return this.bar; }).apply(...arr, ...arr); // error

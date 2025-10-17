@@ -45,7 +45,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- constrain_array.js:6:8
 
-Cannot call `x.push` because string [1] is incompatible with number [2] in array element. [incompatible-type]
+Cannot call `x.push` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
 
    constrain_array.js:6:8
    6| x.push('a'); // error
@@ -101,7 +101,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ constrain_array.js:15:8
 
-Cannot assign array literal to `z` because number [1] is incompatible with string [2] in array element.
+Cannot assign array literal to `z` because in array element: number [1] is incompatible with string [2].
 [incompatible-type]
 
 All writes to `z` must be compatible with the type of its initializer [3]. Add an annotation to `z` [3] if a different
@@ -122,8 +122,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------ constrain_array.js:21:1
 
-Cannot cast `w` to array type because `Array<number>` [1] is not exactly the same as `Array<?number>` [2] in array
-element. [incompatible-type]
+Cannot cast `w` to array type because in array element: `Array<number>` [1] is not exactly the same as
+`Array<?number>` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<Array<number>>` [3] and `Array<Array<?number>>` [4] exactly the same
@@ -151,7 +151,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ constrain_array.js:25:8
 
-Cannot call `u.push` because number [1] is incompatible with string [2] in array element. [incompatible-type]
+Cannot call `u.push` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
 
    constrain_array.js:25:8
    25| u.push(42); // error
@@ -165,7 +165,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- constrain_array.js:30:12
 
-Cannot call `xin.push` because string [1] is incompatible with number [2] in array element. [incompatible-type]
+Cannot call `xin.push` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
 
    constrain_array.js:30:12
    30|   xin.push('a'); // error

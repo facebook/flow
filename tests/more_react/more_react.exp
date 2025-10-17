@@ -90,7 +90,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- inexact_props.js:44:34
 
-Cannot create `YComponent` element because null or undefined [1] is incompatible with string [2] in property `p3`.
+Cannot create `YComponent` element because in property `p3`: null or undefined [1] is incompatible with string [2].
 [incompatible-type]
 
    inexact_props.js:44:34

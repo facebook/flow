@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- arrays.js:8:14
 
-Cannot call `noop` with `new_arr` bound to `arr` because `$NonMaybeType<Array<?string>>` [1] is not exactly the same as
-`Array<string>` [2] in array element. [incompatible-type]
+Cannot call `noop` with `new_arr` bound to `arr` because in array element: `$NonMaybeType<Array<?string>>` [1] is not
+exactly the same as `Array<string>` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<$NonMaybeType<Array<?string>>>` [3] and `Array<Array<string>>` [4] exactly the same

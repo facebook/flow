@@ -118,7 +118,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- respect_local_scope.js:14:11
 
-Cannot create `Bar` element because number [1] is incompatible with string [2] in property `x`. [incompatible-type]
+Cannot create `Bar` element because in property `x`: number [1] is incompatible with string [2]. [incompatible-type]
 
    respect_local_scope.js:14:11
    14|   <Bar x={123} />; // error: number ~> string
@@ -177,7 +177,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- respect_local_scope.js:32:12
 
-Cannot create `Bar` element because string [1] is incompatible with boolean [2] in property `key`. [incompatible-type]
+Cannot create `Bar` element because in property `key`: string [1] is incompatible with boolean [2]. [incompatible-type]
 
    respect_local_scope.js:32:12
    32|   <Bar key="hi" ref="bye" />; // error: string ~> boolean, string ~> number
@@ -191,7 +191,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- respect_local_scope.js:32:21
 
-Cannot create `Bar` element because string [1] is incompatible with number [2] in property `ref`. [incompatible-type]
+Cannot create `Bar` element because in property `ref`: string [1] is incompatible with number [2]. [incompatible-type]
 
    respect_local_scope.js:32:21
    32|   <Bar key="hi" ref="bye" />; // error: string ~> boolean, string ~> number

@@ -31,20 +31,20 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:24:12
 
-Cannot return empty string because string [1] is incompatible with number [2] in type argument `Return` [3].
+Cannot return empty string because in type argument `Return` [1]: string [2] is incompatible with number [3].
 [incompatible-type]
 
    class.js:24:12
      24|     return ""; // error: string ~> number
-                    ^^ [1]
+                    ^^ [2]
 
 References:
-   class.js:23:39
-     23|   *stmt_return_err(): Generator<void, number, void> {
-                                               ^^^^^^ [2]
    <BUILTINS>/core.js:1963:24
    1963| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
-                                ^^^^^^ [3]
+                                ^^^^^^ [1]
+   class.js:23:39
+     23|   *stmt_return_err(): Generator<void, number, void> {
+                                               ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:28:22
@@ -117,23 +117,23 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:72:12
 
-Cannot yield `xs` because undefined [1] is incompatible with string [2] in type argument `Next` [3] of the return value
-of property `@@iterator`. [incompatible-type]
+Cannot yield `xs` because in property `@@iterator` > the return value > type argument `Next` [1]: undefined [2] is
+incompatible with string [3]. [incompatible-type]
 
    class.js:72:12
      72|     yield *xs;
                     ^^
 
 References:
-   <BUILTINS>/core.js:1843:50
-   1843| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
-                                                          ^^^^ [1]
-   class.js:71:71
-     71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
-                                                                               ^^^^^^ [2]
    <BUILTINS>/core.js:1833:50
    1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                                          ^^^^ [3]
+                                                          ^^^^ [1]
+   <BUILTINS>/core.js:1843:50
+   1843| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
+                                                          ^^^^ [2]
+   class.js:71:71
+     71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
+                                                                               ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:98:41
@@ -363,20 +363,20 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- generators.js:23:10
 
-Cannot return empty string because string [1] is incompatible with number [2] in type argument `Return` [3].
+Cannot return empty string because in type argument `Return` [1]: string [2] is incompatible with number [3].
 [incompatible-type]
 
    generators.js:23:10
      23|   return ""; // error: string ~> number
-                  ^^ [1]
+                  ^^ [2]
 
 References:
-   generators.js:22:46
-     22| function *stmt_return_err(): Generator<void, number, void> {
-                                                      ^^^^^^ [2]
    <BUILTINS>/core.js:1963:24
    1963| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
-                                ^^^^^^ [3]
+                                ^^^^^^ [1]
+   generators.js:22:46
+     22| function *stmt_return_err(): Generator<void, number, void> {
+                                                      ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- generators.js:27:20

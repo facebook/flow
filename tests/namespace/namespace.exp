@@ -17,7 +17,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ namespace.js:3:25
 
-Cannot assign function to `f` because string [1] is incompatible with number [2] in the first parameter.
+Cannot assign function to `f` because in the first parameter: string [1] is incompatible with number [2].
 [incompatible-type]
 
    namespace.js:3:25
@@ -50,8 +50,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- namespace.js:15:15
 
 Cannot assign array literal to `s2` because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in array element of array element.
- - Or string [1] is incompatible with array type [3] in array element of array element.
+ - Either in array element > array element: string [1] is incompatible with number [2].
+ - Or in array element > array element: string [1] is incompatible with array type [3].
 
    namespace.js:15:15
    15| var s2: Seq = [['']];

@@ -25,7 +25,7 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:38
 
-Cannot return `x` because `empty` [1] is not exactly the same as `T` [2] in array element. [incompatible-type]
+Cannot return `x` because in array element: `empty` [1] is not exactly the same as `T` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<empty>` [1] and `Array<T>` [3] exactly the same

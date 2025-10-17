@@ -22,7 +22,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ fun.js:5:19
 
-Cannot assign function to `f0` because number [1] is incompatible with undefined [2] in the return value.
+Cannot assign function to `f0` because in the return value: number [1] is incompatible with undefined [2].
 [incompatible-type]
 
    fun.js:5:19
@@ -167,8 +167,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:64:4
 
-Cannot cast `x` to `Invariant` because `number` [1] is not exactly the same as `number | string` [2] in the indexer
-property. [incompatible-type]
+Cannot cast `x` to `Invariant` because in the indexer property: `number` [1] is not exactly the same as
+`number | string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[Keys]: number}` [3] and `{[Keys]: number | string}` [4] exactly the same
@@ -199,7 +199,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:70:4
 
-Cannot cast `x` to `Invariant` because string [1] is incompatible with number [2] in the indexer property.
+Cannot cast `x` to `Invariant` because in the indexer property: string [1] is incompatible with number [2].
 [incompatible-type]
 
 This property is invariantly typed. See
@@ -220,8 +220,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:77:4
 
-Cannot cast `x` to interface type because `number | string` [1] is not exactly the same as `number` [2] in the indexer
-property. [incompatible-type]
+Cannot cast `x` to interface type because in the indexer property: `number | string` [1] is not exactly the same as
+`number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[Keys]: number | string}` [3] and `{[Keys]: number}` [4] exactly the same
@@ -249,7 +249,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:78:4
 
-Cannot cast `x` to interface type because string [1] is incompatible with number [2] in the indexer property.
+Cannot cast `x` to interface type because in the indexer property: string [1] is incompatible with number [2].
 [incompatible-type]
 
    indexer.js:78:4
@@ -267,7 +267,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:83:4
 
-Cannot cast `x` to interface type because string [1] is incompatible with number [2] in the indexer property.
+Cannot cast `x` to interface type because in the indexer property: string [1] is incompatible with number [2].
 [incompatible-type]
 
    indexer.js:83:4
@@ -285,7 +285,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- indexer.js:84:4
 
-Cannot cast `x` to interface type because string [1] is incompatible with number [2] in the indexer property.
+Cannot cast `x` to interface type because in the indexer property: string [1] is incompatible with number [2].
 [incompatible-type]
 
    indexer.js:84:4
@@ -391,7 +391,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- inline.js:5:6
 
-Cannot cast object literal to `A` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `A` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    inline.js:5:6
@@ -406,7 +406,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- inline.js:8:6
 
-Cannot cast object literal to `B` because string [1] is incompatible with number [2] in property `p`.
+Cannot cast object literal to `B` because in property `p`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    inline.js:8:6
@@ -421,7 +421,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:9:12
 
-Cannot cast object literal to `B` because string [1] is incompatible with number [2] in property `q`.
+Cannot cast object literal to `B` because in property `q`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    inline.js:9:12
@@ -543,7 +543,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:29:6
 
-Cannot extend `Base` [1] with interface type because string [2] is incompatible with number [3] in property `p`.
+Cannot extend `Base` [1] with interface type because in property `p`: string [2] is incompatible with number [3].
 [incompatible-type]
 
    inline.js:29:6
@@ -561,7 +561,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- inline.js:34:3
 
-Cannot cast `x` to interface type because number [1] is incompatible with string [2] in property `foo`.
+Cannot cast `x` to interface type because in property `foo`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    inline.js:34:3
@@ -624,7 +624,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:29:2
 
-Cannot cast `new D` to `J` because undefined [1] is incompatible with number [2] in property `x`. [incompatible-type]
+Cannot cast `new D` to `J` because in property `x`: undefined [1] is incompatible with number [2]. [incompatible-type]
 
 This property is invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
@@ -661,8 +661,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:43:2
 
-Cannot cast `o3` to interface type because `number` [1] is not exactly the same as `boolean` [2] in the indexer
-property. [incompatible-type]
+Cannot cast `o3` to interface type because in the indexer property: `number` [1] is not exactly the same as
+`boolean` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: number}` [3] and `{[string]: boolean}` [4] exactly the same
@@ -690,7 +690,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:44:7
 
-Cannot cast object literal to interface type because number [1] is incompatible with boolean [2] in property `x`.
+Cannot cast object literal to interface type because in property `x`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    interface.js:44:7
@@ -705,8 +705,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:46:2
 
-Cannot cast `o3` to interface type because `string` [1] is not exactly the same as `number` [2] in the indexer
-property's key. [incompatible-type]
+Cannot cast `o3` to interface type because in the indexer property's key: `string` [1] is not exactly the same as
+`number` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: number}` [3] and `{[number]: number}` [4] exactly the same
@@ -753,8 +753,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:51:2
 
-Cannot cast `o4` to interface type because `"asdf"` [1] is not exactly the same as `string` [2] in the indexer
-property's key. [incompatible-type]
+Cannot cast `o4` to interface type because in the indexer property's key: `"asdf"` [1] is not exactly the same as
+`string` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{["asdf"]: number}` [3] and `{[string]: number}` [4] exactly the same
@@ -782,8 +782,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ interface.js:59:2
 
-Cannot cast `o6` to interface type because `string` [1] is not exactly the same as `"asdf"` [2] in the indexer
-property's key. [incompatible-type]
+Cannot cast `o6` to interface type because in the indexer property's key: `string` [1] is not exactly the same as
+`"asdf"` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
 - Either make `{[string]: number}` [3] and `{["asdf"]: number}` [4] exactly the same
@@ -1037,7 +1037,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:17
 
-Cannot assign object literal to `k` because string [1] is incompatible with number [2] in property `x`.
+Cannot assign object literal to `k` because in property `x`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:6:17
@@ -1069,7 +1069,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:17:25
 
-Cannot assign object literal to `e` because string [1] is incompatible with number [2] in property `x`.
+Cannot assign object literal to `e` because in property `x`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:17:25
@@ -1084,7 +1084,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:17:39
 
-Cannot assign object literal to `e` because string [1] is incompatible with number [2] in property `z`.
+Cannot assign object literal to `e` because in property `z`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test.js:17:39
@@ -1147,7 +1147,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test3.js:3:31
 
-Cannot extend `I` [1] with `K` because string [2] is incompatible with number [3] in property `x`. [incompatible-type]
+Cannot extend `I` [1] with `K` because in property `x`: string [2] is incompatible with number [3]. [incompatible-type]
 
    test3.js:3:31
    3| interface K extends I, J { x: string } // error: x is number in I
@@ -1213,7 +1213,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test4.js:9:9
 
 Cannot call `(new C()).bar` because: [incompatible-type]
- - Either string [1] is incompatible with number [2] in the first parameter.
+ - Either in the first parameter: string [1] is incompatible with number [2].
  - Or property `foo` is missing in function [3] but exists in `I` [4].
 
    test4.js:9:9

@@ -37,8 +37,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- error.js:12:12
 
-Cannot call `newFn2` with function bound to the first parameter because string [1] is incompatible with number [2] in
-the first parameter. [incompatible-type]
+Cannot call `newFn2` with function bound to the first parameter because in the first parameter: string [1] is
+incompatible with number [2]. [incompatible-type]
 
    error.js:12:12
    12| newFn2((x: string) => {});
@@ -52,7 +52,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- error.js:15:13
 
-Cannot call `fn3` with function bound to `y` because string [1] is incompatible with number [2] in the first parameter.
+Cannot call `fn3` with function bound to `y` because in the first parameter: string [1] is incompatible with number [2].
 [incompatible-type]
 
    error.js:15:13
@@ -84,8 +84,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------- error_position.js:11:1
 
-Cannot cast `foo` to `typeof bar` because property `x` is extra in object type [1] but missing in object type [2]. Exact
-objects do not accept extra props in the first parameter. [incompatible-type]
+Cannot cast `foo` to `typeof bar` because in the first parameter: property `x` is extra in object type [1] but missing
+in object type [2]. Exact objects do not accept extra props. [incompatible-type]
 
    error_position.js:11:1
    11| foo as typeof bar;
@@ -131,27 +131,27 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- inout.js:7:2
 
-Cannot cast `x` to `C` because `B` [1] is incompatible with `A` [2] in type argument `In` [3]. [incompatible-type]
+Cannot cast `x` to `C` because in type argument `In` [1]: `B` [2] is incompatible with `A` [3]. [incompatible-type]
 
    inout.js:7:2
    7| (x: C<A>); // error: A ~> B in default-expanded type
        ^
 
 References:
-   inout.js:6:18
-   6| declare var x: C<B>;
-                       ^ [1]
-   inout.js:7:7
-   7| (x: C<A>); // error: A ~> B in default-expanded type
-            ^ [2]
    inout.js:4:16
    4| class C<+Out, -In: Out = Out> {}
-                     ^^ [3]
+                     ^^ [1]
+   inout.js:6:18
+   6| declare var x: C<B>;
+                       ^ [2]
+   inout.js:7:7
+   7| (x: C<A>); // error: A ~> B in default-expanded type
+            ^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- phantom.js:5:2
 
-Cannot cast `a` to `B` because number [1] is incompatible with string [2] in type argument `Phantom` [3].
+Cannot cast `a` to `B` because in type argument `Phantom` [1]: number [2] is incompatible with string [3].
 [incompatible-type]
 
    phantom.js:5:2
@@ -159,20 +159,20 @@ Cannot cast `a` to `B` because number [1] is incompatible with string [2] in typ
        ^
 
 References:
-   phantom.js:1:12
-   1| type A = T<number>;
-                 ^^^^^^ [1]
-   phantom.js:2:12
-   2| type B = T<string>;
-                 ^^^^^^ [2]
    phantom.js:7:8
    7| type T<Phantom> = any;
-             ^^^^^^^ [3]
+             ^^^^^^^ [1]
+   phantom.js:1:12
+   1| type A = T<number>;
+                 ^^^^^^ [2]
+   phantom.js:2:12
+   2| type B = T<string>;
+                 ^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------------- phantom.js:13:2
 
-Cannot cast `c` to `D` because number [1] is incompatible with string [2] in type argument `Phantom` [3].
+Cannot cast `c` to `D` because in type argument `Phantom` [1]: number [2] is incompatible with string [3].
 [incompatible-type]
 
    phantom.js:13:2
@@ -180,15 +180,15 @@ Cannot cast `c` to `D` because number [1] is incompatible with string [2] in typ
         ^
 
 References:
-   phantom.js:9:12
-    9| type C = T<number>;
-                  ^^^^^^ [1]
-   phantom.js:10:12
-   10| type D = T<string>;
-                  ^^^^^^ [2]
    phantom.js:7:8
     7| type T<Phantom> = any;
-              ^^^^^^^ [3]
+              ^^^^^^^ [1]
+   phantom.js:9:12
+    9| type C = T<number>;
+                  ^^^^^^ [2]
+   phantom.js:10:12
+   10| type D = T<string>;
+                  ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:17:16
@@ -225,7 +225,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:8:40
 
-Cannot return `o` because mixed [1] is incompatible with `T` [2] in the return value. [incompatible-type]
+Cannot return `o` because in the return value: mixed [1] is incompatible with `T` [2]. [incompatible-type]
 
    subtyping.js:8:40
    8|   (o: <T>() => mixed): (<S>() => S) => o; // should error
@@ -242,7 +242,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:11:48
 
-Cannot return `o` because mixed [1] is incompatible with `T` [2] in the return value. [incompatible-type]
+Cannot return `o` because in the return value: mixed [1] is incompatible with `T` [2]. [incompatible-type]
 
    subtyping.js:11:48
    11|     const g = (o: <T>() => A): (<S>() => S) => o; // should error
@@ -259,7 +259,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:21:46
 
-Cannot return `f` because `T` [1] is incompatible with mixed [2] in the first parameter. [incompatible-type]
+Cannot return `f` because in the first parameter: `T` [1] is incompatible with mixed [2]. [incompatible-type]
 
    subtyping.js:21:46
    21|   (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
@@ -276,7 +276,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:21:46
 
-Cannot return `f` because mixed [1] is incompatible with `T` [2] in the return value. [incompatible-type]
+Cannot return `f` because in the return value: mixed [1] is incompatible with `T` [2]. [incompatible-type]
 
    subtyping.js:21:46
    21|   (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
@@ -293,7 +293,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:24:58
 
-Cannot return `f` because `T` [1] is incompatible with mixed [2] in the first parameter. [incompatible-type]
+Cannot return `f` because in the first parameter: `T` [1] is incompatible with mixed [2]. [incompatible-type]
 
    subtyping.js:24:58
    24|     const g = (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
@@ -310,7 +310,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:24:58
 
-Cannot return `f` because mixed [1] is incompatible with `T` [2] in the return value. [incompatible-type]
+Cannot return `f` because in the return value: mixed [1] is incompatible with `T` [2]. [incompatible-type]
 
    subtyping.js:24:58
    24|     const g = (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
@@ -344,7 +344,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:49:48
 
-Cannot return `f` because `T` [1] is incompatible with number [2] in the first parameter. [incompatible-type]
+Cannot return `f` because in the first parameter: `T` [1] is incompatible with number [2]. [incompatible-type]
 
    subtyping.js:49:48
    49|   (f: <T>(T) => T): (<S>(number) => number) => f; // should be ok, currently isn't
@@ -361,7 +361,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:49:48
 
-Cannot return `f` because mixed [1] is incompatible with number [2] in the return value. [incompatible-type]
+Cannot return `f` because in the return value: mixed [1] is incompatible with number [2]. [incompatible-type]
 
    subtyping.js:49:48
    49|   (f: <T>(T) => T): (<S>(number) => number) => f; // should be ok, currently isn't
@@ -378,7 +378,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:57:42
 
-Cannot return `f` because `T` [1] is incompatible with array type [2] in the first parameter. [incompatible-type]
+Cannot return `f` because in the first parameter: `T` [1] is incompatible with array type [2]. [incompatible-type]
 
    subtyping.js:57:42
    57|   (f: <T>(T) => T): (<S>(S[]) => S[]) => f; // should be ok, currently isn't
@@ -395,7 +395,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:57:42
 
-Cannot return `f` because mixed [1] is incompatible with array type [2] in the return value. [incompatible-type]
+Cannot return `f` because in the return value: mixed [1] is incompatible with array type [2]. [incompatible-type]
 
    subtyping.js:57:42
    57|   (f: <T>(T) => T): (<S>(S[]) => S[]) => f; // should be ok, currently isn't
@@ -412,7 +412,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:64:51
 
-Cannot return `f` because boolean [1] is incompatible with mixed [2] in the second parameter. [incompatible-type]
+Cannot return `f` because in the second parameter: boolean [1] is incompatible with mixed [2]. [incompatible-type]
 
    subtyping.js:64:51
    64| (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
@@ -429,7 +429,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:66:49
 
-Cannot return `f` because `T` [1] is incompatible with mixed [2] in the first parameter. [incompatible-type]
+Cannot return `f` because in the first parameter: `T` [1] is incompatible with mixed [2]. [incompatible-type]
 
    subtyping.js:66:49
    66| (f: <R>(R, mixed) => R): (<S, T>(S, T) => T) => f; // error
@@ -480,8 +480,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:73:51
 
-Cannot return `f` because properties `a` and `b` of `{a: S, b: T}` [1] are not exactly the same as those of
-`{a: T, b: S}` [2] in the return value. [incompatible-type]
+Cannot return `f` because in the return value: properties `a` and `b` of `{a: S, b: T}` [1] are not exactly the same as
+those of `{a: T, b: S}` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because properties `a` and `b` are invariantly typed. To fix the error,
 - Either make `{a: S, b: T}` [1] and `{a: T, b: S}` [2] exactly the same
@@ -503,7 +503,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:78:54
 
-Cannot return `f` because number [1] is incompatible with mixed [2] in the first parameter. [incompatible-type]
+Cannot return `f` because in the first parameter: number [1] is incompatible with mixed [2]. [incompatible-type]
 
    subtyping.js:78:54
    78| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
@@ -520,7 +520,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:78:54
 
-Cannot return `f` because number [1] is incompatible with mixed [2] in the second parameter. [incompatible-type]
+Cannot return `f` because in the second parameter: number [1] is incompatible with mixed [2]. [incompatible-type]
 
    subtyping.js:78:54
    78| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
@@ -537,7 +537,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:78:54
 
-Cannot return `f` because number [1] is incompatible with `T` [2] in the return value. [incompatible-type]
+Cannot return `f` because in the return value: number [1] is incompatible with `T` [2]. [incompatible-type]
 
    subtyping.js:78:54
    78| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
@@ -554,7 +554,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:80:54
 
-Cannot return `f` because number [1] is incompatible with string [2] in the second parameter. [incompatible-type]
+Cannot return `f` because in the second parameter: number [1] is incompatible with string [2]. [incompatible-type]
 
    subtyping.js:80:54
    80| (f: <T>(T, T) => T): ((number, string) => number) => f; // error

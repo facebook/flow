@@ -53,8 +53,8 @@ module.exports = foo;
 > flow status
 Error -------------------------------------------------------------------------------------------------------- a.js:14:2
 
-Cannot cast `foo()` to array type because `{data: string, type: string, ...}` [1] is not exactly the same as `Exact` [2]
-in array element. [incompatible-type]
+Cannot cast `foo()` to array type because in array element: `{data: string, type: string, ...}` [1] is not exactly the
+same as `Exact` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{data: string, type: string, ...}>` [3] and `Array<Exact>` [4] exactly the same
@@ -82,8 +82,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------------- c.js:13:2
 
-Cannot cast `foo()` to array type because `{data: string, type: string, ...}` [1] is not exactly the same as `Exact` [2]
-in array element. [incompatible-type]
+Cannot cast `foo()` to array type because in array element: `{data: string, type: string, ...}` [1] is not exactly the
+same as `Exact` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{data: string, type: string, ...}>` [3] and `Array<Exact>` [4] exactly the same

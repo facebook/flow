@@ -29,7 +29,7 @@ Cannot resolve module `missing_module`. [cannot-resolve-module]
 
 Error -------------------------------------------------------------------------------------------- libs/imports.js:20:14
 
-Cannot extend `A` [1] with `D` because number [2] is incompatible with string [3] in the return value of property `m`.
+Cannot extend `A` [1] with `D` because in property `m` > the return value: number [2] is incompatible with string [3].
 [incompatible-type]
 
    libs/imports.js:20:14
@@ -270,7 +270,7 @@ Cannot resolve module `missing_module`. [cannot-resolve-module]
 
 Error -------------------------------------------------------------------------------------------- libs/imports.js:20:14
 
-Cannot extend `A` [1] with `D` because number [2] is incompatible with string [3] in the return value of property `m`.
+Cannot extend `A` [1] with `D` because in property `m` > the return value: number [2] is incompatible with string [3].
 [incompatible-type]
 
    libs/imports.js:20:14

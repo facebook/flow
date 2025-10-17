@@ -482,8 +482,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- prefix.js:122:82
 
-Cannot assign `obj` to `noCopyReadWrite` because string `bar` [1] is incompatible with string prefixed with `foo` [2] in
-the indexer property's key. [incompatible-type]
+Cannot assign `obj` to `noCopyReadWrite` because in the indexer property's key: string `bar` [1] is incompatible with
+string prefixed with `foo` [2]. [incompatible-type]
 
    prefix.js:122:82
    122|   const noCopyReadWrite: {[SpreadOverOptionalProperies]: number, bar?: number} = obj; // ERROR
@@ -500,7 +500,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- prefix.js:123:91
 
-Cannot assign `obj` to `validKeyInvalidValue` because number [1] is incompatible with string [2] in property `foobar`.
+Cannot assign `obj` to `validKeyInvalidValue` because in property `foobar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    prefix.js:123:91

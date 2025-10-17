@@ -87,28 +87,28 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- file.js:62:3
 
-Cannot cast `c1` to `C` because number [1] is incompatible with number literal `1` [2] in property `f` of type argument
-`X` [3]. [incompatible-type]
+Cannot cast `c1` to `C` because in type argument `X` [1] > property `f`: number [2] is incompatible with number literal
+`1` [3]. [incompatible-type]
 
    file.js:62:3
    62|   c1 as C<{f:1}>; // error number ~> 1
          ^^
 
 References:
-   file.js:59:23
-   59|   const c1 = new C<{f:number}>();
-                             ^^^^^^ [1]
-   file.js:62:14
-   62|   c1 as C<{f:1}>; // error number ~> 1
-                    ^ [2]
    file.js:53:25
    53|   declare class C<const X> {
-                               ^ [3]
+                               ^ [1]
+   file.js:59:23
+   59|   const c1 = new C<{f:number}>();
+                             ^^^^^^ [2]
+   file.js:62:14
+   62|   c1 as C<{f:1}>; // error number ~> 1
+                    ^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- file.js:68:3
 
-Cannot cast `x1` to object type because number [1] is incompatible with number literal `1` [2] in property `f`.
+Cannot cast `x1` to object type because in property `f`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    file.js:68:3
@@ -141,7 +141,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- file.js:87:3
 
-Cannot cast `x1` to object type because number [1] is incompatible with number literal `1` [2] in property `a`.
+Cannot cast `x1` to object type because in property `a`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    file.js:87:3
@@ -159,7 +159,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- file.js:98:14
 
-Cannot call `f1` because const array literal [1] is incompatible with array type [2] in type argument `T`.
+Cannot call `f1` because in type argument `T`: const array literal [1] is incompatible with array type [2].
 [incompatible-type]
 
    file.js:98:14

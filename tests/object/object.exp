@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- obj.js:11:47
 
-Cannot call method `defineProperty` because string [1] is incompatible with number [2] in property `value`.
+Cannot call method `defineProperty` because in property `value`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    obj.js:11:47

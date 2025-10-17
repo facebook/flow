@@ -1,7 +1,7 @@
 Error --------------------------------------------------------------------------------------------------- empty.js:14:17
 
-Cannot assign `si.add(...)` to `si` because null or undefined [1] is incompatible with empty [2] in type argument
-`T` [3]. [incompatible-type]
+Cannot assign `si.add(...)` to `si` because in type argument `T` [1]: null or undefined [2] is incompatible with
+empty [3]. [incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
 type is desired.
@@ -11,15 +11,15 @@ type is desired.
                        ^
 
 References:
-   empty.js:13:20
-   13|     declare var x: ?string;
-                          ^^^^^^^ [1]
-   empty.js:11:20
-   11|   let si = new Set<empty>();
-                          ^^^^^ [2]
    empty.js:67:20
    67| declare class Set<+T> {
-                          ^ [3]
+                          ^ [1]
+   empty.js:13:20
+   13|     declare var x: ?string;
+                          ^^^^^^^ [2]
+   empty.js:11:20
+   11|   let si = new Set<empty>();
+                          ^^^^^ [3]
    empty.js:11:7
    11|   let si = new Set<empty>();
              ^^ [4]
@@ -27,7 +27,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:14:17
 
-Cannot assign `si.add(...)` to `si` because string [1] is incompatible with empty [2] in type argument `T` [3].
+Cannot assign `si.add(...)` to `si` because in type argument `T` [1]: string [2] is incompatible with empty [3].
 [incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
@@ -38,15 +38,15 @@ type is desired.
                        ^
 
 References:
-   empty.js:13:21
-   13|     declare var x: ?string;
-                           ^^^^^^ [1]
-   empty.js:11:20
-   11|   let si = new Set<empty>();
-                          ^^^^^ [2]
    empty.js:67:20
    67| declare class Set<+T> {
-                          ^ [3]
+                          ^ [1]
+   empty.js:13:21
+   13|     declare var x: ?string;
+                           ^^^^^^ [2]
+   empty.js:11:20
+   11|   let si = new Set<empty>();
+                          ^^^^^ [3]
    empty.js:11:7
    11|   let si = new Set<empty>();
              ^^ [4]
@@ -54,7 +54,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:22:10
 
-Cannot assign array literal to `arr` because number [1] is incompatible with empty [2] in array element.
+Cannot assign array literal to `arr` because in array element: number [1] is incompatible with empty [2].
 [incompatible-type]
 
    empty.js:22:10
@@ -69,7 +69,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:22:13
 
-Cannot assign array literal to `arr` because number [1] is incompatible with empty [2] in array element.
+Cannot assign array literal to `arr` because in array element: number [1] is incompatible with empty [2].
 [incompatible-type]
 
    empty.js:22:13
@@ -84,7 +84,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:22:16
 
-Cannot assign array literal to `arr` because number [1] is incompatible with empty [2] in array element.
+Cannot assign array literal to `arr` because in array element: number [1] is incompatible with empty [2].
 [incompatible-type]
 
    empty.js:22:16
@@ -119,7 +119,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- empty.js:74:16
 
-Cannot assign `new Set<...>()` to `si` because string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot assign `new Set<...>()` to `si` because in type argument `T` [1]: string [2] is incompatible with number [3].
 [incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
@@ -127,15 +127,15 @@ type is desired.
 
    empty.js:74:16
    74|   si = new Set<string>(); // error
-                      ^^^^^^ [1]
+                      ^^^^^^ [2]
 
 References:
-   empty.js:72:20
-   72|   let si = new Set<number>();
-                          ^^^^^^ [2]
    empty.js:67:20
    67| declare class Set<+T> {
-                          ^ [3]
+                          ^ [1]
+   empty.js:72:20
+   72|   let si = new Set<number>();
+                          ^^^^^^ [3]
    empty.js:72:7
    72|   let si = new Set<number>();
              ^^ [4]
@@ -143,7 +143,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- empty.js:76:3
 
-Cannot cast `si` to `Set` because string [1] is incompatible with number [2] in type argument `T` [3].
+Cannot cast `si` to `Set` because in type argument `T` [1]: string [2] is incompatible with number [3].
 [incompatible-type]
 
    empty.js:76:3
@@ -151,20 +151,20 @@ Cannot cast `si` to `Set` because string [1] is incompatible with number [2] in 
          ^^
 
 References:
-   empty.js:74:16
-   74|   si = new Set<string>(); // error
-                      ^^^^^^ [1]
-   empty.js:76:13
-   76|   si as Set<number>;
-                   ^^^^^^ [2]
    empty.js:67:20
    67| declare class Set<+T> {
-                          ^ [3]
+                          ^ [1]
+   empty.js:74:16
+   74|   si = new Set<string>(); // error
+                      ^^^^^^ [2]
+   empty.js:76:13
+   76|   si as Set<number>;
+                   ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- empty.js:88:15
 
-Cannot assign `si.add(...)` to `si` because number [1] is incompatible with empty [2] in type argument `T` [3].
+Cannot assign `si.add(...)` to `si` because in type argument `T` [1]: number [2] is incompatible with empty [3].
 [incompatible-type]
 
 All writes to `si` must be compatible with the type of its initializer [4]. Add an annotation to `si` [4] if a different
@@ -172,15 +172,15 @@ type is desired.
 
    empty.js:88:15
    88|   si = si.add(42); // error
-                     ^^ [1]
+                     ^^ [2]
 
 References:
-   empty.js:86:20
-   86|   let si = new Set<empty>();
-                          ^^^^^ [2]
    empty.js:67:20
    67| declare class Set<+T> {
-                          ^ [3]
+                          ^ [1]
+   empty.js:86:20
+   86|   let si = new Set<empty>();
+                          ^^^^^ [3]
    empty.js:86:7
    86|   let si = new Set<empty>();
              ^^ [4]
@@ -448,8 +448,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- test.js:63:12
 
 Cannot assign `f` to `fn` because: [incompatible-type]
- - Either empty [1] is incompatible with number [2] in the first parameter.
- - Or empty [3] is incompatible with number [2] in the first parameter.
+ - Either in the first parameter: empty [1] is incompatible with number [2].
+ - Or in the first parameter: empty [3] is incompatible with number [2].
 
 All writes to `fn` must be compatible with the type of its initializer [4]. Add an annotation to `fn` [4] if a different
 type is desired.

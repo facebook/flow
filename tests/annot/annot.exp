@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- annot.js:4:44
 
-Cannot assign `foo` to `bar` because string [1] is incompatible with number [2] in the first parameter.
+Cannot assign `foo` to `bar` because in the first parameter: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annot.js:4:44
@@ -50,7 +50,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- annot.js:8:62
 
-Cannot assign object literal to `obj` because string [1] is incompatible with number [2] in property `i`.
+Cannot assign object literal to `obj` because in property `i`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annot.js:8:62
@@ -65,7 +65,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:10:31
 
-Cannot assign array literal to `arr` because string [1] is incompatible with number [2] in array element.
+Cannot assign array literal to `arr` because in array element: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annot.js:10:31
@@ -80,7 +80,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:13:28
 
-Cannot assign array literal to `array` because string [1] is incompatible with number [2] in array element.
+Cannot assign array literal to `array` because in array element: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annot.js:13:28
@@ -124,8 +124,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- annot.js:46:14
 
-Cannot call `batchRequests.map` with function bound to `callbackfn` because property `path` is missing in object
-literal [1] but exists in object type [2] in the return value. [incompatible-type]
+Cannot call `batchRequests.map` with function bound to `callbackfn` because in the return value: property `path` is
+missing in object literal [1] but exists in object type [2]. [incompatible-type]
 
    annot.js:46:14
                     v

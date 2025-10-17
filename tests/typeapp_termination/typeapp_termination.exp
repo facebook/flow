@@ -1,28 +1,28 @@
 Error ------------------------------------------------------------------------------------------------- soundness.js:8:5
 
-Cannot cast `x` to `Bak` because mixed [1] is incompatible with empty [2] in type argument `T` [3]. [incompatible-type]
+Cannot cast `x` to `Bak` because in type argument `T` [1]: mixed [2] is incompatible with empty [3]. [incompatible-type]
 
    soundness.js:8:5
    8|     x as Bak<empty>; // error mixed <~> empty
           ^
 
 References:
-   soundness.js:4:14
-   4| type Bak<T = mixed> = Foo<Bar<T>>;
-                   ^^^^^ [1]
-   soundness.js:8:14
-   8|     x as Bak<empty>; // error mixed <~> empty
-                   ^^^^^ [2]
    soundness.js:1:10
    1| type Foo<T> = { foo: T };
-               ^ [3]
+               ^ [1]
+   soundness.js:4:14
+   4| type Bak<T = mixed> = Foo<Bar<T>>;
+                   ^^^^^ [2]
+   soundness.js:8:14
+   8|     x as Bak<empty>; // error mixed <~> empty
+                   ^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ soundness.js:13:5
 
 Cannot cast `x` to union type because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2] in property `foo`.
- - Or boolean [1] is incompatible with string [3] in property `foo`.
+ - Either in property `foo`: boolean [1] is incompatible with number [2].
+ - Or in property `foo`: boolean [1] is incompatible with string [3].
 
    soundness.js:13:5
    13|     x as Bak<number> | Bak<string>; // error Bak<boolean> ~/~> Bak<number> | Bak<string>

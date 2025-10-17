@@ -59,8 +59,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- hints.js:16:8
 
-Cannot assign object literal to `obj2` because number literal `1` [1] is incompatible with empty [2] in the indexer
-property. [incompatible-type]
+Cannot assign object literal to `obj2` because in the indexer property: number literal `1` [1] is incompatible with
+empty [2]. [incompatible-type]
 
    hints.js:16:8
    16|   [x]: v1, // error 1 ~> empty
@@ -242,8 +242,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- hints.js:70:7
 
 Cannot call `foo` with object literal bound to `o` because: [incompatible-type]
- - Either number [1] is incompatible with boolean [2] in the indexer property.
- - Or boolean [2] is incompatible with number [1] in the indexer property.
+ - Either in the indexer property: number [1] is incompatible with boolean [2].
+ - Or in the indexer property: boolean [2] is incompatible with number [1].
 
    hints.js:70:7
              v-------------------------------------------------------------------------

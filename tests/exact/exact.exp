@@ -33,7 +33,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error_continues.js:3:12
 
-Cannot cast `any` to object type because `number` [1] is not exactly the same as `string` [2] in property `p`.
+Cannot cast `any` to object type because in property `p`: `number` [1] is not exactly the same as `string` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,
@@ -523,8 +523,8 @@ Cannot create exact type from `A` [1]. [invalid-exact]
 
 Error -------------------------------------------------------------------------------------------------- objmap.js:10:36
 
-Cannot assign object literal to `doesError` because number literal `3` [1] is incompatible with number literal `2` [2]
-in property `a`. [incompatible-type]
+Cannot assign object literal to `doesError` because in property `a`: number literal `3` [1] is incompatible with number
+literal `2` [2]. [incompatible-type]
 
    objmap.js:10:36
    10| const doesError: MappedThing = {a: 3};
@@ -575,7 +575,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:3:71
 
-Cannot return `x` because string [1] is incompatible with number [2] in property `p`. [incompatible-type]
+Cannot return `x` because in property `p`: string [1] is incompatible with number [2]. [incompatible-type]
 
    optional.js:3:71
    3| function foo3(x: {|__proto__: { p: string}|}): {+p?: number} { return x; } // error, type incompatibility
@@ -689,7 +689,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- use_ops.js:2:31
 
-Cannot assign `a` to `b` because `{q: null, ...}` [1] is not exactly the same as `{q: null}` [2] in property `p`.
+Cannot assign `a` to `b` because in property `p`: `{q: null, ...}` [1] is not exactly the same as `{q: null}` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,

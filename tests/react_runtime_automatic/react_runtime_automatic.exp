@@ -36,44 +36,44 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:60
 
-Cannot assign `<Component />` to `z` because property `bar` is missing in `Props` [1] but exists in object type [2] in
-type argument `P` [3]. [incompatible-type]
+Cannot assign `<Component />` to `z` because in type argument `P` [1]: property `bar` is missing in `Props` [2] but
+exists in object type [3]. [incompatible-type]
 
    test.js:9:60
     9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
                                                                   ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:4:27
-    4| function Component(props: Props): React.Node { return null }
-                                 ^^^^^ [1]
-   test.js:5:28
-    5| function Component2(props: {| bar: number |}): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [3]
+                                                                                          ^ [1]
+   test.js:4:27
+    4| function Component(props: Props): React.Node { return null }
+                                 ^^^^^ [2]
+   test.js:5:28
+    5| function Component2(props: {| bar: number |}): React.Node { return null }
+                                  ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:60
 
-Cannot assign `<Component />` to `z` because property `foo` is extra in `Props` [1] but missing in object type [2].
-Exact objects do not accept extra props in type argument `P` [3]. [incompatible-type]
+Cannot assign `<Component />` to `z` because in type argument `P` [1]: property `foo` is extra in `Props` [2] but
+missing in object type [3]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:9:60
     9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
                                                                   ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:4:27
-    4| function Component(props: Props): React.Node { return null }
-                                 ^^^^^ [1]
-   test.js:5:28
-    5| function Component2(props: {| bar: number |}): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [3]
+                                                                                          ^ [1]
+   test.js:4:27
+    4| function Component(props: Props): React.Node { return null }
+                                 ^^^^^ [2]
+   test.js:5:28
+    5| function Component2(props: {| bar: number |}): React.Node { return null }
+                                  ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61

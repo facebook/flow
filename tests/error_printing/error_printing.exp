@@ -29,7 +29,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:18:6
 
-Cannot create `Foo` element because number [1] is incompatible with boolean [2] in property `a`. [incompatible-type]
+Cannot create `Foo` element because in property `a`: number [1] is incompatible with boolean [2]. [incompatible-type]
 
    test.js:18:6
    18|   a={3}

@@ -398,7 +398,7 @@ module Friendly = struct
        * have one) and return. We can safely ignore acc_frames. If a message has
        * frames set to None then the message is not equipped to handle
        * extra frames. *)
-      | Normal { message; frames = None; parent_frames; explanations = None } ->
+      | Normal { message; frames = None | Some []; parent_frames; explanations = None } ->
         assert (Base.List.is_empty parent_frames);
         let message =
           if show_code then
@@ -411,66 +411,7 @@ module Friendly = struct
           { group_message = message; group_message_list = []; group_message_post = None }
         )
       (* Create normal error messages. *)
-      | Normal { message; frames; parent_frames = []; explanations } ->
-        (* Add the frames to our error message. *)
-        let frames =
-          Base.Option.value_map
-            ~default:[]
-            ~f:(fun frames -> message_of_frames frames acc_frames)
-            frames
-        in
-        let message =
-          if frames = [] then
-            message
-          else
-            message @ (text " in " :: frames)
-        in
-        let explanations =
-          Base.Option.value_map
-            ~default:[]
-            ~f:(fun explanations ->
-              let (leading_sep, sep) =
-                if in_speculation then
-                  ("", "")
-                else
-                  ("\n", "\n")
-              in
-              message_of_explanations ~leading_sep ~sep explanations acc_explanations)
-            explanations
-        in
-        (* Add the root to our error message when we are configured to show
-         * the root. *)
-        let message =
-          match error.root with
-          | Some { root_message; root_kind = OperationRoot; _ } when show_root ->
-            root_message @ (text " because " :: message)
-          | Some { root_message; root_kind = ShortExplanationRoot; _ } when show_root ->
-            root_message @ (text ": " :: message)
-          | _ -> message
-        in
-        (* Finish our error message with a period. But only if frames
-         * is empty! Either way, add the error code at the end *)
-        let message = message @ [text "."] in
-        let primary_loc = error.loc in
-        let message =
-          if show_code then
-            message @ msg_of_error_code_suffix_for_display ~error_code ~error_kind
-          else
-            message
-        in
-        let group_message_post =
-          if explanations = [] then
-            None
-          else
-            Some explanations
-        in
-        ( hidden_branches,
-          primary_loc,
-          { group_message = message; group_message_list = []; group_message_post }
-        )
-      (* Create normal error messages with parent frames. *)
-      | Normal { message; frames; parent_frames = _ :: _ as parent_frames; explanations } ->
-        let frames = Base.Option.value_exn frames in
+      | Normal { message; frames; parent_frames; explanations } ->
         let explanations =
           Base.Option.value_map
             ~default:[]
@@ -501,40 +442,75 @@ module Friendly = struct
         in
         let primary_loc = error.loc in
         let group_message =
-          let group_message =
-            Base.List.fold
-              parent_frames
-              ~init:
-                {
-                  group_message = stack_item message frames;
-                  group_message_list = [];
-                  group_message_post = None;
-                }
-              ~f:(fun acc (incompatibility_msg, frames) ->
-                let message = stack_item incompatibility_msg frames in
-                { group_message = message; group_message_list = [acc]; group_message_post = None })
-          in
-          let message =
-            match error.root with
-            | Some { root_message; root_kind = OperationRoot; _ } when show_root ->
-              root_message @ [text " because:"]
-            | Some { root_message; root_kind = ShortExplanationRoot; _ } when show_root ->
-              root_message @ [text ":"]
-            | _ -> []
-          in
-          let message =
-            if show_code then
-              message @ msg_of_error_code_suffix_for_display ~error_code ~error_kind
-            else
-              message
-          in
-          let group_message_post =
-            if explanations = [] then
-              None
-            else
-              Some explanations
-          in
-          { group_message = message; group_message_list = [group_message]; group_message_post }
+          match parent_frames with
+          | [] ->
+            let incompatibility_message =
+              match frames with
+              | None
+              | Some [] ->
+                message
+              | Some frames -> stack_item message frames
+            in
+            let message =
+              match error.root with
+              | Some { root_message; root_kind = OperationRoot; _ } when show_root ->
+                root_message @ [text " because "] @ incompatibility_message
+              | Some { root_message; root_kind = ShortExplanationRoot; _ } when show_root ->
+                root_message @ [text ": "] @ incompatibility_message
+              | _ -> incompatibility_message
+            in
+            (* Finish our error message with a period. But only if frames
+             * is empty! Either way, add the error code at the end *)
+            let message = message @ [text "."] in
+            let message =
+              if show_code then
+                message @ msg_of_error_code_suffix_for_display ~error_code ~error_kind
+              else
+                message
+            in
+            let group_message_post =
+              if explanations = [] then
+                None
+              else
+                Some explanations
+            in
+            { group_message = message; group_message_list = []; group_message_post }
+          | _ ->
+            let frames = Base.Option.value_exn frames in
+            let group_message =
+              Base.List.fold
+                parent_frames
+                ~init:
+                  {
+                    group_message = stack_item message frames;
+                    group_message_list = [];
+                    group_message_post = None;
+                  }
+                ~f:(fun acc (incompatibility_msg, frames) ->
+                  let message = stack_item incompatibility_msg frames in
+                  { group_message = message; group_message_list = [acc]; group_message_post = None })
+            in
+            let message =
+              match error.root with
+              | Some { root_message; root_kind = OperationRoot; _ } when show_root ->
+                root_message @ [text " because:"]
+              | Some { root_message; root_kind = ShortExplanationRoot; _ } when show_root ->
+                root_message @ [text ":"]
+              | _ -> []
+            in
+            let message =
+              if show_code then
+                message @ msg_of_error_code_suffix_for_display ~error_code ~error_kind
+              else
+                message
+            in
+            let group_message_post =
+              if explanations = [] then
+                None
+              else
+                Some explanations
+            in
+            { group_message = message; group_message_list = [group_message]; group_message_post }
         in
         (hidden_branches, primary_loc, group_message)
       (* When we have a speculation error, do some work to create a message

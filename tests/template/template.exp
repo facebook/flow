@@ -28,7 +28,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tagged_template.js:18:12
 
-Cannot call `tag` because string [1] is incompatible with number [2] in array element. [incompatible-type]
+Cannot call `tag` because in array element: string [1] is incompatible with number [2]. [incompatible-type]
 
    tagged_template.js:18:12
    18|   tag`foo${'bad'}`; // ERROR: string !~> number

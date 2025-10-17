@@ -26,8 +26,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- lazy.js:9:18
 
-Cannot call `React.lazy` with function bound to `component` because function [1] is incompatible with `Promise` [2] in
-the return value. [incompatible-type]
+Cannot call `React.lazy` with function bound to `component` because in the return value: function [1] is incompatible
+with `Promise` [2]. [incompatible-type]
 
    lazy.js:9:18
      9| React.lazy(() => FunctionComponent); // Error incompatible with Promise
@@ -50,8 +50,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:10:18
 
-Cannot call `React.lazy` with function bound to `component` because class `ClassComponent` [1] is incompatible with
-`Promise` [2] in the return value. [incompatible-type]
+Cannot call `React.lazy` with function bound to `component` because in the return value: class `ClassComponent` [1] is
+incompatible with `Promise` [2]. [incompatible-type]
 
    lazy.js:10:18
     10| React.lazy(() => ClassComponent); // Error incompatible with Promise
@@ -74,8 +74,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:11:34
 
-Cannot call `React.lazy` with function bound to `component` because function [1] is incompatible with object type [2] in
-type argument `R` [3] of the return value. [incompatible-type]
+Cannot call `React.lazy` with function bound to `component` because in the return value > type argument `R` [1]:
+function [2] is incompatible with object type [3]. [incompatible-type]
 
 Functions without statics are not compatible with objects.
 
@@ -84,44 +84,44 @@ Functions without statics are not compatible with objects.
                                           ^^^^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/core.js:2199:24
+   2199| declare class Promise<+R = mixed> {
+                                ^ [1]
    lazy.js:6:1
       6| function FunctionComponent(x: Props): React.Node { return null }
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:535:19
                            v
     535|         $ReadOnly<{
     536|           default: component(...Config) renders Renders,
     537|           ...
     538|         }>,
-                 ^ [2]
-   <BUILTINS>/core.js:2199:24
-   2199| declare class Promise<+R = mixed> {
-                                ^ [3]
+                 ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:12:34
 
-Cannot call `React.lazy` with function bound to `component` because property `default` is missing in statics of
-`ClassComponent` [1] but exists in object type [2] in type argument `R` [3] of the return value. [incompatible-type]
+Cannot call `React.lazy` with function bound to `component` because in the return value > type argument `R` [1]:
+property `default` is missing in statics of `ClassComponent` [2] but exists in object type [3]. [incompatible-type]
 
    lazy.js:12:34
      12| React.lazy(() => Promise.resolve(ClassComponent)); // Error property default is missing
                                           ^^^^^^^^^^^^^^
 
 References:
+   <BUILTINS>/core.js:2199:24
+   2199| declare class Promise<+R = mixed> {
+                                ^ [1]
    lazy.js:7:7
       7| class ClassComponent extends React.Component<Props> {}
-               ^^^^^^^^^^^^^^ [1]
+               ^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:535:19
                            v
     535|         $ReadOnly<{
     536|           default: component(...Config) renders Renders,
     537|           ...
     538|         }>,
-                 ^ [2]
-   <BUILTINS>/core.js:2199:24
-   2199| declare class Promise<+R = mixed> {
-                                ^ [3]
+                 ^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:19:13
@@ -162,7 +162,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:21:39
 
-Cannot create `LazyFunctionComponent` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `LazyFunctionComponent` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    lazy.js:21:39
@@ -213,7 +213,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- lazy.js:30:36
 
-Cannot create `LazyClassComponent` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `LazyClassComponent` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    lazy.js:30:36
@@ -278,7 +278,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:14:31
 
-Cannot create `MemoComponent` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `MemoComponent` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    memo.js:14:31
@@ -329,7 +329,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- memo.js:21:40
 
-Cannot create `MemoComponentWithEqual` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `MemoComponentWithEqual` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    memo.js:21:40

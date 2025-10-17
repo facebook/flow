@@ -18,7 +18,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:13:39
 
-Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `InlineOnly` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annotation.js:13:39
@@ -33,7 +33,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:13:47
 
-Cannot create `InlineOnly` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `InlineOnly` element because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    annotation.js:13:47
@@ -48,7 +48,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:21:37
 
-Cannot create `InexactRest` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `InexactRest` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annotation.js:21:37
@@ -63,7 +63,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:21:45
 
-Cannot create `InexactRest` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `InexactRest` element because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    annotation.js:21:45
@@ -78,7 +78,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:29:37
 
-Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `IndexedRest` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annotation.js:29:37
@@ -93,7 +93,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:29:44
 
-Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `IndexedRest` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annotation.js:29:44
@@ -108,7 +108,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:36:39
 
-Cannot create `DefaultProps` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `DefaultProps` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annotation.js:36:39
@@ -123,7 +123,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:43:34
 
-Cannot create `OptionalRest` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `OptionalRest` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annotation.js:43:34
@@ -182,7 +182,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- annotation.js:60:19
 
-Cannot create `DefaultExport` element because string [1] is incompatible with number [2] in property `x`.
+Cannot create `DefaultExport` element because in property `x`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    annotation.js:60:19
@@ -626,23 +626,23 @@ References:
 
 Error ----------------------------------------------------------------------------- component_in_type_position.js:12:115
 
-Cannot assign `<Poly />` to `polyElemBad` because string [1] is incompatible with number [2] in property `prop` of type
-argument `P` [3]. [incompatible-type]
+Cannot assign `<Poly />` to `polyElemBad` because in type argument `P` [1] > property `prop`: string [2] is incompatible
+with number [3]. [incompatible-type]
 
    component_in_type_position.js:12:115
    12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
                                                                                                                          ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   component_in_type_position.js:12:126
-   12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
-                                                                                                                                    ^^^^^^^^ [1]
-   component_in_type_position.js:12:25
-   12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
-                               ^^^^^^ [2]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [3]
+                                                                                          ^ [1]
+   component_in_type_position.js:12:126
+   12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
+                                                                                                                                    ^^^^^^^^ [2]
+   component_in_type_position.js:12:25
+   12| const polyElemBad: Poly<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
+                               ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------ component_in_type_position.js:13:20
@@ -932,7 +932,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:13:39
 
-Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `InlineOnly` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    declared.js:13:39
@@ -947,7 +947,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:13:47
 
-Cannot create `InlineOnly` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `InlineOnly` element because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    declared.js:13:47
@@ -962,7 +962,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:21:37
 
-Cannot create `InexactRest` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `InexactRest` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    declared.js:21:37
@@ -977,7 +977,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:21:45
 
-Cannot create `InexactRest` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `InexactRest` element because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    declared.js:21:45
@@ -992,7 +992,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:29:37
 
-Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `IndexedRest` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    declared.js:29:37
@@ -1007,7 +1007,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:29:44
 
-Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `IndexedRest` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    declared.js:29:44
@@ -1022,7 +1022,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:36:39
 
-Cannot create `DefaultProps` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `DefaultProps` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    declared.js:36:39
@@ -1037,7 +1037,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:43:34
 
-Cannot create `OptionalRest` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `OptionalRest` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    declared.js:43:34
@@ -1126,7 +1126,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ declared.js:61:19
 
-Cannot create `DefaultExport` element because string [1] is incompatible with number [2] in property `x`.
+Cannot create `DefaultExport` element because in property `x`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    declared.js:61:19
@@ -1357,7 +1357,7 @@ statement must be included for all possible branches. [component-missing-return]
 
 Error --------------------------------------------------------------------------------------------- export_syntax.js:7:7
 
-Cannot create `C` element because string [1] is incompatible with number [2] in property `x`. [incompatible-type]
+Cannot create `C` element because in property `x`: string [1] is incompatible with number [2]. [incompatible-type]
 
    export_syntax.js:7:7
    7| <C x={"a"} />; // error
@@ -1389,7 +1389,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- export_syntax.js:8:7
 
-Cannot create `D` element because string [1] is incompatible with number [2] in property `y`. [incompatible-type]
+Cannot create `D` element because in property `y`: string [1] is incompatible with number [2]. [incompatible-type]
 
    export_syntax.js:8:7
    8| <D y={"a"} /> // 2 errors
@@ -1403,7 +1403,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:5:39
 
-Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `InlineOnly` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    import.js:5:39
@@ -1418,7 +1418,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:5:47
 
-Cannot create `InlineOnly` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `InlineOnly` element because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    import.js:5:47
@@ -1433,7 +1433,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:8:37
 
-Cannot create `InexactRest` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `InexactRest` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    import.js:8:37
@@ -1448,7 +1448,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:8:45
 
-Cannot create `InexactRest` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `InexactRest` element because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    import.js:8:45
@@ -1463,7 +1463,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:11:37
 
-Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `IndexedRest` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    import.js:11:37
@@ -1478,7 +1478,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:11:44
 
-Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `IndexedRest` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    import.js:11:44
@@ -1493,7 +1493,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:14:39
 
-Cannot create `DefaultProps` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `DefaultProps` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    import.js:14:39
@@ -1554,7 +1554,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:17:47
 
-Cannot create `RenamedParams` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `RenamedParams` element because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    import.js:17:47
@@ -1569,7 +1569,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:17:54
 
-Cannot create `RenamedParams` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `RenamedParams` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    import.js:17:54
@@ -1658,7 +1658,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:27:7
 
-Cannot create `C` element because string [1] is incompatible with number [2] in property `x`. [incompatible-type]
+Cannot create `C` element because in property `x`: string [1] is incompatible with number [2]. [incompatible-type]
 
    import.js:27:7
    27| <C x={"a"} />; // error
@@ -1690,7 +1690,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:28:7
 
-Cannot create `D` element because string [1] is incompatible with number [2] in property `y`. [incompatible-type]
+Cannot create `D` element because in property `y`: string [1] is incompatible with number [2]. [incompatible-type]
 
    import.js:28:7
    28| <D y={"a"} /> // 2 errors
@@ -1722,7 +1722,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:34:19
 
-Cannot create `DefaultExport` element because string [1] is incompatible with number [2] in property `x`.
+Cannot create `DefaultExport` element because in property `x`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    import.js:34:19
@@ -1773,7 +1773,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:43:23
 
-Cannot create `DefaultExportType` element because string [1] is incompatible with number [2] in property `x`.
+Cannot create `DefaultExportType` element because in property `x`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    import.js:43:23
@@ -1788,8 +1788,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:49:34
 
-Cannot create `Poly` element because string [1] is incompatible with number [2] in the first parameter of property
-`baz`. [incompatible-type]
+Cannot create `Poly` element because in property `baz` > the first parameter: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    import.js:49:34
    49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
@@ -1803,8 +1803,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- import.js:49:34
 
-Cannot create `Poly` element because string [1] is incompatible with number [2] in the first parameter of property
-`baz`. [incompatible-type]
+Cannot create `Poly` element because in property `baz` > the first parameter: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    import.js:49:34
    49| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />;
@@ -1818,23 +1818,23 @@ References:
 
 Error ---------------------------------------------------------------------- import_component_in_type_position.js:13:121
 
-Cannot assign `<Poly />` to `polyElemError` because string [1] is incompatible with number [2] in property `prop` of
-type argument `P` [3]. [incompatible-type]
+Cannot assign `<Poly />` to `polyElemError` because in type argument `P` [1] > property `prop`: string [2] is
+incompatible with number [3]. [incompatible-type]
 
    import_component_in_type_position.js:13:121
    13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
                                                                                                                                ^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   import_component_in_type_position.js:13:132
-   13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
-                                                                                                                                          ^^^^^^^^ [1]
-   import_component_in_type_position.js:13:31
-   13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
-                                     ^^^^^^ [2]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [3]
+                                                                                          ^ [1]
+   import_component_in_type_position.js:13:132
+   13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
+                                                                                                                                          ^^^^^^^^ [2]
+   import_component_in_type_position.js:13:31
+   13| const polyElemError: PolyType<number> extends React$RendersExactly<infer C> ? ExactReactElement_DEPRECATED<C> : empty = <Poly prop="STRING" />; // ERROR
+                                     ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------ import_component_in_type_position.js:18:2
@@ -1918,7 +1918,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- names.js:5:9
 
-Cannot create `Foo` element because boolean [1] is incompatible with number [2] in property `a`. [incompatible-type]
+Cannot create `Foo` element because in property `a`: boolean [1] is incompatible with number [2]. [incompatible-type]
 
    names.js:5:9
    5| <Foo a={false} /> // Error: first param wins, so a must be number
@@ -1950,7 +1950,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- names.js:9:2
 
-Cannot create `Bar` element because boolean [1] is incompatible with number [2] in property `a`. [incompatible-type]
+Cannot create `Bar` element because in property `a`: boolean [1] is incompatible with number [2]. [incompatible-type]
 
    names.js:9:2
    9| <Bar a={false} /> // Error: first param wins, so a must be number
@@ -1967,7 +1967,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- names.js:12:9
 
-Cannot create `Baz` element because boolean [1] is incompatible with number [2] in property `a`. [incompatible-type]
+Cannot create `Baz` element because in property `a`: boolean [1] is incompatible with number [2]. [incompatible-type]
 
    names.js:12:9
    12| <Baz a={false} />; // Error
@@ -1999,7 +1999,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- names.js:16:9
 
-Cannot create `Qux` element because boolean [1] is incompatible with number [2] in property `a`. [incompatible-type]
+Cannot create `Qux` element because in property `a`: boolean [1] is incompatible with number [2]. [incompatible-type]
 
    names.js:16:9
    16| <Qux a={false} /> // Error: first param wins, so a must be number
@@ -2031,8 +2031,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- names.js:20:40
 
-Cannot create `RunningOutOfMetasyntaxticVariables` element because boolean [1] is incompatible with number [2] in
-property `a`. [incompatible-type]
+Cannot create `RunningOutOfMetasyntaxticVariables` element because in property `a`: boolean [1] is incompatible with
+number [2]. [incompatible-type]
 
    names.js:20:40
    20| <RunningOutOfMetasyntaxticVariables a={false} /> // Error: first param wins, so a must be number
@@ -2263,8 +2263,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:34
 
-Cannot create `Poly` element because string [1] is incompatible with number [2] in the first parameter of property
-`baz`. [incompatible-type]
+Cannot create `Poly` element because in property `baz` > the first parameter: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    poly.js:10:34
    10| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />; //error
@@ -2278,8 +2278,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:10:34
 
-Cannot create `Poly` element because string [1] is incompatible with number [2] in the first parameter of property
-`baz`. [incompatible-type]
+Cannot create `Poly` element because in property `baz` > the first parameter: string [1] is incompatible with
+number [2]. [incompatible-type]
 
    poly.js:10:34
    10| <Poly foo={1} bar={[1]} baz={(x: string) => {}} />; //error
@@ -2293,7 +2293,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:13:2
 
-Cannot cast `x` to `Poly` because number [1] is incompatible with string [2] in type argument `T` [3].
+Cannot cast `x` to `Poly` because in type argument `T` [1]: number [2] is incompatible with string [3].
 [incompatible-type]
 
    poly.js:13:2
@@ -2301,21 +2301,21 @@ Cannot cast `x` to `Poly` because number [1] is incompatible with string [2] in 
         ^
 
 References:
-   poly.js:12:23
-   12| declare const x: Poly<number>;
-                             ^^^^^^ [1]
-   poly.js:13:10
-   13| (x: Poly<string>);
-                ^^^^^^ [2]
    poly.js:3:23
     3| export component Poly<T>(foo: T, bar: [T], ...props: { baz?: (T) => void}) {
-                             ^ [3]
+                             ^ [1]
+   poly.js:12:23
+   12| declare const x: Poly<number>;
+                             ^^^^^^ [2]
+   poly.js:13:10
+   13| (x: Poly<string>);
+                ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- poly.js:25:25
 
-Cannot create `Foo` element because string literal `number` [1] is incompatible with string literal `out` [2] in the
-first parameter of property `setTV`. [incompatible-type]
+Cannot create `Foo` element because in property `setTV` > the first parameter: string literal `number` [1] is
+incompatible with string literal `out` [2]. [incompatible-type]
 
    poly.js:25:25
    25|     return (<Foo setTV={set /* error */}>
@@ -2556,8 +2556,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
 
 Cannot create `meta` element because in property `ref`: [incompatible-type]
- - Either `MetaInstance` [1] is incompatible with `AInstance` [2] in the first parameter.
- - Or `MetaInstance` [1] is incompatible with null [3] in the first parameter.
+ - Either in the first parameter: `MetaInstance` [1] is incompatible with `AInstance` [2].
+ - Or in the first parameter: `MetaInstance` [1] is incompatible with null [3].
 
    propsof.js:28:22
     28|   let b = <meta ref={ref} />; // error
@@ -2578,8 +2578,8 @@ References:
 Error ------------------------------------------------------------------------------------------------- propsof.js:28:22
 
 Cannot create `meta` element because in property `ref`: [incompatible-type]
- - Either `MetaInstance` [1] is incompatible with `AInstance` [2] in property `current`.
- - Or `MetaInstance` [1] is incompatible with null [3] in property `current`.
+ - Either in property `current`: `MetaInstance` [1] is incompatible with `AInstance` [2].
+ - Or in property `current`: `MetaInstance` [1] is incompatible with null [3].
 
    propsof.js:28:22
     28|   let b = <meta ref={ref} />; // error
@@ -2640,7 +2640,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- refs.js:3:15
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
- - Either null [1] is incompatible with component Reffed [2] in property `current`.
+ - Either in property `current`: null [1] is incompatible with component Reffed [2].
  - Or object type [3] is incompatible with function type [4].
 
    refs.js:3:15
@@ -2665,7 +2665,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- refs.js:5:15
 
 The `ref` parameter must be a subtype of `React.RefSetter`: [incompatible-type]
- - Either component Reffed [1] is incompatible with null [2] in the first parameter.
+ - Either in the first parameter: component Reffed [1] is incompatible with null [2].
  - Or function type [3] is incompatible with object type [4].
     - Functions without statics are not compatible with objects.
 
@@ -2690,7 +2690,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because null [1] is incompatible with object type [2] in property `ref`.
+Cannot cast `Foo` to component because in property `ref`: null [1] is incompatible with object type [2].
 [incompatible-type]
 
    refs.js:12:2
@@ -2708,7 +2708,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because undefined [1] is incompatible with object type [2] in property `ref`.
+Cannot cast `Foo` to component because in property `ref`: undefined [1] is incompatible with object type [2].
 [incompatible-type]
 
    refs.js:12:2
@@ -2726,8 +2726,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because inexact function type [1] is incompatible with exact object type [2] in property
-`ref`. [incompatible-exact]
+Cannot cast `Foo` to component because in property `ref`: inexact function type [1] is incompatible with exact object
+type [2]. [incompatible-exact]
 
    refs.js:12:2
    12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2744,8 +2744,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because inexact object type [1] is incompatible with exact object type [2] in property
-`ref`. [incompatible-exact]
+Cannot cast `Foo` to component because in property `ref`: inexact object type [1] is incompatible with exact object
+type [2]. [incompatible-exact]
 
    refs.js:12:2
    12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2762,8 +2762,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:12:2
 
-Cannot cast `Foo` to component because property `current` is write-only in object type [1] but readable in object
-type [2] in property `ref`. [incompatible-variance]
+Cannot cast `Foo` to component because in property `ref`: property `current` is write-only in object type [1] but
+readable in object type [2]. [incompatible-variance]
 
    refs.js:12:2
    12| (Foo: component(ref: React.RefSetter<string>)); // err: React.RefSetter<string> ~> {current: typeof Reffed}
@@ -2802,7 +2802,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because null [1] is incompatible with object type [2] in property `ref`.
+Cannot cast `Foo` to component because in property `ref`: null [1] is incompatible with object type [2].
 [incompatible-type]
 
    refs.js:13:2
@@ -2820,7 +2820,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because undefined [1] is incompatible with object type [2] in property `ref`.
+Cannot cast `Foo` to component because in property `ref`: undefined [1] is incompatible with object type [2].
 [incompatible-type]
 
    refs.js:13:2
@@ -2838,8 +2838,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because inexact function type [1] is incompatible with exact object type [2] in property
-`ref`. [incompatible-exact]
+Cannot cast `Foo` to component because in property `ref`: inexact function type [1] is incompatible with exact object
+type [2]. [incompatible-exact]
 
    refs.js:13:2
    13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
@@ -2856,8 +2856,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because inexact object type [1] is incompatible with exact object type [2] in property
-`ref`. [incompatible-exact]
+Cannot cast `Foo` to component because in property `ref`: inexact object type [1] is incompatible with exact object
+type [2]. [incompatible-exact]
 
    refs.js:13:2
    13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
@@ -2874,8 +2874,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:13:2
 
-Cannot cast `Foo` to component because property `current` is write-only in object type [1] but readable in object
-type [2] in property `ref`. [incompatible-variance]
+Cannot cast `Foo` to component because in property `ref`: property `current` is write-only in object type [1] but
+readable in object type [2]. [incompatible-variance]
 
    refs.js:13:2
    13| (Foo: component(ref: React.RefSetter<typeof Reffed>)); //err
@@ -2892,7 +2892,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because null [1] is incompatible with function type [2] in property `ref`.
+Cannot cast `Bar` to component because in property `ref`: null [1] is incompatible with function type [2].
 [incompatible-type]
 
    refs.js:15:2
@@ -2910,7 +2910,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because object type [1] is incompatible with function type [2] in property `ref`.
+Cannot cast `Bar` to component because in property `ref`: object type [1] is incompatible with function type [2].
 [incompatible-type]
 
    refs.js:15:2
@@ -2928,7 +2928,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:15:2
 
-Cannot cast `Bar` to component because undefined [1] is incompatible with function type [2] in property `ref`.
+Cannot cast `Bar` to component because in property `ref`: undefined [1] is incompatible with function type [2].
 [incompatible-type]
 
    refs.js:15:2
@@ -2968,30 +2968,30 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- refs.js:17:2
 
-Cannot cast `Baz` to component because string [1] is incompatible with component Reffed [2] in type argument `T` [3] of
-property `ref`. [incompatible-type]
+Cannot cast `Baz` to component because in property `ref` > type argument `T` [1]: string [2] is incompatible with
+component Reffed [3]. [incompatible-type]
 
    refs.js:17:2
     17| (Baz: component(ref: React.RefSetter<string>)); // err
          ^^^
 
 References:
-   refs.js:17:38
-    17| (Baz: component(ref: React.RefSetter<string>)); // err
-                                             ^^^^^^ [1]
-   refs.js:8:36
-     8| component Baz(ref: React.RefSetter<typeof Reffed>) { return null };
-                                           ^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:257:34
    257|   declare export type RefSetter<-T> = React.RefSetter<T>;
-                                         ^ [3]
+                                         ^ [1]
+   refs.js:17:38
+    17| (Baz: component(ref: React.RefSetter<string>)); // err
+                                             ^^^^^^ [2]
+   refs.js:8:36
+     8| component Baz(ref: React.RefSetter<typeof Reffed>) { return null };
+                                           ^^^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
 
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
- - Either `CommonInstance` [1] is incompatible with nullable `InputInstance` [2] in the first parameter.
- - Or `CommonInstance` [1] is incompatible with `InputInstance` [3] in the first parameter.
+ - Either in the first parameter: `CommonInstance` [1] is incompatible with nullable `InputInstance` [2].
+ - Or in the first parameter: `CommonInstance` [1] is incompatible with `InputInstance` [3].
 
    refs.js:64:53
    64|                 <MyNestedInput {...otherProps} ref={ref} />
@@ -3012,8 +3012,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- refs.js:64:53
 
 Cannot create `MyNestedInput` element because in property `ref`: [incompatible-type]
- - Either `CommonInstance` [1] is incompatible with nullable `InputInstance` [2] in property `current`.
- - Or `CommonInstance` [1] is incompatible with `InputInstance` [3] in property `current`.
+ - Either in property `current`: `CommonInstance` [1] is incompatible with nullable `InputInstance` [2].
+ - Or in property `current`: `CommonInstance` [1] is incompatible with `InputInstance` [3].
 
    refs.js:64:53
    64|                 <MyNestedInput {...otherProps} ref={ref} />
@@ -3034,8 +3034,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- refs.js:92:13
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2] in property `bar` of the first parameter.
- - Or object type [3] is incompatible with null [4] in the first parameter.
+ - Either in the first parameter > property `bar`: number [1] is incompatible with boolean [2].
+ - Or in the first parameter: object type [3] is incompatible with null [4].
 
    refs.js:92:13
     92|   <Foo ref={badRef} />; // error
@@ -3059,8 +3059,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- refs.js:92:13
 
 Cannot create `Foo` element because in property `ref`: [incompatible-type]
- - Either number [1] is incompatible with boolean [2] in property `bar` of property `current`.
- - Or object type [3] is incompatible with null [4] in property `current`.
+ - Either in property `current` > property `bar`: number [1] is incompatible with boolean [2].
+ - Or in property `current`: object type [3] is incompatible with null [4].
 
    refs.js:92:13
     92|   <Foo ref={badRef} />; // error
@@ -3103,8 +3103,8 @@ References:
 Error --------------------------------------------------------------------------------------------------- refs.js:108:23
 
 Cannot create `GenericRef2` element because in property `ref`: [incompatible-type]
- - Either array type [1] is incompatible with string [2] in the first parameter.
- - Or array type [1] is incompatible with null [3] in the first parameter.
+ - Either in the first parameter: array type [1] is incompatible with string [2].
+ - Or in the first parameter: array type [1] is incompatible with null [3].
 
    refs.js:108:23
    108|     <GenericRef2 ref={(r: string | null) => {}} />; // error
@@ -3294,7 +3294,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:9:39
 
-Cannot create `InlineOnly` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `InlineOnly` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    signature.js:9:39
@@ -3309,7 +3309,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ signature.js:9:47
 
-Cannot create `InlineOnly` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `InlineOnly` element because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    signature.js:9:47
@@ -3324,7 +3324,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:16:37
 
-Cannot create `InexactRest` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `InexactRest` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    signature.js:16:37
@@ -3339,7 +3339,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:16:45
 
-Cannot create `InexactRest` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `InexactRest` element because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    signature.js:16:45
@@ -3354,7 +3354,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:23:37
 
-Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `IndexedRest` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    signature.js:23:37
@@ -3369,7 +3369,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:23:44
 
-Cannot create `IndexedRest` element because string [1] is incompatible with number [2] in property `bar`.
+Cannot create `IndexedRest` element because in property `bar`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    signature.js:23:44
@@ -3384,7 +3384,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:30:39
 
-Cannot create `DefaultProps` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `DefaultProps` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    signature.js:30:39
@@ -3445,7 +3445,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:41:47
 
-Cannot create `RenamedParams` element because number [1] is incompatible with string [2] in property `bar`.
+Cannot create `RenamedParams` element because in property `bar`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    signature.js:41:47
@@ -3460,7 +3460,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- signature.js:41:54
 
-Cannot create `RenamedParams` element because string [1] is incompatible with number [2] in property `foo`.
+Cannot create `RenamedParams` element because in property `foo`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    signature.js:41:54

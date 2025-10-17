@@ -29,7 +29,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- primitives.js:13:7
 
-Cannot call `icall.call` because number [1] is incompatible with string [2] in the first argument. [incompatible-type]
+Cannot call `icall.call` because in the first argument: number [1] is incompatible with string [2]. [incompatible-type]
 
    primitives.js:13:7
    13| icall.call(null, 0); // error, number ~> string
@@ -60,7 +60,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- primitives.js:21:10
 
-Cannot call `callable.call` because number [1] is incompatible with string [2] in the first argument.
+Cannot call `callable.call` because in the first argument: number [1] is incompatible with string [2].
 [incompatible-type]
 
    primitives.js:21:10

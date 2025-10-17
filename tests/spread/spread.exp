@@ -331,7 +331,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test8.js:7:2
 
-Cannot cast object literal to object type because string [1] is incompatible with number [2] in property `q`.
+Cannot cast object literal to object type because in property `q`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    test8.js:7:2
@@ -349,7 +349,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test8.js:8:2
 
-Cannot cast object literal to object type because number [1] is incompatible with string [2] in property `p`.
+Cannot cast object literal to object type because in property `p`: number [1] is incompatible with string [2].
 [incompatible-type]
 
    test8.js:8:2

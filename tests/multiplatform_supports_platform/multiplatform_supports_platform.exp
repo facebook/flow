@@ -32,7 +32,7 @@ https://flow.org/en/docs/react/multiplatform [cannot-resolve-module]
 
 Error ---------------------------------------------------------------------------------------------- foo.windows.js:1:18
 
-Cannot conform to common interface module because number [1] is incompatible with string [2] in property `a`.
+Cannot conform to common interface module because in property `a`: number [1] is incompatible with string [2].
 [incompatible-type]
 
 Read the docs on Flow's multi-platform support for more information: https://flow.org/en/docs/react/multiplatform.

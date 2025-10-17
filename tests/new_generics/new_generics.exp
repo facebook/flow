@@ -1063,28 +1063,28 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- react.js:13:3
 
-Cannot cast `a` to `React.ComponentType` because `Props` [1] is incompatible with object type [2] in type argument
-`P` [3]. [incompatible-type]
+Cannot cast `a` to `React.ComponentType` because in type argument `P` [1]: `Props` [2] is incompatible with object
+type [3]. [incompatible-type]
 
    react.js:13:3
     13|   a as React.ComponentType<{a: number}>; // nope, contravariance
           ^
 
 References:
-   react.js:11:38
-    11|   declare var a: React.ComponentType<Props>;
-                                             ^^^^^ [1]
-   react.js:13:28
-    13|   a as React.ComponentType<{a: number}>; // nope, contravariance
-                                   ^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:241:38
    241|   declare export type ComponentType<-P: {...}> = component(...P);
-                                             ^ [3]
+                                             ^ [1]
+   react.js:11:38
+    11|   declare var a: React.ComponentType<Props>;
+                                             ^^^^^ [2]
+   react.js:13:28
+    13|   a as React.ComponentType<{a: number}>; // nope, contravariance
+                                   ^^^^^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- react.js:14:3
 
-Cannot cast `b` to `React.Component` because object type [1] is incompatible with `Props` [2] in type argument
+Cannot cast `b` to `React.Component` because in type argument `Props` [1]: object type [2] is incompatible with
 `Props` [3]. [incompatible-type]
 
    react.js:14:3
@@ -1092,15 +1092,15 @@ Cannot cast `b` to `React.Component` because object type [1] is incompatible wit
           ^
 
 References:
-   react.js:12:34
-    12|   declare var b: React.Component<{+a: number}>;
-                                         ^^^^^^^^^^^^ [1]
-   react.js:14:24
-    14|   b as React.Component<Props>; // nope
-                               ^^^^^ [2]
    <BUILTINS>/react.js:600:29
    600|     declare class Component<Props, State = void> {
-                                    ^^^^^ [3]
+                                    ^^^^^ [1]
+   react.js:12:34
+    12|   declare var b: React.Component<{+a: number}>;
+                                         ^^^^^^^^^^^^ [2]
+   react.js:14:24
+    14|   b as React.Component<Props>; // nope
+                               ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- react.js:46:26

@@ -1,29 +1,29 @@
 Error ------------------------------------------------------------------------------------------------------ main.js:9:4
 
-Cannot assign `<CustomComponent />` to `b` because `CustomComponent` [1] is incompatible with `CustomComponentNope` [2]
-in type argument `ElementType` [3]. [incompatible-type]
+Cannot assign `<CustomComponent />` to `b` because in type argument `ElementType` [1]: `CustomComponent` [2] is
+incompatible with `CustomComponentNope` [3]. [incompatible-type]
 
    main.js:9:4
     9|   <CustomComponent prop="asdf" />; // Error: Bad class type
           ^^^^^^^^^^^^^^^
 
 References:
-   main.js:3:7
-    3| class CustomComponent extends React.Component<{prop: string}, void> {}
-             ^^^^^^^^^^^^^^^ [1]
-   main.js:4:7
-    4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
-             ^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   main.js:3:7
+    3| class CustomComponent extends React.Component<{prop: string}, void> {}
+             ^^^^^^^^^^^^^^^ [2]
+   main.js:4:7
+    4| class CustomComponentNope extends React.Component<{prop: string}, void> {}
+             ^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------------ main.js:9:4
 
 Cannot assign `<CustomComponent />` to `b` because in property `ref` of type argument `P` [1]: [incompatible-type]
- - Either `CustomComponentNope` [2] is incompatible with `CustomComponent` [3] in the first parameter.
- - Or `CustomComponentNope` [2] is incompatible with null [4] in the first parameter.
+ - Either in the first parameter: `CustomComponentNope` [2] is incompatible with `CustomComponent` [3].
+ - Or in the first parameter: `CustomComponentNope` [2] is incompatible with null [4].
 
    main.js:9:4
      9|   <CustomComponent prop="asdf" />; // Error: Bad class type
@@ -47,8 +47,8 @@ References:
 Error ------------------------------------------------------------------------------------------------------ main.js:9:4
 
 Cannot assign `<CustomComponent />` to `b` because in property `ref` of type argument `P` [1]: [incompatible-type]
- - Either `CustomComponentNope` [2] is incompatible with `CustomComponent` [3] in property `current`.
- - Or `CustomComponentNope` [2] is incompatible with null [4] in property `current`.
+ - Either in property `current`: `CustomComponentNope` [2] is incompatible with `CustomComponent` [3].
+ - Or in property `current`: `CustomComponentNope` [2] is incompatible with null [4].
 
    main.js:9:4
      9|   <CustomComponent prop="asdf" />; // Error: Bad class type
@@ -71,78 +71,78 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
 
-Cannot assign `<CustomComponent />` to `c` because property `prop` is missing in object type [1] but exists in object
-type [2] in type argument `Props` [3] of type argument `ElementType` [4]. [incompatible-type]
+Cannot assign `<CustomComponent />` to `c` because in type argument `ElementType` [1] > type argument `Props` [2]:
+property `prop` is missing in object type [3] but exists in object type [4]. [incompatible-type]
 
    main.js:11:4
     11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
            ^^^^^^^^^^^^^^^
 
 References:
-   main.js:10:59
-    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
-                                                                  ^^^^^^^^^^^^^^^ [1]
-   main.js:3:47
-     3| class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                      ^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:600:29
-   600|     declare class Component<Props, State = void> {
-                                    ^^^^^ [3]
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [4]
+                                                          ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:600:29
+   600|     declare class Component<Props, State = void> {
+                                    ^^^^^ [2]
+   main.js:10:59
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
+                                                                  ^^^^^^^^^^^^^^^ [3]
+   main.js:3:47
+     3| class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                      ^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
 
-Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in object type [1] but exists in object
-type [2] in type argument `Props` [3] of type argument `ElementType` [4]. [incompatible-type]
+Cannot assign `<CustomComponent />` to `c` because in type argument `ElementType` [1] > type argument `Props` [2]:
+property `prop1` is missing in object type [3] but exists in object type [4]. [incompatible-type]
 
    main.js:11:4
     11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
            ^^^^^^^^^^^^^^^
 
 References:
-   main.js:3:47
-     3| class CustomComponent extends React.Component<{prop: string}, void> {}
-                                                      ^^^^^^^^^^^^^^ [1]
-   main.js:10:59
-    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
-                                                                  ^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:600:29
-   600|     declare class Component<Props, State = void> {
-                                    ^^^^^ [3]
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [4]
+                                                          ^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:600:29
+   600|     declare class Component<Props, State = void> {
+                                    ^^^^^ [2]
+   main.js:3:47
+     3| class CustomComponent extends React.Component<{prop: string}, void> {}
+                                                      ^^^^^^^^^^^^^^ [3]
+   main.js:10:59
+    10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
+                                                                  ^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
 
-Cannot assign `<CustomComponent />` to `c` because property `prop1` is missing in props of class `CustomComponent` [1]
-but exists in props of statics of `React.Component` [2] in type argument `P` [3]. [incompatible-type]
+Cannot assign `<CustomComponent />` to `c` because in type argument `P` [1]: property `prop1` is missing in props of
+class `CustomComponent` [2] but exists in props of statics of `React.Component` [3]. [incompatible-type]
 
    main.js:11:4
    11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
           ^^^^^^^^^^^^^^^
 
 References:
-   main.js:3:7
-    3| class CustomComponent extends React.Component<{prop: string}, void> {}
-             ^^^^^^^^^^^^^^^ [1]
-   main.js:10:37
-   10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/react.js:58:84
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                                                          ^ [3]
+                                                                                          ^ [1]
+   main.js:3:7
+    3| class CustomComponent extends React.Component<{prop: string}, void> {}
+             ^^^^^^^^^^^^^^^ [2]
+   main.js:10:37
+   10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
 
 Cannot assign `<CustomComponent />` to `c` because in property `ref` of type argument `P` [1]: [incompatible-type]
- - Either `Component` [2] is incompatible with `CustomComponent` [3] in the first parameter.
- - Or `Component` [2] is incompatible with null [4] in the first parameter.
+ - Either in the first parameter: `Component` [2] is incompatible with `CustomComponent` [3].
+ - Or in the first parameter: `Component` [2] is incompatible with null [4].
 
    main.js:11:4
     11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>
@@ -166,8 +166,8 @@ References:
 Error ----------------------------------------------------------------------------------------------------- main.js:11:4
 
 Cannot assign `<CustomComponent />` to `c` because in property `ref` of type argument `P` [1]: [incompatible-type]
- - Either `Component` [2] is incompatible with `CustomComponent` [3] in property `current`.
- - Or `Component` [2] is incompatible with null [4] in property `current`.
+ - Either in property `current`: `Component` [2] is incompatible with `CustomComponent` [3].
+ - Or in property `current`: `Component` [2] is incompatible with null [4].
 
    main.js:11:4
     11|   <CustomComponent prop="asdf" />; // Error: Props<{prop}> ~> Props<{prop1}>

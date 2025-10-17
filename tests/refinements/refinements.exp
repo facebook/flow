@@ -7925,8 +7925,8 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:7:13
 
 Cannot yield object literal because: [incompatible-type]
- - Either string [1] is incompatible with string literal `PENDING` [2] in property `type`.
- - Or string [1] is incompatible with string literal `DONE` [3] in property `type`.
+ - Either in property `type`: string [1] is incompatible with string literal `PENDING` [2].
+ - Or in property `type`: string [1] is incompatible with string literal `DONE` [3].
 
    issue-7105.js:7:13
    7|       yield { type: "PENDING" }; // TODO(T225770374)
@@ -7947,7 +7947,7 @@ References:
 Error ----------------------------------------------------------------------------------------------- issue-7105.js:9:15
 
 Cannot yield object literal because: [incompatible-type]
- - Either string [1] is incompatible with string literal `DONE` [2] in property `type`.
+ - Either in property `type`: string [1] is incompatible with string literal `DONE` [2].
  - Or property `value` is extra in object literal [3] but missing in object type [4]. Exact objects do not accept extra
    props.
 
@@ -15391,7 +15391,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:44:1
 
 Cannot call `calc` because: [incompatible-type]
- - Either string literal `abs` [1] is incompatible with string literal `add` [2] in index 0.
+ - Either in index 0: string literal `abs` [1] is incompatible with string literal `add` [2].
  - Or rest array [3] has 3 elements but tuple type [4] has 2 elements.
 
    tuple_union.js:44:1
@@ -15416,7 +15416,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:47:1
 
 Cannot call `calc` because: [incompatible-type]
- - Either string literal `add` [1] is incompatible with string literal `abs` [2] in index 0.
+ - Either in index 0: string literal `add` [1] is incompatible with string literal `abs` [2].
  - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
 
    tuple_union.js:47:1

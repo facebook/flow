@@ -32,8 +32,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------------- C.js:4:9
 
-Cannot extend `B` [1] with `C` because string [2] is incompatible with number [3] in the first parameter of property
-`foo`. [incompatible-type]
+Cannot extend `B` [1] with `C` because in property `foo` > the first parameter: string [2] is incompatible with
+number [3]. [incompatible-type]
 
    C.js:4:9
    4|   foo(x:string):void { }
@@ -141,7 +141,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
 
-Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `a`. [incompatible-type]
+Cannot assign `z` to `w` because in property `a`: number [1] is incompatible with string [2]. [incompatible-type]
 
    class_shapes.js:35:15
    35| var w : Foo = z;
@@ -158,7 +158,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
 
-Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `b`. [incompatible-type]
+Cannot assign `z` to `w` because in property `b`: number [1] is incompatible with string [2]. [incompatible-type]
 
    class_shapes.js:35:15
    35| var w : Foo = z;
@@ -175,7 +175,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- class_shapes.js:35:15
 
-Cannot assign `z` to `w` because number [1] is incompatible with string [2] in property `c`. [incompatible-type]
+Cannot assign `z` to `w` because in property `c`: number [1] is incompatible with string [2]. [incompatible-type]
 
    class_shapes.js:35:15
    35| var w : Foo = z;
@@ -253,7 +253,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- statics.js:10:1
 
-Cannot cast `C` to object type because `string` [1] is not exactly the same as `number` [2] in property `p`.
+Cannot cast `C` to object type because in property `p`: `string` [1] is not exactly the same as `number` [2].
 [incompatible-type]
 
 The above-mentioned two types must be the same because property `p` is invariantly typed. To fix the error,

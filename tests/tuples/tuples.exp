@@ -177,8 +177,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:32:4
 
-Cannot cast `rest` to tuple type because number literal `4` [1] is incompatible with number literal `40` [2] in index 1.
-[incompatible-type]
+Cannot cast `rest` to tuple type because in index 1: number literal `4` [1] is incompatible with number literal
+`40` [2]. [incompatible-type]
 
    array.js:32:4
    32|   (rest: [3,40]); // error
@@ -209,8 +209,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- holes.js:5:3
 
-Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with number [2] in index
-0. [incompatible-type]
+Cannot cast array literal to `Tuple` because in index 0: undefined (due to array hole) [1] is incompatible with
+number [2]. [incompatible-type]
 
    holes.js:5:3
    5| [ , 'foobar', true] as Tuple; // ERROR
@@ -224,8 +224,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- holes.js:6:5
 
-Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with string [2] in index
-1. [incompatible-type]
+Cannot cast array literal to `Tuple` because in index 1: undefined (due to array hole) [1] is incompatible with
+string [2]. [incompatible-type]
 
    holes.js:6:5
    6| [1, , true] as Tuple; // ERROR
@@ -239,8 +239,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- holes.js:7:15
 
-Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with boolean [2] in index
-2. [incompatible-type]
+Cannot cast array literal to `Tuple` because in index 2: undefined (due to array hole) [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    holes.js:7:15
    7| [1, 'foobar', , ] as Tuple;  // ERROR
@@ -254,8 +254,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- holes.js:8:3
 
-Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with number [2] in index
-0. [incompatible-type]
+Cannot cast array literal to `Tuple` because in index 0: undefined (due to array hole) [1] is incompatible with
+number [2]. [incompatible-type]
 
    holes.js:8:3
    8| [ , , , ] as Tuple;  // ERROR
@@ -269,8 +269,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- holes.js:8:5
 
-Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with string [2] in index
-1. [incompatible-type]
+Cannot cast array literal to `Tuple` because in index 1: undefined (due to array hole) [1] is incompatible with
+string [2]. [incompatible-type]
 
    holes.js:8:5
    8| [ , , , ] as Tuple;  // ERROR
@@ -284,8 +284,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- holes.js:8:7
 
-Cannot cast array literal to `Tuple` because undefined (due to array hole) [1] is incompatible with boolean [2] in index
-2. [incompatible-type]
+Cannot cast array literal to `Tuple` because in index 2: undefined (due to array hole) [1] is incompatible with
+boolean [2]. [incompatible-type]
 
    holes.js:8:7
    8| [ , , , ] as Tuple;  // ERROR
@@ -299,7 +299,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- import.js:7:9
 
-Cannot cast array literal to `T` because number literal `9` [1] is incompatible with number literal `2` [2] in index 2.
+Cannot cast array literal to `T` because in index 2: number literal `9` [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
    import.js:7:9
@@ -346,7 +346,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- inexact.js:12:4
 
-Cannot cast array literal to tuple type because boolean [1] is incompatible with number literal `1` [2] in index 0.
+Cannot cast array literal to tuple type because in index 0: boolean [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    inexact.js:12:4
@@ -484,8 +484,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inexact.js:67:10
 
-Cannot return array literal because an unknown element of an inexact tuple type [1] is incompatible with `T` [2] in
-array element. [incompatible-type]
+Cannot return array literal because in array element: an unknown element of an inexact tuple type [1] is incompatible
+with `T` [2]. [incompatible-type]
 
    inexact.js:67:10
    67|   return [...x];
@@ -704,7 +704,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- inexact.js:158:6
 
-Cannot call `c` because boolean [1] is incompatible with number [2] in index 0 of type argument `T`. [incompatible-type]
+Cannot call `c` because in type argument `T` > index 0: boolean [1] is incompatible with number [2]. [incompatible-type]
 
    inexact.js:158:6
    158|   c([true], (x) => {}); // ERROR
@@ -736,7 +736,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- labeled.js:5:3
 
-Cannot cast array literal to `A` because boolean [1] is incompatible with string [2] in index 0. [incompatible-type]
+Cannot cast array literal to `A` because in index 0: boolean [1] is incompatible with string [2]. [incompatible-type]
 
    labeled.js:5:3
    5| ([true, 1]: A); // ERROR
@@ -750,7 +750,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- labeled.js:11:8
 
-Cannot cast array literal to `B` because boolean [1] is incompatible with number [2] in index 1. [incompatible-type]
+Cannot cast array literal to `B` because in index 1: boolean [1] is incompatible with number [2]. [incompatible-type]
 
    labeled.js:11:8
    11| (["s", true]: B); // ERROR
@@ -764,7 +764,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- mapped_type_on_tuple.js:6:10
 
-Cannot return `arr` because string [1] is incompatible with number literal `1` [2] in index 0. [incompatible-type]
+Cannot return `arr` because in index 0: string [1] is incompatible with number literal `1` [2]. [incompatible-type]
 
    mapped_type_on_tuple.js:6:10
    6|   return arr; // error
@@ -781,7 +781,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- mapped_type_on_tuple.js:6:10
 
-Cannot return `arr` because string [1] is incompatible with number literal `2` [2] in index 1. [incompatible-type]
+Cannot return `arr` because in index 1: string [1] is incompatible with number literal `2` [2]. [incompatible-type]
 
    mapped_type_on_tuple.js:6:10
    6|   return arr; // error
@@ -798,7 +798,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ mapped_type_on_tuple.js:10:10
 
-Cannot return `arr` because number [1] is incompatible with string [2] in index 0. [incompatible-type]
+Cannot return `arr` because in index 0: number [1] is incompatible with string [2]. [incompatible-type]
 
    mapped_type_on_tuple.js:10:10
    10|   return arr; // error
@@ -815,7 +815,7 @@ References:
 
 Error ------------------------------------------------------------------------------------ mapped_type_on_tuple.js:10:10
 
-Cannot return `arr` because number [1] is incompatible with string [2] in index 1. [incompatible-type]
+Cannot return `arr` because in index 1: number [1] is incompatible with string [2]. [incompatible-type]
 
    mapped_type_on_tuple.js:10:10
    10|   return arr; // error
@@ -832,7 +832,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- mapped_type_on_tuple.js:20:1
 
-Cannot cast `map(...)` to tuple type because string [1] is incompatible with number [2] in index 0. [incompatible-type]
+Cannot cast `map(...)` to tuple type because in index 0: string [1] is incompatible with number [2]. [incompatible-type]
 
    mapped_type_on_tuple.js:20:1
    20| map(boo) as [+v: number]; // error
@@ -966,8 +966,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:14:4
 
-Cannot cast `single` to `WithOpt` because string [1] is incompatible with undefined (out of bounds tuple access at index
-1) [2] in index 1. [incompatible-type]
+Cannot cast `single` to `WithOpt` because in index 1: string [1] is incompatible with undefined (out of bounds tuple
+access at index 1) [2]. [incompatible-type]
 
    optional.js:14:4
    14|   (single: WithOpt); // ERROR
@@ -1145,7 +1145,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:50:3
 
-Cannot cast `f11` to `typeof f2` because string [1] is incompatible with undefined [2] in index 0. [incompatible-type]
+Cannot cast `f11` to `typeof f2` because in index 0: string [1] is incompatible with undefined [2]. [incompatible-type]
 
    optional.js:50:3
    50|   f11 as typeof f2; // error
@@ -1162,7 +1162,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:54:3
 
-Cannot cast `f11` to `typeof f12` because string [1] is incompatible with undefined [2] in index 0. [incompatible-type]
+Cannot cast `f11` to `typeof f12` because in index 0: string [1] is incompatible with undefined [2]. [incompatible-type]
 
    optional.js:54:3
    54|   f11 as typeof f12; // error
@@ -1194,8 +1194,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:64:6
 
-Cannot cast array literal to `WithOpt` because you cannot assign undefined [1] to optional tuple element [2] (to do so,
-add `| void` to the tuple element type) in index 1. [incompatible-type]
+Cannot cast array literal to `WithOpt` because in index 1: you cannot assign undefined [1] to optional tuple element [2]
+(to do so, add `| void` to the tuple element type). [incompatible-type]
 
    optional.js:64:6
    64| ([1, undefined]: WithOpt); // ERROR
@@ -1209,7 +1209,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:65:6
 
-Cannot cast array literal to `WithOpt` because boolean [1] is incompatible with string [2] in index 1.
+Cannot cast array literal to `WithOpt` because in index 1: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    optional.js:65:6
@@ -1224,8 +1224,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:69:6
 
-Cannot cast array literal to `WithReadOnlyOpt` because you cannot assign undefined [1] to optional tuple element [2] (to
-do so, add `| void` to the tuple element type) in index 1. [incompatible-type]
+Cannot cast array literal to `WithReadOnlyOpt` because in index 1: you cannot assign undefined [1] to optional tuple
+element [2] (to do so, add `| void` to the tuple element type). [incompatible-type]
 
    optional.js:69:6
    69| ([1, undefined]: WithReadOnlyOpt); // ERROR
@@ -1239,7 +1239,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- optional.js:70:6
 
-Cannot cast array literal to `WithReadOnlyOpt` because boolean [1] is incompatible with string [2] in index 1.
+Cannot cast array literal to `WithReadOnlyOpt` because in index 1: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    optional.js:70:6
@@ -1412,8 +1412,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:116:4
 
-Cannot cast `rest0` to tuple type because number literal `2` [1] is incompatible with number literal `1` [2] in index 0.
-[incompatible-type]
+Cannot cast `rest0` to tuple type because in index 0: number literal `2` [1] is incompatible with number literal
+`1` [2]. [incompatible-type]
 
    optional.js:116:4
    116|   (rest0: [a: 1, b?: 3, c?: 4]); // ERROR
@@ -1430,7 +1430,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:120:4
 
-Cannot cast `rest1` to tuple type because number literal `4` [1] is incompatible with empty [2] in index 0.
+Cannot cast `rest1` to tuple type because in index 0: number literal `4` [1] is incompatible with empty [2].
 [incompatible-type]
 
    optional.js:120:4
@@ -1496,7 +1496,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ readonly-array.js:16:76
 
-Cannot return `tup` because number [1] is incompatible with string [2] in array element. [incompatible-type]
+Cannot return `tup` because in array element: number [1] is incompatible with string [2]. [incompatible-type]
 
    readonly-array.js:16:76
    16| const elemCheck = (tup: $ReadOnlyArray<number>): $ReadOnlyArray<string> => tup; // error
@@ -1640,8 +1640,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:13:7
 
-Cannot cast array literal to `Same` because number literal `99` [1] is incompatible with number literal `2` [2] in index
-1. [incompatible-type]
+Cannot cast array literal to `Same` because in index 1: number literal `99` [1] is incompatible with number literal
+`2` [2]. [incompatible-type]
 
    spread.js:13:7
    13|   [1, 99] as Same; // ERROR: element type
@@ -1688,8 +1688,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:25:10
 
-Cannot cast array literal to `Middle` because number literal `99` [1] is incompatible with number literal `2` [2] in
-index 2. [incompatible-type]
+Cannot cast array literal to `Middle` because in index 2: number literal `99` [1] is incompatible with number literal
+`2` [2]. [incompatible-type]
 
    spread.js:25:10
    25|   [0, 1, 99, 3] as Middle; // ERROR: element type
@@ -1811,8 +1811,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- spread.js:87:8
 
-Cannot cast array literal to `WithTail` because number literal `66` [1] is incompatible with number literal `3` [2] in
-index 2. [incompatible-type]
+Cannot cast array literal to `WithTail` because in index 2: number literal `66` [1] is incompatible with number literal
+`3` [2]. [incompatible-type]
 
    spread.js:87:8
    87| [1, 2, 66] as WithTail<[2, 3]>; // ERROR
@@ -1857,8 +1857,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- spread.js:108:7
 
-Cannot call `tail` with array literal bound to `xs` because number literal `666` [1] is incompatible with number literal
-`1` [2] in index 0. [incompatible-type]
+Cannot call `tail` with array literal bound to `xs` because in index 0: number literal `666` [1] is incompatible with
+number literal `1` [2]. [incompatible-type]
 
    spread.js:108:7
    108| tail([666, 2, 3]); // ERROR
@@ -1987,7 +1987,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- tuples.js:6:33
 
-Cannot assign array literal to `f` because number [1] is incompatible with string [2] in index 1. [incompatible-type]
+Cannot assign array literal to `f` because in index 1: number [1] is incompatible with string [2]. [incompatible-type]
 
    tuples.js:6:33
    6| var f: [number, string] = [123, 456];
@@ -2185,7 +2185,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value-spread.js:8:4
 
-Cannot cast `y` to `$ReadOnly` because number literal `3` [1] is incompatible with number literal `999` [2] in index 3.
+Cannot cast `y` to `$ReadOnly` because in index 3: number literal `3` [1] is incompatible with number literal `999` [2].
 [incompatible-type]
 
    value-spread.js:8:4
@@ -2361,7 +2361,7 @@ Cannot get `b[0]` because tuple element at index `0` [1] labeled `foo` is not re
 
 Error ------------------------------------------------------------------------------------------------- variance.js:26:2
 
-Cannot cast `c` to tuple type because undefined [1] is incompatible with string [2] in index 0. [incompatible-type]
+Cannot cast `c` to tuple type because in index 0: undefined [1] is incompatible with string [2]. [incompatible-type]
 
    variance.js:26:2
    26| (c: [foo: string | void]); // ERROR
@@ -2378,7 +2378,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- variance.js:27:2
 
-Cannot cast `c` to tuple type because undefined [1] is incompatible with string [2] in index 0. [incompatible-type]
+Cannot cast `c` to tuple type because in index 0: undefined [1] is incompatible with string [2]. [incompatible-type]
 
    variance.js:27:2
    27| (c: [-foo: string | void]); // ERROR
@@ -2395,7 +2395,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- variance.js:32:2
 
-Cannot cast `d` to tuple type because undefined [1] is incompatible with string [2] in index 0. [incompatible-type]
+Cannot cast `d` to tuple type because in index 0: undefined [1] is incompatible with string [2]. [incompatible-type]
 
    variance.js:32:2
    32| (d: [foo: string]); // ERROR
@@ -2412,29 +2412,29 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- variance.js:38:2
 
-Cannot cast `m` to `K` because tuple element at index `0` is read-only in tuple type [1] but writable in tuple type [2]
-in type argument `T` [3]. [incompatible-variance]
+Cannot cast `m` to `K` because in type argument `T` [1]: tuple element at index `0` is read-only in tuple type [2] but
+writable in tuple type [3]. [incompatible-variance]
 
    variance.js:38:2
    38| (m: K<[string]>); // ERROR
         ^
 
 References:
-   variance.js:36:18
-   36| declare var m: K<[+foo: string]>;
-                        ^^^^^^^^^^^^^^ [1]
-   variance.js:38:7
-   38| (m: K<[string]>); // ERROR
-             ^^^^^^^^ [2]
    variance.js:35:17
    35| declare class K<T> {}
-                       ^ [3]
+                       ^ [1]
+   variance.js:36:18
+   36| declare var m: K<[+foo: string]>;
+                        ^^^^^^^^^^^^^^ [2]
+   variance.js:38:7
+   38| (m: K<[string]>); // ERROR
+             ^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ variance.js:43:15
 
-Cannot call `f` with `n` bound to the first parameter because `readonly [n: number]` [1] is not exactly the same as
-`[number]` [2] in array element. [incompatible-type]
+Cannot call `f` with `n` bound to the first parameter because in array element: `readonly [n: number]` [1] is not
+exactly the same as `[number]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<readonly [n: number]>` [3] and `Array<[number]>` [4] exactly the same
@@ -2598,7 +2598,7 @@ Cannot assign `"s"` to `inter[0]` because tuple element at index `0` [1] is not 
 
 Error ------------------------------------------------------------------------------------------------ variance.js:83:11
 
-Cannot cast array literal to tuple type because number [1] is incompatible with number literal `1` [2] in index 0.
+Cannot cast array literal to tuple type because in index 0: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    variance.js:83:11
@@ -2616,7 +2616,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ variance.js:83:11
 
-Cannot cast array literal to tuple type because number [1] is incompatible with number literal `2` [2] in index 1.
+Cannot cast array literal to tuple type because in index 1: number [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
    variance.js:83:11
