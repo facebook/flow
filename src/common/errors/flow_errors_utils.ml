@@ -706,10 +706,10 @@ module Friendly = struct
     in
     (id_to_loc, message)
 
-  (* Turns a group_message back into a message. We do this by adding all the
-   * messages together. We don't insert newlines. This is a suboptimal
+  (* Turns a group_message back into a single-line message. We do this by adding
+   * all the messages together. We don't insert newlines. This is a suboptimal
    * representation of a grouped message, but it works for our purposes. *)
-  let message_of_group_message =
+  let single_line_message_of_group_message =
     let rec loop acc { group_message; group_message_list; group_message_post } =
       let acc = List.fold_left loop (group_message :: acc) group_message_list in
       Base.Option.value_map ~f:(fun post -> post :: acc) ~default:acc group_message_post
@@ -717,6 +717,39 @@ module Friendly = struct
     fun message_group ->
       let acc = loop [] message_group in
       Base.List.concat (Base.List.intersperse (List.rev acc) ~sep:[text " "])
+
+  let indented_message_of_group_message =
+    let indented ~indentation message =
+      if indentation = 0 then
+        message
+      else
+        let pad = "\n" ^ Base.String.init indentation ~f:(fun _ -> ' ') ^ "- " in
+        text pad :: message
+    in
+    let rec loop ~indentation acc message_group =
+      let acc = indented ~indentation message_group.group_message :: acc in
+      let acc = loop_list ~indentation:(indentation + 1) acc message_group.group_message_list in
+      Base.Option.value_map
+        ~f:(fun post ->
+          let indentation =
+            if indentation = 0 then
+              indentation
+            else
+              indentation + 1
+          in
+          indented ~indentation post :: acc)
+        ~default:acc
+        message_group.group_message_post
+    and loop_list ~indentation acc message_group_list =
+      match message_group_list with
+      | [] -> acc
+      | message_group :: message_group_list ->
+        (* Not tail-recursive for message_group depth. Generally message_group
+         * should not be more then 5 or so deep. *)
+        let acc = loop ~indentation acc message_group in
+        loop_list ~indentation acc message_group_list
+    in
+    (fun message_group -> Base.List.concat (List.rev (loop ~indentation:0 [] message_group)))
 
   (* Converts our friendly error to a classic error message. *)
   let to_classic ~error_kind error =
@@ -733,7 +766,7 @@ module Friendly = struct
     (* We use a basic strategy that concatenates all group messages together.
      * This isn't the most attractive approach, but it works for consumers of
      * the classic format. *)
-    let message = message_of_group_message message in
+    let message = single_line_message_of_group_message message in
     (* Turn the message into a string. *)
     let message =
       List.fold_left
@@ -2669,6 +2702,7 @@ module Cli_output = struct
        * print group_message at the current indentation and group_message_list at
        * the current indentation plus 1. *)
       let message =
+        (* here *)
         let rec loop ~indentation acc message_group =
           let acc =
             print_message_friendly ~flags ~colors ~indentation message_group.group_message :: acc
@@ -3485,7 +3519,7 @@ module Lsp_output = struct
         friendly
     in
     let (references, group) = Friendly.extract_references group in
-    let features = Friendly.message_of_group_message group in
+    let features = Friendly.indented_message_of_group_message group in
     (* This is the accumulator function to build up the message and related locations... *)
     let f (message, relatedLocations) feature =
       match feature with
