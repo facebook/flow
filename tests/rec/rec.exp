@@ -34,6 +34,18 @@ Invalid trivially recursive definition of `$Values`.  [recursive-definition]
       ^
 
 
+Error ------------------------------------------------------------------------------------- exported_eval_values.js:4:36
+
+Invalid trivially recursive definition of `$Values`. . (FLOW BUG: This is a misplaced error. The original error was
+raised in file `eval_values.js`) [recursive-definition]
+
+                                         v------------------------
+   4| export opaque type Value: number = $Values< // error: cyclic
+   5|   typeof options,
+   6| >;
+      ^
+
+
 Error ------------------------------------------------------------------------------------ exported_eval_values.js:14:22
 
 Invalid trivially recursive definition of `$Values`.  [recursive-definition]
@@ -562,4 +574,4 @@ Invalid trivially recursive definition of `T3`.  [recursive-definition]
 
 
 
-Found 34 errors
+Found 35 errors

@@ -13,6 +13,8 @@ val equal_id : id -> id -> bool
 
 val id_of_aloc_id : type_sig:bool -> ALoc.id -> id
 
+val from_type_sig : id -> bool
+
 val string_of_id : id -> string
 
 val stable_string_of_id : id -> string

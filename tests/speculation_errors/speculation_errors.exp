@@ -1,48 +1,18 @@
-Error -------------------------------------------------------------------------------- bad_interaction_with_evalt.js:4:5
+Error -------------------------------------------------------------------------------- bad_interaction_with_evalt.js:4:1
 
-Cannot call `bad.get` because: [incompatible-type]
- - Either cannot access `Obj2` [1] with computed property using string [2].
- - Or function type [3] requires another argument from call of method `get` [4].
+Cannot cast `bad.get()` to `Obj2` because null [1] is incompatible with `Obj2` [2]. [incompatible-type]
 
-   bad_interaction_with_evalt.js:4:5
-   4| bad.get() as Obj2; // error: TODO should not error here, since annotation error should be non-speculative
-          ^^^
-
-References:
-   exported_bad_evalt.js:8:21
-   8| export type Bad = C<Obj2[string]>;
-                          ^^^^ [1]
-   exported_bad_evalt.js:8:26
-   8| export type Bad = C<Obj2[string]>;
-                               ^^^^^^ [2]
-   exported_bad_evalt.js:3:3
-   3|   get(v: T): T;
-        ^^^^^^^^^^^^ [3]
    bad_interaction_with_evalt.js:4:1
-   4| bad.get() as Obj2; // error: TODO should not error here, since annotation error should be non-speculative
-      ^^^^^^^^^ [4]
-
-
-Error -------------------------------------------------------------------------------- bad_interaction_with_evalt.js:5:5
-
-Cannot call `bad.get` because: [incompatible-type]
- - Either number [1] is incompatible with empty [2].
- - Or no arguments are expected by function type [3].
-
-   bad_interaction_with_evalt.js:5:5
-   5| bad.get(1) as Obj2; // error: TODO spurious incompatible with empty
-          ^^^
+   4| bad.get() as Obj2; // only subtyping error
+      ^^^^^^^^^
 
 References:
-   bad_interaction_with_evalt.js:5:9
-   5| bad.get(1) as Obj2; // error: TODO spurious incompatible with empty
-              ^ [1]
-   exported_bad_evalt.js:8:21
-   8| export type Bad = C<Obj2[string]>;
-                          ^^^^^^^^^^^^ [2]
-   exported_bad_evalt.js:2:3
+   exported_bad_evalt.js:2:14
    2|   get(): T | null;
-        ^^^^^^^^^^^^^^^ [3]
+                   ^^^^ [1]
+   bad_interaction_with_evalt.js:4:14
+   4| bad.get() as Obj2; // only subtyping error
+                   ^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------- errors_intersection.js:13:13
@@ -3942,7 +3912,7 @@ References:
 
 
 
-Found 186 errors
+Found 185 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

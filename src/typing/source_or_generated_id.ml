@@ -54,6 +54,10 @@ let generate_id () = Generated (Reason.mk_id ())
 
 let id_of_aloc_id ~type_sig aloc_id = Source { loc = aloc_id; type_sig }
 
+let from_type_sig = function
+  | Source { loc = _; type_sig } -> type_sig
+  | Generated _ -> false
+
 let string_of_id = function
   | Generated id -> string_of_int id
   | Source { type_sig; loc = id } ->

@@ -6309,21 +6309,47 @@ struct
 
   and mk_type_destructor cx ~trace use_op reason t d id =
     let evaluated = Context.evaluated cx in
-    let result =
-      match Eval.Map.find_opt id evaluated with
-      | Some cached_t -> cached_t
-      | None ->
-        Tvar.mk_no_wrap_where cx reason (fun tvar ->
-            Context.set_evaluated cx (Eval.Map.add id (OpenT tvar) evaluated);
-            evaluate_type_destructor cx ~trace use_op reason t d tvar
-        )
-    in
     if
-      (not (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t))
-      && not (Flow_js_utils.TvarVisitors.has_unresolved_tvars_in_destructors cx d)
-    then
-      Tvar_resolver.resolve cx result;
-    result
+      Eval.from_type_sig id
+      && Subst_name.Set.is_empty
+           (Type_subst.free_var_finder
+              cx
+              (EvalT { type_ = t; defer_use_t = TypeDestructorT (use_op, reason, d); id })
+           )
+    then (
+      let result =
+        match Eval.Map.find_opt id evaluated with
+        | Some cached_t -> cached_t
+        | None ->
+          let trace = DepthTrace.dummy_trace in
+          Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
+              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tvar ->
+                  let errors = Context.errors cx in
+                  let cache_snapshot = Context.take_cache_snapshot cx in
+                  evaluate_type_destructor cx ~trace use_op reason t d tvar;
+                  Context.restore_cache_snapshot cx cache_snapshot;
+                  Context.reset_errors cx errors
+              )
+          )
+      in
+      Context.set_evaluated cx (Eval.Map.add id result evaluated);
+      result
+    ) else
+      let result =
+        match Eval.Map.find_opt id evaluated with
+        | Some cached_t -> cached_t
+        | None ->
+          Tvar.mk_no_wrap_where cx reason (fun tvar ->
+              Context.set_evaluated cx (Eval.Map.add id (OpenT tvar) evaluated);
+              evaluate_type_destructor cx ~trace use_op reason t d tvar
+          )
+      in
+      if
+        (not (Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t))
+        && not (Flow_js_utils.TvarVisitors.has_unresolved_tvars_in_destructors cx d)
+      then
+        Tvar_resolver.resolve cx result;
+      result
 
   and eval_destructor cx ~trace use_op reason t d tout =
     match d with
