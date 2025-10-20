@@ -67,7 +67,7 @@
         "severity": 1,
         "code": "incompatible-type",
         "source": "Flow",
-        "message": "Cannot assign `4` to `b` because:\n - Either  number [1] is incompatible with  string [2].\n - Or  number [1] is incompatible with  boolean [3].",
+        "message": "Cannot assign `4` to `b` because:\n • Either  number [1] is incompatible with  string [2].\n • Or  number [1] is incompatible with  boolean [3].",
         "relatedInformation": [
           {
             "location": {

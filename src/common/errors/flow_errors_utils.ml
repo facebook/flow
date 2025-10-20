@@ -133,11 +133,32 @@ module Friendly = struct
    *)
   type 'a message_group = {
     group_message: 'a message;
-    group_message_list: 'a message_group list;
+    group_message_nested: 'a group_message_nested;
     group_message_post: 'a message option;
   }
 
+  and 'a group_message_nested =
+    | NoNesting
+    | StackedErrorNesting of 'a message_group list
+    | SpeculationErrorNesting of 'a message_group list
+
+  type bullet_point_kind =
+    | StackedErrorBulletPoint
+    | SpeculationErrorBulletPoint
+
   type t = ALoc.t t'
+
+  let bullet_char ~unicode ~kind =
+    (* Use unicode for the bullet character if unicode is enabled.
+     *
+     * http://graphemica.com/%E2%86%B3
+     * http://graphemica.com/%E2%80%A2 *)
+    if unicode then
+      match kind with
+      | StackedErrorBulletPoint -> "\xE2\x86\xB3"
+      | SpeculationErrorBulletPoint -> "\xE2\x80\xA2"
+    else
+      "-"
 
   (* This function was introduced into the OCaml standard library in 4.04.0. Not
    * all of our tooling supports 4.04.0 yet, so we have a small
@@ -316,10 +337,10 @@ module Friendly = struct
     | message -> message
 
   (* Adds some message to the beginning of a group message. *)
-  let append_group_message message { group_message; group_message_list; group_message_post } =
+  let append_group_message message { group_message; group_message_nested; group_message_post } =
     {
       group_message = message @ (text " " :: uncapitalize group_message);
-      group_message_list;
+      group_message_nested;
       group_message_post;
     }
 
@@ -408,7 +429,7 @@ module Friendly = struct
         in
         ( hidden_branches,
           error.loc,
-          { group_message = message; group_message_list = []; group_message_post = None }
+          { group_message = message; group_message_nested = NoNesting; group_message_post = None }
         )
       (* Create normal error messages. *)
       | Normal { message; frames; parent_frames; explanations } ->
@@ -430,7 +451,7 @@ module Friendly = struct
             let sep =
               [
                 ( if unicode then
-                  text " › "
+                  text " \xE2\x80\xBA "
                 else
                   text " > "
                 );
@@ -474,7 +495,7 @@ module Friendly = struct
               else
                 Some explanations
             in
-            { group_message = message; group_message_list = []; group_message_post }
+            { group_message = message; group_message_nested = NoNesting; group_message_post }
           | _ ->
             let frames = Base.Option.value_exn frames in
             let group_message =
@@ -483,12 +504,16 @@ module Friendly = struct
                 ~init:
                   {
                     group_message = stack_item message frames;
-                    group_message_list = [];
+                    group_message_nested = NoNesting;
                     group_message_post = None;
                   }
                 ~f:(fun acc (incompatibility_msg, frames) ->
                   let message = stack_item incompatibility_msg frames in
-                  { group_message = message; group_message_list = [acc]; group_message_post = None })
+                  {
+                    group_message = message;
+                    group_message_nested = StackedErrorNesting [acc];
+                    group_message_post = None;
+                  })
             in
             let message =
               match error.root with
@@ -510,7 +535,11 @@ module Friendly = struct
               else
                 Some explanations
             in
-            { group_message = message; group_message_list = [group_message]; group_message_post }
+            {
+              group_message = message;
+              group_message_nested = StackedErrorNesting [group_message];
+              group_message_post;
+            }
         in
         (hidden_branches, primary_loc, group_message)
       (* When we have a speculation error, do some work to create a message
@@ -662,7 +691,11 @@ module Friendly = struct
           in
           ( hidden_branches,
             error.loc,
-            { group_message = message; group_message_list; group_message_post }
+            {
+              group_message = message;
+              group_message_nested = SpeculationErrorNesting group_message_list;
+              group_message_post;
+            }
           ))
     in
     (* Partially apply loop with the state it needs. Have fun! *)
@@ -706,15 +739,24 @@ module Friendly = struct
         ~id_to_loc
         ~message:message_group.group_message
     in
-    let (next_id, loc_to_id, id_to_loc, group_message_list_rev) =
-      List.fold_left
-        (fun (next_id, loc_to_id, id_to_loc, group_message_list_rev) message_group ->
-          let (next_id, loc_to_id, id_to_loc, message_group) =
-            extract_references_intermediate ~next_id ~loc_to_id ~id_to_loc ~message_group
-          in
-          (next_id, loc_to_id, id_to_loc, message_group :: group_message_list_rev))
-        (next_id, loc_to_id, id_to_loc, [])
-        message_group.group_message_list
+    let (next_id, loc_to_id, id_to_loc, group_message_nested) =
+      let map_group_message_list =
+        List.fold_left
+          (fun (next_id, loc_to_id, id_to_loc, group_message_list_rev) message_group ->
+            let (next_id, loc_to_id, id_to_loc, message_group) =
+              extract_references_intermediate ~next_id ~loc_to_id ~id_to_loc ~message_group
+            in
+            (next_id, loc_to_id, id_to_loc, message_group :: group_message_list_rev))
+          (next_id, loc_to_id, id_to_loc, [])
+      in
+      match message_group.group_message_nested with
+      | NoNesting -> (next_id, loc_to_id, id_to_loc, NoNesting)
+      | StackedErrorNesting l ->
+        let (next_id, loc_to_id, id_to_loc, group_message_list_rev) = map_group_message_list l in
+        (next_id, loc_to_id, id_to_loc, StackedErrorNesting (List.rev group_message_list_rev))
+      | SpeculationErrorNesting l ->
+        let (next_id, loc_to_id, id_to_loc, group_message_list_rev) = map_group_message_list l in
+        (next_id, loc_to_id, id_to_loc, SpeculationErrorNesting (List.rev group_message_list_rev))
     in
     let (next_id, loc_to_id, id_to_loc, group_message_post) =
       Base.Option.value_map
@@ -726,11 +768,7 @@ module Friendly = struct
         ~default:(next_id, loc_to_id, id_to_loc, None)
         message_group.group_message_post
     in
-    ( next_id,
-      loc_to_id,
-      id_to_loc,
-      { group_message; group_message_list = List.rev group_message_list_rev; group_message_post }
-    )
+    (next_id, loc_to_id, id_to_loc, { group_message; group_message_nested; group_message_post })
 
   (* Extracts common location references from a message. In order, each location
    * will be replaced with an integer reference starting at 1. If some reference
@@ -750,7 +788,14 @@ module Friendly = struct
    * all the messages together. We don't insert newlines. This is a suboptimal
    * representation of a grouped message, but it works for our purposes. *)
   let single_line_message_of_group_message =
-    let rec loop acc { group_message; group_message_list; group_message_post } =
+    let rec loop acc { group_message; group_message_nested; group_message_post } =
+      let group_message_list =
+        match group_message_nested with
+        | NoNesting -> []
+        | StackedErrorNesting l
+        | SpeculationErrorNesting l ->
+          l
+      in
       let acc = List.fold_left loop (group_message :: acc) group_message_list in
       Base.Option.value_map ~f:(fun post -> post :: acc) ~default:acc group_message_post
     in
@@ -758,24 +803,39 @@ module Friendly = struct
       let acc = loop [] message_group in
       Base.List.concat (Base.List.intersperse (List.rev acc) ~sep:[text " "])
 
-  let indented_message_of_group_message =
+  let indented_message_of_group_message ~unicode =
     let indented ~indentation message =
-      if indentation = 0 then
-        message
-      else
-        let pad = "\n" ^ Base.String.init indentation ~f:(fun _ -> ' ') ^ "- " in
+      match indentation with
+      | None -> message
+      | Some (kind, indentation) ->
+        let pad =
+          "\n" ^ Base.String.init indentation ~f:(fun _ -> ' ') ^ bullet_char ~unicode ~kind ^ " "
+        in
         text pad :: message
     in
     let rec loop ~indentation acc message_group =
       let acc = indented ~indentation message_group.group_message :: acc in
-      let acc = loop_list ~indentation:(indentation + 1) acc message_group.group_message_list in
+      let acc =
+        match message_group.group_message_nested with
+        | NoNesting -> acc
+        | StackedErrorNesting l ->
+          let indentation =
+            Some (StackedErrorBulletPoint, Base.Option.value_map ~f:snd ~default:0 indentation + 1)
+          in
+          loop_list ~indentation acc l
+        | SpeculationErrorNesting l ->
+          let indentation =
+            Some
+              (SpeculationErrorBulletPoint, Base.Option.value_map ~f:snd ~default:0 indentation + 1)
+          in
+          loop_list ~indentation acc l
+      in
       Base.Option.value_map
         ~f:(fun post ->
           let indentation =
-            if indentation = 0 then
-              indentation
-            else
-              indentation + 1
+            match indentation with
+            | None -> None
+            | Some (_, i) -> Some (StackedErrorBulletPoint, i + 1)
           in
           indented ~indentation post :: acc)
         ~default:acc
@@ -789,7 +849,7 @@ module Friendly = struct
         let acc = loop ~indentation acc message_group in
         loop_list ~indentation acc message_group_list
     in
-    (fun message_group -> Base.List.concat (List.rev (loop ~indentation:0 [] message_group)))
+    (fun message_group -> Base.List.concat (List.rev (loop ~indentation:None [] message_group)))
 
   (* Converts our friendly error to a classic error message. *)
   let to_classic ~error_kind error =
@@ -1718,15 +1778,6 @@ module Cli_output = struct
           ~default:(Some Tty.Default)
       | color -> Some (get_tty_color_internal color))
 
-  let bullet_char ~flags =
-    (* Use [U+2022][1] for the bullet character if unicode is enabled.
-     *
-     * [1]: http://graphemica.com/%E2%80%A2 *)
-    if flags.unicode then
-      "\xE2\x80\xA2"
-    else
-      "-"
-
   (* ==================
    * Error Message Text
    * ==================
@@ -1998,21 +2049,18 @@ module Cli_output = struct
                message
             )
         in
-        (* Create the indentation for our message. The first line of indentation
-         * will contain a bullet character. *)
-        let indentation_space =
-          if indentation <= 0 then
-            None
-          else
-            Some (String.make ((indentation - 1) * 3) ' ')
-        in
-        let indentation_first =
-          Base.Option.map indentation_space ~f:(fun space ->
-              [default_style (space ^ " " ^ bullet_char ~flags ^ " ")]
-          )
-        in
-        let indentation =
-          Base.Option.map indentation_space ~f:(fun space -> [default_style (space ^ "   ")])
+        let (indentation_first, indentation) =
+          match indentation with
+          | None -> (None, None)
+          | Some (kind, indentation) ->
+            (* Create the indentation for our message. The first line of indentation
+             * will contain a bullet character. *)
+            let space = String.make ((indentation - 1) * 3) ' ' in
+            let indentation_first =
+              [default_style (space ^ " " ^ bullet_char ~unicode:flags.unicode ~kind ^ " ")]
+            in
+            let indentation = [default_style (space ^ "   ")] in
+            (Some indentation_first, Some indentation)
         in
         let message =
           concat_words_into_lines
@@ -2813,19 +2861,36 @@ module Cli_output = struct
        * print group_message at the current indentation and group_message_list at
        * the current indentation plus 1. *)
       let message =
-        (* here *)
         let rec loop ~indentation acc message_group =
           let acc =
             print_message_friendly ~flags ~colors ~indentation message_group.group_message :: acc
           in
-          let acc = loop_list ~indentation:(indentation + 1) acc message_group.group_message_list in
+          let acc =
+            match message_group.group_message_nested with
+            | NoNesting -> acc
+            | StackedErrorNesting l ->
+              let indentation =
+                Some
+                  ( Friendly.StackedErrorBulletPoint,
+                    Base.Option.value_map ~f:snd ~default:0 indentation + 1
+                  )
+              in
+              loop_list ~indentation acc l
+            | SpeculationErrorNesting l ->
+              let indentation =
+                Some
+                  ( Friendly.SpeculationErrorBulletPoint,
+                    Base.Option.value_map ~f:snd ~default:0 indentation + 1
+                  )
+              in
+              loop_list ~indentation acc l
+          in
           Base.Option.value_map
             ~f:(fun post ->
               let indentation =
-                if indentation = 0 then
-                  indentation
-                else
-                  indentation + 1
+                match indentation with
+                | None -> None
+                | Some (_, i) -> Some (Friendly.StackedErrorBulletPoint, i + 1)
               in
               print_message_friendly ~flags ~colors ~indentation post :: acc)
             ~default:acc
@@ -2839,7 +2904,7 @@ module Cli_output = struct
             let acc = loop ~indentation acc message_group in
             loop_list ~indentation acc message_group_list
         in
-        Base.List.concat (List.rev (loop ~indentation:0 [] message_group))
+        Base.List.concat (List.rev (loop ~indentation:None [] message_group))
       in
       (* Print the code frame for our error message. *)
       let code_frame =
@@ -2902,7 +2967,7 @@ module Cli_output = struct
     (* Singleton errors concatenate the optional error root with the error
      * message and render a single message. *)
     Friendly.(
-      let (primary_loc, { group_message; group_message_list; group_message_post }) =
+      let (primary_loc, { group_message; group_message_nested; group_message_post }) =
         let (hidden_branches, loc, err) =
           message_group_of_error
             ~show_all_branches
@@ -2921,7 +2986,7 @@ module Cli_output = struct
         ~severity
         ~primary_locs:(LocSet.singleton primary_loc)
         ~message_group:
-          { group_message = capitalize group_message; group_message_list; group_message_post }
+          { group_message = capitalize group_message; group_message_nested; group_message_post }
     )
 
   let print_styles ~out_channel ~flags styles =
@@ -3257,13 +3322,20 @@ module Json_output = struct
   let rec json_of_message_group_friendly message_group =
     Hh_json.(
       Friendly.(
-        let { group_message; group_message_list; group_message_post } = message_group in
+        let { group_message; group_message_nested; group_message_post } = message_group in
         let group_message = json_of_message_friendly group_message in
         let group_message_post =
           Base.Option.value_map
             ~f:(fun post -> [("post_message", json_of_message_friendly post)])
             ~default:[]
             group_message_post
+        in
+        let group_message_list =
+          match group_message_nested with
+          | NoNesting -> []
+          | StackedErrorNesting l
+          | SpeculationErrorNesting l ->
+            l
         in
         if group_message_list = [] && group_message_post = [] then
           group_message
@@ -3633,7 +3705,7 @@ module Lsp_output = struct
         friendly
     in
     let (references, group) = Friendly.extract_references group in
-    let features = Friendly.indented_message_of_group_message group in
+    let features = Friendly.indented_message_of_group_message ~unicode:true group in
     (* This is the accumulator function to build up the message and related locations... *)
     let f (message, relatedLocations) feature =
       match feature with
