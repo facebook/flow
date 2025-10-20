@@ -556,8 +556,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:17:4
 
 Cannot cast `x` to `TupleUnion` because: [incompatible-type]
- - Either in index 0: number literal `3` [1] is incompatible with number literal `1` [2].
- - Or in index 0: number literal `3` [1] is incompatible with number literal `2` [3].
+ - Either in index `0`: number literal `3` [1] is incompatible with number literal `1` [2].
+ - Or in index `0`: number literal `3` [1] is incompatible with number literal `2` [3].
 
    union.js:17:4
    17|   (x: TupleUnion); // ERROR: 1, 2
@@ -578,8 +578,8 @@ References:
 Error ---------------------------------------------------------------------------------------------------- union.js:18:4
 
 Cannot cast `x` to `$ReadOnly` because: [incompatible-type]
- - Either in index 0: number literal `3` [1] is incompatible with number literal `1` [2].
- - Or in index 0: number literal `3` [1] is incompatible with number literal `2` [3].
+ - Either in index `0`: number literal `3` [1] is incompatible with number literal `1` [2].
+ - Or in index `0`: number literal `3` [1] is incompatible with number literal `2` [3].
 
    union.js:18:4
    18|   (x: $ReadOnly<TupleUnion>); // ERROR: 1, 2 (same order as above)

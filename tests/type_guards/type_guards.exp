@@ -3476,7 +3476,7 @@ declare class or interface methods. [function-predicate]
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:11:7
 
-Cannot cast `x` to `B` because in index 0: string literal `A` [1] is incompatible with string literal `B` [2].
+Cannot cast `x` to `B` because in index `0`: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
    tuple_refinement.js:11:7
@@ -3494,7 +3494,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:11:7
 
-Cannot cast `x` to `B` because in index 1: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to `B` because in index `1`: number [1] is incompatible with string [2]. [incompatible-type]
 
    tuple_refinement.js:11:7
    11|       x as B; // ERROR: A ~> B
@@ -3511,7 +3511,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:31:7
 
-Cannot cast `x` to `ROB` because in index 0: string literal `A` [1] is incompatible with string literal `B` [2].
+Cannot cast `x` to `ROB` because in index `0`: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
    tuple_refinement.js:31:7
@@ -3529,7 +3529,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:31:7
 
-Cannot cast `x` to `ROB` because in index 1: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to `ROB` because in index `1`: number [1] is incompatible with string [2]. [incompatible-type]
 
    tuple_refinement.js:31:7
    31|       x as ROB; // ERROR: A ~> B
@@ -3546,7 +3546,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:51:7
 
-Cannot cast `x` to `MTB` because in index 0: string literal `A` [1] is incompatible with string literal `B` [2].
+Cannot cast `x` to `MTB` because in index `0`: string literal `A` [1] is incompatible with string literal `B` [2].
 [incompatible-type]
 
    tuple_refinement.js:51:7
@@ -3564,7 +3564,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:51:7
 
-Cannot cast `x` to `MTB` because in index 2: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to `MTB` because in index `2`: number [1] is incompatible with string [2]. [incompatible-type]
 
    tuple_refinement.js:51:7
    51|       x as MTB; // ERROR: A ~> B

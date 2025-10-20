@@ -202,7 +202,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- optional.js:9:7
 
-Cannot call `qux` because in index 0: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `qux` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
 
    optional.js:9:7
    9| qux(0,0,0); // Error, number ~> string
@@ -216,7 +216,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ optional.js:10:11
 
-Cannot call `qux` because in index 0: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `qux` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
 
    optional.js:10:11
    10| qux(0,...[42, ""]); // Error, number ~> string

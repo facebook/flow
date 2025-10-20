@@ -15391,7 +15391,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:44:1
 
 Cannot call `calc` because: [incompatible-type]
- - Either in index 0: string literal `abs` [1] is incompatible with string literal `add` [2].
+ - Either in index `0`: string literal `abs` [1] is incompatible with string literal `add` [2].
  - Or rest array [3] has 3 elements but tuple type [4] has 2 elements.
 
    tuple_union.js:44:1
@@ -15416,7 +15416,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- tuple_union.js:47:1
 
 Cannot call `calc` because: [incompatible-type]
- - Either in index 0: string literal `add` [1] is incompatible with string literal `abs` [2].
+ - Either in index `0`: string literal `add` [1] is incompatible with string literal `abs` [2].
  - Or rest array [3] has 2 elements but tuple type [4] has 3 elements.
 
    tuple_union.js:47:1

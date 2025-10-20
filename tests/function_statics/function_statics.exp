@@ -31,7 +31,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- arrow.js:27:7
 
-Cannot call `d` because in index 0: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `d` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
 
    arrow.js:27:7
    27|     d(n, s); // ERROR
@@ -48,7 +48,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrow.js:27:10
 
-Cannot call `d` because in index 1: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `d` because in index `1`: string [1] is incompatible with number [2]. [incompatible-type]
 
    arrow.js:27:10
    27|     d(n, s); // ERROR
@@ -188,7 +188,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- function_expression.js:28:9
 
-Cannot call `d` because in index 0: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `d` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
 
    function_expression.js:28:9
    28|       d(n, s); // ERROR
@@ -205,7 +205,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_expression.js:28:12
 
-Cannot call `d` because in index 1: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `d` because in index `1`: string [1] is incompatible with number [2]. [incompatible-type]
 
    function_expression.js:28:12
    28|       d(n, s); // ERROR
@@ -222,7 +222,7 @@ References:
 
 Error -------------------------------------------------------------------------------------- function_expression.js:34:9
 
-Cannot call `d` because in index 0: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `d` because in index `0`: number [1] is incompatible with string [2]. [incompatible-type]
 
    function_expression.js:34:9
    34|       d(n, s); // ERROR
@@ -239,7 +239,7 @@ References:
 
 Error ------------------------------------------------------------------------------------- function_expression.js:34:12
 
-Cannot call `d` because in index 1: string [1] is incompatible with number [2]. [incompatible-type]
+Cannot call `d` because in index `1`: string [1] is incompatible with number [2]. [incompatible-type]
 
    function_expression.js:34:12
    34|       d(n, s); // ERROR

@@ -923,7 +923,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:23:11
 
-Cannot return array literal because in index 0: inexact rest of object pattern [1] is incompatible with exact
+Cannot return array literal because in index `0`: inexact rest of object pattern [1] is incompatible with exact
 `Omit` [2]. [incompatible-exact]
 
    tparams.js:23:11
@@ -941,7 +941,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:23:14
 
-Cannot return array literal because in index 1: mixed [1] is incompatible with `B` [2]. [incompatible-type]
+Cannot return array literal because in index `1`: mixed [1] is incompatible with `B` [2]. [incompatible-type]
 
    tparams.js:23:14
    23|   return [o, p];

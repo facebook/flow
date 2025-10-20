@@ -1,8 +1,8 @@
 flow check --json-version=2
-{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because: [incompatible-type]"}],"items":[{"kind":"UnorderedList","message":[{"kind":"Text","text":"in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]}],"items":[[{"kind":"Text","text":"in index 0: "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]}]]}],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
+{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]},{"kind":"Text","text":". [incompatible-type]"}],"items":[],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
 
 flow check --json-version=2 --json
-{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because: [incompatible-type]"}],"items":[{"kind":"UnorderedList","message":[{"kind":"Text","text":"in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]}],"items":[[{"kind":"Text","text":"in index 0: "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]}]]}],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
+{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]},{"kind":"Text","text":". [incompatible-type]"}],"items":[],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
 
 flow check --json-version=2 --pretty
 {
@@ -33,58 +33,32 @@ flow check --json-version=2 --pretty
         "message":[
           {
             "kind":"Text",
-            "text":"Cannot cast array literal to tuple type because: [incompatible-type]"
-          }
-        ],
-        "items":[
+            "text":"Cannot cast array literal to tuple type because in property "
+          },
+          {"kind":"Code","text":"0.p"},
+          {"kind":"Text","text":": "},
           {
-            "kind":"UnorderedList",
+            "kind":"Reference",
+            "referenceId":"1",
             "message":[
-              {"kind":"Text","text":"in property "},
-              {"kind":"Code","text":"p"},
-              {"kind":"Text","text":": "},
-              {
-                "kind":"Reference",
-                "referenceId":"1",
-                "message":[{"kind":"Text","text":"object literal"}]
-              },
-              {"kind":"Text","text":" is incompatible with "},
-              {
-                "kind":"Reference",
-                "referenceId":"2",
-                "message":[
-                  {"kind":"Text","text":""},
-                  {"kind":"Code","text":"O"},
-                  {"kind":"Text","text":""}
-                ]
-              }
-            ],
-            "items":[
-              [
-                {"kind":"Text","text":"in index 0: "},
-                {
-                  "kind":"Reference",
-                  "referenceId":"3",
-                  "message":[
-                    {"kind":"Text","text":""},
-                    {"kind":"Code","text":"number"},
-                    {"kind":"Text","text":""}
-                  ]
-                },
-                {"kind":"Text","text":" is not exactly the same as "},
-                {
-                  "kind":"Reference",
-                  "referenceId":"4",
-                  "message":[
-                    {"kind":"Text","text":""},
-                    {"kind":"Code","text":"empty"},
-                    {"kind":"Text","text":""}
-                  ]
-                }
-              ]
+              {"kind":"Text","text":""},
+              {"kind":"Code","text":"number"},
+              {"kind":"Text","text":""}
             ]
-          }
+          },
+          {"kind":"Text","text":" is not exactly the same as "},
+          {
+            "kind":"Reference",
+            "referenceId":"2",
+            "message":[
+              {"kind":"Text","text":""},
+              {"kind":"Code","text":"empty"},
+              {"kind":"Text","text":""}
+            ]
+          },
+          {"kind":"Text","text":". [incompatible-type]"}
         ],
+        "items":[],
         "post_message":[
           {
             "kind":"Text",
@@ -97,13 +71,13 @@ flow check --json-version=2 --pretty
           },
           {
             "kind":"Reference",
-            "referenceId":"1",
+            "referenceId":"3",
             "message":[{"kind":"Text","text":"object literal"}]
           },
           {"kind":"Text","text":" with "},
           {
             "kind":"Reference",
-            "referenceId":"5",
+            "referenceId":"4",
             "message":[
               {"kind":"Text","text":""},
               {"kind":"Code","text":"O"},
@@ -115,7 +89,7 @@ flow check --json-version=2 --pretty
           {"kind":"Text","text":" in "},
           {
             "kind":"Reference",
-            "referenceId":"2",
+            "referenceId":"5",
             "message":[
               {"kind":"Text","text":""},
               {"kind":"Code","text":"O"},
@@ -132,37 +106,37 @@ flow check --json-version=2 --pretty
         "1":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":7,"column":12,"offset":61},
-          "end":{"line":7,"column":18,"offset":68},
-          "context":{"7":"const o1 = {p: 42};"}
-        },
-        "2":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":9,"column":9,"offset":98},
-          "end":{"line":9,"column":9,"offset":99},
-          "context":{"9":"([o1]: [O]);"}
-        },
-        "3":{
-          "source":"test.js",
-          "type":"SourceFile",
           "start":{"line":7,"column":16,"offset":65},
           "end":{"line":7,"column":17,"offset":67},
           "context":{"7":"const o1 = {p: 42};"}
         },
-        "4":{
+        "2":{
           "source":"test.js",
           "type":"SourceFile",
           "start":{"line":6,"column":14,"offset":42},
           "end":{"line":6,"column":18,"offset":47},
           "context":{"6":"type O = {p: empty};"}
         },
-        "5":{
+        "3":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":7,"column":12,"offset":61},
+          "end":{"line":7,"column":18,"offset":68},
+          "context":{"7":"const o1 = {p: 42};"}
+        },
+        "4":{
           "source":"test.js",
           "type":"SourceFile",
           "start":{"line":6,"column":10,"offset":38},
           "end":{"line":6,"column":19,"offset":48},
           "context":{"6":"type O = {p: empty};"}
+        },
+        "5":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":9,"column":9,"offset":98},
+          "end":{"line":9,"column":9,"offset":99},
+          "context":{"9":"([o1]: [O]);"}
         }
       }
     },
@@ -195,8 +169,8 @@ flow check --json-version=2 --pretty
         ],
         "items":[
           [
-            {"kind":"Text","text":"Either in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Either in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -212,8 +186,8 @@ flow check --json-version=2 --pretty
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -229,8 +203,8 @@ flow check --json-version=2 --pretty
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -246,8 +220,8 @@ flow check --json-version=2 --pretty
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -449,10 +423,10 @@ flow check --json-version=2 --pretty
 }
 
 flow focus-check test.js --json-version=2
-{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because: [incompatible-type]"}],"items":[{"kind":"UnorderedList","message":[{"kind":"Text","text":"in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]}],"items":[[{"kind":"Text","text":"in index 0: "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]}]]}],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
+{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]},{"kind":"Text","text":". [incompatible-type]"}],"items":[],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
 
 flow focus-check test.js --json-version=2 --json
-{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because: [incompatible-type]"}],"items":[{"kind":"UnorderedList","message":[{"kind":"Text","text":"in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]}],"items":[[{"kind":"Text","text":"in index 0: "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]}]]}],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
+{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]},{"kind":"Text","text":". [incompatible-type]"}],"items":[],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
 
 flow focus-check test.js --json-version=2 --pretty
 {
@@ -483,58 +457,32 @@ flow focus-check test.js --json-version=2 --pretty
         "message":[
           {
             "kind":"Text",
-            "text":"Cannot cast array literal to tuple type because: [incompatible-type]"
-          }
-        ],
-        "items":[
+            "text":"Cannot cast array literal to tuple type because in property "
+          },
+          {"kind":"Code","text":"0.p"},
+          {"kind":"Text","text":": "},
           {
-            "kind":"UnorderedList",
+            "kind":"Reference",
+            "referenceId":"1",
             "message":[
-              {"kind":"Text","text":"in property "},
-              {"kind":"Code","text":"p"},
-              {"kind":"Text","text":": "},
-              {
-                "kind":"Reference",
-                "referenceId":"1",
-                "message":[{"kind":"Text","text":"object literal"}]
-              },
-              {"kind":"Text","text":" is incompatible with "},
-              {
-                "kind":"Reference",
-                "referenceId":"2",
-                "message":[
-                  {"kind":"Text","text":""},
-                  {"kind":"Code","text":"O"},
-                  {"kind":"Text","text":""}
-                ]
-              }
-            ],
-            "items":[
-              [
-                {"kind":"Text","text":"in index 0: "},
-                {
-                  "kind":"Reference",
-                  "referenceId":"3",
-                  "message":[
-                    {"kind":"Text","text":""},
-                    {"kind":"Code","text":"number"},
-                    {"kind":"Text","text":""}
-                  ]
-                },
-                {"kind":"Text","text":" is not exactly the same as "},
-                {
-                  "kind":"Reference",
-                  "referenceId":"4",
-                  "message":[
-                    {"kind":"Text","text":""},
-                    {"kind":"Code","text":"empty"},
-                    {"kind":"Text","text":""}
-                  ]
-                }
-              ]
+              {"kind":"Text","text":""},
+              {"kind":"Code","text":"number"},
+              {"kind":"Text","text":""}
             ]
-          }
+          },
+          {"kind":"Text","text":" is not exactly the same as "},
+          {
+            "kind":"Reference",
+            "referenceId":"2",
+            "message":[
+              {"kind":"Text","text":""},
+              {"kind":"Code","text":"empty"},
+              {"kind":"Text","text":""}
+            ]
+          },
+          {"kind":"Text","text":". [incompatible-type]"}
         ],
+        "items":[],
         "post_message":[
           {
             "kind":"Text",
@@ -547,13 +495,13 @@ flow focus-check test.js --json-version=2 --pretty
           },
           {
             "kind":"Reference",
-            "referenceId":"1",
+            "referenceId":"3",
             "message":[{"kind":"Text","text":"object literal"}]
           },
           {"kind":"Text","text":" with "},
           {
             "kind":"Reference",
-            "referenceId":"5",
+            "referenceId":"4",
             "message":[
               {"kind":"Text","text":""},
               {"kind":"Code","text":"O"},
@@ -565,7 +513,7 @@ flow focus-check test.js --json-version=2 --pretty
           {"kind":"Text","text":" in "},
           {
             "kind":"Reference",
-            "referenceId":"2",
+            "referenceId":"5",
             "message":[
               {"kind":"Text","text":""},
               {"kind":"Code","text":"O"},
@@ -582,37 +530,37 @@ flow focus-check test.js --json-version=2 --pretty
         "1":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":7,"column":12,"offset":61},
-          "end":{"line":7,"column":18,"offset":68},
-          "context":{"7":"const o1 = {p: 42};"}
-        },
-        "2":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":9,"column":9,"offset":98},
-          "end":{"line":9,"column":9,"offset":99},
-          "context":{"9":"([o1]: [O]);"}
-        },
-        "3":{
-          "source":"test.js",
-          "type":"SourceFile",
           "start":{"line":7,"column":16,"offset":65},
           "end":{"line":7,"column":17,"offset":67},
           "context":{"7":"const o1 = {p: 42};"}
         },
-        "4":{
+        "2":{
           "source":"test.js",
           "type":"SourceFile",
           "start":{"line":6,"column":14,"offset":42},
           "end":{"line":6,"column":18,"offset":47},
           "context":{"6":"type O = {p: empty};"}
         },
-        "5":{
+        "3":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":7,"column":12,"offset":61},
+          "end":{"line":7,"column":18,"offset":68},
+          "context":{"7":"const o1 = {p: 42};"}
+        },
+        "4":{
           "source":"test.js",
           "type":"SourceFile",
           "start":{"line":6,"column":10,"offset":38},
           "end":{"line":6,"column":19,"offset":48},
           "context":{"6":"type O = {p: empty};"}
+        },
+        "5":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":9,"column":9,"offset":98},
+          "end":{"line":9,"column":9,"offset":99},
+          "context":{"9":"([o1]: [O]);"}
         }
       }
     },
@@ -645,8 +593,8 @@ flow focus-check test.js --json-version=2 --pretty
         ],
         "items":[
           [
-            {"kind":"Text","text":"Either in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Either in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -662,8 +610,8 @@ flow focus-check test.js --json-version=2 --pretty
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -679,8 +627,8 @@ flow focus-check test.js --json-version=2 --pretty
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -696,8 +644,8 @@ flow focus-check test.js --json-version=2 --pretty
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -899,10 +847,10 @@ flow focus-check test.js --json-version=2 --pretty
 }
 
 flow check-contents --json-version=2 < test.js
-{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because: [incompatible-type]"}],"items":[{"kind":"UnorderedList","message":[{"kind":"Text","text":"in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]}],"items":[[{"kind":"Text","text":"in index 0: "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]}]]}],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"-","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}},"3":{"source":"-","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"-","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"5":{"source":"-","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"-","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"-","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"-","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"-","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"-","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"-","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
+{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]},{"kind":"Text","text":". [incompatible-type]"}],"items":[],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"-","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"3":{"source":"-","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"-","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}},"5":{"source":"-","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"-","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"-","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"-","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"-","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"-","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"-","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
 
 flow check-contents --json-version=2 --json < test.js
-{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because: [incompatible-type]"}],"items":[{"kind":"UnorderedList","message":[{"kind":"Text","text":"in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]}],"items":[[{"kind":"Text","text":"in index 0: "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]}]]}],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"-","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}},"3":{"source":"-","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"-","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"5":{"source":"-","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"-","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"-","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"-","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"-","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"-","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"-","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
+{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]},{"kind":"Text","text":". [incompatible-type]"}],"items":[],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"-","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"3":{"source":"-","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"-","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}},"5":{"source":"-","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"-","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"-","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"-","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"-","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"-","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"-","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"-","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
 
 flow check-contents --json-version=2 --pretty < test.js
 {
@@ -933,58 +881,32 @@ flow check-contents --json-version=2 --pretty < test.js
         "message":[
           {
             "kind":"Text",
-            "text":"Cannot cast array literal to tuple type because: [incompatible-type]"
-          }
-        ],
-        "items":[
+            "text":"Cannot cast array literal to tuple type because in property "
+          },
+          {"kind":"Code","text":"0.p"},
+          {"kind":"Text","text":": "},
           {
-            "kind":"UnorderedList",
+            "kind":"Reference",
+            "referenceId":"1",
             "message":[
-              {"kind":"Text","text":"in property "},
-              {"kind":"Code","text":"p"},
-              {"kind":"Text","text":": "},
-              {
-                "kind":"Reference",
-                "referenceId":"1",
-                "message":[{"kind":"Text","text":"object literal"}]
-              },
-              {"kind":"Text","text":" is incompatible with "},
-              {
-                "kind":"Reference",
-                "referenceId":"2",
-                "message":[
-                  {"kind":"Text","text":""},
-                  {"kind":"Code","text":"O"},
-                  {"kind":"Text","text":""}
-                ]
-              }
-            ],
-            "items":[
-              [
-                {"kind":"Text","text":"in index 0: "},
-                {
-                  "kind":"Reference",
-                  "referenceId":"3",
-                  "message":[
-                    {"kind":"Text","text":""},
-                    {"kind":"Code","text":"number"},
-                    {"kind":"Text","text":""}
-                  ]
-                },
-                {"kind":"Text","text":" is not exactly the same as "},
-                {
-                  "kind":"Reference",
-                  "referenceId":"4",
-                  "message":[
-                    {"kind":"Text","text":""},
-                    {"kind":"Code","text":"empty"},
-                    {"kind":"Text","text":""}
-                  ]
-                }
-              ]
+              {"kind":"Text","text":""},
+              {"kind":"Code","text":"number"},
+              {"kind":"Text","text":""}
             ]
-          }
+          },
+          {"kind":"Text","text":" is not exactly the same as "},
+          {
+            "kind":"Reference",
+            "referenceId":"2",
+            "message":[
+              {"kind":"Text","text":""},
+              {"kind":"Code","text":"empty"},
+              {"kind":"Text","text":""}
+            ]
+          },
+          {"kind":"Text","text":". [incompatible-type]"}
         ],
+        "items":[],
         "post_message":[
           {
             "kind":"Text",
@@ -997,13 +919,13 @@ flow check-contents --json-version=2 --pretty < test.js
           },
           {
             "kind":"Reference",
-            "referenceId":"1",
+            "referenceId":"3",
             "message":[{"kind":"Text","text":"object literal"}]
           },
           {"kind":"Text","text":" with "},
           {
             "kind":"Reference",
-            "referenceId":"5",
+            "referenceId":"4",
             "message":[
               {"kind":"Text","text":""},
               {"kind":"Code","text":"O"},
@@ -1015,7 +937,7 @@ flow check-contents --json-version=2 --pretty < test.js
           {"kind":"Text","text":" in "},
           {
             "kind":"Reference",
-            "referenceId":"2",
+            "referenceId":"5",
             "message":[
               {"kind":"Text","text":""},
               {"kind":"Code","text":"O"},
@@ -1032,37 +954,37 @@ flow check-contents --json-version=2 --pretty < test.js
         "1":{
           "source":"-",
           "type":"SourceFile",
-          "start":{"line":7,"column":12,"offset":61},
-          "end":{"line":7,"column":18,"offset":68},
-          "context":{"7":"const o1 = {p: 42};"}
-        },
-        "2":{
-          "source":"-",
-          "type":"SourceFile",
-          "start":{"line":9,"column":9,"offset":98},
-          "end":{"line":9,"column":9,"offset":99},
-          "context":{"9":"([o1]: [O]);"}
-        },
-        "3":{
-          "source":"-",
-          "type":"SourceFile",
           "start":{"line":7,"column":16,"offset":65},
           "end":{"line":7,"column":17,"offset":67},
           "context":{"7":"const o1 = {p: 42};"}
         },
-        "4":{
+        "2":{
           "source":"-",
           "type":"SourceFile",
           "start":{"line":6,"column":14,"offset":42},
           "end":{"line":6,"column":18,"offset":47},
           "context":{"6":"type O = {p: empty};"}
         },
-        "5":{
+        "3":{
+          "source":"-",
+          "type":"SourceFile",
+          "start":{"line":7,"column":12,"offset":61},
+          "end":{"line":7,"column":18,"offset":68},
+          "context":{"7":"const o1 = {p: 42};"}
+        },
+        "4":{
           "source":"-",
           "type":"SourceFile",
           "start":{"line":6,"column":10,"offset":38},
           "end":{"line":6,"column":19,"offset":48},
           "context":{"6":"type O = {p: empty};"}
+        },
+        "5":{
+          "source":"-",
+          "type":"SourceFile",
+          "start":{"line":9,"column":9,"offset":98},
+          "end":{"line":9,"column":9,"offset":99},
+          "context":{"9":"([o1]: [O]);"}
         }
       }
     },
@@ -1095,8 +1017,8 @@ flow check-contents --json-version=2 --pretty < test.js
         ],
         "items":[
           [
-            {"kind":"Text","text":"Either in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Either in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -1112,8 +1034,8 @@ flow check-contents --json-version=2 --pretty < test.js
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -1129,8 +1051,8 @@ flow check-contents --json-version=2 --pretty < test.js
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -1146,8 +1068,8 @@ flow check-contents --json-version=2 --pretty < test.js
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -1349,10 +1271,10 @@ flow check-contents --json-version=2 --pretty < test.js
 }
 
 flow status --json-version=2
-{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because: [incompatible-type]"}],"items":[{"kind":"UnorderedList","message":[{"kind":"Text","text":"in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]}],"items":[[{"kind":"Text","text":"in index 0: "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]}]]}],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
+{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]},{"kind":"Text","text":". [incompatible-type]"}],"items":[],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
 
 flow status --json-version=2 --json
-{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because: [incompatible-type]"}],"items":[{"kind":"UnorderedList","message":[{"kind":"Text","text":"in property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]}],"items":[[{"kind":"Text","text":"in index 0: "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]}]]}],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in index 0 > property "},{"kind":"Code","text":"p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
+{"flowVersion":"<VERSION>","jsonVersion":"2","errors":[{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":3,"offset":92},"end":{"line":9,"column":4,"offset":94},"context":{"9":"([o1]: [O]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":2,"offset":91},"end":{"line":9,"column":5,"offset":95},"context":{"9":"([o1]: [O]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to tuple type because in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":""},{"kind":"Code","text":"number"},{"kind":"Text","text":""}]},{"kind":"Text","text":" is not exactly the same as "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":""},{"kind":"Code","text":"empty"},{"kind":"Text","text":""}]},{"kind":"Text","text":". [incompatible-type]"}],"items":[],"post_message":[{"kind":"Text","text":"\nThe above-mentioned two types must be the same because property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" is invariantly typed. To fix the error,\n- Either annotate "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"object literal"}]},{"kind":"Text","text":" with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":"\n- Or make property "},{"kind":"Code","text":"p"},{"kind":"Text","text":" in "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":""},{"kind":"Code","text":"O"},{"kind":"Text","text":""}]},{"kind":"Text","text":" readonly. See https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number."}]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":16,"offset":65},"end":{"line":7,"column":17,"offset":67},"context":{"7":"const o1 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":14,"offset":42},"end":{"line":6,"column":18,"offset":47},"context":{"6":"type O = {p: empty};"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":7,"column":12,"offset":61},"end":{"line":7,"column":18,"offset":68},"context":{"7":"const o1 = {p: 42};"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":6,"column":10,"offset":38},"end":{"line":6,"column":19,"offset":48},"context":{"6":"type O = {p: empty};"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":9,"column":9,"offset":98},"end":{"line":9,"column":9,"offset":99},"context":{"9":"([o1]: [O]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":2,"offset":104},"end":{"line":10,"column":5,"offset":108},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"messageMarkup":{"kind":"UnorderedList","message":[{"kind":"Text","text":"Cannot cast array literal to union type because: [incompatible-type]"}],"items":[[{"kind":"Text","text":"Either in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"3","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"4","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}],[{"kind":"Text","text":"Or in property "},{"kind":"Code","text":"0.p"},{"kind":"Text","text":": "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"5","message":[{"kind":"Text","text":"empty"}]},{"kind":"Text","text":"."}]]},"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":8,"column":16,"offset":85},"end":{"line":8,"column":17,"offset":87},"context":{"8":"const o2 = {p: 42};"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":13,"offset":115},"end":{"line":10,"column":17,"offset":120},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"3":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":21,"offset":123},"end":{"line":10,"column":25,"offset":128},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"4":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":36,"offset":138},"end":{"line":10,"column":40,"offset":143},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}},"5":{"source":"test.js","type":"SourceFile","start":{"line":10,"column":44,"offset":146},"end":{"line":10,"column":48,"offset":151},"context":{"10":"([o2]: [{p: empty | empty}] | [{p: empty | empty}]);"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"five_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":33,"offset":189},"end":{"line":16,"column":7,"offset":225},"context":{"12":"const five_line_error: number = `Line 1","13":"Line 2","14":"Line 3","15":"Line 4","16":"Line 5`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":12,"column":24,"offset":180},"end":{"line":12,"column":29,"offset":186},"context":{"12":"const five_line_error: number = `Line 1"}}}},{"kind":"infer","level":"error","suppressions":[],"classic":false,"primaryLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"rootLoc":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"messageMarkup":[{"kind":"Text","text":"Cannot assign template string to "},{"kind":"Code","text":"ten_line_error"},{"kind":"Text","text":" because "},{"kind":"Reference","referenceId":"1","message":[{"kind":"Text","text":"string"}]},{"kind":"Text","text":" is incompatible with "},{"kind":"Reference","referenceId":"2","message":[{"kind":"Text","text":"number"}]},{"kind":"Text","text":". [incompatible-type]"}],"referenceLocs":{"1":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":32,"offset":259},"end":{"line":27,"column":8,"offset":331},"context":{"18":"const ten_line_error: number = `Line 1","19":"Line 2","20":"Line 3","26":"Line 9","27":"Line 10`;"}},"2":{"source":"test.js","type":"SourceFile","start":{"line":18,"column":23,"offset":250},"end":{"line":18,"column":28,"offset":256},"context":{"18":"const ten_line_error: number = `Line 1"}}}}],"passed":false}
 
 flow status --json-version=2 --pretty
 {
@@ -1383,58 +1305,32 @@ flow status --json-version=2 --pretty
         "message":[
           {
             "kind":"Text",
-            "text":"Cannot cast array literal to tuple type because: [incompatible-type]"
-          }
-        ],
-        "items":[
+            "text":"Cannot cast array literal to tuple type because in property "
+          },
+          {"kind":"Code","text":"0.p"},
+          {"kind":"Text","text":": "},
           {
-            "kind":"UnorderedList",
+            "kind":"Reference",
+            "referenceId":"1",
             "message":[
-              {"kind":"Text","text":"in property "},
-              {"kind":"Code","text":"p"},
-              {"kind":"Text","text":": "},
-              {
-                "kind":"Reference",
-                "referenceId":"1",
-                "message":[{"kind":"Text","text":"object literal"}]
-              },
-              {"kind":"Text","text":" is incompatible with "},
-              {
-                "kind":"Reference",
-                "referenceId":"2",
-                "message":[
-                  {"kind":"Text","text":""},
-                  {"kind":"Code","text":"O"},
-                  {"kind":"Text","text":""}
-                ]
-              }
-            ],
-            "items":[
-              [
-                {"kind":"Text","text":"in index 0: "},
-                {
-                  "kind":"Reference",
-                  "referenceId":"3",
-                  "message":[
-                    {"kind":"Text","text":""},
-                    {"kind":"Code","text":"number"},
-                    {"kind":"Text","text":""}
-                  ]
-                },
-                {"kind":"Text","text":" is not exactly the same as "},
-                {
-                  "kind":"Reference",
-                  "referenceId":"4",
-                  "message":[
-                    {"kind":"Text","text":""},
-                    {"kind":"Code","text":"empty"},
-                    {"kind":"Text","text":""}
-                  ]
-                }
-              ]
+              {"kind":"Text","text":""},
+              {"kind":"Code","text":"number"},
+              {"kind":"Text","text":""}
             ]
-          }
+          },
+          {"kind":"Text","text":" is not exactly the same as "},
+          {
+            "kind":"Reference",
+            "referenceId":"2",
+            "message":[
+              {"kind":"Text","text":""},
+              {"kind":"Code","text":"empty"},
+              {"kind":"Text","text":""}
+            ]
+          },
+          {"kind":"Text","text":". [incompatible-type]"}
         ],
+        "items":[],
         "post_message":[
           {
             "kind":"Text",
@@ -1447,13 +1343,13 @@ flow status --json-version=2 --pretty
           },
           {
             "kind":"Reference",
-            "referenceId":"1",
+            "referenceId":"3",
             "message":[{"kind":"Text","text":"object literal"}]
           },
           {"kind":"Text","text":" with "},
           {
             "kind":"Reference",
-            "referenceId":"5",
+            "referenceId":"4",
             "message":[
               {"kind":"Text","text":""},
               {"kind":"Code","text":"O"},
@@ -1465,7 +1361,7 @@ flow status --json-version=2 --pretty
           {"kind":"Text","text":" in "},
           {
             "kind":"Reference",
-            "referenceId":"2",
+            "referenceId":"5",
             "message":[
               {"kind":"Text","text":""},
               {"kind":"Code","text":"O"},
@@ -1482,37 +1378,37 @@ flow status --json-version=2 --pretty
         "1":{
           "source":"test.js",
           "type":"SourceFile",
-          "start":{"line":7,"column":12,"offset":61},
-          "end":{"line":7,"column":18,"offset":68},
-          "context":{"7":"const o1 = {p: 42};"}
-        },
-        "2":{
-          "source":"test.js",
-          "type":"SourceFile",
-          "start":{"line":9,"column":9,"offset":98},
-          "end":{"line":9,"column":9,"offset":99},
-          "context":{"9":"([o1]: [O]);"}
-        },
-        "3":{
-          "source":"test.js",
-          "type":"SourceFile",
           "start":{"line":7,"column":16,"offset":65},
           "end":{"line":7,"column":17,"offset":67},
           "context":{"7":"const o1 = {p: 42};"}
         },
-        "4":{
+        "2":{
           "source":"test.js",
           "type":"SourceFile",
           "start":{"line":6,"column":14,"offset":42},
           "end":{"line":6,"column":18,"offset":47},
           "context":{"6":"type O = {p: empty};"}
         },
-        "5":{
+        "3":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":7,"column":12,"offset":61},
+          "end":{"line":7,"column":18,"offset":68},
+          "context":{"7":"const o1 = {p: 42};"}
+        },
+        "4":{
           "source":"test.js",
           "type":"SourceFile",
           "start":{"line":6,"column":10,"offset":38},
           "end":{"line":6,"column":19,"offset":48},
           "context":{"6":"type O = {p: empty};"}
+        },
+        "5":{
+          "source":"test.js",
+          "type":"SourceFile",
+          "start":{"line":9,"column":9,"offset":98},
+          "end":{"line":9,"column":9,"offset":99},
+          "context":{"9":"([o1]: [O]);"}
         }
       }
     },
@@ -1545,8 +1441,8 @@ flow status --json-version=2 --pretty
         ],
         "items":[
           [
-            {"kind":"Text","text":"Either in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Either in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -1562,8 +1458,8 @@ flow status --json-version=2 --pretty
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -1579,8 +1475,8 @@ flow status --json-version=2 --pretty
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",
@@ -1596,8 +1492,8 @@ flow status --json-version=2 --pretty
             {"kind":"Text","text":"."}
           ],
           [
-            {"kind":"Text","text":"Or in index 0 > property "},
-            {"kind":"Code","text":"p"},
+            {"kind":"Text","text":"Or in property "},
+            {"kind":"Code","text":"0.p"},
             {"kind":"Text","text":": "},
             {
               "kind":"Reference",

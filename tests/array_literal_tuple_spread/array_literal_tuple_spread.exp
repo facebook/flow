@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------------- test.js:29:31
 
-Cannot assign array literal to `x` because in index 1: number [1] is incompatible with number literal `20` [2].
+Cannot assign array literal to `x` because in index `1`: number [1] is incompatible with number literal `20` [2].
 [incompatible-type]
 
    test.js:29:31
@@ -18,7 +18,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:29:31
 
-Cannot assign array literal to `x` because in index 3: number [1] is incompatible with number literal `4` [2].
+Cannot assign array literal to `x` because in index `3`: number [1] is incompatible with number literal `4` [2].
 [incompatible-type]
 
    test.js:29:31
@@ -36,7 +36,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:29:31
 
-Cannot assign array literal to `x` because in index 4: number [1] is incompatible with number literal `5` [2].
+Cannot assign array literal to `x` because in index `4`: number [1] is incompatible with number literal `5` [2].
 [incompatible-type]
 
    test.js:29:31
@@ -54,7 +54,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:29:41
 
-Cannot assign array literal to `x` because in index 2: number literal `3` [1] is incompatible with number literal
+Cannot assign array literal to `x` because in index `2`: number literal `3` [1] is incompatible with number literal
 `30` [2]. [incompatible-type]
 
    test.js:29:41
@@ -69,7 +69,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:29:50
 
-Cannot assign array literal to `x` because in index 5: number literal `6` [1] is incompatible with number literal
+Cannot assign array literal to `x` because in index `5`: number literal `6` [1] is incompatible with number literal
 `60` [2]. [incompatible-type]
 
    test.js:29:50

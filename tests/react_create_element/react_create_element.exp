@@ -1492,8 +1492,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:218:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children` > index 0: number [1]
-is incompatible with number literal `1` [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > index `children[0]`: number [1] is
+incompatible with number literal `1` [2]. [incompatible-type]
 
    test.js:218:7
    218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
@@ -1510,8 +1510,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:218:7
 
-Cannot call `React.createElement` because in type argument `_ValidatedProps` > property `children` > index 1: number [1]
-is incompatible with number literal `2` [2]. [incompatible-type]
+Cannot call `React.createElement` because in type argument `_ValidatedProps` > index `children[1]`: number [1] is
+incompatible with number literal `2` [2]. [incompatible-type]
 
    test.js:218:7
    218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK

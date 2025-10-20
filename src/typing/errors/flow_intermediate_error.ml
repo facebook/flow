@@ -504,6 +504,46 @@ let rec make_intermediate_error :
       else
         None
     in
+    let loc_of_prop_compatibility_reason loc reason = function
+      (* If we are checking class extensions or implementations then the
+       * object reason will point to the class name. So don't reposition with
+       * this reason. *)
+      | Op (ClassExtendsCheck _) -> loc
+      | Op (ClassImplementsCheck _) -> loc
+      | _ -> loc_of_aloc (loc_of_reason reason)
+    in
+    let rec loop_to_form_access_chain lower_loc = function
+      (* Don't match $call properties since they have special
+       * meaning. As defined above. *)
+      | Frame (PropertyCompatibility { prop = Some prop; lower = lower'; upper = upper'; _ }, use_op)
+      (* TODO the $-prefixed names should be internal *)
+        when prop <> OrdinaryName "$call"
+             && Base.Option.is_none (opt_incompatibility_pair use_op (lower', upper')) ->
+        let lower_loc' = loc_of_prop_compatibility_reason lower_loc lower' use_op in
+        (* Perform the same frame location unwrapping as we do in our
+         * general code. *)
+        let lower_loc =
+          if Loc.contains lower_loc' lower_loc then
+            lower_loc
+          else
+            lower_loc'
+        in
+        let (lower_loc, props, use_op) = loop_to_form_access_chain lower_loc use_op in
+        (lower_loc, PropSegment prop :: props, use_op)
+      | Frame (TupleElementCompatibility { n; lower = lower'; upper = upper'; _ }, use_op)
+        when Base.Option.is_none (opt_incompatibility_pair use_op (lower', upper')) ->
+        let lower_loc' = loc_of_aloc (loc_of_reason lower') in
+        let lower_loc =
+          if Loc.contains lower_loc' lower_loc then
+            lower_loc
+          else
+            lower_loc'
+        in
+        let (lower_loc, props, use_op) = loop_to_form_access_chain lower_loc use_op in
+        (lower_loc, TupleIndexSegment n :: props, use_op)
+      (* Perform standard iteration through these use_ops. *)
+      | use_op -> (lower_loc, [], use_op)
+    in
     let rec loop loc frames use_op =
       match use_op with
       | Op UnknownUse -> unknown_root loc frames
@@ -739,58 +779,34 @@ let rec make_intermediate_error :
       | Frame (UnifyFlip, (Frame (PropertyCompatibility _, _) as use_op)) ->
         explanation loc frames use_op ExplanationPropertyInvariantTyping
       | Frame (PropertyCompatibility { prop = Some prop; lower; upper; _ }, use_op) ->
-        let loc_of_prop_compatibility_reason loc reason = function
-          (* If we are checking class extensions or implementations then the
-           * object reason will point to the class name. So don't reposition with
-           * this reason. *)
-          | Op (ClassExtendsCheck _) -> loc
-          | Op (ClassImplementsCheck _) -> loc
-          | _ -> loc_of_aloc (loc_of_reason reason)
-        in
-        let rec loop lower_loc = function
-          (* Don't match $call properties since they have special
-           * meaning. As defined above. *)
-          | Frame
-              (PropertyCompatibility { prop = Some prop; lower = lower'; upper = upper'; _ }, use_op)
-          (* TODO the $-prefixed names should be internal *)
-            when prop <> OrdinaryName "$call"
-                 && Base.Option.is_none (opt_incompatibility_pair use_op (lower', upper')) ->
-            let lower_loc' = loc_of_prop_compatibility_reason lower_loc lower' use_op in
-            (* Perform the same frame location unwrapping as we do in our
-             * general code. *)
-            let lower_loc =
-              if Loc.contains lower_loc' lower_loc then
-                lower_loc
-              else
-                lower_loc'
-            in
-            let (lower_loc, props, use_op) = loop lower_loc use_op in
-            (lower_loc, prop :: props, use_op)
-          (* Perform standard iteration through these use_ops. *)
-          | use_op -> (lower_loc, [], use_op)
-        in
-        (* Loop through our parent use_op to get our property path. *)
         let lower_loc = loc_of_prop_compatibility_reason loc lower use_op in
-        let (lower_loc, props, use_op) = loop lower_loc use_op in
+        (* Loop through our parent use_op to get our access chain. *)
+        let (lower_loc, props, use_op) = loop_to_form_access_chain lower_loc use_op in
         unwrap_frame_with_loc
           loc
           frames
           lower_loc
           use_op
-          (FrameProperty
+          (FrameAccessChain
              {
-               props = (prop, props);
+               chain = (PropSegment prop, props);
                incompatibility_pair = opt_incompatibility_pair use_op (lower, upper);
              }
           )
       | Frame (TupleElementCompatibility { n; lower; upper; _ }, use_op) ->
-        unwrap_frame
+        let lower_loc = loc_of_aloc (loc_of_reason lower) in
+        (* Loop through our parent use_op to get our access chain. *)
+        let (lower_loc, props, use_op) = loop_to_form_access_chain lower_loc use_op in
+        unwrap_frame_with_loc
           loc
           frames
-          lower
+          lower_loc
           use_op
-          (FrameTupleIndex
-             { index = n; incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+          (FrameAccessChain
+             {
+               chain = (TupleIndexSegment n, props);
+               incompatibility_pair = opt_incompatibility_pair use_op (lower, upper);
+             }
           )
       | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
         unwrap_frame loc frames lower use_op (FrameTypeArgument targ)
@@ -1626,6 +1642,28 @@ let to_printable_error :
     in
     function
     | FrameAnonymous -> (None, [])
+    | FrameAccessChain { chain = (last, _) as chain; incompatibility_pair } ->
+      let kind =
+        match last with
+        | PropSegment _ -> "property "
+        | TupleIndexSegment _ -> "index "
+      in
+      let (first, rest) = Nel.rev chain in
+      ( map incompatibility_pair,
+        [
+          text kind;
+          code
+            (List.fold_left
+               (fun acc -> function
+                 | PropSegment prop -> Utils_js.spf "%s.%s" acc (display_string_of_name prop)
+                 | TupleIndexSegment n -> Utils_js.spf "%s[%d]" acc n)
+               (match first with
+               | PropSegment prop -> display_string_of_name prop
+               | TupleIndexSegment n -> string_of_int n)
+               rest
+            );
+        ]
+      )
     | FrameArrayElement { incompatibility_pair } ->
       (map incompatibility_pair, [text "array element"])
     | FrameCallableSignature { incompatibility_pair } ->
@@ -1643,20 +1681,6 @@ let to_printable_error :
       (map incompatibility_pair, [text "the indexer property"])
     | FrameIndexerPropertyKey { incompatibility_pair } ->
       (map incompatibility_pair, [text "the indexer property's key"])
-    | FrameProperty { props = (prop, props); incompatibility_pair } ->
-      ( map incompatibility_pair,
-        [
-          text "property ";
-          code
-            (List.fold_left
-               (fun acc prop -> display_string_of_name prop ^ "." ^ acc)
-               (display_string_of_name prop)
-               props
-            );
-        ]
-      )
-    | FrameTupleIndex { index = n; incompatibility_pair } ->
-      (map incompatibility_pair, [text "index "; text (string_of_int n)])
     | FrameTypeArgument targ -> (None, [text "type argument "; ref targ])
     | FrameTypeParameterBound name -> (None, [text "type argument "; code name])
     | FrameTypePredicate -> (None, [text "the type predicate"])

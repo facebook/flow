@@ -510,7 +510,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:63:52
 
-Cannot assign array literal to destructuring because in index 0: number [1] is incompatible with boolean [2].
+Cannot assign array literal to destructuring because in index `0`: number [1] is incompatible with boolean [2].
 [incompatible-type]
 
    extraction.js:63:52
@@ -525,7 +525,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:63:57
 
-Cannot assign array literal to destructuring because in index 1: boolean [1] is incompatible with string [2].
+Cannot assign array literal to destructuring because in index `1`: boolean [1] is incompatible with string [2].
 [incompatible-type]
 
    extraction.js:63:57
@@ -540,7 +540,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:63:63
 
-Cannot assign array literal to destructuring because in index 2: string [1] is incompatible with number [2].
+Cannot assign array literal to destructuring because in index `2`: string [1] is incompatible with number [2].
 [incompatible-type]
 
    extraction.js:63:63

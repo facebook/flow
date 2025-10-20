@@ -2856,8 +2856,8 @@ References:
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:33:58
 
-Cannot call `f` with object literal bound to `literalValue` because in property `f` > index 0: number literal `42` [1]
-is incompatible with number literal `43` [2]. [incompatible-type]
+Cannot call `f` with object literal bound to `literalValue` because in index `f[0]`: number literal `42` [1] is
+incompatible with number literal `43` [2]. [incompatible-type]
 
    nested_generic_calls.js:33:58
    33|   const x6: {f: {f: <V>(V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error

@@ -2165,8 +2165,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:61:4
 
-Cannot cast `badC` to `Mapped` because in index 1 > property `contents`: `string` [1] is not exactly the same as
-`Tuple[1]` [2]. [incompatible-type]
+Cannot cast `badC` to `Mapped` because in property `1.contents`: `string` [1] is not exactly the same as `Tuple[1]` [2].
+[incompatible-type]
 
 The above-mentioned two types must be the same because property `contents` is invariantly typed. To fix the error,
 - Either make `{contents: string}` [3] and `{contents: Tuple[1]}` [4] exactly the same

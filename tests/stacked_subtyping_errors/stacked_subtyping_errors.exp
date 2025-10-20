@@ -1,7 +1,7 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:5:29
 
 Cannot call `ouchWithNamed` with object literal bound to `foo` because: [incompatible-type]
- - in index 0 > property `baz` > array element: array literal [1] is incompatible with `Bar` [2]
+ - in index `0` > property `baz` > array element: array literal [1] is incompatible with `Bar` [2]
     - in property `bar`: number [3] is incompatible with string [4]
 
    test.js:5:29
@@ -23,7 +23,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:30
 
 Cannot call `ouchWithNamed2` with object literal bound to `foo` because: [incompatible-type]
- - in index 0 > property `baz` > array element: array literal [1] is incompatible with `Bar` [2]
+ - in index `0` > property `baz` > array element: array literal [1] is incompatible with `Bar` [2]
     - in property `bar`: number [3] is incompatible with string [4]
 
    test.js:9:30
@@ -45,7 +45,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:9:49
 
 Cannot call `ouchWithNamed2` with object literal bound to `foo` because: [incompatible-type]
- - in index 0 > property `baz` > array element: array literal [1] is incompatible with `Bar` [2]
+ - in index `0` > property `baz` > array element: array literal [1] is incompatible with `Bar` [2]
     - in property `bus`: number [3] is incompatible with string [4]
 
    test.js:9:49
@@ -95,8 +95,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:18:27
 
-Cannot call `ouchUnnamed` with object literal bound to `foo` because in property `bar` > index 0 > property `baz` >
-array element: number [1] is incompatible with string [2]. [incompatible-type]
+Cannot call `ouchUnnamed` with object literal bound to `foo` because in property `bar[0].baz` > array element:
+number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:18:27
    18| ouchUnnamed({bar: [{baz: [3]}]});

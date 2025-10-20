@@ -36,7 +36,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- apply.js:17:7
 
-Cannot call `apply` with `withRest1` bound to `fn` because in index 1: number [1] is incompatible with number literal
+Cannot call `apply` with `withRest1` bound to `fn` because in index `1`: number [1] is incompatible with number literal
 `123` [2]. [incompatible-type]
 
    apply.js:17:7
@@ -126,7 +126,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- apply.js:36:11
 
-Cannot call `applyType` with `withRest2` bound to `fn` because in index 1: number [1] is incompatible with number
+Cannot call `applyType` with `withRest2` bound to `fn` because in index `1`: number [1] is incompatible with number
 literal `123` [2]. [incompatible-type]
 
    apply.js:36:11
@@ -288,7 +288,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ jsx.js:40:2
 
-Cannot create `ExpectsChildrenTuple` element because in index 0: number [1] is incompatible with string [2].
+Cannot create `ExpectsChildrenTuple` element because in index `0`: number [1] is incompatible with string [2].
 [incompatible-use]
 
    jsx.js:40:2

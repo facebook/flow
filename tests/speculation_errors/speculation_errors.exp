@@ -618,8 +618,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
 
 Cannot cast `any` to object type because in property `a`: [incompatible-type]
- - Either in index 0: number [1] is incompatible with boolean literal `true` [2].
- - Or in index 0: string [3] is incompatible with boolean literal `true` [2].
+ - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
+ - Or in index `0`: string [3] is incompatible with boolean literal `true` [2].
 
    errors_intersection.js:74:8
               v
@@ -646,8 +646,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
 
 Cannot cast `any` to object type because in property `b`: [incompatible-type]
- - Either in index 0: number [1] is incompatible with boolean literal `true` [2].
- - Or in index 0: string [3] is incompatible with boolean literal `true` [2].
+ - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
+ - Or in index `0`: string [3] is incompatible with boolean literal `true` [2].
 
    errors_intersection.js:74:8
               v
@@ -674,8 +674,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
 
 Cannot cast `any` to object type because in property `c`: [incompatible-type]
- - Either in index 0: number [1] is incompatible with boolean literal `true` [2].
- - Or in index 0: string [3] is incompatible with boolean literal `true` [2].
+ - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
+ - Or in index `0`: string [3] is incompatible with boolean literal `true` [2].
 
    errors_intersection.js:74:8
               v
@@ -702,8 +702,8 @@ References:
 Error -------------------------------------------------------------------------------------- errors_intersection.js:74:8
 
 Cannot cast `any` to object type because in property `d`: [incompatible-type]
- - Either in index 0: number [1] is incompatible with boolean literal `true` [2].
- - Or in index 0: string [3] is incompatible with boolean literal `true` [2].
+ - Either in index `0`: number [1] is incompatible with boolean literal `true` [2].
+ - Or in index `0`: string [3] is incompatible with boolean literal `true` [2].
 
    errors_intersection.js:74:8
               v
@@ -1120,10 +1120,10 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:103:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either in index 0 > index 1: `A` [1] is incompatible with number [2].
- - Or in index 0 > index 1: `B` [3] is incompatible with number [2].
- - Or in index 0 > index 1: `C` [4] is incompatible with number [2].
- - Or in index 0 > index 1: `D` [5] is incompatible with number [2].
+ - Either in index `0` > index `1`: `A` [1] is incompatible with number [2].
+ - Or in index `0` > index `1`: `B` [3] is incompatible with number [2].
+ - Or in index `0` > index `1`: `C` [4] is incompatible with number [2].
+ - Or in index `0` > index `1`: `D` [5] is incompatible with number [2].
 
    errors_intersection.js:103:1
    103| any as [[null, A] & [null, B]] & [[null, C] & [null, D]] as [[null, number]];
@@ -1150,9 +1150,9 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:106:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either in index 0 > index 1: `A` [1] is incompatible with number [2].
- - Or in index 0 > index 1: `C` [3] is incompatible with number [2].
- - Or in index 0 > index 1: `D` [4] is incompatible with number [2].
+ - Either in index `0` > index `1`: `A` [1] is incompatible with number [2].
+ - Or in index `0` > index `1`: `C` [3] is incompatible with number [2].
+ - Or in index `0` > index `1`: `D` [4] is incompatible with number [2].
 
    errors_intersection.js:106:1
    106| any as [[null, A] & {}] & [[null, C] & [null, D]] as [[null, number]];
@@ -1176,8 +1176,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:109:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either in index 0 > index 1: `A` [1] is incompatible with number [2].
- - Or in index 0 > index 1: `C` [3] is incompatible with number [2].
+ - Either in index `0` > index `1`: `A` [1] is incompatible with number [2].
+ - Or in index `0` > index `1`: `C` [3] is incompatible with number [2].
 
    errors_intersection.js:109:1
    109| any as [[null, A] & {}] & [[null, C] & {}] as [[null, number]];
@@ -1198,8 +1198,8 @@ References:
 Error ------------------------------------------------------------------------------------- errors_intersection.js:112:1
 
 Cannot cast `any` to tuple type because: [incompatible-type]
- - Either in index 0 > index 1: `C` [1] is incompatible with number [2].
- - Or in index 0: object type [3] is incompatible with tuple type [4].
+ - Either in index `0` > index `1`: `C` [1] is incompatible with number [2].
+ - Or in index `0`: object type [3] is incompatible with tuple type [4].
 
    errors_intersection.js:112:1
    112| any as {} & [[null, C] & {}] as [[null, number]];
@@ -1933,8 +1933,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:75:6
 
 Cannot cast object literal to object type because in property `a`: [incompatible-type]
- - Either in index 0: boolean [1] is incompatible with number [2].
- - Or in index 0: boolean [1] is incompatible with string [3].
+ - Either in index `0`: boolean [1] is incompatible with number [2].
+ - Or in index `0`: boolean [1] is incompatible with string [3].
 
    errors_union.js:75:6
    75|   a: [true], // Error: should be grouped
@@ -1955,8 +1955,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:76:6
 
 Cannot cast object literal to object type because in property `b`: [incompatible-type]
- - Either in index 0: boolean [1] is incompatible with number [2].
- - Or in index 0: boolean [1] is incompatible with string [3].
+ - Either in index `0`: boolean [1] is incompatible with number [2].
+ - Or in index `0`: boolean [1] is incompatible with string [3].
 
    errors_union.js:76:6
    76|   b: [true], // Error: should be grouped, should not show the [{}] branch
@@ -1977,8 +1977,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:77:6
 
 Cannot cast object literal to object type because in property `c`: [incompatible-type]
- - Either in index 0: boolean [1] is incompatible with number [2].
- - Or in index 0: boolean [1] is incompatible with string [3].
+ - Either in index `0`: boolean [1] is incompatible with number [2].
+ - Or in index `0`: boolean [1] is incompatible with string [3].
 
    errors_union.js:77:6
    77|   c: [true], // Error: should be grouped, should not show the [{}] branch
@@ -1999,8 +1999,8 @@ References:
 Error --------------------------------------------------------------------------------------------- errors_union.js:78:6
 
 Cannot cast object literal to object type because in property `d`: [incompatible-type]
- - Either in index 0: boolean [1] is incompatible with number [2].
- - Or in index 0: boolean [1] is incompatible with string [3].
+ - Either in index `0`: boolean [1] is incompatible with number [2].
+ - Or in index `0`: boolean [1] is incompatible with string [3].
 
    errors_union.js:78:6
    78|   d: [true], // Error: should be grouped, should not show the [{}] branch
@@ -2366,10 +2366,10 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:103:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either in index 0 > index 1: number [1] is incompatible with `A` [2].
- - Or in index 0 > index 1: number [1] is incompatible with `B` [3].
- - Or in index 0 > index 1: number [1] is incompatible with `C` [4].
- - Or in index 0 > index 1: number [1] is incompatible with `D` [5].
+ - Either in index `0` > index `1`: number [1] is incompatible with `A` [2].
+ - Or in index `0` > index `1`: number [1] is incompatible with `B` [3].
+ - Or in index `0` > index `1`: number [1] is incompatible with `C` [4].
+ - Or in index `0` > index `1`: number [1] is incompatible with `D` [5].
 
    errors_union.js:103:8
    103| any as [[null, number]] as [[null, A] | [null, B]] | [[null, C] | [null, D]];
@@ -2396,9 +2396,9 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:106:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either in index 0 > index 1: number [1] is incompatible with `A` [2].
- - Or in index 0 > index 1: number [1] is incompatible with `C` [3].
- - Or in index 0 > index 1: number [1] is incompatible with `D` [4].
+ - Either in index `0` > index `1`: number [1] is incompatible with `A` [2].
+ - Or in index `0` > index `1`: number [1] is incompatible with `C` [3].
+ - Or in index `0` > index `1`: number [1] is incompatible with `D` [4].
 
    errors_union.js:106:8
    106| any as [[null, number]] as [[null, A] | {}] | [[null, C] | [null, D]];
@@ -2422,8 +2422,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:109:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either in index 0 > index 1: number [1] is incompatible with `A` [2].
- - Or in index 0 > index 1: number [1] is incompatible with `C` [3].
+ - Either in index `0` > index `1`: number [1] is incompatible with `A` [2].
+ - Or in index `0` > index `1`: number [1] is incompatible with `C` [3].
 
    errors_union.js:109:8
    109| any as [[null, number]] as [[null, A] | {}] | [[null, C] | {}];
@@ -2444,8 +2444,8 @@ References:
 Error -------------------------------------------------------------------------------------------- errors_union.js:112:8
 
 Cannot cast `any` to union type because: [incompatible-type]
- - Either in index 0 > index 1: number [1] is incompatible with `C` [2].
- - Or in index 0: tuple type [3] is incompatible with object type [4].
+ - Either in index `0` > index `1`: number [1] is incompatible with `C` [2].
+ - Or in index `0`: tuple type [3] is incompatible with object type [4].
 
    errors_union.js:112:8
    112| any as [[null, number]] as {} | [[null, C] | {}];
@@ -2902,7 +2902,7 @@ References:
 Error ------------------------------------------------------------------------------------ intersection-function.js:57:1
 
 Cannot call `f` because: [incompatible-type]
- - Either in index 0: number [1] is incompatible with string [2].
+ - Either in index `0`: number [1] is incompatible with string [2].
  - Or in array element: number [1] is incompatible with string [3].
 
    intersection-function.js:57:1
@@ -3782,7 +3782,7 @@ References:
 Error --------------------------------------------------------------------------------------------------- union.js:47:11
 
 Cannot cast `[...]` to `F` because: [incompatible-type]
- - Either in index 0: number [1] is incompatible with string [2].
+ - Either in index `0`: number [1] is incompatible with string [2].
  - Or in array element: number [1] is incompatible with string [3].
 
    union.js:47:11

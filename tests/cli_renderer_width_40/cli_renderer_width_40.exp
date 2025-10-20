@@ -242,13 +242,11 @@ References:
 Error -------------------- wrap.js:21:64
 
 Cannot cast object literal to object
-type because in property `this.is.going`
-> index 0 > property `to.be.a.really` >
-index 0 > property
-`long.error.message.that.hopefully` >
-index 0 > property
-`breaks.on.multiple.lines`: number [1]
-is incompatible with string [2].
+type because in property
+`this.is.going[0].to.be.a.really[0].long
+.error.message.that.hopefully[0].breaks.
+on.multiple.lines`: number [1] is
+incompatible with string [2].
 [incompatible-type]
 
    wrap.js:21:64
@@ -264,13 +262,11 @@ References:
 Error -------------- wrap_group.js:21:68
 
 Cannot cast object literal to object
-type because in property `this.is.going`
-> index 0 > property `to.be.a.really` >
-index 0 > property
-`long.error.message.that.hopefully` >
-index 0 > property
-`breaks.on.multiple.lines.a`: number [1]
-is incompatible with string [2].
+type because in property
+`this.is.going[0].to.be.a.really[0].long
+.error.message.that.hopefully[0].breaks.
+on.multiple.lines.a`: number [1] is
+incompatible with string [2].
 [incompatible-type]
 
    wrap_group.js:21:68
@@ -286,13 +282,11 @@ References:
 Error -------------- wrap_group.js:21:74
 
 Cannot cast object literal to object
-type because in property `this.is.going`
-> index 0 > property `to.be.a.really` >
-index 0 > property
-`long.error.message.that.hopefully` >
-index 0 > property
-`breaks.on.multiple.lines.b`: number [1]
-is incompatible with string [2].
+type because in property
+`this.is.going[0].to.be.a.really[0].long
+.error.message.that.hopefully[0].breaks.
+on.multiple.lines.b`: number [1] is
+incompatible with string [2].
 [incompatible-type]
 
    wrap_group.js:21:74

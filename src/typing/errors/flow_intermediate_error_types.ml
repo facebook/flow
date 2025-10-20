@@ -375,8 +375,16 @@ type 'loc explanation =
       extra_number: int;
     }
 
+type access_chain_segment =
+  | PropSegment of name
+  | TupleIndexSegment of int
+
 type 'loc frame =
   | FrameAnonymous
+  | FrameAccessChain of {
+      chain: access_chain_segment Nel.t;
+      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
+    }
   | FrameArrayElement of {
       incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
     }
@@ -402,14 +410,6 @@ type 'loc frame =
       incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
     }
   | FrameIndexerPropertyKey of {
-      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
-    }
-  | FrameProperty of {
-      props: name Nel.t;
-      incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
-    }
-  | FrameTupleIndex of {
-      index: int;
       incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option;
     }
   | FrameTypeArgument of 'loc virtual_reason
