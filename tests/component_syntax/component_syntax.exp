@@ -2976,8 +2976,8 @@ component Reffed [3]. [incompatible-type]
          ^^^
 
 References:
-   <BUILTINS>/react.js:257:34
-   257|   declare export type RefSetter<-T> = React.RefSetter<T>;
+   <BUILTINS>/react.js:271:34
+   271|   declare export type RefSetter<-T> = React.RefSetter<T>;
                                          ^ [1]
    refs.js:17:38
     17| (Baz: component(ref: React.RefSetter<string>)); // err

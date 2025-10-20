@@ -26,13 +26,13 @@ References:
    profiler.js:17:12
     17| const _b = <React.Profiler />; // Error, id and onRender are required
                    ^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:761:38
+   <BUILTINS>/react.js:810:38
                                              v
-   761|     declare const Profiler: component(
-   762|       children?: React$Node,
-   763|       id: string,
-   764|       onRender: ProfilerOnRenderFnType,
-   765|     );
+   810|     declare const Profiler: component(
+   811|       children?: React$Node,
+   812|       id: string,
+   813|       onRender: ProfilerOnRenderFnType,
+   814|     );
             ^ [2]
 
 

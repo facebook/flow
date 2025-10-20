@@ -138,25 +138,25 @@ Cannot call `React.cloneElement` because: [incompatible-type]
    props.
 
    test.js:31:7
-    31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
-              ^^^^^^^^^^^^
+     31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
+               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [1]
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [1]
    test.js:13:45
-    13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
-                                                    ^^^^^^^^ [2]
-   <BUILTINS>/react.js:999:4
-   999|   [string]: {
-           ^^^^^^ [3]
+     13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
+                                                     ^^^^^^^^ [2]
+   <BUILTINS>/react.js:1056:4
+   1056|   [string]: {
+            ^^^^^^ [3]
    test.js:31:23
-    31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
-                              ^^^^^^^^^^^^^^^^ [4]
+     31| React.cloneElement(a, {foo: 1, bar: 2}); // Error: `bar` is extra
+                               ^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:161:32
-   161|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+    161|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:32:7
@@ -166,25 +166,25 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Or in property `foo`: string [4] is incompatible with number [5].
 
    test.js:32:7
-    32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
-              ^^^^^^^^^^^^
+     32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
+               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [1]
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [1]
    test.js:13:45
-    13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
-                                                    ^^^^^^^^ [2]
-   <BUILTINS>/react.js:999:4
-   999|   [string]: {
-           ^^^^^^ [3]
+     13| declare var a: ExactReactElement_DEPRECATED<Class<A>>;
+                                                     ^^^^^^^^ [2]
+   <BUILTINS>/react.js:1056:4
+   1056|   [string]: {
+            ^^^^^^ [3]
    test.js:32:29
-    32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
-                                    ^^^ [4]
+     32| React.cloneElement(a, {foo: '1'}); // Error: `foo` is a number.
+                                     ^^^ [4]
    test.js:5:39
-     5| class A extends React.Component<{foo: number}, void> {}
-                                              ^^^^^^ [5]
+      5| class A extends React.Component<{foo: number}, void> {}
+                                               ^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:38:7
@@ -194,25 +194,25 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Or in property `foo`: string [4] is incompatible with number [5].
 
    test.js:38:7
-    38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
-              ^^^^^^^^^^^^
+     38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
+               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [1]
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [1]
    test.js:14:45
-    14| declare var b: ExactReactElement_DEPRECATED<Class<B>>;
-                                                    ^^^^^^^^ [2]
-   <BUILTINS>/react.js:999:4
-   999|   [string]: {
-           ^^^^^^ [3]
+     14| declare var b: ExactReactElement_DEPRECATED<Class<B>>;
+                                                     ^^^^^^^^ [2]
+   <BUILTINS>/react.js:1056:4
+   1056|   [string]: {
+            ^^^^^^ [3]
    test.js:38:29
-    38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
-                                    ^^^ [4]
+     38| React.cloneElement(b, {foo: '1'}); // Error: `foo` is a number.
+                                     ^^^ [4]
    test.js:6:39
-     6| class B extends React.Component<{foo: number, bar: number}, void> {}
-                                              ^^^^^^ [5]
+      6| class B extends React.Component<{foo: number, bar: number}, void> {}
+                                               ^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:44:7
@@ -222,25 +222,25 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Or in property `children`: string [4] is incompatible with number [5].
 
    test.js:44:7
-    44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
-              ^^^^^^^^^^^^
+     44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
+               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [1]
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [1]
    test.js:15:45
-    15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
-                                                    ^^^^^^^^ [2]
-   <BUILTINS>/react.js:999:4
-   999|   [string]: {
-           ^^^^^^ [3]
+     15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
+                                                     ^^^^^^^^ [2]
+   <BUILTINS>/react.js:1056:4
+   1056|   [string]: {
+            ^^^^^^ [3]
    test.js:44:34
-    44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
-                                         ^^^^ [4]
+     44| React.cloneElement(c, {children: '42'}); // Error: `children` is a number.
+                                          ^^^^ [4]
    test.js:7:44
-     7| class C extends React.Component<{children: number}, void> {}
-                                                   ^^^^^^ [5]
+      7| class C extends React.Component<{children: number}, void> {}
+                                                    ^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:48:7
@@ -250,26 +250,26 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Or no more than 2 arguments are expected by function type [4].
 
    test.js:48:7
-    48| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
-              ^^^^^^^^^^^^
+     48| React.cloneElement(c, {}, 1, 2, 3); // Error: `children` is not an array.
+               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [1]
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [1]
    test.js:15:45
-    15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
-                                                    ^^^^^^^^ [2]
-   <BUILTINS>/react.js:999:4
-   999|   [string]: {
-           ^^^^^^ [3]
+     15| declare var c: ExactReactElement_DEPRECATED<Class<C>>;
+                                                     ^^^^^^^^ [2]
+   <BUILTINS>/react.js:1056:4
+   1056|   [string]: {
+            ^^^^^^ [3]
    <BUILTINS>/react.js:159:6
-             v--------------------------------------------------------------------------
-   159|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
-   160|     element: E,
-   161|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
-   162|   ) => E)
-          -----^ [4]
+              v--------------------------------------------------------------------------
+    159|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+    160|     element: E,
+    161|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
+    162|   ) => E)
+           -----^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:49:7
@@ -337,25 +337,25 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Or in property `children`: number [4] is incompatible with array type [5].
 
    test.js:54:7
-    54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
-              ^^^^^^^^^^^^
+     54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
+               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [1]
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [1]
    test.js:16:45
-    16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
-                                                    ^^^^^^^^ [2]
-   <BUILTINS>/react.js:999:4
-   999|   [string]: {
-           ^^^^^^ [3]
+     16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
+                                                     ^^^^^^^^ [2]
+   <BUILTINS>/react.js:1056:4
+   1056|   [string]: {
+            ^^^^^^ [3]
    test.js:54:34
-    54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
-                                         ^^ [4]
+     54| React.cloneElement(d, {children: 42}); // Error: `children` is an array.
+                                          ^^ [4]
    test.js:8:44
-     8| class D extends React.Component<{children: Array<number>}, void> {}
-                                                   ^^^^^^^^^^^^^ [5]
+      8| class D extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:56:7
@@ -365,25 +365,25 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Or number [4] is incompatible with array type [5].
 
    test.js:56:7
-    56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
-              ^^^^^^^^^^^^
+     56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
+               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [1]
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [1]
    test.js:16:45
-    16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
-                                                    ^^^^^^^^ [2]
-   <BUILTINS>/react.js:999:4
-   999|   [string]: {
-           ^^^^^^ [3]
+     16| declare var d: ExactReactElement_DEPRECATED<Class<D>>;
+                                                     ^^^^^^^^ [2]
+   <BUILTINS>/react.js:1056:4
+   1056|   [string]: {
+            ^^^^^^ [3]
    test.js:56:27
-    56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
-                                  ^^ [4]
+     56| React.cloneElement(d, {}, 42); // Error: `children` is an array.
+                                   ^^ [4]
    test.js:8:44
-     8| class D extends React.Component<{children: Array<number>}, void> {}
-                                                   ^^^^^^^^^^^^^ [5]
+      8| class D extends React.Component<{children: Array<number>}, void> {}
+                                                    ^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:57:7
@@ -449,25 +449,25 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Or in property `p`: string [4] is incompatible with number [5].
 
    test.js:70:7
-    70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
-              ^^^^^^^^^^^^
+     70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
+               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [1]
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [1]
    test.js:69:1
-    69| function SFC(props: { p: number }) { return null };
-        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:999:4
-   999|   [string]: {
-           ^^^^^^ [3]
+     69| function SFC(props: { p: number }) { return null };
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:1056:4
+   1056|   [string]: {
+            ^^^^^^ [3]
    test.js:70:40
-    70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
-                                               ^^^^^ [4]
+     70| React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
+                                                ^^^^^ [4]
    test.js:69:26
-    69| function SFC(props: { p: number }) { return null };
-                                 ^^^^^^ [5]
+     69| function SFC(props: { p: number }) { return null };
+                                  ^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:76:7
@@ -478,25 +478,25 @@ Cannot call `React.cloneElement` because: [incompatible-type]
    props.
 
    test.js:76:7
-    76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
-              ^^^^^^^^^^^^
+     76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
+               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [1]
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [1]
    test.js:74:51
-    74| declare const exact: ExactReactElement_DEPRECATED<typeof Exact>;
-                                                          ^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:999:4
-   999|   [string]: {
-           ^^^^^^ [3]
+     74| declare const exact: ExactReactElement_DEPRECATED<typeof Exact>;
+                                                           ^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:1056:4
+   1056|   [string]: {
+            ^^^^^^ [3]
    test.js:76:27
-    76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
-                                  ^^^^^^^^^^^^^^^^ [4]
+     76| React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
+                                   ^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:161:32
-   161|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
-                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
+    161|     props?: ?Partial<$ReadOnly<{|...$Exact<NoInfer<Props>>, key: React$Key, ref: React.RefSetter<React.ElementRef<NoInfer<C>>>|}>>,
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:92:9
@@ -541,28 +541,28 @@ Cannot call `React.cloneElement` because: [incompatible-type]
  - Or in type argument `ElementType` [1]: string [2] is incompatible with component [6].
 
    test.js:93:9
-    93|   React.cloneElement(el, {}); // ERROR
-                ^^^^^^^^^^^^
+     93|   React.cloneElement(el, {}); // ERROR
+                 ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/react.js:58:51
-    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                          ^^^^^^^^^^^ [1]
+     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
+                                                           ^^^^^^^^^^^ [1]
    <BUILTINS>/react.js:94:52
-    94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
-                                                           ^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:999:4
-   999|   [string]: {
-           ^^^^^^ [3]
+     94|   type MixedElement = ExactReactElement_DEPRECATED<React$ElementType, mixed>;
+                                                            ^^^^^^^^^^^^^^^^^ [2]
+   <BUILTINS>/react.js:1056:4
+   1056|   [string]: {
+            ^^^^^^ [3]
    <BUILTINS>/react.js:159:17
-   159|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
-                        ^^^^^^^^^^^^^^^^^^^ [4]
+    159|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                         ^^^^^^^^^^^^^^^^^^^ [4]
    <BUILTINS>/react.js:163:17
-   163|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
-                        ^^^^^^^^^^^^^^^^^^^ [5]
+    163|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                         ^^^^^^^^^^^^^^^^^^^ [5]
    <BUILTINS>/react.js:168:17
-   168|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
-                        ^^^^^^^^^^^^^^^^^^^ [6]
+    168|   & (<Props, C: component(...empty), E: ExactReactElement_DEPRECATED<C, Props>>(
+                         ^^^^^^^^^^^^^^^^^^^ [6]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:99:9

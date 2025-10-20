@@ -8,8 +8,8 @@ type [2] is incompatible with exact object type [3]. [incompatible-exact]
                             ^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:241:38
-   241|   declare export type ComponentType<-P: {...}> = component(...P);
+   <BUILTINS>/react.js:255:38
+   255|   declare export type ComponentType<-P: {...}> = component(...P);
                                              ^ [1]
    test.js:4:34
      4|   Component: React.ComponentType<{...P, ...{}}>,

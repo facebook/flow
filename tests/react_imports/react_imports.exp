@@ -8,8 +8,8 @@ Cannot cast `React.Component` to number because class `Component` [1] is incompa
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:600:19
-   600|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:641:19
+   641|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [1]
    commonjs.js:4:19
      4| (React.Component: number); // Error
@@ -63,8 +63,8 @@ Cannot cast `React.Component` to number because class `Component` [1] is incompa
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:600:19
-   600|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:641:19
+   641|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [1]
    es-default.js:4:19
      4| (React.Component: number); // Error
@@ -99,13 +99,13 @@ Error --------------------------------------------------------------------------
 Cannot get `React.Missing` because property `Missing` is missing in namespace React [1]. [prop-missing]
 
    es-default.js:7:14
-     7| (null: React.Missing); // Error: Not in default export.
-                     ^^^^^^^
+      7| (null: React.Missing); // Error: Not in default export.
+                      ^^^^^^^
 
 References:
-   <BUILTINS>/react.js:994:26
-   994|   declare export default typeof React;
-                                 ^^^^^^^^^^^^ [1]
+   <BUILTINS>/react.js:1051:26
+   1051|   declare export default typeof React;
+                                  ^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- es-namespace.js:4:2
@@ -118,8 +118,8 @@ Cannot cast `React.Component` to number because class `Component` [1] is incompa
          ^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/react.js:600:19
-   600|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:641:19
+   641|     declare class Component<Props, State = void> {
                           ^^^^^^^^^ [1]
    es-namespace.js:4:19
      4| (React.Component: number); // Error
