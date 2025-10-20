@@ -238,7 +238,10 @@ let diagnostics_of_flow_errors =
       ~(severity : Severity.severity)
       (printable_error : Loc.t Flow_errors_utils.printable_error) :
       (Lsp.DocumentUri.t * Lsp.PublishDiagnostics.diagnostic) option =
-    let lsp_error = Flow_errors_utils.Lsp_output.lsp_of_error printable_error in
+    let has_detailed_diagnostics = should_include_vscode_detailed_diagnostics printable_error in
+    let lsp_error =
+      Flow_errors_utils.Lsp_output.lsp_of_error ~has_detailed_diagnostics printable_error
+    in
     match loc_to_lsp lsp_error.Flow_errors_utils.Lsp_output.loc with
     | Ok location ->
       let uri = location.Lsp.Location.uri in
@@ -253,7 +256,7 @@ let diagnostics_of_flow_errors =
           ~f:related_to_lsp
       in
       let data =
-        if should_include_vscode_detailed_diagnostics printable_error then
+        if has_detailed_diagnostics then
           let map_color = function
             | Tty.Default -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Default
             | Tty.Black -> Lsp.PublishDiagnostics.ExtraDetailedDiagnosticV0.Black

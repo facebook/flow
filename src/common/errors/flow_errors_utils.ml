@@ -3690,12 +3690,12 @@ module Lsp_output = struct
     relatedLocations: (Loc.t * string) list;
   }
 
-  let lsp_of_error (error : Loc.t printable_error) : t =
+  let lsp_of_error ~has_detailed_diagnostics (error : Loc.t printable_error) : t =
     (* e.g. "Error about `code` in type Ref(`foo`)"                    *)
     (* will produce LSP message "Error about `code` in type `foo` [1]" *)
     (* and the LSP related location will have message "[1]: `foo`"      *)
     let (kind, friendly) = error in
-    let (_, loc, group) =
+    let (hidden_branch, loc, group) =
       Friendly.message_group_of_error
         ~show_all_branches:false
         ~show_root:true
@@ -3721,6 +3721,14 @@ module Lsp_output = struct
         (message, (ref_loc, ref_message) :: relatedLocations)
     in
     let (message, relatedLocations) = List.fold_left f ("", []) features in
+    let message =
+      if has_detailed_diagnostics && Base.Option.is_some hidden_branch then
+        message
+        ^ "\n\nOnly showing the most relevant union/intersection branches."
+        ^ "\nClick \"Click for full error\" to see the full error message."
+      else
+        message
+    in
     {
       loc;
       message = String.trim message;

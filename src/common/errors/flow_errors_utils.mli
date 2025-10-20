@@ -256,5 +256,5 @@ module Lsp_output : sig
     relatedLocations: (Loc.t * string) list;
   }
 
-  val lsp_of_error : Loc.t printable_error -> t
+  val lsp_of_error : has_detailed_diagnostics:bool -> Loc.t printable_error -> t
 end
