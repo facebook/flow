@@ -78,47 +78,44 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
 
-Cannot assign `<Component />` to `z` because: [incompatible-type]
- - in the first parameter: object type [1] is incompatible with `Props` [2]
-    - in type argument `ElementType` [3]: property `bar` is extra in object type [1] but missing in `Props` [2]. Exact
-      objects do not accept extra props
+Cannot assign `<Component />` to `z` because in type argument `ElementType` [1] > the first parameter: property `bar` is
+extra in object type [2] but missing in `Props` [3]. Exact objects do not accept extra props. [incompatible-type]
 
    test.js:9:61
     9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
                                                                    ^^^^^^^^^
 
 References:
-   test.js:5:28
-    5| function Component2(props: {| bar: number |}): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^^^ [1]
-   test.js:4:27
-    4| function Component(props: Props): React.Node { return null }
-                                 ^^^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   test.js:5:28
+    5| function Component2(props: {| bar: number |}): React.Node { return null }
+                                  ^^^^^^^^^^^^^^^^^ [2]
+   test.js:4:27
+    4| function Component(props: Props): React.Node { return null }
+                                 ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61
 
-Cannot assign `<Component />` to `z` because: [incompatible-type]
- - in the first parameter: object type [1] is incompatible with `Props` [2]
-    - in type argument `ElementType` [3]: property `foo` is missing in object type [1] but exists in `Props` [2]
+Cannot assign `<Component />` to `z` because in type argument `ElementType` [1] > the first parameter: property `foo` is
+missing in object type [2] but exists in `Props` [3]. [incompatible-type]
 
    test.js:9:61
     9| const z: ExactReactElement_DEPRECATED<typeof Component2> = <Component bar={3} />; // Error, missing foo got bar
                                                                    ^^^^^^^^^
 
 References:
-   test.js:5:28
-    5| function Component2(props: {| bar: number |}): React.Node { return null }
-                                  ^^^^^^^^^^^^^^^^^ [1]
-   test.js:4:27
-    4| function Component(props: Props): React.Node { return null }
-                                 ^^^^^ [2]
    <BUILTINS>/react.js:58:51
    58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
-                                                         ^^^^^^^^^^^ [3]
+                                                         ^^^^^^^^^^^ [1]
+   test.js:5:28
+    5| function Component2(props: {| bar: number |}): React.Node { return null }
+                                  ^^^^^^^^^^^^^^^^^ [2]
+   test.js:4:27
+    4| function Component(props: Props): React.Node { return null }
+                                 ^^^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:9:61

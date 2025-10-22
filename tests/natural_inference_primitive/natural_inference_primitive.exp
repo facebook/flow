@@ -2756,23 +2756,28 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:658:20
 
-Cannot call `Set` with array literal bound to `iterable` because in property `@@iterator` > the return value > type
-argument `Yield` [1]: string literal `C` [2] is incompatible with union type [3]. [incompatible-type]
+Cannot call `Set` with array literal bound to `iterable` because: [incompatible-type]
+ - array literal [1] is incompatible with `$Iterable` [2]
+    - in property `@@iterator` > the return value > type argument `Yield` [3]: string literal `C` [4] is incompatible
+      with union type [5]
 
    local.js:658:20
     658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
-                            ^^^^^
+                            ^^^^^ [1]
 
 References:
+   <BUILTINS>/core.js:2155:29
+   2155|     constructor(iterable?: ?Iterable<T>): void;
+                                     ^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1833:30
    1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [1]
+                                      ^^^^^ [3]
    local.js:658:21
     658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'
-                             ^^^ [2]
+                             ^^^ [4]
    local.js:653:77
     653|     fn: (...args: Parameters<() => Set<'A' | 'B'>>) => ReturnType<() => Set<'A' | 'B'>>,
-                                                                                     ^^^^^^^^^ [3]
+                                                                                     ^^^^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- local.js:671:7

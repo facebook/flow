@@ -42,23 +42,31 @@ References:
 
 Error --------------------------------------------------------------------------------------------- caching_bug.js:21:79
 
-Cannot return `x` because in property `@@iterator` > the return value > type argument `Yield` [1]: number [2] is
-incompatible with string [3]. [incompatible-type]
+Cannot return `x` because: [incompatible-type]
+ - array type [1] is incompatible with `$Iterable` [2]
+    - in property `@@iterator` > the return value > type argument `Yield` [3]: number [4] is incompatible with
+      string [5]
 
    caching_bug.js:21:79
      21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
                                                                                        ^
 
 References:
+   caching_bug.js:21:28
+     21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                    ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   caching_bug.js:21:53
+     21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
+                                                             ^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1833:30
    1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [1]
+                                      ^^^^^ [3]
    caching_bug.js:21:43
      21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                                   ^^^^^^ [2]
+                                                   ^^^^^^ [4]
    caching_bug.js:21:62
      21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
-                                                                      ^^^^^^ [3]
+                                                                      ^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------- iterator_result.js:23:31
@@ -98,44 +106,60 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- map.js:14:10
 
-Cannot return `map` because in property `@@iterator` > the return value > type argument `Yield` [1]: tuple type [2] is
-incompatible with string [3]. [incompatible-type]
+Cannot return `map` because: [incompatible-type]
+ - `Map` [1] is incompatible with `$Iterable` [2]
+    - in property `@@iterator` > the return value > type argument `Yield` [3]: tuple type [4] is incompatible with
+      string [5]
 
    map.js:14:10
      14|   return map;
                   ^^^
 
 References:
+   map.js:13:24
+     13| function mapTest4(map: Map<number, string>): Iterable<string> {
+                                ^^^^^^^^^^^^^^^^^^^ [1]
+   map.js:13:46
+     13| function mapTest4(map: Map<number, string>): Iterable<string> {
+                                                      ^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1833:30
    1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [1]
+                                      ^^^^^ [3]
    <BUILTINS>/core.js:2016:28
    2016|     @@iterator(): Iterator<[K, V]>;
-                                    ^^^^^^ [2]
+                                    ^^^^^^ [4]
    map.js:13:55
      13| function mapTest4(map: Map<number, string>): Iterable<string> {
-                                                               ^^^^^^ [3]
+                                                               ^^^^^^ [5]
 
 
 Error ----------------------------------------------------------------------------------------------------- set.js:14:10
 
-Cannot return `set` because in property `@@iterator` > the return value > type argument `Yield` [1]: string [2] is
-incompatible with number [3]. [incompatible-type]
+Cannot return `set` because: [incompatible-type]
+ - `Set` [1] is incompatible with `$Iterable` [2]
+    - in property `@@iterator` > the return value > type argument `Yield` [3]: string [4] is incompatible with
+      number [5]
 
    set.js:14:10
      14|   return set;
                   ^^^
 
 References:
+   set.js:13:24
+     13| function setTest4(set: Set<string>): Iterable<number> {
+                                ^^^^^^^^^^^ [1]
+   set.js:13:38
+     13| function setTest4(set: Set<string>): Iterable<number> {
+                                              ^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1833:30
    1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                      ^^^^^ [1]
+                                      ^^^^^ [3]
    set.js:13:28
      13| function setTest4(set: Set<string>): Iterable<number> {
-                                    ^^^^^^ [2]
+                                    ^^^^^^ [4]
    set.js:13:47
      13| function setTest4(set: Set<string>): Iterable<number> {
-                                                       ^^^^^^ [3]
+                                                       ^^^^^^ [5]
 
 
 Error ---------------------------------------------------------------------------------------------------- string.js:3:2

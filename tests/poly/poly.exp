@@ -571,9 +571,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:10
 
-Cannot extend `C` [1] with `D` because: [incompatible-type]
- - in the first parameter: number [2] is incompatible with `X` [3]
-    - in property `foo`: number [2] is incompatible with mixed [3]
+Cannot extend `C` [1] with `D` because in property `foo` > the first parameter: number [2] is incompatible with
+mixed [3]. [incompatible-type]
 
    test.js:8:10
    8|   foo(x: number): number { return x; } // error (specialization, see below)
@@ -590,9 +589,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:8:19
 
-Cannot extend `C` [1] with `D` because: [incompatible-type]
- - in the return value: number [2] is incompatible with `X` [3]
-    - in property `foo`: number [2] is incompatible with `X` [3]
+Cannot extend `C` [1] with `D` because in property `foo` > the return value: number [2] is incompatible with `X` [3].
+[incompatible-type]
 
    test.js:8:19
    8|   foo(x: number): number { return x; } // error (specialization, see below)
