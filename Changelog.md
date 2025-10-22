@@ -1,3 +1,26 @@
+### 0.289.0
+
+Likely to cause new Flow errors:
+* For a poorly bounded generic indexed access types, we will no longer generate an error for it when it's being first subtyped against. Instead, we will make it opaque so that when it's being subtyped against, it will error. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSMAeyjg0AABAt7AAeAAqAD4ABQAHSg0u10oayGlioA2gByGDEY0AXV40oA9DbpVAINKTJRedKcGaWNbHc7qG7HQB3TUASn1RtN5ot0uAtvtLrdHt5sgdTvjlBTQa10pYEiElC1AEYANyx32u9OB72pv3pxMsTUCzW5EANEwkKVQJINAAMVgATAAOADsVm7IAFQA)
+* Flow will error when you are trying to redefine the following reserved types: `$NonMaybeType`, `NonNullable`, `$ReadOnly`, `Readonly`, `$Keys`, `$Values`, `Values`, `$ReadOnlyMap`, `ReadonlyMap`, `$ReadOnlySet`, `ReadonlySet`.
+
+Notable bug fixes:
+* We no longer incorrectly report conditional hook call for loops with a break. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiStWIWwABJSAEJRLYASSgAFUoLgsHhSgAxXkAGWIjAAFABKSXAAA6UElkpgvMlhraEklcElAF5JQAGADczslAB5JQBGb3OgDUodNFqt1slaHlXst1oFielZAAypYFiafQB6HOSiBbS3JqC5EANEwkODQJIZewmEACoA)
+* Fixed a potential crash when evaluating a conditional type. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSK2MAAIAHLQADycLgCNwAGlsLQSAAeAAqAD4JQBeCUAEgAatwZJrgAAdKASiUAbR2tAlFQlTogMAlWoAusgJQ0IHA2BKFAsoGwSF7HWrvRKAPwhkRw51+p28G0CnUAbht4uwEtlaAAVnMJAB1OASWoyqDy+FQbiq2javWG622h1Ol22mt1xUNlVqzW631Rp3e9NQAU5nyrCUAQSgECrJkLJeU2rXpdbxoASqw2LKoIMNe27VYL1vlBWq72FUqm6ebXa7dHna73Z6tVeJKPv8XSzfCdnwlTNJ0zLNchABoTBIfskgyewTBAAUgA)
+* Flow will now allow computed keys of type `StringPrefix`/`StringSuffix` to be included in object initializers with other non-overlapping keys (example [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSGieVGwAAJAVKdrQAMpSCoIAAKLHg8mQUqVpigao1xQAPAByLBgE0APgA3AAdKD22z2KXyKUAXilwA0MG1AAZeFKANry3Uq9WaYoAXT9AutUoA9PGpQB1ODHKVQCAAdylOClEC2dCli0WGYg+YaJlwGEYUoqcuwtBI9vtrtZnu92uEIhuAcDK2MEBgDcVyv14c10Yz1xMsYTSYLdHt4urLBlVCltG1Xs0XZnlD7A+wQ5HofHhvkU+7N1j9toUvbR5P8jjialWbTuFz0sXtBbUHkKxvQfEhpx7ExXyTVN0zzX9Wysc0QLAm5IJTT9v3zQs-wAqx5FoAAvVDoK-PNgSlExKF5bVqU8FYpRNPD8JNKUijZFVchASt8TgaAkgaX0rAAJgADmEqxfRAAUgA))
+
+Library Definitions:
+* Update React API types from recent releases
+Added
+- `act`: 19.0: https://react.dev/reference/react/act
+- `captureOwnerStack`: 19.1: See https://react.dev/reference/react/captureOwnerStack
+- `useEffectEvent`: 19.2: https://react.dev/reference/react/useEffectEvent
+- `<Activity />`: 19.2: See https://react.dev/reference/react/Activity
+Updated
+- `useDeferredValue`: 19.0: Accepts a second argument for initial value
+- `useTransition`: 19.0: Accepts an async action function
+- `startTransition`: 19.0: Accepts an async action function
+
 ### 0.288.0
 
 Likely to cause new Flow errors:
