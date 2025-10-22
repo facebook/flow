@@ -117,23 +117,31 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:72:12
 
-Cannot yield `xs` because in property `@@iterator` > the return value > type argument `Next` [1]: undefined [2] is
-incompatible with string [3]. [incompatible-type]
+Cannot yield `xs` because: [incompatible-type]
+ - array type [1] is incompatible with `$Iterable` [2]
+    - in property `@@iterator` > the return value > type argument `Next` [3]: undefined [4] is incompatible with
+      string [5]
 
    class.js:72:12
      72|     yield *xs;
                     ^^
 
 References:
+   class.js:71:31
+     71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
+                                       ^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:1949:11
+   1949| interface $Iterable<+Yield,+Return,-Next> {
+                   ^^^^^^^^^ [2]
    <BUILTINS>/core.js:1833:50
    1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
-                                                          ^^^^ [1]
+                                                          ^^^^ [3]
    <BUILTINS>/core.js:1843:50
    1843| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
-                                                          ^^^^ [2]
+                                                          ^^^^ [4]
    class.js:71:71
      71|   *delegate_next_iterable(xs: Array<number>): Generator<number, void, string> {
-                                                                               ^^^^^^ [3]
+                                                                               ^^^^^^ [5]
 
 
 Error --------------------------------------------------------------------------------------------------- class.js:98:41

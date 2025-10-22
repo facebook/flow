@@ -447,19 +447,22 @@ module Friendly = struct
             explanations
         in
         let stack_item incompatibility_msg frames =
-          let frame_msg =
-            let sep =
-              [
-                ( if unicode then
-                  text " \xE2\x80\xBA "
-                else
-                  text " > "
-                );
-              ]
+          match frames with
+          | [] -> incompatibility_msg
+          | _ ->
+            let frame_msg =
+              let sep =
+                [
+                  ( if unicode then
+                    text " \xE2\x80\xBA "
+                  else
+                    text " > "
+                  );
+                ]
+              in
+              Base.List.concat (Base.List.intersperse frames ~sep)
             in
-            Base.List.concat (Base.List.intersperse frames ~sep)
-          in
-          (text "in " :: frame_msg) @ [text ": "] @ incompatibility_msg
+            (text "in " :: frame_msg) @ [text ": "] @ incompatibility_msg
         in
         let primary_loc = error.loc in
         let group_message =
@@ -926,14 +929,12 @@ let mk_error
       | (Some incompatibility_msg, frame_msg) :: frames ->
         loop_to_partition_parent_frames
           ( incompatibility_msg,
-            [frame_msg],
-            (current_stack_incompatibility_msg, List.rev acc_current_stack_frames)
+            [],
+            (current_stack_incompatibility_msg, frame_msg :: acc_current_stack_frames)
             :: acc_processed_stack
           )
           frames
-      | [] ->
-        (current_stack_incompatibility_msg, List.rev acc_current_stack_frames)
-        :: acc_processed_stack
+      | [] -> (current_stack_incompatibility_msg, acc_current_stack_frames) :: acc_processed_stack
     in
     (* The inner most frames and the parent frames should be treated differently.
      * Consider the following input of mk_error:
@@ -945,24 +946,24 @@ let mk_error
      * message
      *
      * We should partition them into
-     * inner_most: message, frame7 > frame8
-     * parent_frames: (frame1 > frame2 > frame3: m1) > (frame1 > frame2 > frame3: m2)
+     * inner_most: message, frame 6 > frame7 > frame8
+     * parent_frames: (frame1 > frame2: m1) > (frame3 > frame4 > frame5: m2)
      *
      * Note from the illustrating example above, the inner most frame takes the message
      * from the param of mk_error, while parent frames' message comes from the most inner
      * frame of the stack item.
      *)
-    let rec loop_to_partition_inner_most_and_parent_frames acc frames =
-      match frames with
+    let rec loop_to_partition_inner_most_and_parent_frames acc frames_inner_to_outer =
+      match frames_inner_to_outer with
       | (None, frame_msg) :: rest_frames ->
         loop_to_partition_inner_most_and_parent_frames (frame_msg :: acc) rest_frames
-      | [] -> (Some (List.rev acc), [])
+      | [] -> (Some acc, [])
       | (Some incompatibility_msg, frame_msg) :: rest_frames ->
-        ( Some (List.rev acc),
-          loop_to_partition_parent_frames (incompatibility_msg, [frame_msg], []) rest_frames
+        ( Some (frame_msg :: acc),
+          loop_to_partition_parent_frames (incompatibility_msg, [], []) rest_frames |> List.rev
         )
     in
-    match Base.Option.value frames ~default:[] with
+    match Base.Option.value_map ~f:List.rev frames ~default:[] with
     | [] -> (None, [])
     | (_, frame_msg) :: rest ->
       (* For the inner most message, we already have an incompatibility message

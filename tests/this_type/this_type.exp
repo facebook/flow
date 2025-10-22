@@ -488,9 +488,8 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:25:16
 
-Cannot extend `Base` [1] with `Override` because: [incompatible-type]
- - in the first parameter: `this` type [2] is incompatible with `Base` [3]
-    - in property `grault`: `this` [2] is incompatible with `Base` [3]
+Cannot extend `Base` [1] with `Override` because in property `grault` > the first parameter: `this` [2] is incompatible
+with `Base` [3]. [incompatible-type]
 
    test.js:25:16
    25|   grault(that: this) { } // error, too (only variance error with new-generics)
