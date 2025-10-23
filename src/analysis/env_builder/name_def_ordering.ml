@@ -213,7 +213,7 @@ struct
           let rec writes_of_refinement refi =
             let open Env_api.Refi in
             match refi with
-            | InstanceOfR exp -> ignore (this#expression exp)
+            | InstanceOfR { expr } -> ignore (this#expression expr)
             | LatentR { func; targs; arguments; index = _ } ->
               ignore @@ this#expression func;
               run_opt this#call_type_args targs;

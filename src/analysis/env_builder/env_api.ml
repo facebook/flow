@@ -127,7 +127,7 @@ module type S = sig
       | NullR
       | UndefinedR
       | MaybeR
-      | InstanceOfR of (L.t, L.t) Ast.Expression.t
+      | InstanceOfR of { expr: (L.t, L.t) Ast.Expression.t }
       | IsArrayR
       | ArrLenR of {
           op: array_length_op;
@@ -435,7 +435,7 @@ module Make
       | NullR
       | UndefinedR
       | MaybeR
-      | InstanceOfR of (L.t, L.t) Ast.Expression.t
+      | InstanceOfR of { expr: (L.t, L.t) Ast.Expression.t }
       | IsArrayR
       | ArrLenR of {
           op: array_length_op;

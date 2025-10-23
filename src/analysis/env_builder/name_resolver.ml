@@ -5822,7 +5822,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           this#add_single_refinement
             refinement_key
             ~refining_locs:(L.LSet.singleton loc)
-            (InstanceOfR instance)
+            (InstanceOfR { expr = instance })
 
       method binary_refinement loc expr =
         let open Flow_ast.Expression.Binary in

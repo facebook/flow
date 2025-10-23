@@ -303,7 +303,7 @@ let predicate_of_refinement cx =
     | NullR -> Some NullP
     | UndefinedR -> Some VoidP
     | MaybeR -> Some MaybeP
-    | InstanceOfR (loc, _) ->
+    | InstanceOfR { expr = (loc, _) } ->
       (* Instanceof refinements store the loc they check against, which is a read in the env *)
       Debug_js.Verbose.print_if_verbose_lazy
         cx
