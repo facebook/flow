@@ -1418,6 +1418,21 @@ References:
                            ^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------------- instance.js:15:1
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `C {b: false, ...}` to
+match `C` [1]. [match-not-exhaustive]
+
+   instance.js:15:1
+   15| match (x) { // ERROR: missing with `b: false` case
+       ^^^^^
+
+References:
+   instance.js:5:18
+    5| declare const x: C;
+                        ^ [1]
+
+
 Error -------------------------------------------------------------------------------------------------- objects.js:12:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{bar: true, foo: false}`
@@ -1654,7 +1669,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- objects.js:285:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
-`{bar: true, foo: false, ...}` to match `C` [1]. [match-not-exhaustive]
+`C {bar: true, foo: false, ...}` to match `C` [1]. [match-not-exhaustive]
 
    objects.js:285:3
    285|   match (x) { // ERROR: missing `{bar: true, foo: false, ...}`
@@ -1669,7 +1684,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- objects.js:332:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern:
-`{bar: true, foo: false, ...}` to match `C` [1]. [match-not-exhaustive]
+`C {bar: true, foo: false, ...}` to match `C` [1]. [match-not-exhaustive]
 
    objects.js:332:3
    332|   match (x) { // ERROR: missing `{bar: true, foo: false, ...}`
@@ -2393,4 +2408,4 @@ References:
 
 
 
-Found 174 errors
+Found 175 errors

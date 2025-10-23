@@ -3285,9 +3285,29 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 bindings
             in
             check_or (List.rev patterns) bindings
-          | (loc, ObjectPattern pattern) -> object_pattern acc (loc, pattern) bindings
+          | (loc, ObjectPattern pattern) ->
+            (match RefinementKey.of_expression acc with
+            | Some key ->
+              (* typeof x === 'object' && x !== null *)
+              let refi = AndR (ObjectR, NotR NullR) in
+              this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
+            | None -> ());
+            object_pattern_props ~instance_pattern:false acc (loc, pattern) bindings
           | (loc, ArrayPattern pattern) -> array_pattern acc (loc, pattern) bindings
-          | (_, InstancePattern _) -> failwith "TODO: upcoming diff"
+          | (loc, InstancePattern { InstancePattern.constructor; fields; _ }) ->
+            let (expr, id) =
+              match constructor with
+              | InstancePattern.IdentifierConstructor ((id_loc, _) as id) ->
+                run this#identifier id;
+                ((id_loc, Ast.Expression.Identifier id), id)
+              | InstancePattern.MemberConstructor member ->
+                Flow_ast_utils.expression_of_match_member_pattern
+                  ~visit_expression:(fun e -> ignore @@ this#expression e)
+                  member
+            in
+            check_invalid_reference bindings id;
+            this#instance_test ~context:Env_api.Refi.MatchInstancePattern loc acc expr;
+            object_pattern_props ~instance_pattern:true acc fields bindings
         and array_pattern acc (loc, { ArrayPattern.elements; rest; comments = _ }) bindings =
           (match RefinementKey.of_expression acc with
           | Some key ->
@@ -3337,13 +3357,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             )
           in
           bindings_of_rest bindings rest
-        and object_pattern acc (loc, { ObjectPattern.properties; rest; comments = _ }) bindings =
-          (match RefinementKey.of_expression acc with
-          | Some key ->
-            (* typeof x === 'object' && x !== null *)
-            let refi = AndR (ObjectR, NotR NullR) in
-            this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
-          | None -> ());
+        and object_pattern_props
+            ~instance_pattern acc (_, { ObjectPattern.properties; rest; _ }) bindings =
           let bindings =
             Base.List.fold properties ~init:bindings ~f:(fun bindings -> function
               | ( loc,
@@ -3378,14 +3393,16 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   let open Ast.Expression in
                   (loc, Member { Member._object = acc; property; comments = None })
                 in
-                (match needs_prop_exists_refi pattern with
-                | Some loc ->
-                  (match RefinementKey.of_expression acc with
-                  | Some key ->
-                    let refi = PropExistsR { propname; loc } in
-                    this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
-                  | None -> ())
-                | None -> ());
+                ( if not instance_pattern then
+                  match needs_prop_exists_refi pattern with
+                  | Some loc ->
+                    (match RefinementKey.of_expression acc with
+                    | Some key ->
+                      let refi = PropExistsR { propname; loc } in
+                      this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
+                    | None -> ())
+                  | None -> ()
+                );
                 recurse member pattern bindings
               | (_, ObjectPattern.Property.InvalidShorthand _) -> bindings
             )
@@ -5796,7 +5813,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 (PropExistsR { propname; loc })
           )
 
-      method instance_test loc expr instance =
+      method instance_test ~context loc expr instance =
         ignore
         @@ (* We already ensure that RHS of instanceof must be object,
             * so the expression must be at least truthy as well *)
@@ -5822,7 +5839,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           this#add_single_refinement
             refinement_key
             ~refining_locs:(L.LSet.singleton loc)
-            (InstanceOfR { expr = instance })
+            (InstanceOfR { expr = instance; context })
 
       method binary_refinement loc expr =
         let open Flow_ast.Expression.Binary in
@@ -5834,7 +5851,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | NotEqual -> eq_test ~strict:false ~sense:false loc left right
         | StrictEqual -> eq_test ~strict:true ~sense:true loc left right
         | StrictNotEqual -> eq_test ~strict:true ~sense:false loc left right
-        | Instanceof -> this#instance_test loc left right
+        | Instanceof -> this#instance_test ~context:Env_api.Refi.InstanceOfExpr loc left right
         | In -> this#in_test loc left right
         | LessThan
         | LessThanEqual

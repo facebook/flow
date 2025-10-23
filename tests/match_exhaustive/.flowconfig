@@ -1,5 +1,6 @@
 [options]
 all=true
 experimental.pattern_matching=true
+experimental.pattern_matching.instance_patterns=true
 enums=true
 no_flowlib=false

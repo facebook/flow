@@ -7532,3 +7532,38 @@ let%expect_test "match_array_pattern" =
         {refinement = And (And (isArray, array length === 1), SentinelR 0); writes = {refinement = Or (Not (And (isArray, array length === 2)), Not (SentinelR 0)); writes = (2, 1) to (2, 6): (`<match_root>`)}}
       }]
   |}]
+
+let%expect_test "match_instance_pattern" =
+  print_ssa_test {|
+(match (x) {
+  Foo {a: true, const b} => b,
+  Foo {b: false, const b} => b,
+});
+|};
+  [%expect {|
+    [
+      (2, 1) to (2, 6) => {
+        {refinement = Or (Not (instanceof), Not (SentinelR b)); writes = {refinement = Or (Not (instanceof), Not (SentinelR a)); writes = (2, 1) to (2, 6): (`<match_root>`)}}
+      };
+      (2, 8) to (2, 9) => {
+        Global x
+      };
+      (3, 2) to (3, 2) => {
+        {refinement = And (instanceof, SentinelR a); writes = (2, 1) to (2, 6): (`<match_root>`)}
+      };
+      (3, 2) to (3, 5) => {
+        Global Foo
+      };
+      (3, 28) to (3, 29) => {
+        (3, 22) to (3, 23): (`b`)
+      };
+      (4, 2) to (4, 2) => {
+        {refinement = And (instanceof, SentinelR b); writes = {refinement = Or (Not (instanceof), Not (SentinelR a)); writes = (2, 1) to (2, 6): (`<match_root>`)}}
+      };
+      (4, 2) to (4, 5) => {
+        Global Foo
+      };
+      (4, 29) to (4, 30) => {
+        (4, 23) to (4, 24): (`b`)
+      }]
+  |}]

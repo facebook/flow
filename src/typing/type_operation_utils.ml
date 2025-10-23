@@ -878,6 +878,12 @@ module TypeAssertions = struct
       | l -> add_output cx (Error_message.EInstanceofRHS (reason_of_t l))
     )
 
+  let assert_match_instance_pattern_constructor cx t =
+    match Exhaustive.get_class_info cx t with
+    | Some _ -> ()
+    | None ->
+      add_output cx (Error_message.EMatchInvalidInstancePattern (reason_of_t t |> loc_of_reason))
+
   let assert_iterable cx loc ~async ~use_op t targs_to_infer =
     Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t) t
     |> Base.List.iter ~f:(function

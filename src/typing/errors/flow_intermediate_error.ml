@@ -4622,6 +4622,8 @@ let to_printable_error :
       [code "match"; text " expressions are not supported."]
     | MessageUnsupportedSyntax MatchStatement ->
       [code "match"; text " statements are not supported."]
+    | MessageUnsupportedSyntax MatchInstancePattern ->
+      [code "match"; text " instance patterns are not supported."]
     | MessageUnsupportedSyntax MetaPropertyExpression -> [text "Not supported."]
     | MessageUnsupportedSyntax MultipleIndexers -> [text "Multiple indexers are not supported."]
     | MessageUnsupportedSyntax MultipleProtos -> [text "Multiple prototypes specified."]
@@ -4997,6 +4999,8 @@ let to_printable_error :
         code "_";
         text ".";
       ]
+    | MessageMatchInvalidInstancePattern ->
+      [text "Invalid match instance pattern constructor. It must reference a single class."]
     | MessageIncompatiblETypeParamConstIncompatibility { lower; upper } ->
       [
         text "type parameters ";

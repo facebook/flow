@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
+val get_class_info : Context.t -> Type.t -> (ALoc.id * string option) option
+
 val analyze :
   Context.t ->
   match_loc:ALoc.t ->

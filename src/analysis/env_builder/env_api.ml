@@ -119,6 +119,11 @@ module type S = sig
       | ArrLenGreaterThanEqual
     [@@deriving show]
 
+    type instanceof_context =
+      | InstanceOfExpr
+      | MatchInstancePattern
+    [@@deriving show]
+
     type refinement_kind =
       | AndR of refinement_kind * refinement_kind
       | OrR of refinement_kind * refinement_kind
@@ -127,7 +132,10 @@ module type S = sig
       | NullR
       | UndefinedR
       | MaybeR
-      | InstanceOfR of { expr: (L.t, L.t) Ast.Expression.t }
+      | InstanceOfR of {
+          expr: (L.t, L.t) Ast.Expression.t;
+          context: instanceof_context;
+        }
       | IsArrayR
       | ArrLenR of {
           op: array_length_op;
@@ -427,6 +435,11 @@ module Make
       | ArrLenGreaterThanEqual
     [@@deriving show]
 
+    type instanceof_context =
+      | InstanceOfExpr
+      | MatchInstancePattern
+    [@@deriving show]
+
     type refinement_kind =
       | AndR of refinement_kind * refinement_kind
       | OrR of refinement_kind * refinement_kind
@@ -435,7 +448,10 @@ module Make
       | NullR
       | UndefinedR
       | MaybeR
-      | InstanceOfR of { expr: (L.t, L.t) Ast.Expression.t }
+      | InstanceOfR of {
+          expr: (L.t, L.t) Ast.Expression.t;
+          context: instanceof_context;
+        }
       | IsArrayR
       | ArrLenR of {
           op: array_length_op;

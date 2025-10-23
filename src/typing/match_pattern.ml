@@ -199,6 +199,11 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
     | ObjectPattern pattern ->
       ObjectPattern
         (object_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc pattern)
+    | InstancePattern x when not @@ Context.enable_pattern_matching_instance_patterns cx ->
+      Flow_js.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchInstancePattern));
+      InstancePattern (Tast_utils.error_mapper#match_instance_pattern x)
     | InstancePattern { InstancePattern.constructor; fields = (fields_loc, fields); comments } ->
       let open InstancePattern in
       let constructor =

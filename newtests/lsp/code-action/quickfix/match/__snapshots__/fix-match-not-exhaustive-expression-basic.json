@@ -2,7 +2,7 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Add 8 missing cases to make `match` exhaustively checked",
+      "title": "Add 9 missing cases to make `match` exhaustively checked",
       "kind": "quickfix",
       "diagnostics": [],
       "edit": {
@@ -11,15 +11,15 @@
             {
               "range": {
                 "start": {
-                  "line": 6,
+                  "line": 8,
                   "character": 10
                 },
                 "end": {
-                  "line": 6,
+                  "line": 8,
                   "character": 22
                 }
               },
-              "newText": "match (x) {\n  true => undefined,\n  \"foo\" => undefined,\n  1 => undefined,\n  99n => undefined,\n  null => undefined,\n  undefined => undefined,\n  E.A => undefined,\n  E.B => undefined,\n}"
+              "newText": "match (x) {\n  true => undefined,\n  \"foo\" => undefined,\n  1 => undefined,\n  99n => undefined,\n  null => undefined,\n  undefined => undefined,\n  E.A => undefined,\n  E.B => undefined,\n  C {...} => undefined,\n}"
             }
           ]
         }
@@ -30,7 +30,7 @@
         "arguments": [
           "textDocument/codeAction",
           "fix_match_not_exhaustive",
-          "Add 8 missing cases to make `match` exhaustively checked"
+          "Add 9 missing cases to make `match` exhaustively checked"
         ]
       }
     }

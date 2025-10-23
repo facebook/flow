@@ -2050,6 +2050,8 @@ let dump_error_message =
       spf "EMatchStatementInvalidBody (%s)" (string_of_aloc loc)
     | EMatchInvalidCaseSyntax { loc; _ } -> spf "EMatchInvalidCaseSyntax (%s)" (string_of_aloc loc)
     | EMatchInvalidWildcardSyntax loc -> spf "EMatchInvalidWildcardSyntax (%s)" (string_of_aloc loc)
+    | EMatchInvalidInstancePattern loc ->
+      spf "EMatchInvalidInstancePattern (%s)" (string_of_aloc loc)
     | EUndocumentedFeature { loc } -> spf "EUndocumentedFeature (%s)" (string_of_aloc loc)
     | EIllegalAssertOperator { obj; op; specialized } ->
       spf

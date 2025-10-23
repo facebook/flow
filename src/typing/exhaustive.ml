@@ -6,6 +6,7 @@
  *)
 
 module ALocSet = Loc_collections.ALocSet
+module ALocIDSet = Loc_collections.ALocIDSet
 module ReasonSet = Reason.ReasonSet
 
 (****************************************)
@@ -31,6 +32,21 @@ let attempt_union_rep_optimization cx (rep : Type.UnionRep.t) : unit =
       ~flatten:(Type_mapper.union_flatten cx)
       ~find_resolved:(Context.find_resolved cx)
       ~find_props:(Context.find_props cx)
+
+let get_class_info cx (t : Type.t) : (ALoc.id * string option) option =
+  let instance_t =
+    match singleton_concrete_type cx t with
+    | Type.DefT (_, Type.ClassT t) -> singleton_concrete_type cx t
+    | _ -> Type.EmptyT.why (TypeUtil.reason_of_t t)
+  in
+  match instance_t with
+  | Type.DefT
+      ( _,
+        Type.InstanceT
+          { Type.inst = { Type.inst_kind = Type.ClassKind; class_id; class_name; _ }; _ }
+      ) ->
+    Some (class_id, class_name)
+  | _ -> None
 
 (***********************)
 (* Datatype definitions *)
@@ -174,6 +190,7 @@ module rec PatternObject : sig
   type t' = {
     kind: ObjKind.t;
     props: Properties.t;
+    class_info: (ALoc.id * string option) option;
     keys_order: string list;
     rest: Reason.t option;
     contains_invalid_pattern: bool;
@@ -218,6 +235,7 @@ end = struct
   type t' = {
     kind: ObjKind.t;
     props: Properties.t;
+    class_info: (ALoc.id * string option) option;
     keys_order: string list;
     rest: Reason.t option;
     contains_invalid_pattern: bool;
@@ -258,7 +276,12 @@ end = struct
       else
         compare_rest rest1 rest2
 
-  let to_string (_, { kind; props; keys_order; rest; _ }) =
+  let to_string (_, { kind; props; class_info; keys_order; rest; _ }) =
+    let constructor =
+      match class_info with
+      | Some (_, Some class_name) -> Utils_js.spf "%s " class_name
+      | _ -> ""
+    in
     match kind with
     | ObjKind.Obj ->
       let props =
@@ -273,7 +296,7 @@ end = struct
         else
           props
       in
-      Utils_js.spf "{%s}" (String.concat ", " props)
+      Utils_js.spf "%s{%s}" constructor (String.concat ", " props)
     | ObjKind.Tuple { length } ->
       let elements =
         Base.List.init length ~f:(fun i ->
@@ -289,7 +312,7 @@ end = struct
       in
       Utils_js.spf "[%s]" (String.concat ", " elements)
 
-  let to_ast (_, { kind; props; keys_order; rest; _ }) =
+  let to_ast (_, { kind; props; class_info; keys_order; rest; _ }) =
     let open Flow_ast in
     let rest =
       if Base.Option.is_some rest then
@@ -328,9 +351,22 @@ end = struct
             )
         )
       in
-      ( Loc.none,
-        MatchPattern.ObjectPattern { MatchPattern.ObjectPattern.properties; rest; comments = None }
-      )
+      let obj_pattern = { MatchPattern.ObjectPattern.properties; rest; comments = None } in
+      (match class_info with
+      | Some (_, Some name) ->
+        let constructor =
+          MatchPattern.InstancePattern.IdentifierConstructor
+            (Loc.none, { Flow_ast.Identifier.name; comments = None })
+        in
+        ( Loc.none,
+          MatchPattern.InstancePattern
+            {
+              MatchPattern.InstancePattern.constructor;
+              fields = (Loc.none, obj_pattern);
+              comments = None;
+            }
+        )
+      | _ -> (Loc.none, MatchPattern.ObjectPattern obj_pattern))
     | ObjKind.Tuple { length } ->
       let elements =
         Base.List.init length ~f:(fun i ->
@@ -702,6 +738,7 @@ end = struct
           ( reason,
             {
               PatternObject.props;
+              class_info = None;
               keys_order;
               rest;
               kind = ObjKind.Tuple { length };
@@ -713,75 +750,101 @@ end = struct
       in
       let pattern_union = add_tuple cx pattern_union ~length tuple in
       (pattern_union, next_i)
-    | ObjectPattern { ObjectPattern.properties; rest; _ } ->
-      let (props, keys_order_rev, tuple_like, contains_invalid_pattern) =
-        Base.List.fold properties ~init:(SMap.empty, [], Some 0., false) ~f:(fun acc prop ->
-            let (props, keys_order_rev, tuple_like, contains_invalid_pattern) = acc in
-            match prop with
-            | (_, ObjectPattern.Property.Valid { ObjectPattern.Property.key; pattern; _ }) ->
-              let (loc, propname) =
-                let open ObjectPattern.Property in
-                match key with
-                | Identifier ((loc, _), { Flow_ast.Identifier.name; _ }) -> (loc, name)
-                | StringLiteral (loc, { Flow_ast.StringLiteral.value; _ }) -> (loc, value)
-                | NumberLiteral (loc, { Flow_ast.NumberLiteral.value; _ }) ->
-                  (loc, Dtoa.ecma_string_of_float value)
-                | BigIntLiteral (loc, { Flow_ast.BigIntLiteral.raw; _ }) -> (loc, raw)
-              in
-              let value = of_pattern_ast cx pattern in
-              (* If the object patterns seems like it could also match tuples, record that. *)
-              let tuple_like =
-                match tuple_like with
-                | None -> None
-                | Some prev_i ->
-                  (match (propname, Float.of_string_opt propname) with
-                  | (_, Some value) when Js_number.is_float_safe_integer value ->
-                    Some (Float.max prev_i (value +. 1.))
-                  | ("length", _) when only_wildcard value |> Base.Option.is_some -> tuple_like
-                  | _ -> None)
-              in
-              let property = { PatternObject.Property.loc; value } in
-              let props = SMap.add propname property props in
-              let contains_invalid_pattern =
-                contains_invalid_pattern || value.PatternUnion.contains_invalid_pattern
-              in
-              (props, propname :: keys_order_rev, tuple_like, contains_invalid_pattern)
-            | _ -> (props, keys_order_rev, tuple_like, true)
+    | ObjectPattern x ->
+      object_pattern cx ~reason ~next_i ~pattern_union ~guarded ~class_info:None x
+    | InstancePattern _ when not @@ Context.enable_pattern_matching_instance_patterns cx ->
+      (pattern_union, next_i)
+    | InstancePattern { InstancePattern.constructor; fields = (_, fields); _ } ->
+      let (constructor_t, constructor_name) =
+        match constructor with
+        | InstancePattern.IdentifierConstructor ((_, t), { Flow_ast.Identifier.name; _ })
+        | InstancePattern.MemberConstructor
+            ( (_, t),
+              {
+                MemberPattern.property =
+                  MemberPattern.PropertyIdentifier (_, { Flow_ast.Identifier.name; _ });
+                _;
+              }
+            ) ->
+          (t, Some name)
+        | InstancePattern.MemberConstructor ((_, t), _) -> (t, None)
+      in
+      (match get_class_info cx constructor_t with
+      | Some (class_id, class_name) ->
+        let class_name = Base.Option.first_some constructor_name class_name in
+        let class_info = Some (class_id, class_name) in
+        object_pattern cx ~reason ~next_i ~pattern_union ~guarded ~class_info fields
+      | _ -> (pattern_union, next_i))
+
+  and object_pattern cx ~reason ~next_i ~pattern_union ~guarded ~class_info pattern =
+    let open Flow_ast.MatchPattern in
+    let { ObjectPattern.properties; rest; _ } = pattern in
+    let (props, keys_order_rev, tuple_like, contains_invalid_pattern) =
+      Base.List.fold properties ~init:(SMap.empty, [], Some 0., false) ~f:(fun acc prop ->
+          let (props, keys_order_rev, tuple_like, contains_invalid_pattern) = acc in
+          match prop with
+          | (_, ObjectPattern.Property.Valid { ObjectPattern.Property.key; pattern; _ }) ->
+            let (loc, propname) =
+              let open ObjectPattern.Property in
+              match key with
+              | Identifier ((loc, _), { Flow_ast.Identifier.name; _ }) -> (loc, name)
+              | StringLiteral (loc, { Flow_ast.StringLiteral.value; _ }) -> (loc, value)
+              | NumberLiteral (loc, { Flow_ast.NumberLiteral.value; _ }) ->
+                (loc, Dtoa.ecma_string_of_float value)
+              | BigIntLiteral (loc, { Flow_ast.BigIntLiteral.raw; _ }) -> (loc, raw)
+            in
+            let value = of_pattern_ast cx pattern in
+            (* If the object patterns seems like it could also match tuples, record that. *)
+            let tuple_like =
+              match tuple_like with
+              | None -> None
+              | Some prev_i ->
+                (match (propname, Float.of_string_opt propname) with
+                | (_, Some value) when Js_number.is_float_safe_integer value ->
+                  Some (Float.max prev_i (value +. 1.))
+                | ("length", _) when only_wildcard value |> Base.Option.is_some -> tuple_like
+                | _ -> None)
+            in
+            let property = { PatternObject.Property.loc; value } in
+            let props = SMap.add propname property props in
+            let contains_invalid_pattern =
+              contains_invalid_pattern || value.PatternUnion.contains_invalid_pattern
+            in
+            (props, propname :: keys_order_rev, tuple_like, contains_invalid_pattern)
+          | _ -> (props, keys_order_rev, tuple_like, true)
+      )
+    in
+    let keys_order =
+      Base.List.rev keys_order_rev
+      |> Base.List.stable_sort ~compare:(fun key_a key_b ->
+             PatternObject.Property.compare (SMap.find key_a props) (SMap.find key_b props)
+         )
+    in
+    let pattern_union =
+      let rest =
+        Base.Option.map rest ~f:(fun (loc, _) -> Reason.mk_reason Reason.RObjectPatternRestProp loc)
+      in
+      let obj =
+        ( next_i,
+          ( reason,
+            {
+              PatternObject.props;
+              class_info;
+              keys_order;
+              rest;
+              kind = ObjKind.Obj;
+              contains_invalid_pattern;
+              guarded;
+            }
+          )
         )
       in
-      let keys_order =
-        Base.List.rev keys_order_rev
-        |> Base.List.stable_sort ~compare:(fun key_a key_b ->
-               PatternObject.Property.compare (SMap.find key_a props) (SMap.find key_b props)
-           )
-      in
-      let pattern_union =
-        let rest =
-          Base.Option.map rest ~f:(fun (loc, _) ->
-              Reason.mk_reason Reason.RObjectPatternRestProp loc
-          )
-        in
-        let obj =
-          ( next_i,
-            ( reason,
-              {
-                PatternObject.props;
-                keys_order;
-                rest;
-                kind = ObjKind.Obj;
-                contains_invalid_pattern;
-                guarded;
-              }
-            )
-          )
-        in
-        let pattern_union = add_object cx pattern_union obj in
-        match tuple_like with
-        | None -> pattern_union
-        | Some i -> add_tuple cx ~length:(Int.of_float i) pattern_union obj
-      in
-      (pattern_union, next_i)
-    | InstancePattern _ -> failwith "TODO: upcoming diff"
+      let pattern_union = add_object cx pattern_union obj in
+      match (class_info, tuple_like) with
+      | (None, Some i) -> add_tuple cx ~length:(Int.of_float i) pattern_union obj
+      | _ -> pattern_union
+    in
+    (pattern_union, next_i)
 
   let of_patterns_ast cx patterns_ast =
     let last_i = Base.List.length patterns_ast - 1 in
@@ -848,6 +911,7 @@ let empty_inexact_tuple_pattern (reason : Reason.t) : PatternObject.t =
     {
       PatternObject.kind = ObjKind.Tuple { length = 0 };
       props = SMap.empty;
+      class_info = None;
       keys_order = [];
       rest = Some reason;
       contains_invalid_pattern = false;
@@ -886,6 +950,7 @@ module rec ValueObject : sig
     kind: ObjKind.t;
     t: Type.t;
     props: Properties.t;
+    class_info: (ALoc.id * string option * ALocIDSet.t) option;
     rest: Reason.t option;
     (* We store a set of potential sentinel props, so that we can improve
        error messages, and also check these properties first when filtering
@@ -943,13 +1008,14 @@ end = struct
     kind: ObjKind.t;
     t: Type.t;
     props: Properties.t;
+    class_info: (ALoc.id * string option * ALocIDSet.t) option;
     rest: Reason.t option;
     sentinel_props: SSet.t;
   }
 
   type t = Reason.t * t'
 
-  let to_pattern (reason, { props; rest; kind; sentinel_props; _ }) =
+  let to_pattern (reason, { props; class_info; rest; kind; sentinel_props; _ }) =
     let loc = Reason.loc_of_reason reason in
     let (props, keys_order, rest) =
       match kind with
@@ -1027,10 +1093,12 @@ end = struct
         let keys_order = Base.List.init length ~f:(fun i -> string_of_int i) in
         (props, keys_order, rest)
     in
+    let class_info = Base.Option.map class_info ~f:(fun (class_id, name, _) -> (class_id, name)) in
     ( reason,
       {
         PatternObject.kind;
         props;
+        class_info;
         keys_order;
         rest;
         contains_invalid_pattern = false;
@@ -1200,6 +1268,7 @@ end = struct
                          ValueObject.kind = ObjKind.Tuple { length };
                          t;
                          props;
+                         class_info = None;
                          rest;
                          sentinel_props = SSet.empty;
                        }
@@ -1216,6 +1285,7 @@ end = struct
                 ValueObject.kind = ObjKind.Obj;
                 t;
                 props = SMap.empty;
+                class_info = None;
                 rest = Some reason;
                 sentinel_props = SSet.empty;
               }
@@ -1257,16 +1327,48 @@ end = struct
               (Context.find_props cx props_tmap)
               (SMap.empty, SSet.empty)
           in
-          let obj = (reason, { ValueObject.kind = ObjKind.Obj; t; props; rest; sentinel_props }) in
+          let obj =
+            ( reason,
+              { ValueObject.kind = ObjKind.Obj; t; props; class_info = None; rest; sentinel_props }
+            )
+          in
           { value_union with objects = obj :: objects }
-        | Type.DefT (reason, Type.InstanceT _) ->
+        | Type.DefT
+            (reason, Type.InstanceT { Type.inst = { Type.class_id; class_name; _ }; super; _ }) ->
           let rest = Some reason in
+          let class_info =
+            if Context.enable_pattern_matching_instance_patterns cx then
+              let rec get_super_ids acc t =
+                match singleton_concrete_type cx t with
+                | Type.DefT
+                    ( _,
+                      Type.InstanceT
+                        {
+                          Type.inst =
+                            { Type.inst_kind = Type.ClassKind; class_id = super_class_id; _ };
+                          super;
+                          _;
+                        }
+                    ) ->
+                  if ALoc.equal_id super_class_id class_id || ALocIDSet.mem super_class_id acc then
+                    (* Recursive extends: stop looping *)
+                    acc
+                  else
+                    let acc = ALocIDSet.add super_class_id acc in
+                    get_super_ids acc super
+                | _ -> acc
+              in
+              Some (class_id, class_name, get_super_ids ALocIDSet.empty super)
+            else
+              None
+          in
           let obj =
             ( reason,
               {
                 ValueObject.kind = ObjKind.Obj;
                 t;
                 props = SMap.empty;
+                class_info;
                 rest;
                 sentinel_props = SSet.empty;
               }
@@ -1654,13 +1756,21 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
     filter_object_result =
   let open Base.Continue_or_stop in
   let ( reason_value,
-        { ValueObject.props = value_props; rest = value_rest; t; kind = value_kind; sentinel_props }
+        {
+          ValueObject.props = value_props;
+          class_info = value_class_info;
+          rest = value_rest;
+          t;
+          kind = value_kind;
+          sentinel_props;
+        }
       ) =
     value_object
   in
   let ( reason_pattern,
         {
           PatternObject.props = pattern_props;
+          class_info = pattern_class_info;
           keys_order;
           rest = pattern_rest;
           kind = pattern_kind;
@@ -1670,154 +1780,187 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
       ) =
     pattern_object
   in
-  (* Sort the keys that are sentinel props for the value first. *)
-  let pattern_keys =
-    keys_order |> Base.List.partition_tf ~f:(fun key -> SSet.mem key sentinel_props)
-    |> fun (sentinel_keys, other_keys) -> sentinel_keys @ other_keys
+  let possibly_matches =
+    match (value_class_info, pattern_class_info) with
+    (* Structural pattern: can match *)
+    | (_, None) -> true
+    (* Structural value, nominal pattern: cannot match *)
+    | (None, Some _) -> false
+    (* Nominal value, nominal pattern: potentially matches *)
+    | (Some (value_class_id, _, value_super_ids), Some (pattern_class_id, _)) ->
+      ALoc.equal_id value_class_id pattern_class_id
+      || ALocIDSet.mem pattern_class_id value_super_ids
   in
-  (* If every key in the pattern also exists in the value, then return the props of the
-     value, otherwise return `None`, so we can skip below directly to `NoMatch`. *)
-  let value_props =
-    Base.List.fold_until
-      pattern_keys
-      ~init:value_props
-      ~f:(fun value_props key ->
-        match SMap.find_opt key value_props with
-        | Some (Some _) -> Continue value_props
-        | Some None -> Stop None
-        | None ->
-          let { PatternObject.Property.loc = key_loc; _ } = SMap.find key pattern_props in
-          let prop = ValueUnion.get_prop cx (key_loc, key) t in
-          if Base.Option.is_none prop then
-            Stop None
-          else
-            Continue (SMap.add key prop value_props))
-      ~finish:Base.Option.some
-  in
-  match value_props with
-  | None -> NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }
-  | Some value_props ->
-    (* If this pattern is gaurded, then it can't filter out values. *)
-    let no_match = guarded in
-    (* We fold over the `pattern_keys` of the pattern and match the value at that key to the pattern
-       at that key. We build up `head` which is the properties matched so far. The `remainder_value`
-       is the properties of the value left to check. If we don't have a match, but need to continue
-       checking for the purposes of marking patterns as used, we set `no_match` to true. *)
-    Base.List.fold_until
-      pattern_keys
-      ~init:(ALocSet.empty, no_match, [], SMap.empty, value_props)
-      ~f:(fun (used_pattern_locs, no_match, queue_additions, head, remainder_value) key ->
-        let { PatternObject.Property.value = pattern; _ } = SMap.find key pattern_props in
-        (* Checked above in `has_all_props` *)
-        let prop_value = SMap.find key value_props |> Base.Option.value_exn in
-        let { ValueObject.Property.loc = loc_value; value; optional } = prop_value in
-        let remainder_value = SMap.remove key remainder_value in
-        let (value_left, value_matched, value_matched_is_empty, new_used_pattern_locs) =
-          match PatternUnion.only_wildcard pattern with
-          | Some wildcard ->
-            (ValueUnion.empty, value, false, ALocSet.singleton (Reason.loc_of_reason wildcard))
+  if not possibly_matches then
+    NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }
+  else
+    (* Sort the keys that are sentinel props for the value first. *)
+    let pattern_keys =
+      keys_order |> Base.List.partition_tf ~f:(fun key -> SSet.mem key sentinel_props)
+      |> fun (sentinel_keys, other_keys) -> sentinel_keys @ other_keys
+    in
+    (* If every key in the pattern also exists in the value, then return the props of the
+       value, otherwise return `None`, so we can skip below directly to `NoMatch`. *)
+    let value_props =
+      Base.List.fold_until
+        pattern_keys
+        ~init:value_props
+        ~f:(fun value_props key ->
+          match SMap.find_opt key value_props with
+          | Some (Some _) -> Continue value_props
+          | Some None -> Stop None
           | None ->
-            let { value_left; value_matched; used_pattern_locs = new_used_pattern_locs } =
-              filter_values_by_patterns cx ~value_union:(Lazy.force value) ~pattern_union:pattern
-            in
-            ( value_left,
-              lazy value_matched,
-              ValueUnion.is_empty value_matched,
-              new_used_pattern_locs
-            )
-        in
-        let used_pattern_locs = ALocSet.union used_pattern_locs new_used_pattern_locs in
-        let property_matched =
-          { ValueObject.Property.loc = loc_value; value = value_matched; optional }
-        in
-        let head = SMap.add key (Some property_matched) head in
-        if no_match || value_matched_is_empty then
-          if ALocSet.is_empty new_used_pattern_locs then
-            Stop (NoMatch { used_pattern_locs = ALocSet.empty; left = value_object })
-          else
-            let no_match = true in
-            Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value)
-        else if (not optional) && ValueUnion.is_empty value_left then
-          (* Full match *)
-          Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value)
-        else
-          (* Partial match *)
-          let (props_left, rest) =
-            if ValueUnion.is_empty value_left then
-              (* Optional value is ignored from left pattern, but then there are additional,
-                 unknown properties. *)
-              let value_rest =
-                if Base.Option.is_some value_rest then
-                  value_rest
-                else
-                  Some
-                    (Reason.mk_reason
-                       (Reason.RUnknownUnspecifiedProperty (Reason.desc_of_reason reason_value))
-                       loc_value
-                    )
-              in
-              (SMap.add key None head, value_rest)
+            let { PatternObject.Property.loc = key_loc; _ } = SMap.find key pattern_props in
+            let prop = ValueUnion.get_prop cx (key_loc, key) t in
+            if Base.Option.is_none prop then
+              Stop None
             else
-              let property_left =
-                { ValueObject.Property.loc = loc_value; value = lazy value_left; optional }
-              in
-              (SMap.add key (Some property_left) head, value_rest)
-          in
-          let props_left = SMap.union props_left remainder_value in
-          let object_left =
-            ( reason_value,
-              { ValueObject.props = props_left; rest; t; kind = value_kind; sentinel_props }
-            )
-          in
-          let queue_additions = object_left :: queue_additions in
-          Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value))
-      ~finish:(fun (used_pattern_locs, no_match, queue_additions, head, remainder_value) ->
-        let pattern_loc = Reason.loc_of_reason reason_pattern in
-        let used_pattern_locs = ALocSet.add pattern_loc used_pattern_locs in
-        let used_pattern_locs =
-          if
-            Base.Option.is_some value_rest
-            || (not @@ ValueObject.Properties.is_empty remainder_value)
-          then
-            match pattern_rest with
+              Continue (SMap.add key prop value_props))
+        ~finish:Base.Option.some
+    in
+    match value_props with
+    | None -> NoMatch { used_pattern_locs = ALocSet.empty; left = value_object }
+    | Some value_props ->
+      (* If this pattern is gaurded, then it can't filter out values. *)
+      let no_match = guarded in
+      (* We fold over the `pattern_keys` of the pattern and match the value at that key to the pattern
+         at that key. We build up `head` which is the properties matched so far. The `remainder_value`
+         is the properties of the value left to check. If we don't have a match, but need to continue
+         checking for the purposes of marking patterns as used, we set `no_match` to true. *)
+      Base.List.fold_until
+        pattern_keys
+        ~init:(ALocSet.empty, no_match, [], SMap.empty, value_props)
+        ~f:(fun (used_pattern_locs, no_match, queue_additions, head, remainder_value) key ->
+          let { PatternObject.Property.value = pattern; _ } = SMap.find key pattern_props in
+          (* Checked above in `has_all_props` *)
+          let prop_value = SMap.find key value_props |> Base.Option.value_exn in
+          let { ValueObject.Property.loc = loc_value; value; optional } = prop_value in
+          let remainder_value = SMap.remove key remainder_value in
+          let (value_left, value_matched, value_matched_is_empty, new_used_pattern_locs) =
+            match PatternUnion.only_wildcard pattern with
+            | Some wildcard ->
+              (ValueUnion.empty, value, false, ALocSet.singleton (Reason.loc_of_reason wildcard))
             | None ->
-              ( if pattern_kind = ObjKind.Obj then
-                let missing_props =
-                  SMap.fold
-                    (fun key prop acc ->
-                      if Base.Option.is_some prop then
-                        key :: acc
-                      else
-                        acc)
-                    remainder_value
-                    []
-                  |> Base.List.rev
-                in
-                Flow_js.add_output
-                  cx
-                  (Error_message.EMatchNonExhaustiveObjectPattern
-                     { loc = Reason.loc_of_reason reason_pattern; rest = value_rest; missing_props }
-                  )
-              );
-              used_pattern_locs
-            | Some pattern_rest -> ALocSet.add (Reason.loc_of_reason pattern_rest) used_pattern_locs
-          else
-            used_pattern_locs
-        in
-        let non_matching_rest =
-          pattern_kind <> ObjKind.Obj
-          && Base.Option.is_some value_rest
-          && Base.Option.is_none pattern_rest
-        in
-        if no_match || non_matching_rest then
-          NoMatch { used_pattern_locs; left = value_object }
-        else
-          let matched =
-            ( reason_value,
-              { ValueObject.props = head; rest = value_rest; t; kind = value_kind; sentinel_props }
-            )
+              let { value_left; value_matched; used_pattern_locs = new_used_pattern_locs } =
+                filter_values_by_patterns cx ~value_union:(Lazy.force value) ~pattern_union:pattern
+              in
+              ( value_left,
+                lazy value_matched,
+                ValueUnion.is_empty value_matched,
+                new_used_pattern_locs
+              )
           in
-          Match { used_pattern_locs; queue_additions; matched })
+          let used_pattern_locs = ALocSet.union used_pattern_locs new_used_pattern_locs in
+          let property_matched =
+            { ValueObject.Property.loc = loc_value; value = value_matched; optional }
+          in
+          let head = SMap.add key (Some property_matched) head in
+          if no_match || value_matched_is_empty then
+            if ALocSet.is_empty new_used_pattern_locs then
+              Stop (NoMatch { used_pattern_locs = ALocSet.empty; left = value_object })
+            else
+              let no_match = true in
+              Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value)
+          else if (not optional) && ValueUnion.is_empty value_left then
+            (* Full match *)
+            Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value)
+          else
+            (* Partial match *)
+            let (props_left, rest) =
+              if ValueUnion.is_empty value_left then
+                (* Optional value is ignored from left pattern, but then there are additional,
+                   unknown properties. *)
+                let value_rest =
+                  if Base.Option.is_some value_rest then
+                    value_rest
+                  else
+                    Some
+                      (Reason.mk_reason
+                         (Reason.RUnknownUnspecifiedProperty (Reason.desc_of_reason reason_value))
+                         loc_value
+                      )
+                in
+                (SMap.add key None head, value_rest)
+              else
+                let property_left =
+                  { ValueObject.Property.loc = loc_value; value = lazy value_left; optional }
+                in
+                (SMap.add key (Some property_left) head, value_rest)
+            in
+            let props_left = SMap.union props_left remainder_value in
+            let object_left =
+              ( reason_value,
+                {
+                  ValueObject.props = props_left;
+                  class_info = value_class_info;
+                  rest;
+                  t;
+                  kind = value_kind;
+                  sentinel_props;
+                }
+              )
+            in
+            let queue_additions = object_left :: queue_additions in
+            Continue (used_pattern_locs, no_match, queue_additions, head, remainder_value))
+        ~finish:(fun (used_pattern_locs, no_match, queue_additions, head, remainder_value) ->
+          let pattern_loc = Reason.loc_of_reason reason_pattern in
+          let used_pattern_locs = ALocSet.add pattern_loc used_pattern_locs in
+          let used_pattern_locs =
+            if
+              Base.Option.is_some value_rest
+              || (not @@ ValueObject.Properties.is_empty remainder_value)
+            then
+              match pattern_rest with
+              | None ->
+                ( if pattern_kind = ObjKind.Obj then
+                  let missing_props =
+                    SMap.fold
+                      (fun key prop acc ->
+                        if Base.Option.is_some prop then
+                          key :: acc
+                        else
+                          acc)
+                      remainder_value
+                      []
+                    |> Base.List.rev
+                  in
+                  Flow_js.add_output
+                    cx
+                    (Error_message.EMatchNonExhaustiveObjectPattern
+                       {
+                         loc = Reason.loc_of_reason reason_pattern;
+                         rest = value_rest;
+                         missing_props;
+                       }
+                    )
+                );
+                used_pattern_locs
+              | Some pattern_rest ->
+                ALocSet.add (Reason.loc_of_reason pattern_rest) used_pattern_locs
+            else
+              used_pattern_locs
+          in
+          let non_matching_rest =
+            pattern_kind <> ObjKind.Obj
+            && Base.Option.is_some value_rest
+            && Base.Option.is_none pattern_rest
+          in
+          if no_match || non_matching_rest then
+            NoMatch { used_pattern_locs; left = value_object }
+          else
+            let matched =
+              ( reason_value,
+                {
+                  ValueObject.props = head;
+                  class_info = value_class_info;
+                  rest = value_rest;
+                  t;
+                  kind = value_kind;
+                  sentinel_props;
+                }
+              )
+            in
+            Match { used_pattern_locs; queue_additions; matched })
 
 (* mixed/any values mark object and tuple patterns as used. *)
 and visit_mixed cx (reason : Reason.t) (pattern_union : PatternUnion.t) : ALocSet.t =
@@ -1845,6 +1988,7 @@ and visit_mixed cx (reason : Reason.t) (pattern_union : PatternUnion.t) : ALocSe
           {
             ValueObject.kind = ObjKind.Obj;
             t = Type.DefT (reason, Type.ArrT (Type.ROArrayAT (Type.MixedT.why reason, None)));
+            class_info = None;
             props = SMap.empty;
             rest = Some reason;
             sentinel_props = SSet.empty;
@@ -1885,6 +2029,7 @@ and visit_mixed cx (reason : Reason.t) (pattern_union : PatternUnion.t) : ALocSe
             ValueObject.kind = ObjKind.Obj;
             t;
             props = SMap.empty;
+            class_info = None;
             rest = Some reason;
             sentinel_props = SSet.empty;
           }

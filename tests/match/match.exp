@@ -152,6 +152,120 @@ References:
                               ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- instance-pattern.js:26:5
+
+This object pattern hasn't considered all possible properties of the input. There could be additional properties due to
+`Point` [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
+
+   instance-pattern.js:26:5
+   26|     Point {const x, const y} => { // ERROR: instances are inexact
+           ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   instance-pattern.js:16:20
+   16|   declare const x: Point;
+                          ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- instance-pattern.js:92:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `Point {...}` to match
+`Point` [1]. [match-not-exhaustive]
+
+   instance-pattern.js:92:3
+   92|   match (x) { // ERROR
+         ^^^^^
+
+References:
+   instance-pattern.js:90:20
+   90|   declare const x: Point;
+                          ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- instance-pattern.js:93:5
+
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   93|     ThreeD {...} => {} // ERROR
+           ^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- instance-pattern.js:102:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `Point {...}` to match
+`Point` [1]. [match-not-exhaustive]
+
+   instance-pattern.js:102:3
+   102|   match (x) { // ERROR: non-exhaustive
+          ^^^^^
+
+References:
+   instance-pattern.js:99:20
+    99|   declare const x: Point;
+                           ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- instance-pattern.js:103:5
+
+Invalid match instance pattern constructor. It must reference a single class. [match-invalid-pattern]
+
+   103|     S {...} => {} // ERROR
+            ^
+
+
+Error ---------------------------------------------------------------------------------------- instance-pattern.js:113:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `Point {...}` to match
+`Point` [1]. [match-not-exhaustive]
+
+   instance-pattern.js:113:3
+   113|   match (x) { // ERROR: non-exhaustive
+          ^^^^^
+
+References:
+   instance-pattern.js:107:20
+   107|   declare const x: Point;
+                           ^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- instance-pattern.js:114:5
+
+Cannot use type `I` [1] as a value. Types are erased and don't exist at runtime. [type-as-value]
+
+   instance-pattern.js:114:5
+   114|     I {...} => {} // ERROR
+            ^
+
+References:
+   instance-pattern.js:108:13
+   108|   interface I {
+                    ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- instance-pattern.js:114:5
+
+Invalid match instance pattern constructor. It must reference a single class. [match-invalid-pattern]
+
+   114|     I {...} => {} // ERROR
+            ^
+
+
+Error ---------------------------------------------------------------------------------------- instance-pattern.js:133:3
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{...}` to match
+`<<anonymous class>>` [1]. [match-not-exhaustive]
+
+   instance-pattern.js:133:3
+   133|   match (x) {} // ERROR
+          ^^^^^
+
+References:
+   instance-pattern.js:124:20
+   124|   declare const x: C;
+                           ^ [1]
+
+
 Error ---------------------------------------------------------------------------------- invalid-break-statement.js:17:5
 
 Illegal break statement. `break` statements are not required in `match` statements, as unlike `switch` statements,
@@ -1589,4 +1703,4 @@ References:
 
 
 
-Found 119 errors
+Found 128 errors

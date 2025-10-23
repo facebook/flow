@@ -325,8 +325,8 @@ module.exports = (suite(
           uri: '<PLACEHOLDER_PROJECT_URL>/fix-match-not-exhaustive-expression-basic.js',
         },
         range: {
-          start: {line: 6, character: 11},
-          end: {line: 6, character: 15},
+          start: {line: 8, character: 11},
+          end: {line: 8, character: 15},
         },
         context: {
           only: ['quickfix'],

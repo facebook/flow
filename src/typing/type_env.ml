@@ -303,7 +303,7 @@ let predicate_of_refinement cx =
     | NullR -> Some NullP
     | UndefinedR -> Some VoidP
     | MaybeR -> Some MaybeP
-    | InstanceOfR { expr = (loc, _) } ->
+    | InstanceOfR { expr = (loc, _); context } ->
       (* Instanceof refinements store the loc they check against, which is a read in the env *)
       Debug_js.Verbose.print_if_verbose_lazy
         cx
@@ -311,7 +311,10 @@ let predicate_of_refinement cx =
           [spf "reading from location %s (in instanceof refinement)" (Reason.string_of_aloc loc)]
           );
       let t = checked_find_loc_env_write cx Env_api.ExpressionLoc loc in
-      Type_operation_utils.TypeAssertions.assert_instanceof_rhs cx t;
+      (match context with
+      | InstanceOfExpr -> Type_operation_utils.TypeAssertions.assert_instanceof_rhs cx t
+      | MatchInstancePattern ->
+        Type_operation_utils.TypeAssertions.assert_match_instance_pattern_constructor cx t);
       Some (BinaryP (InstanceofTest, t))
     | IsArrayR -> Some ArrP
     | ArrLenR { op; n } ->

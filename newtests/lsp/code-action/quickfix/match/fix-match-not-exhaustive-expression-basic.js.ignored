@@ -2,6 +2,8 @@
 
 enum E {A, B}
 
-declare const x: true | "foo" | 1 | 99n | null | undefined | E;
+class C {}
+
+declare const x: true | "foo" | 1 | 99n | null | undefined | E | C;
 
 const e = match (x) {}

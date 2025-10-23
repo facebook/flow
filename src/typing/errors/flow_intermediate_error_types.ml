@@ -80,6 +80,7 @@ type unsupported_syntax =
   | PredicateDeclarationAnonymousParameters
   | MatchExpression
   | MatchStatement
+  | MatchInstancePattern
   | MultipleIndexers
   | MultipleProtos
   | ExplicitCallAfterProto
@@ -1147,6 +1148,7 @@ type 'loc message =
   | MessageMatchStatementInvalidBody
   | MessageMatchInvalidCaseSyntax of 'loc match_invalid_case_syntax
   | MessageMatchInvalidWildcardSyntax
+  | MessageMatchInvalidInstancePattern
   | MessageConstantCondition of {
       is_truthy: bool;
       show_warning: bool;

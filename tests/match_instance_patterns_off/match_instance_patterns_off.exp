@@ -1,1 +1,25 @@
-Found 0 errors
+Error ------------------------------------------------------------------------------------------------------ test.js:6:3
+
+`match` instance patterns are not supported. [unsupported-syntax]
+
+   6|   C {...} => {} // ERROR
+        ^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:10:1
+
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `{...}` to match `C` [1].
+[match-not-exhaustive]
+
+   test.js:10:1
+   10| match (x) {} // ERROR: pattern suggested is `{...}`, not `C {...}`
+       ^^^^^
+
+References:
+   test.js:3:18
+    3| declare const x: C;
+                        ^ [1]
+
+
+
+Found 2 errors

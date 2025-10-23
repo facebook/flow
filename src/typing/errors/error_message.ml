@@ -749,6 +749,7 @@ and 'loc t' =
       kind: 'loc match_invalid_case_syntax;
     }
   | EMatchInvalidWildcardSyntax of 'loc
+  | EMatchInvalidInstancePattern of 'loc
   | EUndocumentedFeature of { loc: 'loc }
   | EIllegalAssertOperator of {
       op: 'loc virtual_reason;
@@ -1844,6 +1845,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     in
     EMatchInvalidCaseSyntax { loc = f loc; kind }
   | EMatchInvalidWildcardSyntax loc -> EMatchInvalidWildcardSyntax (f loc)
+  | EMatchInvalidInstancePattern loc -> EMatchInvalidInstancePattern (f loc)
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
   | EIllegalAssertOperator { op; obj; specialized } ->
     EIllegalAssertOperator { op = map_reason op; obj = map_reason obj; specialized }
@@ -2208,6 +2210,7 @@ let util_use_op_of_msg nope util = function
   | EMatchStatementInvalidBody _
   | EMatchInvalidCaseSyntax _
   | EMatchInvalidWildcardSyntax _
+  | EMatchInvalidInstancePattern _
   | EUndocumentedFeature _
   | EIllegalAssertOperator _ ->
     nope
@@ -2443,9 +2446,10 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchStatementInvalidBody { loc } -> Some loc
   | EMatchInvalidCaseSyntax { loc; _ } -> Some loc
   | EMatchInvalidWildcardSyntax loc -> Some loc
-  | EUndocumentedFeature { loc } -> Some loc
+  | EMatchInvalidInstancePattern loc -> Some loc
   | EMatchInvalidGuardedWildcard loc -> Some loc
   | EMatchInvalidIdentOrMemberPattern { loc; _ } -> Some loc
+  | EUndocumentedFeature { loc } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
   | EUnableToSpread _
@@ -3660,6 +3664,7 @@ let friendly_message_of_msg = function
   | EMatchStatementInvalidBody _ -> Normal MessageMatchStatementInvalidBody
   | EMatchInvalidCaseSyntax { kind; _ } -> Normal (MessageMatchInvalidCaseSyntax kind)
   | EMatchInvalidWildcardSyntax _ -> Normal MessageMatchInvalidWildcardSyntax
+  | EMatchInvalidInstancePattern _ -> Normal MessageMatchInvalidInstancePattern
   | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
   | EIllegalAssertOperator { obj; specialized; _ } ->
     Normal (MessageIllegalAssertOperator { obj; specialized })
@@ -4066,5 +4071,6 @@ let error_code_of_message err : error_code option =
   | EMatchStatementInvalidBody _ -> Some MatchStatementInvalidBody
   | EMatchInvalidCaseSyntax _ -> Some UnsupportedSyntax
   | EMatchInvalidWildcardSyntax _ -> Some UnsupportedSyntax
+  | EMatchInvalidInstancePattern _ -> Some MatchInvalidPattern
   | EUndocumentedFeature _ -> Some UndocumentedFeature
   | EIllegalAssertOperator _ -> Some IllegalAssertOperator
