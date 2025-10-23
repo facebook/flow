@@ -972,15 +972,26 @@ struct
         let state = depends_of_expression ~for_expression_writes expr state in
         depends_of_hints state hints
       in
+      let depends_on_match_pattern case_match_root_loc pattern state =
+        depends_of_node
+          (fun visitor ->
+            run visitor#identifier (Flow_ast_utils.match_root_ident case_match_root_loc);
+            run visitor#match_pattern pattern;
+            ())
+          state
+      in
       let depends_of_root state = function
         | Annotation { annot; tparams_map; _ } -> depends_of_annotation tparams_map annot state
         | Value { hints; expr; decl_kind = _; as_const = _ } ->
           let state = depends_of_hints state hints in
           depends_of_expression expr state
-        | MatchCaseRoot { case_match_root_loc } ->
+        | MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev } ->
           depends_of_node
             (fun visitor ->
-              run visitor#identifier (Flow_ast_utils.match_root_ident case_match_root_loc))
+              run visitor#identifier (Flow_ast_utils.match_root_ident case_match_root_loc);
+              Base.List.iter prev_pattern_locs_rev ~f:(fun loc ->
+                  visitor#add ~why:loc (Env_api.MatchCasePatternLoc, loc)
+              ))
             state
         | ObjectValue { obj; synthesizable = ObjectSynthesizable _; _ } ->
           let open Ast.Expression.Object in
@@ -1177,6 +1188,8 @@ struct
       in
       function
       | Binding binding -> depends_of_binding binding
+      | MatchCasePattern { case_match_root_loc; pattern } ->
+        depends_on_match_pattern case_match_root_loc pattern EnvMap.empty
       | ExpressionDef { expr; hints; _ } ->
         depends_of_hinted_expression ~for_expression_writes:true hints expr EnvMap.empty
       | Update _ -> depends_of_update None
@@ -1286,6 +1299,7 @@ struct
       | Function { synthesizable_from_annotation = FunctionSynthesizable; _ }
       | Component _ ->
         true
+      | MatchCasePattern _
       | ExpressionDef _
       | Update _
       | MemberAssign _
@@ -1369,6 +1383,7 @@ struct
     | Class _
     | DeclaredClass _
     | DeclaredComponent _
+    | MatchCasePattern _
     | ExpressionDef _
     | DeclaredNamespace _
     | MissingThisAnnot

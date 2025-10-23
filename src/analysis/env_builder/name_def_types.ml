@@ -100,7 +100,10 @@ type root =
       concrete: root option;
     }
   | Value of value
-  | MatchCaseRoot of { case_match_root_loc: ALoc.t }
+  | MatchCaseRoot of {
+      case_match_root_loc: ALoc.t;
+      prev_pattern_locs_rev: ALoc.t list;
+    }
   | FunctionValue of {
       hints: ast_hints;
       synthesizable_from_annotation: function_synth_kind;
@@ -164,6 +167,10 @@ type expression_def = {
 
 type def =
   | Binding of binding
+  | MatchCasePattern of {
+      case_match_root_loc: ALoc.t;
+      pattern: (ALoc.t, ALoc.t) Ast.MatchPattern.t;
+    }
   | ExpressionDef of expression_def
   | MemberAssign of {
       member_loc: ALoc.t;
@@ -233,7 +240,7 @@ module Print = struct
     | UnannotatedParameter r -> Reason.string_of_reason r
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
     | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)
-    | MatchCaseRoot { case_match_root_loc } ->
+    | MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev = _ } ->
       spf "match root for case at %s" (ALoc.debug_to_string case_match_root_loc)
     | FunctionValue { function_loc; _ } -> spf "function val %s" (ALoc.debug_to_string function_loc)
     | ObjectValue _ -> "object"
@@ -293,6 +300,7 @@ module Print = struct
 
   let string_of_source = function
     | Binding b -> string_of_binding b
+    | MatchCasePattern { pattern = (loc, _); _ } -> spf "match pattern %s" (ALoc.debug_to_string loc)
     | ExpressionDef { expr = (expr_loc, _); hints; _ } ->
       spf "exp %s (hint = %s)" (ALoc.debug_to_string expr_loc) (string_of_hints ~on_hint hints)
     | Update _ -> "[in/de]crement"

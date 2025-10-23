@@ -21,6 +21,7 @@ module type S = sig
     | OrdinaryNameLoc
     | FunctionParamLoc
     | PatternLoc
+    | MatchCasePatternLoc
     | ExpressionLoc
     | ArrayProviderLoc
     | FunctionThisLoc
@@ -354,6 +355,7 @@ module Make
     | OrdinaryNameLoc
     | FunctionParamLoc
     | PatternLoc
+    | MatchCasePatternLoc
     | ExpressionLoc
     | ArrayProviderLoc
     | FunctionThisLoc

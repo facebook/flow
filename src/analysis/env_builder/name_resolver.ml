@@ -3082,6 +3082,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method private visit_match_pattern ~arg root_pattern =
         let open Ast.MatchPattern in
+        let () =
+          let write_entries =
+            EnvMap.add
+              (Env_api.MatchCasePatternLoc, fst root_pattern)
+              (Env_api.AssigningWrite (mk_reason RMatchPattern (fst root_pattern)))
+              env_state.write_entries
+          in
+          env_state <- { env_state with write_entries }
+        in
         let eq_refinement ~acc ~loc refis =
           match RefinementKey.of_expression acc with
           | Some key ->

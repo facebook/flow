@@ -480,7 +480,7 @@ let rec resolve_binding cx def_scope_kind reason loc b =
       t
   | Root (Value { hints = _; expr; decl_kind; as_const }) ->
     expression cx ?decl:decl_kind ~as_const expr
-  | Root (MatchCaseRoot { case_match_root_loc }) ->
+  | Root (MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev = _ }) ->
     Type_env.var_ref cx (OrdinaryName Flow_ast_utils.match_root_name) case_match_root_loc
   | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
     let open Ast.Expression.Object in
@@ -1072,6 +1072,10 @@ let resolve_chain_expression cx ~cond exp =
 
 let resolve_write_expression cx ~cond exp = synthesizable_expression cx ~encl_ctx:cond exp
 
+let resolve_match_pattern cx def_scope_kind def_reason case_match_root_loc pattern =
+  ignore (cx, def_scope_kind, def_reason, case_match_root_loc, pattern);
+  MixedT.why def_reason
+
 let resolve_generator_next cx reason gen =
   let open TypeUtil in
   match gen with
@@ -1112,6 +1116,8 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   let t =
     match def with
     | Binding b -> resolve_binding cx def_scope_kind def_reason id_loc b
+    | MatchCasePattern { case_match_root_loc; pattern } ->
+      resolve_match_pattern cx def_scope_kind def_reason case_match_root_loc pattern
     | ExpressionDef { cond_context = cond; expr; chain = true; hints = _ } ->
       resolve_chain_expression cx ~cond expr
     | ExpressionDef { cond_context = cond; expr; chain = false; hints = _ } ->

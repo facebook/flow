@@ -3263,17 +3263,25 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               acc
         )
       in
-      Base.List.iteri cases ~f:(fun i (_, { Case.pattern; body; guard; case_match_root_loc; _ }) ->
-          let acc = MatchCaseRoot { case_match_root_loc } in
-          this#add_match_destructure_bindings acc pattern;
-          ignore @@ super#match_pattern pattern;
-          Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
-          (* We use best-effort value hints for cases other than the current case.
-             Hints are ordered as the cases are in source, top to bottom. *)
-          let value_hints = value_hints |> IMap.remove i |> IMap.values |> List.rev in
-          let hints = Base.List.append hints value_hints in
-          this#visit_expression ~hints ~cond:NoContext body
-      )
+      let _ =
+        Base.List.foldi
+          cases
+          ~init:[]
+          ~f:(fun i prev_pattern_locs_rev (_, { Case.pattern; body; guard; case_match_root_loc; _ })
+             ->
+            let acc = MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev } in
+            this#add_match_destructure_bindings ~case_match_root_loc acc pattern;
+            ignore @@ super#match_pattern pattern;
+            Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
+            (* We use best-effort value hints for cases other than the current case.
+               Hints are ordered as the cases are in source, top to bottom. *)
+            let value_hints = value_hints |> IMap.remove i |> IMap.values |> List.rev in
+            let hints = Base.List.append hints value_hints in
+            this#visit_expression ~hints ~cond:NoContext body;
+            fst pattern :: prev_pattern_locs_rev
+        )
+      in
+      ()
 
     method! match_statement _ x =
       let open Ast.Match in
@@ -3283,16 +3291,23 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         match_keyword_loc
         (mk_reason RMatch match_keyword_loc)
         (Binding (Root (mk_value ~as_const:true arg)));
-      Base.List.iter cases ~f:(fun (_, { Case.pattern; body; guard; case_match_root_loc; _ }) ->
-          let acc = MatchCaseRoot { case_match_root_loc } in
-          this#add_match_destructure_bindings acc pattern;
-          ignore @@ super#match_pattern pattern;
-          Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
-          run this#statement body
-      );
+      let _ =
+        Base.List.fold
+          cases
+          ~init:[]
+          ~f:(fun prev_pattern_locs_rev (_, { Case.pattern; body; guard; case_match_root_loc; _ })
+             ->
+            let acc = MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev } in
+            this#add_match_destructure_bindings ~case_match_root_loc acc pattern;
+            ignore @@ super#match_pattern pattern;
+            Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
+            run this#statement body;
+            fst pattern :: prev_pattern_locs_rev
+        )
+      in
       x
 
-    method add_match_destructure_bindings root pattern =
+    method add_match_destructure_bindings ~case_match_root_loc root pattern =
       let visit_binding loc name binding =
         let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
         this#add_ordinary_binding
@@ -3300,6 +3315,11 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           (mk_reason (RIdentifier (OrdinaryName name)) loc)
           (Binding binding)
       in
+      let (pattern_loc, _) = pattern in
+      this#add_binding
+        (Env_api.MatchCasePatternLoc, pattern_loc)
+        (mk_reason RMatchPattern pattern_loc)
+        (MatchCasePattern { case_match_root_loc; pattern });
       MatchPattern.visit_pattern
         ~visit_binding
         ~visit_expression:(this#visit_expression ~hints:[] ~cond:MatchPattern)

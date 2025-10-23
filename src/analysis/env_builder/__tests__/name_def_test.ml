@@ -1632,7 +1632,8 @@ let%expect_test "match_pattern_binding" =
   [%expect {|
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
-      (3, 8) to (3, 9) => match root for case at (3, 2) to (3, 2)
+      (3, 8) to (3, 9) => match root for case at (3, 2) to (3, 2);
+      (3, 2) to (3, 9) => match pattern (3, 2) to (3, 9)
     ] |}]
 
 let%expect_test "match_pattern_tuple" =
@@ -1645,7 +1646,8 @@ let%expect_test "match_pattern_tuple" =
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
       (3, 9) to (3, 10) => (match root for case at (3, 2) to (3, 2))[0];
-      (3, 2) to (3, 11) => match root for case at (3, 2) to (3, 2)
+      (3, 2) to (3, 11) => match root for case at (3, 2) to (3, 2);
+      (3, 2) to (3, 11) => match pattern (3, 2) to (3, 11)
     ] |}]
 
 let%expect_test "match_pattern_tuple_rest" =
@@ -1658,7 +1660,8 @@ let%expect_test "match_pattern_tuple_rest" =
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
       (3, 15) to (3, 16) => (match root for case at (3, 2) to (3, 2))[...];
-      (3, 2) to (3, 17) => match root for case at (3, 2) to (3, 2)
+      (3, 2) to (3, 17) => match root for case at (3, 2) to (3, 2);
+      (3, 2) to (3, 17) => match pattern (3, 2) to (3, 17)
     ] |}]
 
 let%expect_test "match_pattern_object" =
@@ -1671,7 +1674,8 @@ let%expect_test "match_pattern_object" =
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
       (3, 14) to (3, 15) => (match root for case at (3, 2) to (3, 2)).foo;
-      (3, 2) to (3, 16) => match root for case at (3, 2) to (3, 2)
+      (3, 2) to (3, 16) => match root for case at (3, 2) to (3, 2);
+      (3, 2) to (3, 16) => match pattern (3, 2) to (3, 16)
     ] |}]
 
 let%expect_test "match_pattern_object_shorthand" =
@@ -1684,7 +1688,8 @@ let%expect_test "match_pattern_object_shorthand" =
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
       (3, 9) to (3, 12) => (match root for case at (3, 2) to (3, 2)).foo;
-      (3, 2) to (3, 13) => match root for case at (3, 2) to (3, 2)
+      (3, 2) to (3, 13) => match root for case at (3, 2) to (3, 2);
+      (3, 2) to (3, 13) => match pattern (3, 2) to (3, 13)
     ] |}]
 
 let%expect_test "match_pattern_object_rest" =
@@ -1697,7 +1702,8 @@ let%expect_test "match_pattern_object_rest" =
     [
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
       (3, 20) to (3, 24) => (match root for case at (3, 2) to (3, 2)){ ... };
-      (3, 2) to (3, 25) => match root for case at (3, 2) to (3, 2)
+      (3, 2) to (3, 25) => match root for case at (3, 2) to (3, 2);
+      (3, 2) to (3, 25) => match pattern (3, 2) to (3, 25)
     ] |}]
 
 let%expect_test "match_pattern_as" =
@@ -1711,6 +1717,7 @@ let%expect_test "match_pattern_as" =
       (2, 1) to (2, 6) => val (2, 8) to (2, 9);
       (3, 13) to (3, 14) => (match root for case at (3, 2) to (3, 2)).foo;
       (3, 2) to (3, 15) => match root for case at (3, 2) to (3, 2);
+      (3, 2) to (3, 15) => match pattern (3, 2) to (3, 15);
       (3, 8) to (3, 9) => exp (3, 8) to (3, 9) (hint = [])
     ] |}]
 
@@ -1726,5 +1733,22 @@ let%expect_test "match_pattern_nested" =
       (3, 27) to (3, 28) => (((match root for case at (3, 2) to (3, 2)).foo)[2]).bar;
       (3, 2) to (3, 31) => match root for case at (3, 2) to (3, 2);
       (3, 8) to (3, 30) => (match root for case at (3, 2) to (3, 2)).foo;
-      (3, 15) to (3, 29) => ((match root for case at (3, 2) to (3, 2)).foo)[2]
+      (3, 15) to (3, 29) => ((match root for case at (3, 2) to (3, 2)).foo)[2];
+      (3, 2) to (3, 31) => match pattern (3, 2) to (3, 31)
     ] |}]
+
+let%expect_test "match_pattern_order" =
+  print_order_test {|
+(match (x) {
+  [const a] => a,
+  [const b] => b,
+});
+  |};
+  [%expect {|
+    (2, 1) to (2, 6) =>
+    (3, 2) to (3, 11) (Env_api.Make.PatternLoc) =>
+    (3, 9) to (3, 10) =>
+    (3, 2) to (3, 11) (Env_api.Make.MatchCasePatternLoc) =>
+    (4, 2) to (4, 11) (Env_api.Make.PatternLoc) =>
+    (4, 9) to (4, 10) =>
+    (4, 2) to (4, 11) (Env_api.Make.MatchCasePatternLoc) |}]
