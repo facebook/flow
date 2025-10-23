@@ -100,6 +100,7 @@ type root =
       concrete: root option;
     }
   | Value of value
+  | MatchCaseRoot of { case_match_root_loc: ALoc.t }
   | FunctionValue of {
       hints: ast_hints;
       synthesizable_from_annotation: function_synth_kind;
@@ -232,6 +233,8 @@ module Print = struct
     | UnannotatedParameter r -> Reason.string_of_reason r
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
     | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)
+    | MatchCaseRoot { case_match_root_loc } ->
+      spf "match root for case at %s" (ALoc.debug_to_string case_match_root_loc)
     | FunctionValue { function_loc; _ } -> spf "function val %s" (ALoc.debug_to_string function_loc)
     | ObjectValue _ -> "object"
     | For (In, (loc, _)) -> spf "for in %s" (ALoc.debug_to_string loc)

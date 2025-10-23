@@ -3264,13 +3264,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         )
       in
       Base.List.iteri cases ~f:(fun i (_, { Case.pattern; body; guard; case_match_root_loc; _ }) ->
-          let match_root =
-            ( case_match_root_loc,
-              Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_match_root_loc)
-            )
-          in
-          ignore @@ this#expression match_root;
-          let acc = mk_value match_root in
+          let acc = MatchCaseRoot { case_match_root_loc } in
           this#add_match_destructure_bindings acc pattern;
           ignore @@ super#match_pattern pattern;
           Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
@@ -3290,13 +3284,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         (mk_reason RMatch match_keyword_loc)
         (Binding (Root (mk_value ~as_const:true arg)));
       Base.List.iter cases ~f:(fun (_, { Case.pattern; body; guard; case_match_root_loc; _ }) ->
-          let match_root =
-            ( case_match_root_loc,
-              Ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_match_root_loc)
-            )
-          in
-          ignore @@ this#expression match_root;
-          let acc = mk_value match_root in
+          let acc = MatchCaseRoot { case_match_root_loc } in
           this#add_match_destructure_bindings acc pattern;
           ignore @@ super#match_pattern pattern;
           Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);

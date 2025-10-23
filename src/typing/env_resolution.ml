@@ -480,6 +480,8 @@ let rec resolve_binding cx def_scope_kind reason loc b =
       t
   | Root (Value { hints = _; expr; decl_kind; as_const }) ->
     expression cx ?decl:decl_kind ~as_const expr
+  | Root (MatchCaseRoot { case_match_root_loc }) ->
+    Type_env.var_ref cx (OrdinaryName Flow_ast_utils.match_root_name) case_match_root_loc
   | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
     let open Ast.Expression.Object in
     let resolve_prop ~bind_this ~prop_loc ~fn_loc fn =

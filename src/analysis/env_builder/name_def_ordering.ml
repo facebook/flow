@@ -977,6 +977,11 @@ struct
         | Value { hints; expr; decl_kind = _; as_const = _ } ->
           let state = depends_of_hints state hints in
           depends_of_expression expr state
+        | MatchCaseRoot { case_match_root_loc } ->
+          depends_of_node
+            (fun visitor ->
+              run visitor#identifier (Flow_ast_utils.match_root_ident case_match_root_loc))
+            state
         | ObjectValue { obj; synthesizable = ObjectSynthesizable _; _ } ->
           let open Ast.Expression.Object in
           let open Ast.Expression.Object.Property in
@@ -1223,7 +1228,9 @@ struct
         | Root (UnannotatedParameter _) -> true
         | Root (Annotation _) -> true
         | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) -> true
-        | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
+        | Root
+            ( For _ | Value _ | MatchCaseRoot _ | FunctionValue _ | Contextual _ | EmptyArray _
+            | ObjectValue _ ) ->
           false
         | Select { selector = Selector.Computed _; _ } -> false
         | Select { parent = (_, binding); _ } -> bind_loop binding
@@ -1326,8 +1333,9 @@ struct
           with
           | Scope_api.With_ALoc.Missing_def _ -> functions
         end
-      | Root (For _ | Value _ | FunctionValue _ | Contextual _ | EmptyArray _ | ObjectValue _) ->
-      begin
+      | Root
+          ( For _ | Value _ | MatchCaseRoot _ | FunctionValue _ | Contextual _ | EmptyArray _
+          | ObjectValue _ ) -> begin
         try
           let { Provider_api.state; _ } =
             Base.Option.value_exn (Provider_api.providers_of_def providers loc)
