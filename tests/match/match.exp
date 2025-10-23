@@ -758,7 +758,7 @@ Error --------------------------------------------------------------------------
 
 Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   14|      {var a, ...var b} => 0, // ERROR
+   14|      {var a, ...var b} => a, // ERROR
              ^^^^^
 
 
@@ -766,8 +766,16 @@ Error --------------------------------------------------------------------------
 
 Cannot use `var` for match pattern binding. Only `const` is allowed. [match-invalid-pattern]
 
-   14|      {var a, ...var b} => 0, // ERROR
+   14|      {var a, ...var b} => a, // ERROR
                        ^^^^^
+
+
+Error ------------------------------------------------------------------------------------------ pattern-errors.js:14:27
+
+Cannot resolve name `a`. [cannot-resolve-name]
+
+   14|      {var a, ...var b} => a, // ERROR
+                                 ^
 
 
 Error ------------------------------------------------------------------------------------------ pattern-errors.js:15:11
@@ -1703,4 +1711,4 @@ References:
 
 
 
-Found 128 errors
+Found 129 errors

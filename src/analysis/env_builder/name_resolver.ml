@@ -3412,7 +3412,15 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         recurse arg root_pattern SMap.empty
         |> SMap.iter (fun _ bindings ->
                Base.List.iter bindings ~f:(fun (kind, id) ->
-                   ignore @@ this#pattern_identifier ~kind id
+                   match kind with
+                   | Ast.Variable.Var
+                   | Ast.Variable.Let ->
+                     (* While the invalid let binding is generally fine, the invalid var binding can
+                      * can very problematic, since it's function scoped. If we bind them as usual,
+                      * it can cause confusing cycle errors, since the var binding can introduce
+                      * dependency from a pattern below the current pattern. *)
+                     ()
+                   | Ast.Variable.Const -> ignore @@ this#pattern_identifier ~kind id
                )
            )
 

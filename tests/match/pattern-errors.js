@@ -11,7 +11,7 @@
 
   const e2 = match (x) {
      [...var a] => 0, // ERROR
-     {var a, ...var b} => 0, // ERROR
+     {var a, ...var b} => a, // ERROR
      0 as var a => 0, // ERROR
      var a => 0, // ERROR
   };
