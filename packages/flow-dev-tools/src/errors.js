@@ -75,7 +75,7 @@ function isUnusedSuppression(error: FlowError): boolean {
   return (
     (error.message[0].descr === 'Error suppressing comment' &&
       error.message[1].descr === 'Unused suppression') ||
-    error.message[0].descr === 'Unused suppression comment.'
+    error.message[0].descr.startsWith('Unused suppression comment.')
   );
 }
 
