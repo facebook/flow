@@ -2,3 +2,5 @@
 
 export type A = string;
 export type B = number;
+
+export const Map = 1; // something that's also available as a global

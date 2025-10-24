@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Import from ./import-provider",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-missing-import.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 41
+                },
+                "end": {
+                  "line": 2,
+                  "character": 41
+                }
+              },
+              "newText": "\n\nimport { Map } from \"./import-provider\";"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "import",
+          "Import from ./import-provider"
+        ]
+      }
+    }
+  ]
+}

@@ -551,6 +551,38 @@ let maybe_sort_by_usage ~imports_ranked_usage imports =
   else
     imports
 
+let find_unbound_names_from_scope ~loc_of_aloc ~cx query_loc =
+  let open Loc_collections in
+  let already_handled_unbound_names_with_error =
+    Flow_error.ErrorSet.fold
+      (fun error loc_set ->
+        let error_message =
+          Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
+        in
+        match error_message with
+        | Error_message.EBuiltinNameLookupFailed { loc = error_loc; name = _ } ->
+          LocSet.add error_loc loc_set
+        | _ -> loc_set)
+      (Context.errors cx)
+      LocSet.empty
+  in
+  let { Loc_env.var_info = { Env_api.env_values; _ }; _ } = Context.environment cx in
+  ALocMap.fold
+    (fun aloc { Env_api.write_locs; _ } acc ->
+      match write_locs with
+      | [Env_api.Global name] ->
+        let loc = loc_of_aloc aloc in
+        if
+          Loc.intersects loc query_loc
+          && not (LocSet.mem loc already_handled_unbound_names_with_error)
+        then
+          (loc, name) :: acc
+        else
+          acc
+      | _ -> acc)
+    env_values
+    []
+
 let suggest_imports
     ~cx
     ~layout_options
@@ -1889,6 +1921,25 @@ let code_actions_at_loc
       uri
       loc
   in
+  let scope_based_auto_import_fixes =
+    match env.ServerEnv.exports with
+    | Some exports when Options.autoimports options && include_quick_fixes only ->
+      let unbound_names = find_unbound_names_from_scope ~loc_of_aloc ~cx loc in
+      Base.List.concat_map unbound_names ~f:(fun (error_loc, name) ->
+          suggest_imports
+            ~cx
+            ~layout_options:(Code_action_utils.layout_options options)
+            ~module_system_info
+            ~ast
+            ~diagnostics
+            ~imports_ranked_usage
+            ~exports
+            ~name
+            uri
+            error_loc
+      )
+    | _ -> []
+  in
   let inspection_related_code_actions =
     if autofix_exports_code_actions <> [] then
       (* If autofix_exports_code_actions provides some results, and
@@ -1918,6 +1969,7 @@ let code_actions_at_loc
     @ autofix_exports_code_actions
     @ autofix_missing_local_annot_code_actions
     @ error_fixes
+    @ scope_based_auto_import_fixes
     @ insert_inferred_render_type_code_actions
     @ refactor_code_actions
     @ inspection_related_code_actions
