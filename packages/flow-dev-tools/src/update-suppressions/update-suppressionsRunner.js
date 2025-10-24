@@ -447,12 +447,12 @@ async function runner(args: Args): Promise<void> {
   console.log(
     'Removed %d comments in %d files',
     removedErrorCount,
-    errors.length,
+    filesWithUnusedSuppressionsCount,
   );
   console.log(
     'Added %d comments in %d files',
     addedSuppressionCount,
-    errors.length,
+    filesWithNeededSuppressionsCount,
   );
   if (ignoredFileCount > 0) {
     console.log(
