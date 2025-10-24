@@ -138,10 +138,8 @@ import_specifiers_1.js:3:9
 Flags: --pretty
 {
   "result":[
-    {"name":"Typesafety","type":"interface Typesafety"},
     {"name":"Typhoon","type":"declare var Typhoon: \"not a type\""},
     {"name":"Typhoons","type":"declare var Typhoons: \"also not a type\""},
-    {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
     {"name":"Tyrannosaurus","type":"class Tyrannosaurus"},
     {"name":"default","type":"declare var default: number"}
   ]
@@ -151,9 +149,7 @@ import_specifiers_2.js:3:17
 Flags: --pretty
 {
   "result":[
-    {"name":"Typesafety","type":"interface Typesafety"},
     {"name":"Typhoons","type":"declare var Typhoons: \"also not a type\""},
-    {"name":"Typical","type":"type Typical = {|x: number, y: number|}"},
     {"name":"Tyrannosaurus","type":"class Tyrannosaurus"},
     {"name":"default","type":"declare var default: number"}
   ]

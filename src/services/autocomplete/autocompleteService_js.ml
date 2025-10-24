@@ -2311,15 +2311,14 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
         (* TODO: complete module names *)
         AcEmpty "Module"
       | Ac_import_specifier { module_type_opt; used_keys; is_type } ->
-        (* TODO: is_type should be an import_kind:
-           ImportType = `Type
-           ImportTypeof = `Value
-           ImportValue = `Either *)
+        (* is_type determines whether to suggest type exports or value exports:
+           import type { } -> is_type = true -> suggest only type exports
+           import { } -> is_type = false -> suggest only value exports *)
         let kind =
           if is_type then
             `Type
           else
-            `Either
+            `Value
         in
         let filter_name name = not (SSet.mem name used_keys) in
         let module_type_opt = Option.map (fun m -> `Module m) module_type_opt in
