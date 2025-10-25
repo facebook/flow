@@ -1005,7 +1005,7 @@ References:
 Error ---------------------------------------------------------------------------------------------------- misc.js:68:28
 
 Cannot call `Object.keys(...).reduce` because: [incompatible-type]
- - Either object literal [1] is incompatible with type including generic type(s) `TFormData` [2].
+ - Either object literal [1] is incompatible with mapped type [2].
  - Or no more than 1 argument is expected by function type [3].
 
    misc.js:68:28
@@ -1042,6 +1042,23 @@ References:
    misc.js:133:72
    133| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
                                                                                ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- misc.js:156:10
+
+Cannot return `p` because partial `T` [1] is incompatible with `T` [2]. [incompatible-type]
+
+   misc.js:156:10
+   156|   return p; // error
+                 ^
+
+References:
+   misc.js:155:37
+   155| function partial_test<T>(p: Partial<T>): T {
+                                            ^ [1]
+   misc.js:155:42
+   155| function partial_test<T>(p: Partial<T>): T {
+                                                 ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- nested.js:8:10
@@ -1394,8 +1411,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ synthetic.js:2:10
 
-Cannot return `x` because mapped type [1] is incompatible with type including generic type(s) `T` [2].
-[incompatible-type]
+Cannot return `x` because mapped type [1] is incompatible with mapped type [2]. [incompatible-type]
 
    synthetic.js:2:10
    2|   return x; // error S incompatible with T
@@ -1429,7 +1445,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:10:10
 
-Cannot return `x` because `Pick` [1] is incompatible with type including generic type(s) `T` [2]. [incompatible-type]
+Cannot return `x` because `Pick` [1] is incompatible with `Pick` [2]. [incompatible-type]
 
    synthetic.js:10:10
    10|   return x; // error S incompatible with T
@@ -1446,7 +1462,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:14:10
 
-Cannot return `x` because partial `S` [1] is incompatible with `Partial<T>` [2]. [incompatible-type]
+Cannot return `x` because partial `S` [1] is incompatible with partial `T` [2]. [incompatible-type]
 
    synthetic.js:14:10
    14|   return x; // error S incompatible with T
@@ -1463,7 +1479,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:18:10
 
-Cannot return `x` because required of `S` [1] is incompatible with `Required<T>` [2]. [incompatible-type]
+Cannot return `x` because required of `S` [1] is incompatible with required of `T` [2]. [incompatible-type]
 
    synthetic.js:18:10
    18|   return x; // error S incompatible with T
@@ -1552,7 +1568,7 @@ References:
 
 
 
-Found 89 errors
+Found 90 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

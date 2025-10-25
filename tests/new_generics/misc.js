@@ -150,3 +150,8 @@ function gejses<TMapKey: string>(
   }
   return null;
 }
+
+// Partial
+function partial_test<T>(p: Partial<T>): T {
+  return p; // error
+}

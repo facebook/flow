@@ -56,7 +56,29 @@ let mk_object_type
   in
   Generic.make_op_id kind generics
   |> Base.Option.value_map ~default:t ~f:(fun id ->
-         GenericT { bound = t; reason; id; name = Generic.subst_name_of_id id; no_infer = false }
+         match kind with
+         | Subst_name.CreateElement
+         | Subst_name.CheckConfig
+         | Subst_name.MakeExact
+         | Subst_name.ReadOnly
+         | Subst_name.ReactConfig
+         | Subst_name.Spread ->
+           GenericT { bound = t; reason; id; name = Generic.subst_name_of_id id; no_infer = false }
+         | Subst_name.MappedObject
+         | Subst_name.MappedArray
+         | Subst_name.Partial
+         | Subst_name.Required ->
+           let name = Generic.subst_name_of_id id in
+           OpaqueT
+             ( reason,
+               {
+                 opaque_id = Opaque.(StuckEval (StuckEvalForGenericallyMappedObject name));
+                 underlying_t = None;
+                 lower_t = None;
+                 upper_t = Some t;
+                 opaque_type_args = [(name, reason, t, Polarity.Neutral)];
+               }
+             )
      )
 
 let type_optionality_and_missing_property { Object.prop_t; _ } =

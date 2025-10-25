@@ -2190,6 +2190,7 @@ and Opaque : sig
     | StuckEvalForRequiredType
     | StuckEvalForValuesType
     | StuckEvalForConditionalType
+    | StuckEvalForGenericallyMappedObject of Subst_name.t
     | StuckEvalForKeyMirrorType
     | StuckEvalForReactDRO of TypeTerm.dro_type
     | StuckEvalForEnumType
@@ -2219,6 +2220,7 @@ end = struct
     | StuckEvalForRequiredType
     | StuckEvalForValuesType
     | StuckEvalForConditionalType
+    | StuckEvalForGenericallyMappedObject of Subst_name.t
     | StuckEvalForKeyMirrorType
     | StuckEvalForReactDRO of TypeTerm.dro_type
     | StuckEvalForEnumType
@@ -2255,6 +2257,8 @@ end = struct
     | StuckEval StuckEvalForRequiredType -> "StuckEvalForRequiredType"
     | StuckEval StuckEvalForValuesType -> "StuckEvalForValuesType"
     | StuckEval StuckEvalForConditionalType -> "StuckEvalForConditionalType"
+    | StuckEval (StuckEvalForGenericallyMappedObject n) ->
+      "StuckEvalForGenericMappedType " ^ Subst_name.show n
     | StuckEval StuckEvalForKeyMirrorType -> "StuckEvalForKeyMirrorType"
     | StuckEval (StuckEvalForReactDRO _) -> "StuckEvalForReactDRO"
     | StuckEval StuckEvalForEnumType -> "StuckEvalForEnumType"
