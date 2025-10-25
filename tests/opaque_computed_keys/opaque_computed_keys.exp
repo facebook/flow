@@ -1,0 +1,82 @@
+Error ----------------------------------------------------------------------------------------------------- defs.js:13:1
+
+Cannot cast `obj` to object type because property `special` is missing in object type [1] but exists in object
+literal [2]. Any property that does not exist in object type [1] must be compatible with its indexer string literal
+`other` [3]. [incompatible-type]
+
+   defs.js:13:1
+   13| obj as {['other']: string}; // error 'other' is incompatible with 'special'
+       ^^^
+
+References:
+   defs.js:13:8
+   13| obj as {['other']: string}; // error 'other' is incompatible with 'special'
+              ^^^^^^^^^^^^^^^^^^^ [1]
+   defs.js:5:13
+    5| const obj = {[op]: 'abc'};
+                   ^^^^^^^^^^^^^ [2]
+   defs.js:13:10
+   13| obj as {['other']: string}; // error 'other' is incompatible with 'special'
+                ^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------------ main.js:9:1
+
+Cannot cast `obj` to object type because in the indexer property's key: `Op` [1] is not exactly the same as
+`string` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{[string]: string}` [4]
+- Or make the indexer in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   main.js:9:1
+   9| obj as {[string]: string}; // error invariant position
+      ^^^
+
+References:
+   main.js:4:15
+   4| const obj = {[op]: 'abc'};
+                    ^^ [1]
+   main.js:9:10
+   9| obj as {[string]: string}; // error invariant position
+               ^^^^^^ [2]
+   main.js:4:13
+   4| const obj = {[op]: 'abc'};
+                  ^^^^^^^^^^^^^ [3]
+   main.js:9:8
+   9| obj as {[string]: string}; // error invariant position
+             ^^^^^^^^^^^^^^^^^^ [4]
+
+
+Error ----------------------------------------------------------------------------------------------------- main.js:10:1
+
+Cannot cast `obj` to object type because in the indexer property's key: `Op` [1] is not exactly the same as
+`"special"` [2]. [incompatible-type]
+
+The above-mentioned two types must be the same because the indexer is invariantly typed. To fix the error,
+- Either annotate object literal [3] with `{["special"]: string}` [4]
+- Or make the indexer in object type [4] readonly. See
+https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-a-string-number.
+
+   main.js:10:1
+   10| obj as {['special']: string}; // error Op is opaque - no knowledge of specific value
+       ^^^
+
+References:
+   main.js:4:15
+    4| const obj = {[op]: 'abc'};
+                     ^^ [1]
+   main.js:10:10
+   10| obj as {['special']: string}; // error Op is opaque - no knowledge of specific value
+                ^^^^^^^^^ [2]
+   main.js:4:13
+    4| const obj = {[op]: 'abc'};
+                   ^^^^^^^^^^^^^ [3]
+   main.js:10:8
+   10| obj as {['special']: string}; // error Op is opaque - no knowledge of specific value
+              ^^^^^^^^^^^^^^^^^^^^^ [4]
+
+
+
+Found 3 errors

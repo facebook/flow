@@ -1827,7 +1827,7 @@ struct
                 reason = _;
                 kind =
                   ( ConcretizeForOptionalChain | ConcretizeForOperatorsChecking
-                  | ConcretizeForObjectAssign );
+                  | ConcretizeForComputedObjectKeys | ConcretizeForObjectAssign );
                 seen = _;
                 collector;
               }
@@ -4011,6 +4011,11 @@ struct
              the case. All that remains is the "constructor" prop, which has no
              special meaning on the static object. *)
           NameUtils.Map.iter (fun x p -> if inherited_method x then check_super st x p) static
+          (* Keep opaque types in computed object keys *)
+        | ( t,
+            ConcretizeT { reason = _; kind = ConcretizeForComputedObjectKeys; seen = _; collector }
+          ) ->
+          TypeCollector.add collector t
         (***********************)
         (* opaque types part 2 *)
         (***********************)
@@ -5342,6 +5347,7 @@ struct
       (* In this set of cases, we flow the generic's upper bound to u. This is what we normally would do
          in the catch-all generic case anyways, but these rules are to avoid wildcards elsewhere in __flow. *)
       | ConcretizeT { reason = _; kind = ConcretizeForOperatorsChecking; seen = _; collector = _ }
+      | ConcretizeT { reason = _; kind = ConcretizeForComputedObjectKeys; seen = _; collector = _ }
       | ConcretizeT { reason = _; kind = ConcretizeForOptionalChain; seen = _; collector = _ }
       | TestPropT _
       | OptionalIndexedAccessT _
@@ -9440,6 +9446,9 @@ module rec FlowJs : Flow_common.S = struct
     possible_concrete_types ConcretizeForOperatorsChecking
 
   let possible_concrete_types_for_object_assign = possible_concrete_types ConcretizeForObjectAssign
+
+  let possible_concrete_types_for_computed_object_keys =
+    possible_concrete_types ConcretizeForComputedObjectKeys
 
   let singleton_concrete_type_for_match_arg cx ~keep_unions reason t =
     singleton_concrete_type (ConcretizeForMatchArg { keep_unions }) cx reason t

@@ -1634,6 +1634,7 @@ module rec TypeTerm : sig
     | ConcretizeForInspection
     | ConcretizeForPredicate of predicate_concretizer_variant
     | ConcretizeForOperatorsChecking
+    | ConcretizeForComputedObjectKeys
     | ConcretizeForObjectAssign
     | ConcretizeForSentinelPropTest
     | ConcretizeForMatchArg of { keep_unions: bool }
@@ -4219,6 +4220,7 @@ let string_of_use_ctor = function
       | ConcretizeForSentinelPropTest -> "ConcretizeForPredicate"
       | ConcretizeAll -> "ConcretizeAll"
       | ConcretizeForOperatorsChecking -> "ConcretizeForOperatorsChecking"
+      | ConcretizeForComputedObjectKeys -> "ConcretizeForComputedObjectKeys"
       | ConcretizeForObjectAssign -> "ConcretizeForObjectAssign"
       | ConcretizeForMatchArg { keep_unions } ->
         spf "ConcretizeForMatchArg {keep_unions=%b}" keep_unions)

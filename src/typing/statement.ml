@@ -2543,31 +2543,48 @@ module Make
       ~as_const
       ~frozen
       value =
+    let valid_computed_key = function
+      | DefT (_, StrGeneralT _)
+      | StrUtilT _
+      | DefT (_, NumGeneralT _)
+      | DefT (_, EnumValueT _)
+      | AnyT _ ->
+        true
+      | _ -> false
+    in
     let single_key key =
       match Flow_js_utils.propref_for_elem_t cx key with
       | Computed key ->
-        (match key with
-        | DefT (_, StrGeneralT _)
-        | StrUtilT _
-        | DefT (_, NumGeneralT _)
-        | DefT (_, EnumValueT _)
-        | AnyT _ ->
+        if valid_computed_key key then
           ObjectExpressionAcc.ComputedProp.NonLiteralKey
             { key_loc; key; value; reason_obj; named_set_opt = None }
-        | DefT (reason_key, SingletonNumT { value = (value, _); _ }) ->
-          let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
-          Flow_js_utils.add_output
-            cx
-            (Error_message.EObjectComputedPropertyAssign (reason, Some reason_key, kind));
-          ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey
-        | _ ->
-          let reason = reason_of_t key in
-          Flow_js_utils.add_output
-            cx
-            (Error_message.EObjectComputedPropertyAssign
-               (reason, Some reason_key, Flow_intermediate_error_types.InvalidObjKey.Other)
-            );
-          ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey)
+        else (
+          match key with
+          | OpaqueT
+              (reason, { underlying_t = Some key; opaque_id = Opaque.UserDefinedOpaqueTypeId _; _ })
+            when ALoc.source (loc_of_reason reason) = ALoc.source (def_loc_of_reason reason)
+                 && valid_computed_key key ->
+            ObjectExpressionAcc.ComputedProp.NonLiteralKey
+              { key_loc; key; value; reason_obj; named_set_opt = None }
+          | OpaqueT (_, { upper_t = Some upper; opaque_id = Opaque.UserDefinedOpaqueTypeId _; _ })
+            when valid_computed_key upper ->
+            ObjectExpressionAcc.ComputedProp.NonLiteralKey
+              { key_loc; key; value; reason_obj; named_set_opt = None }
+          | DefT (reason_key, SingletonNumT { value = (value, _); _ }) ->
+            let kind = Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value in
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EObjectComputedPropertyAssign (reason, Some reason_key, kind));
+            ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey
+          | _ ->
+            let reason = reason_of_t key in
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EObjectComputedPropertyAssign
+                 (reason, Some reason_key, Flow_intermediate_error_types.InvalidObjKey.Other)
+              );
+            ObjectExpressionAcc.ComputedProp.IgnoredInvalidNonLiteralKey
+        )
       | Named { name; _ } ->
         let prop =
           Field
@@ -2617,7 +2634,7 @@ module Make
     let obj_proto = ObjProtoT reason in
     let mk_computed k key value =
       let (key_loc, _e) = k in
-      let concretized_keys = Flow.possible_concrete_types_for_operators_checking cx reason key in
+      let concretized_keys = Flow.possible_concrete_types_for_computed_object_keys cx reason key in
       let reason = reason_of_t key in
       let reason_key = Reason.mk_expression_reason k in
       let reason_obj = reason in
