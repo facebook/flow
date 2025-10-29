@@ -16,8 +16,8 @@ o2.qux; // error: qux not found
 class C<X> {
   x: {[key: $Keys<X>]: any}; // object with larger key set than X's
 }
-class D extends C<{foo: number, bar: string}> {
-  x: { foo: number, qux: boolean }; // error: qux not found
+class D extends C<{foo: number, bar: string, ...}> {
+  x: { foo: number, qux: boolean, ... }; // error: qux not found
 }
 
 type AnyKey = $Keys<Object>;
