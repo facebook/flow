@@ -1468,6 +1468,7 @@ let make_options
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
     opt_facebook_module_interop = FlowConfig.facebook_module_interop flowconfig;
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
+    opt_instance_t_objkit_fix = FlowConfig.instance_t_objkit_fix flowconfig;
     opt_include_warnings =
       options_flags.include_warnings
       || options_flags.max_warnings <> None

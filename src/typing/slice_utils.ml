@@ -40,7 +40,24 @@ let mk_object_type
         | Indexed dict -> Some dict
         | _ -> None
       in
-      let inst = { inst with own_props = id; inst_dict } in
+      let (inst, reason) =
+        if (Context.metadata cx).Context.instance_t_objkit_fix then
+          let inst =
+            {
+              inst with
+              own_props = id;
+              inst_dict;
+              (* When an instance goes through an ObjKit operations, it should lose its nominal identity. *)
+              class_id = ALoc.id_none;
+              inst_kind = InterfaceKind { inline = true };
+            }
+          in
+          let reason = replace_desc_reason RObjectType reason in
+          (inst, reason)
+        else
+          let inst = { inst with own_props = id; inst_dict } in
+          (inst, reason)
+      in
       (* Implemented/super interfaces are folded into the property map computed by the slice, so
            we effectively flatten the hierarchy in the output *)
       DefT (reason, InstanceT { static; super = ObjProtoT reason; implements = []; inst })

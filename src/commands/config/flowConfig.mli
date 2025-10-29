@@ -150,6 +150,8 @@ val hook_compatibility : config -> bool
 
 val ignore_non_literal_requires : config -> bool
 
+val instance_t_objkit_fix : config -> bool
+
 val include_warnings : config -> bool
 
 val jest_integration : config -> bool

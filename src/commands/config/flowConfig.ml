@@ -86,6 +86,7 @@ module Opts = struct
     hook_compatibility_includes: string list;
     hook_compatibility_excludes: string list;
     ignore_non_literal_requires: bool;
+    instance_t_objkit_fix: bool;
     include_warnings: bool;
     jest_integration: bool;
     lazy_mode: lazy_mode option;
@@ -232,6 +233,7 @@ module Opts = struct
       hook_compatibility_includes = [];
       hook_compatibility_excludes = [];
       ignore_non_literal_requires = false;
+      instance_t_objkit_fix = false;
       include_warnings = false;
       jest_integration = false;
       lazy_mode = None;
@@ -706,6 +708,9 @@ module Opts = struct
   let ignore_non_literal_requires_parser =
     boolean (fun opts v -> Ok { opts with ignore_non_literal_requires = v })
 
+  let instance_t_objkit_fix_parser =
+    boolean (fun opts v -> Ok { opts with instance_t_objkit_fix = v })
+
   let lazy_mode_parser =
     enum
       [
@@ -1056,6 +1061,7 @@ module Opts = struct
         hook_compatibility_excludes_parser
       );
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
+      ("experimental.instance_t_objkit_fix", instance_t_objkit_fix_parser);
       ("experimental.channel_mode", channel_mode_parser ~enabled:true);
       ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
       ("experimental.long_lived_workers", long_lived_workers_parser ~enabled:true);
@@ -1919,6 +1925,8 @@ let hook_compatibility_excludes c = c.options.Opts.hook_compatibility_excludes
 let hook_compatibility c = c.options.Opts.hook_compatibility
 
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
+
+let instance_t_objkit_fix c = c.options.Opts.instance_t_objkit_fix
 
 let include_warnings c = c.options.Opts.include_warnings
 

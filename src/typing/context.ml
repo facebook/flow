@@ -56,6 +56,7 @@ type metadata = {
   facebook_module_interop: bool;
   file_options: Files.options;
   ignore_non_literal_requires: bool;
+  instance_t_objkit_fix: bool;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   no_unchecked_indexed_access: bool;
@@ -294,6 +295,7 @@ let metadata_of_options options =
     hook_compatibility_excludes = Options.hook_compatibility_excludes options;
     hook_compatibility_includes = Options.hook_compatibility_includes options;
     hook_compatibility = Options.hook_compatibility options;
+    instance_t_objkit_fix = Options.instance_t_objkit_fix options;
     react_rules = Options.react_rules options;
     dev_only_refinement_info_as_errors = Options.dev_only_refinement_info_as_errors options;
     enable_const_params = Options.enable_const_params options;

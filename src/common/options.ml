@@ -137,6 +137,7 @@ type t = {
   opt_gc_worker: gc_control;
   opt_haste_module_ref_prefix: string option;
   opt_ignore_non_literal_requires: bool;
+  opt_instance_t_objkit_fix: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
   opt_lazy_mode: bool;
@@ -376,6 +377,8 @@ let saved_state_skip_version_check opts = opts.opt_saved_state_skip_version_chec
 let saved_state_verify opts = opts.opt_saved_state_verify
 
 let should_ignore_non_literal_requires opts = opts.opt_ignore_non_literal_requires
+
+let instance_t_objkit_fix opts = opts.opt_instance_t_objkit_fix
 
 let should_include_warnings opts = opts.opt_include_warnings
 

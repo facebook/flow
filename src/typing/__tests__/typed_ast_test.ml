@@ -44,6 +44,7 @@ let metadata =
     facebook_module_interop = false;
     file_options = Files.default_options;
     ignore_non_literal_requires = false;
+    instance_t_objkit_fix = false;
     max_workers = 0;
     missing_module_generators = [];
     no_unchecked_indexed_access = false;

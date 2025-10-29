@@ -106,6 +106,7 @@ type metadata = {
   facebook_module_interop: bool;
   file_options: Files.options;
   ignore_non_literal_requires: bool;
+  instance_t_objkit_fix: bool;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   no_unchecked_indexed_access: bool;
