@@ -54,31 +54,36 @@ let get_class_info cx (t : Type.t) : (ALoc.id * string option) option =
 (***********************)
 
 module PatternUnionBuilder : sig
-  val of_patterns_ast : Context.t -> pattern_ast_list -> PatternUnion.t
+  val of_patterns_ast : Context.t -> raise_errors:bool -> pattern_ast_list -> PatternUnion.t
 end = struct
   open PatternUnion
 
   (* Builder helpers *)
 
-  let not_seen_wildcard (cx : Context.t) (pattern_union : t) (reason : Reason.t) : bool =
+  let not_seen_wildcard
+      (cx : Context.t) ~(raise_errors : bool) (pattern_union : t) (reason : Reason.t) : bool =
     let { PatternUnion.wildcard; _ } = pattern_union in
     match wildcard with
     | Some already_seen ->
-      Flow_js.add_output
-        cx
-        (Error_message.EMatchUnusedPattern { reason; already_seen = Some already_seen });
-      false
-    | None -> true
-
-  let add_leaf (cx : Context.t) ~(guarded : bool) (pattern_union : t) (leaf : Leaf.t) : t =
-    let (reason, _) = leaf in
-    if not_seen_wildcard cx pattern_union reason then
-      let { PatternUnion.leafs; guarded_leafs; _ } = pattern_union in
-      match LeafSet.find_opt leaf leafs with
-      | Some (already_seen, _) ->
+      if raise_errors then
         Flow_js.add_output
           cx
           (Error_message.EMatchUnusedPattern { reason; already_seen = Some already_seen });
+      false
+    | None -> true
+
+  let add_leaf
+      (cx : Context.t) ~(raise_errors : bool) ~(guarded : bool) (pattern_union : t) (leaf : Leaf.t)
+      : t =
+    let (reason, _) = leaf in
+    if not_seen_wildcard cx ~raise_errors pattern_union reason then
+      let { PatternUnion.leafs; guarded_leafs; _ } = pattern_union in
+      match LeafSet.find_opt leaf leafs with
+      | Some (already_seen, _) ->
+        if raise_errors then
+          Flow_js.add_output
+            cx
+            (Error_message.EMatchUnusedPattern { reason; already_seen = Some already_seen });
         pattern_union
       | None ->
         if guarded then
@@ -89,15 +94,19 @@ end = struct
       pattern_union
 
   let add_wildcard
-      (cx : Context.t) ~(guarded : bool) ~(last : bool) (pattern_union : t) (reason : Reason.t) : t
-      =
-    if not_seen_wildcard cx pattern_union reason then
+      (cx : Context.t)
+      ~(raise_errors : bool)
+      ~(guarded : bool)
+      ~(last : bool)
+      (pattern_union : t)
+      (reason : Reason.t) : t =
+    if not_seen_wildcard cx ~raise_errors pattern_union reason then
       if guarded then (
         ( if last then
           let loc = Reason.loc_of_reason reason in
           (* We avoid more complex analysis by simply erroring when there is a
              guarded wilcard which is in the last case. *)
-          Flow_js.add_output cx (Error_message.EMatchInvalidGuardedWildcard loc)
+          if raise_errors then Flow_js.add_output cx (Error_message.EMatchInvalidGuardedWildcard loc)
         );
         pattern_union
       ) else
@@ -106,9 +115,13 @@ end = struct
       pattern_union
 
   let add_tuple
-      (cx : Context.t) (pattern_union : t) ~(length : int) (tuple : PatternObject.with_index) : t =
+      (cx : Context.t)
+      ~(raise_errors : bool)
+      (pattern_union : t)
+      ~(length : int)
+      (tuple : PatternObject.with_index) : t =
     let (_, (reason, { PatternObject.kind; rest; _ })) = tuple in
-    if not_seen_wildcard cx pattern_union reason then
+    if not_seen_wildcard cx ~raise_errors pattern_union reason then
       let { tuples_exact; tuples_inexact; _ } = pattern_union in
       let (tuples_exact, tuples_inexact) =
         if Base.Option.is_some rest || kind = ObjKind.Obj then
@@ -134,9 +147,11 @@ end = struct
     else
       pattern_union
 
-  let add_object (cx : Context.t) (pattern_union : t) (obj : PatternObject.with_index) : t =
+  let add_object
+      (cx : Context.t) ~(raise_errors : bool) (pattern_union : t) (obj : PatternObject.with_index) :
+      t =
     let (_, (reason, _)) = obj in
-    if not_seen_wildcard cx pattern_union reason then
+    if not_seen_wildcard cx ~raise_errors pattern_union reason then
       let { objects; _ } = pattern_union in
       (* Accumulate backwards, reverse at end of pattern_union creation. *)
       { pattern_union with objects = obj :: objects }
@@ -145,7 +160,7 @@ end = struct
 
   (* Construction from AST *)
 
-  let leaf_of_type cx (t : Type.t) pattern_ast : Leaf.t option =
+  let leaf_of_type cx ~(raise_errors : bool) (t : Type.t) pattern_ast : Leaf.t option =
     let open Flow_ast.MatchPattern in
     let (loc, _) = pattern_ast in
     let reason = Reason.mk_reason Reason.RMatchPattern loc in
@@ -166,11 +181,12 @@ end = struct
       | (loc, _) ->
         let { Type.members; _ } = enum_info in
         let example_member = SMap.choose_opt members |> Base.Option.map ~f:fst in
-        Flow_js.add_output
-          cx
-          (Error_message.EEnumInvalidCheck
-             { loc; enum_reason = TypeUtil.reason_of_t t; example_member; from_match = true }
-          );
+        if raise_errors then
+          Flow_js.add_output
+            cx
+            (Error_message.EEnumInvalidCheck
+               { loc; enum_reason = TypeUtil.reason_of_t t; example_member; from_match = true }
+            );
         None)
     | Type.DefT (_, Type.SingletonBoolT { value; _ }) -> Some (reason, Leaf.BoolC value)
     | Type.DefT (_, Type.SingletonNumT { value; _ }) -> Some (reason, Leaf.NumC value)
@@ -182,20 +198,26 @@ end = struct
       (* Ignore any-typed patterns. *)
       None
     | _ ->
-      Flow_js.add_output
-        cx
-        (Error_message.EMatchInvalidIdentOrMemberPattern
-           { loc; type_reason = TypeUtil.reason_of_t t }
-        );
+      if raise_errors then
+        Flow_js.add_output
+          cx
+          (Error_message.EMatchInvalidIdentOrMemberPattern
+             { loc; type_reason = TypeUtil.reason_of_t t }
+          );
       None
 
   let rec of_pattern_ast
-      (cx : Context.t) (pattern_ast : (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t) : t =
-    let (pattern_union, _) = of_pattern_ast' cx (empty, 0) ~guarded:false ~last:false pattern_ast in
+      (cx : Context.t)
+      ~(raise_errors : bool)
+      (pattern_ast : (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t) : t =
+    let (pattern_union, _) =
+      of_pattern_ast' cx (empty, 0) ~raise_errors ~guarded:false ~last:false pattern_ast
+    in
     pattern_union
 
   and of_pattern_ast'
       (cx : Context.t)
+      ~(raise_errors : bool)
       ((pattern_union, i) : t * int)
       ~(guarded : bool)
       ~(last : bool)
@@ -207,31 +229,31 @@ end = struct
     match pat with
     | BindingPattern _ ->
       let reason = Reason.mk_reason Reason.RMatchWildcard loc in
-      let pattern_union = add_wildcard cx ~guarded ~last pattern_union reason in
+      let pattern_union = add_wildcard cx ~raise_errors ~guarded ~last pattern_union reason in
       (pattern_union, next_i)
     | WildcardPattern _ ->
       let reason = Reason.mk_reason Reason.RMatchWildcard loc in
-      let pattern_union = add_wildcard cx ~guarded ~last pattern_union reason in
+      let pattern_union = add_wildcard cx ~raise_errors ~guarded ~last pattern_union reason in
       (pattern_union, next_i)
     | BooleanPattern { Flow_ast.BooleanLiteral.value; _ } ->
       let leaf = (reason, Leaf.BoolC value) in
-      let pattern_union = add_leaf cx ~guarded pattern_union leaf in
+      let pattern_union = add_leaf cx ~raise_errors ~guarded pattern_union leaf in
       (pattern_union, next_i)
     | NumberPattern { Flow_ast.NumberLiteral.value; raw; _ } ->
       let leaf = (reason, Leaf.NumC (value, raw)) in
-      let pattern_union = add_leaf cx ~guarded pattern_union leaf in
+      let pattern_union = add_leaf cx ~raise_errors ~guarded pattern_union leaf in
       (pattern_union, next_i)
     | BigIntPattern { Flow_ast.BigIntLiteral.value; raw; _ } ->
       let leaf = (reason, Leaf.BigIntC (value, raw)) in
-      let pattern_union = add_leaf cx ~guarded pattern_union leaf in
+      let pattern_union = add_leaf cx ~raise_errors ~guarded pattern_union leaf in
       (pattern_union, next_i)
     | StringPattern { Flow_ast.StringLiteral.value; _ } ->
       let leaf = (reason, Leaf.StrC (Reason.OrdinaryName value)) in
-      let pattern_union = add_leaf cx ~guarded pattern_union leaf in
+      let pattern_union = add_leaf cx ~raise_errors ~guarded pattern_union leaf in
       (pattern_union, next_i)
     | NullPattern _ ->
       let leaf = (reason, Leaf.NullC) in
-      let pattern_union = add_leaf cx ~guarded pattern_union leaf in
+      let pattern_union = add_leaf cx ~raise_errors ~guarded pattern_union leaf in
       (pattern_union, next_i)
     | UnaryPattern
         {
@@ -250,7 +272,7 @@ end = struct
           | Minus -> Flow_ast_utils.negate_number_literal (value, raw)
         in
         let leaf = (reason, Leaf.NumC literal) in
-        let pattern_union = add_leaf cx ~guarded pattern_union leaf in
+        let pattern_union = add_leaf cx ~raise_errors ~guarded pattern_union leaf in
         (pattern_union, next_i)
     | UnaryPattern
         {
@@ -266,19 +288,19 @@ end = struct
       | Minus ->
         let literal = (value, raw) in
         let leaf = (reason, Leaf.BigIntC literal) in
-        let pattern_union = add_leaf cx ~guarded pattern_union leaf in
+        let pattern_union = add_leaf cx ~raise_errors ~guarded pattern_union leaf in
         (pattern_union, next_i))
     | IdentifierPattern ((_, t), _)
     | MemberPattern ((_, t), _) ->
       let t = singleton_concrete_type cx t in
-      (match leaf_of_type cx t pattern_ast with
-      | Some leaf -> (add_leaf cx ~guarded pattern_union leaf, next_i)
+      (match leaf_of_type cx ~raise_errors t pattern_ast with
+      | Some leaf -> (add_leaf cx ~raise_errors ~guarded pattern_union leaf, next_i)
       | None -> ({ pattern_union with contains_invalid_pattern = true }, i))
     | AsPattern { AsPattern.pattern; _ } ->
-      of_pattern_ast' cx (pattern_union, i) ~guarded ~last pattern
+      of_pattern_ast' cx ~raise_errors (pattern_union, i) ~guarded ~last pattern
     | OrPattern { OrPattern.patterns; _ } ->
       Base.List.fold patterns ~init:(pattern_union, i) ~f:(fun acc pattern_ast ->
-          of_pattern_ast' ~guarded ~last cx acc pattern_ast
+          of_pattern_ast' ~raise_errors ~guarded ~last cx acc pattern_ast
       )
     | ArrayPattern { ArrayPattern.elements; rest; _ } ->
       let length = Base.List.length elements in
@@ -292,7 +314,7 @@ end = struct
                { ArrayPattern.Element.pattern; _ }
              ->
             let key = string_of_int i in
-            let value = of_pattern_ast cx pattern in
+            let value = of_pattern_ast cx ~raise_errors pattern in
             let contains_invalid_pattern =
               contains_invalid_pattern || value.PatternUnion.contains_invalid_pattern
             in
@@ -326,10 +348,10 @@ end = struct
           )
         )
       in
-      let pattern_union = add_tuple cx pattern_union ~length tuple in
+      let pattern_union = add_tuple cx ~raise_errors pattern_union ~length tuple in
       (pattern_union, next_i)
     | ObjectPattern x ->
-      object_pattern cx ~reason ~next_i ~pattern_union ~guarded ~class_info:None x
+      object_pattern cx ~raise_errors ~reason ~next_i ~pattern_union ~guarded ~class_info:None x
     | InstancePattern _ when not @@ Context.enable_pattern_matching_instance_patterns cx ->
       (pattern_union, next_i)
     | InstancePattern { InstancePattern.constructor; fields = (_, fields); _ } ->
@@ -351,10 +373,10 @@ end = struct
       | Some (class_id, class_name) ->
         let class_name = Base.Option.first_some constructor_name class_name in
         let class_info = Some (class_id, class_name) in
-        object_pattern cx ~reason ~next_i ~pattern_union ~guarded ~class_info fields
+        object_pattern cx ~raise_errors ~reason ~next_i ~pattern_union ~guarded ~class_info fields
       | _ -> (pattern_union, next_i))
 
-  and object_pattern cx ~reason ~next_i ~pattern_union ~guarded ~class_info pattern =
+  and object_pattern cx ~raise_errors ~reason ~next_i ~pattern_union ~guarded ~class_info pattern =
     let open Flow_ast.MatchPattern in
     let { ObjectPattern.properties; rest; _ } = pattern in
     let (props, keys_order_rev, tuple_like, contains_invalid_pattern) =
@@ -371,7 +393,7 @@ end = struct
                 (loc, Dtoa.ecma_string_of_float value)
               | BigIntLiteral (loc, { Flow_ast.BigIntLiteral.raw; _ }) -> (loc, raw)
             in
-            let value = of_pattern_ast cx pattern in
+            let value = of_pattern_ast cx ~raise_errors pattern in
             (* If the object patterns seems like it could also match tuples, record that. *)
             let tuple_like =
               match tuple_like with
@@ -417,18 +439,18 @@ end = struct
           )
         )
       in
-      let pattern_union = add_object cx pattern_union obj in
+      let pattern_union = add_object cx ~raise_errors pattern_union obj in
       match (class_info, tuple_like) with
-      | (None, Some i) -> add_tuple cx ~length:(Int.of_float i) pattern_union obj
+      | (None, Some i) -> add_tuple cx ~raise_errors ~length:(Int.of_float i) pattern_union obj
       | _ -> pattern_union
     in
     (pattern_union, next_i)
 
-  let of_patterns_ast cx patterns_ast =
+  let of_patterns_ast cx ~raise_errors patterns_ast =
     let last_i = Base.List.length patterns_ast - 1 in
     let (pattern_union, _) =
       Base.List.foldi patterns_ast ~init:(empty, 0) ~f:(fun i acc (pattern_ast, guarded) ->
-          of_pattern_ast' cx acc ~guarded ~last:(i = last_i) pattern_ast
+          of_pattern_ast' cx acc ~raise_errors ~guarded ~last:(i = last_i) pattern_ast
       )
     in
     let { objects; _ } = pattern_union in
@@ -817,8 +839,9 @@ type filter_union_result = {
 (* Filter some values by some patterns. This results in values which were matched by the patterns,
    and those which were not matched and left over. We also computed the set of locs of patterns
    which were useful - that is used to computed the unnecessary patterns. *)
-let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_union : PatternUnion.t)
-    : filter_union_result =
+let rec filter_values_by_patterns
+    cx ~(raise_errors : bool) ~(value_union : ValueUnion.t) ~(pattern_union : PatternUnion.t) :
+    filter_union_result =
   let {
     ValueUnion.leafs = value_leafs;
     tuples = value_tuples;
@@ -899,7 +922,7 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
           (tuple_value :: acc_tuples_left, acc_tuples_matched, acc_used_pattern_locs)
         else
           let (tuples_left, tuples_matched, used_pattern_locs) =
-            filter_objects_by_patterns cx [tuple_value] pattern_tuples
+            filter_objects_by_patterns cx ~raise_errors [tuple_value] pattern_tuples
           in
           let acc_used_pattern_locs = ALocSet.union acc_used_pattern_locs used_pattern_locs in
           ( Base.List.rev_append tuples_left acc_tuples_left,
@@ -913,12 +936,16 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
     if Base.List.is_empty arrays then
       (arrays, [], ALocSet.empty)
     else
-      filter_objects_by_patterns cx arrays (PatternUnion.all_tuples_and_objects pattern_union)
+      filter_objects_by_patterns
+        cx
+        ~raise_errors
+        arrays
+        (PatternUnion.all_tuples_and_objects pattern_union)
   in
   let used_pattern_locs = ALocSet.union used_pattern_locs array_used_pattern_locs in
   (* Objects *)
   let (objects_left, objects_matched, obj_used_pattern_locs) =
-    filter_objects_by_patterns cx value_objects pattern_objects
+    filter_objects_by_patterns cx ~raise_errors value_objects pattern_objects
   in
   let used_pattern_locs = ALocSet.union used_pattern_locs obj_used_pattern_locs in
   let value_left =
@@ -935,7 +962,7 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
   let mixed_used_pattern_locs =
     match is_object_subtype_of_inexhaustible inexhaustible with
     | None -> ALocSet.empty
-    | Some reason -> visit_mixed cx reason pattern_union
+    | Some reason -> visit_mixed cx ~raise_errors reason pattern_union
   in
   let used_pattern_locs = ALocSet.union used_pattern_locs mixed_used_pattern_locs in
   (* Wildcard *)
@@ -966,7 +993,10 @@ let rec filter_values_by_patterns cx ~(value_union : ValueUnion.t) ~(pattern_uni
    values against the patterns, and compute which objects were matched, and
    which were not matched. *)
 and filter_objects_by_patterns
-    cx (value_objects : ValueObject.t list) (pattern_objects : PatternObject.with_index list) :
+    cx
+    ~(raise_errors : bool)
+    (value_objects : ValueObject.t list)
+    (pattern_objects : PatternObject.with_index list) :
     ValueObject.t list * ValueObject.t list * ALocSet.t =
   let rec f acc = function
     | [] -> acc
@@ -985,7 +1015,9 @@ and filter_objects_by_patterns
               let additional_used_pattern_locs =
                 ALocSet.union additional_used_pattern_locs used_pattern_locs
               in
-              (filter_object_by_pattern cx value_object pattern_object, additional_used_pattern_locs))
+              ( filter_object_by_pattern cx ~raise_errors value_object pattern_object,
+                additional_used_pattern_locs
+              ))
       in
       let (queue, acc_left, acc_matched, used_pattern_locs) =
         match result with
@@ -1011,7 +1043,8 @@ and filter_objects_by_patterns
   f ([], [], ALocSet.empty) value_objects
 
 (* Filter an object value by an object pattern. *)
-and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object : PatternObject.t) :
+and filter_object_by_pattern
+    cx ~raise_errors (value_object : ValueObject.t) (pattern_object : PatternObject.t) :
     filter_object_result =
   let open Base.Continue_or_stop in
   let ( reason_value,
@@ -1101,7 +1134,11 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
               (ValueUnion.empty, value, false, ALocSet.singleton (Reason.loc_of_reason wildcard))
             | None ->
               let { value_left; value_matched; used_pattern_locs = new_used_pattern_locs } =
-                filter_values_by_patterns cx ~value_union:(Lazy.force value) ~pattern_union:pattern
+                filter_values_by_patterns
+                  cx
+                  ~raise_errors
+                  ~value_union:(Lazy.force value)
+                  ~pattern_union:pattern
               in
               ( value_left,
                 lazy value_matched,
@@ -1183,15 +1220,16 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
                       []
                     |> Base.List.rev
                   in
-                  Flow_js.add_output
-                    cx
-                    (Error_message.EMatchNonExhaustiveObjectPattern
-                       {
-                         loc = Reason.loc_of_reason reason_pattern;
-                         rest = value_rest;
-                         missing_props;
-                       }
-                    )
+                  if raise_errors then
+                    Flow_js.add_output
+                      cx
+                      (Error_message.EMatchNonExhaustiveObjectPattern
+                         {
+                           loc = Reason.loc_of_reason reason_pattern;
+                           rest = value_rest;
+                           missing_props;
+                         }
+                      )
                 );
                 used_pattern_locs
               | Some pattern_rest ->
@@ -1222,7 +1260,8 @@ and filter_object_by_pattern cx (value_object : ValueObject.t) (pattern_object :
             Match { used_pattern_locs; queue_additions; matched })
 
 (* mixed/any values mark object and tuple patterns as used. *)
-and visit_mixed cx (reason : Reason.t) (pattern_union : PatternUnion.t) : ALocSet.t =
+and visit_mixed cx ~(raise_errors : bool) (reason : Reason.t) (pattern_union : PatternUnion.t) :
+    ALocSet.t =
   let {
     PatternUnion.tuples_exact = pattern_tuples_exact;
     tuples_inexact = pattern_tuples_inexact;
@@ -1255,7 +1294,9 @@ and visit_mixed cx (reason : Reason.t) (pattern_union : PatternUnion.t) : ALocSe
         )
       in
       let pattern_objects = PatternUnion.all_tuples_and_objects pattern_union in
-      let (_, _, used_pattern_locs) = filter_objects_by_patterns cx [mixed_array] pattern_objects in
+      let (_, _, used_pattern_locs) =
+        filter_objects_by_patterns cx ~raise_errors [mixed_array] pattern_objects
+      in
       used_pattern_locs
   in
   let object_used_pattern_locs =
@@ -1295,7 +1336,7 @@ and visit_mixed cx (reason : Reason.t) (pattern_union : PatternUnion.t) : ALocSe
         )
       in
       let (_, _, used_pattern_locs) =
-        filter_objects_by_patterns cx [mixed_object] pattern_objects
+        filter_objects_by_patterns cx ~raise_errors [mixed_object] pattern_objects
       in
       used_pattern_locs
   in
@@ -1359,10 +1400,10 @@ let rec check_for_unused_patterns cx (pattern_union : PatternUnion.t) (used_patt
    Otherwise, build up examples of patterns that could be added to make the `match` exhaustive.
    Then, check the patterns to see if any are unused. *)
 let analyze cx ~match_loc patterns arg_t =
-  let pattern_union = PatternUnionBuilder.of_patterns_ast cx patterns in
+  let pattern_union = PatternUnionBuilder.of_patterns_ast cx ~raise_errors:true patterns in
   let value_union = ValueUnionBuilder.of_type cx arg_t in
   let { value_left; used_pattern_locs; value_matched } =
-    filter_values_by_patterns cx ~value_union ~pattern_union
+    filter_values_by_patterns cx ~raise_errors:true ~value_union ~pattern_union
   in
   ( if ValueUnion.is_empty value_left then
     let { ValueUnion.enum_unknown_members; _ } = value_matched in
