@@ -169,6 +169,7 @@ type def =
   | Binding of binding
   | MatchCasePattern of {
       case_match_root_loc: ALoc.t;
+      has_guard: bool;
       pattern: (ALoc.t, ALoc.t) Ast.MatchPattern.t;
     }
   | ExpressionDef of expression_def

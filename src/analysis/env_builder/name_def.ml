@@ -3270,7 +3270,11 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           ~f:(fun i prev_pattern_locs_rev (_, { Case.pattern; body; guard; case_match_root_loc; _ })
              ->
             let acc = MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev } in
-            this#add_match_destructure_bindings ~case_match_root_loc acc pattern;
+            this#add_match_destructure_bindings
+              ~case_match_root_loc
+              ~has_guard:(Option.is_some guard)
+              acc
+              pattern;
             ignore @@ super#match_pattern pattern;
             Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
             (* We use best-effort value hints for cases other than the current case.
@@ -3298,7 +3302,11 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           ~f:(fun prev_pattern_locs_rev (_, { Case.pattern; body; guard; case_match_root_loc; _ })
              ->
             let acc = MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev } in
-            this#add_match_destructure_bindings ~case_match_root_loc acc pattern;
+            this#add_match_destructure_bindings
+              ~case_match_root_loc
+              ~has_guard:(Option.is_some guard)
+              acc
+              pattern;
             ignore @@ super#match_pattern pattern;
             Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
             run this#statement body;
@@ -3307,7 +3315,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       in
       x
 
-    method add_match_destructure_bindings ~case_match_root_loc root pattern =
+    method add_match_destructure_bindings ~case_match_root_loc ~has_guard root pattern =
       let visit_binding loc name binding =
         let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
         this#add_ordinary_binding
@@ -3319,7 +3327,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       this#add_binding
         (Env_api.MatchCasePatternLoc, pattern_loc)
         (mk_reason RMatchPattern pattern_loc)
-        (MatchCasePattern { case_match_root_loc; pattern });
+        (MatchCasePattern { case_match_root_loc; has_guard; pattern });
       MatchPattern.visit_pattern
         ~visit_binding
         ~visit_expression:(this#visit_expression ~hints:[] ~cond:MatchPattern)

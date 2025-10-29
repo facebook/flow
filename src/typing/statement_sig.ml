@@ -276,4 +276,11 @@ module type S = sig
     Type.t
 
   val empty_array : Context.t -> ALoc.t -> Reason.t * Type.t
+
+  val match_pattern :
+    Context.t ->
+    ALoc.t ->
+    has_guard:bool ->
+    (ALoc.t, ALoc.t) Ast.MatchPattern.t ->
+    (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t
 end

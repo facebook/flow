@@ -1188,7 +1188,7 @@ struct
       in
       function
       | Binding binding -> depends_of_binding binding
-      | MatchCasePattern { case_match_root_loc; pattern } ->
+      | MatchCasePattern { case_match_root_loc; has_guard = _; pattern } ->
         depends_on_match_pattern case_match_root_loc pattern EnvMap.empty
       | ExpressionDef { expr; hints; _ } ->
         depends_of_hinted_expression ~for_expression_writes:true hints expr EnvMap.empty

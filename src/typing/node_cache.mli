@@ -77,6 +77,8 @@ val set_component_sig :
     ) ->
   unit
 
+val set_match_pattern : t -> ALoc.t -> (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t * bool -> unit
+
 val get_annotation : t -> ALoc.t -> (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation option
 
 val get_expression : t -> ALoc.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option
@@ -145,3 +147,5 @@ val get_component_sig :
     )
   )
   option
+
+val get_match_pattern : t -> ALoc.t -> ((ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t * bool) option

@@ -1339,23 +1339,7 @@ module Make
                 case
               in
               let pattern =
-                Match_pattern.pattern
-                  cx
-                  ( case_match_root_loc,
-                    Flow_ast.Expression.Identifier
-                      (Flow_ast_utils.match_root_ident case_match_root_loc)
-                  )
-                  pattern
-                  ~on_identifier:(fun ~encl_ctx cx ->
-                    identifier cx { empty_syntactic_flags with Natural_inference.encl_ctx })
-                  ~on_expression:expression
-                  ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
-                    init_var kind cx ~use_op t name_loc;
-                    Type_env.constraining_type
-                      ~default:(Type_env.get_var_declared_type cx (OrdinaryName name) name_loc)
-                      cx
-                      name
-                      name_loc)
+                match_pattern cx case_match_root_loc ~has_guard:(Option.is_some guard) pattern
               in
               let guard = Base.Option.map ~f:(expression cx) guard in
               (match body with
@@ -3129,22 +3113,7 @@ module Make
                 case
               in
               let pattern =
-                Match_pattern.pattern
-                  cx
-                  ( case_match_root_loc,
-                    Identifier (Flow_ast_utils.match_root_ident case_match_root_loc)
-                  )
-                  pattern
-                  ~on_identifier:(fun ~encl_ctx cx ->
-                    identifier cx { empty_syntactic_flags with Natural_inference.encl_ctx })
-                  ~on_expression:expression
-                  ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
-                    init_var kind cx ~use_op t name_loc;
-                    Type_env.constraining_type
-                      ~default:(Type_env.get_var_declared_type cx (OrdinaryName name) name_loc)
-                      cx
-                      name
-                      name_loc)
+                match_pattern cx case_match_root_loc ~has_guard:(Option.is_some guard) pattern
               in
               let (guard, guard_throws) =
                 match guard with
@@ -9013,6 +8982,32 @@ module Make
         (DefT (reason, SymbolT), defaulted_members members, has_unknown_members)
     in
     { enum_name; enum_id; members; representation_t; has_unknown_members }
+
+  and match_pattern cx case_match_root_loc ~has_guard pattern =
+    let node_cache = Context.node_cache cx in
+    match Node_cache.get_match_pattern node_cache (fst pattern) with
+    | Some (p, _has_guard) -> p
+    | None ->
+      let p =
+        Match_pattern.pattern
+          cx
+          ( case_match_root_loc,
+            Flow_ast.Expression.Identifier (Flow_ast_utils.match_root_ident case_match_root_loc)
+          )
+          pattern
+          ~on_identifier:(fun ~encl_ctx cx ->
+            identifier cx { empty_syntactic_flags with Natural_inference.encl_ctx })
+          ~on_expression:expression
+          ~on_binding:(fun ~use_op ~name_loc ~kind name t ->
+            init_var kind cx ~use_op t name_loc;
+            Type_env.constraining_type
+              ~default:(Type_env.get_var_declared_type cx (OrdinaryName name) name_loc)
+              cx
+              name
+              name_loc)
+      in
+      Node_cache.set_match_pattern node_cache (fst pattern) (p, has_guard);
+      p
 
   and error_on_match_case_invalid_syntax
       cx ~match_keyword_loc (invalid_syntax_list : ALoc.t Flow_ast.Match.Case.InvalidSyntax.t list)

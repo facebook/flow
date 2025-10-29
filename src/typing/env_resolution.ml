@@ -1072,8 +1072,10 @@ let resolve_chain_expression cx ~cond exp =
 
 let resolve_write_expression cx ~cond exp = synthesizable_expression cx ~encl_ctx:cond exp
 
-let resolve_match_pattern cx def_scope_kind def_reason case_match_root_loc pattern =
-  ignore (cx, def_scope_kind, def_reason, case_match_root_loc, pattern);
+let resolve_match_pattern cx def_reason case_match_root_loc ~has_guard pattern =
+  let (_pattern : (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t) =
+    Statement.match_pattern cx case_match_root_loc ~has_guard pattern
+  in
   MixedT.why def_reason
 
 let resolve_generator_next cx reason gen =
@@ -1116,8 +1118,8 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   let t =
     match def with
     | Binding b -> resolve_binding cx def_scope_kind def_reason id_loc b
-    | MatchCasePattern { case_match_root_loc; pattern } ->
-      resolve_match_pattern cx def_scope_kind def_reason case_match_root_loc pattern
+    | MatchCasePattern { case_match_root_loc; has_guard; pattern } ->
+      resolve_match_pattern cx def_reason case_match_root_loc ~has_guard pattern
     | ExpressionDef { cond_context = cond; expr; chain = true; hints = _ } ->
       resolve_chain_expression cx ~cond expr
     | ExpressionDef { cond_context = cond; expr; chain = false; hints = _ } ->
