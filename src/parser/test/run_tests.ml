@@ -130,6 +130,8 @@ end = struct
           | "pattern_matching" ->
             get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.pattern_matching = v })
+          | "records" ->
+            get_bool k v >>= fun v -> return (test_opts, { opts with Parser_env.records = v })
           | "esproposal_decorators" ->
             get_bool k v >>= fun v ->
             return (test_opts, { opts with Parser_env.esproposal_decorators = v })

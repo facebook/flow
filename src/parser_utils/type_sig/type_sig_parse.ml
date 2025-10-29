@@ -4726,6 +4726,9 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.OpaqueType decl -> opaque_type_decl opts scope tbls decl ignore2
   | S.DeclareOpaqueType decl -> opaque_type_decl opts scope tbls decl ignore2
   | S.ClassDeclaration decl -> class_decl opts scope tbls decl ignore2
+  | S.RecordDeclaration _ ->
+    (* TODO: records *)
+    ()
   | S.DeclareClass decl -> declare_class_decl opts scope tbls decl ignore2
   | S.DeclareComponent decl -> declare_component_decl opts scope tbls loc decl ignore2
   | S.InterfaceDeclaration decl -> interface_decl opts scope tbls decl ignore2

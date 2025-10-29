@@ -1798,6 +1798,12 @@ module Make
       in
       Type_env.init_var cx ~use_op t name_loc;
       (loc, DeclareClass decl_ast)
+    | (loc, RecordDeclaration record) ->
+      (* TODO: records *)
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.Records));
+      (loc, RecordDeclaration (Tast_utils.error_mapper#record_declaration record))
     | ( loc,
         DeclareComponent
           ( {

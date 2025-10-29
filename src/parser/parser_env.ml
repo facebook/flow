@@ -127,6 +127,7 @@ type parse_options = {
   components: bool; (* enable parsing of Flow component syntax *)
   enums: bool;  (** enable parsing of Flow enums *)
   pattern_matching: bool;
+  records: bool;
   esproposal_decorators: bool;  (** enable parsing of decorators *)
   types: bool;  (** enable parsing of Flow types *)
   use_strict: bool;  (** treat the file as strict, without needing a "use strict" directive *)
@@ -140,6 +141,7 @@ let default_parse_options =
     enums = false;
     assert_operator = false;
     pattern_matching = false;
+    records = false;
     esproposal_decorators = false;
     types = true;
     use_strict = false;
@@ -152,6 +154,7 @@ let permissive_parse_options =
     enums = true;
     assert_operator = false;
     pattern_matching = true;
+    records = true;
     esproposal_decorators = true;
     types = true;
     use_strict = false;
@@ -797,6 +800,7 @@ let token_is_type_identifier env t =
     | T_INTERFACE
     | T_LET
     | T_MATCH
+    | T_RECORD
     | T_NEW
     | T_NULL
     | T_OF
@@ -1005,6 +1009,7 @@ module Peek = struct
     | T_AWAIT
     | T_ENUM
     | T_MATCH
+    | T_RECORD
     | T_POUND
     | T_IDENTIFIER _
     | T_READONLY ->

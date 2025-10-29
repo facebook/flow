@@ -46,6 +46,7 @@ type t =
   | T_RETURN
   | T_SWITCH
   | T_MATCH
+  | T_RECORD
   | T_THIS
   | T_THROW
   | T_TRY
@@ -220,6 +221,7 @@ let token_to_string = function
   | T_RETURN -> "T_RETURN"
   | T_SWITCH -> "T_SWITCH"
   | T_MATCH -> "T_MATCH"
+  | T_RECORD -> "T_RECORD"
   | T_THIS -> "T_THIS"
   | T_THROW -> "T_THROW"
   | T_TRY -> "T_TRY"
@@ -395,6 +397,7 @@ let value_of_token = function
   | T_RETURN -> "return"
   | T_SWITCH -> "switch"
   | T_MATCH -> "match"
+  | T_RECORD -> "record"
   | T_THIS -> "this"
   | T_THROW -> "throw"
   | T_TRY -> "try"

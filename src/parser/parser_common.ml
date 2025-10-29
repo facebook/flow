@@ -149,6 +149,8 @@ module type OBJECT = sig
   val class_implements : env -> attach_leading:bool -> (Loc.t, Loc.t) Class.Implements.t
 
   val decorator_list : env -> (Loc.t, Loc.t) Class.Decorator.t list
+
+  val record_declaration : env -> (Loc.t, Loc.t) Statement.t
 end
 
 module type JSX = sig
@@ -378,6 +380,7 @@ let identifier_name_raw env =
     | T_OPAQUE -> "opaque"
     | T_ANY_TYPE -> "any"
     | T_MATCH -> "match"
+    | T_RECORD -> "record"
     | T_MIXED_TYPE -> "mixed"
     | T_EMPTY_TYPE -> "empty"
     | T_BOOLEAN_TYPE BOOL -> "bool"

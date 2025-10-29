@@ -1,0 +1,1 @@
+record R {} // ERROR: unsupported

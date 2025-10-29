@@ -1,0 +1,10 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:1:1
+
+Records are not enabled. [unsupported-syntax]
+
+   1| record R {} // ERROR: unsupported
+      ^^^^^^^^^^^
+
+
+
+Found 1 error

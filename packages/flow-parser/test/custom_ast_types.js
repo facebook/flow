@@ -326,6 +326,26 @@ function custom_ast_types(fork) {
     .field('pattern', def('MatchPattern'))
     .field('target', or(def('Identifier'), def('MatchBindingPattern')));
 
+  def('RecordDeclaration')
+    .bases('Statement')
+    .build('id', 'typeParameters', 'implements', 'body')
+    .field('id', def('Identifier'))
+    .field('typeParameters', or(def('TypeParameterDeclaration'), null))
+    .field('implements', [def('RecordImplements')])
+    .field('body', def('RecordBody'));
+
+  def('RecordImplements').bases('ClassImplements');
+
+  def('RecordBody')
+    .build('body')
+    .field('body', [or(def('RecordProperty'), def('Method'))]);
+
+  def('RecordProperty')
+    .build('key', 'typeAnnotation', 'defaultValue')
+    .field('key', def('Identifier'))
+    .field('typeAnnotation', def('TypeAnnotation'))
+    .field('defaultValue', or(def('Expression'), null));
+
   /////////
   // es2018
   /////////

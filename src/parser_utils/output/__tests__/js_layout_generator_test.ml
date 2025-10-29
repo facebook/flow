@@ -3089,4 +3089,13 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "type X = renders* number;";
            assert_statement_string ~ctxt ~pretty:false "type X=renders* number;"
          );
+         ( "records" >:: fun ctxt ->
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "record R<T> implements IFace {\n  foo: number,\n  bar: boolean = true,\n}";
+           assert_statement_string ~ctxt ~pretty:true "record R implements IFace {}";
+           assert_statement_string ~ctxt ~pretty:true "record R<T> {}";
+           assert_statement_string ~ctxt "record R<T>implements IFace{foo:number,bar:boolean=true,}"
+         );
        ]

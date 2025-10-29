@@ -47,6 +47,7 @@ let replace_comments_of_statement ~comments =
       | ComponentDeclaration x ->
         ComponentDeclaration Ast.Statement.ComponentDeclaration.{ x with comments }
       | ClassDeclaration x -> ClassDeclaration Ast.Class.{ x with comments }
+      | RecordDeclaration x -> RecordDeclaration Ast.Statement.RecordDeclaration.{ x with comments }
       | FunctionDeclaration x -> FunctionDeclaration Ast.Function.{ x with comments }
       | EnumDeclaration x -> EnumDeclaration EnumDeclaration.{ x with comments }
       | DeclareVariable x -> DeclareVariable DeclareVariable.{ x with comments }

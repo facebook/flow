@@ -78,6 +78,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Labeled label -> Labeled (this#labeled_statement label)
         | Match x -> Match (this#match_statement x)
         | OpaqueType otype -> OpaqueType (this#opaque_type annot otype)
+        | RecordDeclaration record -> RecordDeclaration (this#record_declaration record)
         | Return ret -> Return (this#return ret)
         | Switch switch -> Switch (this#switch switch)
         | Throw throw -> Throw (this#throw throw)
@@ -2653,6 +2654,50 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method predicate_expression (expr : ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
       this#expression expr
+
+    method record_declaration (record : ('M, 'T) Ast.Statement.RecordDeclaration.t)
+        : ('N, 'U) Ast.Statement.RecordDeclaration.t =
+      let open Ast.Statement.RecordDeclaration in
+      let { id; tparams; implements; body; comments } = record in
+      let id' = this#t_identifier id in
+      let comments' = this#syntax_opt comments in
+      this#type_params_opt tparams (fun tparams' ->
+          let implements' = Base.Option.map ~f:this#class_implements implements in
+          let body' = this#record_body body in
+          {
+            id = id';
+            tparams = tparams';
+            implements = implements';
+            body = body';
+            comments = comments';
+          }
+      )
+
+    method record_body (record_body : ('M, 'T) Ast.Statement.RecordDeclaration.Body.t)
+        : ('N, 'U) Ast.Statement.RecordDeclaration.Body.t =
+      let open Ast.Statement.RecordDeclaration.Body in
+      let (annot, { body; comments }) = record_body in
+      let annot' = this#on_loc_annot annot in
+      let body' = List.map ~f:this#record_element body in
+      let comments' = this#syntax_opt comments in
+      (annot', { body = body'; comments = comments' })
+
+    method record_element (element : ('M, 'T) Ast.Statement.RecordDeclaration.Body.element)
+        : ('N, 'U) Ast.Statement.RecordDeclaration.Body.element =
+      let open Ast.Statement.RecordDeclaration.Body in
+      match element with
+      | Method (annot, meth) -> Method (this#on_type_annot annot, this#class_method meth)
+      | Property (annot, prop) -> Property (this#on_type_annot annot, this#record_property prop)
+
+    method record_property (prop : ('M, 'T) Ast.Statement.RecordDeclaration.Property.t')
+        : ('N, 'U) Ast.Statement.RecordDeclaration.Property.t' =
+      let open Ast.Statement.RecordDeclaration.Property in
+      let { key; annot; default_value; comments } = prop in
+      let key' = this#t_identifier key in
+      let annot' = this#type_annotation annot in
+      let default_value' = Base.Option.map ~f:this#expression default_value in
+      let comments' = this#syntax_opt comments in
+      { key = key'; annot = annot'; default_value = default_value'; comments = comments' }
 
     method return (stmt : ('M, 'T) Ast.Statement.Return.t) : ('N, 'U) Ast.Statement.Return.t =
       let open Ast.Statement.Return in

@@ -492,6 +492,7 @@ class lib_def_loc_mapper_and_validator cx =
       | If _ -> Some (error "if")
       | Labeled _ -> Some (error "labeled")
       | Match _ -> Some (error "match")
+      | RecordDeclaration _ -> Some (error "record declaration")
       | Return _ -> Some (error "return")
       | Switch _ -> Some (error "switch")
       | Throw _ -> Some (error "throw")

@@ -378,6 +378,7 @@ let acceptable_statement_in_declaration_context ~in_declare_namespace =
   | If _ -> Error "if"
   | Labeled _ -> Error "labeled"
   | Match _ -> Error "match"
+  | RecordDeclaration _ -> Error "record declaration"
   | Return _ -> Error "return"
   | Switch _ -> Error "switch"
   | Throw _ -> Error "throw"
@@ -449,6 +450,7 @@ let rec is_type_only_declaration_statement (_, stmt') =
     | If _
     | Labeled _
     | Match _
+    | RecordDeclaration _
     | Return _
     | Switch _
     | Throw _

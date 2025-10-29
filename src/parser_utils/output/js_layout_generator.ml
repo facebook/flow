@@ -887,6 +887,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
         in
         variable_declaration ?semicolon ~opts (loc, decl)
       | S.ClassDeclaration class_ -> class_base ~opts loc class_
+      | S.RecordDeclaration record -> record_declaration ~opts loc record
       | S.EnumDeclaration enum -> enum_declaration ~def:(Atom "enum") loc enum
       | S.ForOf { S.ForOf.left; right; body; await; comments } ->
         layout_node_with_comments_opt loc comments
@@ -2561,6 +2562,61 @@ and class_base
     |> List.rev
   in
   group [decorator_parts; source_location_with_comments ?comments (loc, group parts)]
+
+and record_property
+    ~opts (loc, { Ast.Statement.RecordDeclaration.Property.key; annot; default_value; comments }) =
+  let default_value =
+    match default_value with
+    | Some expr -> fuse [pretty_space; Atom "="; pretty_space; expression ~opts expr]
+    | None -> Empty
+  in
+  source_location_with_comments
+    ?comments
+    (loc, group [identifier key; type_annotation ~opts annot; default_value; Atom ","])
+
+and record_body ~opts (loc, { Ast.Statement.RecordDeclaration.Body.body; comments }) =
+  let elements =
+    Base.List.map body ~f:(function
+        | Ast.Statement.RecordDeclaration.Body.Property prop -> record_property ~opts prop
+        | Ast.Statement.RecordDeclaration.Body.Method meth -> class_method ~opts meth
+        )
+  in
+  if body <> [] then
+    source_location_with_comments
+      ?comments
+      ( loc,
+        group
+          [
+            wrap_and_indent
+              ~break:pretty_hardline
+              (Atom "{", Atom "}")
+              [join pretty_hardline elements];
+          ]
+      )
+  else
+    source_location_with_comments ?comments (loc, Atom "{}")
+
+and record_declaration
+    ~opts loc { Ast.Statement.RecordDeclaration.id; tparams; implements; body; comments } =
+  let implements =
+    class_implements ~opts implements
+    |> Base.Option.map ~f:(fun implements -> fuse [pretty_space; implements])
+    |> Base.Option.value ~default:Empty
+  in
+  source_location_with_comments
+    ?comments
+    ( loc,
+      fuse
+        [
+          Atom "record";
+          space;
+          identifier id;
+          option (type_parameter ~opts ~kind:Flow_ast_mapper.RecordTP) tparams;
+          implements;
+          pretty_space;
+          record_body ~opts body;
+        ]
+    )
 
 and enum_declaration ~def loc { Ast.Statement.EnumDeclaration.id; body; comments } =
   let open Ast.Statement.EnumDeclaration in

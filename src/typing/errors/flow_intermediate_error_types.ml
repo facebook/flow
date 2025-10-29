@@ -98,6 +98,7 @@ type unsupported_syntax =
   | ComponentSyntax
   | DeclareGlobal
   | NonnullAssertion
+  | Records
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

@@ -903,6 +903,7 @@ let token (env : Lex_env.t) lexbuf : result =
     | "private" -> Token (env, T_PRIVATE)
     | "protected" -> Token (env, T_PROTECTED)
     | "public" -> Token (env, T_PUBLIC)
+    | "record" -> Token (env, T_RECORD)
     | "return" -> Token (env, T_RETURN)
     | "static" -> Token (env, T_STATIC)
     | "super" -> Token (env, T_SUPER)

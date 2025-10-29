@@ -121,7 +121,8 @@ let check_for_duplicate_exports =
           | Statement.ClassDeclaration { Class.id = Some id; _ }
           | Statement.FunctionDeclaration { Function.id = Some id; _ }
           | Statement.EnumDeclaration { Statement.EnumDeclaration.id; _ }
-          | Statement.ComponentDeclaration { Statement.ComponentDeclaration.id; _ } )
+          | Statement.ComponentDeclaration { Statement.ComponentDeclaration.id; _ }
+          | Statement.RecordDeclaration { Statement.RecordDeclaration.id; _ } )
         ) ->
         record_export
           env
@@ -167,8 +168,8 @@ let check_for_duplicate_exports =
           | DeclareTypeAlias _ | DeclareOpaqueType _ | DeclareVariable _ | DoWhile _ | Empty _
           | EnumDeclaration _ | Expression _ | For _ | ForIn _ | ForOf _ | FunctionDeclaration _
           | ComponentDeclaration _ | If _ | ImportDeclaration _ | InterfaceDeclaration _ | Labeled _
-          | Match _ | Return _ | Switch _ | Throw _ | Try _ | TypeAlias _ | OpaqueType _
-          | VariableDeclaration _ | While _ | With _ ))
+          | Match _ | RecordDeclaration _ | Return _ | Switch _ | Throw _ | Try _ | TypeAlias _
+          | OpaqueType _ | VariableDeclaration _ | While _ | With _ ))
       ) ->
       seen
   in
@@ -356,6 +357,11 @@ module rec Parse : PARSER = struct
       (match Try.to_parse env Statement.match_statement with
       | Try.ParsedSuccessfully m -> m
       | Try.FailedToParse -> expression env)
+    | T_RECORD
+      when (parse_options env).records
+           && (not (Peek.ith_is_line_terminator ~i:1 env))
+           && Peek.ith_is_identifier ~i:1 env ->
+      record_declaration env
     | T_THROW -> throw env
     | T_TRY -> try_ env
     | T_WHILE -> while_ env
@@ -516,6 +522,8 @@ module rec Parse : PARSER = struct
   and pattern_from_expr = Pattern.from_expr
 
   and match_pattern = Match_pattern.match_pattern
+
+  and record_declaration = Object.record_declaration
 end
 
 (*****************************************************************************)

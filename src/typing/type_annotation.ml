@@ -2520,7 +2520,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         match (const, kind) with
         | ( Some _,
             ( ClassTP | FunctionTP | DeclareFunctionTP | DeclareClassTP | DeclareComponentTP
-            | ComponentDeclarationTP | ComponentTypeTP | FunctionTypeTP )
+            | ComponentDeclarationTP | ComponentTypeTP | FunctionTypeTP | RecordTP )
           ) ->
           true
         | (Some _, _) ->

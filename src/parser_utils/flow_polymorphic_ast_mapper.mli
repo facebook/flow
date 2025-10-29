@@ -787,6 +787,21 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method program : ('M, 'T) Flow_ast.Program.t -> ('N, 'U) Flow_ast.Program.t
 
+    method record_declaration :
+      ('M, 'T) Ast.Statement.RecordDeclaration.t -> ('N, 'U) Ast.Statement.RecordDeclaration.t
+
+    method record_body :
+      ('M, 'T) Ast.Statement.RecordDeclaration.Body.t ->
+      ('N, 'U) Ast.Statement.RecordDeclaration.Body.t
+
+    method record_element :
+      ('M, 'T) Ast.Statement.RecordDeclaration.Body.element ->
+      ('N, 'U) Ast.Statement.RecordDeclaration.Body.element
+
+    method record_property :
+      ('M, 'T) Ast.Statement.RecordDeclaration.Property.t' ->
+      ('N, 'U) Ast.Statement.RecordDeclaration.Property.t'
+
     method return : ('M, 'T) Ast.Statement.Return.t -> ('N, 'U) Ast.Statement.Return.t
 
     method sequence : ('M, 'T) Ast.Expression.Sequence.t -> ('N, 'U) Ast.Expression.Sequence.t

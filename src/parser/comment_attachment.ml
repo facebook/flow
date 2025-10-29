@@ -575,6 +575,8 @@ let statement_add_comments
       Labeled { s with Labeled.comments = merge_comments comments }
     | Match ({ Match.comments; _ } as s) ->
       Match { s with Match.comments = merge_comments comments }
+    | RecordDeclaration ({ RecordDeclaration.comments; _ } as s) ->
+      RecordDeclaration { s with RecordDeclaration.comments = merge_comments comments }
     | Return ({ Return.comments; _ } as s) ->
       Return { s with Return.comments = merge_comments comments }
     | Switch ({ Switch.comments; _ } as s) ->

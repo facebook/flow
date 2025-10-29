@@ -173,6 +173,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
   | (_, ComponentDeclaration _)
   | (_, VariableDeclaration _)
   | (_, ClassDeclaration _)
+  | (_, RecordDeclaration _)
   | (_, DeclareModule _)
   | (_, ImportDeclaration _)
   | (_, DeclareNamespace { DeclareNamespace.id = DeclareNamespace.Global _; _ }) ->

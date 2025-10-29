@@ -1169,4 +1169,91 @@ module Object
 
   let class_expression =
     with_loc (fun env -> Ast.Expression.Class (_class env ~optional_id:true ~expression:true))
+
+  let record_body =
+    let open Statement.RecordDeclaration in
+    let rec elements env acc =
+      match Peek.token env with
+      | T_EOF
+      | T_RCURLY ->
+        List.rev acc
+      | _ ->
+        let leading = Peek.comments env in
+        let key = identifier_name env in
+        let (key_loc, _) = key in
+        (match Peek.token env with
+        (* TODO: records - methods parsing*)
+        | T_COLON ->
+          let prop =
+            with_loc
+              ~start_loc:key_loc
+              (fun env ->
+                let annot = Type.annotation env in
+                let default_value =
+                  if Eat.maybe env T_ASSIGN then
+                    Some (Expression.assignment env)
+                  else
+                    None
+                in
+                (match Peek.token env with
+                | T_EOF
+                | T_RCURLY ->
+                  ()
+                | _ -> Expect.token env T_COMMA);
+                let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+                { Property.key; annot; default_value; comments })
+              env
+          in
+          elements env (Body.Property prop :: acc)
+        | _ ->
+          (* TODO: records - error *)
+          elements env acc)
+    in
+    with_loc (fun env ->
+        let leading = Peek.comments env in
+        if Eat.maybe env T_LCURLY then (
+          let body = elements env [] in
+          let trailing =
+            match Peek.token env with
+            | T_RCURLY
+            | T_EOF ->
+              Eat.trailing_comments env
+            | _ when Peek.is_line_terminator env -> Eat.comments_until_next_line env
+            | _ -> []
+          in
+          Expect.token env T_RCURLY;
+          { Body.body; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () }
+        ) else (
+          Expect.error env T_LCURLY;
+          { Body.body = []; comments = None }
+        )
+    )
+
+  let record_declaration =
+    with_loc (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_RECORD;
+        let id = Parse.identifier env in
+        let tparams =
+          match Type.type_params env with
+          | None -> None
+          | Some tparams ->
+            let { remove_trailing; _ } = trailing_and_remover env in
+            Some
+              (remove_trailing tparams (fun remover tparams ->
+                   remover#type_params ~kind:Flow_ast_mapper.RecordTP tparams
+               )
+              )
+        in
+        let implements =
+          if Peek.token env = T_IMPLEMENTS then
+            Some (class_implements_remove_trailing env (class_implements env ~attach_leading:true))
+          else
+            None
+        in
+        let body = record_body env in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+        Ast.Statement.RecordDeclaration
+          { Ast.Statement.RecordDeclaration.id; tparams; implements; body; comments }
+    )
 end

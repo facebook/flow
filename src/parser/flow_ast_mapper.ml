@@ -92,6 +92,7 @@ type type_params_context =
   | FunctionTypeTP
   | InferTP
   | ObjectMappedTypeTP
+  | RecordTP
 
 class ['loc] mapper =
   object (this)
@@ -190,6 +191,10 @@ class ['loc] mapper =
       | (loc, Match x) -> id_loc this#match_statement loc x stmt (fun x -> (loc, Match x))
       | (loc, OpaqueType otype) ->
         id_loc this#opaque_type loc otype stmt (fun otype -> (loc, OpaqueType otype))
+      | (loc, RecordDeclaration record) ->
+        id_loc this#record_declaration loc record stmt (fun record ->
+            (loc, RecordDeclaration record)
+        )
       | (loc, Return ret) -> id_loc this#return loc ret stmt (fun ret -> (loc, Return ret))
       | (loc, Switch switch) ->
         id_loc this#switch loc switch stmt (fun switch -> (loc, Switch switch))
@@ -3279,6 +3284,62 @@ class ['loc] mapper =
         expr
       else
         (loc, { argument = argument'; comments = comments' })
+
+    method record_declaration _loc (record : ('loc, 'loc) Ast.Statement.RecordDeclaration.t) =
+      let open Ast.Statement.RecordDeclaration in
+      let { id; tparams; implements; body; comments } = record in
+      let id' = this#identifier id in
+      let tparams' = map_opt (this#type_params ~kind:RecordTP) tparams in
+      let implements' = map_opt this#class_implements implements in
+      let body' = this#record_body body in
+      let comments' = this#syntax_opt comments in
+      if
+        id == id'
+        && tparams == tparams'
+        && implements == implements'
+        && body == body'
+        && comments == comments'
+      then
+        record
+      else
+        {
+          id = id';
+          tparams = tparams';
+          implements = implements';
+          body = body';
+          comments = comments';
+        }
+
+    method record_body (record_body : ('loc, 'loc) Ast.Statement.RecordDeclaration.Body.t) =
+      let open Ast.Statement.RecordDeclaration.Body in
+      let (loc, { body; comments }) = record_body in
+      let body' = map_list this#record_element body in
+      let comments' = this#syntax_opt comments in
+      if body == body' && comments == comments' then
+        record_body
+      else
+        (loc, { body = body'; comments = comments' })
+
+    method record_element (element : ('loc, 'loc) Ast.Statement.RecordDeclaration.Body.element) =
+      let open Ast.Statement.RecordDeclaration.Body in
+      match element with
+      | Method (loc, meth) ->
+        id_loc this#class_method loc meth element (fun meth -> Method (loc, meth))
+      | Property (loc, prop) ->
+        id_loc this#record_property loc prop element (fun prop -> Property (loc, prop))
+
+    method record_property _loc (prop : ('loc, 'loc) Ast.Statement.RecordDeclaration.Property.t') =
+      let open Ast.Statement.RecordDeclaration.Property in
+      let { key; annot; default_value; comments } = prop in
+      let key' = this#identifier key in
+      let annot' = this#type_annotation annot in
+      let default_value' = map_opt this#expression default_value in
+      let comments' = this#syntax_opt comments in
+      if key' == key && annot' == annot && default_value' == default_value && comments' == comments
+      then
+        prop
+      else
+        { key = key'; annot = annot'; default_value = default_value'; comments = comments' }
 
     method return _loc (stmt : ('loc, 'loc) Ast.Statement.Return.t) =
       let open Ast.Statement.Return in

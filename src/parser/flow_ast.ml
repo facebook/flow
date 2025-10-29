@@ -1076,6 +1076,43 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module RecordDeclaration : sig
+    module Property : sig
+      type ('M, 'T) t = 'T * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        key: ('M, 'T) Identifier.t;
+        annot: ('M, 'T) Type.annotation;
+        default_value: ('M, 'T) Expression.t option;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
+    module Body : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        body: ('M, 'T) element list;
+        comments: ('M, unit) Syntax.t option;
+      }
+
+      and ('M, 'T) element =
+        | Method of ('M, 'T) Class.Method.t
+        | Property of ('M, 'T) Property.t
+      [@@deriving show]
+    end
+
+    type ('M, 'T) t = {
+      id: ('M, 'T) Identifier.t;
+      tparams: ('M, 'T) Type.TypeParams.t option;
+      implements: ('M, 'T) Class.Implements.t option;
+      body: ('M, 'T) Body.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module DeclareClass : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
@@ -1320,6 +1357,7 @@ and Statement : sig
     | InterfaceDeclaration of ('M, 'T) Interface.t
     | Labeled of ('M, 'T) Labeled.t
     | Match of ('M, 'T) match_statement
+    | RecordDeclaration of ('M, 'T) RecordDeclaration.t
     | Return of ('M, 'T) Return.t
     | Switch of ('M, 'T) Switch.t
     | Throw of ('M, 'T) Throw.t
