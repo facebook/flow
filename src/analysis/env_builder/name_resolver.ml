@@ -736,10 +736,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       cx name assignment_loc def_loc_opt stored_binding_kind pattern_write_kind v =
     let is_bundled_in_core_dot_js =
       match name with
+      | "ReadonlyArray"
       | "ReadonlyMap"
       | "ReadonlySet"
       | "$ReadOnlyMap"
-      | "$ReadOnlySet" ->
+      | "$ReadOnlySet"
+      | "$ReadOnlyArray" ->
         true
       | _ -> false
     in

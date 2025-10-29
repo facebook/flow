@@ -671,65 +671,97 @@ References:
 
 Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:2:19
 
-Cannot declare `$ReadOnlyMap` [1] because the name is a core builtin type. [name-already-bound]
+Cannot declare `$ReadOnlyArray` [1] because the name is a core builtin type. [name-already-bound]
 
-   2|     declare class $ReadOnlyMap {}
-                        ^^^^^^^^^^^^ [1]
+   2|     declare class $ReadOnlyArray {}
+                        ^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:3:19
 
-Cannot declare `$ReadOnlySet` [1] because the name is a core builtin type. [name-already-bound]
+Cannot declare `$ReadOnlyMap` [1] because the name is a core builtin type. [name-already-bound]
 
-   3|     declare class $ReadOnlySet {}
+   3|     declare class $ReadOnlyMap {}
                         ^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:4:19
 
-Cannot declare `ReadonlyMap` [1] because the name is a core builtin type. [name-already-bound]
+Cannot declare `$ReadOnlySet` [1] because the name is a core builtin type. [name-already-bound]
 
-   4|     declare class ReadonlyMap {}
-                        ^^^^^^^^^^^ [1]
+   4|     declare class $ReadOnlySet {}
+                        ^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:5:19
 
-Cannot declare `ReadonlySet` [1] because the name is a core builtin type. [name-already-bound]
+Cannot declare `ReadonlyArray` [1] because the name is a core builtin type. [name-already-bound]
 
-   5|     declare class ReadonlySet {}
+   5|     declare class ReadonlyArray {}
+                        ^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:6:19
+
+Cannot declare `ReadonlyMap` [1] because the name is a core builtin type. [name-already-bound]
+
+   6|     declare class ReadonlyMap {}
                         ^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:9:11
+Error ------------------------------------------------------------------------------------ reserved_core_js_type.js:7:19
 
-Cannot declare `$ReadOnlyMap` [1] because the name is a core builtin type. [name-already-bound]
+Cannot declare `ReadonlySet` [1] because the name is a core builtin type. [name-already-bound]
 
-   9|     class $ReadOnlyMap {}
-                ^^^^^^^^^^^^ [1]
-
-
-Error ----------------------------------------------------------------------------------- reserved_core_js_type.js:10:11
-
-Cannot declare `$ReadOnlySet` [1] because the name is a core builtin type. [name-already-bound]
-
-   10|     class $ReadOnlySet {}
-                 ^^^^^^^^^^^^ [1]
+   7|     declare class ReadonlySet {}
+                        ^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- reserved_core_js_type.js:11:11
 
-Cannot declare `ReadonlyMap` [1] because the name is a core builtin type. [name-already-bound]
+Cannot declare `$ReadOnlyArray` [1] because the name is a core builtin type. [name-already-bound]
 
-   11|     class ReadonlyMap {}
-                 ^^^^^^^^^^^ [1]
+   11|     class $ReadOnlyArray {}
+                 ^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- reserved_core_js_type.js:12:11
 
+Cannot declare `$ReadOnlyMap` [1] because the name is a core builtin type. [name-already-bound]
+
+   12|     class $ReadOnlyMap {}
+                 ^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- reserved_core_js_type.js:13:11
+
+Cannot declare `$ReadOnlySet` [1] because the name is a core builtin type. [name-already-bound]
+
+   13|     class $ReadOnlySet {}
+                 ^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- reserved_core_js_type.js:14:11
+
+Cannot declare `ReadonlyArray` [1] because the name is a core builtin type. [name-already-bound]
+
+   14|     class ReadonlyArray {}
+                 ^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- reserved_core_js_type.js:15:11
+
+Cannot declare `ReadonlyMap` [1] because the name is a core builtin type. [name-already-bound]
+
+   15|     class ReadonlyMap {}
+                 ^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------- reserved_core_js_type.js:16:11
+
 Cannot declare `ReadonlySet` [1] because the name is a core builtin type. [name-already-bound]
 
-   12|     class ReadonlySet {}
+   16|     class ReadonlySet {}
                  ^^^^^^^^^^^ [1]
 
 
@@ -1022,4 +1054,4 @@ types. [ts-syntax]
 
 
 
-Found 122 errors
+Found 126 errors
