@@ -97,7 +97,6 @@ end = struct
         match t with
         (* composite types that allow self or cyclic reference *)
         | DefT (_, FunT _)
-        | DefT (_, ObjT _)
         | DefT (_, ArrT _)
         | DefT (_, InstanceT _)
         | DefT (_, ReactAbstractComponentT _)
@@ -108,6 +107,7 @@ end = struct
         | TypeAppT _
         | ThisTypeAppT _ ->
           acc
+        | DefT (_, ObjT { proto_t; _ }) -> super#type_ cx pole acc proto_t
         (* EvalT(t, d, _) behaves like TypeAppT, not everything there will be unconditionally
          * evaluated, but if we do have the eval result, we should visit it, since at that point,
          * the EvalT behaves like an OpenT. *)
