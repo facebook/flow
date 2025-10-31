@@ -192,11 +192,21 @@ with type t = Impl.t = struct
               ("defaultValue", option expression default_value);
             ]
         in
+        let record_static_property
+            (loc, { RecordDeclaration.StaticProperty.key; annot; value; comments }) =
+          let key = identifier key in
+          node
+            ?comments
+            "RecordStaticProperty"
+            loc
+            [("key", key); ("typeAnnotation", type_annotation annot); ("value", expression value)]
+        in
 
         let record_element element =
           let open RecordDeclaration.Body in
           match element with
           | Property prop -> record_property prop
+          | StaticProperty prop -> record_static_property prop
           | Method meth -> class_method meth
         in
         let record_body (loc, { RecordDeclaration.Body.body; comments }) =

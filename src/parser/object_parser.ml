@@ -1209,6 +1209,24 @@ module Object
         let key = identifier_name env in
         let (key_loc, _) = key in
         (match Peek.token env with
+        | T_COLON when static ->
+          let prop =
+            with_loc
+              ~start_loc:key_loc
+              (fun env ->
+                let annot = Type.annotation env in
+                Expect.token env T_ASSIGN;
+                let value = Expression.assignment env in
+                (match Peek.token env with
+                | T_EOF
+                | T_RCURLY ->
+                  ()
+                | _ -> Expect.token env T_COMMA);
+                let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+                { StaticProperty.key; annot; value; comments })
+              env
+          in
+          elements env (Body.StaticProperty prop :: acc)
         | T_COLON when not (async || generator) ->
           let prop =
             with_loc

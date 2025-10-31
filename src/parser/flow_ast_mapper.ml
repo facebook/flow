@@ -3327,6 +3327,8 @@ class ['loc] mapper =
         id_loc this#class_method loc meth element (fun meth -> Method (loc, meth))
       | Property (loc, prop) ->
         id_loc this#record_property loc prop element (fun prop -> Property (loc, prop))
+      | StaticProperty (loc, prop) ->
+        id_loc this#record_static_property loc prop element (fun prop -> StaticProperty (loc, prop))
 
     method record_property _loc (prop : ('loc, 'loc) Ast.Statement.RecordDeclaration.Property.t') =
       let open Ast.Statement.RecordDeclaration.Property in
@@ -3340,6 +3342,19 @@ class ['loc] mapper =
         prop
       else
         { key = key'; annot = annot'; default_value = default_value'; comments = comments' }
+
+    method record_static_property
+        _loc (prop : ('loc, 'loc) Ast.Statement.RecordDeclaration.StaticProperty.t') =
+      let open Ast.Statement.RecordDeclaration.StaticProperty in
+      let { key; annot; value; comments } = prop in
+      let key' = this#identifier key in
+      let annot' = this#type_annotation annot in
+      let value' = this#expression value in
+      let comments' = this#syntax_opt comments in
+      if key' == key && annot' == annot && value' == value && comments' == comments then
+        prop
+      else
+        { key = key'; annot = annot'; value = value'; comments = comments' }
 
     method return _loc (stmt : ('loc, 'loc) Ast.Statement.Return.t) =
       let open Ast.Statement.Return in

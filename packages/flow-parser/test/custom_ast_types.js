@@ -338,13 +338,25 @@ function custom_ast_types(fork) {
 
   def('RecordBody')
     .build('body')
-    .field('body', [or(def('RecordProperty'), def('MethodDefinition'))]);
+    .field('body', [
+      or(
+        def('RecordProperty'),
+        def('RecordStaticProperty'),
+        def('MethodDefinition'),
+      ),
+    ]);
 
   def('RecordProperty')
     .build('key', 'typeAnnotation', 'defaultValue')
     .field('key', def('Identifier'))
     .field('typeAnnotation', def('TypeAnnotation'))
     .field('defaultValue', or(def('Expression'), null));
+
+  def('RecordStaticProperty')
+    .build('key', 'typeAnnotation', 'value')
+    .field('key', def('Identifier'))
+    .field('typeAnnotation', def('TypeAnnotation'))
+    .field('value', def('Expression'));
 
   /////////
   // es2018

@@ -802,6 +802,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.RecordDeclaration.Property.t' ->
       ('N, 'U) Ast.Statement.RecordDeclaration.Property.t'
 
+    method record_static_property :
+      ('M, 'T) Ast.Statement.RecordDeclaration.StaticProperty.t' ->
+      ('N, 'U) Ast.Statement.RecordDeclaration.StaticProperty.t'
+
     method return : ('M, 'T) Ast.Statement.Return.t -> ('N, 'U) Ast.Statement.Return.t
 
     method sequence : ('M, 'T) Ast.Expression.Sequence.t -> ('N, 'U) Ast.Expression.Sequence.t

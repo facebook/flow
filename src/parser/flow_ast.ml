@@ -1089,6 +1089,18 @@ and Statement : sig
       [@@deriving show]
     end
 
+    module StaticProperty : sig
+      type ('M, 'T) t = 'T * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        key: ('M, 'T) Identifier.t;
+        annot: ('M, 'T) Type.annotation;
+        value: ('M, 'T) Expression.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
     module Body : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
@@ -1100,6 +1112,7 @@ and Statement : sig
       and ('M, 'T) element =
         | Method of ('M, 'T) Class.Method.t
         | Property of ('M, 'T) Property.t
+        | StaticProperty of ('M, 'T) StaticProperty.t
       [@@deriving show]
     end
 

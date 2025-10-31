@@ -2688,6 +2688,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       match element with
       | Method (annot, meth) -> Method (this#on_type_annot annot, this#class_method meth)
       | Property (annot, prop) -> Property (this#on_type_annot annot, this#record_property prop)
+      | StaticProperty (annot, prop) ->
+        StaticProperty (this#on_type_annot annot, this#record_static_property prop)
 
     method record_property (prop : ('M, 'T) Ast.Statement.RecordDeclaration.Property.t')
         : ('N, 'U) Ast.Statement.RecordDeclaration.Property.t' =
@@ -2698,6 +2700,17 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let default_value' = Base.Option.map ~f:this#expression default_value in
       let comments' = this#syntax_opt comments in
       { key = key'; annot = annot'; default_value = default_value'; comments = comments' }
+
+    method record_static_property
+        (prop : ('M, 'T) Ast.Statement.RecordDeclaration.StaticProperty.t')
+        : ('N, 'U) Ast.Statement.RecordDeclaration.StaticProperty.t' =
+      let open Ast.Statement.RecordDeclaration.StaticProperty in
+      let { key; annot; value; comments } = prop in
+      let key' = this#t_identifier key in
+      let annot' = this#type_annotation annot in
+      let value' = this#expression value in
+      let comments' = this#syntax_opt comments in
+      { key = key'; annot = annot'; value = value'; comments = comments' }
 
     method return (stmt : ('M, 'T) Ast.Statement.Return.t) : ('N, 'U) Ast.Statement.Return.t =
       let open Ast.Statement.Return in

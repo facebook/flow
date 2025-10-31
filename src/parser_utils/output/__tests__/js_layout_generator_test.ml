@@ -3098,6 +3098,10 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "record R<T> {}";
            assert_statement_string ~ctxt "record R<T>implements IFace{foo:number,bar:boolean=true,}";
            assert_statement_string ~ctxt ~pretty:true "record R {\n  f() {}\n}";
-           assert_statement_string ~ctxt ~pretty:true "record R {\n  static async *f() {}\n}"
+           assert_statement_string ~ctxt ~pretty:true "record R {\n  static async *f() {}\n}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "record R implements IFace {\n  static foo: number = 1,\n}"
          );
        ]

@@ -2574,10 +2574,31 @@ and record_property
     ?comments
     (loc, group [identifier key; type_annotation ~opts annot; default_value; Atom ","])
 
+and record_static_property
+    ~opts (loc, { Ast.Statement.RecordDeclaration.StaticProperty.key; annot; value; comments }) =
+  source_location_with_comments
+    ?comments
+    ( loc,
+      group
+        [
+          Atom "static";
+          space;
+          identifier key;
+          type_annotation ~opts annot;
+          pretty_space;
+          Atom "=";
+          pretty_space;
+          expression ~opts value;
+          Atom ",";
+        ]
+    )
+
 and record_body ~opts (loc, { Ast.Statement.RecordDeclaration.Body.body; comments }) =
   let elements =
     Base.List.map body ~f:(function
         | Ast.Statement.RecordDeclaration.Body.Property prop -> record_property ~opts prop
+        | Ast.Statement.RecordDeclaration.Body.StaticProperty prop ->
+          record_static_property ~opts prop
         | Ast.Statement.RecordDeclaration.Body.Method meth -> class_method ~opts meth
         )
   in
