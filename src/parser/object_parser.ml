@@ -191,6 +191,54 @@ module Object
     in
     (key, value)
 
+  (* #prod-MethodDefinition *)
+  let parse_method ~async ~generator ~leading =
+    with_loc (fun env ->
+        (* #sec-function-definitions-static-semantics-early-errors *)
+        let env = env |> with_allow_super Super_prop in
+        let (sig_loc, (tparams, params, return)) =
+          with_loc
+            (fun env ->
+              let tparams =
+                type_params_remove_trailing
+                  env
+                  ~kind:Flow_ast_mapper.FunctionTP
+                  (Type.type_params env)
+              in
+              let params =
+                let params = Declaration.function_params ~await:async ~yield:generator env in
+                if Peek.token env = T_COLON then
+                  params
+                else
+                  function_params_remove_trailing env params
+              in
+              let return =
+                return_annotation_remove_trailing env (Type.function_return_annotation_opt env)
+              in
+              (tparams, params, return))
+            env
+        in
+        let simple_params = is_simple_parameter_list params in
+        let (body, contains_use_strict) =
+          Declaration.function_body env ~async ~generator ~expression:false ~simple_params
+        in
+        Declaration.strict_function_post_check env ~contains_use_strict None params;
+        {
+          Function.id = None;
+          params;
+          body;
+          generator;
+          effect_ = Function.Arbitrary;
+          async;
+          (* TODO: add support for object method predicates *)
+          predicate = None;
+          return;
+          tparams;
+          sig_loc;
+          comments = Flow_ast_utils.mk_comments_opt ~leading ();
+        }
+    )
+
   let _initializer =
     let parse_assignment_cover env =
       match Expression.assignment_cover env with
@@ -241,54 +289,6 @@ module Object
         | Computed (_, { ComputedKey.expression = expr; comments = _ }) ->
           error_at env (fst expr, Parse_error.ComputedShorthandProperty);
           expr
-      in
-      (* #prod-MethodDefinition *)
-      let parse_method ~async ~generator ~leading =
-        with_loc (fun env ->
-            (* #sec-function-definitions-static-semantics-early-errors *)
-            let env = env |> with_allow_super Super_prop in
-            let (sig_loc, (tparams, params, return)) =
-              with_loc
-                (fun env ->
-                  let tparams =
-                    type_params_remove_trailing
-                      env
-                      ~kind:Flow_ast_mapper.FunctionTP
-                      (Type.type_params env)
-                  in
-                  let params =
-                    let params = Declaration.function_params ~await:async ~yield:generator env in
-                    if Peek.token env = T_COLON then
-                      params
-                    else
-                      function_params_remove_trailing env params
-                  in
-                  let return =
-                    return_annotation_remove_trailing env (Type.function_return_annotation_opt env)
-                  in
-                  (tparams, params, return))
-                env
-            in
-            let simple_params = is_simple_parameter_list params in
-            let (body, contains_use_strict) =
-              Declaration.function_body env ~async ~generator ~expression:false ~simple_params
-            in
-            Declaration.strict_function_post_check env ~contains_use_strict None params;
-            {
-              Function.id = None;
-              params;
-              body;
-              generator;
-              effect_ = Function.Arbitrary;
-              async;
-              (* TODO: add support for object method predicates *)
-              predicate = None;
-              return;
-              tparams;
-              sig_loc;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            }
-        )
       in
       (* PropertyName `:` AssignmentExpression *)
       let parse_value env =
