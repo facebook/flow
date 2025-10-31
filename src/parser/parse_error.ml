@@ -127,6 +127,12 @@ type t =
   | PrivateDelete
   | PrivateNotInClass
   | PropertyAfterRestElement
+  | RecordInvalidPropertyName of {
+      name: string;
+      static: bool;
+      method_: bool;
+    }
+  | RecordPrivateElementUnsupported
   | Redeclaration of string * string
   | SetterArity
   | SetterMayNotHaveThisParam
@@ -438,6 +444,21 @@ module PP = struct
     | PrivateDelete -> "Private fields may not be deleted."
     | PrivateNotInClass -> "Private fields can only be referenced from within a class."
     | PropertyAfterRestElement -> "Rest property must be final property of an object pattern"
+    | RecordInvalidPropertyName { name; static; method_ } ->
+      let static_modifier =
+        if static then
+          "static "
+        else
+          ""
+      in
+      let category =
+        if method_ then
+          "methods"
+        else
+          "properties"
+      in
+      Printf.sprintf "Records may not have %s%s named `%s`." static_modifier category name
+    | RecordPrivateElementUnsupported -> "Records to not support private elements. Remove the `#`."
     | Redeclaration (what, name) -> Printf.sprintf "%s '%s' has already been declared" what name
     | SetterArity -> "Setter should have exactly one parameter"
     | SetterMayNotHaveThisParam -> "A setter cannot have a `this` parameter."

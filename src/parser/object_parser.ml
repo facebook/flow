@@ -1206,10 +1206,23 @@ module Object
         let (generator, leading_generator) = Declaration.generator env in
         let leading_key = Peek.comments env in
         let leading = List.concat [leading_static; leading_async; leading_generator; leading_key] in
+        if Peek.token env = T_POUND then (
+          let error_loc = Peek.loc env in
+          Eat.token env;
+          error_at env (error_loc, Parse_error.RecordPrivateElementUnsupported)
+        );
         let key = identifier_name env in
-        let (key_loc, _) = key in
+        let (key_loc, { Identifier.name = key_name; _ }) = key in
+        let check_invalid_name env ~method_ =
+          if String.equal key_name "constructor" || (String.equal key_name "prototype" && static)
+          then
+            error_at
+              env
+              (key_loc, Parse_error.RecordInvalidPropertyName { name = key_name; static; method_ })
+        in
         (match Peek.token env with
         | T_COLON when static ->
+          check_invalid_name env ~method_:false;
           let prop =
             with_loc
               ~start_loc:key_loc
@@ -1228,6 +1241,7 @@ module Object
           in
           elements env (Body.StaticProperty prop :: acc)
         | T_COLON when not (async || generator) ->
+          check_invalid_name env ~method_:false;
           let prop =
             with_loc
               ~start_loc:key_loc
@@ -1250,6 +1264,7 @@ module Object
           in
           elements env (Body.Property prop :: acc)
         | _ ->
+          check_invalid_name env ~method_:true;
           let meth =
             with_loc
               ~start_loc:key_loc
