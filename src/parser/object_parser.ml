@@ -1178,12 +1178,38 @@ module Object
       | T_RCURLY ->
         List.rev acc
       | _ ->
-        let leading = Peek.comments env in
+        let maybe_eat_and_get_comments token env =
+          let cond =
+            Peek.token env = token
+            &&
+            match Peek.ith_token ~i:1 env with
+            | T_COLON (* token: T *)
+            | T_LESS_THAN (* token<T>() {} *)
+            | T_LPAREN (* token() {} *)
+            | T_EOF (* incomplete property *)
+            | T_RCURLY (* end of record *) ->
+              false
+            | _ -> true
+          in
+          let comments =
+            if cond then (
+              let leading = Peek.comments env in
+              Eat.token env;
+              leading
+            ) else
+              []
+          in
+          (cond, comments)
+        in
+        let (static, leading_static) = maybe_eat_and_get_comments T_STATIC env in
+        let (async, leading_async) = maybe_eat_and_get_comments T_ASYNC env in
+        let (generator, leading_generator) = Declaration.generator env in
+        let leading_key = Peek.comments env in
+        let leading = List.concat [leading_static; leading_async; leading_generator; leading_key] in
         let key = identifier_name env in
         let (key_loc, _) = key in
         (match Peek.token env with
-        (* TODO: records - methods parsing*)
-        | T_COLON ->
+        | T_COLON when not (async || generator) ->
           let prop =
             with_loc
               ~start_loc:key_loc
@@ -1206,8 +1232,23 @@ module Object
           in
           elements env (Body.Property prop :: acc)
         | _ ->
-          (* TODO: records - error *)
-          elements env acc)
+          let meth =
+            with_loc
+              ~start_loc:key_loc
+              (fun env ->
+                let value = parse_method env ~async ~generator ~leading in
+                let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+                {
+                  Class.Method.key = Ast.Expression.Object.Property.Identifier key;
+                  value;
+                  kind = Class.Method.Method;
+                  static;
+                  decorators = [];
+                  comments;
+                })
+              env
+          in
+          elements env (Body.Method meth :: acc))
     in
     with_loc (fun env ->
         let leading = Peek.comments env in

@@ -338,7 +338,7 @@ function custom_ast_types(fork) {
 
   def('RecordBody')
     .build('body')
-    .field('body', [or(def('RecordProperty'), def('Method'))]);
+    .field('body', [or(def('RecordProperty'), def('MethodDefinition'))]);
 
   def('RecordProperty')
     .build('key', 'typeAnnotation', 'defaultValue')
