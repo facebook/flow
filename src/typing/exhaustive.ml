@@ -1537,3 +1537,11 @@ let analyze cx ~match_loc patterns arg_t =
       (Error_message.EMatchNotExhaustive { loc = match_loc; examples; missing_pattern_asts = asts })
   );
   check_for_unused_patterns cx pattern_union used_pattern_locs
+
+let partial_leftover_value_union cx patterns root_t =
+  let pattern_union = PatternUnionBuilder.of_patterns_ast cx ~raise_errors:false patterns in
+  let value_union = ValueUnionBuilder.of_type cx root_t in
+  let { value_left; used_pattern_locs = _; value_matched = _ } =
+    filter_values_by_patterns cx ~raise_errors:false ~value_union ~pattern_union
+  in
+  value_left

@@ -1258,7 +1258,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ refining.js:10:19
 
-Cannot cast `test` to empty because number literal `-2` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    refining.js:10:19
    10|     const test => test as empty, // ERROR: `-2 | 's'`
@@ -1275,7 +1275,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ refining.js:10:19
 
-Cannot cast `test` to empty because string literal `s` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `test` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
 
    refining.js:10:19
    10|     const test => test as empty, // ERROR: `-2 | 's'`
@@ -1292,7 +1292,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ refining.js:23:19
 
-Cannot cast `test` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    refining.js:23:19
    23|     const test => test as empty, // ERROR: `2`
@@ -1343,7 +1343,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ refining.js:58:19
 
-Cannot cast `test` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    refining.js:58:19
    58|     const test => test as empty, // ERROR: `2`
@@ -1360,7 +1360,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ refining.js:68:19
 
-Cannot cast `test` to empty because number literal `3` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    refining.js:68:19
    68|     const test => test as empty, // ERROR `3`
@@ -1377,7 +1377,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ refining.js:81:19
 
-Cannot cast `test` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `test` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
 
    refining.js:81:19
    81|     const test => test as empty, // ERROR: `2`
@@ -1592,6 +1592,59 @@ References:
                 ^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------- smart_filtering.js:6:9
+
+Cannot cast `foo` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   smart_filtering.js:6:9
+   6|         foo as empty; // error for sanity check
+              ^^^
+
+References:
+   smart_filtering.js:2:15
+   2|   const foo: ?string = 'foo';
+                    ^^^^^^ [1]
+   smart_filtering.js:6:16
+   6|         foo as empty; // error for sanity check
+                     ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ smart_filtering.js:26:9
+
+Cannot cast `entireTuple` to `$ReadOnly` because in index `0`: null [1] is incompatible with string [2].
+[incompatible-type]
+
+   smart_filtering.js:26:9
+   26|         entireTuple as $ReadOnly<[string, string]>; // error
+               ^^^^^^^^^^^
+
+References:
+   smart_filtering.js:18:27
+   18|     return match ([a.x ?? null, b.x ?? null]) {
+                                 ^^^^ [1]
+   smart_filtering.js:26:35
+   26|         entireTuple as $ReadOnly<[string, string]>; // error
+                                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ smart_filtering.js:26:9
+
+Cannot cast `entireTuple` to `$ReadOnly` because in index `1`: null [1] is incompatible with string [2].
+[incompatible-type]
+
+   smart_filtering.js:26:9
+   26|         entireTuple as $ReadOnly<[string, string]>; // error
+               ^^^^^^^^^^^
+
+References:
+   smart_filtering.js:18:40
+   18|     return match ([a.x ?? null, b.x ?? null]) {
+                                              ^^^^ [1]
+   smart_filtering.js:26:43
+   26|         entireTuple as $ReadOnly<[string, string]>; // error
+                                                 ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ statement.js:22:3
 
 Unreachable code. [unreachable-code]
@@ -1711,4 +1764,4 @@ References:
 
 
 
-Found 129 errors
+Found 132 errors

@@ -480,8 +480,19 @@ let rec resolve_binding cx def_scope_kind reason loc b =
       t
   | Root (Value { hints = _; expr; decl_kind; as_const }) ->
     expression cx ?decl:decl_kind ~as_const expr
-  | Root (MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev = _ }) ->
-    Type_env.var_ref cx (OrdinaryName Flow_ast_utils.match_root_name) case_match_root_loc
+  | Root (MatchCaseRoot { case_match_root_loc; root_pattern_loc; prev_pattern_locs_rev }) ->
+    let unfiltered_t =
+      Type_env.var_ref cx (OrdinaryName Flow_ast_utils.match_root_name) case_match_root_loc
+    in
+    let node_cache = Context.node_cache cx in
+    let patterns =
+      Base.List.rev_map prev_pattern_locs_rev ~f:(fun l ->
+          Base.Option.value_exn (Node_cache.get_match_pattern node_cache l)
+      )
+    in
+    let value_left = Exhaustive.partial_leftover_value_union cx patterns unfiltered_t in
+    Node_cache.set_match_pattern_value_union (Context.node_cache cx) root_pattern_loc value_left;
+    Match_pattern_ir.ValueUnion.to_type (TypeUtil.reason_of_t unfiltered_t) value_left
   | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
     let open Ast.Expression.Object in
     let resolve_prop ~bind_this ~prop_loc ~fn_loc fn =
@@ -832,44 +843,56 @@ let rec resolve_binding cx def_scope_kind reason loc b =
     let t = resolve_binding cx def_scope_kind reason loc binding in
     make_hooklike cx t
   | Select { selector; parent = (parent_loc, binding) } ->
-    let refined_type =
-      match selector with
-      | Selector.Prop { prop; prop_loc; _ } ->
-        let desc = RProperty (Some (OrdinaryName prop)) in
-        Type_env.get_refinement cx desc prop_loc
-      | _ -> None
+    let node_cache = Context.node_cache cx in
+    let filtered_pattern_type =
+      Node_cache.get_match_pattern_value_union node_cache parent_loc
+      |> Base.Option.bind ~f:(Match_pattern_ir.ValueUnion.select ~selector)
+      |> Base.Option.map ~f:(fun value_left ->
+             Node_cache.set_match_pattern_value_union node_cache loc value_left;
+             Match_pattern_ir.ValueUnion.to_type reason value_left
+         )
     in
-    (match refined_type with
-    | Some t ->
-      (* When we can get a refined value on a destructured property,
-         we must be in an assignment position and the type must have been resolved. *)
-      t
+    (match filtered_pattern_type with
+    | Some t -> t
     | None ->
-      let t = Type_env.checked_find_loc_env_write cx Env_api.PatternLoc parent_loc in
-      let has_anno = binding_has_annot binding in
-      let (selector, reason, has_default) = mk_selector_reason_has_default cx loc selector in
-      let kind =
-        if has_anno then
-          DestructAnnot
+      let refined_type =
+        match selector with
+        | Selector.Prop { prop; prop_loc; _ } ->
+          let desc = RProperty (Some (OrdinaryName prop)) in
+          Type_env.get_refinement cx desc prop_loc
+        | _ -> None
+      in
+      (match refined_type with
+      | Some t ->
+        (* When we can get a refined value on a destructured property,
+           we must be in an assignment position and the type must have been resolved. *)
+        t
+      | None ->
+        let t = Type_env.checked_find_loc_env_write cx Env_api.PatternLoc parent_loc in
+        let has_anno = binding_has_annot binding in
+        let (selector, reason, has_default) = mk_selector_reason_has_default cx loc selector in
+        let kind =
+          if has_anno then
+            DestructAnnot
+          else
+            DestructInfer
+        in
+        let t =
+          Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
+              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+                  Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+              )
+          )
+        in
+        if has_default then
+          let (selector, reason, _) = mk_selector_reason_has_default cx loc Selector.Default in
+          Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
+              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
+                  Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+              )
+          )
         else
-          DestructInfer
-      in
-      let t =
-        Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
-            Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
-                Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
-            )
-        )
-      in
-      if has_default then
-        let (selector, reason, _) = mk_selector_reason_has_default cx loc Selector.Default in
-        Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
-            Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
-                Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
-            )
-        )
-      else
-        t)
+          t))
 
 let resolve_inferred_function
     cx ~scope_kind ~statics ~needs_this_param id_loc reason function_loc function_ =

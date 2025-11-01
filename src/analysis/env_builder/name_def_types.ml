@@ -102,6 +102,7 @@ type root =
   | Value of value
   | MatchCaseRoot of {
       case_match_root_loc: ALoc.t;
+      root_pattern_loc: ALoc.t;
       prev_pattern_locs_rev: ALoc.t list;
     }
   | FunctionValue of {
@@ -241,7 +242,7 @@ module Print = struct
     | UnannotatedParameter r -> Reason.string_of_reason r
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
     | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)
-    | MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev = _ } ->
+    | MatchCaseRoot { case_match_root_loc; root_pattern_loc = _; prev_pattern_locs_rev = _ } ->
       spf "match root for case at %s" (ALoc.debug_to_string case_match_root_loc)
     | FunctionValue { function_loc; _ } -> spf "function val %s" (ALoc.debug_to_string function_loc)
     | ObjectValue _ -> "object"

@@ -544,6 +544,8 @@ module rec ValueObject : sig
 
   type t = Reason.t * t'
 
+  val to_original_type : t -> Type.t
+
   val to_pattern : t -> PatternObject.t
 end = struct
   module Property = struct
@@ -570,6 +572,8 @@ end = struct
   }
 
   type t = Reason.t * t'
+
+  let to_original_type (_, { t; _ }) = t
 
   let to_pattern (reason, { props; class_info; rest; kind; sentinel_props; _ }) =
     let loc = Reason.loc_of_reason reason in
@@ -679,6 +683,10 @@ and ValueUnion : sig
   val is_empty : t -> bool
 
   val to_pattern : t -> PatternUnion.t
+
+  val to_type : Reason.t -> t -> Type.t
+
+  val select : selector:Selector.t -> t -> t option
 end = struct
   type t = {
     leafs: LeafSet.t;
@@ -706,6 +714,33 @@ end = struct
     && Base.List.is_empty objects
     && Base.List.is_empty enum_unknown_members
     && Base.List.is_empty inexhaustible
+
+  let union
+      {
+        leafs = leafs1;
+        tuples = tuples1;
+        arrays = arrays1;
+        objects = objects1;
+        enum_unknown_members = enum_unknown_members1;
+        inexhaustible = inexhaustible1;
+      }
+      {
+        leafs = leafs2;
+        tuples = tuples2;
+        arrays = arrays2;
+        objects = objects2;
+        enum_unknown_members = enum_unknown_members2;
+        inexhaustible = inexhaustible2;
+      } =
+    {
+      leafs = LeafSet.union leafs1 leafs2;
+      tuples = Base.List.rev_append (List.rev tuples1) tuples2;
+      arrays = Base.List.rev_append (List.rev arrays1) arrays2;
+      objects = Base.List.rev_append (List.rev objects1) objects2;
+      enum_unknown_members =
+        Base.List.rev_append (List.rev enum_unknown_members1) enum_unknown_members2;
+      inexhaustible = Base.List.rev_append (List.rev inexhaustible1) inexhaustible2;
+    }
 
   let to_pattern { leafs; tuples; arrays; objects; enum_unknown_members; inexhaustible } =
     let (tuples_exact, tuples_inexact) =
@@ -767,4 +802,73 @@ end = struct
       | (_, (reason, _) :: _) -> Some reason
     in
     { PatternUnion.empty with PatternUnion.leafs; tuples_exact; tuples_inexact; objects; wildcard }
+
+  let to_type r { leafs; tuples; arrays; objects; enum_unknown_members; inexhaustible } =
+    let all_possible_types =
+      Base.List.concat
+        [
+          leafs |> LeafSet.elements |> Base.List.map ~f:Leaf.to_type;
+          Base.List.map tuples ~f:ValueObject.to_original_type;
+          Base.List.map arrays ~f:ValueObject.to_original_type;
+          Base.List.map objects ~f:ValueObject.to_original_type;
+          Base.List.bind enum_unknown_members ~f:(fun (_, leaf_set) ->
+              LeafSet.elements leaf_set |> Base.List.map ~f:Leaf.to_type
+          );
+          inexhaustible;
+        ]
+    in
+    TypeUtil.union_of_ts r all_possible_types
+
+  let select
+      ~selector
+      ( { leafs = _; tuples; arrays; objects; enum_unknown_members = _; inexhaustible = _ } as
+      value_union
+      ) =
+    (* Given a list of values, select a sub-value matching the given key.
+     * This is intend to be conservative. If we are unsure whether the key definitely exists/not exists,
+     * we will abort and return None. Otherwise, we return `Some(candidates)` *)
+    let conservative_find key values =
+      let rec loop acc = function
+        | [] -> Some (List.rev acc)
+        | (_, { ValueObject.kind = _; t = _; props; rest; class_info = _; sentinel_props = _ })
+          :: rest_values ->
+          (match SMap.find_opt key props with
+          | None ->
+            if Base.Option.is_some rest then
+              None
+            else
+              loop acc rest_values
+          | Some None ->
+            (* We definitely know the field doesn't exist. *)
+            loop acc rest_values
+          | Some (Some v) -> loop (v.ValueObject.Property.value :: acc) rest_values)
+      in
+      loop [] values
+    in
+    let conservative_find_all key =
+      match conservative_find key tuples with
+      | None -> None
+      | Some tuple_candidates ->
+        (match conservative_find key arrays with
+        | None -> None
+        | Some array_candidates ->
+          (match conservative_find key objects with
+          | None -> None
+          | Some object_candidates ->
+            Some (Base.List.concat [tuple_candidates; array_candidates; object_candidates])))
+    in
+    let vus_opt =
+      match selector with
+      | Selector.Elem { index; has_default = _ } ->
+        let key = string_of_int index in
+        conservative_find_all key
+      | Selector.Prop { prop; prop_loc = _; has_default = _ } -> conservative_find_all prop
+      | Selector.Computed _ -> None
+      | Selector.ObjRest _ -> None
+      | Selector.ArrRest _ -> None
+      | Selector.Default -> Some [lazy value_union]
+    in
+    match vus_opt with
+    | None -> None
+    | Some vus -> Some (Base.List.fold_right vus ~init:empty ~f:(fun (lazy vu) acc -> union vu acc))
 end

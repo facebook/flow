@@ -985,7 +985,7 @@ struct
         | Value { hints; expr; decl_kind = _; as_const = _ } ->
           let state = depends_of_hints state hints in
           depends_of_expression expr state
-        | MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev } ->
+        | MatchCaseRoot { case_match_root_loc; root_pattern_loc = _; prev_pattern_locs_rev } ->
           depends_of_node
             (fun visitor ->
               run visitor#identifier (Flow_ast_utils.match_root_ident case_match_root_loc);

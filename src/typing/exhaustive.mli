@@ -13,3 +13,9 @@ val analyze :
   ((ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t * (* guarded *) bool) list ->
   Type.t ->
   unit
+
+val partial_leftover_value_union :
+  Context.t ->
+  ((ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t * (* guarded *) bool) list ->
+  Type.t ->
+  Match_pattern_ir.ValueUnion.t

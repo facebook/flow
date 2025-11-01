@@ -3269,7 +3269,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           ~init:[]
           ~f:(fun i prev_pattern_locs_rev (_, { Case.pattern; body; guard; case_match_root_loc; _ })
              ->
-            let acc = MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev } in
+            let acc =
+              MatchCaseRoot
+                { case_match_root_loc; root_pattern_loc = fst pattern; prev_pattern_locs_rev }
+            in
             this#add_match_destructure_bindings
               ~case_match_root_loc
               ~has_guard:(Option.is_some guard)
@@ -3301,7 +3304,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           ~init:[]
           ~f:(fun prev_pattern_locs_rev (_, { Case.pattern; body; guard; case_match_root_loc; _ })
              ->
-            let acc = MatchCaseRoot { case_match_root_loc; prev_pattern_locs_rev } in
+            let acc =
+              MatchCaseRoot
+                { case_match_root_loc; root_pattern_loc = fst pattern; prev_pattern_locs_rev }
+            in
             this#add_match_destructure_bindings
               ~case_match_root_loc
               ~has_guard:(Option.is_some guard)
