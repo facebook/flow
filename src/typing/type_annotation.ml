@@ -3060,7 +3060,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let (iface_sig, properties) =
       add_interface_properties env properties ~this:(implicit_mixed_this reason) iface_sig
     in
-    let (_, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
+    let (_, t) = Class_type_sig.classtype ~check_polarity:true cx iface_sig in
     ( t,
       iface_sig,
       {
