@@ -30,8 +30,8 @@ module FlowConstraint = struct
     | (_, ConcretizeT _) ->
       false
     | ( _,
-        ( BindT _ | CallT _ | MethodT _ | PrivateMethodT _ | ConstructorT _ | ObjRestT _
-        | ObjTestT _ | ArrRestT _ )
+        ( BindT _ | CallT _ | MethodT _ | PrivateMethodT _ | ConstructorT _ | LookupT _ | GetPropT _
+        | ObjRestT _ | ObjTestT _ | ArrRestT _ )
       ) ->
       false
     | _ ->
