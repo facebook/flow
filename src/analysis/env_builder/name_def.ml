@@ -274,6 +274,7 @@ end
 module MatchPattern : sig
   val visit_pattern :
     visit_binding:(ALoc.t -> string -> binding -> unit) ->
+    visit_non_binding_leaf:(ALoc.t -> binding -> unit) ->
     visit_expression:((ALoc.t, ALoc.t) Ast.Expression.t -> unit) ->
     visit_intermediate:(ALoc.t -> binding -> unit) ->
     binding ->
@@ -315,16 +316,30 @@ end = struct
   let binding ~visit_binding acc (name_loc, { Ast.Identifier.name; _ }) =
     visit_binding name_loc name acc
 
-  let rec visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc (loc, pattern) =
+  let rec visit_pattern
+      ~visit_binding ~visit_non_binding_leaf ~visit_expression ~visit_intermediate acc (loc, pattern)
+      =
     match pattern with
     | BindingPattern { BindingPattern.id; kind = _; comments = _ } -> binding ~visit_binding acc id
-    | NumberPattern x -> visit_expression (loc, Ast.Expression.NumberLiteral x)
-    | BigIntPattern x -> visit_expression (loc, Ast.Expression.BigIntLiteral x)
-    | StringPattern x -> visit_expression (loc, Ast.Expression.StringLiteral x)
-    | BooleanPattern x -> visit_expression (loc, Ast.Expression.BooleanLiteral x)
-    | NullPattern x -> visit_expression (loc, Ast.Expression.NullLiteral x)
-    | IdentifierPattern x -> visit_expression (loc, Ast.Expression.Identifier x)
-    | WildcardPattern _ -> ()
+    | NumberPattern x ->
+      visit_non_binding_leaf loc acc;
+      visit_expression (loc, Ast.Expression.NumberLiteral x)
+    | BigIntPattern x ->
+      visit_non_binding_leaf loc acc;
+      visit_expression (loc, Ast.Expression.BigIntLiteral x)
+    | StringPattern x ->
+      visit_non_binding_leaf loc acc;
+      visit_expression (loc, Ast.Expression.StringLiteral x)
+    | BooleanPattern x ->
+      visit_non_binding_leaf loc acc;
+      visit_expression (loc, Ast.Expression.BooleanLiteral x)
+    | NullPattern x ->
+      visit_non_binding_leaf loc acc;
+      visit_expression (loc, Ast.Expression.NullLiteral x)
+    | IdentifierPattern x ->
+      visit_non_binding_leaf loc acc;
+      visit_expression (loc, Ast.Expression.Identifier x)
+    | WildcardPattern _ -> visit_non_binding_leaf loc acc
     | UnaryPattern { UnaryPattern.operator; argument; comments } ->
       let operator =
         match operator with
@@ -336,37 +351,80 @@ end = struct
         | (loc, UnaryPattern.NumberLiteral lit) -> (loc, Ast.Expression.NumberLiteral lit)
         | (loc, UnaryPattern.BigIntLiteral lit) -> (loc, Ast.Expression.BigIntLiteral lit)
       in
+      visit_non_binding_leaf loc acc;
       visit_expression
         (loc, Ast.Expression.Unary { Ast.Expression.Unary.operator; argument; comments })
     | MemberPattern mem ->
+      visit_non_binding_leaf loc acc;
       ignore @@ Flow_ast_utils.expression_of_match_member_pattern ~visit_expression mem
     | ArrayPattern pattern ->
-      array_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc pattern
+      array_pattern
+        ~visit_binding
+        ~visit_non_binding_leaf
+        ~visit_expression
+        ~visit_intermediate
+        loc
+        acc
+        pattern
     | ObjectPattern pattern ->
-      object_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc pattern
+      object_pattern
+        ~visit_binding
+        ~visit_non_binding_leaf
+        ~visit_expression
+        ~visit_intermediate
+        loc
+        acc
+        pattern
     | InstancePattern { InstancePattern.constructor; fields = (_, fields); comments = _ } ->
       (match constructor with
       | InstancePattern.IdentifierConstructor ((id_loc, _) as id) ->
         visit_expression (id_loc, Ast.Expression.Identifier id)
       | InstancePattern.MemberConstructor mem ->
         ignore @@ Flow_ast_utils.expression_of_match_member_pattern ~visit_expression mem);
-      object_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc fields
+      object_pattern
+        ~visit_binding
+        ~visit_non_binding_leaf
+        ~visit_expression
+        ~visit_intermediate
+        loc
+        acc
+        fields
     | OrPattern { OrPattern.patterns; comments = _ } ->
       Base.List.iter
         patterns
-        ~f:(visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc)
+        ~f:
+          (visit_pattern
+             ~visit_binding
+             ~visit_non_binding_leaf
+             ~visit_expression
+             ~visit_intermediate
+             acc
+          )
     | AsPattern { AsPattern.pattern; target; comments = _ } ->
-      visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc pattern;
+      visit_pattern
+        ~visit_binding
+        ~visit_non_binding_leaf
+        ~visit_expression
+        ~visit_intermediate
+        acc
+        pattern;
       (match target with
       | AsPattern.Binding (_, { BindingPattern.id; kind = _; comments = _ })
       | AsPattern.Identifier id ->
         binding ~visit_binding acc id)
 
-  and array_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc pattern =
+  and array_pattern
+      ~visit_binding ~visit_non_binding_leaf ~visit_expression ~visit_intermediate loc acc pattern =
     let { ArrayPattern.elements; rest; comments = _ } = pattern in
     visit_intermediate loc acc;
     let used_elements =
-      array_elements ~visit_binding ~visit_expression ~visit_intermediate (loc, acc) elements
+      array_elements
+        ~visit_binding
+        ~visit_non_binding_leaf
+        ~visit_expression
+        ~visit_intermediate
+        (loc, acc)
+        elements
     in
     Base.Option.iter rest ~f:(function (_, { RestPattern.argument; comments = _ }) ->
         Base.Option.iter argument ~f:(function
@@ -376,18 +434,32 @@ end = struct
             )
         )
 
-  and array_elements ~visit_binding ~visit_expression ~visit_intermediate acc elements =
+  and array_elements
+      ~visit_binding ~visit_non_binding_leaf ~visit_expression ~visit_intermediate acc elements =
     Base.List.fold elements ~init:0 ~f:(fun i { ArrayPattern.Element.pattern; _ } ->
         let acc = array_element acc i in
-        visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc pattern;
+        visit_pattern
+          ~visit_binding
+          ~visit_non_binding_leaf
+          ~visit_expression
+          ~visit_intermediate
+          acc
+          pattern;
         i + 1
     )
 
-  and object_pattern ~visit_binding ~visit_expression ~visit_intermediate loc acc pattern =
+  and object_pattern
+      ~visit_binding ~visit_non_binding_leaf ~visit_expression ~visit_intermediate loc acc pattern =
     let { ObjectPattern.properties; rest; comments = _ } = pattern in
     visit_intermediate loc acc;
     let used_props =
-      object_properties ~visit_binding ~visit_expression ~visit_intermediate (loc, acc) properties
+      object_properties
+        ~visit_binding
+        ~visit_non_binding_leaf
+        ~visit_expression
+        ~visit_intermediate
+        (loc, acc)
+        properties
     in
     Base.Option.iter rest ~f:(function (_, { RestPattern.argument; comments = _ }) ->
         Base.Option.iter argument ~f:(function
@@ -397,7 +469,8 @@ end = struct
             )
         )
 
-  and object_properties ~visit_binding ~visit_expression ~visit_intermediate acc properties =
+  and object_properties
+      ~visit_binding ~visit_non_binding_leaf ~visit_expression ~visit_intermediate acc properties =
     Base.List.fold properties ~init:[] ~f:(fun used_props prop ->
         match prop with
         | ( _,
@@ -405,7 +478,13 @@ end = struct
               { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }
           ) ->
           let (acc, prop_name) = object_property acc key in
-          visit_pattern ~visit_binding ~visit_expression ~visit_intermediate acc pattern;
+          visit_pattern
+            ~visit_binding
+            ~visit_non_binding_leaf
+            ~visit_expression
+            ~visit_intermediate
+            acc
+            pattern;
           prop_name :: used_props
         | (_, ObjectPattern.Property.InvalidShorthand _) -> used_props
     )
@@ -3336,6 +3415,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         (MatchCasePattern { case_match_root_loc; has_guard; pattern });
       MatchPattern.visit_pattern
         ~visit_binding
+        ~visit_non_binding_leaf:this#add_destructure_binding
         ~visit_expression:(this#visit_expression ~hints:[] ~cond:MatchPattern)
         ~visit_intermediate:this#add_destructure_binding
         (Root root)

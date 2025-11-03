@@ -176,11 +176,11 @@
   declare const x: mixed;
 
   match (x) { // ERROR: missing `_`
-    {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // OK
+    {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR
   }
 
   match (x) { // OK
-    {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // OK
+    {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR
     _ => {}
   }
 }

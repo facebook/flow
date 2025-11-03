@@ -157,13 +157,41 @@ of the input type. To fix, either remove this pattern or restructure previous pa
            ^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- arrays.js:92:6
+
+Property `0` is missing in `Array` [1]. [prop-missing]
+
+   arrays.js:92:6
+   92|     {0: true, ...} => {} // ERROR: cannot access property 0
+            ^
+
+References:
+   arrays.js:81:20
+   81|   declare const x: Array<boolean>;
+                          ^^^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- arrays.js:93:5
 
 This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
 of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
 
-   93|     {1: 'xxx', ...} => {} // ERROR
+   93|     {1: 'xxx', ...} => {} // ERROR: unused, cannot access property 1
            ^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- arrays.js:93:6
+
+Property `1` is missing in `Array` [1]. [prop-missing]
+
+   arrays.js:93:6
+   93|     {1: 'xxx', ...} => {} // ERROR: unused, cannot access property 1
+            ^
+
+References:
+   arrays.js:81:20
+   81|   declare const x: Array<boolean>;
+                          ^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- basic.js:12:3
@@ -1091,6 +1119,20 @@ of the input type. To fix, either remove this pattern or restructure previous pa
            ^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- guards.js:88:6
+
+Property `baz` is missing in object type [1]. [prop-missing]
+
+   guards.js:88:6
+   88|     {baz: 3} | {bar: 2} if (cond) => {} // ERROR
+            ^^^
+
+References:
+   guards.js:50:20
+   50|   declare const x: {foo: 1} | {bar: 2};
+                          ^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- guards.js:97:3
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `[1]` to match tuple
@@ -1418,6 +1460,62 @@ References:
                            ^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------------------ inexhaustible.js:179:23
+
+An index signature declaring the expected key / value type is missing in mixed [1]. [incompatible-use]
+
+   inexhaustible.js:179:23
+   179|     {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR
+                              ^^^^^
+
+References:
+   inexhaustible.js:178:10
+   178|   match (x) { // ERROR: missing `_`
+                 ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ inexhaustible.js:179:30
+
+An index signature declaring the expected key / value type is missing in mixed [1]. [incompatible-use]
+
+   inexhaustible.js:179:30
+   179|     {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR
+                                     ^^^^^^^^^^^^^^^
+
+References:
+   inexhaustible.js:178:10
+   178|   match (x) { // ERROR: missing `_`
+                 ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ inexhaustible.js:183:23
+
+An index signature declaring the expected key / value type is missing in mixed [1]. [incompatible-use]
+
+   inexhaustible.js:183:23
+   183|     {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR
+                              ^^^^^
+
+References:
+   inexhaustible.js:182:10
+   182|   match (x) { // OK
+                 ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------ inexhaustible.js:183:30
+
+An index signature declaring the expected key / value type is missing in mixed [1]. [incompatible-use]
+
+   inexhaustible.js:183:30
+   183|     {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR
+                                     ^^^^^^^^^^^^^^^
+
+References:
+   inexhaustible.js:182:10
+   182|   match (x) { // OK
+                 ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------- instance.js:15:1
 
 `match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `C {b: false, ...}` to
@@ -1679,6 +1777,20 @@ References:
    objects.js:276:20
    276|   declare const x: C;
                            ^ [1]
+
+
+Error ------------------------------------------------------------------------------------------------ objects.js:297:17
+
+property `m` [1] cannot be unbound from the context [2] where it was defined. [method-unbinding]
+
+   objects.js:297:17
+   297|     {foo: true, m: _, ...} => {} // ERROR: cannot unbound
+                        ^ [1]
+
+References:
+   objects.js:294:45
+   294|   declare const x: interface {foo: boolean, m(): void};
+                                                    ^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- objects.js:332:3
@@ -2408,4 +2520,4 @@ References:
 
 
 
-Found 175 errors
+Found 183 errors

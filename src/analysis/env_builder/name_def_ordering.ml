@@ -1117,28 +1117,28 @@ struct
              the type of `y` against `x`. So in addition to exploring the RHS, we also add the providers
              for `x` to the set of dependencies. *)
         match lhs_member_expression with
-        | None ->
-          let { Provider_api.providers = provider_entries; _ } =
-            Base.Option.value_exn (Provider_api.providers_of_def providers id_loc)
-          in
-          if not @@ Provider_api.is_provider providers id_loc then
-            Base.List.fold
-              ~init:EnvMap.empty
-              ~f:(fun acc { Provider_api.reason = r; _ } ->
-                let key = (Env_api.OrdinaryNameLoc, Reason.loc_of_reason r) in
-                if Env_api.has_assigning_write key env_entries then
-                  EnvMap.update
-                    key
-                    (function
-                      | None -> Some (Nel.one id_loc)
-                      | Some locs -> Some (Nel.cons id_loc locs))
-                    acc
-                else
-                  acc)
-              provider_entries
-          else
-            EnvMap.empty
         | Some e -> depends_of_expression ~for_expression_writes:true e EnvMap.empty
+        | None ->
+          (match Provider_api.providers_of_def providers id_loc with
+          | Some { Provider_api.providers = provider_entries; _ } ->
+            if not @@ Provider_api.is_provider providers id_loc then
+              Base.List.fold
+                ~init:EnvMap.empty
+                ~f:(fun acc { Provider_api.reason = r; _ } ->
+                  let key = (Env_api.OrdinaryNameLoc, Reason.loc_of_reason r) in
+                  if Env_api.has_assigning_write key env_entries then
+                    EnvMap.update
+                      key
+                      (function
+                        | None -> Some (Nel.one id_loc)
+                        | Some locs -> Some (Nel.cons id_loc locs))
+                      acc
+                  else
+                    acc)
+                provider_entries
+            else
+              EnvMap.empty
+          | None -> EnvMap.empty)
       in
       let rec depends_of_binding bind =
         let state =

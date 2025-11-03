@@ -89,8 +89,8 @@
   }
 
   match (x) { // OK
-    {0: true, ...} => {} // OK
-    {1: 'xxx', ...} => {} // ERROR
+    {0: true, ...} => {} // ERROR: cannot access property 0
+    {1: 'xxx', ...} => {} // ERROR: unused, cannot access property 1
     [...] => {}
   }
 }

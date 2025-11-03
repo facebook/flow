@@ -294,7 +294,7 @@
   declare const x: interface {foo: boolean, m(): void};
 
   match (x) { // OK
-    {foo: true, m: _, ...} => {}
+    {foo: true, m: _, ...} => {} // ERROR: cannot unbound
     {foo: false, m: _, ...} => {}
   }
 }

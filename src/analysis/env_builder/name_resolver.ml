@@ -3150,8 +3150,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           | (_, OrPattern { OrPattern.patterns; _ }) ->
             Base.List.find_map patterns ~f:needs_prop_exists_refi
         in
-        let rec recurse acc pattern bindings =
-          ( if Flow_ast_utils.match_pattern_has_binding pattern then
+        let rec recurse acc pattern bindings non_binding_leaves =
+          let () =
             let (loc, _) = pattern in
             let write_entries =
               EnvMap.add
@@ -3160,7 +3160,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 env_state.write_entries
             in
             env_state <- { env_state with write_entries }
-          );
+          in
           match pattern with
           | (loc, NumberPattern ({ Ast.NumberLiteral.value; raw; _ } as x)) ->
             let lit = (value, raw) in
@@ -3172,7 +3172,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               acc
               refi
               (loc, Ast.Expression.NumberLiteral x);
-            bindings
+            (bindings, ALocSet.add loc non_binding_leaves)
           | (loc, BigIntPattern ({ Ast.BigIntLiteral.value; raw; _ } as x)) ->
             let lit = (value, raw) in
             let refi = SingletonBigIntR { loc; sense = true; lit } in
@@ -3183,7 +3183,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               acc
               refi
               (loc, Ast.Expression.BigIntLiteral x);
-            bindings
+            (bindings, ALocSet.add loc non_binding_leaves)
           | (loc, StringPattern ({ Ast.StringLiteral.value = lit; _ } as x)) ->
             let refi = SingletonStrR { loc; sense = true; lit } in
             this#literal_test
@@ -3193,7 +3193,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               acc
               refi
               (loc, Ast.Expression.StringLiteral x);
-            bindings
+            (bindings, ALocSet.add loc non_binding_leaves)
           | (loc, BooleanPattern ({ Ast.BooleanLiteral.value = lit; _ } as x)) ->
             let refi = SingletonBoolR { loc; sense = true; lit } in
             this#literal_test
@@ -3203,10 +3203,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               acc
               refi
               (loc, Ast.Expression.BooleanLiteral x);
-            bindings
+            (bindings, ALocSet.add loc non_binding_leaves)
           | (loc, NullPattern x) ->
             this#null_test ~strict:true ~sense:true loc acc (loc, Ast.Expression.NullLiteral x);
-            bindings
+            (bindings, ALocSet.add loc non_binding_leaves)
           | (loc, IdentifierPattern id) ->
             check_invalid_reference bindings id;
             run this#identifier id;
@@ -3214,7 +3214,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             let refis = this#maybe_sentinel ~sense:true ~strict:true loc acc id_expr in
             let refis = eq_refinement ~acc ~loc refis in
             this#commit_refinement refis;
-            bindings
+            (bindings, ALocSet.add loc non_binding_leaves)
           | (loc, MemberPattern x) ->
             let (mem_expr, root_ident) =
               Flow_ast_utils.expression_of_match_member_pattern
@@ -3225,7 +3225,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             let refis = this#maybe_sentinel ~sense:true ~strict:true loc acc mem_expr in
             let refis = eq_refinement ~acc ~loc refis in
             this#commit_refinement refis;
-            bindings
+            (bindings, ALocSet.add loc non_binding_leaves)
           | (loc, UnaryPattern { UnaryPattern.operator; argument; _ }) ->
             (match argument with
             | (_, UnaryPattern.NumberLiteral { Ast.NumberLiteral.value; raw; comments }) ->
@@ -3256,7 +3256,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 acc
                 refi
                 (loc, Ast.Expression.BigIntLiteral { Ast.BigIntLiteral.raw; value; comments }));
-            bindings
+            (bindings, ALocSet.add loc non_binding_leaves)
           | (_, AsPattern { AsPattern.pattern; target; _ }) ->
             let bindings =
               match target with
@@ -3264,26 +3264,26 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 add_binding kind id bindings
               | AsPattern.Identifier id -> add_binding Ast.Variable.Const id bindings
             in
-            recurse acc pattern bindings
+            recurse acc pattern bindings non_binding_leaves
           | (loc, BindingPattern { BindingPattern.kind; id; _ }) ->
             impossible_refinement ~acc loc;
-            add_binding kind id bindings
+            (add_binding kind id bindings, non_binding_leaves)
           | (loc, WildcardPattern _) ->
             impossible_refinement ~acc loc;
-            bindings
+            (bindings, ALocSet.add loc non_binding_leaves)
           | (_, OrPattern { OrPattern.patterns; _ }) ->
-            let rec check_or patterns bindings =
+            let rec check_or patterns bindings non_binding_leaves =
               match patterns with
-              | [] -> bindings
-              | [pattern] -> recurse acc pattern bindings
+              | [] -> (bindings, non_binding_leaves)
+              | [pattern] -> recurse acc pattern bindings non_binding_leaves
               | rhs :: rest ->
                 this#push_refinement_scope empty_refinements;
-                let bindings = check_or rest bindings in
+                let (bindings, non_binding_leaves) = check_or rest bindings non_binding_leaves in
                 let lhs_latest_refinements = this#peek_new_refinements () in
                 let env1 = this#env_snapshot_without_latest_refinements in
                 this#negate_new_refinements ();
                 this#push_refinement_scope empty_refinements;
-                let bindings = recurse acc rhs bindings in
+                let (bindings, non_binding_leaves) = recurse acc rhs bindings non_binding_leaves in
                 let rhs_latest_refinements = this#peek_new_refinements () in
                 this#pop_refinement_scope ();
                 (* Pop LHS refinement scope *)
@@ -3293,9 +3293,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   ~conjunction:false
                   lhs_latest_refinements
                   rhs_latest_refinements;
-                bindings
+                (bindings, non_binding_leaves)
             in
-            check_or (List.rev patterns) bindings
+            check_or (List.rev patterns) bindings non_binding_leaves
           | (loc, ObjectPattern pattern) ->
             (match RefinementKey.of_expression acc with
             | Some key ->
@@ -3303,8 +3303,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               let refi = AndR (ObjectR, NotR NullR) in
               this#add_single_refinement key ~refining_locs:(L.LSet.singleton loc) refi
             | None -> ());
-            object_pattern_props ~instance_pattern:false acc (loc, pattern) bindings
-          | (loc, ArrayPattern pattern) -> array_pattern acc (loc, pattern) bindings
+            object_pattern_props
+              ~instance_pattern:false
+              acc
+              (loc, pattern)
+              bindings
+              non_binding_leaves
+          | (loc, ArrayPattern pattern) ->
+            array_pattern acc (loc, pattern) bindings non_binding_leaves
           | (loc, InstancePattern { InstancePattern.constructor; fields; _ }) ->
             let (expr, id) =
               match constructor with
@@ -3318,8 +3324,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             in
             check_invalid_reference bindings id;
             this#instance_test ~context:Env_api.Refi.MatchInstancePattern loc acc expr;
-            object_pattern_props ~instance_pattern:true acc fields bindings
-        and array_pattern acc (loc, { ArrayPattern.elements; rest; comments = _ }) bindings =
+            object_pattern_props ~instance_pattern:true acc fields bindings non_binding_leaves
+        and array_pattern
+            acc (loc, { ArrayPattern.elements; rest; comments = _ }) bindings non_binding_leaves =
           (match RefinementKey.of_expression acc with
           | Some key ->
             let refis = this#start_refinement key ~refining_locs:(L.LSet.singleton loc) IsArrayR in
@@ -3347,11 +3354,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             Ast.Expression.NumberLiteral
               { Ast.NumberLiteral.value = float i; raw = string_of_int i; comments = None }
           in
-          let bindings =
+          let (bindings, non_binding_leaves) =
             Base.List.foldi
               elements
-              ~init:bindings
-              ~f:(fun i bindings { ArrayPattern.Element.pattern; index } ->
+              ~init:(bindings, non_binding_leaves)
+              ~f:(fun i (bindings, non_binding_leaves) { ArrayPattern.Element.pattern; index } ->
                 let (pat_loc, _) = pattern in
                 let member =
                   ( index,
@@ -3364,14 +3371,21 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                       }
                   )
                 in
-                recurse member pattern bindings
+                recurse member pattern bindings non_binding_leaves
             )
           in
-          bindings_of_rest bindings rest
+          (bindings_of_rest bindings rest, non_binding_leaves)
         and object_pattern_props
-            ~instance_pattern acc (_, { ObjectPattern.properties; rest; _ }) bindings =
-          let bindings =
-            Base.List.fold properties ~init:bindings ~f:(fun bindings -> function
+            ~instance_pattern
+            acc
+            (_, { ObjectPattern.properties; rest; _ })
+            bindings
+            non_binding_leaves =
+          let (bindings, non_binding_leaves) =
+            Base.List.fold
+              properties
+              ~init:(bindings, non_binding_leaves)
+              ~f:(fun (bindings, non_binding_leaves) -> function
               | ( loc,
                   ObjectPattern.Property.Valid
                     { ObjectPattern.Property.key; pattern; shorthand = _; comments = _ }
@@ -3414,13 +3428,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     | None -> ())
                   | None -> ()
                 );
-                recurse member pattern bindings
-              | (_, ObjectPattern.Property.InvalidShorthand _) -> bindings
+                recurse member pattern bindings non_binding_leaves
+              | (_, ObjectPattern.Property.InvalidShorthand _) -> (bindings, non_binding_leaves)
             )
           in
-          bindings_of_rest bindings rest
+          (bindings_of_rest bindings rest, non_binding_leaves)
         in
-        recurse arg root_pattern SMap.empty
+        let (bindings, non_binding_leaves) = recurse arg root_pattern SMap.empty ALocSet.empty in
+        bindings
         |> SMap.iter (fun _ bindings ->
                Base.List.iter bindings ~f:(fun (kind, id) ->
                    match kind with
@@ -3433,6 +3448,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                      ()
                    | Ast.Variable.Const -> ignore @@ this#pattern_identifier ~kind id
                )
+           );
+        non_binding_leaves
+        |> ALocSet.iter (fun loc ->
+               let write_entries =
+                 let write_entry = Env_api.AssigningWrite (mk_reason RMatchPattern loc) in
+                 EnvMap.add (Env_api.PatternLoc, loc) write_entry env_state.write_entries
+               in
+               env_state <- { env_state with write_entries }
            )
 
       method merge_conditional_branches_with_refinements
