@@ -3034,7 +3034,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           let env0 = this#env_snapshot in
           let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
           let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
-          let (completion_state, test_refinements) =
+          let completion_state =
             this#with_bindings ~lexical:true case_loc bindings (fun _ ->
                 this#push_refinement_scope empty_refinements;
                 let arg =
@@ -3043,7 +3043,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                   )
                 in
                 this#visit_match_pattern ~arg pattern;
-                let test_refinements = this#peek_new_refinements () in
                 (match this#get_val_of_expression arg with
                 | Some refined_value ->
                   let values =
@@ -3067,19 +3066,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                       ignore @@ on_case_body body
                   )
                 in
-                (completion_state, test_refinements)
+                completion_state
             )
           in
           let body_env_no_refinements = this#env_snapshot_without_latest_refinements in
           let body_env_with_refinements = this#env_snapshot in
           this#pop_refinement_scope ();
           this#reset_env env0;
-          if Option.is_none guard then (
-            (* If there is a guard, it's possible the case didn't match
-               because of it, not because the pattern didn't match. *)
-            this#push_refinement_scope test_refinements;
-            this#negate_new_refinements ()
-          );
           (body_env_no_refinements, body_env_with_refinements, completion_state)
 
       method private visit_match_pattern ~arg root_pattern =

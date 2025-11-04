@@ -7490,7 +7490,7 @@ let%expect_test "match_object_pattern" =
   [%expect {|
     [
       (2, 1) to (2, 6) => {
-        {refinement = Or (Not (And (object, Not (Null))), Not (SentinelR type)); writes = {refinement = Or (Or (Not (And (object, Not (Null))), Not (SentinelR type)), Not (PropExistsR (value))); writes = (2, 1) to (2, 6): (`<match_root>`)}}
+        (2, 1) to (2, 6): (`<match_root>`)
       };
       (2, 8) to (2, 9) => {
         Global x
@@ -7502,7 +7502,7 @@ let%expect_test "match_object_pattern" =
         (3, 29) to (3, 30): (`a`)
       };
       (4, 2) to (4, 2) => {
-        {refinement = And (And (object, Not (Null)), SentinelR type); writes = {refinement = Or (Or (Not (And (object, Not (Null))), Not (SentinelR type)), Not (PropExistsR (value))); writes = (2, 1) to (2, 6): (`<match_root>`)}}
+        {refinement = And (And (object, Not (Null)), SentinelR type); writes = (2, 1) to (2, 6): (`<match_root>`)}
       }]
   |}]
 
@@ -7517,7 +7517,7 @@ let%expect_test "match_array_pattern" =
   [%expect {|
     [
       (2, 1) to (2, 6) => {
-        {refinement = Or (Not (And (isArray, array length === 1)), Not (SentinelR 0)); writes = {refinement = Or (Not (And (isArray, array length === 2)), Not (SentinelR 0)); writes = (2, 1) to (2, 6): (`<match_root>`)}}
+        (2, 1) to (2, 6): (`<match_root>`)
       };
       (2, 8) to (2, 9) => {
         Global x
@@ -7529,7 +7529,7 @@ let%expect_test "match_array_pattern" =
         (3, 29) to (3, 30): (`a`)
       };
       (4, 2) to (4, 2) => {
-        {refinement = And (And (isArray, array length === 1), SentinelR 0); writes = {refinement = Or (Not (And (isArray, array length === 2)), Not (SentinelR 0)); writes = (2, 1) to (2, 6): (`<match_root>`)}}
+        {refinement = And (And (isArray, array length === 1), SentinelR 0); writes = (2, 1) to (2, 6): (`<match_root>`)}
       }]
   |}]
 
@@ -7543,7 +7543,7 @@ let%expect_test "match_instance_pattern" =
   [%expect {|
     [
       (2, 1) to (2, 6) => {
-        {refinement = Or (Not (instanceof), Not (SentinelR b)); writes = {refinement = Or (Not (instanceof), Not (SentinelR a)); writes = (2, 1) to (2, 6): (`<match_root>`)}}
+        (2, 1) to (2, 6): (`<match_root>`)
       };
       (2, 8) to (2, 9) => {
         Global x
@@ -7558,7 +7558,7 @@ let%expect_test "match_instance_pattern" =
         (3, 22) to (3, 23): (`b`)
       };
       (4, 2) to (4, 2) => {
-        {refinement = And (instanceof, SentinelR b); writes = {refinement = Or (Not (instanceof), Not (SentinelR a)); writes = (2, 1) to (2, 6): (`<match_root>`)}}
+        {refinement = And (instanceof, SentinelR b); writes = (2, 1) to (2, 6): (`<match_root>`)}
       };
       (4, 2) to (4, 5) => {
         Global Foo
