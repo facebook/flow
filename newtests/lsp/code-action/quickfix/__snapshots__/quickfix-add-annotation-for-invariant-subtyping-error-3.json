@@ -52,7 +52,7 @@
                   "character": 21
                 }
               },
-              "newText": "$ReadOnly<{ v?: string }>"
+              "newText": "Readonly<{ v?: string }>"
             }
           ]
         }

@@ -19,7 +19,7 @@
                   "character": 20
                 }
               },
-              "newText": "$ReadOnlyArray"
+              "newText": "ReadonlyArray"
             }
           ]
         }
