@@ -544,66 +544,118 @@ let rec make_intermediate_error :
       (* Perform standard iteration through these use_ops. *)
       | use_op -> (lower_loc, [], use_op)
     in
-    let rec loop loc frames use_op =
+    let rec loop ~loc ~frames ~use_op =
       match use_op with
-      | Op UnknownUse -> unknown_root loc frames
-      | Op (Type.Speculation _) when speculation -> unknown_root loc frames
-      | Op (Type.Speculation use) -> loop loc frames use
-      | Op (ObjectAddComputedProperty { op }) -> root loc frames op RootCannotAddComputedProperty
-      | Op (ObjectSpread { op }) -> root loc frames op (RootCannotSpread (desc op))
-      | Op (ObjectRest { op }) -> root loc frames op (RootCannotGetRest (desc op))
-      | Op (ObjectChain { op }) -> root loc frames op (RootCannotCallObjectAssign (desc op))
+      | Op UnknownUse -> unknown_root ~loc ~frames
+      | Op (Type.Speculation _) when speculation -> unknown_root ~loc ~frames
+      | Op (Type.Speculation use) -> loop ~loc ~frames ~use_op:use
+      | Op (ObjectAddComputedProperty { op }) ->
+        root ~loc ~frames ~root_reason:op ~root_message:RootCannotAddComputedProperty
+      | Op (ObjectSpread { op }) ->
+        root ~loc ~frames ~root_reason:op ~root_message:(RootCannotSpread (desc op))
+      | Op (ObjectRest { op }) ->
+        root ~loc ~frames ~root_reason:op ~root_message:(RootCannotGetRest (desc op))
+      | Op (ObjectChain { op }) ->
+        root ~loc ~frames ~root_reason:op ~root_message:(RootCannotCallObjectAssign (desc op))
       | Op (AssignVar { var; init }) ->
-        root loc frames init (RootCannotAssign { init = desc init; target = Option.map desc var })
-      | Op (DeleteVar { var }) -> root loc frames var (RootCannotDelete (desc var))
+        root
+          ~loc
+          ~frames
+          ~root_reason:init
+          ~root_message:(RootCannotAssign { init = desc init; target = Option.map desc var })
+      | Op (DeleteVar { var }) ->
+        root ~loc ~frames ~root_reason:var ~root_message:(RootCannotDelete (desc var))
       | Op (InitField { op; body }) ->
-        root loc frames op (RootCannotInitializeField { field = desc op; body = desc body })
+        root
+          ~loc
+          ~frames
+          ~root_reason:op
+          ~root_message:(RootCannotInitializeField { field = desc op; body = desc body })
       | Op (Cast { lower; upper }) ->
-        root loc frames lower (RootCannotCast { lower = desc lower; upper = desc upper })
+        root
+          ~loc
+          ~frames
+          ~root_reason:lower
+          ~root_message:(RootCannotCast { lower = desc lower; upper = desc upper })
       | Op (ClassExtendsCheck { extends; def }) ->
-        root loc frames def (RootCannotExtendClass { extends; def = desc def })
+        root
+          ~loc
+          ~frames
+          ~root_reason:def
+          ~root_message:(RootCannotExtendClass { extends; def = desc def })
       | Op (ClassMethodDefinition { name; def }) ->
-        root loc frames def (RootCannotDefineClassMethod { method_ = def; name = desc name })
+        root
+          ~loc
+          ~frames
+          ~root_reason:def
+          ~root_message:(RootCannotDefineClassMethod { method_ = def; name = desc name })
       | Op (ClassImplementsCheck { implements; def; _ }) ->
-        root loc frames def (RootCannotImplementClass { implements; def = desc def })
+        root
+          ~loc
+          ~frames
+          ~root_reason:def
+          ~root_message:(RootCannotImplementClass { implements; def = desc def })
       | Op (ClassOwnProtoCheck { prop; own_loc; proto_loc }) ->
         (match (own_loc, proto_loc) with
-        | (None, None) -> unknown_root loc frames
+        | (None, None) -> unknown_root ~loc ~frames
         | (Some loc, None) ->
           let def = mk_reason (RProperty (Some prop)) loc in
-          root (loc_of_aloc loc) frames def RootCannotShadowProtoProperty
+          root
+            ~loc:(loc_of_aloc loc)
+            ~frames
+            ~root_reason:def
+            ~root_message:RootCannotShadowProtoProperty
         | (None, Some loc) ->
           let def = mk_reason (RProperty (Some prop)) loc in
-          root (loc_of_aloc loc) frames def RootCannotDefineShadowedProtoProperty
+          root
+            ~loc:(loc_of_aloc loc)
+            ~frames
+            ~root_reason:def
+            ~root_message:RootCannotDefineShadowedProtoProperty
         | (Some own_loc, Some proto_loc) ->
           let def = mk_reason (RProperty (Some prop)) own_loc in
           let proto = mk_reason (RProperty (Some prop)) proto_loc in
-          root loc frames def (RootCannotShadowProto proto))
+          root ~loc ~frames ~root_reason:def ~root_message:(RootCannotShadowProto proto))
       | Op (Coercion { from; target }) ->
-        root loc frames from (RootCannotCoerce { from = desc from; target = desc target })
+        root
+          ~loc
+          ~frames
+          ~root_reason:from
+          ~root_message:(RootCannotCoerce { from = desc from; target = desc target })
       | Op (ConformToCommonInterface { self_sig_loc; self_module_loc; originate_from_import }) ->
         let frames =
           let (all_frames, explanations) = frames in
           (all_frames, ExplanationMultiplatform :: explanations)
         in
         root_with_loc_and_specific_loc
-          loc
-          frames
-          (loc_of_aloc self_module_loc)
-          (loc_of_aloc self_sig_loc)
-          (RootCannotConformToCommonInterface { originate_from_import })
-      | Op (DeclareComponentRef { op }) -> root loc frames op RootCannotDeclareRef
+          ~loc
+          ~frames
+          ~root_loc:(loc_of_aloc self_module_loc)
+          ~specific_loc:(loc_of_aloc self_sig_loc)
+          ~root_message:(RootCannotConformToCommonInterface { originate_from_import })
+      | Op (DeclareComponentRef { op }) ->
+        root ~loc ~frames ~root_reason:op ~root_message:RootCannotDeclareRef
       | Op (FunCall { op; fn; _ }) ->
-        root_with_specific_reason loc frames op fn (RootCannotCall (desc fn))
+        root_with_specific_reason
+          ~loc
+          ~frames
+          ~root_reason:op
+          ~specific_reason:fn
+          ~root_message:(RootCannotCall (desc fn))
       | Op (FunCallMethod { op; fn; prop; _ }) ->
-        root_with_specific_reason loc frames op prop (RootCannotCall (desc fn))
+        root_with_specific_reason
+          ~loc
+          ~frames
+          ~root_reason:op
+          ~specific_reason:prop
+          ~root_message:(RootCannotCall (desc fn))
       | Op (RenderTypeInstantiation { render_type }) ->
-        root loc frames render_type RootCannotInstantiateRenderType
+        root ~loc ~frames ~root_reason:render_type ~root_message:RootCannotInstantiateRenderType
       | Frame
           ( FunParam _,
             (Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as use_op)
           ) ->
-        loop loc frames use_op
+        loop ~loc ~frames ~use_op
       | Frame
           ( FunParam { n; name; lower = lower'; _ },
             Op (FunCall { args; fn; _ } | FunCallMethod { args; fn; _ })
@@ -619,31 +671,56 @@ let rec make_intermediate_error :
           | Some name -> RootCannotCallWithNamedParam { fn = desc fn; lower = desc lower; name }
           | None -> RootCannotCallWithNthParam { fn = desc fn; lower = desc lower; n }
         in
-        root loc frames lower root_msg
-      | Op (FunReturnStatement { value }) -> root loc frames value (RootCannotReturn (desc value))
+        root ~loc ~frames ~root_reason:lower ~root_message:root_msg
+      | Op (FunReturnStatement { value }) ->
+        root ~loc ~frames ~root_reason:value ~root_message:(RootCannotReturn (desc value))
       | Op (FunImplicitReturn { upper; fn; type_guard = true }) ->
         root
-          loc
-          frames
-          upper
-          (RootCannotDeclareTypeGuard { type_guard_loc = loc_of_reason upper; fn })
+          ~loc
+          ~frames
+          ~root_reason:upper
+          ~root_message:(RootCannotDeclareTypeGuard { type_guard_loc = loc_of_reason upper; fn })
       | Op (FunImplicitReturn { upper; fn; _ }) ->
-        root loc frames upper (RootCannotExpectImplicitReturn { upper = desc upper; fn = desc fn })
-      | Op (GeneratorYield { value }) -> root loc frames value (RootCannotYield (desc value))
-      | Op (GetExport prop) -> root loc frames prop (RootCannotGetProp (desc prop))
-      | Op (GetProperty prop) -> root loc frames prop (RootCannotGetProp (desc prop))
+        root
+          ~loc
+          ~frames
+          ~root_reason:upper
+          ~root_message:(RootCannotExpectImplicitReturn { upper = desc upper; fn = desc fn })
+      | Op (GeneratorYield { value }) ->
+        root ~loc ~frames ~root_reason:value ~root_message:(RootCannotYield (desc value))
+      | Op (GetExport prop) ->
+        root ~loc ~frames ~root_reason:prop ~root_message:(RootCannotGetProp (desc prop))
+      | Op (GetProperty prop) ->
+        root ~loc ~frames ~root_reason:prop ~root_message:(RootCannotGetProp (desc prop))
       | Op (IndexedTypeAccess { _object; index }) ->
-        root loc frames index (RootCannotAccessIndex { index = desc index; object_ = desc _object })
+        root
+          ~loc
+          ~frames
+          ~root_reason:index
+          ~root_message:(RootCannotAccessIndex { index = desc index; object_ = desc _object })
       | Op (InferBoundCompatibilityCheck { bound; infer }) ->
-        root loc frames bound (RootCannotUseInferTypeBound { infer = desc infer })
+        root
+          ~loc
+          ~frames
+          ~root_reason:bound
+          ~root_message:(RootCannotUseInferTypeBound { infer = desc infer })
       | Frame (FunParam _, Op (JSXCreateElement { op; component; _ }))
       | Op (JSXCreateElement { op; component; _ })
       | Op (ReactCreateElementCall { op; component; _ }) ->
-        root_with_specific_reason loc frames op component (RootCannotCreateElement (desc component))
+        root_with_specific_reason
+          ~loc
+          ~frames
+          ~root_reason:op
+          ~specific_reason:component
+          ~root_message:(RootCannotCreateElement (desc component))
       | Op (ReactGetIntrinsic { literal }) ->
-        root loc frames literal (RootCannotCreateElement (desc literal))
+        root ~loc ~frames ~root_reason:literal ~root_message:(RootCannotCreateElement (desc literal))
       | Op (TypeApplication { type_ }) ->
-        root loc frames type_ (RootCannotInstantiateTypeApp (desc type_))
+        root
+          ~loc
+          ~frames
+          ~root_reason:type_
+          ~root_message:(RootCannotInstantiateTypeApp (desc type_))
       | Op (SetProperty { prop; value; lhs; _ }) ->
         let loc_reason =
           if Loc.contains (loc_of_aloc (loc_of_reason lhs)) loc then
@@ -652,31 +729,45 @@ let rec make_intermediate_error :
             value
         in
         root
-          loc
-          frames
-          loc_reason
-          (RootCannotAssign { init = desc value; target = Some (desc prop) })
-      | Op (UpdateProperty { prop; lhs }) -> root loc frames lhs (RootCannotUpdate (desc prop))
-      | Op (DeleteProperty { prop; lhs }) -> root loc frames lhs (RootCannotDelete (desc prop))
+          ~loc
+          ~frames
+          ~root_reason:loc_reason
+          ~root_message:(RootCannotAssign { init = desc value; target = Some (desc prop) })
+      | Op (UpdateProperty { prop; lhs }) ->
+        root ~loc ~frames ~root_reason:lhs ~root_message:(RootCannotUpdate (desc prop))
+      | Op (DeleteProperty { prop; lhs }) ->
+        root ~loc ~frames ~root_reason:lhs ~root_message:(RootCannotDelete (desc prop))
       | Op (RefinementCheck { test; discriminant }) ->
-        root loc frames test (RootCannotCheckAgainst { test = desc test; discriminant })
+        root
+          ~loc
+          ~frames
+          ~root_reason:test
+          ~root_message:(RootCannotCheckAgainst { test = desc test; discriminant })
       | Op (SwitchRefinementCheck { test; discriminant }) ->
         let root_loc = loc_of_aloc test in
         root_with_loc_and_specific_loc
-          loc
-          frames
-          root_loc
-          root_loc
-          (RootCannotCheckAgainstSwitchDiscriminant discriminant)
+          ~loc
+          ~frames
+          ~root_loc
+          ~specific_loc:root_loc
+          ~root_message:(RootCannotCheckAgainstSwitchDiscriminant discriminant)
       | Op (EvalMappedType { mapped_type }) ->
-        root loc frames mapped_type (RootCannotInstantiateEval mapped_type)
+        root
+          ~loc
+          ~frames
+          ~root_reason:mapped_type
+          ~root_message:(RootCannotInstantiateEval mapped_type)
       | Op (TypeGuardIncompatibility { guard_type; param_name }) ->
-        root loc frames guard_type (RootCannotUseTypeGuard { guard_type; param_name })
+        root
+          ~loc
+          ~frames
+          ~root_reason:guard_type
+          ~root_message:(RootCannotUseTypeGuard { guard_type; param_name })
       | Op (ComponentRestParamCompatibility { rest_param = _ }) ->
         (* Special-cased incompatibility error. This should be unreachable, but just in case
          * our error messages can compose in a way that would miss the special case we'd rather
          * output a bad error than crash. *)
-        unknown_root loc frames
+        unknown_root ~loc ~frames
       | Op
           (PositiveTypeGuardConsistency
             {
@@ -695,26 +786,43 @@ let rec make_intermediate_error :
             :: explanations
           )
         in
-        root loc frames return (RootCannotReturn (desc return))
+        root ~loc ~frames ~root_reason:return ~root_message:(RootCannotReturn (desc return))
       | Frame (ReactDeepReadOnly (props_loc, Props), use_op) ->
-        explanation loc frames use_op (ExplanationReactComponentPropsDeepReadOnly props_loc)
+        explanation
+          ~loc
+          ~frames
+          ~use_op
+          ~explanation:(ExplanationReactComponentPropsDeepReadOnly props_loc)
       | Frame (ReactDeepReadOnly (props_loc, HookArg), use_op) ->
-        explanation loc frames use_op (ExplanationReactHookArgsDeepReadOnly props_loc)
+        explanation
+          ~loc
+          ~frames
+          ~use_op
+          ~explanation:(ExplanationReactHookArgsDeepReadOnly props_loc)
       | Frame (ReactDeepReadOnly (hook_loc, HookReturn), use_op) ->
-        explanation loc frames use_op (ExplanationReactHookReturnDeepReadOnly hook_loc)
+        explanation
+          ~loc
+          ~frames
+          ~use_op
+          ~explanation:(ExplanationReactHookReturnDeepReadOnly hook_loc)
       | Frame (ConstrainedAssignment { name; declaration; providers }, use_op) ->
-        explanation loc frames use_op (ExplanationConstrainedAssign { name; declaration; providers })
+        explanation
+          ~loc
+          ~frames
+          ~use_op
+          ~explanation:(ExplanationConstrainedAssign { name; declaration; providers })
       | Frame (UnifyFlip, (Frame (ArrayElementCompatibility _, _) as use_op)) ->
-        explanation loc frames use_op ExplanationArrayInvariantTyping
+        explanation ~loc ~frames ~use_op ~explanation:ExplanationArrayInvariantTyping
       | Frame (ArrayElementCompatibility { lower; upper }, use_op) ->
         unwrap_frame
-          loc
-          frames
-          lower
-          use_op
-          (FrameArrayElement
-             { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
-          )
+          ~loc
+          ~frames
+          ~frame_reason:lower
+          ~use_op
+          ~frame:
+            (FrameArrayElement
+               { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+            )
       | Frame (FunParam { n; lower; upper; name }, (Frame (FunCompatibility _, _) as use_op)) ->
         let arg =
           match name with
@@ -725,7 +833,7 @@ let rec make_intermediate_error :
             FrameFunNthParam
               { n; incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
         in
-        unwrap_frame loc frames lower use_op arg
+        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:arg
       | Frame (FunParam { n; lower; upper; name }, use_op) ->
         let incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) in
         let arg =
@@ -733,94 +841,101 @@ let rec make_intermediate_error :
           | Some "this" -> FrameFunThisArgument { incompatibility_pair }
           | _ -> FrameFunNthArgument { n; incompatibility_pair }
         in
-        unwrap_frame loc frames lower use_op arg
-      | Frame (FunRestParam _, use_op) -> loop loc frames use_op
+        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:arg
+      | Frame (FunRestParam _, use_op) -> loop ~loc ~frames ~use_op
       | Frame (FunReturn { lower; upper }, use_op) ->
         unwrap_frame_without_loc
-          loc
-          frames
-          use_op
-          (FrameReturnValue
-             { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
-          )
+          ~loc
+          ~frames
+          ~use_op
+          ~frame:
+            (FrameReturnValue
+               { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+            )
       | Frame (IndexerKeyCompatibility { lower; upper }, use_op) ->
         unwrap_frame
-          loc
-          frames
-          lower
-          use_op
-          (FrameIndexerPropertyKey
-             { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
-          )
+          ~loc
+          ~frames
+          ~frame_reason:lower
+          ~use_op
+          ~frame:
+            (FrameIndexerPropertyKey
+               { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+            )
       | Frame (OpaqueTypeLowerBoundCompatibility { lower; _ }, use_op)
       | Frame (OpaqueTypeUpperBoundCompatibility { lower; _ }, use_op) ->
-        unwrap_frame loc frames lower use_op FrameAnonymous
+        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:FrameAnonymous
       | Frame (PropertyCompatibility { prop = None; lower; upper }, use_op) ->
         unwrap_frame
-          loc
-          frames
-          lower
-          use_op
-          (FrameIndexerProperty
-             { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
-          )
+          ~loc
+          ~frames
+          ~frame_reason:lower
+          ~use_op
+          ~frame:
+            (FrameIndexerProperty
+               { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+            )
       | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; upper }, use_op)
         ->
         unwrap_frame
-          loc
-          frames
-          lower
-          use_op
-          (FrameCallableSignature
-             { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
-          )
+          ~loc
+          ~frames
+          ~frame_reason:lower
+          ~use_op
+          ~frame:
+            (FrameCallableSignature
+               { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
+            )
       | Frame (EnumRepresentationTypeCompatibility { lower; _ }, use_op) ->
-        unwrap_frame loc frames lower use_op FrameEnumRepresentationType
+        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:FrameEnumRepresentationType
       | Frame (UnifyFlip, (Frame (PropertyCompatibility _, _) as use_op)) ->
-        explanation loc frames use_op ExplanationPropertyInvariantTyping
+        explanation ~loc ~frames ~use_op ~explanation:ExplanationPropertyInvariantTyping
       | Frame (PropertyCompatibility { prop = Some prop; lower; upper; _ }, use_op) ->
         let lower_loc = loc_of_prop_compatibility_reason loc lower use_op in
         (* Loop through our parent use_op to get our access chain. *)
         let (lower_loc, props, use_op) = loop_to_form_access_chain lower_loc use_op in
         unwrap_frame_with_loc
-          loc
-          frames
-          lower_loc
-          use_op
-          (FrameAccessChain
-             {
-               chain = (PropSegment prop, props);
-               incompatibility_pair = opt_incompatibility_pair use_op (lower, upper);
-             }
-          )
+          ~loc
+          ~frames
+          ~frame_loc:lower_loc
+          ~use_op
+          ~frame:
+            (FrameAccessChain
+               {
+                 chain = (PropSegment prop, props);
+                 incompatibility_pair = opt_incompatibility_pair use_op (lower, upper);
+               }
+            )
       | Frame (TupleElementCompatibility { n; lower; upper; _ }, use_op) ->
         let lower_loc = loc_of_aloc (loc_of_reason lower) in
         (* Loop through our parent use_op to get our access chain. *)
         let (lower_loc, props, use_op) = loop_to_form_access_chain lower_loc use_op in
         unwrap_frame_with_loc
-          loc
-          frames
-          lower_loc
-          use_op
-          (FrameAccessChain
-             {
-               chain = (TupleIndexSegment n, props);
-               incompatibility_pair = opt_incompatibility_pair use_op (lower, upper);
-             }
-          )
+          ~loc
+          ~frames
+          ~frame_loc:lower_loc
+          ~use_op
+          ~frame:
+            (FrameAccessChain
+               {
+                 chain = (TupleIndexSegment n, props);
+                 incompatibility_pair = opt_incompatibility_pair use_op (lower, upper);
+               }
+            )
       | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
-        unwrap_frame loc frames lower use_op (FrameTypeArgument targ)
+        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:(FrameTypeArgument targ)
       | Frame (TypeParamBound { name }, use_op) ->
         unwrap_frame_without_loc
-          loc
-          frames
-          use_op
-          (FrameTypeParameterBound (Subst_name.string_of_subst_name name))
+          ~loc
+          ~frames
+          ~use_op
+          ~frame:(FrameTypeParameterBound (Subst_name.string_of_subst_name name))
       | Frame (TypeGuardCompatibility, use_op) ->
-        unwrap_frame_without_loc loc frames use_op FrameTypePredicate
-      | Frame (FunCompatibility { lower; _ }, use_op) -> next_with_loc loc frames lower use_op
-      | Frame (OpaqueTypeLowerBound { opaque_t_reason = _ }, use_op) -> loop loc frames use_op
-      | Frame (OpaqueTypeUpperBound { opaque_t_reason = _ }, use_op) -> loop loc frames use_op
+        unwrap_frame_without_loc ~loc ~frames ~use_op ~frame:FrameTypePredicate
+      | Frame (FunCompatibility { lower; _ }, use_op) ->
+        next_with_loc ~loc ~frames ~frame_reason:lower ~use_op
+      | Frame (OpaqueTypeLowerBound { opaque_t_reason = _ }, use_op) -> loop ~loc ~frames ~use_op
+      | Frame (OpaqueTypeUpperBound { opaque_t_reason = _ }, use_op) -> loop ~loc ~frames ~use_op
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam, use_op)
       | Frame (ReactConfigCheck, use_op)
@@ -830,8 +945,8 @@ let rec make_intermediate_error :
       | Frame (TupleAssignment _, use_op)
       | Frame (ReactDeepReadOnly (_, DebugAnnot), use_op)
       | Frame (RendersCompatibility, use_op) ->
-        loop loc frames use_op
-    and next_with_loc loc frames frame_reason use_op =
+        loop ~loc ~frames ~use_op
+    and next_with_loc ~loc ~frames ~frame_reason ~use_op =
       (* Skip this use_op, don't add a frame, but do use the loc to reposition
        * our primary location.
        *
@@ -844,8 +959,8 @@ let rec make_intermediate_error :
         else
           frame_loc
       in
-      loop loc frames use_op
-    and unwrap_frame_with_loc loc frames frame_loc use_op frame =
+      loop ~loc ~frames ~use_op
+    and unwrap_frame_with_loc ~loc ~frames ~frame_loc ~use_op ~frame =
       (* Add our frame message and reposition the location if appropriate.
        *
        * If our current loc is inside our frame_loc then use our current loc
@@ -860,24 +975,24 @@ let rec make_intermediate_error :
       (* Add our frame and recurse with the next use_op. *)
       let (all_frames, explanations) = frames in
       let frames = (frame :: all_frames, explanations) in
-      loop loc frames use_op
-    and unwrap_frame loc frames frame_reason use_op frame =
+      loop ~loc ~frames ~use_op
+    and unwrap_frame ~loc ~frames ~frame_reason ~use_op ~frame =
       let frame_loc = loc_of_aloc (loc_of_reason frame_reason) in
-      unwrap_frame_with_loc loc frames frame_loc use_op frame
-    and unwrap_frame_without_loc loc frames use_op frame =
+      unwrap_frame_with_loc ~loc ~frames ~frame_loc ~use_op ~frame
+    and unwrap_frame_without_loc ~loc ~frames ~use_op ~frame =
       (* Same logic as `unwrap_frame` except we don't have a frame location. *)
       let (all_frames, explanations) = frames in
       let frames = (frame :: all_frames, explanations) in
-      loop loc frames use_op
-    and explanation loc frames use_op (explanation : 'loc explanation) =
+      loop ~loc ~frames ~use_op
+    and explanation ~loc ~frames ~use_op ~(explanation : 'loc explanation) =
       let (all_frames, explanations) = frames in
       let frames = (all_frames, explanation :: explanations) in
-      loop loc frames use_op
-    and unknown_root loc frames =
+      loop ~loc ~frames ~use_op
+    and unknown_root ~loc ~frames =
       (* We don't know what our root is! Return what we do know. *)
       let (all_frames, explanations) = frames in
       (None, loc, all_frames, explanations)
-    and root_with_loc_and_specific_loc loc frames root_loc specific_loc root_message =
+    and root_with_loc_and_specific_loc ~loc ~frames ~root_loc ~specific_loc ~root_message =
       (* Finish up be returning our root location, root message, primary loc,
        * and frames.
 
@@ -893,15 +1008,15 @@ let rec make_intermediate_error :
        * and frames. *)
       let (all_frames, explanations) = frames in
       (Some (root_loc, root_message), loc, all_frames, explanations)
-    and root_with_specific_reason loc frames root_reason specific_reason root_message =
+    and root_with_specific_reason ~loc ~frames ~root_reason ~specific_reason ~root_message =
       let root_loc = loc_of_aloc (loc_of_reason root_reason) in
       let specific_loc = loc_of_aloc (loc_of_reason specific_reason) in
-      root_with_loc_and_specific_loc loc frames root_loc specific_loc root_message
-    and root loc frames root_reason root_message =
+      root_with_loc_and_specific_loc ~loc ~frames ~root_loc ~specific_loc ~root_message
+    and root ~loc ~frames ~root_reason ~root_message =
       let root_loc = loc_of_aloc (loc_of_reason root_reason) in
-      root_with_loc_and_specific_loc loc frames root_loc root_loc root_message
+      root_with_loc_and_specific_loc ~loc ~frames ~root_loc ~specific_loc:root_loc ~root_message
     in
-    (fun loc use_op -> loop loc ([], []) use_op)
+    (fun loc use_op -> loop ~loc ~frames:([], []) ~use_op)
   in
   (* Make a friendly error based on a use_op. The message we are provided should
    * not have any punctuation. Punctuation will be provided after the frames of
