@@ -353,7 +353,7 @@ exception FoundJsdoc of Jsdoc.t
 
 let find_jsdoc target_loc found_loc comments =
   if Loc.equal target_loc found_loc then
-    Base.Option.iter (Jsdoc.of_comments comments) ~f:(fun jsdoc -> raise (FoundJsdoc jsdoc))
+    Base.Option.iter (Jsdoc.of_comments comments) ~f:(fun (_, jsdoc) -> raise (FoundJsdoc jsdoc))
 
 let search_jsdoc def_loc ast =
   let searcher = new jsdoc_documentation_searcher (find_jsdoc def_loc) in

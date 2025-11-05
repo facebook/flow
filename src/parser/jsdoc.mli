@@ -53,4 +53,4 @@ val unrecognized_tags : t -> Unrecognized_tags.t
 (* parsing *)
 (***********)
 
-val of_comments : ('M, 'T) Flow_ast.Syntax.t option -> t option
+val of_comments : ('M, 'T) Flow_ast.Syntax.t option -> ('M * t) option

@@ -47,7 +47,7 @@ let mk_test
     comment ?(should_not_parse = false) ?description ?params ?unrecognized_tags ?deprecated ctxt =
   match Jsdoc.of_comments comment with
   | None -> assert_bool "JSDoc didn't parse" should_not_parse
-  | Some jsdoc ->
+  | Some (_, jsdoc) ->
     Base.Option.iter description ~f:(fun description ->
         assert_equal
           ~ctxt

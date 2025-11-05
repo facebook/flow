@@ -291,7 +291,10 @@ let parse str =
 let of_comments =
   let open Flow_ast in
   let of_comment = function
-    | (_, Comment.{ kind = Block; text; _ }) -> parse text
+    | (l, Comment.{ kind = Block; text; _ }) ->
+      (match parse text with
+      | Some d -> Some (l, d)
+      | None -> None)
     | (_, Comment.{ kind = Line; _ }) -> None
   in
   let rec of_comment_list = function
