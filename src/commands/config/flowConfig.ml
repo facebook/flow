@@ -58,6 +58,7 @@ module Opts = struct
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
+    enable_custom_error: bool;
     enums: bool;
     estimate_recheck_time: bool option;
     exact_by_default: bool option;
@@ -205,6 +206,7 @@ module Opts = struct
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
+      enable_custom_error = false;
       enums = false;
       estimate_recheck_time = None;
       exact_by_default = None;
@@ -1060,6 +1062,9 @@ module Opts = struct
       ( "experimental.component_syntax.hook_compatibility.excludes",
         hook_compatibility_excludes_parser
       );
+      ( "experimental.enable_custom_error",
+        boolean (fun opts v -> Ok { opts with enable_custom_error = v })
+      );
       ("experimental.facebook_module_interop", facebook_module_interop_parser);
       ("experimental.instance_t_objkit_fix", instance_t_objkit_fix_parser);
       ("experimental.channel_mode", channel_mode_parser ~enabled:true);
@@ -1869,6 +1874,8 @@ let dev_only_refinement_info_as_errors c = c.options.Opts.dev_only_refinement_in
 let emoji c = c.options.Opts.emoji
 
 let enable_const_params c = c.options.Opts.enable_const_params
+
+let enable_custom_error c = c.options.Opts.enable_custom_error
 
 let enums c = c.options.Opts.enums
 

@@ -123,6 +123,7 @@ type t = {
   opt_enable_pattern_matching: bool;
   opt_enable_pattern_matching_instance_patterns: bool;
   opt_enable_relay_integration: bool;
+  opt_enable_custom_error: bool;
   opt_enabled_rollouts: string SMap.t;
   opt_enums: bool;
   opt_estimate_recheck_time: bool;
@@ -268,6 +269,8 @@ let enable_pattern_matching_instance_patterns opts =
 let pattern_matching_includes opts = opts.opt_pattern_matching_includes
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
+
+let enable_custom_error opts = opts.opt_enable_custom_error
 
 let enabled_rollouts opts = opts.opt_enabled_rollouts
 

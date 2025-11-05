@@ -71,6 +71,7 @@ let load_lib_files files =
       relay_integration_module_prefix = None;
       facebook_fbt = None;
       exact_by_default = true;
+      enable_custom_error = false;
       enable_enums = true;
       enable_component_syntax = true;
       component_syntax_enabled_in_config = true;
@@ -112,6 +113,7 @@ let stub_metadata ~root ~checked =
         [ValidateRefAccessDuringRender; DeepReadOnlyProps; DeepReadOnlyHookReturns; RulesOfHooks];
     dev_only_refinement_info_as_errors = false;
     enable_const_params = false;
+    enable_custom_error = false;
     enable_enums = true;
     enable_jest_integration = false;
     enable_pattern_matching = true;

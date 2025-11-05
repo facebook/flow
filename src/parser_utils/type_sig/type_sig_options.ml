@@ -10,6 +10,7 @@ type t = {
   facebook_keyMirror: bool;
   facebook_fbt: string option;
   exact_by_default: bool;
+  enable_custom_error: bool;
   enable_enums: bool;
   enable_component_syntax: bool;
   component_syntax_enabled_in_config: bool;
@@ -52,6 +53,7 @@ let of_options options docblock locs_to_dirtify file =
     hook_compatibility = Options.hook_compatibility_in_file options file;
     facebook_fbt = Options.facebook_fbt options;
     exact_by_default = Options.exact_by_default options;
+    enable_custom_error = Options.enable_custom_error options;
     enable_enums = Options.enums options;
     enable_component_syntax = Options.typecheck_component_syntax_in_file options file;
     component_syntax_enabled_in_config = Options.component_syntax options;
@@ -72,6 +74,7 @@ let builtin_options options =
     relay_integration_module_prefix = None;
     facebook_fbt = Options.facebook_fbt options;
     exact_by_default = Options.exact_by_default options;
+    enable_custom_error = Options.enable_custom_error options;
     enable_enums = Options.enums options;
     enable_component_syntax = true;
     component_syntax_enabled_in_config = Options.component_syntax options;

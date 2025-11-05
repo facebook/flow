@@ -94,6 +94,7 @@ type metadata = {
   react_rules: Options.react_rules list;
   dev_only_refinement_info_as_errors: bool;
   enable_const_params: bool;
+  enable_custom_error: bool;
   enable_enums: bool;
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
@@ -199,6 +200,8 @@ val react_rule_enabled : t -> Options.react_rules -> bool
 val dev_only_refinement_info_as_errors : t -> bool
 
 val enable_const_params : t -> bool
+
+val enable_custom_error : t -> bool
 
 val enable_enums : t -> bool
 

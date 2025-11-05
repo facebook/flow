@@ -40,6 +40,7 @@ let stub_metadata ~root ~checked =
     react_rules = [];
     dev_only_refinement_info_as_errors = false;
     enable_const_params = false;
+    enable_custom_error = false;
     enable_enums = true;
     enable_jest_integration = false;
     enable_pattern_matching = false;

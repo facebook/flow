@@ -204,6 +204,7 @@ let sig_options
     ?(facebook_keyMirror = false)
     ?facebook_fbt
     ?(exact_by_default = false)
+    ?(enable_custom_error = false)
     ?(enable_enums = true)
     ?(enable_component_syntax = true)
     ?(enable_ts_syntax = true)
@@ -219,6 +220,7 @@ let sig_options
     facebook_keyMirror;
     facebook_fbt;
     exact_by_default;
+    enable_custom_error;
     enable_enums;
     enable_component_syntax;
     component_syntax_enabled_in_config = true;
@@ -241,8 +243,9 @@ let print_sig
     ?facebook_keyMirror
     ?exact_by_default
     ?module_ref_prefix
+    ?enable_custom_error
     ?enable_enums
-    ?enable_component_syntax
+    ?(enable_component_syntax = true)
     ?enable_relay_integration
     ?relay_integration_module_prefix
     ?for_builtins
@@ -255,12 +258,13 @@ let print_sig
       ?facebook_fbt
       ?facebook_keyMirror
       ?exact_by_default
+      ?enable_custom_error
       ?enable_enums
-      ?enable_component_syntax
       ?enable_relay_integration
       ?relay_integration_module_prefix
       ?for_builtins
       ?locs_to_dirtify
+      ~enable_component_syntax
       ()
   in
   let parse_options = parse_options ~module_ref_prefix in

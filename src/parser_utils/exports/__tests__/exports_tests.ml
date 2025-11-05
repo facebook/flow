@@ -53,6 +53,7 @@ let sig_opts =
     facebook_keyMirror = false;
     facebook_fbt = None;
     exact_by_default = true;
+    enable_custom_error = false;
     enable_enums = true;
     enable_component_syntax = true;
     component_syntax_enabled_in_config = true;
