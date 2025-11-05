@@ -17,7 +17,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- catch-param.js:30:13
 
-Invalid catch parameter type annotation. Annotation must be `any` or `mixed` if specified.
+Invalid catch parameter type annotation. Annotation must be `any` or `unknown` if specified.
 [invalid-catch-parameter-annotation]
 
    30| } catch (e: Error) { // ERROR

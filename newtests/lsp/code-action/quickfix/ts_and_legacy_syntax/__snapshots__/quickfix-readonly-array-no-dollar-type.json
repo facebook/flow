@@ -1,38 +1,4 @@
 {
   "method": "textDocument/codeAction",
-  "result": [
-    {
-      "title": "Convert to `$ReadOnlyArray`",
-      "kind": "quickfix",
-      "diagnostics": [],
-      "edit": {
-        "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/fix-readonlyarray-type.js": [
-            {
-              "range": {
-                "start": {
-                  "line": 1,
-                  "character": 9
-                },
-                "end": {
-                  "line": 1,
-                  "character": 22
-                }
-              },
-              "newText": "$ReadOnlyArray"
-            }
-          ]
-        }
-      },
-      "command": {
-        "title": "",
-        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
-        "arguments": [
-          "textDocument/codeAction",
-          "convert_ReadonlyArray_type",
-          "Convert to `$ReadOnlyArray`"
-        ]
-      }
-    }
-  ]
+  "result": []
 }

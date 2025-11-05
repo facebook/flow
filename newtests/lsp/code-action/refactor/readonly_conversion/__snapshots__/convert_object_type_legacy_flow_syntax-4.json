@@ -19,7 +19,7 @@
                   "character": 29
                 }
               },
-              "newText": "$ReadOnly<{ foo: { bar: string } }>"
+              "newText": "Readonly<{ foo: { bar: string } }>"
             }
           ]
         }
