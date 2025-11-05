@@ -1,3 +1,22 @@
+### 0.290.0
+
+Likely to cause new Flow errors:
+* flow will now validate variance in interface declarations
+* Bad cyclic object types are now banned. e.g. `type O_loop = { p: 0, __proto__: O_loop }` will cause an error.
+* Flow is now stricter with generic mapped type. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSMAeyjg0AABDAADwAFQAfAAKRjIaUABSoWW4iqVAEoNQrpcAADpQaVW6UsCRCSiWxgAbmlAHpXdKoBAAO7SkyUXkkC0Ci25EANEwkKVQJIZewmEACoA)
+
+Notable bug fixes:
+* We improved the refinement system of match. Some code that previously gets a general type will now get a refined type. [example](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiStnsAAIYMRkBKAPz2UxQBASgC8EoA5NKIBqANwAHUe0ElmAAXrLFRUVeqMntagAKADa2oAugBKCXAQ0Sn0Sx1HXASgA+EoeGngXzYLrVAD5NdgRHDaBreN7fY7xRIpcRo6q49rU1ABYbciAGiYSHBoEkGgAGKwAJgAHABOKy1kACoA)
+* allow opaque types to be used as keys to computed object properties
+* autocomplete on `import { | } from 'a';` will only suggest values, not types.
+* flow-dev-tools now properly detects unused suppressions
+
+IDE:
+* Flow now provide auto-import code actions for all unbound names, even through they might resolve to a global. It can be helpful when the global is not what you want.
+
+Library Definitions:
+* Add bigint functions to DataView
+
 ### 0.289.0
 
 Likely to cause new Flow errors:
