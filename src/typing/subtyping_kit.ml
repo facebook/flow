@@ -520,17 +520,16 @@ module Make (Flow : INPUT) : OUTPUT = struct
         in
         add_output
           cx
-          Flow_intermediate_error_types.(
-            Error_message.EInvariantSubtypingWithUseOp
-              {
-                sub_component = None;
-                lower_loc;
-                upper_loc;
-                lower_desc = TypeOrTypeDesc.Type l_prop_t;
-                upper_desc = TypeOrTypeDesc.Type u_prop_t;
-                use_op;
-                explanation;
-              }
+          (Error_message.EInvariantSubtypingWithUseOp
+             {
+               sub_component = None;
+               lower_loc;
+               upper_loc;
+               lower_desc = TypeOrTypeDesc.Type l_prop_t;
+               upper_desc = TypeOrTypeDesc.Type u_prop_t;
+               use_op;
+               explanation;
+             }
           )
       | properties ->
         let t1 = DefT (lreason, ObjT l_obj) in
@@ -600,7 +599,6 @@ module Make (Flow : INPUT) : OUTPUT = struct
           let t2 = DefT (ureason, ObjT u_obj) in
           let lower_obj_loc = def_loc_of_reason lreason in
           let upper_obj_loc = def_loc_of_reason ureason in
-          let open Flow_intermediate_error_types in
           let error_message =
             Error_message.EPropsNotFoundInInvariantSubtyping
               {

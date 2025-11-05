@@ -1423,11 +1423,10 @@ let convert_type_to_type_desc_in_errors cx file_sig typed_ast =
         ~typed_ast_opt:(Some typed_ast)
         ~file_sig
     in
-    let open Flow_intermediate_error_types in
     Flow_error.convert_type_to_type_desc (function
-        | TypeOrTypeDesc.Type t ->
-          TypeOrTypeDesc.TypeDesc (Ty_normalizer_no_flow.type_to_desc_for_errors ~genv t)
-        | TypeOrTypeDesc.TypeDesc d -> TypeOrTypeDesc.TypeDesc d
+        | Type.TypeOrTypeDesc.Type t ->
+          Type.TypeOrTypeDesc.TypeDesc (Ty_normalizer_no_flow.type_to_desc_for_errors ~genv t)
+        | Type.TypeOrTypeDesc.TypeDesc d -> Type.TypeOrTypeDesc.TypeDesc d
         )
   in
   Context.reset_errors cx (Context.errors cx |> Flow_error.ErrorSet.map convert_type_to_type_desc)

@@ -271,43 +271,27 @@ module InvalidObjKey = struct
     | NumberTooSmall -> "number too small"
 end
 
-(* We need to record type description in error messages.
- * However, we cannot generate type descriptions during inference.
- * We also cannot make it lazy because we cannot compare lazy values.
- * Therefore, we create a variant for this. During inference, we will always
- * have Type. After inference, we turn it into `TypeDesc` *)
-module TypeOrTypeDesc = struct
-  type 'loc t =
-    | Type of Type.t
-    | TypeDesc of (Ty.t, 'loc virtual_reason_desc) result
-
-  let map_loc f = function
-    | Type t -> Type t
-    | TypeDesc (Ok t) -> TypeDesc (Ok t)
-    | TypeDesc (Error desc) -> TypeDesc (Error (Reason.map_desc_locs f desc))
-end
-
 type 'loc explanation_with_lazy_parts =
   | LazyExplanationInvariantSubtypingDueToMutableArray of {
       lower_array_loc: 'loc;
       upper_array_loc: 'loc;
-      lower_array_desc: 'loc TypeOrTypeDesc.t;
-      upper_array_desc: 'loc TypeOrTypeDesc.t;
+      lower_array_desc: 'loc Type.TypeOrTypeDesc.t;
+      upper_array_desc: 'loc Type.TypeOrTypeDesc.t;
       upper_array_reason: 'loc virtual_reason;
     }
   | LazyExplanationInvariantSubtypingDueToMutableProperty of {
       lower_obj_loc: 'loc;
       upper_obj_loc: 'loc;
-      lower_obj_desc: 'loc TypeOrTypeDesc.t;
-      upper_obj_desc: 'loc TypeOrTypeDesc.t;
+      lower_obj_desc: 'loc Type.TypeOrTypeDesc.t;
+      upper_obj_desc: 'loc Type.TypeOrTypeDesc.t;
       upper_object_reason: 'loc virtual_reason;
       property_name: string option;
     }
   | LazyExplanationInvariantSubtypingDueToMutableProperties of {
       lower_obj_loc: 'loc;
       upper_obj_loc: 'loc;
-      lower_obj_desc: 'loc TypeOrTypeDesc.t;
-      upper_obj_desc: 'loc TypeOrTypeDesc.t;
+      lower_obj_desc: 'loc Type.TypeOrTypeDesc.t;
+      upper_obj_desc: 'loc Type.TypeOrTypeDesc.t;
       upper_object_reason: 'loc virtual_reason;
       properties: name list;
     }

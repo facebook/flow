@@ -96,22 +96,22 @@ let mapper ~max_type_size (cctx : Codemod_context.Typed.t) =
                         ( LazyExplanationInvariantSubtypingDueToMutableArray
                             {
                               lower_array_loc = lower_loc;
-                              lower_array_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
-                              upper_array_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+                              lower_array_desc = Type.TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                              upper_array_desc = Type.TypeOrTypeDesc.TypeDesc (Ok upper_ty);
                               _;
                             }
                         | LazyExplanationInvariantSubtypingDueToMutableProperty
                             {
                               lower_obj_loc = lower_loc;
-                              lower_obj_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
-                              upper_obj_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+                              lower_obj_desc = Type.TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                              upper_obj_desc = Type.TypeOrTypeDesc.TypeDesc (Ok upper_ty);
                               _;
                             }
                         | LazyExplanationInvariantSubtypingDueToMutableProperties
                             {
                               lower_obj_loc = lower_loc;
-                              lower_obj_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
-                              upper_obj_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+                              lower_obj_desc = Type.TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                              upper_obj_desc = Type.TypeOrTypeDesc.TypeDesc (Ok upper_ty);
                               _;
                             } ));
                   _;

@@ -3272,6 +3272,28 @@ end = struct
   let iter collector ~f = TypeSet.iter f !collector
 end
 
+(* We need to record type description in error messages.
+ * However, we cannot generate type descriptions during inference.
+ * We also cannot make it lazy because we cannot compare lazy values.
+ * Therefore, we create a variant for this. During inference, we will always
+ * have Type. After inference, we turn it into `TypeDesc` *)
+and TypeOrTypeDesc : sig
+  type 'loc t =
+    | Type of TypeTerm.t
+    | TypeDesc of (Ty.t, 'loc virtual_reason_desc) result
+
+  val map_loc : ('a -> 'b) -> 'a t -> 'b t
+end = struct
+  type 'loc t =
+    | Type of TypeTerm.t
+    | TypeDesc of (Ty.t, 'loc virtual_reason_desc) result
+
+  let map_loc f = function
+    | Type t -> Type t
+    | TypeDesc (Ok t) -> TypeDesc (Ok t)
+    | TypeDesc (Error desc) -> TypeDesc (Error (Reason.map_desc_locs f desc))
+end
+
 let unknown_use = TypeTerm.(Op UnknownUse)
 
 let name_of_propref = function

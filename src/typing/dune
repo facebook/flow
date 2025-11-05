@@ -17,7 +17,8 @@
  (libraries
   flow_common
   flow_typing_key
-  flow_typing_polarity)
+  flow_typing_polarity
+  flow_typing_ty)
  (preprocess
   (pps ppx_let ppx_deriving.std)))
 

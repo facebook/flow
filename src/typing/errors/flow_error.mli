@@ -28,10 +28,6 @@ module ConcreteErrorSet : Flow_set.S with type elt = Loc.t t
 val map_loc_of_error : ('a -> 'b) -> 'a t -> 'b t
 
 val convert_type_to_type_desc :
-  ('loc Flow_intermediate_error_types.TypeOrTypeDesc.t ->
-  'loc Flow_intermediate_error_types.TypeOrTypeDesc.t
-  ) ->
-  'loc t ->
-  'loc t
+  ('loc Type.TypeOrTypeDesc.t -> 'loc Type.TypeOrTypeDesc.t) -> 'loc t -> 'loc t
 
 val is_lint_only_errorset : ErrorSet.t -> bool

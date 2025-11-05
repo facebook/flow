@@ -1424,39 +1424,38 @@ let ast_transforms_of_error
       {
         explanation =
           Some
-            Flow_intermediate_error_types.(
-              ( LazyExplanationInvariantSubtypingDueToMutableArray
-                  {
-                    lower_array_loc = lower_loc;
-                    upper_array_loc = upper_loc;
-                    lower_array_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
-                    upper_array_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
-                    _;
-                  }
-              | LazyExplanationInvariantSubtypingDueToMutableProperty
-                  {
-                    lower_obj_loc = lower_loc;
-                    upper_obj_loc = upper_loc;
-                    lower_obj_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
-                    upper_obj_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
-                    _;
-                  }
-              | LazyExplanationInvariantSubtypingDueToMutableProperties
-                  {
-                    lower_obj_loc = lower_loc;
-                    upper_obj_loc = upper_loc;
-                    lower_obj_desc = TypeOrTypeDesc.TypeDesc (Error lower_desc);
-                    upper_obj_desc = TypeOrTypeDesc.TypeDesc (Ok upper_ty);
-                    _;
-                  } ));
+            ( Flow_intermediate_error_types.LazyExplanationInvariantSubtypingDueToMutableArray
+                {
+                  lower_array_loc = lower_loc;
+                  upper_array_loc = upper_loc;
+                  lower_array_desc = Type.TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                  upper_array_desc = Type.TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+                  _;
+                }
+            | Flow_intermediate_error_types.LazyExplanationInvariantSubtypingDueToMutableProperty
+                {
+                  lower_obj_loc = lower_loc;
+                  upper_obj_loc = upper_loc;
+                  lower_obj_desc = Type.TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                  upper_obj_desc = Type.TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+                  _;
+                }
+            | Flow_intermediate_error_types.LazyExplanationInvariantSubtypingDueToMutableProperties
+                {
+                  lower_obj_loc = lower_loc;
+                  upper_obj_loc = upper_loc;
+                  lower_obj_desc = Type.TypeOrTypeDesc.TypeDesc (Error lower_desc);
+                  upper_obj_desc = Type.TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+                  _;
+                } );
         _;
       }
   | Error_message.EPropsNotFoundInInvariantSubtyping
       {
         lower_obj_loc = lower_loc;
         upper_obj_loc = upper_loc;
-        lower_obj_desc = Flow_intermediate_error_types.TypeOrTypeDesc.TypeDesc (Error lower_desc);
-        upper_obj_desc = Flow_intermediate_error_types.TypeOrTypeDesc.TypeDesc (Ok upper_ty);
+        lower_obj_desc = Type.TypeOrTypeDesc.TypeDesc (Error lower_desc);
+        upper_obj_desc = Type.TypeOrTypeDesc.TypeDesc (Ok upper_ty);
         _;
       }
     when match lower_desc with

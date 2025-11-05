@@ -7830,8 +7830,8 @@ struct
                 )
             | UnifyCause.Uncategorized -> None
           in
-          let lower_desc = Flow_intermediate_error_types.TypeOrTypeDesc.Type t1 in
-          let upper_desc = Flow_intermediate_error_types.TypeOrTypeDesc.Type t2 in
+          let lower_desc = TypeOrTypeDesc.Type t1 in
+          let upper_desc = TypeOrTypeDesc.Type t2 in
           let lower_loc =
             match t1 with
             | OpenT (r, id) ->
