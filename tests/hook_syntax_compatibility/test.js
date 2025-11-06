@@ -75,4 +75,6 @@ const [useXB, {w: useXC}] = ((42: any): [() => void, { w: () => void }])
     }
     declare const renderHook: any;
     renderHook(() => useH()); // no error
+    declare const renderAsyncHook: any;
+    renderAsyncHook(() => useH()); // no error
 }
