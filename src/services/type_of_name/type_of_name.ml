@@ -151,7 +151,6 @@ let type_of_name_from_index
     | (Builtin _, _) -> Error "(handled earlier)"
   in
   let contents = "/* @flow */ " ^ contents_body in
-  Utils_js.prerr_endlinef "Type of name: %s" contents;
   let parse_result = Type_contents.parse_contents ~options ~profiling contents file_key in
   match
     Type_contents.type_parse_artifacts
