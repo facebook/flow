@@ -269,7 +269,11 @@ let rec dump_t_ (depth, tvars) cx t =
                  )
                 )
              )
-             (Base.Option.value_map underlying_t ~default:"" ~f:(fun t -> spf " (%s)" (kid t)))
+             (match underlying_t with
+             | Opaque.NormalUnderlying { t } -> spf " (%s)" (kid t)
+             | Opaque.FullyTransparentForCustomError { t; custom_error_loc } ->
+               spf " (%s, custom_error_loc=%s)" (kid t) (ALoc.debug_to_string custom_error_loc)
+             | Opaque.FullyOpaque -> "")
           )
         t
     | OptionalT { reason = _; type_ = arg; use_desc = _ } -> p ~extra:(kid arg) t

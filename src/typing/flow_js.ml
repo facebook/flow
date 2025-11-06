@@ -1411,13 +1411,24 @@ struct
               ( _,
                 {
                   opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _);
-                  underlying_t = Some t;
+                  underlying_t = Opaque.NormalUnderlying { t };
                   _;
                 }
               ),
             ToStringT { reason; t_out; _ }
           )
           when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
+          rec_flow cx trace (t, ToStringT { orig_t = Some l; reason; t_out })
+        | ( OpaqueT
+              ( _,
+                {
+                  opaque_id = Opaque.UserDefinedOpaqueTypeId _;
+                  underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ };
+                  _;
+                }
+              ),
+            ToStringT { reason; t_out; _ }
+          ) ->
           rec_flow cx trace (t, ToStringT { orig_t = Some l; reason; t_out })
         (* Use the upper bound of OpaqueT if it's available, for operations that must be
          * performed on some concretized types. *)
@@ -1434,13 +1445,24 @@ struct
               ( _,
                 {
                   opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _);
-                  underlying_t = Some t;
+                  underlying_t = Opaque.NormalUnderlying { t; _ };
                   _;
                 }
               ),
             _
           )
           when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
+          rec_flow cx trace (t, u)
+        | ( OpaqueT
+              ( _,
+                {
+                  opaque_id = Opaque.UserDefinedOpaqueTypeId _;
+                  underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ };
+                  _;
+                }
+              ),
+            _
+          ) ->
           rec_flow cx trace (t, u)
         (*****************************************************)
         (* keys (NOTE: currently we only support string keys *)
@@ -5528,10 +5550,17 @@ struct
             )
         )
     | OpaqueT (r, ({ underlying_t; lower_t; upper_t; opaque_type_args; _ } as opaquetype)) ->
+      let underlying_t =
+        match underlying_t with
+        | Opaque.FullyOpaque -> Opaque.FullyOpaque
+        | Opaque.FullyTransparentForCustomError { t; custom_error_loc } ->
+          Opaque.FullyTransparentForCustomError { t = only_any t; custom_error_loc }
+        | Opaque.NormalUnderlying { t } -> Opaque.NormalUnderlying { t = only_any t }
+      in
       let opaquetype =
         {
           opaquetype with
-          underlying_t = Base.Option.(underlying_t >>| only_any);
+          underlying_t;
           lower_t = Base.Option.(lower_t >>| only_any);
           upper_t = Base.Option.(upper_t >>| only_any);
           opaque_type_args =
@@ -6412,7 +6441,13 @@ struct
            * lower_t to be inspectable *)
           eagerly_eval_destructor_if_resolved cx ~trace use_op reason t d tvar
         in
-        let underlying_t = Base.Option.map ~f:eval_t underlying_t in
+        let underlying_t =
+          match underlying_t with
+          | Opaque.FullyOpaque -> Opaque.FullyOpaque
+          | Opaque.FullyTransparentForCustomError { t; custom_error_loc } ->
+            Opaque.FullyTransparentForCustomError { t = eval_t t; custom_error_loc }
+          | Opaque.NormalUnderlying { t } -> Opaque.NormalUnderlying { t = eval_t t }
+        in
         let lower_t = Base.Option.map ~f:eval_t lower_t in
         let upper_t = Base.Option.map ~f:eval_t upper_t in
         let opaque_t = OpaqueT (r, { opaquetype with underlying_t; lower_t; upper_t }) in
@@ -6438,7 +6473,7 @@ struct
                   ( _,
                     {
                       opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _);
-                      underlying_t = Some t;
+                      underlying_t = Opaque.NormalUnderlying { t };
                       _;
                     }
                   );
@@ -6458,12 +6493,56 @@ struct
           (GenericT { bound = t; reason = r; id; name; no_infer })
           d
           tout
+      | ( GenericT
+            {
+              bound =
+                OpaqueT
+                  ( _,
+                    {
+                      opaque_id = Opaque.UserDefinedOpaqueTypeId _;
+                      underlying_t =
+                        Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ };
+                      _;
+                    }
+                  );
+              reason = r;
+              id;
+              name;
+              no_infer;
+            },
+          _
+        ) ->
+        eval_destructor
+          cx
+          ~trace
+          use_op
+          reason
+          (GenericT { bound = t; reason = r; id; name; no_infer })
+          d
+          tout
       | (OpaqueT (r, opaquetype), ReactDRO _) -> destruct_and_preserve_opaque_t r opaquetype
       | ( OpaqueT
-            (_, { opaque_id = Opaque.UserDefinedOpaqueTypeId (id, _); underlying_t = Some t; _ }),
+            ( _,
+              {
+                opaque_id = Opaque.UserDefinedOpaqueTypeId (id, _);
+                underlying_t = Opaque.NormalUnderlying { t };
+                _;
+              }
+            ),
           _
         )
         when ALoc.source (id :> ALoc.t) = Some (Context.file cx) ->
+        eval_destructor cx ~trace use_op reason t d tout
+      | ( OpaqueT
+            ( _,
+              {
+                opaque_id = Opaque.UserDefinedOpaqueTypeId _;
+                underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ };
+                _;
+              }
+            ),
+          _
+        ) ->
         eval_destructor cx ~trace use_op reason t d tout
       (* Specialize TypeAppTs before evaluating them so that we can handle special
          cases. Like the union case below. mk_typeapp_instance will return an AnnotT
@@ -6836,7 +6915,7 @@ struct
                   ( reason,
                     {
                       opaque_id = Opaque.StuckEval stuck_eval_kind;
-                      underlying_t = None;
+                      underlying_t = Opaque.FullyOpaque;
                       lower_t = None;
                       upper_t;
                       opaque_type_args;
@@ -9195,11 +9274,27 @@ struct
         UnionT (r, rep)
       | OpaqueT (r, opaquetype) ->
         let r = mod_reason r in
+        let underlying_t =
+          match opaquetype.underlying_t with
+          | Opaque.FullyOpaque -> opaquetype.underlying_t
+          | Opaque.NormalUnderlying { t } ->
+            let t' = recurse seen t in
+            if t == t' then
+              opaquetype.underlying_t
+            else
+              Opaque.NormalUnderlying { t = t' }
+          | Opaque.FullyTransparentForCustomError { t; custom_error_loc } ->
+            let t' = recurse seen t in
+            if t == t' then
+              opaquetype.underlying_t
+            else
+              Opaque.FullyTransparentForCustomError { t = t'; custom_error_loc }
+        in
         OpaqueT
           ( r,
             {
               opaquetype with
-              underlying_t = OptionUtils.ident_map (recurse seen) opaquetype.underlying_t;
+              underlying_t;
               lower_t = OptionUtils.ident_map (recurse seen) opaquetype.lower_t;
               upper_t = OptionUtils.ident_map (recurse seen) opaquetype.upper_t;
             }

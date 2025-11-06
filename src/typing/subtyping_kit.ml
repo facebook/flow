@@ -1156,7 +1156,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
      * expose its underlying type information *)
     | ( OpaqueT
           ( _,
-            { opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _); underlying_t = Some t; _ }
+            {
+              opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _);
+              underlying_t = Opaque.NormalUnderlying { t; _ };
+              _;
+            }
           ),
         _
       )
@@ -1167,10 +1171,37 @@ module Make (Flow : INPUT) : OUTPUT = struct
     | ( _,
         OpaqueT
           ( _,
-            { opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _); underlying_t = Some t; _ }
+            {
+              opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _);
+              underlying_t = Opaque.NormalUnderlying { t; _ };
+              _;
+            }
           )
       )
       when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
+      rec_flow_t cx trace ~use_op (l, t)
+    (* Opaque type for custom error types are always fully transparent *)
+    | ( OpaqueT
+          ( _,
+            {
+              opaque_id = Opaque.UserDefinedOpaqueTypeId _;
+              underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ };
+              _;
+            }
+          ),
+        _
+      ) ->
+      rec_flow_t cx trace ~use_op (t, u)
+    | ( _,
+        OpaqueT
+          ( _,
+            {
+              opaque_id = Opaque.UserDefinedOpaqueTypeId _;
+              underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ };
+              _;
+            }
+          )
+      ) ->
       rec_flow_t cx trace ~use_op (l, t)
     (***********************)
     (* Numeric string keys *)

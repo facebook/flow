@@ -53,7 +53,13 @@ class ['a] t =
             acc
             opaque_type_args
         in
-        let acc = self#opt (self#type_ cx pole) acc underlying_t in
+        let acc =
+          match underlying_t with
+          | Opaque.NormalUnderlying { t }
+          | Opaque.FullyTransparentForCustomError { custom_error_loc = _; t } ->
+            self#type_ cx pole acc t
+          | Opaque.FullyOpaque -> acc
+        in
         let acc = self#opt (self#type_ cx pole) acc lower_t in
         let acc = self#opt (self#type_ cx pole) acc upper_t in
         acc

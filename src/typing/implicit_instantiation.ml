@@ -1814,7 +1814,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                 ( reason,
                   {
                     opaque_id = Opaque.(StuckEval StuckEvalForConditionalType);
-                    underlying_t = None;
+                    underlying_t = Opaque.FullyOpaque;
                     lower_t = None;
                     upper_t = Some bound;
                     opaque_type_args;

@@ -1482,7 +1482,7 @@ module rec TypeTerm : sig
 
   and opaquetype = {
     opaque_id: Opaque.id;
-    underlying_t: t option;
+    underlying_t: Opaque.underlying_t;
     lower_t: t option;
     upper_t: t option;
     opaque_type_args: (Subst_name.t * reason * t * Polarity.t) list;
@@ -2206,6 +2206,14 @@ and Opaque : sig
   val equal_id : id -> id -> bool
 
   val string_of_id : id -> string
+
+  type underlying_t =
+    | FullyOpaque
+    | NormalUnderlying of { t: TypeTerm.t }
+    | FullyTransparentForCustomError of {
+        custom_error_loc: ALoc.t;
+        t: TypeTerm.t;
+      }
 end = struct
   type stuck_eval_kind =
     | StuckEvalForNonMaybeType
@@ -2262,6 +2270,14 @@ end = struct
     | StuckEval StuckEvalForKeyMirrorType -> "StuckEvalForKeyMirrorType"
     | StuckEval (StuckEvalForReactDRO _) -> "StuckEvalForReactDRO"
     | StuckEval StuckEvalForEnumType -> "StuckEvalForEnumType"
+
+  type underlying_t =
+    | FullyOpaque
+    | NormalUnderlying of { t: TypeTerm.t }
+    | FullyTransparentForCustomError of {
+        custom_error_loc: ALoc.t;
+        t: TypeTerm.t;
+      }
 end
 
 and Eval : sig

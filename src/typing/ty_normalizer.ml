@@ -1799,24 +1799,26 @@ module Make (I : INPUT) : S = struct
       let current_source = Context.file (Env.get_cx env) in
       let opaque_source = ALoc.source (def_loc_of_reason reason) in
       let name = symbol_from_reason env reason (Reason.OrdinaryName name) in
-      (* Compare the current file (of the query) and the file that the opaque
-         type is defined. If they differ, then hide the underlying/super type.
-         Otherwise, display the underlying/super type. *)
-      if Some current_source <> opaque_source then
-        return (Ty.TypeAliasDecl { import = false; name; tparams; type_ = None })
-      else
-        let t_opt =
-          match opaque_type with
-          | { underlying_t = Some t; _ } (* opaque type A = number; *)
-          | { upper_t = Some t; _ } ->
-            Some t (* declare opaque type B: number; *)
-          | _ -> None
-          (* declare opaque type C; *)
-          (* TODO: This will potentially report a remote name.
-           * The same fix for T25963804 should be applied here as well. *)
-        in
-        let%map type_ = option (TypeConverter.convert_t ~env) t_opt in
-        Ty.TypeAliasDecl { import = false; name; tparams; type_ }
+      let t_opt =
+        match opaque_type with
+        (* opaque type A = number; *)
+        | { underlying_t = Opaque.NormalUnderlying { t }; _ }
+          when Some current_source = opaque_source ->
+          (* Compare the current file (of the query) and the file that the opaque
+             type is defined. If they differ, then hide the underlying/super type.
+             Otherwise, display the underlying/super type. *)
+          Some t
+        | { underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ }; _ } ->
+          Some t
+        (* declare opaque type B: number; *)
+        | { upper_t = Some t; _ } when Some current_source = opaque_source -> Some t
+        | _ -> None
+        (* declare opaque type C; *)
+        (* TODO: This will potentially report a remote name.
+         * The same fix for T25963804 should be applied here as well. *)
+      in
+      let%map type_ = option (TypeConverter.convert_t ~env) t_opt in
+      Ty.TypeAliasDecl { import = false; name; tparams; type_ }
 
     let type_t =
       let open Type in
@@ -2370,7 +2372,13 @@ module Make (I : INPUT) : S = struct
          type is defined. If they differ, then hide the underlying type. *)
       let same_file = Some current_source = opaque_source in
       match opaquetype with
-      | { Type.underlying_t = Some t; _ } when same_file -> type__ ~env ~inherited ~source ~imode t
+      | { Type.underlying_t = Type.Opaque.NormalUnderlying { t }; _ } when same_file ->
+        type__ ~env ~inherited ~source ~imode t
+      | {
+       Type.underlying_t = Type.Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ };
+       _;
+      } ->
+        type__ ~env ~inherited ~source ~imode t
       | { Type.upper_t = Some t; _ } -> type__ ~env ~inherited ~source ~imode t
       | _ -> return no_members
 

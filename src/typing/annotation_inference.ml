@@ -704,8 +704,15 @@ module rec ConsGen : S = struct
     (****************)
     | (OpaqueT (_, { upper_t = Some upper_t; _ }), Annot_ToStringT { reason; _ }) ->
       elab_t cx upper_t (Annot_ToStringT { orig_t = Some t; reason })
-    | (OpaqueT (r, { underlying_t = Some t; _ }), _)
+    | (OpaqueT (r, { underlying_t = Opaque.NormalUnderlying { t }; _ }), _)
       when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+      elab_t cx ~seen t op
+    | ( OpaqueT
+          ( _,
+            { underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ }; _ }
+          ),
+        _
+      ) ->
       elab_t cx ~seen t op
     (********)
     (* Keys *)

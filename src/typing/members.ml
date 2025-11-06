@@ -580,7 +580,15 @@ let rec extract_type cx this_t =
   | DefT (reason, SymbolT) -> get_builtin_type cx reason "Symbol" |> extract_type cx
   | DefT (_, ReactAbstractComponentT _) as t -> Success t
   | DefT (_, RendersT _) as t -> Success t
-  | OpaqueT (_, { underlying_t = Some t; _ })
+  | OpaqueT
+      ( _,
+        {
+          underlying_t =
+            ( Opaque.NormalUnderlying { t }
+            | Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ } );
+          _;
+        }
+      )
   | OpaqueT (_, { upper_t = Some t; _ }) ->
     extract_type cx t
   | DefT (reason, ArrT arrtype) ->

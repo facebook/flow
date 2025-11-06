@@ -90,7 +90,7 @@ let mk_object_type
              ( reason,
                {
                  opaque_id = Opaque.(StuckEval (StuckEvalForGenericallyMappedObject name));
-                 underlying_t = None;
+                 underlying_t = Opaque.FullyOpaque;
                  lower_t = None;
                  upper_t = Some t;
                  opaque_type_args = [(name, reason, t, Polarity.Neutral)];

@@ -67,8 +67,16 @@ let detect_sketchy_null_checks cx tast =
         (* Ignore AnyTs for sketchy null checks; otherwise they'd always trigger the lint. *)
         | AnyT _ -> cur_checks
         | GenericT { bound = t; _ }
-        | OpaqueT (_, { underlying_t = Some t; _ })
-        | OpaqueT (_, { underlying_t = None; upper_t = Some t; _ }) ->
+        | OpaqueT
+            ( _,
+              {
+                underlying_t =
+                  ( Opaque.NormalUnderlying { t }
+                  | Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ } );
+                _;
+              }
+            )
+        | OpaqueT (_, { underlying_t = Opaque.FullyOpaque; upper_t = Some t; _ }) ->
           make_checks seen cur_checks loc t
         | MaybeT (r, t) ->
           let acc = make_checks seen cur_checks loc t in
@@ -732,7 +740,7 @@ let enforce_optimize cx loc t =
       ( reason,
         {
           opaque_id = Opaque.InternalEnforceUnionOptimized;
-          underlying_t = None;
+          underlying_t = Opaque.FullyOpaque;
           lower_t = None;
           upper_t = None;
           opaque_type_args = [];

@@ -608,7 +608,13 @@ and intersect =
         let upper_t =
           Some (Base.Option.value_map upper_t ~default:t2 ~f:(fun t -> intersect cx t t2))
         in
-        let underlying_t = Base.Option.map ~f:(fun t -> intersect cx t t2) underlying_t in
+        let underlying_t =
+          match underlying_t with
+          | Opaque.FullyOpaque -> Opaque.FullyOpaque
+          | Opaque.FullyTransparentForCustomError { custom_error_loc; t } ->
+            Opaque.FullyTransparentForCustomError { custom_error_loc; t = intersect cx t t2 }
+          | Opaque.NormalUnderlying { t } -> Opaque.NormalUnderlying { t = intersect cx t t2 }
+        in
         Some (OpaqueT (r, { opaquetype with underlying_t; upper_t }))
       | _ -> None
   in

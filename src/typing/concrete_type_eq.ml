@@ -23,7 +23,12 @@ let rec swap_reason t2 t1 =
     ) ->
     let underlying_t =
       match (repr1, repr2) with
-      | (Some t1, Some t2) -> Some (swap_reason t2 t1)
+      | ( Opaque.FullyTransparentForCustomError { t = t1; custom_error_loc = _ },
+          Opaque.FullyTransparentForCustomError { t = t2; custom_error_loc }
+        ) ->
+        Opaque.FullyTransparentForCustomError { custom_error_loc; t = swap_reason t2 t1 }
+      | (Opaque.NormalUnderlying { t = t1 }, Opaque.NormalUnderlying { t = t2 }) ->
+        Opaque.NormalUnderlying { t = swap_reason t2 t1 }
       | _ -> repr2
     in
     let lower_t =

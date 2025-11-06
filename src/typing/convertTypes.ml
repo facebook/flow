@@ -200,8 +200,10 @@ and type_to_json : Context.t -> int -> t -> json =
                 ("opaque_id", JSON_String (Opaque.string_of_id opaquetype.opaque_id));
                 ( "underlying_t",
                   match opaquetype.underlying_t with
-                  | None -> JSON_Null
-                  | Some t -> type_to_json cx (depth - 1) t
+                  | Opaque.FullyOpaque -> JSON_Null
+                  | Opaque.FullyTransparentForCustomError { t; _ }
+                  | Opaque.NormalUnderlying { t; _ } ->
+                    type_to_json cx (depth - 1) t
                 );
                 ( "super_t",
                   match opaquetype.upper_t with

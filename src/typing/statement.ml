@@ -1000,7 +1000,10 @@ module Make
       let opaque_id = Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id cx name_loc, name) in
       let opaquetype =
         {
-          underlying_t;
+          underlying_t =
+            (match underlying_t with
+            | None -> Opaque.FullyOpaque
+            | Some t -> Opaque.NormalUnderlying { t });
           lower_t = lower_bound_t;
           upper_t = upper_bound_t;
           opaque_id;
@@ -2551,9 +2554,27 @@ module Make
         else (
           match key with
           | OpaqueT
-              (reason, { underlying_t = Some key; opaque_id = Opaque.UserDefinedOpaqueTypeId _; _ })
+              ( reason,
+                {
+                  underlying_t = Opaque.NormalUnderlying { t = key; _ };
+                  opaque_id = Opaque.UserDefinedOpaqueTypeId _;
+                  _;
+                }
+              )
             when ALoc.source (loc_of_reason reason) = ALoc.source (def_loc_of_reason reason)
                  && valid_computed_key key ->
+            ObjectExpressionAcc.ComputedProp.NonLiteralKey
+              { key_loc; key; value; reason_obj; named_set_opt = None }
+          | OpaqueT
+              ( _,
+                {
+                  underlying_t =
+                    Opaque.FullyTransparentForCustomError { t = key; custom_error_loc = _ };
+                  opaque_id = Opaque.UserDefinedOpaqueTypeId _;
+                  _;
+                }
+              )
+            when valid_computed_key key ->
             ObjectExpressionAcc.ComputedProp.NonLiteralKey
               { key_loc; key; value; reason_obj; named_set_opt = None }
           | OpaqueT (_, { upper_t = Some upper; opaque_id = Opaque.UserDefinedOpaqueTypeId _; _ })

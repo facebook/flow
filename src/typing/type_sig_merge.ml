@@ -1818,7 +1818,11 @@ let merge_opaque_type file reason id name tparams lower_bound upper_bound body =
     let opaque_reason = Reason.(replace_desc_reason (ROpaqueType name) reason) in
     let lower_t = Option.map ~f:(merge env file) lower_bound in
     let upper_t = Option.map ~f:(merge env file) upper_bound in
-    let body = Option.map ~f:(merge env file) body in
+    let body =
+      match body with
+      | None -> Opaque.FullyOpaque
+      | Some t -> Opaque.NormalUnderlying { t = merge env file t }
+    in
     let opaquetype =
       { underlying_t = body; lower_t; upper_t; opaque_id = id; opaque_type_args = targs }
     in

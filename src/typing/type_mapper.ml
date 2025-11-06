@@ -122,7 +122,22 @@ class virtual ['a] t =
         else
           AnnotT (r, t'', use_desc)
       | OpaqueT (r, opaquetype) ->
-        let underlying_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.underlying_t in
+        let underlying_t =
+          match opaquetype.underlying_t with
+          | Opaque.NormalUnderlying { t } ->
+            let t' = self#type_ cx map_cx t in
+            if t' == t then
+              opaquetype.underlying_t
+            else
+              Opaque.NormalUnderlying { t = t' }
+          | Opaque.FullyTransparentForCustomError { custom_error_loc; t } ->
+            let t' = self#type_ cx map_cx t in
+            if t' == t then
+              opaquetype.underlying_t
+            else
+              Opaque.FullyTransparentForCustomError { custom_error_loc; t = t' }
+          | Opaque.FullyOpaque -> opaquetype.underlying_t
+        in
         let lower_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.lower_t in
         let upper_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.upper_t in
         let opaque_type_args =

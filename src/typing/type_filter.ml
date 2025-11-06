@@ -79,13 +79,35 @@ let recurse_into_intersection cx =
 
 let filter_opaque filter_fn reason ({ underlying_t; upper_t; _ } as opq) =
   match underlying_t with
-  | Some underlying_t
+  | Opaque.NormalUnderlying { t }
     when ALoc.source (loc_of_reason reason) = ALoc.source (def_loc_of_reason reason) -> begin
-    match filter_fn underlying_t with
+    match filter_fn t with
     | TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
       DefT (reason, EmptyT) |> changed_result
     | TypeFilterResult { type_ = t; changed } ->
-      TypeFilterResult { type_ = OpaqueT (reason, { opq with underlying_t = Some t }); changed }
+      TypeFilterResult
+        {
+          type_ = OpaqueT (reason, { opq with underlying_t = Opaque.NormalUnderlying { t } });
+          changed;
+        }
+  end
+  | Opaque.FullyTransparentForCustomError { custom_error_loc; t } -> begin
+    match filter_fn t with
+    | TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
+      DefT (reason, EmptyT) |> changed_result
+    | TypeFilterResult { type_ = t; changed } ->
+      TypeFilterResult
+        {
+          type_ =
+            OpaqueT
+              ( reason,
+                {
+                  opq with
+                  underlying_t = Opaque.FullyTransparentForCustomError { custom_error_loc; t };
+                }
+              );
+          changed;
+        }
   end
   | _ -> begin
     let upper_t = Base.Option.value ~default:(DefT (reason, MixedT Mixed_everything)) upper_t in
@@ -903,8 +925,12 @@ and tag_of_t cx t =
   | OpenT _
   | AnnotT (_, _, _) ->
     Context.find_resolved cx t |> Base.Option.bind ~f:(tag_of_t cx)
-  | OpaqueT (r, { underlying_t = Some t; _ })
+  | OpaqueT (r, { underlying_t = Opaque.NormalUnderlying { t }; _ })
     when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
+    tag_of_t cx t
+  | OpaqueT
+      (_, { underlying_t = Opaque.FullyTransparentForCustomError { custom_error_loc = _; t }; _ })
+    ->
     tag_of_t cx t
   | OpaqueT (_, { upper_t = Some t; _ }) -> tag_of_t cx t
   (* Most of the types below should have boiled away thanks to concretization. *)

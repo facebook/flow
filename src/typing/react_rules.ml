@@ -35,7 +35,12 @@ let check_ref_use cx rrid in_hook var_reason kind t =
       when Base.Option.value_map ~default:false ~f:(( = ) opaque_id) rrid ->
       [Error_message.EReactRefInRender { usage = var_reason; kind; in_hook }]
     | OpaqueT (_, { underlying_t; upper_t; _ }) ->
-      Base.Option.value_map ~default:[] ~f:recur underlying_t
+      begin
+        match underlying_t with
+        | Type.Opaque.NormalUnderlying { t } -> recur t
+        | Type.Opaque.FullyTransparentForCustomError { t; _ } -> recur t
+        | Type.Opaque.FullyOpaque -> []
+      end
       @ Base.Option.value_map ~default:[] ~f:recur upper_t
     | OpenT (_, id) when ISet.mem id seen -> []
     | OpenT (_, id) ->
@@ -106,9 +111,10 @@ let hook_callee cx t =
     | DefT (r, FunT (_, { effect_ = ArbitraryEffect; _ })) -> NotHookCallee (set_of_reason r)
     | OpaqueT (_, { underlying_t; upper_t; _ }) -> begin
       match (underlying_t, upper_t) with
-      | (Some t, _)
-      | (None, Some t) ->
+      | (Type.Opaque.NormalUnderlying { t }, _)
+      | (Type.Opaque.FullyTransparentForCustomError { t; _ }, _) ->
         recur t
+      | (Type.Opaque.FullyOpaque, Some t) -> recur t
       | _ -> AnyCallee
     end
     | OpenT (_, id) when ISet.mem id seen -> AnyCallee
