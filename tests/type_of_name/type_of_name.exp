@@ -280,6 +280,11 @@ component UserProfile(
 where
 'UserProfile' is defined at react.js:71:1,75:1
 
+Found exact match 'UserCard' defined at react.js:37:1,37:43 with type `component UserCard(...UserCardProps)` 
+where
+'UserCard' is defined at react.js:37:1-43
+'UserCardProps' is defined at types.js:4:6-18
+
 Found exact match 'Array' defined at empty_file.js:1:13,1:17 with type `class Array<T>` 
 where
 'Array' is defined at [LIB] prelude.js:30:15-19

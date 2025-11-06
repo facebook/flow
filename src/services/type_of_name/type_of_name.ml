@@ -77,6 +77,22 @@ let get_server_exports env =
   | Some exports -> Ok exports
   | None -> Error "No server exports found (make sure you're not using '--no-autoimport')"
 
+let find_first_match ~exact_match_only target_name results =
+  Base.List.find results ~f:(function
+      | {
+          Export_search_types.search_result =
+            {
+              (* NOTE the target name might change due to fuzzy finding *)
+              Export_search_types.name = actual_name;
+              source = Export_index.(File_key _ | Global);
+              kind = _;
+            };
+          _;
+        } ->
+        (not exact_match_only) || actual_name = target_name
+      | _ -> false
+      )
+
 let type_of_name_from_index
     ~doc_at_loc
     ~options
@@ -102,25 +118,15 @@ let type_of_name_from_index
       exports
   in
   let%bind (actual_name, source, kind) =
-    match results with
-    | {
-        Export_search_types.search_result =
-          {
-            (* NOTE the target name might change due to fuzzy finding *)
-            Export_search_types.name = actual_name;
-            source = Export_index.(File_key _ | Global) as source;
-            kind;
-          };
-        _;
-      }
-      :: _ ->
-      if exact_match_only && actual_name <> target_name then
-        Error (spf "Could not find exact match for `%s`" target_name)
-      else
-        Ok (actual_name, source, kind)
-    | { Export_search_types.search_result = { Export_search_types.source; _ }; _ } :: _ ->
-      Error (spf "Result found in unsupported source '%s'" (Export_index.show_source source))
-    | [] -> Error "No results found"
+    match find_first_match ~exact_match_only target_name results with
+    | Some
+        {
+          Export_search_types.search_result =
+            { Export_search_types.name = actual_name; kind; source };
+          _;
+        } ->
+      Ok (actual_name, source, kind)
+    | None -> Error "No results found"
   in
   (* Create contents of the form
    *

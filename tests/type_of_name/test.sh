@@ -81,7 +81,7 @@ assert_ok "$FLOW" type-of-name-experimental empty_file.js UserCard --strip-root 
 assert_ok "$FLOW" type-of-name-experimental empty_file.js DataDisplay --strip-root --expand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js ProductItem --strip-root --expand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js UserProfile --strip-root --expand-component-props
-assert_errors "$FLOW" type-of-name-experimental empty_file.js UserCard --strip-root --exact-match-only # TODO (should return result from react.js)
+assert_ok "$FLOW" type-of-name-experimental empty_file.js UserCard --strip-root --exact-match-only # returns result from react.js
 
 assert_errors "$FLOW" type-of-name-experimental empty_file.js NO_UserProfile --strip-root --exact-match-only
 
