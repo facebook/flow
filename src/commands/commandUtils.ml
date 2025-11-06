@@ -1442,6 +1442,7 @@ let make_options
       Base.Option.value ~default:false (FlowConfig.pattern_matching flowconfig);
     opt_enable_pattern_matching_instance_patterns =
       Base.Option.value ~default:false (FlowConfig.pattern_matching_instance_patterns flowconfig);
+    opt_enable_records = Base.Option.value ~default:false (FlowConfig.records flowconfig);
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enable_custom_error = FlowConfig.enable_custom_error flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;

@@ -39,6 +39,7 @@ let metadata =
     enable_jest_integration = false;
     enable_pattern_matching = false;
     enable_pattern_matching_instance_patterns = false;
+    enable_records = false;
     enable_relay_integration = false;
     exact_by_default = true;
     facebook_fbs = None;

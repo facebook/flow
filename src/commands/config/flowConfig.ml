@@ -134,6 +134,7 @@ module Opts = struct
     react_ref_as_prop: Options.ReactRefAsProp.t;
     react_rules: Options.react_rules list;
     react_runtime: Options.react_runtime;
+    records: bool option;
     recursion_limit: int;
     relay_integration: bool;
     relay_integration_esmodules: bool;
@@ -282,6 +283,7 @@ module Opts = struct
       react_ref_as_prop = Options.ReactRefAsProp.FullSupport;
       react_rules = [];
       react_runtime = Options.ReactRuntimeClassic;
+      records = None;
       recursion_limit = 10000;
       relay_integration = false;
       relay_integration_esmodules = false;
@@ -1127,6 +1129,7 @@ module Opts = struct
         )
       );
       ("experimental.projects_path_mapping", projects_path_mapping_parser);
+      ("experimental.records", boolean (fun opts v -> Ok { opts with records = Some v }));
       ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
       ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
       ( "experimental.ts_utility_syntax",
@@ -2032,6 +2035,8 @@ let react_ref_as_prop c = c.options.Opts.react_ref_as_prop
 let react_rules c = c.options.Opts.react_rules
 
 let react_runtime c = c.options.Opts.react_runtime
+
+let records c = c.options.Opts.records
 
 let recursion_limit c = c.options.Opts.recursion_limit
 

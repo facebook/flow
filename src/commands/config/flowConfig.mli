@@ -250,6 +250,8 @@ val react_rules : config -> Options.react_rules list
 
 val react_runtime : config -> Options.react_runtime
 
+val records : config -> bool option
+
 val recursion_limit : config -> int
 
 val relay_integration : config -> bool

@@ -122,6 +122,7 @@ type t = {
   opt_enable_jest_integration: bool;
   opt_enable_pattern_matching: bool;
   opt_enable_pattern_matching_instance_patterns: bool;
+  opt_enable_records: bool;
   opt_enable_relay_integration: bool;
   opt_enable_custom_error: bool;
   opt_enabled_rollouts: string SMap.t;
@@ -242,6 +243,8 @@ let enable_pattern_matching opts = opts.opt_enable_pattern_matching
 
 let enable_pattern_matching_instance_patterns opts =
   opts.opt_enable_pattern_matching_instance_patterns
+
+let enable_records opts = opts.opt_enable_records
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 

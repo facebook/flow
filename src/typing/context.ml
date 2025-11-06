@@ -48,6 +48,7 @@ type metadata = {
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
   enable_pattern_matching_instance_patterns: bool;
+  enable_records: bool;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
@@ -307,6 +308,7 @@ let metadata_of_options options =
     enable_pattern_matching_instance_patterns =
       Options.enable_pattern_matching_instance_patterns options;
     pattern_matching_includes = Options.pattern_matching_includes options;
+    enable_records = Options.enable_records options;
     enable_relay_integration = Options.enable_relay_integration options;
     exact_by_default = Options.exact_by_default options;
     facebook_fbs = Options.facebook_fbs options;
@@ -554,6 +556,8 @@ let enable_pattern_matching cx =
 
 let enable_pattern_matching_instance_patterns cx =
   cx.metadata.enable_pattern_matching_instance_patterns
+
+let enable_records cx = cx.metadata.enable_records
 
 let is_utility_type_deprecated cx t =
   match SMap.find_opt t cx.metadata.deprecated_utilities with
