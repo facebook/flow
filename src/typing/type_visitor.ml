@@ -45,20 +45,20 @@ class ['a] t =
       | KeysT (_, t) -> self#type_ cx P.Positive acc t
       | StrUtilT _ -> acc
       | AnnotT (_, t, _) -> self#type_ cx P.Positive acc t
-      | OpaqueT (_, ot) ->
-        let { opaque_id = _; underlying_t; lower_t; upper_t; opaque_type_args } = ot in
+      | NominalT (_, ot) ->
+        let { nominal_id = _; underlying_t; lower_t; upper_t; nominal_type_args } = ot in
         let acc =
           self#list
             (fun acc (_, _, t, pole') -> self#type_ cx (P.mult (pole, pole')) acc t)
             acc
-            opaque_type_args
+            nominal_type_args
         in
         let acc =
           match underlying_t with
-          | Opaque.NormalUnderlying { t }
-          | Opaque.FullyTransparentForCustomError { custom_error_loc = _; t } ->
+          | Nominal.OpaqueWithLocal { t }
+          | Nominal.CustomError { custom_error_loc = _; t } ->
             self#type_ cx pole acc t
-          | Opaque.FullyOpaque -> acc
+          | Nominal.FullyOpaque -> acc
         in
         let acc = self#opt (self#type_ cx pole) acc lower_t in
         let acc = self#opt (self#type_ cx pole) acc upper_t in

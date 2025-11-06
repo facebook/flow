@@ -890,7 +890,7 @@ module Make (I : INPUT) : S = struct
         return (Ty.Renders (ty, Ty.RendersNormal))
       | ThisTypeAppT (_, c, _, ts) -> type_app ~env ~from_value:false c ts
       | KeysT (r, t) -> keys_t ~env ~cont:type__ r t
-      | OpaqueT (r, o) -> opaque_t ~env r o
+      | NominalT (r, o) -> nominal_t ~env r o
       | ObjProtoT _ -> return Ty.(TypeOf (ObjProto, None))
       | FunProtoT _ -> return Ty.(TypeOf (FunProto, None))
       | FunProtoBindT _ ->
@@ -1425,10 +1425,10 @@ module Make (I : INPUT) : S = struct
           | [] -> Ty.Bot (Ty.NoLowerWithUpper Ty.NoUpper)
           | t :: ts -> Ty.mk_union ~from_bounds:true (t, ts))
 
-    and opaque_t ~env reason opaque_type =
-      let { Type.opaque_id; opaque_type_args = targs; _ } = opaque_type in
-      match opaque_id with
-      | Type.Opaque.UserDefinedOpaqueTypeId (_, name) ->
+    and nominal_t ~env reason nominal_type =
+      let { Type.nominal_id; nominal_type_args = targs; _ } = nominal_type in
+      match nominal_id with
+      | Type.Nominal.UserDefinedOpaqueTypeId (_, name) ->
         let opaque_symbol = symbol_from_reason env reason (Reason.OrdinaryName name) in
         let%map targs =
           match targs with
@@ -1436,11 +1436,11 @@ module Make (I : INPUT) : S = struct
           | _ -> optMapM (fun (_, _, t, _) -> type__ ~env t) (Some targs)
         in
         generic_talias opaque_symbol targs
-      | Type.Opaque.InternalEnforceUnionOptimized ->
+      | Type.Nominal.InternalEnforceUnionOptimized ->
         (* InternalEnforceUnionOptimized is a special opaque type that only appears in upper
          * bound position to test optimization. It should never be visible to users. *)
         error (UnsupportedTypeCtor, "Special InternalEnforceUnionOptimized upper bound")
-      | Type.Opaque.StuckEval _ ->
+      | Type.Nominal.StuckEval _ ->
         (* If we are under the mode when we never evaluate EvalT, then we will never get here.
          * When we do evaluate EvalT, there is no good way to show that the EvalT is stuck,
          * so it's better to error, so that only the unevaluated form is shown. *)
@@ -1777,20 +1777,20 @@ module Make (I : INPUT) : S = struct
     val convert_toplevel : env:Env.t -> Type.t -> (Ty.elt, error) t
   end = struct
     (* We are being a bit lax here with opaque types so that we don't have to
-     * introduce a new constructor in Ty.t to support all kinds of OpaqueT.
+     * introduce a new constructor in Ty.t to support all kinds of NominalT.
      * If an underlying type is available, then we use that as the alias body.
      * If not, we check for a super type and use that if there is one.
      * Otherwise, we fall back to a bodyless TypeAlias.
      *)
-    let opaque_type_t ~env reason opaque_type tparams =
+    let nominal_type_t ~env reason nominal_type tparams =
       let open Type in
       let%bind name =
-        match opaque_type.opaque_id with
-        | Opaque.UserDefinedOpaqueTypeId (_, name) -> return name
-        (* The following cases should error, for the same reason as in opaque_t *)
-        | Opaque.InternalEnforceUnionOptimized ->
+        match nominal_type.nominal_id with
+        | Nominal.UserDefinedOpaqueTypeId (_, name) -> return name
+        (* The following cases should error, for the same reason as in nominal_t *)
+        | Nominal.InternalEnforceUnionOptimized ->
           error (UnsupportedTypeCtor, "Special InternalEnforceUnionOptimized upper bound")
-        | Type.Opaque.StuckEval _ ->
+        | Type.Nominal.StuckEval _ ->
           (* If we are under the mode when we never evaluate EvalT, then we will never get here.
            * When we do evaluate EvalT, there is no good way to show that the EvalT is stuck,
            * so it's better to error, so that only the unevaluated form is shown. *)
@@ -1800,16 +1800,15 @@ module Make (I : INPUT) : S = struct
       let opaque_source = ALoc.source (def_loc_of_reason reason) in
       let name = symbol_from_reason env reason (Reason.OrdinaryName name) in
       let t_opt =
-        match opaque_type with
+        match nominal_type with
         (* opaque type A = number; *)
-        | { underlying_t = Opaque.NormalUnderlying { t }; _ }
+        | { underlying_t = Nominal.OpaqueWithLocal { t }; _ }
           when Some current_source = opaque_source ->
           (* Compare the current file (of the query) and the file that the opaque
              type is defined. If they differ, then hide the underlying/super type.
              Otherwise, display the underlying/super type. *)
           Some t
-        | { underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ }; _ } ->
-          Some t
+        | { underlying_t = Nominal.CustomError { t; custom_error_loc = _ }; _ } -> Some t
         (* declare opaque type B: number; *)
         | { upper_t = Some t; _ } when Some current_source = opaque_source -> Some t
         | _ -> None
@@ -1834,8 +1833,8 @@ module Make (I : INPUT) : S = struct
       in
       let opaque env t ps =
         match t with
-        | OpaqueT (r, o) ->
-          let%map o' = opaque_type_t ~env r o ps in
+        | NominalT (r, o) ->
+          let%map o' = nominal_type_t ~env r o ps in
           Ty.Decl o'
         | _ -> terr ~kind:BadTypeAlias ~msg:"opaque" (Some t)
       in
@@ -2365,19 +2364,16 @@ module Make (I : INPUT) : S = struct
       | (T.InterfaceKind _, _, _) ->
         member_expand_object ~env ~inherited ~source super implements inst
 
-    and opaque_t ~env ~inherited ~source ~imode r opaquetype =
+    and nominal_t ~env ~inherited ~source ~imode r nominal_type =
       let current_source = Context.file (Env.get_cx env) in
       let opaque_source = ALoc.source (def_loc_of_reason r) in
       (* Compare the current file (of the query) and the file that the opaque
          type is defined. If they differ, then hide the underlying type. *)
       let same_file = Some current_source = opaque_source in
-      match opaquetype with
-      | { Type.underlying_t = Type.Opaque.NormalUnderlying { t }; _ } when same_file ->
+      match nominal_type with
+      | { Type.underlying_t = Type.Nominal.OpaqueWithLocal { t }; _ } when same_file ->
         type__ ~env ~inherited ~source ~imode t
-      | {
-       Type.underlying_t = Type.Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ };
-       _;
-      } ->
+      | { Type.underlying_t = Type.Nominal.CustomError { t; custom_error_loc = _ }; _ } ->
         type__ ~env ~inherited ~source ~imode t
       | { Type.upper_t = Some t; _ } -> type__ ~env ~inherited ~source ~imode t
       | _ -> return no_members
@@ -2457,7 +2453,7 @@ module Make (I : INPUT) : S = struct
               ~force_eval:true
               (t, d, id')
       | GenericT { bound; _ } -> type__ ~env ~inherited ~source ~imode bound
-      | OpaqueT (r, o) -> opaque_t ~env ~inherited ~source ~imode r o
+      | NominalT (r, o) -> nominal_t ~env ~inherited ~source ~imode r o
       | DefT (reason, ReactAbstractComponentT _) ->
         I.builtin_type
           (Env.get_cx env)

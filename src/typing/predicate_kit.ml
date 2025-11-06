@@ -602,20 +602,20 @@ and intersect =
       Some t2
     else
       match t1 with
-      | OpaqueT (r, ({ upper_t; underlying_t; _ } as opaquetype)) ->
+      | NominalT (r, ({ upper_t; underlying_t; _ } as nominal_type)) ->
         (* Apply the refinement on super and underlying type of opaque type.
-         * Preserve opaque_id to retain compatibility with original type. *)
+         * Preserve nominal_id to retain compatibility with original type. *)
         let upper_t =
           Some (Base.Option.value_map upper_t ~default:t2 ~f:(fun t -> intersect cx t t2))
         in
         let underlying_t =
           match underlying_t with
-          | Opaque.FullyOpaque -> Opaque.FullyOpaque
-          | Opaque.FullyTransparentForCustomError { custom_error_loc; t } ->
-            Opaque.FullyTransparentForCustomError { custom_error_loc; t = intersect cx t t2 }
-          | Opaque.NormalUnderlying { t } -> Opaque.NormalUnderlying { t = intersect cx t t2 }
+          | Nominal.FullyOpaque -> Nominal.FullyOpaque
+          | Nominal.CustomError { custom_error_loc; t } ->
+            Nominal.CustomError { custom_error_loc; t = intersect cx t t2 }
+          | Nominal.OpaqueWithLocal { t } -> Nominal.OpaqueWithLocal { t = intersect cx t t2 }
         in
-        Some (OpaqueT (r, { opaquetype with underlying_t; upper_t }))
+        Some (NominalT (r, { nominal_type with underlying_t; upper_t }))
       | _ -> None
   in
   fun cx t1 t2 ->

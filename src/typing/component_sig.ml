@@ -137,8 +137,8 @@ module Make
       match id_opt with
       | None -> Structural
       | Some (id_loc, name) ->
-        let opaque_id = Context.make_aloc_id cx id_loc in
-        Nominal (opaque_id, name, None)
+        let nominal_id = Context.make_aloc_id cx id_loc in
+        Nominal (nominal_id, name, None)
     in
     let t =
       DefT (reason, ReactAbstractComponentT { config; renders = renders_t; component_kind })

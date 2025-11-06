@@ -147,7 +147,7 @@ end = struct
         | OptionalT _
         | KeysT _
         | AnnotT _
-        | OpaqueT _
+        | NominalT _
         | NamespaceT _ ->
           super#type_ cx pole acc t
     end
@@ -912,7 +912,7 @@ let is_builtin_class_id class_ref class_id cx =
 
 let is_builtin_iterable_class_id class_id cx = is_builtin_class_id "$Iterable" class_id cx
 
-let builtin_react_element_opaque_id cx =
+let builtin_react_element_nominal_id cx =
   match Context.builtin_type_opt cx "ExactReactElement_DEPRECATED" with
   | Some (_, OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
@@ -920,15 +920,16 @@ let builtin_react_element_opaque_id cx =
       match constraints with
       | Constraint.FullyResolved s ->
         (match Context.force_fully_resolved_tvar cx s with
-        | DefT (_, PolyT { t_out = DefT (_, TypeT (OpaqueKind, OpaqueT (_, { opaque_id; _ }))); _ })
+        | DefT
+            (_, PolyT { t_out = DefT (_, TypeT (OpaqueKind, NominalT (_, { nominal_id; _ }))); _ })
           ->
-          Some opaque_id
+          Some nominal_id
         | _ -> None)
       | _ -> None
     end
   | _ -> None
 
-let builtin_react_renders_exactly_opaque_id cx =
+let builtin_react_renders_exactly_nominal_id cx =
   match Context.builtin_type_opt cx "React$RendersExactly" with
   | Some (_, OpenT (_, id)) ->
     let (_, constraints) = Context.find_constraints cx id in
@@ -936,9 +937,10 @@ let builtin_react_renders_exactly_opaque_id cx =
       match constraints with
       | Constraint.FullyResolved s ->
         (match Context.force_fully_resolved_tvar cx s with
-        | DefT (_, PolyT { t_out = DefT (_, TypeT (OpaqueKind, OpaqueT (_, { opaque_id; _ }))); _ })
+        | DefT
+            (_, PolyT { t_out = DefT (_, TypeT (OpaqueKind, NominalT (_, { nominal_id; _ }))); _ })
           ->
-          Some opaque_id
+          Some nominal_id
         | _ -> None)
       | _ -> None
     end
@@ -2835,13 +2837,14 @@ let array_elem_check
 
 let propref_for_elem_t cx l =
   match l with
-  | OpaqueT (reason, { upper_t = Some (DefT (_, SingletonStrT { value = name; _ })); _ })
+  | NominalT (reason, { upper_t = Some (DefT (_, SingletonStrT { value = name; _ })); _ })
   | GenericT { bound = DefT (_, SingletonStrT { value = name; _ }); reason; _ }
   | DefT (reason, SingletonStrT { value = name; _ }) ->
     update_lit_type_from_annot cx l;
     let reason = replace_desc_reason (RProperty (Some name)) reason in
     mk_named_prop ~reason ~from_indexed_access:true name
-  | OpaqueT (reason_num, { upper_t = Some (DefT (_, SingletonNumT { value = (value, raw); _ })); _ })
+  | NominalT
+      (reason_num, { upper_t = Some (DefT (_, SingletonNumT { value = (value, raw); _ })); _ })
   | GenericT { bound = DefT (_, SingletonNumT { value = (value, raw); _ }); reason = reason_num; _ }
   | DefT (reason_num, SingletonNumT { value = (value, raw); _ })
     when Js_number.is_float_safe_integer value ->
@@ -3391,16 +3394,16 @@ end = struct
       TypeCollector.add
         normalization_cx.type_collector
         (DefT (reason, RendersT (IntrinsicRenders "svg")))
-    | OpaqueT
+    | NominalT
         ( element_r,
           {
-            opaque_id;
+            nominal_id;
             upper_t = Some (DefT (_, ObjT { props_tmap; _ }));
-            opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
+            nominal_type_args = (_, _, component_t, _) :: (_ as _targs);
             _;
           }
         )
-      when Some opaque_id = builtin_react_element_opaque_id normalization_cx.cx ->
+      when Some nominal_id = builtin_react_element_nominal_id normalization_cx.cx ->
       let c =
         match Context.find_monomorphized_component normalization_cx.cx props_tmap with
         | Some mono_component -> mono_component
@@ -3409,9 +3412,9 @@ end = struct
       Base.List.iter
         (normalization_cx.concretize c)
         ~f:(on_concretized_component_normalization normalization_cx ~resolved_elem_reason:element_r)
-    | OpaqueT
-        (element_r, { opaque_id; opaque_type_args = (_, _, component_t, _) :: (_ as _targs); _ })
-      when Some opaque_id = builtin_react_renders_exactly_opaque_id normalization_cx.cx ->
+    | NominalT
+        (element_r, { nominal_id; nominal_type_args = (_, _, component_t, _) :: (_ as _targs); _ })
+      when Some nominal_id = builtin_react_renders_exactly_nominal_id normalization_cx.cx ->
       Base.List.iter
         (normalization_cx.concretize component_t)
         ~f:(on_concretized_component_normalization normalization_cx ~resolved_elem_reason:element_r)

@@ -190,32 +190,32 @@ and type_to_json : Context.t -> int -> t -> json =
       json_with_type
         "Annot"
         [("type", type_to_json cx (depth - 1) t); ("use_desc", JSON_Bool use_desc)]
-    | OpaqueT (_, opaquetype) ->
+    | NominalT (_, nominal_type) ->
       json_with_type
         "Opaque"
         [
-          ( "opaquetype",
+          ( "nominal_type",
             JSON_Object
               [
-                ("opaque_id", JSON_String (Opaque.string_of_id opaquetype.opaque_id));
+                ("nominal_id", JSON_String (Nominal.string_of_id nominal_type.nominal_id));
                 ( "underlying_t",
-                  match opaquetype.underlying_t with
-                  | Opaque.FullyOpaque -> JSON_Null
-                  | Opaque.FullyTransparentForCustomError { t; _ }
-                  | Opaque.NormalUnderlying { t; _ } ->
+                  match nominal_type.underlying_t with
+                  | Nominal.FullyOpaque -> JSON_Null
+                  | Nominal.CustomError { t; _ }
+                  | Nominal.OpaqueWithLocal { t; _ } ->
                     type_to_json cx (depth - 1) t
                 );
                 ( "super_t",
-                  match opaquetype.upper_t with
+                  match nominal_type.upper_t with
                   | None -> JSON_Null
                   | Some t -> type_to_json cx (depth - 1) t
                 );
                 ( "sub_t",
-                  match opaquetype.lower_t with
+                  match nominal_type.lower_t with
                   | None -> JSON_Null
                   | Some t -> type_to_json cx (depth - 1) t
                 );
-                ( "opaque_type_args",
+                ( "nominal_type_args",
                   JSON_Array
                     (List.map
                        (fun (name, _, t, polarity) ->
@@ -231,7 +231,7 @@ and type_to_json : Context.t -> int -> t -> json =
                                  | Polarity.Neutral -> "neutral")
                              );
                            ])
-                       opaquetype.opaque_type_args
+                       nominal_type.nominal_type_args
                     )
                 );
               ]

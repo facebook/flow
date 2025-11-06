@@ -426,7 +426,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         {
           use_op = _;
           reason_op = _;
-          l = OpaqueT (reason, { opaque_id = Opaque.InternalEnforceUnionOptimized; _ });
+          l = NominalT (reason, { nominal_id = Nominal.InternalEnforceUnionOptimized; _ });
           union_rep = rep;
           us = _;
           on_success;

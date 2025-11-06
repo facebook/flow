@@ -86,14 +86,14 @@ let mk_object_type
          | Subst_name.Partial
          | Subst_name.Required ->
            let name = Generic.subst_name_of_id id in
-           OpaqueT
+           NominalT
              ( reason,
                {
-                 opaque_id = Opaque.(StuckEval (StuckEvalForGenericallyMappedObject name));
-                 underlying_t = Opaque.FullyOpaque;
+                 nominal_id = Nominal.(StuckEval (StuckEvalForGenericallyMappedObject name));
+                 underlying_t = Nominal.FullyOpaque;
                  lower_t = None;
                  upper_t = Some t;
-                 opaque_type_args = [(name, reason, t, Polarity.Neutral)];
+                 nominal_type_args = [(name, reason, t, Polarity.Neutral)];
                }
              )
      )

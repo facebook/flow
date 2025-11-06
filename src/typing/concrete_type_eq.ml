@@ -18,17 +18,17 @@ let rec swap_reason t2 t1 =
   | (OptionalT { reason = _; type_ = t2; use_desc = _ }, OptionalT { reason; type_ = t1; use_desc })
     ->
     OptionalT { reason; type_ = swap_reason t2 t1; use_desc }
-  | ( OpaqueT (_, { underlying_t = repr2; lower_t = l2; upper_t = u2; _ }),
-      OpaqueT (r, ({ underlying_t = repr1; lower_t = l1; upper_t = u1; _ } as o))
+  | ( NominalT (_, { underlying_t = repr2; lower_t = l2; upper_t = u2; _ }),
+      NominalT (r, ({ underlying_t = repr1; lower_t = l1; upper_t = u1; _ } as o))
     ) ->
     let underlying_t =
       match (repr1, repr2) with
-      | ( Opaque.FullyTransparentForCustomError { t = t1; custom_error_loc = _ },
-          Opaque.FullyTransparentForCustomError { t = t2; custom_error_loc }
+      | ( Nominal.CustomError { t = t1; custom_error_loc = _ },
+          Nominal.CustomError { t = t2; custom_error_loc }
         ) ->
-        Opaque.FullyTransparentForCustomError { custom_error_loc; t = swap_reason t2 t1 }
-      | (Opaque.NormalUnderlying { t = t1 }, Opaque.NormalUnderlying { t = t2 }) ->
-        Opaque.NormalUnderlying { t = swap_reason t2 t1 }
+        Nominal.CustomError { custom_error_loc; t = swap_reason t2 t1 }
+      | (Nominal.OpaqueWithLocal { t = t1 }, Nominal.OpaqueWithLocal { t = t2 }) ->
+        Nominal.OpaqueWithLocal { t = swap_reason t2 t1 }
       | _ -> repr2
     in
     let lower_t =
@@ -41,7 +41,7 @@ let rec swap_reason t2 t1 =
       | (Some t1, Some t2) -> Some (swap_reason t2 t1)
       | _ -> u2
     in
-    OpaqueT (r, { o with underlying_t; lower_t; upper_t })
+    NominalT (r, { o with underlying_t; lower_t; upper_t })
   | _ -> mod_reason_of_t (fun _ -> reason_of_t t1) t2
 
 (* This predicate attempts to flatten out OpenTs and AnnotTs before performing a

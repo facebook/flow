@@ -168,15 +168,15 @@ module rec TypeTerm : sig
        wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
        upper bounds, and would flow lower bounds to T1 & T2. **)
     | AnnotT of reason * t * bool (* use_desc *)
-    (* Opaque type aliases. The opaquetype.opaque_id is its unique id, opaquetype.underlying_t is
+    (* Nominal type aliases. The nominal_type.nominal_id is its unique id, nominal_type.underlying_t is
      * the underlying type, which we only allow access to when inside the file the opaque type
-     * was defined, and opaquetype.super_t is the super type, which we use when an OpaqueT is
+     * was defined, and nominal_type.super_t is the super type, which we use when a NominalT is
      * an upperbound in a file in which it was not defined. We also have
-     * opaquetype.opaque_arg_polarities and opaquetype.opaque_type_args to compare polymorphic
+     * nominal_type.nominal_arg_polarities and nominal_type.nominal_type_args to compare polymorphic
      * opaque types. We need to keep track of these because underlying_t can be None if the opaque
      * type is defined in a libdef. We also keep track of the name of the opaque type in
-     * opaquetype.name for pretty printing. *)
-    | OpaqueT of reason * opaquetype
+     * nominal_type.name for pretty printing. *)
+    | NominalT of reason * nominal_type
     (* Stores both values and types in the same namespace*)
     | NamespaceT of namespace_type
     (* Here's to the crazy ones. The misfits. The rebels. The troublemakers.
@@ -1487,12 +1487,12 @@ module rec TypeTerm : sig
     implements: t list;
   }
 
-  and opaquetype = {
-    opaque_id: Opaque.id;
-    underlying_t: Opaque.underlying_t;
+  and nominal_type = {
+    nominal_id: Nominal.id;
+    underlying_t: Nominal.underlying_t;
     lower_t: t option;
     upper_t: t option;
-    opaque_type_args: (Subst_name.t * reason * t * Polarity.t) list;
+    nominal_type_args: (Subst_name.t * reason * t * Polarity.t) list;
   }
 
   and exporttypes = {
@@ -2183,7 +2183,7 @@ end = struct
     )
 end
 
-and Opaque : sig
+and Nominal : sig
   type stuck_eval_kind =
     | StuckEvalForNonMaybeType
     | StuckEvalForPropertyType of { name: name }
@@ -2216,8 +2216,8 @@ and Opaque : sig
 
   type underlying_t =
     | FullyOpaque
-    | NormalUnderlying of { t: TypeTerm.t }
-    | FullyTransparentForCustomError of {
+    | OpaqueWithLocal of { t: TypeTerm.t }
+    | CustomError of {
         custom_error_loc: ALoc.t;
         t: TypeTerm.t;
       }
@@ -2280,8 +2280,8 @@ end = struct
 
   type underlying_t =
     | FullyOpaque
-    | NormalUnderlying of { t: TypeTerm.t }
-    | FullyTransparentForCustomError of {
+    | OpaqueWithLocal of { t: TypeTerm.t }
+    | CustomError of {
         custom_error_loc: ALoc.t;
         t: TypeTerm.t;
       }
@@ -2687,7 +2687,7 @@ end = struct
           | KeysT _
           | IntersectionT _
           (* other types might wrap parts that are accessible directly *)
-          | OpaqueT _
+          | NominalT _
           | DefT (_, InstanceT _)
           | DefT (_, PolyT _) ->
             raise (Found t)
@@ -4137,7 +4137,7 @@ let string_of_ctor = function
   | NamespaceT _ -> "NamespaceT"
   | NullProtoT _ -> "NullProtoT"
   | ObjProtoT _ -> "ObjProtoT"
-  | OpaqueT _ -> "OpaqueT"
+  | NominalT _ -> "NominalT"
   | ThisInstanceT _ -> "ThisInstanceT"
   | ThisTypeAppT _ -> "ThisTypeAppT"
   | TypeAppT _ -> "TypeAppT"

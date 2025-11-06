@@ -990,27 +990,27 @@ module Make
             upper_bound_t
             ~f:(Context.add_post_inference_polarity_check cx tparams Polarity.Positive)
       end;
-      let opaque_type_args =
+      let nominal_type_args =
         Base.List.map
           ~f:(fun { name; reason; polarity; _ } ->
             let t = Subst_name.Map.find name tparams_map in
             (name, reason, t, polarity))
           (TypeParams.to_list tparams)
       in
-      let opaque_id = Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id cx name_loc, name) in
-      let opaquetype =
+      let nominal_id = Nominal.UserDefinedOpaqueTypeId (Context.make_aloc_id cx name_loc, name) in
+      let nominal_type =
         {
           underlying_t =
             (match underlying_t with
-            | None -> Opaque.FullyOpaque
-            | Some t -> Opaque.NormalUnderlying { t });
+            | None -> Nominal.FullyOpaque
+            | Some t -> Nominal.OpaqueWithLocal { t });
           lower_t = lower_bound_t;
           upper_t = upper_bound_t;
-          opaque_id;
-          opaque_type_args;
+          nominal_id;
+          nominal_type_args;
         }
       in
-      let t = OpaqueT (mk_reason (ROpaqueType name) name_loc, opaquetype) in
+      let t = NominalT (mk_reason (ROpaqueType name) name_loc, nominal_type) in
       let type_ =
         poly_type_of_tparams (Type.Poly.generate_id ()) tparams (DefT (r, TypeT (OpaqueKind, t)))
       in
@@ -2553,11 +2553,11 @@ module Make
             { key_loc; key; value; reason_obj; named_set_opt = None }
         else (
           match key with
-          | OpaqueT
+          | NominalT
               ( reason,
                 {
-                  underlying_t = Opaque.NormalUnderlying { t = key; _ };
-                  opaque_id = Opaque.UserDefinedOpaqueTypeId _;
+                  underlying_t = Nominal.OpaqueWithLocal { t = key; _ };
+                  nominal_id = Nominal.UserDefinedOpaqueTypeId _;
                   _;
                 }
               )
@@ -2565,19 +2565,18 @@ module Make
                  && valid_computed_key key ->
             ObjectExpressionAcc.ComputedProp.NonLiteralKey
               { key_loc; key; value; reason_obj; named_set_opt = None }
-          | OpaqueT
+          | NominalT
               ( _,
                 {
-                  underlying_t =
-                    Opaque.FullyTransparentForCustomError { t = key; custom_error_loc = _ };
-                  opaque_id = Opaque.UserDefinedOpaqueTypeId _;
+                  underlying_t = Nominal.CustomError { t = key; custom_error_loc = _ };
+                  nominal_id = Nominal.UserDefinedOpaqueTypeId _;
                   _;
                 }
               )
             when valid_computed_key key ->
             ObjectExpressionAcc.ComputedProp.NonLiteralKey
               { key_loc; key; value; reason_obj; named_set_opt = None }
-          | OpaqueT (_, { upper_t = Some upper; opaque_id = Opaque.UserDefinedOpaqueTypeId _; _ })
+          | NominalT (_, { upper_t = Some upper; nominal_id = Nominal.UserDefinedOpaqueTypeId _; _ })
             when valid_computed_key upper ->
             ObjectExpressionAcc.ComputedProp.NonLiteralKey
               { key_loc; key; value; reason_obj; named_set_opt = None }

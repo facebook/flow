@@ -221,10 +221,10 @@ end = struct
         let seen = Eval.Set.add id seen in
         Flow.possible_concrete_types_for_inspection cx r out
         |> Base.List.iter ~f:(check_polarity cx ?trace seen tparams Polarity.Positive)
-    | OpaqueT (_, { opaque_type_args; _ }) ->
+    | NominalT (_, { nominal_type_args; _ }) ->
       let (tps, targs) =
         Base.List.fold
-          opaque_type_args
+          nominal_type_args
           ~init:([], [])
           ~f:(fun (tps, targs) (subst_name, reason, t, polarity) ->
             ( {

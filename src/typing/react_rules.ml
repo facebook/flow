@@ -31,15 +31,15 @@ let check_ref_use cx rrid in_hook var_reason kind t =
         [Error_message.EReactRefInRender { usage = var_reason; kind; in_hook }]
       else
         []
-    | OpaqueT (_, { opaque_id; _ })
-      when Base.Option.value_map ~default:false ~f:(( = ) opaque_id) rrid ->
+    | NominalT (_, { nominal_id; _ })
+      when Base.Option.value_map ~default:false ~f:(( = ) nominal_id) rrid ->
       [Error_message.EReactRefInRender { usage = var_reason; kind; in_hook }]
-    | OpaqueT (_, { underlying_t; upper_t; _ }) ->
+    | NominalT (_, { underlying_t; upper_t; _ }) ->
       begin
         match underlying_t with
-        | Type.Opaque.NormalUnderlying { t } -> recur t
-        | Type.Opaque.FullyTransparentForCustomError { t; _ } -> recur t
-        | Type.Opaque.FullyOpaque -> []
+        | Type.Nominal.OpaqueWithLocal { t } -> recur t
+        | Type.Nominal.CustomError { t; _ } -> recur t
+        | Type.Nominal.FullyOpaque -> []
       end
       @ Base.Option.value_map ~default:[] ~f:recur upper_t
     | OpenT (_, id) when ISet.mem id seen -> []
@@ -109,12 +109,12 @@ let hook_callee cx t =
     | DefT (r, FunT (_, { effect_ = HookDecl _ | HookAnnot; _ })) -> HookCallee (set_of_reason r)
     | DefT (_, FunT (_, { effect_ = AnyEffect; _ })) -> AnyCallee
     | DefT (r, FunT (_, { effect_ = ArbitraryEffect; _ })) -> NotHookCallee (set_of_reason r)
-    | OpaqueT (_, { underlying_t; upper_t; _ }) -> begin
+    | NominalT (_, { underlying_t; upper_t; _ }) -> begin
       match (underlying_t, upper_t) with
-      | (Type.Opaque.NormalUnderlying { t }, _)
-      | (Type.Opaque.FullyTransparentForCustomError { t; _ }, _) ->
+      | (Type.Nominal.OpaqueWithLocal { t }, _)
+      | (Type.Nominal.CustomError { t; _ }, _) ->
         recur t
-      | (Type.Opaque.FullyOpaque, Some t) -> recur t
+      | (Type.Nominal.FullyOpaque, Some t) -> recur t
       | _ -> AnyCallee
     end
     | OpenT (_, id) when ISet.mem id seen -> AnyCallee
@@ -1438,8 +1438,8 @@ let check_react_rules cx ast =
 
     let lhs = Context.builtin_type_opt cx "React$RefObject" in
     match Base.Option.map ~f:(get_t cx) lhs with
-    | Some (DefT (_, PolyT { t_out = DefT (_, TypeT (_, OpaqueT (_, { opaque_id; _ }))); _ })) ->
-      Some opaque_id
+    | Some (DefT (_, PolyT { t_out = DefT (_, TypeT (_, NominalT (_, { nominal_id; _ }))); _ })) ->
+      Some nominal_id
     | _ -> None
   in
   let _ =

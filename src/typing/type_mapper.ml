@@ -121,26 +121,26 @@ class virtual ['a] t =
           t
         else
           AnnotT (r, t'', use_desc)
-      | OpaqueT (r, opaquetype) ->
+      | NominalT (r, nominal_type) ->
         let underlying_t =
-          match opaquetype.underlying_t with
-          | Opaque.NormalUnderlying { t } ->
+          match nominal_type.underlying_t with
+          | Nominal.OpaqueWithLocal { t } ->
             let t' = self#type_ cx map_cx t in
             if t' == t then
-              opaquetype.underlying_t
+              nominal_type.underlying_t
             else
-              Opaque.NormalUnderlying { t = t' }
-          | Opaque.FullyTransparentForCustomError { custom_error_loc; t } ->
+              Nominal.OpaqueWithLocal { t = t' }
+          | Nominal.CustomError { custom_error_loc; t } ->
             let t' = self#type_ cx map_cx t in
             if t' == t then
-              opaquetype.underlying_t
+              nominal_type.underlying_t
             else
-              Opaque.FullyTransparentForCustomError { custom_error_loc; t = t' }
-          | Opaque.FullyOpaque -> opaquetype.underlying_t
+              Nominal.CustomError { custom_error_loc; t = t' }
+          | Nominal.FullyOpaque -> nominal_type.underlying_t
         in
-        let lower_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.lower_t in
-        let upper_t = OptionUtils.ident_map (self#type_ cx map_cx) opaquetype.upper_t in
-        let opaque_type_args =
+        let lower_t = OptionUtils.ident_map (self#type_ cx map_cx) nominal_type.lower_t in
+        let upper_t = OptionUtils.ident_map (self#type_ cx map_cx) nominal_type.upper_t in
+        let nominal_type_args =
           ListUtils.ident_map
             (fun x ->
               let (s, r, t, p) = x in
@@ -149,17 +149,17 @@ class virtual ['a] t =
                 x
               else
                 (s, r, t', p))
-            opaquetype.opaque_type_args
+            nominal_type.nominal_type_args
         in
         if
-          underlying_t == opaquetype.underlying_t
-          && lower_t == opaquetype.lower_t
-          && upper_t == opaquetype.upper_t
-          && opaque_type_args == opaquetype.opaque_type_args
+          underlying_t == nominal_type.underlying_t
+          && lower_t == nominal_type.lower_t
+          && upper_t == nominal_type.upper_t
+          && nominal_type_args == nominal_type.nominal_type_args
         then
           t
         else
-          OpaqueT (r, { opaquetype with underlying_t; lower_t; upper_t; opaque_type_args })
+          NominalT (r, { nominal_type with underlying_t; lower_t; upper_t; nominal_type_args })
       | NamespaceT namespace_t ->
         let namespace_t' = self#namespace_type cx map_cx namespace_t in
         if namespace_t' == namespace_t then

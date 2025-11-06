@@ -1066,14 +1066,14 @@ module Make (Flow : INPUT) : OUTPUT = struct
 
     (* If the ids are equal, we use flow_type_args to make sure that the type arguments of each
      * are compatible with each other. If there are no type args, this doesn't do anything *)
-    | ( OpaqueT (lreason, { opaque_id = id1; opaque_type_args = ltargs; _ }),
-        OpaqueT (ureason, { opaque_id = id2; opaque_type_args = utargs; _ })
+    | ( NominalT (lreason, { nominal_id = id1; nominal_type_args = ltargs; _ }),
+        NominalT (ureason, { nominal_id = id2; nominal_type_args = utargs; _ })
       )
-      when Opaque.equal_id id1 id2 ->
+      when Nominal.equal_id id1 id2 ->
       (match id1 with
       (* When we are subtyping between two stuck EvalT, we just want to give a simple yes/no answer.
        * Complex subtyping on these stuck EvalTs is not supported. *)
-      | Opaque.StuckEval _ when not (Context.in_implicit_instantiation cx) ->
+      | Nominal.StuckEval _ when not (Context.in_implicit_instantiation cx) ->
         (try
            SpeculationKit.try_singleton_custom_throw_on_failure cx (fun () ->
                flow_type_args cx trace ~use_op lreason ureason ltargs utargs
@@ -1088,21 +1088,21 @@ module Make (Flow : INPUT) : OUTPUT = struct
       | _ -> flow_type_args cx trace ~use_op lreason ureason ltargs utargs)
     (* If the opaque type are from the same logical module, we need to do some structural validation
        in additional to type_args check. *)
-    | ( OpaqueT
+    | ( NominalT
           ( lreason,
             {
-              opaque_id = Opaque.UserDefinedOpaqueTypeId (id1, name1);
-              opaque_type_args = ltargs;
+              nominal_id = Nominal.UserDefinedOpaqueTypeId (id1, name1);
+              nominal_type_args = ltargs;
               lower_t = lower_1;
               upper_t = upper_1;
               _;
             }
           ),
-        OpaqueT
+        NominalT
           ( ureason,
             {
-              opaque_id = Opaque.UserDefinedOpaqueTypeId (id2, name2);
-              opaque_type_args = utargs;
+              nominal_id = Nominal.UserDefinedOpaqueTypeId (id2, name2);
+              nominal_type_args = utargs;
               lower_t = lower_2;
               upper_t = upper_2;
               _;
@@ -1154,38 +1154,38 @@ module Make (Flow : INPUT) : OUTPUT = struct
       flow_type_args cx trace ~use_op lreason ureason ltargs utargs
     (* If the type is still in the same file it was defined, we allow it to
      * expose its underlying type information *)
-    | ( OpaqueT
+    | ( NominalT
           ( _,
             {
-              opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _);
-              underlying_t = Opaque.NormalUnderlying { t; _ };
+              nominal_id = Nominal.UserDefinedOpaqueTypeId (nominal_id, _);
+              underlying_t = Nominal.OpaqueWithLocal { t; _ };
               _;
             }
           ),
         _
       )
-      when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
+      when ALoc.source (nominal_id :> ALoc.t) = Some (Context.file cx) ->
       rec_flow_t cx trace ~use_op (t, u)
     (* If the lower bound is in the same file as where the opaque type was defined,
      * we expose the underlying type information *)
     | ( _,
-        OpaqueT
+        NominalT
           ( _,
             {
-              opaque_id = Opaque.UserDefinedOpaqueTypeId (opaque_id, _);
-              underlying_t = Opaque.NormalUnderlying { t; _ };
+              nominal_id = Nominal.UserDefinedOpaqueTypeId (nominal_id, _);
+              underlying_t = Nominal.OpaqueWithLocal { t; _ };
               _;
             }
           )
       )
-      when ALoc.source (opaque_id :> ALoc.t) = Some (Context.file cx) ->
+      when ALoc.source (nominal_id :> ALoc.t) = Some (Context.file cx) ->
       rec_flow_t cx trace ~use_op (l, t)
     (* Opaque type for custom error types are always fully transparent *)
-    | ( OpaqueT
+    | ( NominalT
           ( _,
             {
-              opaque_id = Opaque.UserDefinedOpaqueTypeId _;
-              underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ };
+              nominal_id = Nominal.UserDefinedOpaqueTypeId _;
+              underlying_t = Nominal.CustomError { t; custom_error_loc = _ };
               _;
             }
           ),
@@ -1193,11 +1193,11 @@ module Make (Flow : INPUT) : OUTPUT = struct
       ) ->
       rec_flow_t cx trace ~use_op (t, u)
     | ( _,
-        OpaqueT
+        NominalT
           ( ru,
             {
-              opaque_id = Opaque.UserDefinedOpaqueTypeId _;
-              underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc };
+              nominal_id = Nominal.UserDefinedOpaqueTypeId _;
+              underlying_t = Nominal.CustomError { t; custom_error_loc };
               _;
             }
           )
@@ -1383,7 +1383,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
       iter_resolve_union ~f:rec_flow cx trace reason rep (UseT (use_op, u))
     (* cases where there is no loss of precision *)
     | (UnionT (_, rep), UnionT _) -> union_to_union cx trace use_op l rep u
-    | (OpaqueT (_, { upper_t = Some (UnionT _ as l); _ }), UnionT _)
+    | (NominalT (_, { upper_t = Some (UnionT _ as l); _ }), UnionT _)
       when union_optimization_guard cx TypeUtil.quick_subtype l u
            = UnionOptimizationGuardResult.True ->
       if Context.is_verbose cx then prerr_endline "UnionT ~> UnionT fast path (via an opaque type)"
@@ -1536,7 +1536,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         SpeculationKit.try_union cx trace use_op l r rep
     (* The following case distributes the opaque constructor over a union/maybe/optional
      * type in the super type position of the opaque type. *)
-    | (OpaqueT (lreason, ({ upper_t = Some t; _ } as opaquetype)), UnionT (r, rep)) ->
+    | (NominalT (lreason, ({ upper_t = Some t; _ } as nominal_type)), UnionT (r, rep)) ->
       let ts = possible_concrete_types_for_inspection cx (reason_of_t t) t in
       begin
         match ts with
@@ -1545,7 +1545,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           (* Same as `_ ~> UnionT` case below *)
           SpeculationKit.try_union cx trace use_op l r rep
         | lt1 :: lt2 :: lts ->
-          let make_opaque t = OpaqueT (lreason, { opaquetype with upper_t = Some t }) in
+          let make_opaque t = NominalT (lreason, { nominal_type with upper_t = Some t }) in
           let union_of_opaques =
             UnionRep.make (make_opaque lt1) (make_opaque lt2) (Base.List.map ~f:make_opaque lts)
           in
@@ -2569,8 +2569,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (************************************)
     (* When both bounds are available, we need to do a speculative check, since only one of them
      * needs to pass. *)
-    | ( OpaqueT (opaque_l_reason, { upper_t = Some lower_upper; _ }),
-        OpaqueT (opaque_u_reason, { lower_t = Some upper_lower; _ })
+    | ( NominalT (opaque_l_reason, { upper_t = Some lower_upper; _ }),
+        NominalT (opaque_u_reason, { lower_t = Some upper_lower; _ })
       ) ->
       SpeculationKit.try_custom
         cx
@@ -2591,12 +2591,12 @@ module Make (Flow : INPUT) : OUTPUT = struct
               (lower_upper, u));
         ]
     (* Opaque types may be treated as their upper bound when they are a lower bound for a use *)
-    | (OpaqueT (opaque_t_reason, { upper_t = Some t; _ }), _) ->
+    | (NominalT (opaque_t_reason, { upper_t = Some t; _ }), _) ->
       rec_flow_t cx trace ~use_op:(Frame (OpaqueTypeUpperBound { opaque_t_reason }, use_op)) (t, u)
-      (* Similar to the case of OpaqueT { upper_t=Some _ }  ~> OpaqueT { lower_t=Some _ }
+      (* Similar to the case of NominalT { upper_t=Some _ }  ~> NominalT { lower_t=Some _ }
          We need to do the same for GenericT. *)
     | ( GenericT { reason; bound = lower_upper; _ },
-        OpaqueT (opaque_u_reason, { lower_t = Some upper_lower; _ })
+        NominalT (opaque_u_reason, { lower_t = Some upper_lower; _ })
       ) ->
       SpeculationKit.try_custom
         cx
@@ -2612,7 +2612,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
           (fun () -> rec_flow_t cx trace ~use_op (reposition_reason cx reason lower_upper, u));
         ]
     (* Opaque types may be treated as their lower bound when they are a upper bound for a use *)
-    | (_, OpaqueT (opaque_t_reason, { lower_t = Some t; _ })) ->
+    | (_, NominalT (opaque_t_reason, { lower_t = Some t; _ })) ->
       rec_flow_t cx trace ~use_op:(Frame (OpaqueTypeLowerBound { opaque_t_reason }, use_op)) (l, t)
     (*********************)
     (* functions statics *)
@@ -2852,7 +2852,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         );
       rec_flow_t cx trace ~use_op (AnyT.make (AnyError None) lreason, u)
     | (FunProtoBindT reason, _) -> rec_flow_t cx trace ~use_op (FunProtoT reason, u)
-    | (OpaqueT (reason, { opaque_id = Opaque.InternalEnforceUnionOptimized; _ }), _) ->
+    | (NominalT (reason, { nominal_id = Nominal.InternalEnforceUnionOptimized; _ }), _) ->
       add_output
         cx
         (Error_message.EUnionOptimizationOnNonUnion

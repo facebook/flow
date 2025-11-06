@@ -1801,7 +1801,7 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                  We cannot conservatively decide which branch we will take. To maintain
                  soundness in this general case, we make the type abstract. *)
               let bound = UnionT (reason, UnionRep.make true_t false_t []) in
-              let opaque_type_args =
+              let nominal_type_args =
                 Base.List.mapi [check_t; extends_t; true_t; false_t] ~f:(fun i t ->
                     ( Subst_name.Synthetic { name = string_of_int i; op_kind = None; ts = [] },
                       TypeUtil.reason_of_t t,
@@ -1810,14 +1810,14 @@ module Kit (FlowJs : Flow_common.S) (Instantiation_helper : Flow_js_utils.Instan
                     )
                 )
               in
-              OpaqueT
+              NominalT
                 ( reason,
                   {
-                    opaque_id = Opaque.(StuckEval StuckEvalForConditionalType);
-                    underlying_t = Opaque.FullyOpaque;
+                    nominal_id = Nominal.(StuckEval StuckEvalForConditionalType);
+                    underlying_t = Nominal.FullyOpaque;
                     lower_t = None;
                     upper_t = Some bound;
-                    opaque_type_args;
+                    nominal_type_args;
                   }
                 ))
       in

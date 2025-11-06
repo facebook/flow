@@ -79,7 +79,7 @@ let recurse_into_intersection cx =
 
 let filter_opaque filter_fn reason ({ underlying_t; upper_t; _ } as opq) =
   match underlying_t with
-  | Opaque.NormalUnderlying { t }
+  | Nominal.OpaqueWithLocal { t }
     when ALoc.source (loc_of_reason reason) = ALoc.source (def_loc_of_reason reason) -> begin
     match filter_fn t with
     | TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
@@ -87,11 +87,11 @@ let filter_opaque filter_fn reason ({ underlying_t; upper_t; _ } as opq) =
     | TypeFilterResult { type_ = t; changed } ->
       TypeFilterResult
         {
-          type_ = OpaqueT (reason, { opq with underlying_t = Opaque.NormalUnderlying { t } });
+          type_ = NominalT (reason, { opq with underlying_t = Nominal.OpaqueWithLocal { t } });
           changed;
         }
   end
-  | Opaque.FullyTransparentForCustomError { custom_error_loc; t } -> begin
+  | Nominal.CustomError { custom_error_loc; t } -> begin
     match filter_fn t with
     | TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
       DefT (reason, EmptyT) |> changed_result
@@ -99,13 +99,8 @@ let filter_opaque filter_fn reason ({ underlying_t; upper_t; _ } as opq) =
       TypeFilterResult
         {
           type_ =
-            OpaqueT
-              ( reason,
-                {
-                  opq with
-                  underlying_t = Opaque.FullyTransparentForCustomError { custom_error_loc; t };
-                }
-              );
+            NominalT
+              (reason, { opq with underlying_t = Nominal.CustomError { custom_error_loc; t } });
           changed;
         }
   end
@@ -115,7 +110,7 @@ let filter_opaque filter_fn reason ({ underlying_t; upper_t; _ } as opq) =
     | TypeFilterResult { type_ = DefT (_, EmptyT); changed = _ } ->
       DefT (reason, EmptyT) |> changed_result
     | TypeFilterResult { type_ = t; changed } ->
-      TypeFilterResult { type_ = OpaqueT (reason, { opq with upper_t = Some t }); changed }
+      TypeFilterResult { type_ = NominalT (reason, { opq with upper_t = Some t }); changed }
   end
 
 let map_poly ~f t =
@@ -139,7 +134,7 @@ let rec truthy cx t =
   else
     match t with
     (* unknown things become truthy *)
-    | OpaqueT (r, opq) -> filter_opaque (truthy cx) r opq
+    | NominalT (r, opq) -> filter_opaque (truthy cx) r opq
     | UnionT (r, rep) -> recurse_into_union cx truthy (r, UnionRep.members rep)
     | MaybeT (_, t) -> changed_result t
     | OptionalT { reason = _; type_ = t; use_desc = _ } -> truthy cx t
@@ -160,7 +155,7 @@ let rec not_truthy cx t =
   else
     match t with
     | DefT (_, PolyT _) -> map_poly ~f:(not_truthy cx) t
-    | OpaqueT (r, opq) -> filter_opaque (not_truthy cx) r opq
+    | NominalT (r, opq) -> filter_opaque (not_truthy cx) r opq
     | AnyT (r, _) -> DefT (r, EmptyT) |> changed_result
     | UnionT (r, rep) -> recurse_into_union cx not_truthy (r, UnionRep.members rep)
     (* truthy things get removed *)
@@ -207,7 +202,7 @@ let rec not_truthy cx t =
     | t -> unchanged_result t
 
 let rec maybe cx = function
-  | OpaqueT (r, opq) -> filter_opaque (maybe cx) r opq
+  | NominalT (r, opq) -> filter_opaque (maybe cx) r opq
   | UnionT (r, rep) -> recurse_into_union cx maybe (r, UnionRep.members rep)
   | MaybeT (r, _) -> UnionT (r, UnionRep.make (NullT.why r) (VoidT.why r) []) |> changed_result
   | DefT (r, MixedT Mixed_everything) ->
@@ -227,7 +222,7 @@ let rec maybe cx = function
     EmptyT.why reason |> changed_result
 
 let rec not_maybe cx = function
-  | OpaqueT (r, opq) -> filter_opaque (not_maybe cx) r opq
+  | NominalT (r, opq) -> filter_opaque (not_maybe cx) r opq
   | UnionT (r, rep) -> recurse_into_union cx not_maybe (r, UnionRep.members rep)
   | MaybeT (_, t) -> changed_result t
   | OptionalT { reason = _; type_ = t; use_desc = _ } -> not_maybe cx t
@@ -241,7 +236,7 @@ let rec not_maybe cx = function
   | t -> unchanged_result t
 
 let rec null = function
-  | OpaqueT (r, opq) -> filter_opaque null r opq
+  | NominalT (r, opq) -> filter_opaque null r opq
   | OptionalT { reason = _; type_ = MaybeT (r, _); use_desc = _ }
   | MaybeT (r, _) ->
     NullT.why r |> changed_result
@@ -256,7 +251,7 @@ let rec null = function
     EmptyT.why reason |> changed_result
 
 let rec not_null cx = function
-  | OpaqueT (r, opq) -> filter_opaque (not_null cx) r opq
+  | NominalT (r, opq) -> filter_opaque (not_null cx) r opq
   | MaybeT (r, t) -> UnionT (r, UnionRep.make (VoidT.why r) t []) |> changed_result
   | OptionalT { reason; type_ = t; use_desc } ->
     let (TypeFilterResult { type_ = t; changed }) = not_null cx t in
@@ -268,7 +263,7 @@ let rec not_null cx = function
   | t -> unchanged_result t
 
 let rec undefined = function
-  | OpaqueT (r, opq) -> filter_opaque undefined r opq
+  | NominalT (r, opq) -> filter_opaque undefined r opq
   | MaybeT (r, _) -> VoidT.why r |> changed_result
   | DefT (_, VoidT) as t -> unchanged_result t
   | OptionalT { reason = r; type_ = _; use_desc } ->
@@ -283,7 +278,7 @@ let rec undefined = function
     EmptyT.why reason |> changed_result
 
 let rec not_undefined cx = function
-  | OpaqueT (r, opq) -> filter_opaque (not_undefined cx) r opq
+  | NominalT (r, opq) -> filter_opaque (not_undefined cx) r opq
   | MaybeT (r, t) -> UnionT (r, UnionRep.make (NullT.why r) t []) |> changed_result
   | OptionalT { reason = _; type_ = t; use_desc = _ } -> not_undefined cx t
   | UnionT (r, rep) -> recurse_into_union cx not_undefined (r, UnionRep.members rep)
@@ -925,14 +920,12 @@ and tag_of_t cx t =
   | OpenT _
   | AnnotT (_, _, _) ->
     Context.find_resolved cx t |> Base.Option.bind ~f:(tag_of_t cx)
-  | OpaqueT (r, { underlying_t = Opaque.NormalUnderlying { t }; _ })
+  | NominalT (r, { underlying_t = Nominal.OpaqueWithLocal { t }; _ })
     when ALoc.source (loc_of_reason r) = ALoc.source (def_loc_of_reason r) ->
     tag_of_t cx t
-  | OpaqueT
-      (_, { underlying_t = Opaque.FullyTransparentForCustomError { custom_error_loc = _; t }; _ })
-    ->
+  | NominalT (_, { underlying_t = Nominal.CustomError { custom_error_loc = _; t }; _ }) ->
     tag_of_t cx t
-  | OpaqueT (_, { upper_t = Some t; _ }) -> tag_of_t cx t
+  | NominalT (_, { upper_t = Some t; _ }) -> tag_of_t cx t
   (* Most of the types below should have boiled away thanks to concretization. *)
   | NamespaceT { values_type; _ } -> tag_of_t cx values_type
   | StrUtilT _ -> Some (TypeTagSet.singleton StringTag)
@@ -949,7 +942,7 @@ and tag_of_t cx t =
   | MaybeT (_, _)
   | OptionalT _
   | KeysT (_, _)
-  | OpaqueT (_, _)
+  | NominalT (_, _)
   | AnyT (_, _) ->
     None
 

@@ -1820,13 +1820,13 @@ let merge_opaque_type file reason id name tparams lower_bound upper_bound body =
     let upper_t = Option.map ~f:(merge env file) upper_bound in
     let body =
       match body with
-      | None -> Opaque.FullyOpaque
-      | Some t -> Opaque.NormalUnderlying { t = merge env file t }
+      | None -> Nominal.FullyOpaque
+      | Some t -> Nominal.OpaqueWithLocal { t = merge env file t }
     in
-    let opaquetype =
-      { underlying_t = body; lower_t; upper_t; opaque_id = id; opaque_type_args = targs }
+    let nominal_type =
+      { underlying_t = body; lower_t; upper_t; nominal_id = id; nominal_type_args = targs }
     in
-    DefT (reason, TypeT (OpaqueKind, OpaqueT (opaque_reason, opaquetype)))
+    DefT (reason, TypeT (OpaqueKind, NominalT (opaque_reason, nominal_type)))
   in
   merge_tparams_targs (mk_merge_env SMap.empty) file reason t tparams
 
@@ -1960,7 +1960,7 @@ let merge_declare_fun file defs =
 let merge_def ~const_decl file reason = function
   | TypeAlias { id_loc = _; name; tparams; body } -> merge_type_alias file reason name tparams body
   | OpaqueType { id_loc; name; tparams; body; lower_bound; upper_bound } ->
-    let id = Type.Opaque.UserDefinedOpaqueTypeId (Context.make_aloc_id file.cx id_loc, name) in
+    let id = Type.Nominal.UserDefinedOpaqueTypeId (Context.make_aloc_id file.cx id_loc, name) in
     merge_opaque_type file reason id name tparams lower_bound upper_bound body
   | Interface { id_loc; name; tparams; def } ->
     let id = Context.make_aloc_id file.cx id_loc in

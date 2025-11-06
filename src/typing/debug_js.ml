@@ -257,23 +257,23 @@ let rec dump_t_ (depth, tvars) cx t =
         ) ->
       p ~extra:(spf "enum concrete: %s #%s" enum_name (ALoc.debug_to_string (enum_id :> ALoc.t))) t
     | AnnotT (_, arg, use_desc) -> p ~extra:(spf "use_desc=%b, %s" use_desc (kid arg)) t
-    | OpaqueT (_, { underlying_t; opaque_type_args; _ }) ->
+    | NominalT (_, { underlying_t; nominal_type_args; _ }) ->
       p
         ~extra:
           (spf
              "[%s]%s"
              (String.concat
                 "; "
-                (Base.List.map opaque_type_args ~f:(fun (n, _, t, _) ->
+                (Base.List.map nominal_type_args ~f:(fun (n, _, t, _) ->
                      spf "%s=%s" (Subst_name.show n) (kid t)
                  )
                 )
              )
              (match underlying_t with
-             | Opaque.NormalUnderlying { t } -> spf " (%s)" (kid t)
-             | Opaque.FullyTransparentForCustomError { t; custom_error_loc } ->
+             | Nominal.OpaqueWithLocal { t } -> spf " (%s)" (kid t)
+             | Nominal.CustomError { t; custom_error_loc } ->
                spf " (%s, custom_error_loc=%s)" (kid t) (ALoc.debug_to_string custom_error_loc)
-             | Opaque.FullyOpaque -> "")
+             | Nominal.FullyOpaque -> "")
           )
         t
     | OptionalT { reason = _; type_ = arg; use_desc = _ } -> p ~extra:(kid arg) t

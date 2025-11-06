@@ -67,16 +67,15 @@ let detect_sketchy_null_checks cx tast =
         (* Ignore AnyTs for sketchy null checks; otherwise they'd always trigger the lint. *)
         | AnyT _ -> cur_checks
         | GenericT { bound = t; _ }
-        | OpaqueT
+        | NominalT
             ( _,
               {
                 underlying_t =
-                  ( Opaque.NormalUnderlying { t }
-                  | Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ } );
+                  Nominal.OpaqueWithLocal { t } | Nominal.CustomError { t; custom_error_loc = _ };
                 _;
               }
             )
-        | OpaqueT (_, { underlying_t = Opaque.FullyOpaque; upper_t = Some t; _ }) ->
+        | NominalT (_, { underlying_t = Nominal.FullyOpaque; upper_t = Some t; _ }) ->
           make_checks seen cur_checks loc t
         | MaybeT (r, t) ->
           let acc = make_checks seen cur_checks loc t in
@@ -314,7 +313,7 @@ let try_eval_concrete_type_truthyness cx t =
   | IntersectionT _ -> ConstCond_Unknown
   | KeysT _ -> ConstCond_Unknown
   | StrUtilT _ -> ConstCond_Unknown
-  | OpaqueT _ -> ConstCond_Unknown
+  | NominalT _ -> ConstCond_Unknown
   | NamespaceT _ -> ConstCond_Unknown
   | AnyT _ -> ConstCond_Unknown
 
@@ -736,14 +735,14 @@ let enforce_optimize cx loc t =
   let reason = Reason.(mk_reason (RTypeApp (RType (OrdinaryName "$Flow$EnforceOptimized")))) loc in
   let internal_t =
     let open Type in
-    OpaqueT
+    NominalT
       ( reason,
         {
-          opaque_id = Opaque.InternalEnforceUnionOptimized;
-          underlying_t = Opaque.FullyOpaque;
+          nominal_id = Nominal.InternalEnforceUnionOptimized;
+          underlying_t = Nominal.FullyOpaque;
           lower_t = None;
           upper_t = None;
-          opaque_type_args = [];
+          nominal_type_args = [];
         }
       )
   in

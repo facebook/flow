@@ -155,7 +155,7 @@ let visitor =
       | MaybeT _
       | NamespaceT _
       | NullProtoT _
-      | OpaqueT _
+      | NominalT _
       | ObjProtoT _
       | OptionalT _ ->
         Kind.Checked

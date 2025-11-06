@@ -660,23 +660,23 @@ module Kit (Flow : Flow_common.S) : REACT = struct
       let elem =
         let result = Flow.singleton_concrete_type_for_inspection cx elem_reason elem in
         match result with
-        | OpaqueT
+        | NominalT
             ( _,
               ( {
                   upper_t =
                     Some
                       (DefT (super_r, ObjT { props_tmap; flags; proto_t; call_t; reachable_targs }));
                   _;
-                } as opaque_t
+                } as nominal_t
               )
             ) ->
           if record_monomorphized_result then (
             let props_tmap = Context.generate_property_map cx (Context.find_props cx props_tmap) in
             let t =
-              OpaqueT
+              NominalT
                 ( elem_reason,
                   {
-                    opaque_t with
+                    nominal_t with
                     upper_t =
                       Some
                         (DefT (super_r, ObjT { props_tmap; flags; proto_t; call_t; reachable_targs })

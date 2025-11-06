@@ -205,7 +205,7 @@ module Make (Flow : INPUT) : S = struct
     match opq with
     | {
      upper_t = Some (DefT (_, ObjT { props_tmap; _ }));
-     opaque_type_args = (_, _, component_t, _) :: (_ as _targs);
+     nominal_type_args = (_, _, component_t, _) :: (_ as _targs);
      _;
     } ->
       (match Context.find_monomorphized_component cx props_tmap with
@@ -282,18 +282,18 @@ module Make (Flow : INPUT) : S = struct
       ) ->
       rec_flow_t cx trace ~use_op (t, reconstruct_render_type renders_r upper_renders)
     (* Try to do structural subtyping. If that fails promote to a render type *)
-    | (OpaqueT (reason_opaque, ({ opaque_id; _ } as opq)), (IntrinsicRenders _ | NominalRenders _))
-      when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
+    | (NominalT (reason_opaque, ({ nominal_id; _ } as opq)), (IntrinsicRenders _ | NominalRenders _))
+      when Some nominal_id = Flow_js_utils.builtin_react_element_nominal_id cx ->
       try_promote_render_type_from_react_element_type
         cx
         trace
         ~use_op
         (reason_opaque, opq)
         (renders_r, upper_renders)
-    | ( OpaqueT (reason_opaque, ({ opaque_id; _ } as opq)),
+    | ( NominalT (reason_opaque, ({ nominal_id; _ } as opq)),
         StructuralRenders { renders_variant = _; renders_structural_type = t }
       )
-      when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
+      when Some nominal_id = Flow_js_utils.builtin_react_element_nominal_id cx ->
       if not (speculative_subtyping_succeeds cx l t) then
         try_promote_render_type_from_react_element_type
           cx
@@ -388,8 +388,8 @@ module Make (Flow : INPUT) : S = struct
                          renders_variant = merge_renders_variant (renders_variant, renders_variant');
                        }
                     ))
-            | OpaqueT (elem_reason, ({ opaque_id; _ } as opq))
-              when Some opaque_id = Flow_js_utils.builtin_react_element_opaque_id cx ->
+            | NominalT (elem_reason, ({ nominal_id; _ } as opq))
+              when Some nominal_id = Flow_js_utils.builtin_react_element_nominal_id cx ->
               let (ts, has_failed) =
                 possibly_promoted_render_types_of_react_element_type cx (elem_reason, opq)
               in

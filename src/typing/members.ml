@@ -580,16 +580,15 @@ let rec extract_type cx this_t =
   | DefT (reason, SymbolT) -> get_builtin_type cx reason "Symbol" |> extract_type cx
   | DefT (_, ReactAbstractComponentT _) as t -> Success t
   | DefT (_, RendersT _) as t -> Success t
-  | OpaqueT
+  | NominalT
       ( _,
         {
           underlying_t =
-            ( Opaque.NormalUnderlying { t }
-            | Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ } );
+            Nominal.OpaqueWithLocal { t } | Nominal.CustomError { t; custom_error_loc = _ };
           _;
         }
       )
-  | OpaqueT (_, { upper_t = Some t; _ }) ->
+  | NominalT (_, { upper_t = Some t; _ }) ->
     extract_type cx t
   | DefT (reason, ArrT arrtype) ->
     let (builtin, elem_t) =
@@ -612,7 +611,7 @@ let rec extract_type cx this_t =
   | DefT (_, MixedT _)
   | NullProtoT _
   | ObjProtoT _
-  | OpaqueT _
+  | NominalT _
   | DefT (_, TypeT _)
   | DefT (_, EnumValueT _) ->
     FailureUnhandledType this_t

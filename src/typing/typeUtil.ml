@@ -27,7 +27,7 @@ let rec reason_of_t = function
   | NamespaceT { values_type; _ } -> reason_of_t values_type
   | NullProtoT reason -> reason
   | ObjProtoT reason -> reason
-  | OpaqueT (reason, _) -> reason
+  | NominalT (reason, _) -> reason
   | ThisInstanceT (reason, _, _, _) -> reason
   | ThisTypeAppT (reason, _, _, _) -> reason
   | TypeAppT { reason; _ } -> reason
@@ -185,7 +185,7 @@ let rec mod_reason_of_t f = function
     NamespaceT { namespace_symbol; values_type = mod_reason_of_t f values_type; types_tmap }
   | NullProtoT reason -> NullProtoT (f reason)
   | ObjProtoT reason -> ObjProtoT (f reason)
-  | OpaqueT (reason, opaquetype) -> OpaqueT (f reason, opaquetype)
+  | NominalT (reason, nominal_type) -> NominalT (f reason, nominal_type)
   | ThisInstanceT (reason, t, is_this, this_name) -> ThisInstanceT (f reason, t, is_this, this_name)
   | ThisTypeAppT (reason, t1, t2, t3) -> ThisTypeAppT (f reason, t1, t2, t3)
   | TypeAppT { reason; use_op; type_; targs; from_value; use_desc } ->
@@ -556,7 +556,7 @@ let is_concrete = function
   | KeysT _
   | IntersectionT _
   | UnionT _
-  | OpaqueT _ ->
+  | NominalT _ ->
     false
   | _ -> true
 

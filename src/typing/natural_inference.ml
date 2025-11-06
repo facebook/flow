@@ -225,7 +225,7 @@ class implicit_instantiation_literal_mapper ~singleton_action =
         | ThisTypeAppT _
         | TypeAppT _
         | GenericT _
-        | OpaqueT _
+        | NominalT _
         | OptionalT _
         | MaybeT _
         | IntersectionT _
