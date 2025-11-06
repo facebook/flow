@@ -6,6 +6,7 @@
   flow_autofix_options
   flow_common
   flow_coverage
+  flow_index
   flow_parser_utils_replacement_printer
   flow_server_status
   flow_typing

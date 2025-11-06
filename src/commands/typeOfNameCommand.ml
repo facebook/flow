@@ -40,7 +40,7 @@ let spec =
   }
 
 let handle_response ~strip_root ~hide_references ~query_name response =
-  let { ServerProt.Response.InferTypeOfName.loc; actual_name; type_; refs; documentation } =
+  let { ServerProt.Response.InferTypeOfName.loc; actual_name; type_; refs; documentation; source } =
     response
   in
 
@@ -51,10 +51,15 @@ let handle_response ~strip_root ~hide_references ~query_name response =
       spf "approximate match '%s' (instead of '%s')" actual_name query_name
   in
   let range =
-    if loc = Loc.none then
-      ""
-    else
-      spf " defined at %s" (Reason.range_string_of_loc ~strip_root loc)
+    let open Export_index in
+    match source with
+    | Global -> " defined as a library definition (no need to import)"
+    | Builtin s -> spf "defined in module `%s`" (Flow_import_specifier.show_userland s)
+    | File_key file ->
+      if loc = Loc.none then
+        spf " defined at %s" (File_key.to_string file)
+      else
+        spf " defined at %s" (Reason.range_string_of_loc ~strip_root loc)
   in
   let str_of_loc loc =
     match loc.Loc.source with

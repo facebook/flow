@@ -317,6 +317,7 @@ module Response = struct
       type_: string;
       refs: (string * Loc.t) list option;
       documentation: string option;
+      source: Export_index.source;
     }
   end
 

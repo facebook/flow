@@ -285,7 +285,7 @@ where
 'UserCard' is defined at react.js:37:1-43
 'UserCardProps' is defined at types.js:4:6-18
 
-Found exact match 'Array' defined at empty_file.js:1:13,1:17 with type `class Array<T>` 
+Found exact match 'Array' defined as a library definition (no need to import) with type `class Array<T>` 
 where
 'Array' is defined at [LIB] prelude.js:30:15-19
 

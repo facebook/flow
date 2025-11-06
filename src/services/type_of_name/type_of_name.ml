@@ -30,8 +30,14 @@ let find_identifier_and_type target_name typed_ast =
   | _ -> None
 
 let type_of_name_from_artifacts
-    ~doc_at_loc ~reader ~profiling ~check_result ~expand_component_props ~actual_name (aloc, type_)
-    =
+    ~doc_at_loc
+    ~reader
+    ~profiling
+    ~check_result
+    ~expand_component_props
+    ~actual_name
+    ~source
+    (aloc, type_) =
   let (Parse_artifacts { file_sig; ast; _ }, Typecheck_artifacts { cx; typed_ast; _ }) =
     check_result
   in
@@ -67,7 +73,7 @@ let type_of_name_from_artifacts
       Ty_printer.string_of_type_at_pos_result ~exact_by_default:true ~ts_syntax:false r
     in
     let response =
-      { ServerProt.Response.InferTypeOfName.loc; type_; refs; actual_name; documentation }
+      ServerProt.Response.InferTypeOfName.{ loc; type_; refs; actual_name; documentation; source }
     in
     Ok response
   | Error e -> Error ("normalizer error " ^ Ty_normalizer.error_to_string e)
@@ -180,6 +186,7 @@ let type_of_name_from_index
             ~check_result
             ~expand_component_props
             ~actual_name
+            ~source
             (loc, type_)
         in
         (* Use def-loc of type in the response, but pass `loc` above to
@@ -222,6 +229,7 @@ let type_of_name
       ~check_result
       ~expand_component_props
       ~actual_name:target_name
+      ~source:(Export_index.File_key file_key)
       r
   | None ->
     (* Identifier does not exist in current file. Look up the index. *)
