@@ -6,6 +6,7 @@
 import type {SuiteType} from '../../../../Tester';
 const path = require('path');
 const {suite, test} = require('../../../../Tester');
+const {generateSimpleTests} = require('../../test-utils');
 
 module.exports = (suite(
   ({
@@ -582,6 +583,20 @@ module.exports = (suite(
           'fix-match-unused-pattern-array-rest.json',
         ),
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]),
+    test('match coded like switch', [
+      ...generateSimpleTests(
+        'quickfix',
+        {
+          addFile,
+          lspIgnoreStatusAndCancellation,
+          lspStartAndConnect,
+          lspRequestAndWaitUntilResponse,
+        },
+        __dirname,
+        'fix-match-coded-like-switch.js',
+        'fix-match-coded-like-switch',
       ),
     ]),
   ],

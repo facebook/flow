@@ -501,6 +501,43 @@ let refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc =
   else
     []
 
+let refactor_match_coded_like_switch ~cx ~ast ~options ~only ~loc_of_aloc uri loc =
+  if
+    Context.enable_pattern_matching cx
+    && (include_quick_fixes only || include_rewrite_refactors only)
+    && Flow_error.ErrorSet.exists
+         (fun error ->
+           let { Flow_intermediate_error_types.loc = error_loc; _ } =
+             Flow_intermediate_error.make_intermediate_error ~loc_of_aloc error
+           in
+           Loc.contains error_loc loc)
+         (Context.errors cx)
+  then
+    match Refactor_match_discriminant.refactor ast loc with
+    | Some ast' ->
+      Flow_ast_differ.program ast ast'
+      |> Replacement_printer.mk_loc_patch_ast_differ ~opts:(layout_options options)
+      |> flow_loc_patch_to_lsp_edits
+      |> fun edits ->
+      let open Lsp in
+      let title = "Refactor `match` coded like a switch" in
+      [
+        CodeAction.Action
+          {
+            CodeAction.title;
+            kind = CodeActionKind.quickfix;
+            diagnostics = [];
+            action =
+              CodeAction.BothEditThenCommand
+                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                  mk_log_command ~title ~diagnostic_title:"refactor_switch_to_match"
+                );
+          };
+      ]
+    | None -> []
+  else
+    []
+
 let add_jsx_props_code_actions ~snippets_enabled ~cx ~ast ~typed_ast ~options uri loc =
   match Refactor_add_jsx_props.fill_props cx ~snippets_enabled ~ast ~tast:typed_ast loc with
   | None -> []
@@ -1892,6 +1929,7 @@ let code_actions_at_loc
     @ convert_type_to_readonly_form_code_actions ~options ~ast ~only uri loc
     @ refactor_arrow_function_code_actions ~ast ~scope_info ~options ~only uri loc
     @ refactor_switch_to_match_statement_actions ~cx ~ast ~options ~only uri loc
+    @ refactor_match_coded_like_switch ~cx ~ast ~options ~only ~loc_of_aloc uri loc
     @ add_jsx_props_code_actions
         ~snippets_enabled:(Lsp_helpers.supports_experimental_snippet_text_edit lsp_init_params)
         ~cx

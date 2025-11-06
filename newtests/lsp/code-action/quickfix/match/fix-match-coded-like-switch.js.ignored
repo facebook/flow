@@ -1,0 +1,23 @@
+// @flow
+
+type DataPoint =
+  | {type: 'avg', p50: null, avg: number}
+  | {type: 'p50', p50: number, avg: null};
+
+declare const dataPoint: DataPoint;
+
+match (dataPoint.type) {
+//       ^
+    'avg' => {
+        dataPoint.avg as number;
+//       ^
+    },
+    'p50' => {
+        dataPoint.p50 as number;
+    },
+}
+const v: number = match (dataPoint.type) {
+    'avg' => dataPoint.avg,
+//              ^
+    'p50' => dataPoint.p50,
+}

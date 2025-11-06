@@ -1,0 +1,90 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Refactor `match` coded like a switch",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-match-coded-like-switch.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 18,
+                  "character": 25
+                },
+                "end": {
+                  "line": 18,
+                  "character": 39
+                }
+              },
+              "newText": "dataPoint"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 19,
+                  "character": 4
+                },
+                "end": {
+                  "line": 19,
+                  "character": 9
+                }
+              },
+              "newText": "{type: \"avg\", const avg, ...} as dataPoint"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 19,
+                  "character": 13
+                },
+                "end": {
+                  "line": 19,
+                  "character": 26
+                }
+              },
+              "newText": "avg"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 21,
+                  "character": 4
+                },
+                "end": {
+                  "line": 21,
+                  "character": 9
+                }
+              },
+              "newText": "{type: \"p50\", const p50, ...} as dataPoint"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 21,
+                  "character": 13
+                },
+                "end": {
+                  "line": 21,
+                  "character": 26
+                }
+              },
+              "newText": "p50"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "refactor_switch_to_match",
+          "Refactor `match` coded like a switch"
+        ]
+      }
+    }
+  ]
+}
