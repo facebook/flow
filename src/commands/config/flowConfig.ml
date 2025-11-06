@@ -44,6 +44,7 @@ module Opts = struct
 
   type t = {
     all: bool option;
+    assert_operator: Options.AssertOperator.t;
     autoimports: bool option;
     autoimports_min_characters: int option;
     autoimports_ranked_by_usage: bool;
@@ -55,6 +56,7 @@ module Opts = struct
     casting_syntax_only_support_as_excludes: string list;
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
+    deprecated_utilities: string list SMap.t;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
@@ -84,11 +86,11 @@ module Opts = struct
     haste_paths_excludes: string list;
     haste_paths_includes: string list;
     hook_compatibility: bool;
-    hook_compatibility_includes: string list;
     hook_compatibility_excludes: string list;
+    hook_compatibility_includes: string list;
     ignore_non_literal_requires: bool;
-    instance_t_objkit_fix: bool;
     include_warnings: bool;
+    instance_t_objkit_fix: bool;
     jest_integration: bool;
     lazy_mode: lazy_mode option;
     log_saving: Options.log_saving SMap.t;
@@ -107,9 +109,9 @@ module Opts = struct
     module_system: Options.module_system;
     modules_are_use_strict: bool;
     multi_platform: bool option;
-    multi_platform_extensions: string list;
-    multi_platform_extension_group_mapping: (string * string list) list;
     multi_platform_ambient_supports_platform_project_overrides: (string * string list) list;
+    multi_platform_extension_group_mapping: (string * string list) list;
+    multi_platform_extensions: string list;
     munge_underscores: bool;
     no_flowlib: bool;
     no_unchecked_indexed_access: bool;
@@ -126,8 +128,8 @@ module Opts = struct
     projects_overlap_mapping: SSet.t SMap.t;
     projects_path_mapping: (string * string list) list;
     projects_strict_boundary: bool;
-    projects_strict_boundary_validate_import_pattern_opt_outs: bool;
     projects_strict_boundary_import_pattern_opt_outs: Str.regexp list;
+    projects_strict_boundary_validate_import_pattern_opt_outs: bool;
     react_custom_jsx_typing: bool;
     react_ref_as_prop: Options.ReactRefAsProp.t;
     react_rules: Options.react_rules list;
@@ -143,12 +145,10 @@ module Opts = struct
     saved_state_skip_version_check: bool;
     shm_hash_table_pow: int;
     shm_heap_size: int;
-    supported_operating_systems: Options.supported_os list;
     strict_es6_import_export: bool;
+    supported_operating_systems: Options.supported_os list;
     ts_syntax: bool;
     ts_utility_syntax: bool;
-    deprecated_utilities: string list SMap.t;
-    assert_operator: Options.AssertOperator.t;
     type_expansion_recursion_limit: int;
     unsuppressable_error_codes: SSet.t;
     use_mixed_in_catch_variables: bool option;
@@ -192,6 +192,7 @@ module Opts = struct
   let default_options =
     {
       all = None;
+      assert_operator = Options.AssertOperator.Disabled;
       autoimports = None;
       autoimports_min_characters = None;
       autoimports_ranked_by_usage = true;
@@ -199,10 +200,11 @@ module Opts = struct
       automatic_require_default = None;
       babel_loose_array_spread = None;
       ban_spread_key_props = None;
-      channel_mode = None;
       casting_syntax = None;
       casting_syntax_only_support_as_excludes = [];
+      channel_mode = None;
       component_syntax = false;
+      deprecated_utilities = SMap.empty;
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -232,11 +234,11 @@ module Opts = struct
       haste_paths_excludes = ["\\(.*\\)?/node_modules/.*"; "<PROJECT_ROOT>/@flowtyped/.*"];
       haste_paths_includes = ["<PROJECT_ROOT>/.*"];
       hook_compatibility = true;
-      hook_compatibility_includes = [];
       hook_compatibility_excludes = [];
+      hook_compatibility_includes = [];
       ignore_non_literal_requires = false;
-      instance_t_objkit_fix = false;
       include_warnings = false;
+      instance_t_objkit_fix = false;
       jest_integration = false;
       lazy_mode = None;
       log_saving = SMap.empty;
@@ -255,9 +257,9 @@ module Opts = struct
       module_system = Options.Node;
       modules_are_use_strict = false;
       multi_platform = None;
-      multi_platform_extensions = [];
-      multi_platform_extension_group_mapping = [];
       multi_platform_ambient_supports_platform_project_overrides = [];
+      multi_platform_extension_group_mapping = [];
+      multi_platform_extensions = [];
       munge_underscores = false;
       no_flowlib = false;
       no_unchecked_indexed_access = false;
@@ -266,16 +268,16 @@ module Opts = struct
       node_resolver_allow_root_relative = false;
       node_resolver_dirnames = ["node_modules"];
       node_resolver_root_relative_dirnames = [(None, "")];
+      opaque_type_new_bound_syntax = false;
       pattern_matching = None;
       pattern_matching_includes = [];
       pattern_matching_instance_patterns = None;
-      opaque_type_new_bound_syntax = false;
       projects = ["default"];
       projects_overlap_mapping = SMap.empty;
       projects_path_mapping = [];
       projects_strict_boundary = false;
-      projects_strict_boundary_validate_import_pattern_opt_outs = true;
       projects_strict_boundary_import_pattern_opt_outs = [];
+      projects_strict_boundary_validate_import_pattern_opt_outs = true;
       react_custom_jsx_typing = false;
       react_ref_as_prop = Options.ReactRefAsProp.FullSupport;
       react_rules = [];
@@ -293,10 +295,8 @@ module Opts = struct
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
       strict_es6_import_export = false;
       supported_operating_systems = [];
-      assert_operator = Options.AssertOperator.Disabled;
       ts_syntax = false;
       ts_utility_syntax = true;
-      deprecated_utilities = SMap.empty;
       type_expansion_recursion_limit = 3;
       unsuppressable_error_codes = SSet.empty;
       use_mixed_in_catch_variables = None;
@@ -1040,6 +1040,7 @@ module Opts = struct
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
+      ("experimental.assert_operator", assert_operator_parser);
       ( "experimental.casting_syntax.only_support_as.excludes",
         string
           ~init:(fun opts -> { opts with casting_syntax_only_support_as_excludes = [] })
@@ -1052,70 +1053,17 @@ module Opts = struct
                   v :: opts.casting_syntax_only_support_as_excludes;
               })
       );
-      ( "experimental.const_params",
-        boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
-      );
+      ("experimental.channel_mode", channel_mode_parser ~enabled:true);
+      ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
       ("experimental.component_syntax.hook_compatibility", hook_compatibility_parser);
-      ( "experimental.component_syntax.hook_compatibility.includes",
-        hook_compatibility_includes_parser
-      );
       ( "experimental.component_syntax.hook_compatibility.excludes",
         hook_compatibility_excludes_parser
       );
-      ( "experimental.enable_custom_error",
-        boolean (fun opts v -> Ok { opts with enable_custom_error = v })
+      ( "experimental.component_syntax.hook_compatibility.includes",
+        hook_compatibility_includes_parser
       );
-      ("experimental.facebook_module_interop", facebook_module_interop_parser);
-      ("experimental.instance_t_objkit_fix", instance_t_objkit_fix_parser);
-      ("experimental.channel_mode", channel_mode_parser ~enabled:true);
-      ("experimental.channel_mode.windows", channel_mode_parser ~enabled:Sys.win32);
-      ("experimental.long_lived_workers", long_lived_workers_parser ~enabled:true);
-      ("experimental.long_lived_workers.windows", long_lived_workers_parser ~enabled:Sys.win32);
-      ("experimental.module.automatic_require_default", automatic_require_default_parser);
-      ( "experimental.multi_platform",
-        boolean (fun opts v -> Ok { opts with multi_platform = Some v })
-      );
-      ("experimental.multi_platform.extensions", multi_platform_extensions_parser);
-      ( "experimental.multi_platform.extension_group_mapping",
-        multi_platform_extension_group_mapping_parser
-      );
-      ( "experimental.multi_platform.ambient_supports_platform.project_overrides",
-        multi_platform_ambient_supports_platform_project_overrides_parser
-      );
-      ( "experimental.pattern_matching",
-        boolean (fun opts v -> Ok { opts with pattern_matching = Some v })
-      );
-      ( "experimental.pattern_matching.includes",
-        string
-          ~init:(fun opts -> { opts with pattern_matching_includes = [] })
-          ~multiple:true
-          (fun opts v ->
-            Ok { opts with pattern_matching_includes = v :: opts.pattern_matching_includes })
-      );
-      ( "experimental.pattern_matching.instance_patterns",
-        boolean (fun opts v -> Ok { opts with pattern_matching_instance_patterns = Some v })
-      );
-      ("experimental.projects", projects_parser);
-      ("experimental.projects_path_mapping", projects_path_mapping_parser);
-      ( "experimental.projects.strict_boundary",
-        boolean (fun opts v -> Ok { opts with projects_strict_boundary = v })
-      );
-      ( "experimental.projects.strict_boundary.import_pattern_opt_outs.validate",
-        boolean (fun opts v ->
-            Ok { opts with projects_strict_boundary_validate_import_pattern_opt_outs = v }
-        )
-      );
-      ( "experimental.projects.strict_boundary.import_pattern_opt_outs",
-        projects_strict_boundary_import_pattern_opt_outs_parser
-      );
-      ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
-      ("experimental.assert_operator", assert_operator_parser);
-      ( "experimental.opaque_type_new_bound_syntax",
-        boolean (fun opts v -> Ok { opts with opaque_type_new_bound_syntax = v })
-      );
-      ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
-      ( "experimental.ts_utility_syntax",
-        boolean (fun opts v -> Ok { opts with ts_utility_syntax = v })
+      ( "experimental.const_params",
+        boolean (fun opts v -> Ok { opts with enable_const_params = Some v })
       );
       ( "experimental.deprecated_utilities",
         mapping
@@ -1131,6 +1079,58 @@ module Opts = struct
                 opts.deprecated_utilities
             in
             Ok { opts with deprecated_utilities = updated_map })
+      );
+      ( "experimental.enable_custom_error",
+        boolean (fun opts v -> Ok { opts with enable_custom_error = v })
+      );
+      ("experimental.facebook_module_interop", facebook_module_interop_parser);
+      ("experimental.instance_t_objkit_fix", instance_t_objkit_fix_parser);
+      ("experimental.long_lived_workers", long_lived_workers_parser ~enabled:true);
+      ("experimental.long_lived_workers.windows", long_lived_workers_parser ~enabled:Sys.win32);
+      ("experimental.module.automatic_require_default", automatic_require_default_parser);
+      ( "experimental.multi_platform",
+        boolean (fun opts v -> Ok { opts with multi_platform = Some v })
+      );
+      ("experimental.multi_platform.extensions", multi_platform_extensions_parser);
+      ( "experimental.multi_platform.ambient_supports_platform.project_overrides",
+        multi_platform_ambient_supports_platform_project_overrides_parser
+      );
+      ( "experimental.multi_platform.extension_group_mapping",
+        multi_platform_extension_group_mapping_parser
+      );
+      ( "experimental.opaque_type_new_bound_syntax",
+        boolean (fun opts v -> Ok { opts with opaque_type_new_bound_syntax = v })
+      );
+      ( "experimental.pattern_matching",
+        boolean (fun opts v -> Ok { opts with pattern_matching = Some v })
+      );
+      ( "experimental.pattern_matching.includes",
+        string
+          ~init:(fun opts -> { opts with pattern_matching_includes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok { opts with pattern_matching_includes = v :: opts.pattern_matching_includes })
+      );
+      ( "experimental.pattern_matching.instance_patterns",
+        boolean (fun opts v -> Ok { opts with pattern_matching_instance_patterns = Some v })
+      );
+      ("experimental.projects", projects_parser);
+      ( "experimental.projects.strict_boundary",
+        boolean (fun opts v -> Ok { opts with projects_strict_boundary = v })
+      );
+      ( "experimental.projects.strict_boundary.import_pattern_opt_outs",
+        projects_strict_boundary_import_pattern_opt_outs_parser
+      );
+      ( "experimental.projects.strict_boundary.import_pattern_opt_outs.validate",
+        boolean (fun opts v ->
+            Ok { opts with projects_strict_boundary_validate_import_pattern_opt_outs = v }
+        )
+      );
+      ("experimental.projects_path_mapping", projects_path_mapping_parser);
+      ("experimental.strict_es6_import_export", strict_es6_import_export_parser);
+      ("experimental.ts_syntax", boolean (fun opts v -> Ok { opts with ts_syntax = v }));
+      ( "experimental.ts_utility_syntax",
+        boolean (fun opts v -> Ok { opts with ts_utility_syntax = v })
       );
       ( "experimental.type_expansion_recursion_limit",
         uint (fun opts v -> Ok { opts with type_expansion_recursion_limit = v })
@@ -1162,12 +1162,12 @@ module Opts = struct
       ("log_saving", log_saving_parser);
       ("max_header_tokens", uint (fun opts v -> Ok { opts with max_header_tokens = v }));
       ("merge_timeout", merge_timeout_parser);
+      ("module.declaration_dirnames", module_declaration_dirnames_parser);
       ("module.file_ext", file_ext_parser);
       ("module.ignore_non_literal_requires", ignore_non_literal_requires_parser);
+      ("module.missing_module_generators", missing_module_generators_parser);
       ("module.name_mapper", name_mapper_parser);
       ("module.name_mapper.extension", name_mapper_extension_parser);
-      ("module.declaration_dirnames", module_declaration_dirnames_parser);
-      ("module.missing_module_generators", missing_module_generators_parser);
       ("module.system", module_system_parser);
       ("module.system.haste.module_ref_prefix", haste_module_ref_prefix_parser);
       ("module.system.haste.paths.excludes", haste_paths_excludes_parser);
@@ -1225,9 +1225,6 @@ module Opts = struct
       );
       ("sharedmemory.hash_table_pow", shm_hash_table_pow_parser);
       ("sharedmemory.heap_size", uint (fun opts shm_heap_size -> Ok { opts with shm_heap_size }));
-      ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
-      ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
-      ("unsuppressable_error_codes", unsuppressable_error_codes_parser);
       ( "supported_operating_systems",
         enum
           [("CentOS", Options.CentOS)]
@@ -1236,6 +1233,9 @@ module Opts = struct
           (fun opts v ->
             Ok { opts with supported_operating_systems = v :: opts.supported_operating_systems })
       );
+      ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
+      ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
+      ("unsuppressable_error_codes", unsuppressable_error_codes_parser);
       ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
       ("vpn_less", boolean (fun opts v -> Ok { opts with vpn_less = v }));
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
@@ -1845,6 +1845,8 @@ let libs config = config.libs
 
 let all c = c.options.Opts.all
 
+let assert_operator c = c.options.Opts.assert_operator
+
 let autoimports c = c.options.Opts.autoimports
 
 let autoimports_min_characters c = c.options.Opts.autoimports_min_characters
@@ -1868,6 +1870,8 @@ let casting_syntax_only_support_as_excludes c =
 let channel_mode c = c.options.Opts.channel_mode
 
 let component_syntax c = c.options.Opts.component_syntax
+
+let deprecated_utilities c = c.options.Opts.deprecated_utilities
 
 let dev_only_refinement_info_as_errors c = c.options.Opts.dev_only_refinement_info_as_errors
 
@@ -1925,17 +1929,17 @@ let haste_paths_excludes c = c.options.Opts.haste_paths_excludes
 
 let haste_paths_includes c = c.options.Opts.haste_paths_includes
 
-let hook_compatibility_includes c = c.options.Opts.hook_compatibility_includes
+let hook_compatibility c = c.options.Opts.hook_compatibility
 
 let hook_compatibility_excludes c = c.options.Opts.hook_compatibility_excludes
 
-let hook_compatibility c = c.options.Opts.hook_compatibility
+let hook_compatibility_includes c = c.options.Opts.hook_compatibility_includes
 
 let ignore_non_literal_requires c = c.options.Opts.ignore_non_literal_requires
 
-let instance_t_objkit_fix c = c.options.Opts.instance_t_objkit_fix
-
 let include_warnings c = c.options.Opts.include_warnings
+
+let instance_t_objkit_fix c = c.options.Opts.instance_t_objkit_fix
 
 let jest_integration c = c.options.Opts.jest_integration
 
@@ -1976,12 +1980,12 @@ let modules_are_use_strict c = c.options.Opts.modules_are_use_strict
 
 let multi_platform c = c.options.Opts.multi_platform
 
-let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
+let multi_platform_ambient_supports_platform_project_overrides c =
+  c.options.Opts.multi_platform_ambient_supports_platform_project_overrides
 
 let multi_platform_extension_group_mapping c = c.options.Opts.multi_platform_extension_group_mapping
 
-let multi_platform_ambient_supports_platform_project_overrides c =
-  c.options.Opts.multi_platform_ambient_supports_platform_project_overrides
+let multi_platform_extensions c = c.options.Opts.multi_platform_extensions
 
 let munge_underscores c = c.options.Opts.munge_underscores
 
@@ -1999,13 +2003,13 @@ let node_resolver_dirnames c = c.options.Opts.node_resolver_dirnames
 
 let node_resolver_root_relative_dirnames c = c.options.Opts.node_resolver_root_relative_dirnames
 
+let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
+
 let pattern_matching c = c.options.Opts.pattern_matching
 
 let pattern_matching_includes c = c.options.Opts.pattern_matching_includes
 
 let pattern_matching_instance_patterns c = c.options.Opts.pattern_matching_instance_patterns
-
-let opaque_type_new_bound_syntax c = c.options.Opts.opaque_type_new_bound_syntax
 
 let projects c = Nel.of_list_exn c.options.Opts.projects
 
@@ -2015,11 +2019,11 @@ let projects_path_mapping c = c.options.Opts.projects_path_mapping
 
 let projects_strict_boundary c = c.options.Opts.projects_strict_boundary
 
-let projects_strict_boundary_validate_import_pattern_opt_outs c =
-  c.options.Opts.projects_strict_boundary_validate_import_pattern_opt_outs
-
 let projects_strict_boundary_import_pattern_opt_outs c =
   c.options.Opts.projects_strict_boundary_import_pattern_opt_outs
+
+let projects_strict_boundary_validate_import_pattern_opt_outs c =
+  c.options.Opts.projects_strict_boundary_validate_import_pattern_opt_outs
 
 let react_custom_jsx_typing c = c.options.Opts.react_custom_jsx_typing
 
@@ -2054,19 +2058,15 @@ let shm_hash_table_pow c = c.options.Opts.shm_hash_table_pow
 
 let shm_heap_size c = c.options.Opts.shm_heap_size
 
-let supported_operating_systems c = c.options.Opts.supported_operating_systems
-
 let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
 
 let strict_mode c = c.strict_mode
 
+let supported_operating_systems c = c.options.Opts.supported_operating_systems
+
 let ts_syntax c = c.options.Opts.ts_syntax
 
 let ts_utility_syntax c = c.options.Opts.ts_utility_syntax
-
-let deprecated_utilities c = c.options.Opts.deprecated_utilities
-
-let assert_operator c = c.options.Opts.assert_operator
 
 let type_expansion_recursion_limit c = c.options.Opts.type_expansion_recursion_limit
 

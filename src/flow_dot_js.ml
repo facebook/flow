@@ -100,17 +100,14 @@ let stub_metadata ~root ~checked =
     verbose = None;
     slow_to_check_logging = Slow_to_check_logging.default;
     (* global *)
+    assert_operator = Options.AssertOperator.Disabled;
     automatic_require_default = false;
     babel_loose_array_spread = false;
+    ban_spread_key_props = false;
     casting_syntax = Options.CastingSyntax.Both;
     casting_syntax_only_support_as_excludes = [];
     component_syntax = true;
-    hook_compatibility = true;
-    hook_compatibility_includes = [];
-    hook_compatibility_excludes = [];
-    react_rules =
-      Options.
-        [ValidateRefAccessDuringRender; DeepReadOnlyProps; DeepReadOnlyHookReturns; RulesOfHooks];
+    deprecated_utilities = SMap.empty;
     dev_only_refinement_info_as_errors = false;
     enable_const_params = false;
     enable_custom_error = false;
@@ -118,22 +115,28 @@ let stub_metadata ~root ~checked =
     enable_jest_integration = false;
     enable_pattern_matching = true;
     enable_pattern_matching_instance_patterns = true;
-    pattern_matching_includes = [];
     enable_relay_integration = false;
     exact_by_default = true;
     facebook_fbs = None;
     facebook_fbt = None;
     facebook_module_interop = false;
     file_options = Files.default_options;
+    hook_compatibility = true;
+    hook_compatibility_excludes = [];
+    hook_compatibility_includes = [];
     ignore_non_literal_requires = false;
     instance_t_objkit_fix = false;
     max_workers = 0;
     missing_module_generators = [];
     no_unchecked_indexed_access = false;
     opaque_type_new_bound_syntax = true;
+    pattern_matching_includes = [];
     projects_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.FullSupport;
+    react_rules =
+      Options.
+        [ValidateRefAccessDuringRender; DeepReadOnlyProps; DeepReadOnlyHookReturns; RulesOfHooks];
     react_runtime = Options.ReactRuntimeAutomatic;
     recursion_limit = 10000;
     relay_integration_esmodules = false;
@@ -145,11 +148,8 @@ let stub_metadata ~root ~checked =
     strip_root = true;
     ts_syntax = true;
     ts_utility_syntax = true;
-    deprecated_utilities = SMap.empty;
-    assert_operator = Options.AssertOperator.Disabled;
     type_expansion_recursion_limit = 3;
     use_mixed_in_catch_variables = false;
-    ban_spread_key_props = false;
   }
 
 let master_cx_ref : (File_path.t * Context.master_context) option ref = ref None

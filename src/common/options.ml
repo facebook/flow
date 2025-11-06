@@ -102,22 +102,22 @@ end
 
 type t = {
   opt_all: bool;
+  opt_assert_operator: AssertOperator.t;
   opt_autoimports: bool;
   opt_autoimports_min_characters: int;
   opt_autoimports_ranked_by_usage: bool;
   opt_autoimports_ranked_by_usage_boost_exact_match_min_length: int;
   opt_automatic_require_default: bool;
   opt_babel_loose_array_spread: bool;
+  opt_ban_spread_key_props: bool;
   opt_casting_syntax: CastingSyntax.t;
   opt_casting_syntax_only_support_as_excludes: Str.regexp list;
   opt_channel_mode: [ `pipe | `socket ];
   opt_component_syntax: bool;
-  opt_hook_compatibility_includes: Str.regexp list;
-  opt_hook_compatibility_excludes: Str.regexp list;
-  opt_hook_compatibility: bool;
-  opt_react_rules: react_rules list;
   opt_debug: bool;
+  opt_deprecated_utilities: string list SMap.t;
   opt_dev_only_refinement_info_as_errors: bool;
+  opt_distributed: bool;
   opt_enable_const_params: bool;
   opt_enable_jest_integration: bool;
   opt_enable_pattern_matching: bool;
@@ -137,10 +137,13 @@ type t = {
   opt_format: format;
   opt_gc_worker: gc_control;
   opt_haste_module_ref_prefix: string option;
+  opt_hook_compatibility: bool;
+  opt_hook_compatibility_excludes: Str.regexp list;
+  opt_hook_compatibility_includes: Str.regexp list;
   opt_ignore_non_literal_requires: bool;
-  opt_instance_t_objkit_fix: bool;
   opt_include_suppressions: bool;
   opt_include_warnings: bool;
+  opt_instance_t_objkit_fix: bool;
   opt_lazy_mode: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
   opt_log_file: File_path.t;
@@ -168,6 +171,7 @@ type t = {
   opt_quiet: bool;
   opt_react_custom_jsx_typing: bool;
   opt_react_ref_as_prop: ReactRefAsProp.t;
+  opt_react_rules: react_rules list;
   opt_react_runtime: react_runtime;
   opt_recursion_limit: int;
   opt_relay_integration_esmodules: bool;
@@ -185,23 +189,21 @@ type t = {
   opt_strict_es6_import_export: bool;
   opt_strict_mode: StrictModeSettings.t;
   opt_strip_root: bool;
+  opt_supported_operating_systems: supported_os list;
   opt_temp_dir: string;
   opt_ts_syntax: bool;
   opt_ts_utility_syntax: bool;
-  opt_deprecated_utilities: string list SMap.t;
-  opt_assert_operator: AssertOperator.t;
   opt_type_expansion_recursion_limit: int;
   opt_unsuppressable_error_codes: SSet.t;
   opt_use_mixed_in_catch_variables: bool;
-  opt_ban_spread_key_props: bool;
   opt_verbose: Verbose.t option;
-  opt_wait_for_recheck: bool;
   opt_vpn_less: bool;
-  opt_distributed: bool;
-  opt_supported_operating_systems: supported_os list;
+  opt_wait_for_recheck: bool;
 }
 
 let all opts = opts.opt_all
+
+let assert_operator opts = opts.opt_assert_operator
 
 let autoimports opts = opts.opt_autoimports
 
@@ -216,6 +218,8 @@ let automatic_require_default opts = opts.opt_automatic_require_default
 
 let babel_loose_array_spread opts = opts.opt_babel_loose_array_spread
 
+let ban_spread_key_props opts = opts.opt_ban_spread_key_props
+
 let casting_syntax opts = opts.opt_casting_syntax
 
 let casting_syntax_only_support_as_excludes opts = opts.opt_casting_syntax_only_support_as_excludes
@@ -224,38 +228,11 @@ let channel_mode opts = opts.opt_channel_mode
 
 let component_syntax opts = opts.opt_component_syntax
 
-let hook_compatibility opts = opts.opt_hook_compatibility
-
-let hook_compatibility_includes opts = opts.opt_hook_compatibility_includes
-
-let hook_compatibility_excludes opts = opts.opt_hook_compatibility_excludes
-
-let hook_compatibility_in_file opts file =
-  let enabled = hook_compatibility opts in
-  let included =
-    match hook_compatibility_includes opts with
-    | [] -> false
-    | dirs ->
-      let filename = File_key.to_string file in
-      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-      List.exists (fun r -> Str.string_match r normalized_filename 0) dirs
-  in
-  let excluded =
-    match hook_compatibility_excludes opts with
-    | [] -> false
-    | dirs ->
-      let filename = File_key.to_string file in
-      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-      List.exists (fun r -> Str.string_match r normalized_filename 0) dirs
-  in
-  included || (enabled && not excluded)
-
-let typecheck_component_syntax_in_file opts file =
-  component_syntax opts || File_key.is_lib_file file
-
-let react_rules opts = opts.opt_react_rules
+let deprecated_utilities opts = opts.opt_deprecated_utilities
 
 let dev_only_refinement_info_as_errors opts = opts.opt_dev_only_refinement_info_as_errors
+
+let distributed opts = opts.opt_distributed
 
 let enable_const_params opts = opts.opt_enable_const_params
 
@@ -265,8 +242,6 @@ let enable_pattern_matching opts = opts.opt_enable_pattern_matching
 
 let enable_pattern_matching_instance_patterns opts =
   opts.opt_enable_pattern_matching_instance_patterns
-
-let pattern_matching_includes opts = opts.opt_pattern_matching_includes
 
 let enable_relay_integration opts = opts.opt_enable_relay_integration
 
@@ -300,7 +275,35 @@ let gc_worker opts = opts.opt_gc_worker
 
 let haste_module_ref_prefix opts = opts.opt_haste_module_ref_prefix
 
+let hook_compatibility opts = opts.opt_hook_compatibility
+
+let hook_compatibility_excludes opts = opts.opt_hook_compatibility_excludes
+
+let hook_compatibility_includes opts = opts.opt_hook_compatibility_includes
+
+let hook_compatibility_in_file opts file =
+  let enabled = hook_compatibility opts in
+  let included =
+    match hook_compatibility_includes opts with
+    | [] -> false
+    | dirs ->
+      let filename = File_key.to_string file in
+      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+      List.exists (fun r -> Str.string_match r normalized_filename 0) dirs
+  in
+  let excluded =
+    match hook_compatibility_excludes opts with
+    | [] -> false
+    | dirs ->
+      let filename = File_key.to_string file in
+      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+      List.exists (fun r -> Str.string_match r normalized_filename 0) dirs
+  in
+  included || (enabled && not excluded)
+
 let include_suppressions opts = opts.opt_include_suppressions
+
+let instance_t_objkit_fix opts = opts.opt_instance_t_objkit_fix
 
 let is_debug_mode opts = opts.opt_debug
 
@@ -346,11 +349,15 @@ let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_rela
 
 let opaque_type_new_bound_syntax opts = opts.opt_opaque_type_new_bound_syntax
 
+let pattern_matching_includes opts = opts.opt_pattern_matching_includes
+
 let projects_options opts = opts.opt_projects_options
 
 let react_custom_jsx_typing opts = opts.opt_react_custom_jsx_typing
 
 let react_ref_as_prop opts = opts.opt_react_ref_as_prop
+
+let react_rules opts = opts.opt_react_rules
 
 let react_runtime opts = opts.opt_react_runtime
 
@@ -381,8 +388,6 @@ let saved_state_verify opts = opts.opt_saved_state_verify
 
 let should_ignore_non_literal_requires opts = opts.opt_ignore_non_literal_requires
 
-let instance_t_objkit_fix opts = opts.opt_instance_t_objkit_fix
-
 let should_include_warnings opts = opts.opt_include_warnings
 
 let should_munge_underscores opts = opts.opt_munge_underscores
@@ -397,30 +402,25 @@ let strict_es6_import_export opts = opts.opt_strict_es6_import_export
 
 let strict_mode opts = opts.opt_strict_mode
 
+let supported_operating_systems opts = opts.opt_supported_operating_systems
+
 let temp_dir opts = opts.opt_temp_dir
 
 let ts_syntax opts = opts.opt_ts_syntax
 
 let ts_utility_syntax opts = opts.opt_ts_utility_syntax
 
-let deprecated_utilities opts = opts.opt_deprecated_utilities
-
-let assert_operator opts = opts.opt_assert_operator
-
 let type_expansion_recursion_limit opts = opts.opt_type_expansion_recursion_limit
+
+let typecheck_component_syntax_in_file opts file =
+  component_syntax opts || File_key.is_lib_file file
 
 let unsuppressable_error_codes opts = opts.opt_unsuppressable_error_codes
 
 let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
 
-let ban_spread_key_props opts = opts.opt_ban_spread_key_props
-
 let verbose opts = opts.opt_verbose
-
-let wait_for_recheck opts = opts.opt_wait_for_recheck
 
 let vpn_less opts = opts.opt_vpn_less
 
-let distributed opts = opts.opt_distributed
-
-let supported_operating_systems opts = opts.opt_supported_operating_systems
+let wait_for_recheck opts = opts.opt_wait_for_recheck

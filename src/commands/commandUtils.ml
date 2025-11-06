@@ -1397,67 +1397,54 @@ let make_options
   in
   let opt_log_file = server_log_file ~flowconfig_name ~tmp_dir:opt_temp_dir root in
   {
-    Options.opt_flowconfig_name = flowconfig_name;
-    opt_lazy_mode;
-    opt_root = root;
-    opt_root_name = FlowConfig.root_name flowconfig;
-    opt_debug = options_flags.debug;
-    opt_verbose = options_flags.verbose;
-    opt_all = options_flags.all || Base.Option.value (FlowConfig.all flowconfig) ~default:false;
+    Options.opt_all =
+      options_flags.all || Base.Option.value (FlowConfig.all flowconfig) ~default:false;
+    opt_assert_operator = FlowConfig.assert_operator flowconfig;
+    opt_autoimports =
+      (not options_flags.no_autoimports)
+      && Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
+    opt_autoimports_min_characters =
+      Base.Option.value (FlowConfig.autoimports_min_characters flowconfig) ~default:0;
+    opt_autoimports_ranked_by_usage = FlowConfig.autoimports_ranked_by_usage flowconfig;
+    opt_autoimports_ranked_by_usage_boost_exact_match_min_length =
+      FlowConfig.autoimports_ranked_by_usage_boost_exact_match_min_length flowconfig;
+    opt_automatic_require_default =
+      Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;
     opt_babel_loose_array_spread =
       Base.Option.value (FlowConfig.babel_loose_array_spread flowconfig) ~default:false;
+    opt_ban_spread_key_props =
+      Base.Option.value (FlowConfig.ban_spread_key_props flowconfig) ~default:false;
     opt_casting_syntax =
       Base.Option.value (FlowConfig.casting_syntax flowconfig) ~default:Options.CastingSyntax.Both;
     opt_casting_syntax_only_support_as_excludes =
       Base.List.map
         ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
         (FlowConfig.casting_syntax_only_support_as_excludes flowconfig);
-    opt_wait_for_recheck;
-    opt_vpn_less;
-    opt_quiet = options_flags.Options_flags.quiet;
-    opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
-    opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
-    opt_profile = options_flags.profile;
-    opt_strip_root = options_flags.strip_root;
-    opt_module = FlowConfig.module_system flowconfig;
-    opt_munge_underscores =
-      options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
-    opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
-    opt_node_package_export_conditions = FlowConfig.node_package_export_conditions flowconfig;
-    opt_temp_dir;
-    opt_max_workers =
-      Base.Option.first_some options_flags.max_workers (FlowConfig.max_workers flowconfig)
-      |> Base.Option.value
-           ~default:(Sys_utils.nbr_procs / FlowConfig.max_workers_down_scaling_factor flowconfig)
-      |> min (Sys_utils.nbr_procs / FlowConfig.max_workers_down_scaling_factor flowconfig);
+    opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
     opt_component_syntax = FlowConfig.component_syntax flowconfig;
-    opt_react_rules = FlowConfig.react_rules flowconfig;
-    opt_hook_compatibility = FlowConfig.hook_compatibility flowconfig;
-    opt_hook_compatibility_includes =
-      Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
-        (FlowConfig.hook_compatibility_includes flowconfig);
-    opt_hook_compatibility_excludes =
-      Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
-        (FlowConfig.hook_compatibility_excludes flowconfig);
+    opt_debug = options_flags.debug;
+    opt_deprecated_utilities =
+      SMap.map
+        (Base.List.map ~f:(fun s ->
+             s
+             |> Files.expand_project_root_token ~root
+             |> Files.expand_builtin_root_token ~flowlib_dir
+         )
+        )
+        (FlowConfig.deprecated_utilities flowconfig);
     opt_dev_only_refinement_info_as_errors =
       FlowConfig.dev_only_refinement_info_as_errors flowconfig;
+    opt_distributed = options_flags.distributed;
     opt_enable_const_params =
       Base.Option.value (FlowConfig.enable_const_params flowconfig) ~default:false;
     opt_enable_jest_integration = FlowConfig.jest_integration flowconfig;
     opt_enable_pattern_matching =
       Base.Option.value ~default:false (FlowConfig.pattern_matching flowconfig);
-    opt_pattern_matching_includes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.pattern_matching_includes flowconfig);
     opt_enable_pattern_matching_instance_patterns =
       Base.Option.value ~default:false (FlowConfig.pattern_matching_instance_patterns flowconfig);
     opt_enable_relay_integration = FlowConfig.relay_integration flowconfig;
     opt_enable_custom_error = FlowConfig.enable_custom_error flowconfig;
     opt_enabled_rollouts = FlowConfig.enabled_rollouts flowconfig;
-    opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
     opt_enums = FlowConfig.enums flowconfig;
     opt_estimate_recheck_time =
       Base.Option.first_some
@@ -1468,99 +1455,10 @@ let make_options
     opt_facebook_fbs = FlowConfig.facebook_fbs flowconfig;
     opt_facebook_fbt = FlowConfig.facebook_fbt flowconfig;
     opt_facebook_module_interop = FlowConfig.facebook_module_interop flowconfig;
-    opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
-    opt_instance_t_objkit_fix = FlowConfig.instance_t_objkit_fix flowconfig;
-    opt_include_warnings =
-      options_flags.include_warnings
-      || options_flags.max_warnings <> None
-      || FlowConfig.include_warnings flowconfig;
-    opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
-    opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
     opt_file_options = file_options;
-    opt_lint_severities = lint_severities;
-    opt_strict_mode = strict_mode;
-    opt_merge_timeout;
-    opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
-    opt_no_unchecked_indexed_access = FlowConfig.no_unchecked_indexed_access flowconfig;
-    opt_saved_state_fetcher;
-    opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;
-    opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;
-    opt_saved_state_skip_version_check =
-      saved_state_options_flags.saved_state_skip_version_check
-      || FlowConfig.saved_state_skip_version_check flowconfig;
-    opt_saved_state_verify = saved_state_options_flags.saved_state_verify;
-    opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
-    opt_node_resolver_root_relative_dirnames =
-      Base.List.map
-        (FlowConfig.node_resolver_root_relative_dirnames flowconfig)
-        ~f:(fun (applicable_dir_opt, dirname) ->
-          (Base.Option.map ~f:(Files.expand_project_root_token ~root) applicable_dir_opt, dirname)
-      );
-    opt_opaque_type_new_bound_syntax = FlowConfig.opaque_type_new_bound_syntax flowconfig;
-    opt_projects_options =
-      Flow_projects.mk_options
-        ~projects:(FlowConfig.projects flowconfig)
-        ~projects_overlap_mapping:(FlowConfig.projects_overlap_mapping flowconfig)
-        ~map_path:(fun path -> Files.expand_project_root_token ~root path |> Str.regexp)
-        ~projects_path_mapping:(FlowConfig.projects_path_mapping flowconfig)
-        ~projects_strict_boundary:(FlowConfig.projects_strict_boundary flowconfig)
-        ~projects_strict_boundary_validate_import_pattern_opt_outs:
-          (FlowConfig.projects_strict_boundary_validate_import_pattern_opt_outs flowconfig)
-        ~projects_strict_boundary_import_pattern_opt_outs:
-          (FlowConfig.projects_strict_boundary_import_pattern_opt_outs flowconfig)
-        ~multi_platform_ambient_supports_platform_project_overrides:
-          (FlowConfig.multi_platform_ambient_supports_platform_project_overrides flowconfig);
-    opt_include_suppressions = options_flags.include_suppressions;
-    opt_distributed = options_flags.distributed;
-    opt_unsuppressable_error_codes = FlowConfig.unsuppressable_error_codes flowconfig;
-    opt_use_mixed_in_catch_variables =
-      Base.Option.value (FlowConfig.use_mixed_in_catch_variables flowconfig) ~default:false;
-    opt_ban_spread_key_props =
-      Base.Option.value (FlowConfig.ban_spread_key_props flowconfig) ~default:false;
-    opt_supported_operating_systems = FlowConfig.supported_operating_systems flowconfig;
-    opt_react_custom_jsx_typing = FlowConfig.react_custom_jsx_typing flowconfig;
-    opt_react_ref_as_prop = FlowConfig.react_ref_as_prop flowconfig;
-    opt_react_runtime = FlowConfig.react_runtime flowconfig;
-    opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
-    opt_relay_integration_esmodules = FlowConfig.relay_integration_esmodules flowconfig;
-    opt_relay_integration_excludes =
-      Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
-        (FlowConfig.relay_integration_excludes flowconfig);
-    opt_relay_integration_module_prefix = FlowConfig.relay_integration_module_prefix flowconfig;
-    opt_relay_integration_module_prefix_includes =
-      Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
-        (FlowConfig.relay_integration_module_prefix_includes flowconfig);
-    opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
-    opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
-    opt_slow_to_check_logging = options_flags.slow_to_check_logging;
-    opt_strict_es6_import_export = FlowConfig.strict_es6_import_export flowconfig;
-    opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
-    opt_ts_utility_syntax = FlowConfig.ts_utility_syntax flowconfig;
-    opt_deprecated_utilities =
-      SMap.map
-        (Base.List.map ~f:(fun s ->
-             s
-             |> Files.expand_project_root_token ~root
-             |> Files.expand_builtin_root_token ~flowlib_dir
-         )
-        )
-        (FlowConfig.deprecated_utilities flowconfig);
-    opt_assert_operator = FlowConfig.assert_operator flowconfig;
-    opt_type_expansion_recursion_limit = FlowConfig.type_expansion_recursion_limit flowconfig;
-    opt_automatic_require_default =
-      Base.Option.value (FlowConfig.automatic_require_default flowconfig) ~default:false;
-    opt_format;
-    opt_autoimports =
-      (not options_flags.no_autoimports)
-      && Base.Option.value (FlowConfig.autoimports flowconfig) ~default:true;
-    opt_autoimports_min_characters =
-      Base.Option.value (FlowConfig.autoimports_min_characters flowconfig) ~default:0;
-    opt_autoimports_ranked_by_usage = FlowConfig.autoimports_ranked_by_usage flowconfig;
-    opt_autoimports_ranked_by_usage_boost_exact_match_min_length =
-      FlowConfig.autoimports_ranked_by_usage_boost_exact_match_min_length flowconfig;
     opt_flowconfig_hash = flowconfig_hash;
+    opt_flowconfig_name = flowconfig_name;
+    opt_format;
     opt_gc_worker =
       {
         Options.gc_minor_heap_size =
@@ -1574,12 +1472,115 @@ let make_options
         gc_custom_minor_ratio = FlowConfig.gc_worker_custom_minor_ratio flowconfig;
         gc_custom_minor_max_size = FlowConfig.gc_worker_custom_minor_max_size flowconfig;
       };
-    opt_log_saving = FlowConfig.log_saving flowconfig;
+    opt_haste_module_ref_prefix = FlowConfig.haste_module_ref_prefix flowconfig;
+    opt_hook_compatibility = FlowConfig.hook_compatibility flowconfig;
+    opt_hook_compatibility_excludes =
+      Base.List.map
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        (FlowConfig.hook_compatibility_excludes flowconfig);
+    opt_hook_compatibility_includes =
+      Base.List.map
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        (FlowConfig.hook_compatibility_includes flowconfig);
+    opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
+    opt_include_suppressions = options_flags.include_suppressions;
+    opt_include_warnings =
+      options_flags.include_warnings
+      || options_flags.max_warnings <> None
+      || FlowConfig.include_warnings flowconfig;
+    opt_instance_t_objkit_fix = FlowConfig.instance_t_objkit_fix flowconfig;
+    opt_lazy_mode;
+    opt_lint_severities = lint_severities;
     opt_log_file;
+    opt_log_saving = FlowConfig.log_saving flowconfig;
     opt_long_lived_workers =
       Option.value
         options_flags.long_lived_workers
         ~default:(FlowConfig.long_lived_workers flowconfig);
+    opt_max_files_checked_per_worker = FlowConfig.max_files_checked_per_worker flowconfig;
+    opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
+    opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
+    opt_max_workers =
+      Base.Option.first_some options_flags.max_workers (FlowConfig.max_workers flowconfig)
+      |> Base.Option.value
+           ~default:(Sys_utils.nbr_procs / FlowConfig.max_workers_down_scaling_factor flowconfig)
+      |> min (Sys_utils.nbr_procs / FlowConfig.max_workers_down_scaling_factor flowconfig);
+    opt_merge_timeout;
+    opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
+    opt_module = FlowConfig.module_system flowconfig;
+    opt_module_name_mappers = FlowConfig.module_name_mappers flowconfig;
+    opt_modules_are_use_strict = FlowConfig.modules_are_use_strict flowconfig;
+    opt_munge_underscores =
+      options_flags.munge_underscore_members || FlowConfig.munge_underscores flowconfig;
+    opt_no_unchecked_indexed_access = FlowConfig.no_unchecked_indexed_access flowconfig;
+    opt_node_main_fields = FlowConfig.node_main_fields flowconfig;
+    opt_node_package_export_conditions = FlowConfig.node_package_export_conditions flowconfig;
+    opt_node_resolver_allow_root_relative = FlowConfig.node_resolver_allow_root_relative flowconfig;
+    opt_node_resolver_root_relative_dirnames =
+      Base.List.map
+        (FlowConfig.node_resolver_root_relative_dirnames flowconfig)
+        ~f:(fun (applicable_dir_opt, dirname) ->
+          (Base.Option.map ~f:(Files.expand_project_root_token ~root) applicable_dir_opt, dirname)
+      );
+    opt_opaque_type_new_bound_syntax = FlowConfig.opaque_type_new_bound_syntax flowconfig;
+    opt_pattern_matching_includes =
+      Base.List.map
+        ~f:(Files.expand_project_root_token ~root)
+        (FlowConfig.pattern_matching_includes flowconfig);
+    opt_profile = options_flags.profile;
+    opt_projects_options =
+      Flow_projects.mk_options
+        ~projects:(FlowConfig.projects flowconfig)
+        ~projects_overlap_mapping:(FlowConfig.projects_overlap_mapping flowconfig)
+        ~map_path:(fun path -> Files.expand_project_root_token ~root path |> Str.regexp)
+        ~projects_path_mapping:(FlowConfig.projects_path_mapping flowconfig)
+        ~projects_strict_boundary:(FlowConfig.projects_strict_boundary flowconfig)
+        ~projects_strict_boundary_validate_import_pattern_opt_outs:
+          (FlowConfig.projects_strict_boundary_validate_import_pattern_opt_outs flowconfig)
+        ~projects_strict_boundary_import_pattern_opt_outs:
+          (FlowConfig.projects_strict_boundary_import_pattern_opt_outs flowconfig)
+        ~multi_platform_ambient_supports_platform_project_overrides:
+          (FlowConfig.multi_platform_ambient_supports_platform_project_overrides flowconfig);
+    opt_quiet = options_flags.Options_flags.quiet;
+    opt_react_custom_jsx_typing = FlowConfig.react_custom_jsx_typing flowconfig;
+    opt_react_ref_as_prop = FlowConfig.react_ref_as_prop flowconfig;
+    opt_react_rules = FlowConfig.react_rules flowconfig;
+    opt_react_runtime = FlowConfig.react_runtime flowconfig;
+    opt_recursion_limit = FlowConfig.recursion_limit flowconfig;
+    opt_relay_integration_esmodules = FlowConfig.relay_integration_esmodules flowconfig;
+    opt_relay_integration_excludes =
+      Base.List.map
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        (FlowConfig.relay_integration_excludes flowconfig);
+    opt_relay_integration_module_prefix = FlowConfig.relay_integration_module_prefix flowconfig;
+    opt_relay_integration_module_prefix_includes =
+      Base.List.map
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        (FlowConfig.relay_integration_module_prefix_includes flowconfig);
+    opt_root = root;
+    opt_root_name = FlowConfig.root_name flowconfig;
+    opt_saved_state_fetcher;
+    opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;
+    opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;
+    opt_saved_state_skip_version_check =
+      saved_state_options_flags.saved_state_skip_version_check
+      || FlowConfig.saved_state_skip_version_check flowconfig;
+    opt_saved_state_verify = saved_state_options_flags.saved_state_verify;
+    opt_slow_to_check_logging = options_flags.slow_to_check_logging;
+    opt_strict_es6_import_export = FlowConfig.strict_es6_import_export flowconfig;
+    opt_strict_mode = strict_mode;
+    opt_strip_root = options_flags.strip_root;
+    opt_supported_operating_systems = FlowConfig.supported_operating_systems flowconfig;
+    opt_temp_dir;
+    opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
+    opt_ts_utility_syntax = FlowConfig.ts_utility_syntax flowconfig;
+    opt_type_expansion_recursion_limit = FlowConfig.type_expansion_recursion_limit flowconfig;
+    opt_unsuppressable_error_codes = FlowConfig.unsuppressable_error_codes flowconfig;
+    opt_use_mixed_in_catch_variables =
+      Base.Option.value (FlowConfig.use_mixed_in_catch_variables flowconfig) ~default:false;
+    opt_verbose = options_flags.verbose;
+    opt_vpn_less;
+    opt_wait_for_recheck;
   }
 
 let make_env flowconfig flowconfig_name connect_flags root =

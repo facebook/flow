@@ -22,26 +22,25 @@ exception Module_not_found of string
 
 type metadata = {
   (* local *)
+  available_platforms: Platform_set.t option;
   checked: bool;
+  has_explicit_supports_platform: bool;
   include_suppressions: bool;
   jsx: Options.jsx_mode;
   munge_underscores: bool;
+  slow_to_check_logging: Slow_to_check_logging.t;
   strict: bool;
   strict_local: bool;
-  available_platforms: Platform_set.t option;
-  has_explicit_supports_platform: bool;
   verbose: Verbose.t option;
-  slow_to_check_logging: Slow_to_check_logging.t;
   (* global *)
+  assert_operator: Options.AssertOperator.t;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
+  ban_spread_key_props: bool;
   casting_syntax: Options.CastingSyntax.t;
   casting_syntax_only_support_as_excludes: Str.regexp list;
   component_syntax: bool;
-  hook_compatibility_excludes: Str.regexp list;
-  hook_compatibility_includes: Str.regexp list;
-  hook_compatibility: bool;
-  react_rules: Options.react_rules list;
+  deprecated_utilities: string list SMap.t;
   dev_only_refinement_info_as_errors: bool;
   enable_const_params: bool;
   enable_custom_error: bool;
@@ -49,22 +48,26 @@ type metadata = {
   enable_jest_integration: bool;
   enable_pattern_matching: bool;
   enable_pattern_matching_instance_patterns: bool;
-  pattern_matching_includes: string list;
   enable_relay_integration: bool;
   exact_by_default: bool;
   facebook_fbs: string option;
   facebook_fbt: string option;
   facebook_module_interop: bool;
   file_options: Files.options;
+  hook_compatibility: bool;
+  hook_compatibility_excludes: Str.regexp list;
+  hook_compatibility_includes: Str.regexp list;
   ignore_non_literal_requires: bool;
   instance_t_objkit_fix: bool;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
   no_unchecked_indexed_access: bool;
   opaque_type_new_bound_syntax: bool;
+  pattern_matching_includes: string list;
   projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
+  react_rules: Options.react_rules list;
   react_runtime: Options.react_runtime;
   recursion_limit: int;
   relay_integration_esmodules: bool;
@@ -76,11 +79,8 @@ type metadata = {
   strip_root: bool;
   ts_syntax: bool;
   ts_utility_syntax: bool;
-  deprecated_utilities: string list SMap.t;
-  assert_operator: Options.AssertOperator.t;
   type_expansion_recursion_limit: int;
   use_mixed_in_catch_variables: bool;
-  ban_spread_key_props: bool;
 }
 
 type test_prop_hit_or_miss =

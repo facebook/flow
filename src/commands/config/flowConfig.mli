@@ -66,6 +66,8 @@ val enabled_rollouts : config -> string SMap.t
 (* options *)
 val all : config -> bool option
 
+val assert_operator : config -> Options.AssertOperator.t
+
 val autoimports : config -> bool option
 
 val autoimports_min_characters : config -> int option
@@ -87,6 +89,8 @@ val casting_syntax_only_support_as_excludes : config -> string list
 val channel_mode : config -> [ `pipe | `socket ] option
 
 val component_syntax : config -> bool
+
+val deprecated_utilities : config -> string list SMap.t
 
 val dev_only_refinement_info_as_errors : config -> bool
 
@@ -144,17 +148,17 @@ val haste_paths_excludes : config -> string list
 
 val haste_paths_includes : config -> string list
 
+val hook_compatibility : config -> bool
+
 val hook_compatibility_excludes : config -> string list
 
 val hook_compatibility_includes : config -> string list
 
-val hook_compatibility : config -> bool
-
 val ignore_non_literal_requires : config -> bool
 
-val instance_t_objkit_fix : config -> bool
-
 val include_warnings : config -> bool
+
+val instance_t_objkit_fix : config -> bool
 
 val jest_integration : config -> bool
 
@@ -195,12 +199,12 @@ val modules_are_use_strict : config -> bool
 
 val multi_platform : config -> bool option
 
-val multi_platform_extensions : config -> string list
+val multi_platform_ambient_supports_platform_project_overrides :
+  config -> (string * string list) list
 
 val multi_platform_extension_group_mapping : config -> (string * string list) list
 
-val multi_platform_ambient_supports_platform_project_overrides :
-  config -> (string * string list) list
+val multi_platform_extensions : config -> string list
 
 val munge_underscores : config -> bool
 
@@ -215,6 +219,8 @@ val node_package_export_conditions : config -> string list
 val node_resolver_allow_root_relative : config -> bool
 
 val node_resolver_dirnames : config -> string list
+
+val node_resolver_root_relative_dirnames : config -> (string option * string) list
 
 val opaque_type_new_bound_syntax : config -> bool
 
@@ -232,11 +238,9 @@ val projects_path_mapping : config -> (string * string list) list
 
 val projects_strict_boundary : config -> bool
 
-val projects_strict_boundary_validate_import_pattern_opt_outs : config -> bool
-
 val projects_strict_boundary_import_pattern_opt_outs : config -> Str.regexp list
 
-val node_resolver_root_relative_dirnames : config -> (string option * string) list
+val projects_strict_boundary_validate_import_pattern_opt_outs : config -> bool
 
 val react_custom_jsx_typing : config -> bool
 
@@ -270,19 +274,15 @@ val shm_hash_table_pow : config -> int
 
 val shm_heap_size : config -> int
 
-val supported_operating_systems : config -> Options.supported_os list
-
 val strict_es6_import_export : config -> bool
 
 val strict_mode : config -> StrictModeSettings.t
 
+val supported_operating_systems : config -> Options.supported_os list
+
 val ts_syntax : config -> bool
 
 val ts_utility_syntax : config -> bool
-
-val deprecated_utilities : config -> string list SMap.t
-
-val assert_operator : config -> Options.AssertOperator.t
 
 val type_expansion_recursion_limit : config -> int
 
