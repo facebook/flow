@@ -507,6 +507,13 @@ module rec TypeTerm : sig
         lower: 'loc virtual_reason;
         upper: 'loc virtual_reason;
       }
+    | OpaqueTypeCustomErrorCompatibility of {
+        lower: 'loc virtual_reason;
+        upper: 'loc virtual_reason;
+        lower_t: 'loc TypeOrTypeDesc.t;
+        upper_t: 'loc TypeOrTypeDesc.t;
+        custom_error_loc: 'loc;
+      }
     | MappedTypeKeyCompatibility of {
         source_type: 'loc virtual_reason;
         mapped_type: 'loc virtual_reason;
@@ -4194,6 +4201,7 @@ let string_of_frame_use_op (type a) : a virtual_frame_use_op -> string = functio
   | IndexerKeyCompatibility _ -> "IndexerKeyCompatibility"
   | OpaqueTypeLowerBoundCompatibility _ -> "OpaqueTypeLowerBoundCompatibility"
   | OpaqueTypeUpperBoundCompatibility _ -> "OpaqueTypeUpperBoundCompatibility"
+  | OpaqueTypeCustomErrorCompatibility _ -> "OpaqueTypeCustomErrorCompatibility"
   | MappedTypeKeyCompatibility _ -> "MappedTypeKeyCompatibility"
   | PropertyCompatibility _ -> "PropertyCompatibility"
   | ReactConfigCheck -> "ReactConfigCheck"

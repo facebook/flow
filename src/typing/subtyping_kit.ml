@@ -1194,14 +1194,27 @@ module Make (Flow : INPUT) : OUTPUT = struct
       rec_flow_t cx trace ~use_op (t, u)
     | ( _,
         OpaqueT
-          ( _,
+          ( ru,
             {
               opaque_id = Opaque.UserDefinedOpaqueTypeId _;
-              underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc = _ };
+              underlying_t = Opaque.FullyTransparentForCustomError { t; custom_error_loc };
               _;
             }
           )
       ) ->
+      let use_op =
+        Frame
+          ( OpaqueTypeCustomErrorCompatibility
+              {
+                lower = TypeUtil.reason_of_t l;
+                upper = ru;
+                lower_t = TypeOrTypeDesc.Type l;
+                upper_t = TypeOrTypeDesc.Type u;
+                custom_error_loc;
+              },
+            use_op
+          )
+      in
       rec_flow_t cx trace ~use_op (l, t)
     (***********************)
     (* Numeric string keys *)

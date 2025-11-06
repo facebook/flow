@@ -308,6 +308,7 @@ type 'loc explanation =
       representation_type: string;
       casting_syntax: Options.CastingSyntax.t;
     }
+  | ExplanationCustomError of { custom_error_loc: 'loc }
   | ExplanationFunctionsWithStaticsToObject
   | ExplanationInvariantSubtypingDueToMutableArray of {
       lower_array_loc: 'loc;
@@ -797,6 +798,12 @@ type 'loc message =
   | MessageIncompatibleGeneral of {
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
+    }
+  | MessageIncompatibleGeneralWithPrintedTypes of {
+      lower_loc: 'loc;
+      upper_loc: 'loc;
+      lower_desc: (Ty.t, 'loc virtual_reason_desc) result;
+      upper_desc: (Ty.t, 'loc virtual_reason_desc) result;
     }
   | MessageIncompatibleDueToInvariantSubtyping of {
       sub_component: SubComponentOfInvariantSubtypingError.t option;

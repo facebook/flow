@@ -72,6 +72,8 @@ let rec score_of_use_op use_op =
        * rendered in error messages. So it doesn't necessarily signal anything
        * about the user's intent. *)
       | ImplicitTypeParam -> 0
+      (* This is just a marker frame for custom errors. *)
+      | OpaqueTypeCustomErrorCompatibility _ -> 0
       | _ -> frame_score)
     use_op
 
@@ -189,9 +191,9 @@ let flip_frame = function
   | EnumRepresentationTypeCompatibility c ->
     EnumRepresentationTypeCompatibility { lower = c.upper; upper = c.lower }
   | ( TupleAssignment _ | TypeParamBound _ | OpaqueTypeLowerBound _ | OpaqueTypeUpperBound _
-    | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | UnifyFlip | ConstrainedAssignment _
-    | MappedTypeKeyCompatibility _ | TypeGuardCompatibility | RendersCompatibility
-    | ReactDeepReadOnly _ ) as use_op ->
+    | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | OpaqueTypeCustomErrorCompatibility _
+    | UnifyFlip | ConstrainedAssignment _ | MappedTypeKeyCompatibility _ | TypeGuardCompatibility
+    | RendersCompatibility | ReactDeepReadOnly _ ) as use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -479,7 +481,11 @@ let rec make_intermediate_error :
   let unwrap_use_ops :
       Loc.t ->
       'loc virtual_use_op ->
-      (Loc.t * 'loc root_message) option * Loc.t * 'loc frame list * 'loc explanation list =
+      (Loc.t * 'loc root_message) option
+      * 'loc Flow_intermediate_error_types.message option
+      * Loc.t
+      * 'loc frame list
+      * 'loc explanation list =
     (* We will optionally include lower and upper pair to provide a TS-like stacked errors.
      * We only do this if the upper bound has a nice name. *)
     let opt_incompatibility_pair use_op ((_lower, upper) as pair) =
@@ -544,60 +550,91 @@ let rec make_intermediate_error :
       (* Perform standard iteration through these use_ops. *)
       | use_op -> (lower_loc, [], use_op)
     in
-    let rec loop ~loc ~frames ~use_op =
+    let rec loop ~loc ~frames ~use_op ~custom_error_message =
       match use_op with
-      | Op UnknownUse -> unknown_root ~loc ~frames
-      | Op (Type.Speculation _) when speculation -> unknown_root ~loc ~frames
-      | Op (Type.Speculation use) -> loop ~loc ~frames ~use_op:use
+      | Op UnknownUse -> unknown_root ~loc ~frames ~custom_error_message
+      | Op (Type.Speculation _) when speculation -> unknown_root ~loc ~frames ~custom_error_message
+      | Op (Type.Speculation use) -> loop ~loc ~frames ~use_op:use ~custom_error_message
       | Op (ObjectAddComputedProperty { op }) ->
-        root ~loc ~frames ~root_reason:op ~root_message:RootCannotAddComputedProperty
+        root
+          ~loc
+          ~frames
+          ~root_reason:op
+          ~root_message:RootCannotAddComputedProperty
+          ~custom_error_message
       | Op (ObjectSpread { op }) ->
-        root ~loc ~frames ~root_reason:op ~root_message:(RootCannotSpread (desc op))
+        root
+          ~loc
+          ~frames
+          ~root_reason:op
+          ~root_message:(RootCannotSpread (desc op))
+          ~custom_error_message
       | Op (ObjectRest { op }) ->
-        root ~loc ~frames ~root_reason:op ~root_message:(RootCannotGetRest (desc op))
+        root
+          ~loc
+          ~frames
+          ~root_reason:op
+          ~root_message:(RootCannotGetRest (desc op))
+          ~custom_error_message
       | Op (ObjectChain { op }) ->
-        root ~loc ~frames ~root_reason:op ~root_message:(RootCannotCallObjectAssign (desc op))
+        root
+          ~loc
+          ~frames
+          ~root_reason:op
+          ~root_message:(RootCannotCallObjectAssign (desc op))
+          ~custom_error_message
       | Op (AssignVar { var; init }) ->
         root
           ~loc
           ~frames
           ~root_reason:init
           ~root_message:(RootCannotAssign { init = desc init; target = Option.map desc var })
+          ~custom_error_message
       | Op (DeleteVar { var }) ->
-        root ~loc ~frames ~root_reason:var ~root_message:(RootCannotDelete (desc var))
+        root
+          ~loc
+          ~frames
+          ~root_reason:var
+          ~root_message:(RootCannotDelete (desc var))
+          ~custom_error_message
       | Op (InitField { op; body }) ->
         root
           ~loc
           ~frames
           ~root_reason:op
           ~root_message:(RootCannotInitializeField { field = desc op; body = desc body })
+          ~custom_error_message
       | Op (Cast { lower; upper }) ->
         root
           ~loc
           ~frames
           ~root_reason:lower
           ~root_message:(RootCannotCast { lower = desc lower; upper = desc upper })
+          ~custom_error_message
       | Op (ClassExtendsCheck { extends; def }) ->
         root
           ~loc
           ~frames
           ~root_reason:def
           ~root_message:(RootCannotExtendClass { extends; def = desc def })
+          ~custom_error_message
       | Op (ClassMethodDefinition { name; def }) ->
         root
           ~loc
           ~frames
           ~root_reason:def
           ~root_message:(RootCannotDefineClassMethod { method_ = def; name = desc name })
+          ~custom_error_message
       | Op (ClassImplementsCheck { implements; def; _ }) ->
         root
           ~loc
           ~frames
           ~root_reason:def
           ~root_message:(RootCannotImplementClass { implements; def = desc def })
+          ~custom_error_message
       | Op (ClassOwnProtoCheck { prop; own_loc; proto_loc }) ->
         (match (own_loc, proto_loc) with
-        | (None, None) -> unknown_root ~loc ~frames
+        | (None, None) -> unknown_root ~loc ~frames ~custom_error_message
         | (Some loc, None) ->
           let def = mk_reason (RProperty (Some prop)) loc in
           root
@@ -605,6 +642,7 @@ let rec make_intermediate_error :
             ~frames
             ~root_reason:def
             ~root_message:RootCannotShadowProtoProperty
+            ~custom_error_message
         | (None, Some loc) ->
           let def = mk_reason (RProperty (Some prop)) loc in
           root
@@ -612,16 +650,23 @@ let rec make_intermediate_error :
             ~frames
             ~root_reason:def
             ~root_message:RootCannotDefineShadowedProtoProperty
+            ~custom_error_message
         | (Some own_loc, Some proto_loc) ->
           let def = mk_reason (RProperty (Some prop)) own_loc in
           let proto = mk_reason (RProperty (Some prop)) proto_loc in
-          root ~loc ~frames ~root_reason:def ~root_message:(RootCannotShadowProto proto))
+          root
+            ~loc
+            ~frames
+            ~root_reason:def
+            ~root_message:(RootCannotShadowProto proto)
+            ~custom_error_message)
       | Op (Coercion { from; target }) ->
         root
           ~loc
           ~frames
           ~root_reason:from
           ~root_message:(RootCannotCoerce { from = desc from; target = desc target })
+          ~custom_error_message
       | Op (ConformToCommonInterface { self_sig_loc; self_module_loc; originate_from_import }) ->
         let frames =
           let (all_frames, explanations) = frames in
@@ -633,8 +678,9 @@ let rec make_intermediate_error :
           ~root_loc:(loc_of_aloc self_module_loc)
           ~specific_loc:(loc_of_aloc self_sig_loc)
           ~root_message:(RootCannotConformToCommonInterface { originate_from_import })
+          ~custom_error_message
       | Op (DeclareComponentRef { op }) ->
-        root ~loc ~frames ~root_reason:op ~root_message:RootCannotDeclareRef
+        root ~loc ~frames ~root_reason:op ~root_message:RootCannotDeclareRef ~custom_error_message
       | Op (FunCall { op; fn; _ }) ->
         root_with_specific_reason
           ~loc
@@ -642,6 +688,7 @@ let rec make_intermediate_error :
           ~root_reason:op
           ~specific_reason:fn
           ~root_message:(RootCannotCall (desc fn))
+          ~custom_error_message
       | Op (FunCallMethod { op; fn; prop; _ }) ->
         root_with_specific_reason
           ~loc
@@ -649,13 +696,19 @@ let rec make_intermediate_error :
           ~root_reason:op
           ~specific_reason:prop
           ~root_message:(RootCannotCall (desc fn))
+          ~custom_error_message
       | Op (RenderTypeInstantiation { render_type }) ->
-        root ~loc ~frames ~root_reason:render_type ~root_message:RootCannotInstantiateRenderType
+        root
+          ~loc
+          ~frames
+          ~root_reason:render_type
+          ~root_message:RootCannotInstantiateRenderType
+          ~custom_error_message
       | Frame
           ( FunParam _,
             (Op (Type.Speculation (Op (FunCall _ | FunCallMethod _ | JSXCreateElement _))) as use_op)
           ) ->
-        loop ~loc ~frames ~use_op
+        loop ~loc ~frames ~use_op ~custom_error_message
       | Frame
           ( FunParam { n; name; lower = lower'; _ },
             Op (FunCall { args; fn; _ } | FunCallMethod { args; fn; _ })
@@ -671,39 +724,63 @@ let rec make_intermediate_error :
           | Some name -> RootCannotCallWithNamedParam { fn = desc fn; lower = desc lower; name }
           | None -> RootCannotCallWithNthParam { fn = desc fn; lower = desc lower; n }
         in
-        root ~loc ~frames ~root_reason:lower ~root_message:root_msg
+        root ~loc ~frames ~root_reason:lower ~root_message:root_msg ~custom_error_message
       | Op (FunReturnStatement { value }) ->
-        root ~loc ~frames ~root_reason:value ~root_message:(RootCannotReturn (desc value))
+        root
+          ~loc
+          ~frames
+          ~root_reason:value
+          ~root_message:(RootCannotReturn (desc value))
+          ~custom_error_message
       | Op (FunImplicitReturn { upper; fn; type_guard = true }) ->
         root
           ~loc
           ~frames
           ~root_reason:upper
           ~root_message:(RootCannotDeclareTypeGuard { type_guard_loc = loc_of_reason upper; fn })
+          ~custom_error_message
       | Op (FunImplicitReturn { upper; fn; _ }) ->
         root
           ~loc
           ~frames
           ~root_reason:upper
           ~root_message:(RootCannotExpectImplicitReturn { upper = desc upper; fn = desc fn })
+          ~custom_error_message
       | Op (GeneratorYield { value }) ->
-        root ~loc ~frames ~root_reason:value ~root_message:(RootCannotYield (desc value))
+        root
+          ~loc
+          ~frames
+          ~root_reason:value
+          ~root_message:(RootCannotYield (desc value))
+          ~custom_error_message
       | Op (GetExport prop) ->
-        root ~loc ~frames ~root_reason:prop ~root_message:(RootCannotGetProp (desc prop))
+        root
+          ~loc
+          ~frames
+          ~root_reason:prop
+          ~root_message:(RootCannotGetProp (desc prop))
+          ~custom_error_message
       | Op (GetProperty prop) ->
-        root ~loc ~frames ~root_reason:prop ~root_message:(RootCannotGetProp (desc prop))
+        root
+          ~loc
+          ~frames
+          ~root_reason:prop
+          ~root_message:(RootCannotGetProp (desc prop))
+          ~custom_error_message
       | Op (IndexedTypeAccess { _object; index }) ->
         root
           ~loc
           ~frames
           ~root_reason:index
           ~root_message:(RootCannotAccessIndex { index = desc index; object_ = desc _object })
+          ~custom_error_message
       | Op (InferBoundCompatibilityCheck { bound; infer }) ->
         root
           ~loc
           ~frames
           ~root_reason:bound
           ~root_message:(RootCannotUseInferTypeBound { infer = desc infer })
+          ~custom_error_message
       | Frame (FunParam _, Op (JSXCreateElement { op; component; _ }))
       | Op (JSXCreateElement { op; component; _ })
       | Op (ReactCreateElementCall { op; component; _ }) ->
@@ -713,14 +790,21 @@ let rec make_intermediate_error :
           ~root_reason:op
           ~specific_reason:component
           ~root_message:(RootCannotCreateElement (desc component))
+          ~custom_error_message
       | Op (ReactGetIntrinsic { literal }) ->
-        root ~loc ~frames ~root_reason:literal ~root_message:(RootCannotCreateElement (desc literal))
+        root
+          ~loc
+          ~frames
+          ~root_reason:literal
+          ~root_message:(RootCannotCreateElement (desc literal))
+          ~custom_error_message
       | Op (TypeApplication { type_ }) ->
         root
           ~loc
           ~frames
           ~root_reason:type_
           ~root_message:(RootCannotInstantiateTypeApp (desc type_))
+          ~custom_error_message
       | Op (SetProperty { prop; value; lhs; _ }) ->
         let loc_reason =
           if Loc.contains (loc_of_aloc (loc_of_reason lhs)) loc then
@@ -733,16 +817,28 @@ let rec make_intermediate_error :
           ~frames
           ~root_reason:loc_reason
           ~root_message:(RootCannotAssign { init = desc value; target = Some (desc prop) })
+          ~custom_error_message
       | Op (UpdateProperty { prop; lhs }) ->
-        root ~loc ~frames ~root_reason:lhs ~root_message:(RootCannotUpdate (desc prop))
+        root
+          ~loc
+          ~frames
+          ~root_reason:lhs
+          ~root_message:(RootCannotUpdate (desc prop))
+          ~custom_error_message
       | Op (DeleteProperty { prop; lhs }) ->
-        root ~loc ~frames ~root_reason:lhs ~root_message:(RootCannotDelete (desc prop))
+        root
+          ~loc
+          ~frames
+          ~root_reason:lhs
+          ~root_message:(RootCannotDelete (desc prop))
+          ~custom_error_message
       | Op (RefinementCheck { test; discriminant }) ->
         root
           ~loc
           ~frames
           ~root_reason:test
           ~root_message:(RootCannotCheckAgainst { test = desc test; discriminant })
+          ~custom_error_message
       | Op (SwitchRefinementCheck { test; discriminant }) ->
         let root_loc = loc_of_aloc test in
         root_with_loc_and_specific_loc
@@ -751,23 +847,26 @@ let rec make_intermediate_error :
           ~root_loc
           ~specific_loc:root_loc
           ~root_message:(RootCannotCheckAgainstSwitchDiscriminant discriminant)
+          ~custom_error_message
       | Op (EvalMappedType { mapped_type }) ->
         root
           ~loc
           ~frames
           ~root_reason:mapped_type
           ~root_message:(RootCannotInstantiateEval mapped_type)
+          ~custom_error_message
       | Op (TypeGuardIncompatibility { guard_type; param_name }) ->
         root
           ~loc
           ~frames
           ~root_reason:guard_type
           ~root_message:(RootCannotUseTypeGuard { guard_type; param_name })
+          ~custom_error_message
       | Op (ComponentRestParamCompatibility { rest_param = _ }) ->
         (* Special-cased incompatibility error. This should be unreachable, but just in case
          * our error messages can compose in a way that would miss the special case we'd rather
          * output a bad error than crash. *)
-        unknown_root ~loc ~frames
+        unknown_root ~loc ~frames ~custom_error_message
       | Op
           (PositiveTypeGuardConsistency
             {
@@ -786,33 +885,47 @@ let rec make_intermediate_error :
             :: explanations
           )
         in
-        root ~loc ~frames ~root_reason:return ~root_message:(RootCannotReturn (desc return))
+        root
+          ~loc
+          ~frames
+          ~root_reason:return
+          ~root_message:(RootCannotReturn (desc return))
+          ~custom_error_message
       | Frame (ReactDeepReadOnly (props_loc, Props), use_op) ->
         explanation
           ~loc
           ~frames
           ~use_op
           ~explanation:(ExplanationReactComponentPropsDeepReadOnly props_loc)
+          ~custom_error_message
       | Frame (ReactDeepReadOnly (props_loc, HookArg), use_op) ->
         explanation
           ~loc
           ~frames
           ~use_op
           ~explanation:(ExplanationReactHookArgsDeepReadOnly props_loc)
+          ~custom_error_message
       | Frame (ReactDeepReadOnly (hook_loc, HookReturn), use_op) ->
         explanation
           ~loc
           ~frames
           ~use_op
           ~explanation:(ExplanationReactHookReturnDeepReadOnly hook_loc)
+          ~custom_error_message
       | Frame (ConstrainedAssignment { name; declaration; providers }, use_op) ->
         explanation
           ~loc
           ~frames
           ~use_op
           ~explanation:(ExplanationConstrainedAssign { name; declaration; providers })
+          ~custom_error_message
       | Frame (UnifyFlip, (Frame (ArrayElementCompatibility _, _) as use_op)) ->
-        explanation ~loc ~frames ~use_op ~explanation:ExplanationArrayInvariantTyping
+        explanation
+          ~loc
+          ~frames
+          ~use_op
+          ~explanation:ExplanationArrayInvariantTyping
+          ~custom_error_message
       | Frame (ArrayElementCompatibility { lower; upper }, use_op) ->
         unwrap_frame
           ~loc
@@ -823,6 +936,7 @@ let rec make_intermediate_error :
             (FrameArrayElement
                { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
             )
+          ~custom_error_message
       | Frame (FunParam { n; lower; upper; name }, (Frame (FunCompatibility _, _) as use_op)) ->
         let arg =
           match name with
@@ -833,7 +947,7 @@ let rec make_intermediate_error :
             FrameFunNthParam
               { n; incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
         in
-        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:arg
+        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:arg ~custom_error_message
       | Frame (FunParam { n; lower; upper; name }, use_op) ->
         let incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) in
         let arg =
@@ -841,8 +955,8 @@ let rec make_intermediate_error :
           | Some "this" -> FrameFunThisArgument { incompatibility_pair }
           | _ -> FrameFunNthArgument { n; incompatibility_pair }
         in
-        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:arg
-      | Frame (FunRestParam _, use_op) -> loop ~loc ~frames ~use_op
+        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:arg ~custom_error_message
+      | Frame (FunRestParam _, use_op) -> loop ~loc ~frames ~use_op ~custom_error_message
       | Frame (FunReturn { lower; upper }, use_op) ->
         unwrap_frame_without_loc
           ~loc
@@ -852,6 +966,7 @@ let rec make_intermediate_error :
             (FrameReturnValue
                { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
             )
+          ~custom_error_message
       | Frame (IndexerKeyCompatibility { lower; upper }, use_op) ->
         unwrap_frame
           ~loc
@@ -862,9 +977,48 @@ let rec make_intermediate_error :
             (FrameIndexerPropertyKey
                { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
             )
+          ~custom_error_message
       | Frame (OpaqueTypeLowerBoundCompatibility { lower; _ }, use_op)
       | Frame (OpaqueTypeUpperBoundCompatibility { lower; _ }, use_op) ->
-        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:FrameAnonymous
+        unwrap_frame
+          ~loc
+          ~frames
+          ~frame_reason:lower
+          ~use_op
+          ~frame:FrameAnonymous
+          ~custom_error_message
+      | Frame
+          ( OpaqueTypeCustomErrorCompatibility { lower; upper; lower_t; upper_t; custom_error_loc },
+            use_op
+          ) ->
+        let lower_desc =
+          match lower_t with
+          | Type.TypeOrTypeDesc.Type _ -> Error (desc_of_reason lower)
+          | Type.TypeOrTypeDesc.TypeDesc d -> d
+        in
+        let upper_desc =
+          match upper_t with
+          | Type.TypeOrTypeDesc.Type _ -> Error (desc_of_reason upper)
+          | Type.TypeOrTypeDesc.TypeDesc d -> d
+        in
+        let custom_error_message =
+          Some
+            (MessageIncompatibleGeneralWithPrintedTypes
+               {
+                 lower_loc = loc_of_reason lower;
+                 upper_loc = loc_of_reason upper;
+                 lower_desc;
+                 upper_desc;
+               }
+            )
+        in
+        let frames = ([], [ExplanationCustomError { custom_error_loc }]) in
+        next_with_loc
+          ~loc:(loc_of_aloc (loc_of_reason lower))
+          ~frames
+          ~frame_reason:lower
+          ~use_op
+          ~custom_error_message
       | Frame (PropertyCompatibility { prop = None; lower; upper }, use_op) ->
         unwrap_frame
           ~loc
@@ -875,6 +1029,7 @@ let rec make_intermediate_error :
             (FrameIndexerProperty
                { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
             )
+          ~custom_error_message
       | Frame (PropertyCompatibility { prop = Some (OrdinaryName "$call"); lower; upper }, use_op)
         ->
         unwrap_frame
@@ -886,10 +1041,22 @@ let rec make_intermediate_error :
             (FrameCallableSignature
                { incompatibility_pair = opt_incompatibility_pair use_op (lower, upper) }
             )
+          ~custom_error_message
       | Frame (EnumRepresentationTypeCompatibility { lower; _ }, use_op) ->
-        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:FrameEnumRepresentationType
+        unwrap_frame
+          ~loc
+          ~frames
+          ~frame_reason:lower
+          ~use_op
+          ~frame:FrameEnumRepresentationType
+          ~custom_error_message
       | Frame (UnifyFlip, (Frame (PropertyCompatibility _, _) as use_op)) ->
-        explanation ~loc ~frames ~use_op ~explanation:ExplanationPropertyInvariantTyping
+        explanation
+          ~loc
+          ~frames
+          ~use_op
+          ~explanation:ExplanationPropertyInvariantTyping
+          ~custom_error_message
       | Frame (PropertyCompatibility { prop = Some prop; lower; upper; _ }, use_op) ->
         let lower_loc = loc_of_prop_compatibility_reason loc lower use_op in
         (* Loop through our parent use_op to get our access chain. *)
@@ -906,6 +1073,7 @@ let rec make_intermediate_error :
                  incompatibility_pair = opt_incompatibility_pair use_op (lower, upper);
                }
             )
+          ~custom_error_message
       | Frame (TupleElementCompatibility { n; lower; upper; _ }, use_op) ->
         let lower_loc = loc_of_aloc (loc_of_reason lower) in
         (* Loop through our parent use_op to get our access chain. *)
@@ -922,20 +1090,35 @@ let rec make_intermediate_error :
                  incompatibility_pair = opt_incompatibility_pair use_op (lower, upper);
                }
             )
+          ~custom_error_message
       | Frame (TypeArgCompatibility { targ; lower; _ }, use_op) ->
-        unwrap_frame ~loc ~frames ~frame_reason:lower ~use_op ~frame:(FrameTypeArgument targ)
+        unwrap_frame
+          ~loc
+          ~frames
+          ~frame_reason:lower
+          ~use_op
+          ~frame:(FrameTypeArgument targ)
+          ~custom_error_message
       | Frame (TypeParamBound { name }, use_op) ->
         unwrap_frame_without_loc
           ~loc
           ~frames
           ~use_op
           ~frame:(FrameTypeParameterBound (Subst_name.string_of_subst_name name))
+          ~custom_error_message
       | Frame (TypeGuardCompatibility, use_op) ->
-        unwrap_frame_without_loc ~loc ~frames ~use_op ~frame:FrameTypePredicate
+        unwrap_frame_without_loc
+          ~loc
+          ~frames
+          ~use_op
+          ~frame:FrameTypePredicate
+          ~custom_error_message
       | Frame (FunCompatibility { lower; _ }, use_op) ->
-        next_with_loc ~loc ~frames ~frame_reason:lower ~use_op
-      | Frame (OpaqueTypeLowerBound { opaque_t_reason = _ }, use_op) -> loop ~loc ~frames ~use_op
-      | Frame (OpaqueTypeUpperBound { opaque_t_reason = _ }, use_op) -> loop ~loc ~frames ~use_op
+        next_with_loc ~loc ~frames ~frame_reason:lower ~use_op ~custom_error_message
+      | Frame (OpaqueTypeLowerBound { opaque_t_reason = _ }, use_op) ->
+        loop ~loc ~frames ~use_op ~custom_error_message
+      | Frame (OpaqueTypeUpperBound { opaque_t_reason = _ }, use_op) ->
+        loop ~loc ~frames ~use_op ~custom_error_message
       | Frame (FunMissingArg _, use_op)
       | Frame (ImplicitTypeParam, use_op)
       | Frame (ReactConfigCheck, use_op)
@@ -945,8 +1128,8 @@ let rec make_intermediate_error :
       | Frame (TupleAssignment _, use_op)
       | Frame (ReactDeepReadOnly (_, DebugAnnot), use_op)
       | Frame (RendersCompatibility, use_op) ->
-        loop ~loc ~frames ~use_op
-    and next_with_loc ~loc ~frames ~frame_reason ~use_op =
+        loop ~loc ~frames ~use_op ~custom_error_message
+    and next_with_loc ~loc ~frames ~frame_reason ~use_op ~custom_error_message =
       (* Skip this use_op, don't add a frame, but do use the loc to reposition
        * our primary location.
        *
@@ -959,8 +1142,8 @@ let rec make_intermediate_error :
         else
           frame_loc
       in
-      loop ~loc ~frames ~use_op
-    and unwrap_frame_with_loc ~loc ~frames ~frame_loc ~use_op ~frame =
+      loop ~loc ~frames ~use_op ~custom_error_message
+    and unwrap_frame_with_loc ~loc ~frames ~frame_loc ~use_op ~frame ~custom_error_message =
       (* Add our frame message and reposition the location if appropriate.
        *
        * If our current loc is inside our frame_loc then use our current loc
@@ -975,24 +1158,25 @@ let rec make_intermediate_error :
       (* Add our frame and recurse with the next use_op. *)
       let (all_frames, explanations) = frames in
       let frames = (frame :: all_frames, explanations) in
-      loop ~loc ~frames ~use_op
-    and unwrap_frame ~loc ~frames ~frame_reason ~use_op ~frame =
+      loop ~loc ~frames ~use_op ~custom_error_message
+    and unwrap_frame ~loc ~frames ~frame_reason ~use_op ~frame ~custom_error_message =
       let frame_loc = loc_of_aloc (loc_of_reason frame_reason) in
-      unwrap_frame_with_loc ~loc ~frames ~frame_loc ~use_op ~frame
-    and unwrap_frame_without_loc ~loc ~frames ~use_op ~frame =
+      unwrap_frame_with_loc ~loc ~frames ~frame_loc ~use_op ~frame ~custom_error_message
+    and unwrap_frame_without_loc ~loc ~frames ~use_op ~frame ~custom_error_message =
       (* Same logic as `unwrap_frame` except we don't have a frame location. *)
       let (all_frames, explanations) = frames in
       let frames = (frame :: all_frames, explanations) in
-      loop ~loc ~frames ~use_op
-    and explanation ~loc ~frames ~use_op ~(explanation : 'loc explanation) =
+      loop ~loc ~frames ~use_op ~custom_error_message
+    and explanation ~loc ~frames ~use_op ~(explanation : 'loc explanation) ~custom_error_message =
       let (all_frames, explanations) = frames in
       let frames = (all_frames, explanation :: explanations) in
-      loop ~loc ~frames ~use_op
-    and unknown_root ~loc ~frames =
+      loop ~loc ~frames ~use_op ~custom_error_message
+    and unknown_root ~loc ~frames ~custom_error_message =
       (* We don't know what our root is! Return what we do know. *)
       let (all_frames, explanations) = frames in
-      (None, loc, all_frames, explanations)
-    and root_with_loc_and_specific_loc ~loc ~frames ~root_loc ~specific_loc ~root_message =
+      (None, custom_error_message, loc, all_frames, explanations)
+    and root_with_loc_and_specific_loc
+        ~loc ~frames ~root_loc ~specific_loc ~root_message ~custom_error_message =
       (* Finish up be returning our root location, root message, primary loc,
        * and frames.
 
@@ -1007,26 +1191,42 @@ let rec make_intermediate_error :
       (* Return our root loc and message in addition to the true primary loc
        * and frames. *)
       let (all_frames, explanations) = frames in
-      (Some (root_loc, root_message), loc, all_frames, explanations)
-    and root_with_specific_reason ~loc ~frames ~root_reason ~specific_reason ~root_message =
+      (Some (root_loc, root_message), custom_error_message, loc, all_frames, explanations)
+    and root_with_specific_reason
+        ~loc ~frames ~root_reason ~specific_reason ~root_message ~custom_error_message =
       let root_loc = loc_of_aloc (loc_of_reason root_reason) in
       let specific_loc = loc_of_aloc (loc_of_reason specific_reason) in
-      root_with_loc_and_specific_loc ~loc ~frames ~root_loc ~specific_loc ~root_message
-    and root ~loc ~frames ~root_reason ~root_message =
+      root_with_loc_and_specific_loc
+        ~loc
+        ~frames
+        ~root_loc
+        ~specific_loc
+        ~root_message
+        ~custom_error_message
+    and root ~loc ~frames ~root_reason ~root_message ~custom_error_message =
       let root_loc = loc_of_aloc (loc_of_reason root_reason) in
-      root_with_loc_and_specific_loc ~loc ~frames ~root_loc ~specific_loc:root_loc ~root_message
+      root_with_loc_and_specific_loc
+        ~loc
+        ~frames
+        ~root_loc
+        ~specific_loc:root_loc
+        ~root_message
+        ~custom_error_message
     in
-    (fun loc use_op -> loop ~loc ~frames:([], []) ~use_op)
+    (fun loc use_op -> loop ~loc ~frames:([], []) ~use_op ~custom_error_message:None)
   in
   (* Make a friendly error based on a use_op. The message we are provided should
    * not have any punctuation. Punctuation will be provided after the frames of
    * an error message. *)
   let mk_use_op_error loc use_op ?explanation message =
-    let (root, loc, frames, explanations) = unwrap_use_ops (loc_of_aloc loc) use_op in
+    let (root, custom_error_msg, loc, frames, explanations) =
+      unwrap_use_ops (loc_of_aloc loc) use_op
+    in
     let code = Flow_error.code_of_error error in
     let explanations =
       Base.Option.value_map ~f:(fun x -> x :: explanations) ~default:explanations explanation
     in
+    let message = Base.Option.value ~default:message custom_error_msg in
     mk_error ?root ~frames ~explanations loc code message
   in
   let mk_use_op_error_reason reason use_op ?explanation message =
@@ -1047,20 +1247,26 @@ let rec make_intermediate_error :
         use_op
         (MessageIncompatibleMappedTypeKey { source_type; mapped_type })
     | _ ->
-      let (root, loc, frames, explanations) = unwrap_use_ops (loc_of_aloc loc) use_op in
-      let error_code = Flow_error.code_of_error error in
-      let speculation_errors =
-        Base.List.map
-          ~f:(fun msg ->
-            let score = score_of_msg msg in
-            let error =
-              Flow_error.error_of_msg ~source_file msg
-              |> make_intermediate_error ~loc_of_aloc ~speculation:true
-            in
-            (score, error))
-          branches
+      let (root, custom_error_msg, loc, frames, explanations) =
+        unwrap_use_ops (loc_of_aloc loc) use_op
       in
-      mk_speculation_error ~loc ~root ~frames ~explanations ~error_code speculation_errors
+      let error_code = Flow_error.code_of_error error in
+      (match custom_error_msg with
+      | Some custom_error_msg ->
+        mk_error ?root ~frames ~explanations loc error_code custom_error_msg
+      | None ->
+        let speculation_errors =
+          Base.List.map
+            ~f:(fun msg ->
+              let score = score_of_msg msg in
+              let error =
+                Flow_error.error_of_msg ~source_file msg
+                |> make_intermediate_error ~loc_of_aloc ~speculation:true
+              in
+              (score, error))
+            branches
+        in
+        mk_speculation_error ~loc ~root ~frames ~explanations ~error_code speculation_errors)
   in
   (* An error between two incompatible types. A "lower" type and an "upper"
    * type. The use_op describes the path which we followed to find
@@ -1705,6 +1911,8 @@ let to_printable_error :
         text " using ";
         code example;
       ]
+    | ExplanationCustomError { custom_error_loc } ->
+      [text "See "; hardcoded_string_desc_ref "relevant docs" custom_error_loc]
     | ExplanationReactComponentPropsDeepReadOnly props_loc ->
       [
         text "React ";
@@ -3459,6 +3667,12 @@ let to_printable_error :
       ]
     | MessageIncompatibleGeneral { lower; upper } ->
       [ref lower; text " is incompatible with "; ref upper]
+    | MessageIncompatibleGeneralWithPrintedTypes { lower_loc; upper_loc; lower_desc; upper_desc } ->
+      [
+        ref_of_ty_or_desc lower_loc lower_desc;
+        text " is incompatible with ";
+        ref_of_ty_or_desc upper_loc upper_desc;
+      ]
     | MessageIncompatibleDueToInvariantSubtyping
         { sub_component; lower_loc; upper_loc; lower_desc; upper_desc } ->
       (match sub_component with

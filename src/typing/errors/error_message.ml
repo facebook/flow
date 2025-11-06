@@ -969,6 +969,8 @@ let map_loc_of_explanation (f : 'a -> 'b) =
       { name; declaration = f declaration; providers = Base.List.map ~f providers }
   | ExplanationConcreteEnumCasting { representation_type; casting_syntax } ->
     ExplanationConcreteEnumCasting { representation_type; casting_syntax }
+  | ExplanationCustomError { custom_error_loc } ->
+    ExplanationCustomError { custom_error_loc = f custom_error_loc }
   | ExplanationFunctionsWithStaticsToObject -> ExplanationFunctionsWithStaticsToObject
   | ExplanationInvariantSubtypingDueToMutableArray
       { lower_array_loc; upper_array_loc; lower_array_desc; upper_array_desc; upper_array_reason }
@@ -1858,77 +1860,92 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ETemporaryHardcodedErrorForPrototyping (r, s) ->
     ETemporaryHardcodedErrorForPrototyping (map_reason r, s)
 
-let rec convert_type_to_type_desc ~f = function
+let rec convert_type_to_type_desc ~f =
+  let rec map_use_op use_op =
+    match use_op with
+    | Op _ -> use_op
+    | Frame
+        ( OpaqueTypeCustomErrorCompatibility { lower; upper; lower_t; upper_t; custom_error_loc },
+          use_op
+        ) ->
+      Frame
+        ( OpaqueTypeCustomErrorCompatibility
+            { lower; upper; lower_t = f lower_t; upper_t = f upper_t; custom_error_loc },
+          map_use_op use_op
+        )
+    | Frame (frame, use_op) -> Frame (frame, map_use_op use_op)
+  in
+  let map_explanation explanation =
+    match explanation with
+    | None -> None
+    | Some
+        (LazyExplanationInvariantSubtypingDueToMutableArray
+          {
+            lower_array_loc;
+            upper_array_loc;
+            lower_array_desc;
+            upper_array_desc;
+            upper_array_reason;
+          }
+          ) ->
+      Some
+        (LazyExplanationInvariantSubtypingDueToMutableArray
+           {
+             lower_array_loc;
+             upper_array_loc;
+             lower_array_desc = f lower_array_desc;
+             upper_array_desc = f upper_array_desc;
+             upper_array_reason;
+           }
+        )
+    | Some
+        (LazyExplanationInvariantSubtypingDueToMutableProperty
+          {
+            lower_obj_loc;
+            upper_obj_loc;
+            lower_obj_desc;
+            upper_obj_desc;
+            upper_object_reason;
+            property_name;
+          }
+          ) ->
+      Some
+        (LazyExplanationInvariantSubtypingDueToMutableProperty
+           {
+             lower_obj_loc;
+             upper_obj_loc;
+             lower_obj_desc = f lower_obj_desc;
+             upper_obj_desc = f upper_obj_desc;
+             upper_object_reason;
+             property_name;
+           }
+        )
+    | Some
+        (LazyExplanationInvariantSubtypingDueToMutableProperties
+          {
+            lower_obj_loc;
+            upper_obj_loc;
+            lower_obj_desc;
+            upper_obj_desc;
+            upper_object_reason;
+            properties;
+          }
+          ) ->
+      Some
+        (LazyExplanationInvariantSubtypingDueToMutableProperties
+           {
+             lower_obj_loc;
+             upper_obj_loc;
+             lower_obj_desc = f lower_obj_desc;
+             upper_obj_desc = f upper_obj_desc;
+             upper_object_reason;
+             properties;
+           }
+        )
+  in
+  function
   | EInvariantSubtypingWithUseOp
       { sub_component; lower_loc; upper_loc; lower_desc; upper_desc; use_op; explanation } ->
-    let explanation =
-      match explanation with
-      | None -> None
-      | Some
-          (LazyExplanationInvariantSubtypingDueToMutableArray
-            {
-              lower_array_loc;
-              upper_array_loc;
-              lower_array_desc;
-              upper_array_desc;
-              upper_array_reason;
-            }
-            ) ->
-        Some
-          (LazyExplanationInvariantSubtypingDueToMutableArray
-             {
-               lower_array_loc;
-               upper_array_loc;
-               lower_array_desc = f lower_array_desc;
-               upper_array_desc = f upper_array_desc;
-               upper_array_reason;
-             }
-          )
-      | Some
-          (LazyExplanationInvariantSubtypingDueToMutableProperty
-            {
-              lower_obj_loc;
-              upper_obj_loc;
-              lower_obj_desc;
-              upper_obj_desc;
-              upper_object_reason;
-              property_name;
-            }
-            ) ->
-        Some
-          (LazyExplanationInvariantSubtypingDueToMutableProperty
-             {
-               lower_obj_loc;
-               upper_obj_loc;
-               lower_obj_desc = f lower_obj_desc;
-               upper_obj_desc = f upper_obj_desc;
-               upper_object_reason;
-               property_name;
-             }
-          )
-      | Some
-          (LazyExplanationInvariantSubtypingDueToMutableProperties
-            {
-              lower_obj_loc;
-              upper_obj_loc;
-              lower_obj_desc;
-              upper_obj_desc;
-              upper_object_reason;
-              properties;
-            }
-            ) ->
-        Some
-          (LazyExplanationInvariantSubtypingDueToMutableProperties
-             {
-               lower_obj_loc;
-               upper_obj_loc;
-               lower_obj_desc = f lower_obj_desc;
-               upper_obj_desc = f upper_obj_desc;
-               upper_object_reason;
-               properties;
-             }
-          )
-    in
     EInvariantSubtypingWithUseOp
       {
         sub_component;
@@ -1936,9 +1953,11 @@ let rec convert_type_to_type_desc ~f = function
         upper_loc;
         lower_desc = f lower_desc;
         upper_desc = f upper_desc;
-        use_op;
-        explanation;
+        use_op = map_use_op use_op;
+        explanation = map_explanation explanation;
       }
+  | EIncompatibleWithUseOp { use_op; reason_lower; reason_upper; explanation } ->
+    EIncompatibleWithUseOp { use_op = map_use_op use_op; reason_lower; reason_upper; explanation }
   | EPropsNotFoundInInvariantSubtyping
       {
         prop_names;
@@ -1959,15 +1978,18 @@ let rec convert_type_to_type_desc ~f = function
         upper_obj_loc;
         lower_obj_desc = f lower_obj_desc;
         upper_obj_desc = f upper_obj_desc;
-        use_op;
+        use_op = map_use_op use_op;
       }
   | EIncompatibleSpeculation { use_op; loc; branches } ->
+    let use_op = Base.Option.map ~f:map_use_op use_op in
     let branches = Base.List.map ~f:(convert_type_to_type_desc ~f) branches in
     EIncompatibleSpeculation { use_op; loc; branches }
   | EIncompatibleDefs { use_op; reason_lower; reason_upper; branches } ->
+    let use_op = map_use_op use_op in
     let branches = Base.List.map ~f:(convert_type_to_type_desc ~f) branches in
     EIncompatibleDefs { use_op; reason_lower; reason_upper; branches }
   | EUnionSpeculationFailed { use_op; reason; op_reasons; branches } ->
+    let use_op = map_use_op use_op in
     let branches = Base.List.map ~f:(convert_type_to_type_desc ~f) branches in
     EUnionSpeculationFailed { use_op; reason; op_reasons; branches }
   | e -> e
