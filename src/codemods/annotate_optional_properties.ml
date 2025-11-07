@@ -223,6 +223,7 @@ let mapper ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
         Options.unsuppressable_error_codes cctx.Codemod_context.Typed.options
       in
       let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
+      let get_ast = Parsing_heaps.Reader_dispatcher.get_ast ~reader in
       let suppressions = Context.error_suppressions cx in
       let error_is_suppressed error =
         let (errors, _, _) =
@@ -231,6 +232,7 @@ let mapper ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
             ~file_options:None
             ~unsuppressable_error_codes
             ~loc_of_aloc
+            ~get_ast
             suppressions
             (Flow_error.ErrorSet.singleton error)
             ~unused:suppressions

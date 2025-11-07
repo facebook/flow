@@ -394,10 +394,11 @@ let check_once ~init_id ~shared_mem_config ~format_errors ?focus_targets options
                 let to_printable =
                   let reader = State_reader.create () in
                   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
+                  let get_ast = Parsing_heaps.Reader.get_ast ~reader in
                   let strip_root =
                     Base.Option.some_if (Options.should_strip_root options) (Options.root options)
                   in
-                  Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root
+                  Flow_intermediate_error.to_printable_error ~loc_of_aloc ~get_ast ~strip_root
                 in
                 let suppressed_errors =
                   if Options.include_suppressions options then

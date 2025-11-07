@@ -1577,10 +1577,11 @@ let make_intermediate_error = make_intermediate_error ~speculation:false
 let to_printable_error :
       'loc.
       loc_of_aloc:('loc -> Loc.t) ->
+      get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
       strip_root:File_path.t option ->
       'loc intermediate_error ->
       Loc.t Flow_errors_utils.printable_error =
- fun ~loc_of_aloc ~strip_root intermediate_error ->
+ fun ~loc_of_aloc ~get_ast ~strip_root intermediate_error ->
   let open Flow_errors_utils in
   let text = Friendly.text in
   let code = Friendly.code in
@@ -1912,7 +1913,27 @@ let to_printable_error :
         code example;
       ]
     | ExplanationCustomError { custom_error_loc } ->
-      [text "See "; hardcoded_string_desc_ref "relevant docs" custom_error_loc]
+      let loc = loc_of_aloc custom_error_loc in
+      let custom_docs =
+        Loc.source loc
+        |> Base.Option.bind ~f:get_ast
+        |> Base.Option.bind ~f:(fun (_, { Flow_ast.Program.all_comments; _ }) ->
+               Base.List.find_map
+                 all_comments
+                 ~f:(fun (comment_loc, { Flow_ast.Comment.kind; text; _ }) ->
+                   if Loc.equal loc comment_loc && kind = Flow_ast.Comment.Block then
+                     Jsdoc.parse text
+                   else
+                     None
+               )
+           )
+        |> Base.Option.bind ~f:(fun jsdoc ->
+               jsdoc |> Jsdoc.description |> Base.Option.map ~f:Base.String.strip
+           )
+      in
+      (match custom_docs with
+      | Some d -> [text d]
+      | None -> [text "See "; hardcoded_string_desc_ref "relevant docs" custom_error_loc])
     | ExplanationReactComponentPropsDeepReadOnly props_loc ->
       [
         text "React ";
@@ -5439,10 +5460,12 @@ let to_printable_error :
   in
   printable_error
 
-let make_errors_printable ~loc_of_aloc ~strip_root errors =
+let make_errors_printable ~loc_of_aloc ~get_ast ~strip_root errors =
   let f err acc =
     let err =
-      err |> make_intermediate_error ~loc_of_aloc |> to_printable_error ~loc_of_aloc ~strip_root
+      err
+      |> make_intermediate_error ~loc_of_aloc
+      |> to_printable_error ~loc_of_aloc ~get_ast ~strip_root
     in
     Flow_errors_utils.ConcreteLocPrintableErrorSet.add err acc
   in

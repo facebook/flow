@@ -33,7 +33,10 @@ let add_suppression_warnings root checked unused warnings =
             let msg = Error_message.EUnusedSuppression loc in
             Flow_error.error_of_msg ~source_file msg
             |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
-            |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
+            |> Flow_intermediate_error.to_printable_error
+                 ~loc_of_aloc:Fun.id
+                 ~get_ast:(fun _ -> None)
+                 ~strip_root:(Some root)
           in
           let file_warnings =
             FilenameMap.find_opt source_file warnings
@@ -56,7 +59,10 @@ let collate_duplicate_providers ~update root =
       Error_message.EDuplicateModuleProvider { module_name; provider; conflict }
       |> Flow_error.error_of_msg ~source_file:duplicate
       |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc:Fun.id
-      |> Flow_intermediate_error.to_printable_error ~loc_of_aloc:Fun.id ~strip_root:(Some root)
+      |> Flow_intermediate_error.to_printable_error
+           ~loc_of_aloc:Fun.id
+           ~get_ast:(fun _ -> None)
+           ~strip_root:(Some root)
     in
     update provider_file duplicate err acc
   in
@@ -70,6 +76,7 @@ let update_local_collated_errors ~reader ~options suppressions errors acc =
   let root = Options.root options in
   let unsuppressable_error_codes = Options.unsuppressable_error_codes options in
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
+  let get_ast = Parsing_heaps.Reader_dispatcher.get_ast ~reader in
   let collated_local_errors =
     FilenameMap.fold
       (fun filename file_errs errors ->
@@ -82,6 +89,7 @@ let update_local_collated_errors ~reader ~options suppressions errors acc =
             ~file_options
             ~unsuppressable_error_codes
             ~loc_of_aloc
+            ~get_ast
             suppressions
             file_errs
             ~unused:Error_suppressions.empty
@@ -97,6 +105,7 @@ let update_collated_errors ~reader ~options ~checked_files ~all_suppressions err
   let unsuppressable_error_codes = Options.unsuppressable_error_codes options in
   let { local_errors; duplicate_providers; merge_errors; warnings; suppressions } = errors in
   let loc_of_aloc = Parsing_heaps.Reader_dispatcher.loc_of_aloc ~reader in
+  let get_ast = Parsing_heaps.Reader_dispatcher.get_ast ~reader in
   let acc_fun filename file_errs (errors, suppressed, unused) =
     let file_options = Some (Options.file_options options) in
     let (file_errs, file_suppressed, unused) =
@@ -105,6 +114,7 @@ let update_collated_errors ~reader ~options ~checked_files ~all_suppressions err
         ~file_options
         ~unsuppressable_error_codes
         ~loc_of_aloc
+        ~get_ast
         (* Use all_suppressions here to account for misplaced errors. *)
         all_suppressions
         file_errs

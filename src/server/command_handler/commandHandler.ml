@@ -324,6 +324,7 @@ let get_status ~options ~reader env =
     let to_printable =
       Flow_intermediate_error.to_printable_error
         ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader)
+        ~get_ast:(Parsing_heaps.Reader.get_ast ~reader)
         ~strip_root:(Base.Option.some_if (Options.should_strip_root options) (Options.root options))
     in
     let suppressed_errors =

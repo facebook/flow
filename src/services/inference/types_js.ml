@@ -328,6 +328,7 @@ let run_merge_service
 let mk_intermediate_result_callback ~reader ~options ~persistent_connections suppressions () =
   let open Flow_errors_utils in
   let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
+  let get_ast = Parsing_heaps.Mutator_reader.get_ast ~reader in
   let root = Options.root options in
   let file_options = Some (Options.file_options options) in
   let unsuppressable_error_codes = Options.unsuppressable_error_codes options in
@@ -342,6 +343,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
         ~file_options
         ~unsuppressable_error_codes
         ~loc_of_aloc
+        ~get_ast
         suppressions
         errors
         ~unused:Error_suppressions.empty
@@ -352,6 +354,7 @@ let mk_intermediate_result_callback ~reader ~options ~persistent_connections sup
         ~file_options:None
         ~unsuppressable_error_codes
         ~loc_of_aloc
+        ~get_ast
         suppressions
         warnings
         ~unused:Error_suppressions.empty
@@ -885,6 +888,7 @@ end = struct
       ~files_to_force
       ~env =
     let loc_of_aloc = Parsing_heaps.Mutator_reader.loc_of_aloc ~reader in
+    let get_ast = Parsing_heaps.Mutator_reader.get_ast ~reader in
     let errors = env.ServerEnv.errors in
     let collated_errors = env.ServerEnv.collated_errors in
     (* files_to_force is a request to promote certain files to be checked as a dependency, dependent,
@@ -955,6 +959,7 @@ end = struct
         let errors =
           Flow_intermediate_error.make_errors_printable
             ~loc_of_aloc
+            ~get_ast
             ~strip_root:(Some (Options.root options))
             errors
         in

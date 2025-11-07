@@ -263,7 +263,14 @@ let all_unused_locs map =
     LocSet.empty
 
 let filter_suppressed_errors
-    ~root ~file_options ~unsuppressable_error_codes ~loc_of_aloc suppressions errors ~unused =
+    ~root
+    ~file_options
+    ~unsuppressable_error_codes
+    ~loc_of_aloc
+    ~get_ast
+    suppressions
+    errors
+    ~unused =
   (* Filter out suppressed errors. also track which suppressions are used. *)
   Flow_error.ErrorSet.fold
     (fun error ((errors, suppressed, unused) as acc) ->
@@ -283,7 +290,11 @@ let filter_suppressed_errors
             | _ -> error
           in
           let error =
-            Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root:(Some root) error
+            Flow_intermediate_error.to_printable_error
+              ~loc_of_aloc
+              ~get_ast
+              ~strip_root:(Some root)
+              error
           in
           (Flow_errors_utils.ConcreteLocPrintableErrorSet.add error errors, suppressed, unused)))
     errors

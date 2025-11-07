@@ -16,12 +16,14 @@ val make_intermediate_error :
 
 val to_printable_error :
   loc_of_aloc:('loc -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   strip_root:File_path.t option ->
   'loc Flow_intermediate_error_types.intermediate_error ->
   Loc.t Flow_errors_utils.printable_error
 
 val make_errors_printable :
   loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   strip_root:File_path.t option ->
   Flow_error.ErrorSet.t ->
   Flow_errors_utils.ConcreteLocPrintableErrorSet.t

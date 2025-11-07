@@ -33,6 +33,7 @@ val filter_suppressed_errors :
   file_options:Files.options option ->
   unsuppressable_error_codes:SSet.t ->
   loc_of_aloc:(ALoc.t -> Loc.t) ->
+  get_ast:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
   t ->
   Flow_error.ErrorSet.t ->
   unused:t ->

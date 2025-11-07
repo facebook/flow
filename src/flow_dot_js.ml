@@ -15,7 +15,10 @@ let error_of_parse_error source_file (loc, err) =
   Error_message.EParseError (ALoc.of_loc loc, err)
   |> Flow_error.error_of_msg ~source_file
   |> Flow_intermediate_error.make_intermediate_error ~loc_of_aloc
-  |> Flow_intermediate_error.to_printable_error ~loc_of_aloc ~strip_root:None
+  |> Flow_intermediate_error.to_printable_error
+       ~loc_of_aloc
+       ~get_ast:(fun _ -> None)
+       ~strip_root:None
 
 let parse_content file content =
   let parse_options = Some Parser_env.permissive_parse_options in
@@ -333,6 +336,7 @@ let check_content ~filename ~content ~js_config_object =
           ~file_options:None
           ~unsuppressable_error_codes:SSet.empty
           ~loc_of_aloc
+          ~get_ast:(fun _ -> None)
           suppressions
           errors
           ~unused:suppressions
@@ -343,6 +347,7 @@ let check_content ~filename ~content ~js_config_object =
           ~file_options:None
           ~unsuppressable_error_codes:SSet.empty
           ~loc_of_aloc
+          ~get_ast:(fun _ -> None)
           suppressions
           warnings
           ~unused:suppressions

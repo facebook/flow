@@ -78,7 +78,7 @@ let parse_contents ~options ~profiling contents filename =
       | Skipped -> (None, Flow_error.ErrorSet.empty)
   )
 
-let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifacts =
+let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~get_ast ~filename ~file_artifacts =
   (* Callers have already had a chance to inspect parse errors, so they are not included here.
    * Typically, type errors in the face of parse errors are meaningless, so callers should probably
    * not call this function if parse errors have been found. *)
@@ -126,6 +126,7 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
       ~file_options
       ~unsuppressable_error_codes
       ~loc_of_aloc
+      ~get_ast
       suppressions
       errors
       ~unused:Error_suppressions.empty
@@ -138,6 +139,7 @@ let errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifact
       ~file_options
       ~unsuppressable_error_codes
       ~loc_of_aloc
+      ~get_ast
       suppressions
       warnings
       ~unused:Error_suppressions.empty
@@ -155,15 +157,20 @@ let printable_errors_of_file_artifacts_result ~options ~env filename result =
   let root = Options.root options in
   let reader = State_reader.create () in
   let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
+  let get_ast = Parsing_heaps.Reader.get_ast ~reader in
   match result with
   | Ok file_artifacts ->
     let (errors, warnings) =
-      errors_of_file_artifacts ~options ~env ~loc_of_aloc ~filename ~file_artifacts
+      errors_of_file_artifacts ~options ~env ~loc_of_aloc ~get_ast ~filename ~file_artifacts
     in
     (errors, warnings)
   | Error errors ->
     let errors =
-      Flow_intermediate_error.make_errors_printable ~loc_of_aloc ~strip_root:(Some root) errors
+      Flow_intermediate_error.make_errors_printable
+        ~loc_of_aloc
+        ~get_ast
+        ~strip_root:(Some root)
+        errors
     in
     (errors, Flow_errors_utils.ConcreteLocPrintableErrorSet.empty)
 
