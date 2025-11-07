@@ -1,0 +1,1358 @@
+Error ------------------------------------------------------------------------------------------------ imported.js:22:27
+
+Cannot assign `123` to `emailTest2` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   imported.js:22:27
+   22| const emailTest2: Email = 123; // Error: TODO: should show custom error, but doesn't since comment is not properly attached.
+                                 ^^^ [1]
+
+References:
+   imported.js:22:19
+   22| const emailTest2: Email = 123; // Error: TODO: should show custom error, but doesn't since comment is not properly attached.
+                         ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:25:23
+
+Cannot assign `"twenty-five"` to `ageTest2` because `"twenty-five"` [1] is incompatible with `Age` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:25:23
+   25| const ageTest2: Age = "twenty-five"; // Error: Should show custom error
+                             ^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:25:17
+   25| const ageTest2: Age = "twenty-five"; // Error: Should show custom error
+                       ^^^ [2]
+   exported.js:11:1
+       v--
+   11| /**
+   12|  * @flowCustomError
+   13|  * @description custom desc
+   14|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:34:35
+
+Cannot assign object literal to `profileTest2` because object literal [1] is incompatible with `UserProfile` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:34:35
+                                         v---------------------------------------
+   34| const profileTest2: UserProfile = { // Error: age should show custom error
+   35|   email: "bob@example.com",
+   36|   age: "thirty",
+   37|   displayName: "Bob"
+   38| };
+       ^ [1]
+
+References:
+   imported.js:34:21
+   34| const profileTest2: UserProfile = { // Error: age should show custom error
+                           ^^^^^^^^^^^ [2]
+   exported.js:17:1
+       v--
+   17| /**
+   18|  * @flowCustomError
+   19|  * @description custom desc
+   20|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:40:35
+
+Cannot assign object literal to `profileTest3` because object literal [1] is incompatible with `UserProfile` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:40:35
+                                         v-----------------------------------------
+   40| const profileTest3: UserProfile = { // Error: email should show custom error
+   41|   email: 123,
+   42|   age: 25,
+   43|   displayName: "Charlie"
+   44| };
+       ^ [1]
+
+References:
+   imported.js:40:21
+   40| const profileTest3: UserProfile = { // Error: email should show custom error
+                           ^^^^^^^^^^^ [2]
+   exported.js:17:1
+       v--
+   17| /**
+   18|  * @flowCustomError
+   19|  * @description custom desc
+   20|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:46:35
+
+Cannot assign `"not an object"` to `profileTest4` because `"not an object"` [1] is incompatible with `UserProfile` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:46:35
+   46| const profileTest4: UserProfile = "not an object"; // Error: Should show custom error
+                                         ^^^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:46:21
+   46| const profileTest4: UserProfile = "not an object"; // Error: Should show custom error
+                           ^^^^^^^^^^^ [2]
+   exported.js:17:1
+       v--
+   17| /**
+   18|  * @flowCustomError
+   19|  * @description custom desc
+   20|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:55:48
+
+Cannot assign object literal to `validatedTest2` because object literal [1] is incompatible with
+`ValidatedInput<number>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:55:48
+                                                      v-----------------------------------
+   55| const validatedTest2: ValidatedInput<number> = { // Error: Should show custom error
+   56|   value: "not a number",
+   57|   isValid: false,
+   58|   errors: ["Invalid number"]
+   59| };
+       ^ [1]
+
+References:
+   imported.js:55:23
+   55| const validatedTest2: ValidatedInput<number> = { // Error: Should show custom error
+                             ^^^^^^^^^^^^^^^^^^^^^^ [2]
+   exported.js:27:1
+       v--
+   27| /**
+   28|  * @flowCustomError
+   29|  * @description custom desc
+   30|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:61:48
+
+Cannot assign `42` to `validatedTest3` because `42` [1] is incompatible with `ValidatedInput<string>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:61:48
+   61| const validatedTest3: ValidatedInput<string> = 42; // Error: Should show custom error
+                                                      ^^ [1]
+
+References:
+   imported.js:61:23
+   61| const validatedTest3: ValidatedInput<string> = 42; // Error: Should show custom error
+                             ^^^^^^^^^^^^^^^^^^^^^^ [2]
+   exported.js:27:1
+       v--
+   27| /**
+   28|  * @flowCustomError
+   29|  * @description custom desc
+   30|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:74:39
+
+Cannot assign object literal to `apiTest3` because object literal [1] is incompatible with
+`ApiResponse<string, string>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:74:39
+                                             v-----------------------------------
+   74| const apiTest3: ApiResponse<string> = { // Error: Should show custom error
+   75|   status: "success",
+   76|   data: 123
+   77| };
+       ^ [1]
+
+References:
+   imported.js:74:17
+   74| const apiTest3: ApiResponse<string> = { // Error: Should show custom error
+                       ^^^^^^^^^^^^^^^^^^^ [2]
+   exported.js:37:1
+       v--
+   37| /**
+   38|  * @flowCustomError
+   39|  * @description custom desc
+   40|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:79:39
+
+Cannot assign `"not a response"` to `apiTest4` because `"not a response"` [1] is incompatible with
+`ApiResponse<string, string>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:79:39
+   79| const apiTest4: ApiResponse<string> = "not a response"; // Error: Should show custom error
+                                             ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:79:17
+   79| const apiTest4: ApiResponse<string> = "not a response"; // Error: Should show custom error
+                       ^^^^^^^^^^^^^^^^^^^ [2]
+   exported.js:37:1
+       v--
+   37| /**
+   38|  * @flowCustomError
+   39|  * @description custom desc
+   40|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:84:21
+
+Cannot assign `true` to `idTest3` because `true` [1] is incompatible with `ID` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:84:21
+   84| const idTest3: ID = true; // Error: Should show custom error
+                           ^^^^ [1]
+
+References:
+   imported.js:84:16
+   84| const idTest3: ID = true; // Error: Should show custom error
+                      ^^ [2]
+   exported.js:45:1
+       v--
+   45| /**
+   46|  * @flowCustomError
+   47|  * @description custom desc
+   48|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:88:42
+
+Cannot assign object literal to `normalTest2` because in property `field`: number [1] is incompatible with string [2].
+[incompatible-type]
+
+   imported.js:88:42
+   88| const normalTest2: NormalType = { field: 123 }; // Error: Normal error message
+                                                ^^^ [1]
+
+References:
+   exported.js:53:10
+   53|   field: string,
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:89:33
+
+Cannot assign `"not an object"` to `normalTest3` because string [1] is incompatible with `NormalType` [2].
+[incompatible-type]
+
+   imported.js:89:33
+   89| const normalTest3: NormalType = "not an object"; // Error: Normal error message
+                                       ^^^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:89:20
+   89| const normalTest3: NormalType = "not an object"; // Error: Normal error message
+                          ^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:93:29
+
+Cannot assign object literal to `pointTest2` because object literal [1] is incompatible with `Point3D` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:93:29
+   93| const pointTest2: Point3D = { x: 1, y: 2 }; // Error: Should show custom error
+                                   ^^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:93:19
+   93| const pointTest2: Point3D = { x: 1, y: 2 }; // Error: Should show custom error
+                         ^^^^^^^ [2]
+   exported.js:66:1
+       v--
+   66| /**
+   67|  * @flowCustomError
+   68|  * @description custom desc
+   69|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:94:29
+
+Cannot assign `"not a point"` to `pointTest3` because `"not a point"` [1] is incompatible with `Point3D` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:94:29
+   94| const pointTest3: Point3D = "not a point"; // Error: Should show custom error
+                                   ^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:94:19
+   94| const pointTest3: Point3D = "not a point"; // Error: Should show custom error
+                         ^^^^^^^ [2]
+   exported.js:66:1
+       v--
+   66| /**
+   67|  * @flowCustomError
+   68|  * @description custom desc
+   69|  */
+        -^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:99:27
+
+Cannot assign `"yellow"` to `colorTest3` because `"yellow"` [1] is incompatible with `Color` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:99:27
+   99| const colorTest3: Color = "yellow"; // Error: Should show custom error
+                                 ^^^^^^^^ [1]
+
+References:
+   imported.js:99:19
+   99| const colorTest3: Color = "yellow"; // Error: Should show custom error
+                         ^^^^^ [2]
+   exported.js:72:1
+       v--
+   72| /**
+   73|  * @flowCustomError
+   74|  * @description custom desc
+   75|  */
+        -^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- imported.js:114:41
+
+Cannot assign object literal to `colorMapTest3` because object literal [1] is incompatible with `ColorMap<number>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:114:41
+                                                v-----------------------------------
+   114| const colorMapTest3: ColorMap<number> = { // Error: Should show custom error
+   115|   red: 255,
+   116|   green: "not a number",
+   117|   blue: 64
+   118| };
+        ^ [1]
+
+References:
+   imported.js:114:22
+   114| const colorMapTest3: ColorMap<number> = { // Error: Should show custom error
+                             ^^^^^^^^^^^^^^^^ [2]
+   exported.js:78:1
+        v--
+    78| /**
+    79|  * @flowCustomError
+    80|  * @description custom desc
+    81|  */
+         -^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- imported.js:120:41
+
+Cannot assign `"not a color map"` to `colorMapTest4` because `"not a color map"` [1] is incompatible with
+`ColorMap<number>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:120:41
+   120| const colorMapTest4: ColorMap<number> = "not a color map"; // Error: Should show custom error
+                                                ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:120:22
+   120| const colorMapTest4: ColorMap<number> = "not a color map"; // Error: Should show custom error
+                             ^^^^^^^^^^^^^^^^ [2]
+   exported.js:78:1
+        v--
+    78| /**
+    79|  * @flowCustomError
+    80|  * @description custom desc
+    81|  */
+         -^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- imported.js:125:41
+
+Cannot assign `"not a function"` to `callbackTest3` because `"not a function"` [1] is incompatible with
+`Callback<number>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:125:41
+   125| const callbackTest3: Callback<number> = "not a function"; // Error: Should show custom error
+                                                ^^^^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:125:22
+   125| const callbackTest3: Callback<number> = "not a function"; // Error: Should show custom error
+                             ^^^^^^^^^^^^^^^^ [2]
+   exported.js:88:1
+        v--
+    88| /**
+    89|  * @flowCustomError
+    90|  * @description custom desc
+    91|  */
+         -^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- imported.js:131:41
+
+Cannot assign `"not a number"` to `optionalTest4` because `"not a number"` [1] is incompatible with
+`Optional<number>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:131:41
+   131| const optionalTest4: Optional<number> = "not a number"; // Error: Should show custom error
+                                                ^^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:131:22
+   131| const optionalTest4: Optional<number> = "not a number"; // Error: Should show custom error
+                             ^^^^^^^^^^^^^^^^ [2]
+   exported.js:94:1
+        v--
+    94| /**
+    95|  * @flowCustomError
+    96|  * @description custom desc
+    97|  */
+         -^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- imported.js:145:53
+
+Cannot assign object literal to `recordTest3` because object literal [1] is incompatible with
+`ReadonlyRecord<string, number>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:145:53
+                                                            v-----------------------------------
+   145| const recordTest3: ReadonlyRecord<string, number> = { // Error: Should show custom error
+   146|   foo: 1,
+   147|   bar: "not a number"
+   148| };
+        ^ [1]
+
+References:
+   imported.js:145:20
+   145| const recordTest3: ReadonlyRecord<string, number> = { // Error: Should show custom error
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   exported.js:100:1
+        v--
+   100| /**
+   101|  * @flowCustomError
+   102|  * @description custom desc
+   103|  */
+         -^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- imported.js:150:53
+
+Cannot assign `"not a record"` to `recordTest4` because `"not a record"` [1] is incompatible with
+`ReadonlyRecord<string, number>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:150:53
+   150| const recordTest4: ReadonlyRecord<string, number> = "not a record"; // Error: Should show custom error
+                                                            ^^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:150:20
+   150| const recordTest4: ReadonlyRecord<string, number> = "not a record"; // Error: Should show custom error
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   exported.js:100:1
+        v--
+   100| /**
+   101|  * @flowCustomError
+   102|  * @description custom desc
+   103|  */
+         -^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- imported.js:172:40
+
+Cannot assign object literal to `enrichedTest2` because object literal [1] is incompatible with `EnrichedProfile` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:172:40
+                                               v-------------------------------------------------------
+   172| const enrichedTest2: EnrichedProfile = { // Error: Should show custom error for EnrichedProfile
+   173|   profile: {
+   174|     email: 123,
+   175|     age: 30,
+   176|     displayName: "User"
+   177|   },
+   178|   lastLogin: 0,
+   179|   preferences: { theme: "dark" }
+   180| };
+        ^ [1]
+
+References:
+   imported.js:172:22
+   172| const enrichedTest2: EnrichedProfile = { // Error: Should show custom error for EnrichedProfile
+                             ^^^^^^^^^^^^^^^ [2]
+   imported.js:153:1
+        v--
+   153| /**
+   154|  * @flowCustomError
+   155|  */
+         -^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------- imported.js:182:40
+
+Cannot assign `'not an enr...'` to `enrichedTest3` because `"not an enriched profile"` [1] is incompatible with
+`EnrichedProfile` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   imported.js:182:40
+   182| const enrichedTest3: EnrichedProfile = "not an enriched profile"; // Error: Should show custom error for EnrichedProfile
+                                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   imported.js:182:22
+   182| const enrichedTest3: EnrichedProfile = "not an enriched profile"; // Error: Should show custom error for EnrichedProfile
+                             ^^^^^^^^^^^^^^^ [2]
+   imported.js:153:1
+        v--
+   153| /**
+   154|  * @flowCustomError
+   155|  */
+         -^ [3]
+
+
+Error ---------------------------------------------------------------------------------------------- simple_test.js:6:35
+
+Cannot assign `42` to `normalTest1` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   simple_test.js:6:35
+   6| const normalTest1: NormalString = 42; // Error: number is not compatible with string
+                                        ^^ [1]
+
+References:
+   simple_test.js:6:20
+   6| const normalTest1: NormalString = 42; // Error: number is not compatible with string
+                         ^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:16:27
+
+Cannot assign `42` to `userTest1` because `42` [1] is incompatible with `UserId` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:16:27
+   16| const userTest1: UserId = 42; // Error: Should show custom error
+                                 ^^ [1]
+
+References:
+   simple_test.js:16:18
+   16| const userTest1: UserId = 42; // Error: Should show custom error
+                        ^^^^^^ [2]
+   simple_test.js:10:1
+       v--
+   10| /**
+   11|  * @flowCustomError
+   12|  * @description custom desc
+   13|  */
+        -^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:31:29
+
+Cannot assign object literal to `personTest2` because object literal [1] is incompatible with `Person` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:31:29
+   31| const personTest2: Person = { name: "Bob" }; // Error: Should show custom error
+                                   ^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:31:20
+   31| const personTest2: Person = { name: "Bob" }; // Error: Should show custom error
+                          ^^^^^^ [2]
+   simple_test.js:20:1
+       v--
+   20| /**
+   21|  * @flowCustomError
+   22|  * @description custom desc
+   23|  */
+        -^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:32:29
+
+Cannot assign `42` to `personTest3` because `42` [1] is incompatible with `Person` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:32:29
+   32| const personTest3: Person = 42; // Error: Should show custom error
+                                   ^^ [1]
+
+References:
+   simple_test.js:32:20
+   32| const personTest3: Person = 42; // Error: Should show custom error
+                          ^^^^^^ [2]
+   simple_test.js:20:1
+       v--
+   20| /**
+   21|  * @flowCustomError
+   22|  * @description custom desc
+   23|  */
+        -^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:42:29
+
+Cannot assign `"invalid"` to `statusTest2` because `"invalid"` [1] is incompatible with `Status` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:42:29
+   42| const statusTest2: Status = "invalid"; // Error: Should show custom error
+                                   ^^^^^^^^^ [1]
+
+References:
+   simple_test.js:42:20
+   42| const statusTest2: Status = "invalid"; // Error: Should show custom error
+                          ^^^^^^ [2]
+   simple_test.js:35:1
+       v--
+   35| /**
+   36|  * @flowCustomError
+   37|  * @description custom desc
+   38|  */
+        -^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:52:33
+
+Cannot assign object literal to `employeeTest2` because object literal [1] is incompatible with `Employee` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:52:33
+   52| const employeeTest2: Employee = { name: "Diana", age: 28 }; // Error: Should show custom error
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:52:22
+   52| const employeeTest2: Employee = { name: "Diana", age: 28 }; // Error: Should show custom error
+                            ^^^^^^^^ [2]
+   simple_test.js:45:1
+       v--
+   45| /**
+   46|  * @flowCustomError
+   47|  * @description custom desc
+   48|  */
+        -^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:53:33
+
+Cannot assign `42` to `employeeTest3` because `42` [1] is incompatible with `Employee` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:53:33
+   53| const employeeTest3: Employee = 42; // Error: Should show custom error
+                                       ^^ [1]
+
+References:
+   simple_test.js:53:22
+   53| const employeeTest3: Employee = 42; // Error: Should show custom error
+                            ^^^^^^^^ [2]
+   simple_test.js:45:1
+       v--
+   45| /**
+   46|  * @flowCustomError
+   47|  * @description custom desc
+   48|  */
+        -^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:63:37
+
+Cannot assign `42` to `validatorTest2` because `42` [1] is incompatible with `ValidatorFn` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:63:37
+   63| const validatorTest2: ValidatorFn = 42; // Error: Should show custom error
+                                           ^^ [1]
+
+References:
+   simple_test.js:63:23
+   63| const validatorTest2: ValidatorFn = 42; // Error: Should show custom error
+                             ^^^^^^^^^^^ [2]
+   simple_test.js:56:1
+       v--
+   56| /**
+   57|  * @flowCustomError
+   58|  * @description custom desc
+   59|  */
+        -^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:73:33
+
+Cannot assign array literal to `userListTest2` because array literal [1] is incompatible with `UserList` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:73:33
+   73| const userListTest2: UserList = [1, 2, 3]; // Error: Should show custom error for array elements
+                                       ^^^^^^^^^ [1]
+
+References:
+   simple_test.js:73:22
+   73| const userListTest2: UserList = [1, 2, 3]; // Error: Should show custom error for array elements
+                            ^^^^^^^^ [2]
+   simple_test.js:66:1
+       v--
+   66| /**
+   67|  * @flowCustomError
+   68|  * @description custom desc
+   69|  */
+        -^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:78:37
+
+Cannot assign `"not a number"` to `regularTest1` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   simple_test.js:78:37
+   78| const regularTest1: RegularNumber = "not a number"; // Error: Normal error message
+                                           ^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:78:21
+   78| const regularTest1: RegularNumber = "not a number"; // Error: Normal error message
+                           ^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:95:31
+
+Cannot assign object literal to `deptTest2` because object literal [1] is incompatible with `Department` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:95:31
+                                     v
+   95| const deptTest2: Department = {
+   96|   name: "Marketing",
+   97|   manager: { name: "Frank", age: 40 } // Error: Should show custom error
+   98| };
+       ^ [1]
+
+References:
+   simple_test.js:95:18
+   95| const deptTest2: Department = {
+                        ^^^^^^^^^^ [2]
+   simple_test.js:82:1
+       v--
+   82| /**
+   83|  * @flowCustomError
+   84|  * @description custom desc
+   85|  */
+        -^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- simple_test.js:99:31
+
+Cannot assign `"not an object"` to `deptTest3` because `"not an object"` [1] is incompatible with `Department` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:99:31
+   99| const deptTest3: Department = "not an object"; // Error: Should show custom error
+                                     ^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:99:18
+   99| const deptTest3: Department = "not an object"; // Error: Should show custom error
+                        ^^^^^^^^^^ [2]
+   simple_test.js:82:1
+       v--
+   82| /**
+   83|  * @flowCustomError
+   84|  * @description custom desc
+   85|  */
+        -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:113:36
+
+Cannot assign object literal to `optUserTest3` because object literal [1] is incompatible with `OptionalUser` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:113:36
+   113| const optUserTest3: OptionalUser = { nickname: "only_nick" }; // Error: Should show custom error
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:113:21
+   113| const optUserTest3: OptionalUser = { nickname: "only_nick" }; // Error: Should show custom error
+                            ^^^^^^^^^^^^ [2]
+   simple_test.js:102:1
+        v--
+   102| /**
+   103|  * @flowCustomError
+   104|  * @description custom desc
+   105|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:114:36
+
+Cannot assign `42` to `optUserTest4` because `42` [1] is incompatible with `OptionalUser` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:114:36
+   114| const optUserTest4: OptionalUser = 42; // Error: Should show custom error
+                                           ^^ [1]
+
+References:
+   simple_test.js:114:21
+   114| const optUserTest4: OptionalUser = 42; // Error: Should show custom error
+                            ^^^^^^^^^^^^ [2]
+   simple_test.js:102:1
+        v--
+   102| /**
+   103|  * @flowCustomError
+   104|  * @description custom desc
+   105|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:128:31
+
+Cannot assign object literal to `boxTest3` because object literal [1] is incompatible with `Box<number>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:128:31
+   128| const boxTest3: Box<number> = { value: "not a number", label: "wrong" }; // Error: Should show custom error
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:128:17
+   128| const boxTest3: Box<number> = { value: "not a number", label: "wrong" }; // Error: Should show custom error
+                        ^^^^^^^^^^^ [2]
+   simple_test.js:117:1
+        v--
+   117| /**
+   118|  * @flowCustomError
+   119|  * @description custom desc
+   120|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:129:31
+
+Cannot assign `42` to `boxTest4` because `42` [1] is incompatible with `Box<string>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:129:31
+   129| const boxTest4: Box<string> = 42; // Error: Should show custom error
+                                      ^^ [1]
+
+References:
+   simple_test.js:129:17
+   129| const boxTest4: Box<string> = 42; // Error: Should show custom error
+                        ^^^^^^^^^^^ [2]
+   simple_test.js:117:1
+        v--
+   117| /**
+   118|  * @flowCustomError
+   119|  * @description custom desc
+   120|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:143:41
+
+Cannot assign object literal to `pairTest3` because object literal [1] is incompatible with `Pair<number, string>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:143:41
+   143| const pairTest3: Pair<number, string> = { first: "wrong", second: "one" }; // Error: Should show custom error
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:143:18
+   143| const pairTest3: Pair<number, string> = { first: "wrong", second: "one" }; // Error: Should show custom error
+                         ^^^^^^^^^^^^^^^^^^^^ [2]
+   simple_test.js:132:1
+        v--
+   132| /**
+   133|  * @flowCustomError
+   134|  * @description custom desc
+   135|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:144:41
+
+Cannot assign object literal to `pairTest4` because object literal [1] is incompatible with `Pair<string, number>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:144:41
+   144| const pairTest4: Pair<string, number> = { first: "one", second: "wrong" }; // Error: Should show custom error
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:144:18
+   144| const pairTest4: Pair<string, number> = { first: "one", second: "wrong" }; // Error: Should show custom error
+                         ^^^^^^^^^^^^^^^^^^^^ [2]
+   simple_test.js:132:1
+        v--
+   132| /**
+   133|  * @flowCustomError
+   134|  * @description custom desc
+   135|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:145:41
+
+Cannot assign `42` to `pairTest5` because `42` [1] is incompatible with `Pair<number, string>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:145:41
+   145| const pairTest5: Pair<number, string> = 42; // Error: Should show custom error
+                                                ^^ [1]
+
+References:
+   simple_test.js:145:18
+   145| const pairTest5: Pair<number, string> = 42; // Error: Should show custom error
+                         ^^^^^^^^^^^^^^^^^^^^ [2]
+   simple_test.js:132:1
+        v--
+   132| /**
+   133|  * @flowCustomError
+   134|  * @description custom desc
+   135|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:159:43
+
+Cannot assign object literal to `containerTest3` because object literal [1] is incompatible with
+`Container<string>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:159:43
+   159| const containerTest3: Container<string> = { items: [1, 2], count: 2 }; // Error: Should show custom error
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:159:23
+   159| const containerTest3: Container<string> = { items: [1, 2], count: 2 }; // Error: Should show custom error
+                              ^^^^^^^^^^^^^^^^^ [2]
+   simple_test.js:148:1
+        v--
+   148| /**
+   149|  * @flowCustomError
+   150|  * @description custom desc
+   151|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:160:43
+
+Cannot assign `"not a container"` to `containerTest4` because `"not a container"` [1] is incompatible with
+`Container<number>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:160:43
+   160| const containerTest4: Container<number> = "not a container"; // Error: Should show custom error
+                                                  ^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:160:23
+   160| const containerTest4: Container<number> = "not a container"; // Error: Should show custom error
+                              ^^^^^^^^^^^^^^^^^ [2]
+   simple_test.js:148:1
+        v--
+   148| /**
+   149|  * @flowCustomError
+   150|  * @description custom desc
+   151|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:173:37
+
+Cannot assign object literal to `resultTest3` because object literal [1] is incompatible with
+`Result<number, string>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:173:37
+   173| const resultTest3: Result<number> = { type: "success", value: "wrong" }; // Error: Should show custom error
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:173:20
+   173| const resultTest3: Result<number> = { type: "success", value: "wrong" }; // Error: Should show custom error
+                           ^^^^^^^^^^^^^^ [2]
+   simple_test.js:163:1
+        v--
+   163| /**
+   164|  * @flowCustomError
+   165|  * @description custom desc
+   166|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:174:37
+
+Cannot assign `42` to `resultTest4` because `42` [1] is incompatible with `Result<number, string>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:174:37
+   174| const resultTest4: Result<number> = 42; // Error: Should show custom error
+                                            ^^ [1]
+
+References:
+   simple_test.js:174:20
+   174| const resultTest4: Result<number> = 42; // Error: Should show custom error
+                           ^^^^^^^^^^^^^^ [2]
+   simple_test.js:163:1
+        v--
+   163| /**
+   164|  * @flowCustomError
+   165|  * @description custom desc
+   166|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:184:39
+
+Cannot assign object literal to `wrapperTest2` because object literal [1] is incompatible with `Wrapper<number>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:184:39
+   184| const wrapperTest2: Wrapper<number> = { value: "not a number", label: "wrong" }; // Error: Should show custom error
+                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:184:21
+   184| const wrapperTest2: Wrapper<number> = { value: "not a number", label: "wrong" }; // Error: Should show custom error
+                            ^^^^^^^^^^^^^^^ [2]
+   simple_test.js:177:1
+        v--
+   177| /**
+   178|  * @flowCustomError
+   179|  * @description custom desc
+   180|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:185:39
+
+Cannot assign `42` to `wrapperTest3` because `42` [1] is incompatible with `Wrapper<number>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:185:39
+   185| const wrapperTest3: Wrapper<number> = 42; // Error: Should show custom error
+                                              ^^ [1]
+
+References:
+   simple_test.js:185:21
+   185| const wrapperTest3: Wrapper<number> = 42; // Error: Should show custom error
+                            ^^^^^^^^^^^^^^^ [2]
+   simple_test.js:177:1
+        v--
+   177| /**
+   178|  * @flowCustomError
+   179|  * @description custom desc
+   180|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:196:33
+
+Cannot assign array literal to `listTest3` because array literal [1] is incompatible with `List<number>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:196:33
+   196| const listTest3: List<number> = ["not", "numbers"]; // Error: Should show custom error
+                                        ^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:196:18
+   196| const listTest3: List<number> = ["not", "numbers"]; // Error: Should show custom error
+                         ^^^^^^^^^^^^ [2]
+   simple_test.js:188:1
+        v--
+   188| /**
+   189|  * @flowCustomError
+   190|  * @description custom desc
+   191|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:197:33
+
+Cannot assign `42` to `listTest4` because `42` [1] is incompatible with `List<string>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:197:33
+   197| const listTest4: List<string> = 42; // Error: Should show custom error
+                                        ^^ [1]
+
+References:
+   simple_test.js:197:18
+   197| const listTest4: List<string> = 42; // Error: Should show custom error
+                         ^^^^^^^^^^^^ [2]
+   simple_test.js:188:1
+        v--
+   188| /**
+   189|  * @flowCustomError
+   190|  * @description custom desc
+   191|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:206:45
+
+Cannot assign function to `mapperTest1` because `(x: number) => number` [1] is incompatible with
+`Mapper<number, string>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:206:45
+   206| const mapperTest1: Mapper<number, string> = (x) => x; // Error: Should show custom error
+                                                    ^^^^^^^^ [1]
+
+References:
+   simple_test.js:206:20
+   206| const mapperTest1: Mapper<number, string> = (x) => x; // Error: Should show custom error
+                           ^^^^^^^^^^^^^^^^^^^^^^ [2]
+   simple_test.js:200:1
+        v--
+   200| /**
+   201|  * @flowCustomError
+   202|  * @description custom desc
+   203|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:207:45
+
+Cannot assign `42` to `mapperTest2` because `42` [1] is incompatible with `Mapper<number, string>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:207:45
+   207| const mapperTest2: Mapper<number, string> = 42; // Error: Should show custom error
+                                                    ^^ [1]
+
+References:
+   simple_test.js:207:20
+   207| const mapperTest2: Mapper<number, string> = 42; // Error: Should show custom error
+                           ^^^^^^^^^^^^^^^^^^^^^^ [2]
+   simple_test.js:200:1
+        v--
+   200| /**
+   201|  * @flowCustomError
+   202|  * @description custom desc
+   203|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:225:33
+
+Cannot assign object literal to `treeTest2` because object literal [1] is incompatible with `Tree<number>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:225:33
+                                        v
+   225| const treeTest2: Tree<number> = {
+   226|   value: 1,
+   227|   left: { value: "wrong", left: null, right: null }, // Error: Should show custom error
+   228|   right: null,
+   229| };
+        ^ [1]
+
+References:
+   simple_test.js:225:18
+   225| const treeTest2: Tree<number> = {
+                         ^^^^^^^^^^^^ [2]
+   simple_test.js:210:1
+        v--
+   210| /**
+   211|  * @flowCustomError
+   212|  * @description custom desc
+   213|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:230:33
+
+Cannot assign `42` to `treeTest3` because `42` [1] is incompatible with `Tree<string>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:230:33
+   230| const treeTest3: Tree<string> = 42; // Error: Should show custom error
+                                        ^^ [1]
+
+References:
+   simple_test.js:230:18
+   230| const treeTest3: Tree<string> = 42; // Error: Should show custom error
+                         ^^^^^^^^^^^^ [2]
+   simple_test.js:210:1
+        v--
+   210| /**
+   211|  * @flowCustomError
+   212|  * @description custom desc
+   213|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:244:41
+
+Cannot assign object literal to `roBoxTest3` because object literal [1] is incompatible with `ReadOnlyBox<number>` [2].
+[incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:244:41
+   244| const roBoxTest3: ReadOnlyBox<number> = { value: "wrong", label: "error" }; // Error: Should show custom error
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   simple_test.js:244:19
+   244| const roBoxTest3: ReadOnlyBox<number> = { value: "wrong", label: "error" }; // Error: Should show custom error
+                          ^^^^^^^^^^^^^^^^^^^ [2]
+   simple_test.js:233:1
+        v--
+   233| /**
+   234|  * @flowCustomError
+   235|  * @description custom desc
+   236|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:245:41
+
+Cannot assign `42` to `roBoxTest4` because `42` [1] is incompatible with `ReadOnlyBox<number>` [2]. [incompatible-type]
+
+See relevant docs [3].
+
+   simple_test.js:245:41
+   245| const roBoxTest4: ReadOnlyBox<number> = 42; // Error: Should show custom error
+                                                ^^ [1]
+
+References:
+   simple_test.js:245:19
+   245| const roBoxTest4: ReadOnlyBox<number> = 42; // Error: Should show custom error
+                          ^^^^^^^^^^^^^^^^^^^ [2]
+   simple_test.js:233:1
+        v--
+   233| /**
+   234|  * @flowCustomError
+   235|  * @description custom desc
+   236|  */
+         -^ [3]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:253:52
+
+Cannot assign object literal to `normalBoxTest2` because in property `value`: string [1] is incompatible with
+number [2]. [incompatible-type]
+
+   simple_test.js:253:52
+   253| const normalBoxTest2: NormalBox<number> = { value: "wrong" }; // Error: Normal error message
+                                                           ^^^^^^^ [1]
+
+References:
+   simple_test.js:253:33
+   253| const normalBoxTest2: NormalBox<number> = { value: "wrong" }; // Error: Normal error message
+                                        ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- simple_test.js:254:43
+
+Cannot assign `42` to `normalBoxTest3` because number [1] is incompatible with `NormalBox` [2]. [incompatible-type]
+
+   simple_test.js:254:43
+   254| const normalBoxTest3: NormalBox<number> = 42; // Error: Normal error message
+                                                  ^^ [1]
+
+References:
+   simple_test.js:254:23
+   254| const normalBoxTest3: NormalBox<number> = 42; // Error: Normal error message
+                              ^^^^^^^^^^^^^^^^^ [2]
+
+
+
+Found 58 errors

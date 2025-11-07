@@ -1799,16 +1799,34 @@ and merge_component
   in
   merge_tparams_targs env file reason t tparams
 
-let merge_type_alias file reason name tparams body =
-  let t (env, _) =
+let merge_type_alias file reason custom_error_loc_opt name tparams body =
+  let t (env, targs) =
     let t = merge env file body in
-    let t =
-      let open Reason in
-      let open TypeUtil in
-      let id_loc = loc_of_reason reason in
-      mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some id_loc, desc))) t
-    in
-    Type.(DefT (reason, TypeT (TypeAliasKind, t)))
+    match custom_error_loc_opt with
+    | Some custom_error_loc ->
+      let id_loc = Reason.loc_of_reason reason in
+      let nominal_reason =
+        Reason.(update_desc_reason (fun desc -> RTypeAlias (name, Some id_loc, desc)) reason)
+      in
+      let id = Type.Nominal.UserDefinedOpaqueTypeId (Context.make_aloc_id file.cx id_loc, name) in
+      let nominal_type =
+        {
+          Type.underlying_t = Type.Nominal.CustomError { custom_error_loc; t };
+          lower_t = None;
+          upper_t = None;
+          nominal_id = id;
+          nominal_type_args = targs;
+        }
+      in
+      Type.(DefT (reason, TypeT (TypeAliasKind, NominalT (nominal_reason, nominal_type))))
+    | None ->
+      let t =
+        let open Reason in
+        let open TypeUtil in
+        let id_loc = loc_of_reason reason in
+        mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some id_loc, desc))) t
+      in
+      Type.(DefT (reason, TypeT (TypeAliasKind, t)))
   in
   merge_tparams_targs (mk_merge_env SMap.empty) file reason t tparams
 
@@ -1958,7 +1976,8 @@ let merge_declare_fun file defs =
     Type.(IntersectionT (reason, InterRep.make t0 t1 ts))
 
 let merge_def ~const_decl file reason = function
-  | TypeAlias { id_loc = _; name; tparams; body } -> merge_type_alias file reason name tparams body
+  | TypeAlias { id_loc = _; custom_error_loc_opt; name; tparams; body } ->
+    merge_type_alias file reason custom_error_loc_opt name tparams body
   | OpaqueType { id_loc; name; tparams; body; lower_bound; upper_bound } ->
     let id = Type.Nominal.UserDefinedOpaqueTypeId (Context.make_aloc_id file.cx id_loc, name) in
     merge_opaque_type file reason id name tparams lower_bound upper_bound body

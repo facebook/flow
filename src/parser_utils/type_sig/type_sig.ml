@@ -280,6 +280,7 @@ type enum_rep =
 type ('loc, 'a) def =
   | TypeAlias of {
       id_loc: 'loc;
+      custom_error_loc_opt: 'loc option;
       name: string;
       tparams: ('loc, 'a) tparams;
       body: 'a;

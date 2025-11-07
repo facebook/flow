@@ -1153,9 +1153,15 @@ let%expect_test "type_alias_dependencies" =
         stars = []; strict = true; platform_availability_set = None}}
 
     Local defs:
-    0. TypeAlias {id_loc = [1:5-7]; name = "T1"; tparams = Mono; body = (Annot (Number [1:10-16]))}
-    1. TypeAlias {id_loc = [2:5-7]; name = "T2"; tparams = Mono; body = (Annot (Number [2:10-16]))}
-    2. TypeAlias {id_loc = [3:5-7]; name = "T3"; tparams = Mono; body = (Annot (Number [3:10-16]))}
+    0. TypeAlias {id_loc = [1:5-7]; custom_error_loc_opt = None;
+         name = "T1"; tparams = Mono;
+         body = (Annot (Number [1:10-16]))}
+    1. TypeAlias {id_loc = [2:5-7]; custom_error_loc_opt = None;
+         name = "T2"; tparams = Mono;
+         body = (Annot (Number [2:10-16]))}
+    2. TypeAlias {id_loc = [3:5-7]; custom_error_loc_opt = None;
+         name = "T3"; tparams = Mono;
+         body = (Annot (Number [3:10-16]))}
     3. ClassBinding {id_loc = [4:6-7];
          name = "C";
          def =
@@ -1873,6 +1879,7 @@ let%expect_test "invalid_qualified_references" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "T";
          tparams =
          (Poly ([1:13-16],
@@ -2657,8 +2664,11 @@ let%expect_test "bound_coverage" =
         platform_availability_set = None}}
 
     Local defs:
-    0. TypeAlias {id_loc = [1:5-8]; name = "Foo"; tparams = Mono; body = (Annot (Number [1:11-17]))}
+    0. TypeAlias {id_loc = [1:5-8]; custom_error_loc_opt = None;
+         name = "Foo"; tparams = Mono;
+         body = (Annot (Number [1:11-17]))}
     1. TypeAlias {id_loc = [2:12-13];
+         custom_error_loc_opt = None;
          name = "T"; tparams = Mono;
          body =
          (Annot
@@ -3129,8 +3139,8 @@ let%expect_test "type_spread" =
         platform_availability_set = None}}
 
     Local defs:
-    0. TypeAlias {id_loc = [1:5-6]; name = "A";
-         tparams = Mono;
+    0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
+         name = "A"; tparams = Mono;
          body =
          (Annot
             ObjAnnot {loc = [1:9-22];
@@ -3138,8 +3148,8 @@ let%expect_test "type_spread" =
               props =
               { "a" -> (ObjAnnotField ([1:11-12], (Annot (String [1:14-20])), Polarity.Neutral)) };
               proto = ObjAnnotImplicitProto})}
-    1. TypeAlias {id_loc = [2:5-6]; name = "B";
-         tparams = Mono;
+    1. TypeAlias {id_loc = [2:5-6]; custom_error_loc_opt = None;
+         name = "B"; tparams = Mono;
          body =
          (Annot
             ObjAnnot {loc = [2:9-22];
@@ -3148,6 +3158,7 @@ let%expect_test "type_spread" =
               { "b" -> (ObjAnnotField ([2:11-12], (Annot (Number [2:14-20])), Polarity.Neutral)) };
               proto = ObjAnnotImplicitProto})}
     2. TypeAlias {id_loc = [3:12-13];
+         custom_error_loc_opt = None;
          name = "C"; tparams = Mono;
          body =
          (Annot
@@ -3177,13 +3188,14 @@ let%expect_test "inline_interface" =
         platform_availability_set = None}}
 
     Local defs:
-    0. TypeAlias {id_loc = [1:5-6]; name = "A";
-         tparams = Mono;
+    0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
+         name = "A"; tparams = Mono;
          body =
          (Annot
             (InlineInterface ([1:9-21],
                InterfaceSig {extends = []; props = {}; calls = []; dict = None})))}
     1. TypeAlias {id_loc = [2:12-13];
+         custom_error_loc_opt = None;
          name = "B"; tparams = Mono;
          body =
          (Annot
@@ -3212,6 +3224,7 @@ let%expect_test "object_annot_optional" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "A"; tparams = Mono;
          body =
          (Annot
@@ -3315,6 +3328,7 @@ let%expect_test "object_annot_method" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "A"; tparams = Mono;
          body =
          (Annot
@@ -3347,6 +3361,7 @@ let%expect_test "object_annot_call_poly" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "A"; tparams = Mono;
          body =
          (Annot
@@ -3400,6 +3415,7 @@ let%expect_test "object_annot_multiple_call" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "A"; tparams = Mono;
          body =
          (Annot
@@ -3504,6 +3520,7 @@ let%expect_test "tuple_annot" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "A"; tparams = Mono;
          body =
          (Annot
@@ -3535,6 +3552,7 @@ let%expect_test "tuple_annot_labeled" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "A"; tparams = Mono;
          body =
          (Annot
@@ -3568,6 +3586,7 @@ let%expect_test "tuple_annot_variance" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "A"; tparams = Mono;
          body =
          (Annot
@@ -3601,6 +3620,7 @@ let%expect_test "tuple_annot_inexact" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "T"; tparams = Mono;
          body = (Annot Tuple {loc = [1:16-21]; elems_rev = []; inexact = true})}
   |}]
@@ -3620,6 +3640,7 @@ let%expect_test "cycle" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "A"; tparams = Mono;
          body =
          (Annot
@@ -3634,6 +3655,7 @@ let%expect_test "cycle" =
                    Polarity.Neutral)) };
               proto = ObjAnnotImplicitProto})}
     1. TypeAlias {id_loc = [2:12-13];
+         custom_error_loc_opt = None;
          name = "B"; tparams = Mono;
          body =
          (Annot
@@ -3959,6 +3981,7 @@ let%expect_test "exact_by_default" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "T"; tparams = Mono;
          body =
          (Annot
@@ -4662,7 +4685,9 @@ let%expect_test "builtins" =
     Local defs:
     0. Variable {id_loc = [1:12-13];
          name = "x"; def = (TyRef (Unqualified LocalRef {ref_loc = [1:15-16]; index = 1}))}
-    1. TypeAlias {id_loc = [2:5-6]; name = "T"; tparams = Mono; body = (Annot (String [2:9-15]))}
+    1. TypeAlias {id_loc = [2:5-6]; custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = (Annot (String [2:9-15]))}
     2. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values =
@@ -4683,10 +4708,11 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
   |}];
   [%expect {|
     Local defs:
-    0. TypeAlias {id_loc = [1:5-7]; name = "T1";
-         tparams = Mono; body = (Annot (Array ([1:10-23], (Annot (String [1:16-22])))))}
-    1. TypeAlias {id_loc = [2:5-7]; name = "T2";
-         tparams = Mono;
+    0. TypeAlias {id_loc = [1:5-7]; custom_error_loc_opt = None;
+         name = "T1"; tparams = Mono;
+         body = (Annot (Array ([1:10-23], (Annot (String [1:16-22])))))}
+    1. TypeAlias {id_loc = [2:5-7]; custom_error_loc_opt = None;
+         name = "T2"; tparams = Mono;
          body =
          (Annot
             (ReadOnly ([2:10-31],
@@ -4713,6 +4739,7 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
            proto_props = {}; static_calls = [];
            calls = []; dict = None; static_dict = None}}
     3. TypeAlias {id_loc = [4:5-14];
+         custom_error_loc_opt = None;
          name = "$ReadOnly"; tparams = Mono;
          body = (Annot (Number [4:17-23]))}
     4. NamespaceBinding {id_loc = [0:0];
@@ -4740,7 +4767,9 @@ let%expect_test "builtin_cjs_module" =
   |}];
   [%expect {|
     Local defs:
-    0. TypeAlias {id_loc = [1:5-6]; name = "T"; tparams = Mono; body = (Annot (String [1:9-15]))}
+    0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = (Annot (String [1:9-15]))}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -4768,7 +4797,9 @@ let%expect_test "builtin_cjs_ignore_later" =
   |}];
   [%expect {|
     Local defs:
-    0. TypeAlias {id_loc = [1:5-6]; name = "T"; tparams = Mono; body = (Annot (String [1:9-15]))}
+    0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = (Annot (String [1:9-15]))}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -4801,9 +4832,11 @@ let%expect_test "builtin_cjs_module_auto_export_type" =
   [%expect {|
     Local defs:
     0. TypeAlias {id_loc = [2:15-17];
+         custom_error_loc_opt = None;
          name = "T1"; tparams = Mono;
          body = (Annot (Number [2:20-26]))}
     1. TypeAlias {id_loc = [3:14-16];
+         custom_error_loc_opt = None;
          name = "T2"; tparams = Mono;
          body = (Annot (String [3:19-25]))}
     2. NamespaceBinding {id_loc = [0:0];
@@ -4830,7 +4863,10 @@ let%expect_test "builtin_cjs_module_unused_type_exported" =
   |}];
   [%expect {|
     Local defs:
-    0. TypeAlias {id_loc = [2:22-23]; name = "T"; tparams = Mono; body = (Annot (Number [2:26-32]))}
+    0. TypeAlias {id_loc = [2:22-23];
+         custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = (Annot (Number [2:26-32]))}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -4856,7 +4892,10 @@ let%expect_test "builtin_cjs_module_used_type" =
   |}];
   [%expect {|
     Local defs:
-    0. TypeAlias {id_loc = [2:15-16]; name = "T"; tparams = Mono; body = (Annot (Number [2:19-25]))}
+    0. TypeAlias {id_loc = [2:15-16];
+         custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = (Annot (Number [2:19-25]))}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -4881,7 +4920,10 @@ let%expect_test "builtin_cjs_module_used_type_exported" =
   |}];
   [%expect {|
     Local defs:
-    0. TypeAlias {id_loc = [2:22-23]; name = "T"; tparams = Mono; body = (Annot (Number [2:26-32]))}
+    0. TypeAlias {id_loc = [2:22-23];
+         custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = (Annot (Number [2:26-32]))}
     1. NamespaceBinding {id_loc = [0:0];
          name = "globalThis";
          values = { "globalThis" -> ([0:0], (Ref LocalRef {ref_loc = [0:0]; index = 1})) };
@@ -4957,9 +4999,11 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
          members = { "B" -> [10:19-20] };
          has_unknown_members = false}
     7. TypeAlias {id_loc = [11:15-16];
+         custom_error_loc_opt = None;
          name = "T"; tparams = Mono;
          body = (Annot (Number [11:19-25]))}
     8. TypeAlias {id_loc = [12:22-23];
+         custom_error_loc_opt = None;
          name = "U"; tparams = Mono;
          body = (Annot (String [12:26-32]))}
     9. NamespaceBinding {id_loc = [0:0];
@@ -5191,9 +5235,11 @@ let%expect_test "builtin_declare_namespace" =
              type_guard = None; effect_ = ArbitraryEffect})
            ]}
     4. TypeAlias {id_loc = [7:15-18];
+         custom_error_loc_opt = None;
          name = "Baz"; tparams = Mono;
          body = (Annot (String [7:21-27]))}
     5. TypeAlias {id_loc = [8:14-17];
+         custom_error_loc_opt = None;
          name = "Boz"; tparams = Mono;
          body = (Annot (String [8:20-26]))}
     6. EnumBinding {id_loc = [9:7-8];
@@ -5274,13 +5320,16 @@ let%expect_test "declare_namespace_declaration_merging" =
            "b" -> ([5:16-17], (Ref LocalRef {ref_loc = [5:16-17]; index = 2})) };
          types = {}}
     2. Variable {id_loc = [5:16-17]; name = "b"; def = (Annot (String [5:19-25]))}
-    3. TypeAlias {id_loc = [8:7-9]; name = "T1"; tparams = Mono; body = (Annot (String [8:12-18]))}
+    3. TypeAlias {id_loc = [8:7-9]; custom_error_loc_opt = None;
+         name = "T1"; tparams = Mono;
+         body = (Annot (String [8:12-18]))}
     4. NamespaceBinding {id_loc = [7:18-22];
          name = "ns_t"; values = {};
          types =
          { "T1" -> ([8:7-9], (Ref LocalRef {ref_loc = [8:7-9]; index = 3}));
            "T2" -> ([11:7-9], (Ref LocalRef {ref_loc = [11:7-9]; index = 5})) }}
     5. TypeAlias {id_loc = [11:7-9];
+         custom_error_loc_opt = None;
          name = "T2"; tparams = Mono;
          body = (Annot (String [11:12-18]))}
     6. Variable {id_loc = [14:16-17]; name = "a"; def = (Annot (String [14:19-25]))}
@@ -5289,6 +5338,7 @@ let%expect_test "declare_namespace_declaration_merging" =
          values = { "a" -> ([14:16-17], (Ref LocalRef {ref_loc = [14:16-17]; index = 6})) };
          types = { "T1" -> ([20:7-9], (Ref LocalRef {ref_loc = [20:7-9]; index = 10})) }}
     8. TypeAlias {id_loc = [17:7-9];
+         custom_error_loc_opt = None;
          name = "T1"; tparams = Mono;
          body = (Annot (String [17:12-18]))}
     9. NamespaceBinding {id_loc = [16:18-33];
@@ -5296,11 +5346,13 @@ let%expect_test "declare_namespace_declaration_merging" =
          values = { "a" -> ([23:16-17], (Ref LocalRef {ref_loc = [23:16-17]; index = 11})) };
          types = { "T1" -> ([17:7-9], (Ref LocalRef {ref_loc = [17:7-9]; index = 8})) }}
     10. TypeAlias {id_loc = [20:7-9];
+          custom_error_loc_opt = None;
           name = "T1"; tparams = Mono;
           body = (Annot (String [20:12-18]))}
     11. Variable {id_loc = [23:16-17]; name = "a"; def = (Annot (String [23:19-25]))}
     12. Variable {id_loc = [25:14-26]; name = "non_ns_value"; def = (Annot (String [25:28-34]))}
     13. TypeAlias {id_loc = [26:5-16];
+          custom_error_loc_opt = None;
           name = "non_ns_type"; tparams = Mono;
           body = (Annot (String [26:19-25]))}
     14. NamespaceBinding {id_loc = [0:0];
@@ -5484,6 +5536,7 @@ let%expect_test "this_param_5" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-15];
+         custom_error_loc_opt = None;
          name = "Foo"; tparams = Mono;
          body =
          (Annot
@@ -5509,6 +5562,7 @@ let%expect_test "this_param_6" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "O"; tparams = Mono;
          body =
          (Annot
@@ -5545,6 +5599,7 @@ let%expect_test "optional_indexed_access" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "T"; tparams = Mono;
          body =
          (Annot
@@ -5700,6 +5755,7 @@ let%expect_test "optional_tuple_elements" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "T"; tparams = Mono;
          body =
          (Annot
@@ -5732,8 +5788,8 @@ let%expect_test "tuple_spread" =
         platform_availability_set = None}}
 
     Local defs:
-    0. TypeAlias {id_loc = [1:5-6]; name = "S";
-         tparams = Mono;
+    0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
+         name = "S"; tparams = Mono;
          body =
          (Annot
             Tuple {loc = [1:9-26];
@@ -5749,6 +5805,7 @@ let%expect_test "tuple_spread" =
                 ];
               inexact = false})}
     1. TypeAlias {id_loc = [2:12-13];
+         custom_error_loc_opt = None;
          name = "T"; tparams = Mono;
          body =
          (Annot
@@ -5786,8 +5843,8 @@ let%expect_test "mapped_types" =
         platform_availability_set = None}}
 
     Local defs:
-    0. TypeAlias {id_loc = [1:5-6]; name = "O";
-         tparams = Mono;
+    0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
+         name = "O"; tparams = Mono;
          body =
          (Annot
             ObjAnnot {loc = [1:9-35];
@@ -5797,6 +5854,7 @@ let%expect_test "mapped_types" =
                 "foo" -> (ObjAnnotField ([1:10-13], (Annot (Number [1:15-21])), Polarity.Neutral)) };
               proto = ObjAnnotImplicitProto})}
     1. TypeAlias {id_loc = [2:12-14];
+         custom_error_loc_opt = None;
          name = "T1"; tparams = Mono;
          body =
          (Annot
@@ -5816,6 +5874,7 @@ let%expect_test "mapped_types" =
               optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
               inline_keyof = true})}
     2. TypeAlias {id_loc = [3:12-14];
+         custom_error_loc_opt = None;
          name = "T2"; tparams = Mono;
          body =
          (Annot
@@ -5835,6 +5894,7 @@ let%expect_test "mapped_types" =
               optional = Flow_ast.Type.Object.MappedType.Optional;
               inline_keyof = true})}
     3. TypeAlias {id_loc = [4:12-14];
+         custom_error_loc_opt = None;
          name = "T3"; tparams = Mono;
          body =
          (Annot
@@ -5854,6 +5914,7 @@ let%expect_test "mapped_types" =
               optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
               inline_keyof = true})}
     4. TypeAlias {id_loc = [5:12-14];
+         custom_error_loc_opt = None;
          name = "T4"; tparams = Mono;
          body =
          (Annot
@@ -5873,6 +5934,7 @@ let%expect_test "mapped_types" =
               optional = Flow_ast.Type.Object.MappedType.Optional;
               inline_keyof = true})}
     5. TypeAlias {id_loc = [6:12-14];
+         custom_error_loc_opt = None;
          name = "T5"; tparams = Mono;
          body =
          (Annot
@@ -5907,8 +5969,14 @@ let%expect_test "mapped_types_invalid" =
         platform_availability_set = None}}
 
     Local defs:
-    0. TypeAlias {id_loc = [2:12-13]; name = "T"; tparams = Mono; body = (Annot (Any [2:17-43]))}
-    1. TypeAlias {id_loc = [3:12-13]; name = "U"; tparams = Mono; body = (Annot (Any [3:16-55]))}
+    0. TypeAlias {id_loc = [2:12-13];
+         custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = (Annot (Any [2:17-43]))}
+    1. TypeAlias {id_loc = [3:12-13];
+         custom_error_loc_opt = None;
+         name = "U"; tparams = Mono;
+         body = (Annot (Any [3:16-55]))}
   |}]
 
 let%expect_test "dirtify_defs" =
@@ -5930,6 +5998,7 @@ export const {foo} = {foo: 3};
 
     Local defs:
     (dirty) 0. TypeAlias {id_loc = [1:12-18];
+                 custom_error_loc_opt = None;
                  name = "OOOOOO"; tparams = Mono;
                  body =
                  (Annot
@@ -6024,8 +6093,8 @@ let%expect_test "component2" =
         platform_availability_set = None}}
 
     Local defs:
-    0. TypeAlias {id_loc = [1:5-9]; name = "Rest";
-         tparams = Mono;
+    0. TypeAlias {id_loc = [1:5-9]; custom_error_loc_opt = None;
+         name = "Rest"; tparams = Mono;
          body =
          (Annot
             ObjAnnot {loc = [1:12-25];
@@ -6265,8 +6334,12 @@ let%expect_test "component_type" =
         stars = []; strict = true; platform_availability_set = None}}
 
     Local defs:
-    0. TypeAlias {id_loc = [1:5-6]; name = "A"; tparams = Mono; body = (Annot (Number [1:9-15]))}
-    1. TypeAlias {id_loc = [2:5-6]; name = "B"; tparams = Mono; body = (Annot (String [2:9-15]))}
+    0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
+         name = "A"; tparams = Mono;
+         body = (Annot (Number [1:9-15]))}
+    1. TypeAlias {id_loc = [2:5-6]; custom_error_loc_opt = None;
+         name = "B"; tparams = Mono;
+         body = (Annot (String [2:9-15]))}
     2. Variable {id_loc = [3:19-22];
          name = "Baz";
          def =
@@ -6296,6 +6369,7 @@ let%expect_test "component_type" =
                  rest_param = None; renders = (Annot (ComponentMissingRenders [4:28]))}
                )))}
     4. TypeAlias {id_loc = [5:5-10];
+         custom_error_loc_opt = None;
          name = "Props"; tparams = Mono;
          body =
          (Annot
@@ -6303,6 +6377,7 @@ let%expect_test "component_type" =
               obj_kind = InexactObj;
               props = {}; proto = ObjAnnotImplicitProto})}
     5. TypeAlias {id_loc = [6:12-16];
+         custom_error_loc_opt = None;
          name = "Mono"; tparams = Mono;
          body =
          (Annot
@@ -6315,6 +6390,7 @@ let%expect_test "component_type" =
                  renders = (Annot (ComponentMissingRenders [6:38]))}
                )))}
     6. TypeAlias {id_loc = [7:12-16];
+         custom_error_loc_opt = None;
          name = "Poly";
          tparams =
          (Poly ([7:16-23],
@@ -6388,6 +6464,7 @@ let%expect_test "render_types" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "X"; tparams = Mono;
          body =
          (Annot
@@ -6395,6 +6472,7 @@ let%expect_test "render_types" =
               arg = (Annot (Number [1:24-30]));
               variant = Flow_ast.Type.Renders.Normal})}
     1. TypeAlias {id_loc = [2:12-13];
+         custom_error_loc_opt = None;
          name = "Y"; tparams = Mono;
          body =
          (Annot
@@ -6407,6 +6485,7 @@ let%expect_test "render_types" =
               t1 = (Annot (String [2:33-39]));
               ts = []})}
     2. TypeAlias {id_loc = [3:12-13];
+         custom_error_loc_opt = None;
          name = "Z"; tparams = Mono;
          body =
          (Annot
@@ -6441,6 +6520,7 @@ let%expect_test "render_maybe_types" =
 
     Local defs:
     0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
          name = "X"; tparams = Mono;
          body =
          (Annot
@@ -6448,6 +6528,7 @@ let%expect_test "render_maybe_types" =
               arg = (Annot (Number [1:25-31]));
               variant = Flow_ast.Type.Renders.Maybe})}
     1. TypeAlias {id_loc = [2:12-13];
+         custom_error_loc_opt = None;
          name = "Y"; tparams = Mono;
          body =
          (Annot
@@ -6460,6 +6541,7 @@ let%expect_test "render_maybe_types" =
               t1 = (Annot (String [2:34-40]));
               ts = []})}
     2. TypeAlias {id_loc = [3:12-13];
+         custom_error_loc_opt = None;
          name = "Z"; tparams = Mono;
          body =
          (Annot
@@ -6472,6 +6554,7 @@ let%expect_test "render_maybe_types" =
                    ts = []});
               variant = Flow_ast.Type.Renders.Maybe})}
     3. TypeAlias {id_loc = [4:12-13];
+         custom_error_loc_opt = None;
          name = "C"; tparams = Mono;
          body =
          (Annot

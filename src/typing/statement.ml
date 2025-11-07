@@ -2143,11 +2143,54 @@ module Make
         Anno.mk_type_param_declarations cx ~kind:Flow_ast_mapper.TypeAliasTP tparams
       in
       let (((_, t), _) as right_ast) = Anno.convert cx tparams_map right in
-      let t =
-        mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (name, Some name_loc, desc))) t
+      let normal_type_alias () =
+        let t =
+          mod_reason_of_t
+            (update_desc_reason (fun desc -> RTypeAlias (name, Some name_loc, desc)))
+            t
+        in
+        poly_type_of_tparams (Type.Poly.generate_id ()) tparams (DefT (r, TypeT (TypeAliasKind, t)))
       in
       let type_ =
-        poly_type_of_tparams (Type.Poly.generate_id ()) tparams (DefT (r, TypeT (TypeAliasKind, t)))
+        if Context.enable_custom_error cx then
+          match Jsdoc.of_comments comments with
+          | Some (custom_error_loc, jsdoc)
+            when Base.List.exists (Jsdoc.unrecognized_tags jsdoc) ~f:(fun (tag_name, _) ->
+                     String.equal tag_name "flowCustomError"
+                 ) ->
+            (* Convert to opaque type with custom error variant *)
+            let nominal_type_args =
+              Base.List.map
+                ~f:(fun { name; reason; polarity; _ } ->
+                  let t = Subst_name.Map.find name tparams_map in
+                  (name, reason, t, polarity))
+                (TypeParams.to_list tparams)
+            in
+            let nominal_id =
+              Nominal.UserDefinedOpaqueTypeId (Context.make_aloc_id cx name_loc, name)
+            in
+            let nominal_type =
+              {
+                underlying_t = Nominal.CustomError { custom_error_loc; t };
+                lower_t = None;
+                upper_t = None;
+                nominal_id;
+                nominal_type_args;
+              }
+            in
+            let nominal_t =
+              NominalT
+                ( update_desc_reason (fun desc -> RTypeAlias (name, Some name_loc, desc)) r,
+                  nominal_type
+                )
+            in
+            poly_type_of_tparams
+              (Type.Poly.generate_id ())
+              tparams
+              (DefT (r, TypeT (TypeAliasKind, nominal_t)))
+          | _ -> normal_type_alias ()
+        else
+          normal_type_alias ()
       in
       begin
         match tparams with

@@ -4069,14 +4069,31 @@ let declare_class_def =
     |> declare_class_props opts scope tbls xs properties
     |> Acc.declare_class_def tparams extends mixins implements
 
-let type_alias_decl opts scope tbls decl =
+let type_alias_decl opts scope tbls ?export_comments decl =
   let {
     Ast.Statement.TypeAlias.id = (id_loc, { Ast.Identifier.name; comments = _ });
     tparams = tps;
     right = t;
-    comments = _;
+    comments;
   } =
     decl
+  in
+  let custom_error_loc_opt =
+    if opts.enable_custom_error then
+      let extract_loc comments =
+        match Jsdoc.of_comments comments with
+        | Some (custom_error_loc, jsdoc)
+          when Base.List.exists (Jsdoc.unrecognized_tags jsdoc) ~f:(fun (tag_name, _) ->
+                   String.equal tag_name "flowCustomError"
+               ) ->
+          Some (push_loc tbls custom_error_loc)
+        | _ -> None
+      in
+      match extract_loc comments with
+      | Some l -> Some l
+      | None -> extract_loc export_comments
+    else
+      None
   in
   let id_loc = push_loc tbls id_loc in
   let def =
@@ -4084,7 +4101,7 @@ let type_alias_decl opts scope tbls decl =
       (splice tbls id_loc (fun tbls ->
            let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
            let body = annot opts scope tbls xs t in
-           TypeAlias { id_loc; name; tparams; body }
+           TypeAlias { id_loc; custom_error_loc_opt; name; tparams; body }
        )
       )
   in
@@ -4525,13 +4542,13 @@ let enum_decl =
     in
     Scope.bind_enum scope tbls id_loc name def
 
-let export_named_decl opts scope tbls kind stmt =
+let export_named_decl opts scope tbls ?export_comments kind stmt =
   let module S = Ast.Statement in
   let decl =
     match stmt with
     | S.FunctionDeclaration f -> function_decl opts scope tbls f
     | S.ClassDeclaration c -> class_decl opts scope tbls c
-    | S.TypeAlias t -> type_alias_decl opts scope tbls t
+    | S.TypeAlias t -> type_alias_decl opts scope tbls ?export_comments t
     | S.OpaqueType t -> opaque_type_decl opts scope tbls t
     | S.InterfaceDeclaration i -> interface_decl opts scope tbls i
     | S.VariableDeclaration decl -> variable_decls opts scope tbls decl
@@ -4541,7 +4558,7 @@ let export_named_decl opts scope tbls kind stmt =
   in
   decl (Scope.export_binding scope kind)
 
-let declare_export_decl opts scope tbls default =
+let declare_export_decl opts scope tbls ?export_comments default =
   let module S = Ast.Statement in
   let module D = S.DeclareExportDeclaration in
   let export_maybe_default_binding =
@@ -4561,7 +4578,8 @@ let declare_export_decl opts scope tbls default =
     let default_loc = Base.Option.value_exn default in
     let def = annot opts scope tbls SSet.empty t in
     Scope.export_default scope default_loc def
-  | D.NamedType (_, t) -> type_alias_decl opts scope tbls t (Scope.export_binding scope S.ExportType)
+  | D.NamedType (_, t) ->
+    type_alias_decl opts scope tbls ?export_comments t (Scope.export_binding scope S.ExportType)
   | D.NamedOpaqueType (_, t) ->
     opaque_type_decl opts scope tbls t (Scope.export_binding scope S.ExportType)
   | D.Interface (_, i) -> interface_decl opts scope tbls i (Scope.export_binding scope S.ExportType)
@@ -4744,11 +4762,11 @@ let rec statement opts scope tbls (loc, stmt) =
     | _ -> import_decl opts scope tbls decl)
   | S.ExportNamedDeclaration decl ->
     let module E = S.ExportNamedDeclaration in
-    let { E.export_kind = kind; source; specifiers; declaration; comments = _ } = decl in
+    let { E.export_kind = kind; source; specifiers; declaration; comments } = decl in
     begin
       match declaration with
       | None -> ()
-      | Some (_, stmt) -> export_named_decl opts scope tbls kind stmt
+      | Some (_, stmt) -> export_named_decl opts scope tbls ?export_comments:comments kind stmt
     end;
     begin
       match specifiers with
@@ -4824,12 +4842,12 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.DeclareVariable decl -> declare_variable_decl opts scope tbls decl ignore2
   | S.DeclareExportDeclaration decl ->
     let module D = S.DeclareExportDeclaration in
-    let { D.default; declaration; specifiers; source; comments = _ } = decl in
+    let { D.default; declaration; specifiers; source; comments } = decl in
     let default = Option.map ~f:(fun loc -> push_loc tbls loc) default in
     begin
       match declaration with
       | None -> ()
-      | Some decl -> declare_export_decl opts scope tbls default decl
+      | Some decl -> declare_export_decl opts scope tbls ?export_comments:comments default decl
     end;
     begin
       match specifiers with
