@@ -17,7 +17,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"twenty-five"` to `ageTest2` because `"twenty-five"` [1] is incompatible with `Age` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Age`: custom desc.
 
    imported.js:25:23
    25| const ageTest2: Age = "twenty-five"; // Error: Should show custom error
@@ -34,7 +34,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `profileTest2` because object literal [1] is incompatible with `UserProfile` [2].
 [incompatible-type]
 
-custom desc.
+Description of `UserProfile`: custom desc.
 
    imported.js:34:35
                                          v---------------------------------------
@@ -56,7 +56,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `profileTest3` because object literal [1] is incompatible with `UserProfile` [2].
 [incompatible-type]
 
-custom desc.
+Description of `UserProfile`: custom desc.
 
    imported.js:40:35
                                          v-----------------------------------------
@@ -78,7 +78,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"not an object"` to `profileTest4` because `"not an object"` [1] is incompatible with `UserProfile` [2].
 [incompatible-type]
 
-custom desc.
+Description of `UserProfile`: custom desc.
 
    imported.js:46:35
    46| const profileTest4: UserProfile = "not an object"; // Error: Should show custom error
@@ -95,7 +95,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `validatedTest2` because object literal [1] is incompatible with
 `ValidatedInput<number>` [2]. [incompatible-type]
 
-custom desc.
+Description of `ValidatedInput`: custom desc.
 
    imported.js:55:48
                                                       v-----------------------------------
@@ -117,7 +117,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `42` to `validatedTest3` because `42` [1] is incompatible with `ValidatedInput<string>` [2].
 [incompatible-type]
 
-custom desc.
+Description of `ValidatedInput`: custom desc.
 
    imported.js:61:48
    61| const validatedTest3: ValidatedInput<string> = 42; // Error: Should show custom error
@@ -134,7 +134,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `apiTest3` because object literal [1] is incompatible with
 `ApiResponse<string, string>` [2]. [incompatible-type]
 
-custom desc.
+Description of `ApiResponse`: custom desc.
 
    imported.js:74:39
                                              v-----------------------------------
@@ -155,7 +155,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"not a response"` to `apiTest4` because `"not a response"` [1] is incompatible with
 `ApiResponse<string, string>` [2]. [incompatible-type]
 
-custom desc.
+Description of `ApiResponse`: custom desc.
 
    imported.js:79:39
    79| const apiTest4: ApiResponse<string> = "not a response"; // Error: Should show custom error
@@ -171,7 +171,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `true` to `idTest3` because `true` [1] is incompatible with `ID` [2]. [incompatible-type]
 
-custom desc.
+Description of `ID`: custom desc.
 
    imported.js:84:21
    84| const idTest3: ID = true; // Error: Should show custom error
@@ -218,7 +218,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `pointTest2` because object literal [1] is incompatible with `Point3D` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Point3D`: custom desc.
 
    imported.js:93:29
    93| const pointTest2: Point3D = { x: 1, y: 2 }; // Error: Should show custom error
@@ -235,7 +235,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"not a point"` to `pointTest3` because `"not a point"` [1] is incompatible with `Point3D` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Point3D`: custom desc.
 
    imported.js:94:29
    94| const pointTest3: Point3D = "not a point"; // Error: Should show custom error
@@ -251,7 +251,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `"yellow"` to `colorTest3` because `"yellow"` [1] is incompatible with `Color` [2]. [incompatible-type]
 
-custom desc.
+Description of `Color`: custom desc.
 
    imported.js:99:27
    99| const colorTest3: Color = "yellow"; // Error: Should show custom error
@@ -268,7 +268,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `colorMapTest3` because object literal [1] is incompatible with `ColorMap<number>` [2].
 [incompatible-type]
 
-custom desc.
+Description of `ColorMap`: custom desc.
 
    imported.js:114:41
                                                 v-----------------------------------
@@ -290,7 +290,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"not a color map"` to `colorMapTest4` because `"not a color map"` [1] is incompatible with
 `ColorMap<number>` [2]. [incompatible-type]
 
-custom desc.
+Description of `ColorMap`: custom desc.
 
    imported.js:120:41
    120| const colorMapTest4: ColorMap<number> = "not a color map"; // Error: Should show custom error
@@ -307,7 +307,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"not a function"` to `callbackTest3` because `"not a function"` [1] is incompatible with
 `Callback<number>` [2]. [incompatible-type]
 
-custom desc.
+Description of `Callback`: custom desc.
 
    imported.js:125:41
    125| const callbackTest3: Callback<number> = "not a function"; // Error: Should show custom error
@@ -324,7 +324,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"not a number"` to `optionalTest4` because `"not a number"` [1] is incompatible with
 `Optional<number>` [2]. [incompatible-type]
 
-custom desc.
+Description of `Optional`: custom desc.
 
    imported.js:131:41
    131| const optionalTest4: Optional<number> = "not a number"; // Error: Should show custom error
@@ -341,7 +341,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `recordTest3` because object literal [1] is incompatible with
 `ReadonlyRecord<string, number>` [2]. [incompatible-type]
 
-custom desc.
+Description of `ReadonlyRecord`: custom desc.
 
    imported.js:145:53
                                                             v-----------------------------------
@@ -362,7 +362,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"not a record"` to `recordTest4` because `"not a record"` [1] is incompatible with
 `ReadonlyRecord<string, number>` [2]. [incompatible-type]
 
-custom desc.
+Description of `ReadonlyRecord`: custom desc.
 
    imported.js:150:53
    150| const recordTest4: ReadonlyRecord<string, number> = "not a record"; // Error: Should show custom error
@@ -447,7 +447,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `42` to `userTest1` because `42` [1] is incompatible with `UserId` [2]. [incompatible-type]
 
-custom desc.
+Description of `UserId`: custom desc.
 
    simple_test.js:16:27
    16| const userTest1: UserId = 42; // Error: Should show custom error
@@ -464,7 +464,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `personTest2` because object literal [1] is incompatible with `Person` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Person`: custom desc.
 
    simple_test.js:31:29
    31| const personTest2: Person = { name: "Bob" }; // Error: Should show custom error
@@ -480,7 +480,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `42` to `personTest3` because `42` [1] is incompatible with `Person` [2]. [incompatible-type]
 
-custom desc.
+Description of `Person`: custom desc.
 
    simple_test.js:32:29
    32| const personTest3: Person = 42; // Error: Should show custom error
@@ -497,7 +497,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"invalid"` to `statusTest2` because `"invalid"` [1] is incompatible with `Status` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Status`: custom desc.
 
    simple_test.js:42:29
    42| const statusTest2: Status = "invalid"; // Error: Should show custom error
@@ -514,7 +514,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `employeeTest2` because object literal [1] is incompatible with `Employee` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Employee`: custom desc.
 
    simple_test.js:52:33
    52| const employeeTest2: Employee = { name: "Diana", age: 28 }; // Error: Should show custom error
@@ -530,7 +530,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `42` to `employeeTest3` because `42` [1] is incompatible with `Employee` [2]. [incompatible-type]
 
-custom desc.
+Description of `Employee`: custom desc.
 
    simple_test.js:53:33
    53| const employeeTest3: Employee = 42; // Error: Should show custom error
@@ -546,7 +546,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `42` to `validatorTest2` because `42` [1] is incompatible with `ValidatorFn` [2]. [incompatible-type]
 
-custom desc.
+Description of `ValidatorFn`: custom desc.
 
    simple_test.js:63:37
    63| const validatorTest2: ValidatorFn = 42; // Error: Should show custom error
@@ -563,7 +563,7 @@ Error --------------------------------------------------------------------------
 Cannot assign array literal to `userListTest2` because array literal [1] is incompatible with `UserList` [2].
 [incompatible-type]
 
-custom desc.
+Description of `UserList`: custom desc.
 
    simple_test.js:73:33
    73| const userListTest2: UserList = [1, 2, 3]; // Error: Should show custom error for array elements
@@ -594,7 +594,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `deptTest2` because object literal [1] is incompatible with `Department` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Department`: custom desc.
 
    simple_test.js:95:31
                                      v
@@ -615,7 +615,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"not an object"` to `deptTest3` because `"not an object"` [1] is incompatible with `Department` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Department`: custom desc.
 
    simple_test.js:99:31
    99| const deptTest3: Department = "not an object"; // Error: Should show custom error
@@ -632,7 +632,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `optUserTest3` because object literal [1] is incompatible with `OptionalUser` [2].
 [incompatible-type]
 
-custom desc.
+Description of `OptionalUser`: custom desc.
 
    simple_test.js:113:36
    113| const optUserTest3: OptionalUser = { nickname: "only_nick" }; // Error: Should show custom error
@@ -648,7 +648,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `42` to `optUserTest4` because `42` [1] is incompatible with `OptionalUser` [2]. [incompatible-type]
 
-custom desc.
+Description of `OptionalUser`: custom desc.
 
    simple_test.js:114:36
    114| const optUserTest4: OptionalUser = 42; // Error: Should show custom error
@@ -665,7 +665,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `boxTest3` because object literal [1] is incompatible with `Box<number>` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Box`: custom desc.
 
    simple_test.js:128:31
    128| const boxTest3: Box<number> = { value: "not a number", label: "wrong" }; // Error: Should show custom error
@@ -681,7 +681,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `42` to `boxTest4` because `42` [1] is incompatible with `Box<string>` [2]. [incompatible-type]
 
-custom desc.
+Description of `Box`: custom desc.
 
    simple_test.js:129:31
    129| const boxTest4: Box<string> = 42; // Error: Should show custom error
@@ -698,7 +698,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `pairTest3` because object literal [1] is incompatible with `Pair<number, string>` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Pair`: custom desc.
 
    simple_test.js:143:41
    143| const pairTest3: Pair<number, string> = { first: "wrong", second: "one" }; // Error: Should show custom error
@@ -715,7 +715,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `pairTest4` because object literal [1] is incompatible with `Pair<string, number>` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Pair`: custom desc.
 
    simple_test.js:144:41
    144| const pairTest4: Pair<string, number> = { first: "one", second: "wrong" }; // Error: Should show custom error
@@ -731,7 +731,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `42` to `pairTest5` because `42` [1] is incompatible with `Pair<number, string>` [2]. [incompatible-type]
 
-custom desc.
+Description of `Pair`: custom desc.
 
    simple_test.js:145:41
    145| const pairTest5: Pair<number, string> = 42; // Error: Should show custom error
@@ -748,7 +748,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `containerTest3` because object literal [1] is incompatible with
 `Container<string>` [2]. [incompatible-type]
 
-custom desc.
+Description of `Container`: custom desc.
 
    simple_test.js:159:43
    159| const containerTest3: Container<string> = { items: [1, 2], count: 2 }; // Error: Should show custom error
@@ -765,7 +765,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `"not a container"` to `containerTest4` because `"not a container"` [1] is incompatible with
 `Container<number>` [2]. [incompatible-type]
 
-custom desc.
+Description of `Container`: custom desc.
 
    simple_test.js:160:43
    160| const containerTest4: Container<number> = "not a container"; // Error: Should show custom error
@@ -782,7 +782,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `resultTest3` because object literal [1] is incompatible with
 `Result<number, string>` [2]. [incompatible-type]
 
-custom desc.
+Description of `Result`: custom desc.
 
    simple_test.js:173:37
    173| const resultTest3: Result<number> = { type: "success", value: "wrong" }; // Error: Should show custom error
@@ -799,7 +799,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `42` to `resultTest4` because `42` [1] is incompatible with `Result<number, string>` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Result`: custom desc.
 
    simple_test.js:174:37
    174| const resultTest4: Result<number> = 42; // Error: Should show custom error
@@ -816,7 +816,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `wrapperTest2` because object literal [1] is incompatible with `Wrapper<number>` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Wrapper`: custom desc.
 
    simple_test.js:184:39
    184| const wrapperTest2: Wrapper<number> = { value: "not a number", label: "wrong" }; // Error: Should show custom error
@@ -832,7 +832,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `42` to `wrapperTest3` because `42` [1] is incompatible with `Wrapper<number>` [2]. [incompatible-type]
 
-custom desc.
+Description of `Wrapper`: custom desc.
 
    simple_test.js:185:39
    185| const wrapperTest3: Wrapper<number> = 42; // Error: Should show custom error
@@ -849,7 +849,7 @@ Error --------------------------------------------------------------------------
 Cannot assign array literal to `listTest3` because array literal [1] is incompatible with `List<number>` [2].
 [incompatible-type]
 
-custom desc.
+Description of `List`: custom desc.
 
    simple_test.js:196:33
    196| const listTest3: List<number> = ["not", "numbers"]; // Error: Should show custom error
@@ -865,7 +865,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `42` to `listTest4` because `42` [1] is incompatible with `List<string>` [2]. [incompatible-type]
 
-custom desc.
+Description of `List`: custom desc.
 
    simple_test.js:197:33
    197| const listTest4: List<string> = 42; // Error: Should show custom error
@@ -882,7 +882,7 @@ Error --------------------------------------------------------------------------
 Cannot assign function to `mapperTest1` because `(x: number) => number` [1] is incompatible with
 `Mapper<number, string>` [2]. [incompatible-type]
 
-custom desc.
+Description of `Mapper`: custom desc.
 
    simple_test.js:206:45
    206| const mapperTest1: Mapper<number, string> = (x) => x; // Error: Should show custom error
@@ -899,7 +899,7 @@ Error --------------------------------------------------------------------------
 Cannot assign `42` to `mapperTest2` because `42` [1] is incompatible with `Mapper<number, string>` [2].
 [incompatible-type]
 
-custom desc.
+Description of `Mapper`: custom desc.
 
    simple_test.js:207:45
    207| const mapperTest2: Mapper<number, string> = 42; // Error: Should show custom error
@@ -916,7 +916,7 @@ Error --------------------------------------------------------------------------
 Cannot assign object literal to `treeTest2` because object literal [1] is incompatible with `Tree<number>` [2].
 [incompatible-type]
 
-custom desc.
+Example for `Tree`: `{value: 3}`.
 
    simple_test.js:225:33
                                         v
@@ -937,7 +937,7 @@ Error --------------------------------------------------------------------------
 
 Cannot assign `42` to `treeTest3` because `42` [1] is incompatible with `Tree<string>` [2]. [incompatible-type]
 
-custom desc.
+Example for `Tree`: `{value: 3}`.
 
    simple_test.js:230:33
    230| const treeTest3: Tree<string> = 42; // Error: Should show custom error
@@ -949,65 +949,65 @@ References:
                          ^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- simple_test.js:244:41
+Error -------------------------------------------------------------------------------------------- simple_test.js:245:41
 
 Cannot assign object literal to `roBoxTest3` because object literal [1] is incompatible with `ReadOnlyBox<number>` [2].
 [incompatible-type]
 
-custom desc.
+Description of `ReadOnlyBox`: custom desc. Example for `ReadOnlyBox`: `{value: 42, label: 'answer'}`.
 
-   simple_test.js:244:41
-   244| const roBoxTest3: ReadOnlyBox<number> = { value: "wrong", label: "error" }; // Error: Should show custom error
+   simple_test.js:245:41
+   245| const roBoxTest3: ReadOnlyBox<number> = { value: "wrong", label: "error" }; // Error: Should show custom error
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   simple_test.js:244:19
-   244| const roBoxTest3: ReadOnlyBox<number> = { value: "wrong", label: "error" }; // Error: Should show custom error
+   simple_test.js:245:19
+   245| const roBoxTest3: ReadOnlyBox<number> = { value: "wrong", label: "error" }; // Error: Should show custom error
                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- simple_test.js:245:41
+Error -------------------------------------------------------------------------------------------- simple_test.js:246:41
 
 Cannot assign `42` to `roBoxTest4` because `42` [1] is incompatible with `ReadOnlyBox<number>` [2]. [incompatible-type]
 
-custom desc.
+Description of `ReadOnlyBox`: custom desc. Example for `ReadOnlyBox`: `{value: 42, label: 'answer'}`.
 
-   simple_test.js:245:41
-   245| const roBoxTest4: ReadOnlyBox<number> = 42; // Error: Should show custom error
+   simple_test.js:246:41
+   246| const roBoxTest4: ReadOnlyBox<number> = 42; // Error: Should show custom error
                                                 ^^ [1]
 
 References:
-   simple_test.js:245:19
-   245| const roBoxTest4: ReadOnlyBox<number> = 42; // Error: Should show custom error
+   simple_test.js:246:19
+   246| const roBoxTest4: ReadOnlyBox<number> = 42; // Error: Should show custom error
                           ^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- simple_test.js:253:52
+Error -------------------------------------------------------------------------------------------- simple_test.js:254:52
 
 Cannot assign object literal to `normalBoxTest2` because in property `value`: string [1] is incompatible with
 number [2]. [incompatible-type]
 
-   simple_test.js:253:52
-   253| const normalBoxTest2: NormalBox<number> = { value: "wrong" }; // Error: Normal error message
+   simple_test.js:254:52
+   254| const normalBoxTest2: NormalBox<number> = { value: "wrong" }; // Error: Normal error message
                                                            ^^^^^^^ [1]
 
 References:
-   simple_test.js:253:33
-   253| const normalBoxTest2: NormalBox<number> = { value: "wrong" }; // Error: Normal error message
+   simple_test.js:254:33
+   254| const normalBoxTest2: NormalBox<number> = { value: "wrong" }; // Error: Normal error message
                                         ^^^^^^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- simple_test.js:254:43
+Error -------------------------------------------------------------------------------------------- simple_test.js:255:43
 
 Cannot assign `42` to `normalBoxTest3` because number [1] is incompatible with `NormalBox` [2]. [incompatible-type]
 
-   simple_test.js:254:43
-   254| const normalBoxTest3: NormalBox<number> = 42; // Error: Normal error message
+   simple_test.js:255:43
+   255| const normalBoxTest3: NormalBox<number> = 42; // Error: Normal error message
                                                   ^^ [1]
 
 References:
-   simple_test.js:254:23
-   254| const normalBoxTest3: NormalBox<number> = 42; // Error: Normal error message
+   simple_test.js:255:23
+   255| const normalBoxTest3: NormalBox<number> = 42; // Error: Normal error message
                               ^^^^^^^^^^^^^^^^^ [2]
 
 

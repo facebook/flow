@@ -988,7 +988,8 @@ let rec make_intermediate_error :
           ~frame:FrameAnonymous
           ~custom_error_message
       | Frame
-          ( OpaqueTypeCustomErrorCompatibility { lower; upper; lower_t; upper_t; custom_error_loc },
+          ( OpaqueTypeCustomErrorCompatibility
+              { lower; upper; lower_t; upper_t; name; custom_error_loc },
             use_op
           ) ->
         let lower_desc =
@@ -1012,7 +1013,7 @@ let rec make_intermediate_error :
                }
             )
         in
-        let frames = ([], [ExplanationCustomError { custom_error_loc }]) in
+        let frames = ([], [ExplanationCustomError { name; custom_error_loc }]) in
         next_with_loc
           ~loc:(loc_of_aloc (loc_of_reason lower))
           ~frames
@@ -1912,7 +1913,7 @@ let to_printable_error :
         text " using ";
         code example;
       ]
-    | ExplanationCustomError { custom_error_loc } ->
+    | ExplanationCustomError { name; custom_error_loc } ->
       let loc = loc_of_aloc custom_error_loc in
       let custom_docs =
         Loc.source loc
@@ -1928,11 +1929,37 @@ let to_printable_error :
                )
            )
         |> Base.Option.bind ~f:(fun jsdoc ->
-               jsdoc |> Jsdoc.description |> Base.Option.map ~f:Base.String.strip
+               let description =
+                 jsdoc |> Jsdoc.description |> Base.Option.map ~f:Base.String.strip
+               in
+               let example =
+                 Base.List.Assoc.find
+                   (Jsdoc.unrecognized_tags jsdoc)
+                   ~equal:Base.String.equal
+                   "example"
+                 |> Base.Option.bind ~f:Base.Fn.id
+                 |> Base.Option.map ~f:Base.String.strip
+               in
+               match (description, example) with
+               | (None, None) -> None
+               | (Some d, None) -> Some [text "Description of "; code name; text ": "; text d]
+               | (None, Some e) -> Some [text "Example for "; code name; text ": "; code e]
+               | (Some d, Some e) ->
+                 Some
+                   [
+                     text "Description of ";
+                     code name;
+                     text ": ";
+                     text d;
+                     text ". Example for ";
+                     code name;
+                     text ": ";
+                     code e;
+                   ]
            )
       in
       (match custom_docs with
-      | Some d -> [text d]
+      | Some m -> m
       | None -> [text "See "; hardcoded_string_desc_ref "relevant docs" custom_error_loc])
     | ExplanationReactComponentPropsDeepReadOnly props_loc ->
       [

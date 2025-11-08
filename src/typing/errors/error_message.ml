@@ -969,8 +969,8 @@ let map_loc_of_explanation (f : 'a -> 'b) =
       { name; declaration = f declaration; providers = Base.List.map ~f providers }
   | ExplanationConcreteEnumCasting { representation_type; casting_syntax } ->
     ExplanationConcreteEnumCasting { representation_type; casting_syntax }
-  | ExplanationCustomError { custom_error_loc } ->
-    ExplanationCustomError { custom_error_loc = f custom_error_loc }
+  | ExplanationCustomError { name; custom_error_loc } ->
+    ExplanationCustomError { name; custom_error_loc = f custom_error_loc }
   | ExplanationFunctionsWithStaticsToObject -> ExplanationFunctionsWithStaticsToObject
   | ExplanationInvariantSubtypingDueToMutableArray
       { lower_array_loc; upper_array_loc; lower_array_desc; upper_array_desc; upper_array_reason }
@@ -1865,12 +1865,13 @@ let rec convert_type_to_type_desc ~f =
     match use_op with
     | Op _ -> use_op
     | Frame
-        ( OpaqueTypeCustomErrorCompatibility { lower; upper; lower_t; upper_t; custom_error_loc },
+        ( OpaqueTypeCustomErrorCompatibility
+            { lower; upper; lower_t; upper_t; name; custom_error_loc },
           use_op
         ) ->
       Frame
         ( OpaqueTypeCustomErrorCompatibility
-            { lower; upper; lower_t = f lower_t; upper_t = f upper_t; custom_error_loc },
+            { lower; upper; lower_t = f lower_t; upper_t = f upper_t; name; custom_error_loc },
           map_use_op use_op
         )
     | Frame (frame, use_op) -> Frame (frame, map_use_op use_op)

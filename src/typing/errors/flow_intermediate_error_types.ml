@@ -308,7 +308,10 @@ type 'loc explanation =
       representation_type: string;
       casting_syntax: Options.CastingSyntax.t;
     }
-  | ExplanationCustomError of { custom_error_loc: 'loc }
+  | ExplanationCustomError of {
+      name: string;
+      custom_error_loc: 'loc;
+    }
   | ExplanationFunctionsWithStaticsToObject
   | ExplanationInvariantSubtypingDueToMutableArray of {
       lower_array_loc: 'loc;

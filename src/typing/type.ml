@@ -513,6 +513,7 @@ module rec TypeTerm : sig
         lower_t: 'loc TypeOrTypeDesc.t;
         upper_t: 'loc TypeOrTypeDesc.t;
         custom_error_loc: 'loc;
+        name: string;
       }
     | MappedTypeKeyCompatibility of {
         source_type: 'loc virtual_reason;

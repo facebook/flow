@@ -1196,7 +1196,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         NominalT
           ( ru,
             {
-              nominal_id = Nominal.UserDefinedOpaqueTypeId _;
+              nominal_id = Nominal.UserDefinedOpaqueTypeId (_, name);
               underlying_t = Nominal.CustomError { t; custom_error_loc };
               _;
             }
@@ -1210,6 +1210,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                 upper = ru;
                 lower_t = TypeOrTypeDesc.Type l;
                 upper_t = TypeOrTypeDesc.Type u;
+                name;
                 custom_error_loc;
               },
             use_op

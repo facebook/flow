@@ -209,7 +209,7 @@ const mapperTest2: Mapper<number, string> = 42; // Error: Should show custom err
 // Test 18: Generic type with complex nested structures
 /**
  * @flowCustomError
- * @description custom desc
+ * @example {value: 3}
  */
 type Tree<T> = {
   value: T,
@@ -233,6 +233,7 @@ const treeTest3: Tree<string> = 42; // Error: Should show custom error
 /**
  * @flowCustomError
  * @description custom desc
+ * @example {value: 42, label: 'answer'}
  */
 type ReadOnlyBox<+T> = {
   +value: T,

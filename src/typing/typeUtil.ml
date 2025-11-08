@@ -430,13 +430,15 @@ let rec mod_loc_of_virtual_use_op f =
       OpaqueTypeLowerBoundCompatibility { lower = mod_reason lower; upper = mod_reason upper }
     | OpaqueTypeUpperBoundCompatibility { lower; upper } ->
       OpaqueTypeUpperBoundCompatibility { lower = mod_reason lower; upper = mod_reason upper }
-    | OpaqueTypeCustomErrorCompatibility { lower; upper; lower_t; upper_t; custom_error_loc } ->
+    | OpaqueTypeCustomErrorCompatibility { lower; upper; lower_t; upper_t; name; custom_error_loc }
+      ->
       OpaqueTypeCustomErrorCompatibility
         {
           lower = mod_reason lower;
           upper = mod_reason upper;
           lower_t = TypeOrTypeDesc.map_loc f lower_t;
           upper_t = TypeOrTypeDesc.map_loc f upper_t;
+          name;
           custom_error_loc = f custom_error_loc;
         }
     | MappedTypeKeyCompatibility { source_type; mapped_type } ->
