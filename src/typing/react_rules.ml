@@ -187,7 +187,7 @@ let compatibility_call call =
    Ast.Expression.Call.callee =
      ( _,
        Ast.Expression.(
-         Identifier (_, { Ast.Identifier.name = "renderHook" | "renderAsyncHook"; _ }))
+         Identifier (_, { Ast.Identifier.name = "renderHook" | "renderHookAsync"; _ }))
      );
    _;
   } ->
