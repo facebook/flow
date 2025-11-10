@@ -669,6 +669,28 @@ let dump_types js_file js_content js_config_object =
     let types_json = types_to_json types ~strip_root in
     js_of_json types_json
 
+let dump_types_for_tool js_file js_content js_config_object =
+  let filename = File_key.SourceFile (Js.to_string js_file) in
+  let root = File_path.dummy_path in
+  let content = Js.to_string js_content in
+  match parse_content filename content with
+  | Error _ -> failwith "parse error"
+  | Ok (ast, file_sig) ->
+    let (_, docblock) =
+      Docblock_parser.(
+        parse_docblock
+          ~max_tokens:docblock_max_tokens
+          ~file_options:Files.default_options
+          filename
+          content
+      )
+    in
+    let (cx, typed_ast) = infer_and_merge ~root filename js_config_object docblock ast file_sig in
+    let types = Query_types.dump_types_for_tool cx typed_ast 5 in
+    let strip_root = None in
+    let types_json = types_to_json types ~strip_root in
+    js_of_json types_json
+
 let loc_as_range_to_json loc =
   let open Hh_json in
   let open Loc in
@@ -1075,6 +1097,8 @@ let () = Js.Unsafe.set exports "check" (Js.wrap_callback check_js)
 let () = Js.Unsafe.set exports "checkContent" (Js.wrap_callback check_content_js)
 
 let () = Js.Unsafe.set exports "dumpTypes" (Js.wrap_callback dump_types)
+
+let () = Js.Unsafe.set exports "dumpTypesForTool" (Js.wrap_callback dump_types_for_tool)
 
 let () = Js.Unsafe.set exports "jsOfOcamlVersion" (Js.string Sys_js.js_of_ocaml_version)
 
