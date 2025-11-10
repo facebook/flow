@@ -1,3 +1,8 @@
+### 0.291.0
+
+IDE:
+* Flow now provides a code action to fix all `invalid-type-cast-syntax` errors in the file.
+
 ### 0.290.0
 
 Likely to cause new Flow errors:
