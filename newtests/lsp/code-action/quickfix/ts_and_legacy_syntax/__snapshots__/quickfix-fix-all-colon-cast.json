@@ -7,19 +7,45 @@
       "diagnostics": [],
       "edit": {
         "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/fix-colon-cast.js": [
+          "<PLACEHOLDER_PROJECT_URL>/fix-all-colon-cast.js": [
             {
               "range": {
                 "start": {
                   "line": 2,
-                  "character": 0
+                  "character": 18
                 },
                 "end": {
                   "line": 2,
-                  "character": 14
+                  "character": 29
                 }
               },
-              "newText": "\"foo\" as mixed"
+              "newText": "1 as number"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 4,
+                  "character": 18
+                },
+                "end": {
+                  "line": 4,
+                  "character": 35
+                }
+              },
+              "newText": "\"hello\" as string"
+            },
+            {
+              "range": {
+                "start": {
+                  "line": 5,
+                  "character": 19
+                },
+                "end": {
+                  "line": 5,
+                  "character": 34
+                }
+              },
+              "newText": "true as boolean"
             }
           ]
         }
@@ -40,19 +66,19 @@
       "diagnostics": [],
       "edit": {
         "changes": {
-          "<PLACEHOLDER_PROJECT_URL>/fix-colon-cast.js": [
+          "<PLACEHOLDER_PROJECT_URL>/fix-all-colon-cast.js": [
             {
               "range": {
                 "start": {
                   "line": 2,
-                  "character": 0
+                  "character": 18
                 },
                 "end": {
                   "line": 2,
-                  "character": 14
+                  "character": 29
                 }
               },
-              "newText": "\"foo\" as mixed"
+              "newText": "1 as number"
             }
           ]
         }

@@ -1,0 +1,6 @@
+// @flow
+
+const x: number = (1: number);
+//                    ^
+const y: string = ("hello": string);
+const z: boolean = (true: boolean);

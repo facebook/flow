@@ -5,18 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-class mapper ~enabled_casting_syntax target_loc kind =
+class mapper target_loc kind =
   object (this)
     inherit Flow_ast_contains_mapper.mapper target_loc as super
 
     method private build_cast ?comments expression annot =
       let expression = super#expression expression in
       let annot = super#type_ annot in
-      let open Options.CastingSyntax in
-      match enabled_casting_syntax with
-      | As
-      | Both ->
-        Ast_builder.Expressions.as_expression ?comments expression annot
+      Ast_builder.Expressions.as_expression ?comments expression annot
 
     method! expression e =
       let open Flow_ast.Expression in
@@ -30,10 +26,39 @@ class mapper ~enabled_casting_syntax target_loc kind =
       | _ -> super#expression e
   end
 
-let convert_satisfies_expression ~enabled_casting_syntax ast loc =
-  let mapper = new mapper ~enabled_casting_syntax loc `SatisfiesExpression in
+let convert_satisfies_expression ast loc =
+  let mapper = new mapper loc `SatisfiesExpression in
   mapper#program ast
 
-let convert_colon_cast ~enabled_casting_syntax ast loc =
-  let mapper = new mapper ~enabled_casting_syntax loc `ColonCast in
+let convert_colon_cast ast loc =
+  let mapper = new mapper loc `ColonCast in
+  mapper#program ast
+
+class all_mapper kind =
+  object (this)
+    inherit [Loc.t] Flow_ast_mapper.mapper as super
+
+    method private build_cast ?comments expression annot =
+      let expression = super#expression expression in
+      let annot = super#type_ annot in
+      Ast_builder.Expressions.as_expression ?comments expression annot
+
+    method! expression e =
+      let open Flow_ast.Expression in
+      match e with
+      | (_, TypeCast { TypeCast.expression; annot = (_, annot); comments }) when kind = `ColonCast
+        ->
+        this#build_cast ?comments expression annot
+      | (_, TSSatisfies { TSSatisfies.expression; annot = (_, annot); comments })
+        when kind = `SatisfiesExpression ->
+        this#build_cast ?comments expression annot
+      | _ -> super#expression e
+  end
+
+let convert_all_colon_casts ast =
+  let mapper = new all_mapper `ColonCast in
+  mapper#program ast
+
+let convert_all_satisfies_expressions ast =
+  let mapper = new all_mapper `SatisfiesExpression in
   mapper#program ast

@@ -6,13 +6,17 @@
  *)
 
 val convert_satisfies_expression :
-  enabled_casting_syntax:Options.CastingSyntax.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
 
 val convert_colon_cast :
-  enabled_casting_syntax:Options.CastingSyntax.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   Loc.t ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+val convert_all_colon_casts :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t -> (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t
+
+val convert_all_satisfies_expressions :
+  (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t -> (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t

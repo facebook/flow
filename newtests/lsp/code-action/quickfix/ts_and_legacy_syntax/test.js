@@ -6,6 +6,7 @@
 import type {SuiteType} from '../../../../Tester';
 const path = require('path');
 const {suite, test} = require('../../../../Tester');
+const {generateSimpleTests} = require('../../test-utils');
 
 module.exports = (suite(
   ({
@@ -624,5 +625,20 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test(
+      'provide fix-all-in-file quickfix for colon casts',
+      generateSimpleTests(
+        'quickfix',
+        {
+          addFile,
+          lspIgnoreStatusAndCancellation,
+          lspStartAndConnect,
+          lspRequestAndWaitUntilResponse,
+        },
+        __dirname,
+        'fix-all-colon-cast.js',
+        'quickfix-fix-all-colon-cast',
+      ),
+    ).flowConfig('_flowconfig_casting_syntax'),
   ],
 ): SuiteType);

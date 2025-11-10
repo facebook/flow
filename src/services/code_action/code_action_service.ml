@@ -1063,9 +1063,7 @@ let ast_transforms_of_error
         {
           title;
           diagnostic_title = "convert_satisfies_expression";
-          transform =
-            untyped_ast_transform
-              (Autofix_casting_syntax.convert_satisfies_expression ~enabled_casting_syntax);
+          transform = untyped_ast_transform Autofix_casting_syntax.convert_satisfies_expression;
           target_loc = error_loc;
           confidence = WillFixErrorAndSafeForRunningOnSave;
         };
@@ -1116,7 +1114,7 @@ let ast_transforms_of_error
         {
           title;
           diagnostic_title;
-          transform = untyped_ast_transform (fix ~enabled_casting_syntax);
+          transform = untyped_ast_transform fix;
           target_loc = error_loc;
           confidence = WillFixErrorAndSafeForRunningOnSave;
         };
@@ -1607,6 +1605,52 @@ let ast_transforms_of_error
       | _ -> [])
     | _ -> [])
 
+let fix_all_in_file_code_actions ~options ~loc_of_aloc ~ast ~diagnostics ~errors ~loc uri =
+  (* Step 1: Check if there's an EInvalidTypeCastSyntax error at the requested location *)
+  let has_invalid_cast_at_loc =
+    Flow_error.ErrorSet.exists
+      (fun error ->
+        let error_message =
+          Flow_error.msg_of_error error |> Error_message.map_loc_of_error_message loc_of_aloc
+        in
+        match error_message with
+        | Error_message.EInvalidTypeCastSyntax _ ->
+          (match Error_message.loc_of_msg error_message with
+          | Some error_loc -> Loc.intersects error_loc loc
+          | None -> false)
+        | _ -> false)
+      errors
+  in
+  if not has_invalid_cast_at_loc then
+    []
+  else
+    (* Step 2: Generate code action using convert_all_colon_casts *)
+    let new_ast = Autofix_casting_syntax.convert_all_colon_casts ast in
+    if new_ast == ast then
+      []
+    else
+      let opts = layout_options options in
+      let edits =
+        Replacement_printer.mk_loc_patch_ast_differ ~opts (Flow_ast_differ.program ast new_ast)
+        |> flow_loc_patch_to_lsp_edits
+      in
+      let open Lsp in
+      [
+        CodeAction.Action
+          {
+            CodeAction.title = "Convert all colon casts to `as` expressions";
+            kind = CodeActionKind.quickfix;
+            diagnostics;
+            action =
+              CodeAction.BothEditThenCommand
+                ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                  mk_log_command
+                    ~title:"Convert all colon casts to `as` expressions"
+                    ~diagnostic_title:"convert_all_colon_cast"
+                );
+          };
+      ]
+
 let code_actions_of_errors
     ~options
     ~loc_of_aloc
@@ -1939,6 +1983,19 @@ let code_actions_at_loc
         uri
         loc
   in
+  let fix_all_in_file_actions =
+    if include_quick_fixes only then
+      fix_all_in_file_code_actions
+        ~options
+        ~loc_of_aloc
+        ~ast
+        ~diagnostics
+        ~errors:(Context.errors cx)
+        ~loc
+        uri
+    else
+      []
+  in
   let error_fixes =
     code_actions_of_errors
       ~options
@@ -2005,6 +2062,7 @@ let code_actions_at_loc
     parse_error_fixes
     @ autofix_exports_code_actions
     @ autofix_missing_local_annot_code_actions
+    @ fix_all_in_file_actions
     @ error_fixes
     @ scope_based_auto_import_fixes
     @ insert_inferred_render_type_code_actions
