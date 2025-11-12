@@ -36,7 +36,7 @@ let parse_and_pack_module ~strict sig_opts contents =
 
 let parse_and_pack_builtins sig_opts contents =
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
-  Type_sig_utils.(pack_builtins (parse_libs sig_opts [ast]))
+  Type_sig_utils.parse_and_pack_builtins sig_opts [ast]
 
 let make_test_formatter () =
   let open Format in
