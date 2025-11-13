@@ -1192,6 +1192,7 @@ module Make (I : INPUT) : S = struct
         inline_interface ~env super own_props inst_call_t inst_dict
       | (T.InterfaceKind { inline = false }, _) -> to_generic ~env Ty.InterfaceKind r inst
       | (T.ClassKind, _) -> to_generic ~env Ty.ClassKind r inst
+      | (T.RecordKind, _) -> to_generic ~env Ty.RecordKind r inst
 
     and inline_interface =
       let rec extends = function
@@ -1263,7 +1264,7 @@ module Make (I : INPUT) : S = struct
     and this_class_t ~env r t =
       let open Type in
       match t with
-      | { inst = { inst_kind = ClassKind; _ }; _ } ->
+      | { inst = { inst_kind = ClassKind | RecordKind; _ }; _ } ->
         let%map symbol = Reason_utils.instance_symbol env r in
         Ty.TypeOf (Ty.TSymbol symbol, None)
       | { inst = { inst_kind = InterfaceKind _; _ }; _ } ->
@@ -1311,6 +1312,7 @@ module Make (I : INPUT) : S = struct
           match inst.T.inst_kind with
           | T.InterfaceKind _ -> Ty.InterfaceKind
           | T.ClassKind -> Ty.ClassKind
+          | T.RecordKind -> Ty.RecordKind
         in
         mk_generic ~env symbol kind tparams targs
       in
@@ -1895,7 +1897,7 @@ module Make (I : INPUT) : S = struct
             TypeConverter.convert_inline_interface ~env super own_props inst_call_t inst_dict
           in
           Ty.Type ty
-        | (T.ClassKind, _) ->
+        | ((T.ClassKind | T.RecordKind), _) ->
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.ClassDecl (symbol, ps))
       in
@@ -2359,8 +2361,8 @@ module Make (I : INPUT) : S = struct
       let { T.inst_kind; _ } = inst in
       let desc = desc_of_reason ~unwrap:false r in
       match (inst_kind, desc, imode) with
-      | (T.ClassKind, _, IMStatic) -> type__ ~env ~inherited ~source ~imode static
-      | (T.ClassKind, _, (IMUnset | IMInstance))
+      | ((T.ClassKind | T.RecordKind), _, IMStatic) -> type__ ~env ~inherited ~source ~imode static
+      | ((T.ClassKind | T.RecordKind), _, (IMUnset | IMInstance))
       | (T.InterfaceKind _, _, _) ->
         member_expand_object ~env ~inherited ~source super implements inst
 

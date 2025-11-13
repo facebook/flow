@@ -1416,9 +1416,10 @@ let resolved ~next ~recurse cx use_op reason resolve_tool tool x =
 
 let interface_slice cx r ~static ~inst id generics =
   let obj_kind =
-    match inst.inst_dict with
-    | Some dict -> Indexed dict
-    | None -> Inexact
+    match (inst.inst_kind, inst.inst_dict) with
+    | (_, Some dict) -> Indexed dict
+    | (RecordKind, _) -> Exact
+    | _ -> Inexact
   in
   let flags = { obj_kind; react_dro = None } in
   object_slice cx ~interface:(Some (static, inst)) r id flags false [] generics

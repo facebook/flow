@@ -2103,7 +2103,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
       )
     | (DefT (_, ObjT _), NullProtoT _) -> ()
     (* InstanceT -> ObjT *)
-    | (DefT (lreason, InstanceT _), DefT (ureason, ObjT { flags = { obj_kind = Exact; _ }; _ })) ->
+    | ( DefT (lreason, InstanceT { inst = { inst_kind = ClassKind | InterfaceKind _; _ }; _ }),
+        DefT (ureason, ObjT { flags = { obj_kind = Exact; _ }; _ })
+      ) ->
       let reasons = FlowError.ordered_reasons (lreason, ureason) in
       add_output
         cx

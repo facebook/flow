@@ -7385,7 +7385,9 @@ module Make
       x
     | None ->
       let def_reason = repos_reason class_loc reason in
-      let (class_t, _, class_sig, class_ast_f) = mk_class_sig cx ~name_loc ~class_loc reason c in
+      let (class_t, _, class_sig, class_ast_f) =
+        mk_class_sig cx ~name_loc ~class_loc ~inst_kind:ClassKind reason c
+      in
 
       let public_property_map =
         Class_stmt_sig.fields_to_prop_map cx
@@ -7628,7 +7630,7 @@ module Make
         let (t, targs) = Anno.mk_super cx tparams_map loc c targs in
         (Explicit t, (fun () -> Some (loc, { Ast.Class.Extends.expr = expr (); targs; comments })))
     in
-    let mk_class_sig_with_self cx ~name_loc ~class_loc reason self cls =
+    let mk_class_sig_with_self cx ~name_loc ~class_loc ~inst_kind reason self cls =
       let node_cache = Context.node_cache cx in
       match Node_cache.get_class_sig node_cache class_loc with
       | Some x ->
@@ -8136,7 +8138,7 @@ module Make
         Type_env.bind_class_static_this cx static_this_default class_loc;
         Type_env.bind_class_instance_super cx super class_loc;
         Type_env.bind_class_static_super cx static_super class_loc;
-        let (class_t_internal, class_t) = Class_stmt_sig.classtype cx class_sig in
+        let (class_t_internal, class_t) = Class_stmt_sig.classtype cx ~inst_kind class_sig in
         ( class_t,
           class_t_internal,
           class_sig,
@@ -8158,13 +8160,13 @@ module Make
             }
         )
     in
-    fun cx ~name_loc ~class_loc reason cls ->
+    fun cx ~name_loc ~class_loc ~inst_kind reason cls ->
       let rec lazy_sig_info =
         lazy
           (let self =
              Tvar.mk_fully_resolved_lazy cx reason (Lazy.map (fun (_, t, _, _) -> t) lazy_sig_info)
            in
-           mk_class_sig_with_self cx ~name_loc ~class_loc reason self cls
+           mk_class_sig_with_self cx ~name_loc ~class_loc ~inst_kind reason self cls
           )
       in
       Lazy.force lazy_sig_info
@@ -8173,7 +8175,7 @@ module Make
     let def_reason = repos_reason record_loc reason in
     Flow_ast_utils.map_record_as_class record ~f:(fun class_ ->
         let (t, _, class_sig, class_ast_f) =
-          mk_class_sig cx ~name_loc ~class_loc:record_loc reason class_
+          mk_class_sig cx ~name_loc ~class_loc:record_loc ~inst_kind:RecordKind reason class_
         in
         Class_stmt_sig.check_signature_compatibility cx def_reason class_sig;
         Class_stmt_sig.toplevels cx class_sig;

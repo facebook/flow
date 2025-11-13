@@ -126,10 +126,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:212:3
 
-Cannot cast `x` to object type because inexact `R` [1] is incompatible with exact object type [2]. [incompatible-exact]
+Cannot cast `x` to object type because `R` [1] is not a subtype of object type [2]. Class instances are not subtypes of
+object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
 
    declaration.js:212:3
-   212|   x as {+a: number}; // ERROR - TODO: records - make exact
+   212|   x as {+a: number}; // ERROR - TODO: records - update error message language
           ^
 
 References:
@@ -137,7 +138,7 @@ References:
    210|   declare const x: R;
                            ^ [1]
    declaration.js:212:8
-   212|   x as {+a: number}; // ERROR - TODO: records - make exact
+   212|   x as {+a: number}; // ERROR - TODO: records - update error message language
                ^^^^^^^^^^^^ [2]
 
 

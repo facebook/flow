@@ -79,7 +79,7 @@
   rest.c as boolean; // OK
 
   const {...asObj} = x;
-  asObj as {a: number, b: string, c: boolean, ...}; // OK - TODO: records - make exact
+  asObj as {a: number, b: string, c: boolean}; // OK
 }
 
 // Methods
@@ -209,7 +209,7 @@ interface Equatable<T> {
 
   declare const x: R;
 
-  x as {+a: number}; // ERROR - TODO: records - make exact
+  x as {+a: number}; // ERROR - TODO: records - update error message language
   x as {+a: number, ...}; // ERROR - TODO: records - update error message language
 }
 
@@ -253,10 +253,10 @@ interface Equatable<T> {
   }
 
   match (x) {
-    RN {const a, ...} => { // TODO: records - make exact
+    RN {const a} => {
       a as number; // OK
     }
-    RS {const a, ...} => { // TODO: records - make exact
+    RS {const a} => {
       a as string; // OK
     }
   }
@@ -289,7 +289,7 @@ interface Equatable<T> {
 
   declare const x: R;
 
-  const o: {a: number, ...} = {...x}; // OK - TODO: records - make exact
+  const o: {a: number} = {...x}; // OK
 }
 
 // Record itself

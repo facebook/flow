@@ -3060,7 +3060,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let (iface_sig, properties) =
       add_interface_properties env properties ~this:(implicit_mixed_this reason) iface_sig
     in
-    let (_, t) = Class_type_sig.classtype ~check_polarity:true cx iface_sig in
+    let (_, t) =
+      Class_type_sig.classtype
+        ~check_polarity:true
+        ~inst_kind:(InterfaceKind { inline = false })
+        cx
+        iface_sig
+    in
     ( t,
       iface_sig,
       {
@@ -3212,7 +3218,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           let reason = replace_desc_reason RDefaultConstructor reason in
           Class_type_sig.add_default_constructor reason iface_sig
       in
-      let (t_internal, t) = Class_type_sig.classtype ~check_polarity:false cx iface_sig in
+      let (t_internal, t) =
+        Class_type_sig.classtype ~check_polarity:false ~inst_kind:ClassKind cx iface_sig
+      in
       ( t_internal,
         t,
         iface_sig,

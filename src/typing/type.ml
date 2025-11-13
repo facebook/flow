@@ -1480,6 +1480,7 @@ module rec TypeTerm : sig
   and instance_kind =
     | ClassKind
     | InterfaceKind of { inline: bool }
+    | RecordKind
 
   and instance_t = {
     inst: insttype;

@@ -136,6 +136,7 @@ and gen_kind =
   | TypeAliasKind
   | EnumKind
   | ComponentKind
+  | RecordKind
 
 and fun_effect =
   | Hook
@@ -616,6 +617,7 @@ class ['A] comparator_ty =
       | TypeAliasKind -> 2
       | EnumKind -> 3
       | ComponentKind -> 4
+      | RecordKind -> 5
 
     method tag_of_obj_kind _ =
       function
@@ -832,6 +834,7 @@ let debug_string_of_generic_kind = function
   | TypeAliasKind -> "type alias"
   | EnumKind -> "enum"
   | ComponentKind -> "component"
+  | RecordKind -> "record"
 
 let string_of_utility_ctor = function
   | Keys _ -> "$Keys"

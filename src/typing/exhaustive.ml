@@ -44,7 +44,11 @@ let get_class_info cx (t : Type.t) : (ALoc.id * string option) option =
   | Type.DefT
       ( _,
         Type.InstanceT
-          { Type.inst = { Type.inst_kind = Type.ClassKind; class_id; class_name; _ }; _ }
+          {
+            Type.inst =
+              { Type.inst_kind = Type.ClassKind | Type.RecordKind; class_id; class_name; _ };
+            _;
+          }
       ) ->
     Some (class_id, class_name)
   | _ -> None
@@ -676,8 +680,16 @@ end = struct
           in
           { value_union with objects = obj :: objects }
         | Type.DefT
-            (reason, Type.InstanceT { Type.inst = { Type.class_id; class_name; _ }; super; _ }) ->
-          let rest = Some reason in
+            ( reason,
+              Type.InstanceT { Type.inst = { Type.class_id; class_name; inst_kind; _ }; super; _ }
+            ) ->
+          let rest =
+            match inst_kind with
+            | Type.RecordKind -> None
+            | Type.ClassKind
+            | Type.InterfaceKind _ ->
+              Some reason
+          in
           let class_info =
             if Context.enable_pattern_matching_instance_patterns cx then
               let rec get_super_ids acc t =
@@ -687,7 +699,11 @@ end = struct
                       Type.InstanceT
                         {
                           Type.inst =
-                            { Type.inst_kind = Type.ClassKind; class_id = super_class_id; _ };
+                            {
+                              Type.inst_kind = Type.ClassKind | Type.RecordKind;
+                              class_id = super_class_id;
+                              _;
+                            };
                           super;
                           _;
                         }

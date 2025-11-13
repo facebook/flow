@@ -61,7 +61,7 @@ module Make
     | Interface _ -> true
     | Class _ -> false
 
-  let inst_kind x =
+  let get_inst_kind x =
     match x.super with
     | Interface { inline; _ } -> Type.InterfaceKind { inline }
     | Class _ -> Type.ClassKind
@@ -481,7 +481,7 @@ module Make
       | _ -> failwith "statics must be an ObjT"
     )
 
-  let insttype cx ~initialized_static_fields s =
+  let insttype cx ~initialized_static_fields ?inst_kind s =
     let constructor =
       (* Constructors do not bind `this` *)
       let ts =
@@ -526,7 +526,7 @@ module Make
       inst_call_t = Base.Option.map call ~f:(Context.make_call_prop cx);
       initialized_fields;
       initialized_static_fields;
-      inst_kind = inst_kind s;
+      inst_kind = Base.Option.value inst_kind ~default:(get_inst_kind s);
       inst_dict = s.instance.dict;
       class_private_fields = fields_to_prop_map cx s.instance.private_fields;
       class_private_static_fields = fields_to_prop_map cx s.static.private_fields;
@@ -642,7 +642,7 @@ module Make
       in
       (super, static_proto)
 
-  let this_instance_type cx x =
+  let this_instance_type cx ?inst_kind x =
     let { static = { reason = sreason; _ }; instance = { reason; _ }; _ } = x in
     let (super, static_proto) = supertype cx x in
     let implements =
@@ -662,7 +662,7 @@ module Make
           implements
     in
     let (initialized_static_fields, static_objtype) = statictype cx static_proto x in
-    let inst = insttype cx ~initialized_static_fields x in
+    let inst = insttype cx ~initialized_static_fields ?inst_kind x in
     let static = Type.DefT (sreason, Type.ObjT static_objtype) in
     (reason, { Type.static; super; implements; inst })
 
@@ -795,8 +795,8 @@ module Make
 
   (* TODO: Ideally we should check polarity for all class types, but this flag is
      flipped off for interface/declare class currently. *)
-  let classtype cx ?(check_polarity = true) x =
-    let (this_reason, this_instance_t) = this_instance_type cx x in
+  let classtype cx ?(check_polarity = true) ~inst_kind x =
+    let (this_reason, this_instance_t) = this_instance_type cx ~inst_kind x in
     let this = Type.(DefT (this_reason, InstanceT this_instance_t)) in
     let this_tparam = this_tparam x in
     let tparams_with_this =

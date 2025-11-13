@@ -912,10 +912,15 @@ let resolve_inferred_function
   else
     fun_type
 
-let resolve_class cx id_loc reason class_loc class_ =
+let resolve_class cx id_loc reason ~kind class_loc class_ =
   let cache = Context.node_cache cx in
+  let inst_kind =
+    match kind with
+    | ClassKind.Class -> ClassKind
+    | ClassKind.Record -> RecordKind
+  in
   let ((class_t, class_t_internal, _, _) as sig_info) =
-    Statement.mk_class_sig cx ~name_loc:id_loc ~class_loc reason class_
+    Statement.mk_class_sig cx ~name_loc:id_loc ~class_loc ~inst_kind reason class_
   in
   Node_cache.set_class_sig cache class_loc sig_info;
   Type_env.bind_class_self_type cx class_t_internal class_loc;
@@ -1191,8 +1196,8 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
         def_reason
         function_loc
         function_
-    | Class { class_; class_loc; this_super_write_locs = _ } ->
-      resolve_class cx id_loc def_reason class_loc class_
+    | Class { class_; class_loc; kind; this_super_write_locs = _ } ->
+      resolve_class cx id_loc def_reason ~kind class_loc class_
     | MemberAssign { member_loc = _; member = _; rhs } -> expression cx rhs
     | OpAssign { exp_loc; lhs; op; rhs; assertion } ->
       resolve_op_assign cx ~exp_loc lhs assertion op rhs

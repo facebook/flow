@@ -166,6 +166,12 @@ type expression_def = {
   hints: ast_hints;
 }
 
+module ClassKind = struct
+  type t =
+    | Class
+    | Record
+end
+
 type def =
   | Binding of binding
   | MatchCasePattern of {
@@ -210,6 +216,7 @@ type def =
       class_loc: ALoc.t;
       (* A set of this and super write locations that can be resolved by resolving the class. *)
       this_super_write_locs: Env_api.EnvSet.t;
+      kind: ClassKind.t;
     }
   | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
   | DeclaredComponent of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareComponent.t
@@ -327,9 +334,15 @@ module Print = struct
     | DeclaredComponent
         (_, { Ast.Statement.DeclareComponent.id = (_, { Ast.Identifier.name; _ }); _ }) ->
       spf "declared component %s" name
-    | Class { class_ = { Ast.Class.id; _ }; class_loc = _; this_super_write_locs = _ } ->
+    | Class { class_ = { Ast.Class.id; _ }; kind; class_loc = _; this_super_write_locs = _ } ->
+      let kind =
+        match kind with
+        | ClassKind.Class -> "class"
+        | ClassKind.Record -> "record"
+      in
       spf
-        "class %s"
+        "%s %s"
+        kind
         (Base.Option.value_map
            ~f:(fun (_, { Ast.Identifier.name; _ }) -> name)
            ~default:"<anonymous>"

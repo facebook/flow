@@ -1890,7 +1890,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         scope_kind
         ()
 
-    method! class_ loc expr =
+    method! class_ loc expr = this#class_internal ~kind:ClassKind.Class loc expr
+
+    method private class_internal ~kind loc expr =
       let open Ast.Class in
       let { id; body; tparams = class_tparams; extends; implements; class_decorators; comments = _ }
           =
@@ -1954,13 +1956,13 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               this#add_ordinary_binding
                 id_loc
                 reason
-                (Class { class_loc = loc; class_ = expr; this_super_write_locs })
+                (Class { class_loc = loc; class_ = expr; this_super_write_locs; kind })
             | None ->
               let reason = mk_reason (RType (OrdinaryName "<<anonymous class>>")) loc in
               this#add_ordinary_binding
                 loc
                 reason
-                (Class { class_loc = loc; class_ = expr; this_super_write_locs })
+                (Class { class_loc = loc; class_ = expr; this_super_write_locs; kind })
           end;
           expr
       )
@@ -2018,7 +2020,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       meth
 
     method! record_declaration loc record =
-      ignore @@ this#class_ loc (Flow_ast_utils.class_of_record record);
+      ignore
+      @@ this#class_internal ~kind:ClassKind.Record loc (Flow_ast_utils.class_of_record record);
       record
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =

@@ -564,8 +564,16 @@ and intersect =
   (* C<T> has no overlap with C<S> iff T and S have no overlap *)
   and instance_tags_differ cx ~depth t1 t2 =
     match (C.unwrap t1, C.unwrap t2) with
-    | ( DefT (_, InstanceT { inst = { inst_kind = ClassKind; type_args = ts1; _ } as inst1; _ }),
-        DefT (_, InstanceT { inst = { inst_kind = ClassKind; type_args = ts2; _ } as inst2; _ })
+    | ( DefT
+          ( _,
+            InstanceT
+              { inst = { inst_kind = ClassKind | RecordKind; type_args = ts1; _ } as inst1; _ }
+          ),
+        DefT
+          ( _,
+            InstanceT
+              { inst = { inst_kind = ClassKind | RecordKind; type_args = ts2; _ } as inst2; _ }
+          )
       )
       when Flow_js_utils.is_same_instance_type inst1 inst2 ->
       let ts1 = Base.List.map ts1 ~f:(fun (_, _, t, _) -> t) in
