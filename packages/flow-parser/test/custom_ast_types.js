@@ -17,6 +17,11 @@ function custom_ast_types(fork) {
   const shared = fork.use(sharedPlugin);
   const defaults = shared.defaults;
 
+  def('ClassDeclaration').field(
+    'superTypeArguments',
+    or(def('TypeParameterInstantiation'), null),
+  );
+
   /////////
   // flow
   /////////

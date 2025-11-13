@@ -39,7 +39,7 @@
         ]
       },
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -84,7 +84,7 @@
         ]
       },
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -129,7 +129,7 @@
         ]
       },
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -174,7 +174,7 @@
         ]
       },
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -219,7 +219,7 @@
         ]
       },
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -277,7 +277,7 @@
         ]
       },
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     }

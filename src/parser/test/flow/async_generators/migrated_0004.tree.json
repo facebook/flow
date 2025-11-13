@@ -67,9 +67,9 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
-      "superTypeParameters":null,
+      "superClass":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     }

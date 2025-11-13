@@ -160,6 +160,14 @@
             "range":[230,338],
             "key":{
               "type":"PrivateIdentifier",
+              "trailingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":6,"column":122},"end":{"line":6,"column":136}},
+                  "range":[323,337],
+                  "value":" 3.5 T id "
+                }
+              ],
               "leadingComments":[
                 {
                   "type":"Block",
@@ -170,14 +178,6 @@
               ],
               "loc":{"source":null,"start":{"line":6,"column":112},"end":{"line":6,"column":121}},
               "range":[313,322],
-              "trailingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":6,"column":122},"end":{"line":6,"column":136}},
-                  "range":[323,337],
-                  "value":" 3.5 T id "
-                }
-              ],
               "name":"private1",
               "typeAnnotation":null,
               "optional":false
@@ -280,20 +280,20 @@
             "range":[483,544],
             "key":{
               "type":"PrivateIdentifier",
-              "leadingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":10,"column":4},"end":{"line":10,"column":23}},
-                  "range":[463,482],
-                  "value":" 5.1 L private "
-                }
-              ],
               "trailingComments":[
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":10,"column":34},"end":{"line":10,"column":48}},
                   "range":[493,507],
                   "value":" 5.2 T id "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":10,"column":4},"end":{"line":10,"column":23}},
+                  "range":[463,482],
+                  "value":" 5.1 L private "
                 }
               ],
               "loc":{"source":null,"start":{"line":10,"column":24},"end":{"line":10,"column":33}},
@@ -396,7 +396,7 @@
       },
       "typeParameters":null,
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -491,20 +491,20 @@
             "range":[812,817],
             "key":{
               "type":"PrivateIdentifier",
-              "leadingComments":[
-                {
-                  "type":"Block",
-                  "loc":{"source":null,"start":{"line":20,"column":4},"end":{"line":20,"column":23}},
-                  "range":[792,811],
-                  "value":" 7.5 L private "
-                }
-              ],
               "trailingComments":[
                 {
                   "type":"Block",
                   "loc":{"source":null,"start":{"line":20,"column":30},"end":{"line":20,"column":44}},
                   "range":[818,832],
                   "value":" 7.6 T id "
+                }
+              ],
+              "leadingComments":[
+                {
+                  "type":"Block",
+                  "loc":{"source":null,"start":{"line":20,"column":4},"end":{"line":20,"column":23}},
+                  "range":[792,811],
+                  "value":" 7.5 L private "
                 }
               ],
               "loc":{"source":null,"start":{"line":20,"column":24},"end":{"line":20,"column":29}},
@@ -679,7 +679,7 @@
       },
       "typeParameters":null,
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -762,7 +762,7 @@
       },
       "typeParameters":null,
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     }

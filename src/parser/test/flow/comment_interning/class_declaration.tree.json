@@ -69,7 +69,7 @@
       },
       "typeParameters":null,
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -149,7 +149,7 @@
         ]
       },
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -211,7 +211,7 @@
       },
       "typeParameters":null,
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[
         {
           "type":"ClassImplements",
@@ -339,7 +339,7 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "superTypeParameters":{
+      "superTypeArguments":{
         "type":"TypeParameterInstantiation",
         "leadingComments":[
           {
@@ -412,7 +412,7 @@
         },
         "typeParameters":null,
         "superClass":null,
-        "superTypeParameters":null,
+        "superTypeArguments":null,
         "implements":[],
         "decorators":[]
       },
@@ -467,7 +467,7 @@
           ]
         },
         "superClass":null,
-        "superTypeParameters":null,
+        "superTypeArguments":null,
         "implements":[],
         "decorators":[]
       },
@@ -521,7 +521,7 @@
           "typeAnnotation":null,
           "optional":false
         },
-        "superTypeParameters":null,
+        "superTypeArguments":null,
         "implements":[],
         "decorators":[]
       },
@@ -560,7 +560,7 @@
         },
         "typeParameters":null,
         "superClass":null,
-        "superTypeParameters":null,
+        "superTypeArguments":null,
         "implements":[
           {
             "type":"ClassImplements",
@@ -630,7 +630,7 @@
           },
           "typeParameters":null,
           "superClass":null,
-          "superTypeParameters":null,
+          "superTypeArguments":null,
           "implements":[],
           "decorators":[]
         },
@@ -670,7 +670,7 @@
           },
           "typeParameters":null,
           "superClass":null,
-          "superTypeParameters":null,
+          "superTypeArguments":null,
           "implements":[],
           "decorators":[]
         }
@@ -727,7 +727,7 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "superTypeParameters":{
+      "superTypeArguments":{
         "type":"TypeParameterInstantiation",
         "trailingComments":[
           {
@@ -939,7 +939,7 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[
         {
           "type":"ClassImplements",
@@ -1039,7 +1039,7 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[
         {
           "type":"ClassImplements",

@@ -199,9 +199,9 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
-      "superTypeParameters":null,
+      "superClass":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -351,6 +351,7 @@
                                                 "typeAnnotation":null,
                                                 "optional":false
                                               },
+                                              "typeArguments":null,
                                               "arguments":[]
                                             }
                                           }
@@ -455,9 +456,9 @@
                               }
                             ]
                           },
-                          "superClass":null,
                           "typeParameters":null,
-                          "superTypeParameters":null,
+                          "superClass":null,
+                          "superTypeArguments":null,
                           "implements":[],
                           "decorators":[]
                         }
@@ -508,9 +509,9 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
-      "superTypeParameters":null,
+      "superClass":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -725,6 +726,7 @@
                                                 "typeAnnotation":null,
                                                 "optional":false
                                               },
+                                              "typeArguments":null,
                                               "arguments":[]
                                             }
                                           }
@@ -829,9 +831,9 @@
                               }
                             ]
                           },
-                          "superClass":null,
                           "typeParameters":null,
-                          "superTypeParameters":null,
+                          "superClass":null,
+                          "superTypeArguments":null,
                           "implements":[],
                           "decorators":[]
                         }
@@ -956,6 +958,7 @@
                                                 "typeAnnotation":null,
                                                 "optional":false
                                               },
+                                              "typeArguments":null,
                                               "arguments":[]
                                             }
                                           }
@@ -1060,9 +1063,9 @@
                               }
                             ]
                           },
-                          "superClass":null,
                           "typeParameters":null,
-                          "superTypeParameters":null,
+                          "superClass":null,
+                          "superTypeArguments":null,
                           "implements":[],
                           "decorators":[]
                         }
@@ -1113,9 +1116,9 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
-      "superTypeParameters":null,
+      "superClass":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },

@@ -1292,7 +1292,7 @@ with type t = Impl.t = struct
           ("body", class_body body);
           ("typeParameters", option type_parameter_declaration tparams);
           ("superClass", option expression super);
-          ("superTypeParameters", option type_args super_targs);
+          ("superTypeArguments", option type_args super_targs);
           ("implements", implements);
           ("decorators", array_of_list class_decorator class_decorators);
         ]

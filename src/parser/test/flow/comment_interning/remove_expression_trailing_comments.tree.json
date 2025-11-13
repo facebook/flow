@@ -572,7 +572,7 @@
             },
             "typeParameters":null,
             "superClass":null,
-            "superTypeParameters":null,
+            "superTypeArguments":null,
             "implements":[],
             "decorators":[]
           },
@@ -631,7 +631,7 @@
                 },
                 "typeParameters":null,
                 "superClass":null,
-                "superTypeParameters":null,
+                "superTypeArguments":null,
                 "implements":[],
                 "decorators":[]
               }
@@ -2438,12 +2438,12 @@
           }
         ]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":false,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     },
     {
       "type":"FunctionDeclaration",
@@ -2556,12 +2556,12 @@
           }
         ]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":true,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     }
   ],
   "comments":[

@@ -32,12 +32,12 @@
           "range":[68,70],
           "body":[]
         },
+        "returnType":null,
+        "typeParameters":null,
         "async":false,
         "generator":false,
         "predicate":null,
-        "expression":false,
-        "returnType":null,
-        "typeParameters":null
+        "expression":false
       },
       "specifiers":[],
       "source":null,
@@ -72,7 +72,7 @@
         },
         "typeParameters":null,
         "superClass":null,
-        "superTypeParameters":null,
+        "superTypeArguments":null,
         "implements":[],
         "decorators":[]
       },

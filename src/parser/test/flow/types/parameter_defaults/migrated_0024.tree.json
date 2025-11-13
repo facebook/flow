@@ -36,7 +36,7 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "superTypeParameters":{
+      "superTypeArguments":{
         "type":"TypeParameterInstantiation",
         "loc":{"source":null,"start":{"line":1,"column":17},"end":{"line":1,"column":29}},
         "range":[17,29],

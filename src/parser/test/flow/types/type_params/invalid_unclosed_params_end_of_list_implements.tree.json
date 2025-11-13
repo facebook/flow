@@ -45,7 +45,7 @@
         ]
       },
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[
         {
           "type":"ClassImplements",

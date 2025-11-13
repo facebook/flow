@@ -25,9 +25,9 @@
           "range":[23,25],
           "body":[]
         },
-        "superClass":null,
         "typeParameters":null,
-        "superTypeParameters":null,
+        "superClass":null,
+        "superTypeArguments":null,
         "implements":[],
         "decorators":[]
       },

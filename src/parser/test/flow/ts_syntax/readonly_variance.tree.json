@@ -143,14 +143,14 @@
               "loc":{"source":null,"start":{"line":7,"column":2},"end":{"line":7,"column":20}},
               "range":[98,116],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"StringTypeAnnotation",
                 "loc":{"source":null,"start":{"line":7,"column":14},"end":{"line":7,"column":20}},
                 "range":[110,116]
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":true,
             "optional":false,
@@ -176,7 +176,6 @@
               "loc":{"source":null,"start":{"line":8,"column":2},"end":{"line":8,"column":18}},
               "range":[120,136],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"GenericTypeAnnotation",
                 "loc":{"source":null,"start":{"line":8,"column":17},"end":{"line":8,"column":18}},
@@ -208,7 +207,8 @@
                     "default":null
                   }
                 ]
-              }
+              },
+              "this":null
             },
             "method":true,
             "optional":false,
@@ -325,7 +325,7 @@
       },
       "typeParameters":null,
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -634,7 +634,7 @@
       },
       "typeParameters":null,
       "superClass":null,
-      "superTypeParameters":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     },
@@ -777,7 +777,6 @@
               "loc":{"source":null,"start":{"line":33,"column":2},"end":{"line":33,"column":15}},
               "range":[494,507],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"GenericTypeAnnotation",
                 "loc":{"source":null,"start":{"line":33,"column":14},"end":{"line":33,"column":15}},
@@ -793,7 +792,8 @@
                 "typeParameters":null
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":true,
             "optional":false,
@@ -819,7 +819,6 @@
               "loc":{"source":null,"start":{"line":34,"column":2},"end":{"line":34,"column":18}},
               "range":[511,527],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"GenericTypeAnnotation",
                 "loc":{"source":null,"start":{"line":34,"column":17},"end":{"line":34,"column":18}},
@@ -851,7 +850,8 @@
                     "default":null
                   }
                 ]
-              }
+              },
+              "this":null
             },
             "method":true,
             "optional":false,

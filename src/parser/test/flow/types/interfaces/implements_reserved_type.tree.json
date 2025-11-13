@@ -27,9 +27,9 @@
         "range":[66,68],
         "body":[]
       },
-      "superClass":null,
       "typeParameters":null,
-      "superTypeParameters":null,
+      "superClass":null,
+      "superTypeArguments":null,
       "implements":[
         {
           "type":"ClassImplements",

@@ -21,14 +21,6 @@
         "range":[34,36],
         "body":[]
       },
-      "superClass":{
-        "type":"Identifier",
-        "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":27}},
-        "range":[24,27],
-        "name":"Bar",
-        "typeAnnotation":null,
-        "optional":false
-      },
       "typeParameters":{
         "type":"TypeParameterDeclaration",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":15}},
@@ -56,7 +48,15 @@
           }
         ]
       },
-      "superTypeParameters":{
+      "superClass":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":27}},
+        "range":[24,27],
+        "name":"Bar",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "superTypeArguments":{
         "type":"TypeParameterInstantiation",
         "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":33}},
         "range":[27,33],

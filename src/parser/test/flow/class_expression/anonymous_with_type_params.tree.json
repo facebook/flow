@@ -1,71 +1,47 @@
 {
-  "type": "Program",
-  "loc": {
-    "source": null,
-    "start": {"line": 1, "column": 0},
-    "end": {"line": 1, "column": 15}
-  },
-  "range": [0, 15],
-  "body": [
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":15}},
+  "range":[0,15],
+  "body":[
     {
-      "type": "ExpressionStatement",
-      "loc": {
-        "source": null,
-        "start": {"line": 1, "column": 0},
-        "end": {"line": 1, "column": 15}
-      },
-      "range": [0, 15],
-      "expression": {
-        "type": "ClassExpression",
-        "loc": {
-          "source": null,
-          "start": {"line": 1, "column": 1},
-          "end": {"line": 1, "column": 13}
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":15}},
+      "range":[0,15],
+      "expression":{
+        "type":"ClassExpression",
+        "loc":{"source":null,"start":{"line":1,"column":1},"end":{"line":1,"column":13}},
+        "range":[1,13],
+        "id":null,
+        "body":{
+          "type":"ClassBody",
+          "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":13}},
+          "range":[11,13],
+          "body":[]
         },
-        "range": [1, 13],
-        "id": null,
-        "body": {
-          "type": "ClassBody",
-          "loc": {
-            "source": null,
-            "start": {"line": 1, "column": 11},
-            "end": {"line": 1, "column": 13}
-          },
-          "range": [11, 13],
-          "body": []
-        },
-        "typeParameters": {
-          "type": "TypeParameterDeclaration",
-          "loc": {
-            "source": null,
-            "start": {"line": 1, "column": 7},
-            "end": {"line": 1, "column": 10}
-          },
-          "range": [7, 10],
-          "params": [
+        "typeParameters":{
+          "type":"TypeParameterDeclaration",
+          "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":10}},
+          "range":[7,10],
+          "params":[
             {
-              "type": "TypeParameter",
-              "loc": {
-                "source": null,
-                "start": {"line": 1, "column": 8},
-                "end": {"line": 1, "column": 9}
-              },
-              "range": [8, 9],
-              "name": "T",
-              "bound": null,
+              "type":"TypeParameter",
+              "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":1,"column":9}},
+              "range":[8,9],
+              "name":"T",
+              "bound":null,
               "const":false,
-              "variance": null,
-              "default": null
+              "variance":null,
+              "default":null
             }
           ]
         },
-        "superClass": null,
-        "superTypeParameters": null,
-        "implements": [],
-        "decorators": []
+        "superClass":null,
+        "superTypeArguments":null,
+        "implements":[],
+        "decorators":[]
       },
-      "directive": null
+      "directive":null
     }
   ],
-  "comments": []
+  "comments":[]
 }

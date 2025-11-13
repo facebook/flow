@@ -56,6 +56,7 @@
                   "typeAnnotation":null,
                   "optional":false
                 },
+                "typeArguments":null,
                 "arguments":[]
               },
               "async":false,
@@ -72,9 +73,9 @@
           }
         ]
       },
-      "superClass":null,
       "typeParameters":null,
-      "superTypeParameters":null,
+      "superClass":null,
+      "superTypeArguments":null,
       "implements":[],
       "decorators":[]
     }
