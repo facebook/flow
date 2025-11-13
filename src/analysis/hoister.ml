@@ -72,6 +72,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       | (_, VariableDeclaration _)
       | (_, ClassDeclaration _)
       | (_, DeclareClass _)
+      | (_, RecordDeclaration _)
       | (_, DeclareExportDeclaration _)
       | (_, DeclareVariable _)
       | (_, EnumDeclaration _)
@@ -259,6 +260,12 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
         in
         this#update_acc Bindings.(add (id, kind)));
       namespace
+
+    method! record_declaration _loc (record : ('loc, 'loc) Ast.Statement.RecordDeclaration.t) =
+      let open Ast.Statement.RecordDeclaration in
+      let { id; _ } = record in
+      this#add_const_binding ~kind:Bindings.Class id;
+      record
   end
 
 class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =

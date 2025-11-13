@@ -1,0 +1,5 @@
+[options]
+all=true
+experimental.records=true
+experimental.pattern_matching=true
+experimental.pattern_matching.instance_patterns=true

@@ -775,6 +775,17 @@ end = struct
       method! match_object_pattern_property_key key = key
 
       method! match_member_pattern_property prop = prop
+
+      method! record_declaration loc record =
+        this#enter_possibly_polymorphic_scope
+          ~is_polymorphic:(Option.is_some record.Ast.Statement.RecordDeclaration.tparams)
+          ~kind:Lex
+          super#record_declaration
+          loc
+          record
+
+      method! record_body ((loc, _) as body) =
+        this#enter_scope Var (fun _ body -> super#record_body body) loc body
     end
 
   (****** pass 1 *******)

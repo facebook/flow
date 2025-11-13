@@ -1785,12 +1785,31 @@ module Make
       in
       Type_env.init_var cx ~use_op t name_loc;
       (loc, DeclareClass decl_ast)
-    | (loc, RecordDeclaration record) ->
-      (* TODO: records *)
-      Flow_js_utils.add_output
-        cx
-        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.Records));
-      (loc, RecordDeclaration (Tast_utils.error_mapper#record_declaration record))
+    | (record_loc, RecordDeclaration record) ->
+      if not @@ Context.enable_records cx then (
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EUnsupportedSyntax (record_loc, Flow_intermediate_error_types.Records));
+        (record_loc, RecordDeclaration (Tast_utils.error_mapper#record_declaration record))
+      ) else
+        let {
+          Ast.Statement.RecordDeclaration.id = (name_loc, { Ast.Identifier.name; comments = _ });
+          _;
+        } =
+          record
+        in
+        let name = OrdinaryName name in
+        let reason = DescFormat.instance_reason name name_loc in
+        let tast_record_type = Type_env.read_declared_type cx reason name_loc in
+        let (record_t, ast) = mk_record cx record_loc ~name_loc ~tast_record_type reason record in
+        let use_op =
+          Op
+            (AssignVar
+               { var = Some (mk_reason (RIdentifier name) name_loc); init = reason_of_t record_t }
+            )
+        in
+        Type_env.init_implicit_const cx ~use_op record_t name_loc;
+        (record_loc, RecordDeclaration ast)
     | ( loc,
         DeclareComponent
           ( {
@@ -8149,6 +8168,18 @@ module Make
           )
       in
       Lazy.force lazy_sig_info
+
+  and mk_record cx record_loc ~name_loc ?tast_record_type reason record =
+    let def_reason = repos_reason record_loc reason in
+    Flow_ast_utils.map_record_as_class record ~f:(fun class_ ->
+        let (t, _, class_sig, class_ast_f) =
+          mk_class_sig cx ~name_loc ~class_loc:record_loc reason class_
+        in
+        Class_stmt_sig.check_signature_compatibility cx def_reason class_sig;
+        Class_stmt_sig.toplevels cx class_sig;
+        let tast_type = Base.Option.value tast_record_type ~default:t in
+        (t, class_ast_f tast_type)
+    )
 
   and mk_component_sig =
     let mk_param_annot cx tparams_map reason = function

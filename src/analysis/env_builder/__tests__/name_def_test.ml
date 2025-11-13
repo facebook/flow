@@ -22,6 +22,8 @@ module Context = struct
 
   let enable_pattern_matching _cx = true
 
+  let enable_records _cx = true
+
   let file _cx = File_key.SourceFile "test.js"
 
   let jsx _cx = !jsx_mode
@@ -491,6 +493,21 @@ var y = function f(): number {
   [%expect {|
     (2, 4) to (2, 5) =>
     (2, 17) to (2, 18) |}]
+
+let%expect_test "record_def" =
+  print_init_test {|
+let x;
+record R {
+  foo() { x = 42; return 42 }
+}
+x = 10;
+  |};
+  [%expect {|
+    [
+      (3, 7) to (3, 8) => class R;
+      (4, 10) to (4, 11) => val (4, 14) to (4, 16);
+      (6, 0) to (6, 1) => val (6, 4) to (6, 6)
+    ] |}]
 
 let%expect_test "class_def" =
   print_init_test {|

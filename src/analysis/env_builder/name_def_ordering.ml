@@ -100,6 +100,8 @@ class toplevel_expression_collector =
 
     method! class_ _ x = x
 
+    method! record_declaration _ x = x
+
     method! function_declaration _ x = x
 
     method! function_expression _ x = x

@@ -2659,7 +2659,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.RecordDeclaration.t =
       let open Ast.Statement.RecordDeclaration in
       let { id; tparams; implements; body; comments } = record in
-      let id' = this#t_identifier id in
+      let id' = this#pattern_identifier ~kind:Ast.Variable.Const id in
       let comments' = this#syntax_opt comments in
       this#type_params_opt tparams (fun tparams' ->
           let implements' = Base.Option.map ~f:this#class_implements implements in

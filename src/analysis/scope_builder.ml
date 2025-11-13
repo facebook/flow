@@ -1055,6 +1055,30 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           enum
         else
           super#enum_declaration loc enum
+
+      method! record_declaration _loc (record : ('loc, 'loc) Ast.Statement.RecordDeclaration.t) =
+        let open Ast.Statement.RecordDeclaration in
+        let { id; tparams; implements; body; comments = _ } = record in
+        ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id;
+        let implements_targs =
+          Base.Option.value_map
+            implements
+            ~default:[]
+            ~f:(fun (_, { Ast.Class.Implements.interfaces; comments = _ }) ->
+              Base.List.filter_map
+                interfaces
+                ~f:(fun (_, { Ast.Class.Implements.Interface.id; targs }) ->
+                  ignore @@ this#type_identifier_reference id;
+                  targs
+              )
+          )
+        in
+        let in_tparam_scope () =
+          run_list this#type_args implements_targs;
+          ignore @@ this#record_body body
+        in
+        this#scoped_type_params tparams ~in_tparam_scope;
+        record
     end
 
   let program ?(flowmin_compatibility = false) ~enable_enums ~with_types program =

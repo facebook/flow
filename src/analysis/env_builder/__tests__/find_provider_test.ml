@@ -32,7 +32,9 @@ let dedent_trim str =
 
 let parse contents =
   let parse_options =
-    Some Parser_env.{ default_parse_options with enums = true; pattern_matching = true }
+    Some
+      Parser_env.
+        { default_parse_options with enums = true; pattern_matching = true; records = true }
   in
   let (ast, _errors) = Parser_flow.program ~parse_options (dedent_trim contents) in
   ast

@@ -2017,6 +2017,10 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       run_list this#class_decorator decorators;
       meth
 
+    method! record_declaration loc record =
+      ignore @@ this#class_ loc (Flow_ast_utils.class_of_record record);
+      record
+
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       let open Ast.Statement.DeclareFunction in
       let { id = (id_loc, { Ast.Identifier.name; _ }); annot; predicate = _; comments = _ } =

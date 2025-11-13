@@ -557,6 +557,8 @@ end = struct
       (* We avoid deeper class visit, since it will be handled by name_resolver. *)
       method! class_ _ cls = cls
 
+      method! record_declaration _ record = record
+
       method! call loc expr =
         let open Ast.Expression.Call in
         let { callee; targs; arguments; _ } = expr in
@@ -4709,6 +4711,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           field
         )
 
+      method! record_declaration loc record =
+        ignore @@ this#class_ loc (Flow_ast_utils.class_of_record record);
+        record
+
       method! object_ loc expr =
         let open Ast.Expression.Object in
         let { properties; comments = _ } = expr in
@@ -6715,6 +6721,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#mark_dead_write (Env_api.ClassStaticThisLoc, loc);
         this#mark_dead_write (Env_api.ClassStaticSuperLoc, loc);
         super#class_ loc expr
+
+      method! record_declaration loc record =
+        this#mark_dead_write (Env_api.ClassSelfLoc, loc);
+        this#mark_dead_write (Env_api.ClassInstanceThisLoc, loc);
+        this#mark_dead_write (Env_api.ClassInstanceSuperLoc, loc);
+        this#mark_dead_write (Env_api.ClassStaticThisLoc, loc);
+        this#mark_dead_write (Env_api.ClassStaticSuperLoc, loc);
+        super#record_declaration loc record
 
       method! function_ loc expr =
         let { Flow_ast.Function.id; _ } = expr in

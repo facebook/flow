@@ -810,3 +810,161 @@ let unwrap_nonnull_lhs : 'loc 'tloc. ('loc, 'tloc) Pattern.t -> ('loc, 'tloc) Pa
       | _ -> ((loc, Pattern.Expression expr), optional)
     end
   | _ -> (pat, false)
+
+let class_of_record :
+      'loc 'tloc. ('loc, 'tloc) Statement.RecordDeclaration.t -> ('loc, 'tloc) Class.t =
+ fun record ->
+  let open Statement in
+  let { RecordDeclaration.id; tparams; implements; body = (body_loc, body_details); comments } =
+    record
+  in
+  let { RecordDeclaration.Body.body = record_body; comments = body_comments } = body_details in
+  let class_body_elements =
+    List.map
+      (fun element ->
+        match element with
+        | RecordDeclaration.Body.Method method_ -> Class.Body.Method method_
+        | RecordDeclaration.Body.Property (prop_loc, prop) ->
+          let { RecordDeclaration.Property.key; annot; default_value; comments = prop_comments } =
+            prop
+          in
+          let value =
+            match default_value with
+            | Some expr -> Class.Property.Initialized expr
+            | None -> Class.Property.Uninitialized
+          in
+          let class_prop =
+            ( prop_loc,
+              {
+                Class.Property.key = E.Object.Property.Identifier key;
+                value;
+                annot = Type.Available annot;
+                static = false;
+                variance = Some (body_loc, { Variance.kind = Variance.Plus; comments = None });
+                decorators = [];
+                comments = prop_comments;
+              }
+            )
+          in
+          Class.Body.Property class_prop
+        | RecordDeclaration.Body.StaticProperty (static_prop_loc, static_prop) ->
+          let {
+            RecordDeclaration.StaticProperty.key;
+            annot;
+            value = init_expr;
+            comments = static_prop_comments;
+          } =
+            static_prop
+          in
+          let class_static_prop =
+            ( static_prop_loc,
+              {
+                Class.Property.key = E.Object.Property.Identifier key;
+                value = Class.Property.Initialized init_expr;
+                annot = Type.Available annot;
+                static = true;
+                variance = Some (body_loc, { Variance.kind = Variance.Plus; comments = None });
+                decorators = [];
+                comments = static_prop_comments;
+              }
+            )
+          in
+          Class.Body.Property class_static_prop)
+      record_body
+  in
+  let class_body =
+    (body_loc, { Class.Body.body = class_body_elements; comments = body_comments })
+  in
+  {
+    Class.id = Some id;
+    body = class_body;
+    tparams;
+    extends = None;
+    implements;
+    class_decorators = [];
+    comments;
+  }
+
+(* This function is not publicly exposed, but only called as part of `map_record_as_class`.
+ * Because of this we know the input class will have been produced by `class_of_record`,
+ * and as such we can make assumptions about the input class. *)
+let record_of_class :
+      'loc 'tloc. ('loc, 'tloc) Class.t -> ('loc, 'tloc) Statement.RecordDeclaration.t =
+ fun class_ ->
+  let open Statement in
+  let { Class.id; body = (body_loc, body_details); tparams; implements; comments; _ } = class_ in
+  let { Class.Body.body = class_body; comments = body_comments } = body_details in
+  let record_body_elements =
+    List.map
+      (fun element ->
+        match element with
+        | Class.Body.Method method_ -> RecordDeclaration.Body.Method method_
+        | Class.Body.Property (prop_loc, prop) ->
+          let { Class.Property.key; value; annot; static; comments = prop_comments; _ } = prop in
+          if static then
+            match (key, value) with
+            | (E.Object.Property.Identifier key_id, Class.Property.Initialized init_expr) ->
+              let annot =
+                match annot with
+                | Type.Available annot -> annot
+                | Type.Missing _ -> failwith "record_of_class: Records must have an annot"
+              in
+              let record_static_prop =
+                ( prop_loc,
+                  {
+                    RecordDeclaration.StaticProperty.key = key_id;
+                    annot;
+                    value = init_expr;
+                    comments = prop_comments;
+                  }
+                )
+              in
+              RecordDeclaration.Body.StaticProperty record_static_prop
+            | _ -> failwith "record_of_class: Records only allows identifier keys"
+          else begin
+            match key with
+            | E.Object.Property.Identifier key_id ->
+              let annot =
+                match annot with
+                | Type.Available annot -> annot
+                | Type.Missing _ -> failwith "record_of_class: Records must have an annot"
+              in
+              let default_value =
+                match value with
+                | Class.Property.Initialized expr -> Some expr
+                | Class.Property.Uninitialized -> None
+                | Class.Property.Declared -> None
+              in
+              let record_prop =
+                ( prop_loc,
+                  {
+                    RecordDeclaration.Property.key = key_id;
+                    annot;
+                    default_value;
+                    comments = prop_comments;
+                  }
+                )
+              in
+              RecordDeclaration.Body.Property record_prop
+            | _ -> failwith "record_of_class: Records only allow identifier keys"
+          end
+        | Class.Body.PrivateField _ ->
+          failwith "record_of_class: Records do not allow private fields"
+        | Class.Body.StaticBlock _ -> failwith "record_of_class: Records do not allow static blocks")
+      class_body
+  in
+  let record_body =
+    (body_loc, { RecordDeclaration.Body.body = record_body_elements; comments = body_comments })
+  in
+  match id with
+  | Some id -> { RecordDeclaration.id; tparams; implements; body = record_body; comments }
+  | None -> failwith "record_of_class: Records must be named"
+
+let map_record_as_class :
+      'loc 'tloc 'x.
+      ('loc, 'loc) Statement.RecordDeclaration.t ->
+      f:(('loc, 'loc) Class.t -> 'x * ('loc, 'tloc) Class.t) ->
+      'x * ('loc, 'tloc) Statement.RecordDeclaration.t =
+ fun record ~f ->
+  let (x, class_) = f (class_of_record record) in
+  (x, record_of_class class_)

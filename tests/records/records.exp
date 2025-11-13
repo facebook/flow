@@ -1,0 +1,196 @@
+Error ----------------------------------------------------------------------------------------------- declaration.js:8:5
+
+Cannot get `x.xxx` because property `xxx` is missing in `R` [1]. [prop-missing]
+
+   declaration.js:8:5
+   8|   x.xxx; // ERROR: property not found
+          ^^^
+
+References:
+   declaration.js:5:20
+   5|   declare const x: R;
+                         ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- declaration.js:20:3
+
+Cannot cast `x.a` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   declaration.js:20:3
+   20|   x.a as empty; // ERROR: `number`
+         ^^^
+
+References:
+   declaration.js:14:8
+   14|     a: number,
+              ^^^^^^ [1]
+   declaration.js:20:10
+   20|   x.a as empty; // ERROR: `number`
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- declaration.js:36:5
+
+Cannot get `x.xxx` because property `xxx` is missing in `R` [1]. [prop-missing]
+
+   declaration.js:36:5
+   36|   x.xxx; // ERROR: property not found
+           ^^^
+
+References:
+   declaration.js:31:20
+   31|   declare const x: R;
+                          ^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------- declaration.js:47:5
+
+Cannot assign `1` to `x.a` because property `a` is not writable. [cannot-write]
+
+   47|   x.a = 1; // ERROR: not writable
+           ^
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:133:5
+
+Cannot assign function to `R.random` because property `random` is not writable. [cannot-write]
+
+   133|   R.random = () => x; // ERROR: method not writable
+            ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:143:3
+
+Cannot cast `R.zero` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   declaration.js:143:3
+   143|   R.zero as empty; // ERROR: `number`
+          ^^^^^^
+
+References:
+   declaration.js:139:18
+   139|     static zero: number = 0,
+                         ^^^^^^ [1]
+   declaration.js:143:13
+   143|   R.zero as empty; // ERROR: `number`
+                    ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:144:5
+
+Cannot assign `1` to `R.zero` because property `zero` is not writable. [cannot-write]
+
+   144|   R.zero = 1; // ERROR: static not writable
+            ^^^^
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:171:7
+
+Cannot compare `x` [1] to number literal `1` [2], because `R` [3] is not a subtype of number literal `1` [2] and number
+literal `1` [2] is not a subtype of `R` [3]. In **rare** cases, these types may have overlapping values but lack a
+subtyping relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
+[invalid-compare]
+
+   declaration.js:171:7
+   171|   if (x === 1) {} // ERROR
+              ^^^^^^^
+
+References:
+   declaration.js:168:17
+   168|   declare const x: R;
+                        ^ [1]
+   declaration.js:171:13
+   171|   if (x === 1) {} // ERROR
+                    ^ [2]
+   declaration.js:168:20
+   168|   declare const x: R;
+                           ^ [3]
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:201:3
+
+Cannot cast `x` to `E` because property `xxx` is missing in `R` [1] but exists in `E` [2]. [incompatible-type]
+
+   declaration.js:201:3
+   201|   x as E; // ERROR
+          ^
+
+References:
+   declaration.js:189:20
+   189|   declare const x: R;
+                           ^ [1]
+   declaration.js:201:8
+   201|   x as E; // ERROR
+               ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:212:3
+
+Cannot cast `x` to object type because inexact `R` [1] is incompatible with exact object type [2]. [incompatible-exact]
+
+   declaration.js:212:3
+   212|   x as {+a: number}; // ERROR - TODO: records - make exact
+          ^
+
+References:
+   declaration.js:210:20
+   210|   declare const x: R;
+                           ^ [1]
+   declaration.js:212:8
+   212|   x as {+a: number}; // ERROR - TODO: records - make exact
+               ^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:213:3
+
+Cannot cast `x` to object type because `R` [1] is not a subtype of object type [2]. Class instances are not subtypes of
+object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+
+   declaration.js:213:3
+   213|   x as {+a: number, ...}; // ERROR - TODO: records - update error message language
+          ^
+
+References:
+   declaration.js:210:20
+   210|   declare const x: R;
+                           ^ [1]
+   declaration.js:213:8
+   213|   x as {+a: number, ...}; // ERROR - TODO: records - update error message language
+               ^^^^^^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:309:3
+
+Cannot reassign class binding `R` [1]. [cannot-reassign]
+
+   declaration.js:309:3
+   309|   R = null; // ERROR: cannot reassign - TODO: records - update error message language
+          ^
+
+References:
+   declaration.js:297:10
+   297|   record R {
+                 ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declaration.js:366:22
+
+Cannot instantiate `R` because in type argument `T`: [incompatible-type]
+ - Either boolean [1] is incompatible with number [2].
+ - Or boolean [1] is incompatible with string [3].
+
+   declaration.js:366:22
+   366|   declare const z: R<boolean>; // ERROR
+                             ^^^^^^^ [1]
+
+References:
+   declaration.js:360:15
+   360|   record R<T: number | string> {
+                      ^^^^^^ [2]
+   declaration.js:360:24
+   360|   record R<T: number | string> {
+                               ^^^^^^ [3]
+
+
+
+Found 13 errors

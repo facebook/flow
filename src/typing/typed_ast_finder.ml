@@ -153,6 +153,14 @@ class virtual ['M, 'T, 'N, 'U, 'P] type_parameter_mapper_generic =
       let decl = super#declare_class decl in
       rev_bound_tparams <- originally_bound_tparams;
       decl
+
+    method! record_declaration record =
+      let this_tparam = self#make_class_this (Flow_ast_utils.class_of_record record) in
+      let originally_bound_tparams = rev_bound_tparams in
+      rev_bound_tparams <- this_tparam :: rev_bound_tparams;
+      let record = super#record_declaration record in
+      rev_bound_tparams <- originally_bound_tparams;
+      record
   end
 
 class type_parameter_mapper =

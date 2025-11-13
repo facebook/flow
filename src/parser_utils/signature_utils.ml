@@ -71,6 +71,8 @@ module This_finder = struct
          the `this` within those structures, so we ignore them *)
       method! class_ _ x = x
 
+      method! record_declaration _ x = x
+
       method! function_declaration _ x = x
 
       method! function_expression_or_method _ x = x
