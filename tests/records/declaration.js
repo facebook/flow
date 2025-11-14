@@ -306,7 +306,7 @@ interface Equatable<T> {
 
   x.a as number; // OK
 
-  R = null; // ERROR: cannot reassign - TODO: records - update error message language
+  R = null; // ERROR: cannot reassign
 }
 
 // Multiple generic parameters

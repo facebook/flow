@@ -32,6 +32,7 @@ type kind =
   | GeneratorNext
   | Component
   | ComponentParameter
+  | Record
 [@@deriving show]
 
 type 'loc entry = ('loc, 'loc) Ast.Identifier.t * kind

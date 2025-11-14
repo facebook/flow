@@ -784,6 +784,16 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                binding_kind = Flow_intermediate_error_types.ClassNameBinding;
              }
           )
+      | (Bindings.Record, AssignmentWrite) ->
+        let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
+        Some
+          (Error_message.EAssignConstLikeBinding
+             {
+               loc = assignment_loc;
+               definition = def_reason;
+               binding_kind = Flow_intermediate_error_types.RecordNameBinding;
+             }
+          )
       | (Bindings.Function, AssignmentWrite) ->
         let def_reason = mk_reason (RIdentifier (OrdinaryName name)) def_loc in
         Some
@@ -832,7 +842,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           Error_message.(
             EBindingError (EVarRedeclaration, assignment_loc, OrdinaryName name, def_loc)
           )
-      | ( Bindings.(Const | Let | Class | Function | Component | Import | Type _),
+      | ( Bindings.(Const | Let | Class | Record | Function | Component | Import | Type _),
           ( VarBinding | LetBinding | ClassBinding | ConstBinding | FunctionBinding
           | ComponentBinding )
         )
@@ -1636,7 +1646,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 heap_refinements = ref HeapRefinementMap.empty;
                 kind;
               }
-            | Bindings.(Class | Enum) ->
+            | Bindings.(Class | Enum | Record) ->
               let (havoc, providers) = this#providers_of_def_loc loc in
               let write_entries =
                 Base.List.fold
@@ -1999,6 +2009,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               | Bindings.Const
               | Bindings.Let
               | Bindings.Class
+              | Bindings.Record
               | Bindings.Function
               | Bindings.Component
               | Bindings.Parameter

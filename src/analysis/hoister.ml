@@ -264,7 +264,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
     method! record_declaration _loc (record : ('loc, 'loc) Ast.Statement.RecordDeclaration.t) =
       let open Ast.Statement.RecordDeclaration in
       let { id; _ } = record in
-      this#add_const_binding ~kind:Bindings.Class id;
+      this#add_const_binding ~kind:Bindings.Record id;
       record
   end
 

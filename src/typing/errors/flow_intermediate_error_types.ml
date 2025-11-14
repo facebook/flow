@@ -12,12 +12,14 @@ type assigned_const_like_binding_type =
   | FunctionNameBinding
   | DeclaredFunctionNameBinding
   | ComponentNameBinding
+  | RecordNameBinding
 
 let string_of_assigned_const_like_binding_type = function
   | ClassNameBinding -> "class"
   | FunctionNameBinding -> "function"
   | DeclaredFunctionNameBinding -> "declared function"
   | ComponentNameBinding -> "component"
+  | RecordNameBinding -> "record"
 
 type docblock_error =
   | MultipleFlowAttributes

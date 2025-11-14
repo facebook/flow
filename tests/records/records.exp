@@ -162,10 +162,10 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:309:3
 
-Cannot reassign class binding `R` [1]. [cannot-reassign]
+Cannot reassign record binding `R` [1]. [cannot-reassign]
 
    declaration.js:309:3
-   309|   R = null; // ERROR: cannot reassign - TODO: records - update error message language
+   309|   R = null; // ERROR: cannot reassign
           ^
 
 References:
