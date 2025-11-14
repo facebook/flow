@@ -193,5 +193,27 @@ References:
                                ^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------------- declaration.js:396:9
 
-Found 13 errors
+Cannot extend `R` [1] with `C` because `R` [1] is not inheritable. [incompatible-use]
+
+   declaration.js:396:9
+   396|   class C extends R { // ERROR
+                ^
+
+References:
+   declaration.js:396:19
+   396|   class C extends R { // ERROR
+                          ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declaration.js:399:22
+
+Cannot implement `R` because it is not an interface. [cannot-implement]
+
+   399|   class D implements R { // ERROR
+                             ^
+
+
+
+Found 15 errors

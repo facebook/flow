@@ -4021,7 +4021,10 @@ struct
            properties with overridden properties. As such, the lookups performed
            for the inherited properties are non-strict: they are not required to
            exist. **)
-        | ( DefT (ureason, InstanceT { static = st; _ }),
+        | ( DefT
+              ( ureason,
+                InstanceT { static = st; inst = { inst_kind = ClassKind | InterfaceKind _; _ }; _ }
+              ),
             SuperT (use_op, reason, Derived { own; proto; static })
           ) ->
           let check_super l = check_super cx trace ~use_op reason ureason l in

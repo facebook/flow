@@ -386,3 +386,16 @@ interface Equatable<T> {
   x.inner.value as number; // OK
   x.name as string; // OK
 }
+
+// Records cannot be extended or implemented
+{
+  record R {
+    a: number,
+  }
+
+  class C extends R { // ERROR
+  }
+
+  class D implements R { // ERROR
+  }
+}
