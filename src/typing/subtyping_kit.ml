@@ -2123,7 +2123,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
           ),
         DefT (ureason, ObjT { props_tmap = uflds; proto_t = uproto; call_t = ucall; _ })
       ) ->
-      add_output cx (Error_message.EClassToObject (lreason, ureason, use_op));
+      add_output
+        cx
+        (Error_message.EClassToObject { reason_class = lreason; reason_obj = ureason; use_op });
       let lflds =
         let own_props = Context.find_props cx lown in
         let proto_props = Context.find_props cx lproto in
