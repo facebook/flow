@@ -126,11 +126,11 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:212:3
 
-Cannot cast `x` to object type because `R` [1] is not a subtype of object type [2]. Class instances are not subtypes of
-object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot cast `x` to object type because `R` [1] is not a subtype of object type [2]. Records are not subtypes of object
+types; consider rewriting object type [2] as an interface. [class-object-subtyping]
 
    declaration.js:212:3
-   212|   x as {+a: number}; // ERROR - TODO: records - update error message language
+   212|   x as {+a: number}; // ERROR
           ^
 
 References:
@@ -138,17 +138,17 @@ References:
    210|   declare const x: R;
                            ^ [1]
    declaration.js:212:8
-   212|   x as {+a: number}; // ERROR - TODO: records - update error message language
+   212|   x as {+a: number}; // ERROR
                ^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- declaration.js:213:3
 
-Cannot cast `x` to object type because `R` [1] is not a subtype of object type [2]. Class instances are not subtypes of
-object types; consider rewriting object type [2] as an interface. [class-object-subtyping]
+Cannot cast `x` to object type because `R` [1] is not a subtype of object type [2]. Records are not subtypes of object
+types; consider rewriting object type [2] as an interface. [class-object-subtyping]
 
    declaration.js:213:3
-   213|   x as {+a: number, ...}; // ERROR - TODO: records - update error message language
+   213|   x as {+a: number, ...}; // ERROR
           ^
 
 References:
@@ -156,7 +156,7 @@ References:
    210|   declare const x: R;
                            ^ [1]
    declaration.js:213:8
-   213|   x as {+a: number, ...}; // ERROR - TODO: records - update error message language
+   213|   x as {+a: number, ...}; // ERROR
                ^^^^^^^^^^^^^^^^^ [2]
 
 

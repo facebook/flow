@@ -566,6 +566,7 @@ and 'loc t' =
       reason_class: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
+      kind: [ `Class | `Record ];
     }
   | EMethodUnbinding of {
       use_op: 'loc virtual_use_op;
@@ -1643,12 +1644,13 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         bound;
         use_op = map_use_op use_op;
       }
-  | EClassToObject { reason_class; reason_obj; use_op } ->
+  | EClassToObject { reason_class; reason_obj; use_op; kind } ->
     EClassToObject
       {
         reason_class = map_reason reason_class;
         reason_obj = map_reason reason_obj;
         use_op = map_use_op use_op;
+        kind;
       }
   | EMethodUnbinding { use_op; reason_op; reason_prop } ->
     EMethodUnbinding
@@ -3539,11 +3541,11 @@ let friendly_message_of_msg = function
         loc = loc_of_reason reason_call;
         explanation = None;
       }
-  | EClassToObject { reason_class; reason_obj; use_op } ->
+  | EClassToObject { reason_class; reason_obj; use_op; kind } ->
     UseOp
       {
         loc = loc_of_reason reason_class;
-        message = MessageIncompatibleClassToObject { reason_class; reason_obj };
+        message = MessageIncompatibleClassToObject { reason_class; reason_obj; kind };
         explanation = None;
         use_op;
       }

@@ -796,6 +796,7 @@ type 'loc message =
   | MessageIncompatibleClassToObject of {
       reason_class: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
+      kind: [ `Class | `Record ];
     }
   | MessageIncompatibleComponentRestParam of 'loc virtual_reason
   | MessageIncompatibleGeneral of {

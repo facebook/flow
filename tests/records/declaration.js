@@ -209,8 +209,8 @@ interface Equatable<T> {
 
   declare const x: R;
 
-  x as {+a: number}; // ERROR - TODO: records - update error message language
-  x as {+a: number, ...}; // ERROR - TODO: records - update error message language
+  x as {+a: number}; // ERROR
+  x as {+a: number, ...}; // ERROR
 }
 
 // Generics and implements

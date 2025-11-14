@@ -3697,12 +3697,19 @@ let to_printable_error :
         ]
     | MessageIncompatibleImplicitReturn { lower; upper } ->
       [ref lower; text " is incompatible with "; text "implicitly-returned "; desc upper]
-    | MessageIncompatibleClassToObject { reason_class; reason_obj } ->
+    | MessageIncompatibleClassToObject { reason_class; reason_obj; kind } ->
+      let kind =
+        match kind with
+        | `Class -> "Class instances"
+        | `Record -> "Records"
+      in
       [
         ref reason_class;
         text " is not a subtype of ";
         ref reason_obj;
-        text ". Class instances are not subtypes of object types; consider rewriting ";
+        text ". ";
+        text kind;
+        text " are not subtypes of object types; consider rewriting ";
         ref reason_obj;
         text " as an interface";
       ]

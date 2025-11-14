@@ -870,7 +870,7 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EClassToObject { reason_class; reason_obj; use_op = _ } ->
+  | Error_message.EClassToObject { reason_class; reason_obj; use_op = _; kind = _ } ->
     let error_loc = Reason.loc_of_reason reason_class in
     if loc_opt_intersects ~error_loc ~loc then
       let obj_loc = Reason.def_loc_of_reason reason_obj in

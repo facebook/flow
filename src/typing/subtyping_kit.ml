@@ -2117,15 +2117,24 @@ module Make (Flow : INPUT) : OUTPUT = struct
             InstanceT
               {
                 super;
-                inst = { own_props = lown; proto_props = lproto; inst_call_t = lcall; _ };
+                inst = { own_props = lown; proto_props = lproto; inst_call_t = lcall; inst_kind; _ };
                 _;
               }
           ),
         DefT (ureason, ObjT { props_tmap = uflds; proto_t = uproto; call_t = ucall; _ })
       ) ->
+      let error_kind =
+        match inst_kind with
+        | ClassKind
+        | InterfaceKind _ ->
+          `Class
+        | RecordKind -> `Record
+      in
       add_output
         cx
-        (Error_message.EClassToObject { reason_class = lreason; reason_obj = ureason; use_op });
+        (Error_message.EClassToObject
+           { reason_class = lreason; reason_obj = ureason; use_op; kind = error_kind }
+        );
       let lflds =
         let own_props = Context.find_props cx lown in
         let proto_props = Context.find_props cx lproto in
