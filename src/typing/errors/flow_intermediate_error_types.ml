@@ -1144,6 +1144,10 @@ type 'loc message =
   | MessageMatchInvalidCaseSyntax of 'loc match_invalid_case_syntax
   | MessageMatchInvalidWildcardSyntax
   | MessageMatchInvalidInstancePattern
+  | MessageRecordBannedTypeUtil of {
+      reason_op: 'loc virtual_reason;
+      reason_record: 'loc virtual_reason;
+    }
   | MessageConstantCondition of {
       is_truthy: bool;
       show_warning: bool;

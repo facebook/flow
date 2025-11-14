@@ -399,3 +399,52 @@ interface Equatable<T> {
   class D implements R { // ERROR
   }
 }
+
+// Banned utility types
+{
+  record R {
+    a: number,
+  }
+
+  declare const x: R;
+
+  type ReadonlyR = Readonly<R>; // ERROR
+  type PartialR = Partial<R>; // ERROR
+  type RequiredR = Required<R>; // ERROR
+  type PickR = Pick<R, 'a'>; // ERROR
+  x as PickR;
+  type OmitR = Omit<R, 'a'>; // ERROR
+  x as OmitR;
+  type ExactR = $Exact<R>; // ERROR
+}
+
+// Spread is allowed
+{
+  record R {
+    a: number,
+    b: string,
+  }
+
+  type ObjR = {...R}; // OK
+  ({a: 1, b: 's'}) as ObjR; // OK
+
+  type OmitObjR = Omit<{...R}, 'a'>; // OK
+  ({a: 1, b: 's'}) as OmitObjR; // ERROR: property `a` is extra
+  ({ b: 's'}) as OmitObjR; // OK
+}
+
+// keyof and Values are allowed
+{
+  record R {
+    a: number,
+    b: string,
+  }
+
+  type KeyR = keyof R; // OK
+  'a' as KeyR; // OK
+  'b' as KeyR; // OK
+
+  type ValuesR = Values<R>; // OK
+  0 as ValuesR; // OK
+  's' as ValuesR; // OK
+}

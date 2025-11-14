@@ -1,5 +1,6 @@
 [options]
 all=true
+no_flowlib=false
 experimental.records=true
 experimental.pattern_matching=true
 experimental.pattern_matching.instance_patterns=true

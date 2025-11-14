@@ -2056,6 +2056,8 @@ let dump_error_message =
     | EMatchInvalidWildcardSyntax loc -> spf "EMatchInvalidWildcardSyntax (%s)" (string_of_aloc loc)
     | EMatchInvalidInstancePattern loc ->
       spf "EMatchInvalidInstancePattern (%s)" (string_of_aloc loc)
+    | ERecordBannedTypeUtil { reason_op; reason_record } ->
+      spf "ERecordBannedTypeUtil (%s) (%s)" (dump_reason cx reason_op) (dump_reason cx reason_record)
     | EUndocumentedFeature { loc } -> spf "EUndocumentedFeature (%s)" (string_of_aloc loc)
     | EIllegalAssertOperator { obj; op; specialized } ->
       spf

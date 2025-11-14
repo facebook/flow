@@ -5379,6 +5379,19 @@ let to_printable_error :
       ]
     | MessageMatchInvalidInstancePattern ->
       [text "Invalid match instance pattern constructor. It must reference a single class."]
+    | MessageRecordBannedTypeUtil { reason_op; reason_record } ->
+      [
+        text "Operation ";
+        ref reason_op;
+        text " is not allowed on record ";
+        ref reason_record;
+        text ". ";
+        text "To fix, turn the record type into an object type first using ";
+        code "{...MyRecord}";
+        text ", for example: ";
+        code "TypeUtil<{...MyRecord}>";
+        text ".";
+      ]
     | MessageIncompatiblETypeParamConstIncompatibility { lower; upper } ->
       [
         text "type parameters ";

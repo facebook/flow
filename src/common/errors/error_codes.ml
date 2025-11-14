@@ -135,6 +135,7 @@ type error_code =
   | ReassignConst
   | ReassignEnum
   | ReassignImport
+  | RecordBannedTypeUtil
   | ReferenceBeforeDeclaration
   | RequireExplicitEnumChecks
   | RequireExplicitEnumSwitchCases
@@ -351,6 +352,7 @@ let string_of_code : error_code -> string = function
   | ReassignConst -> "reassign-const"
   | ReassignEnum -> "reassign-enum"
   | ReassignImport -> "reassign-import"
+  | RecordBannedTypeUtil -> "record-banned-type-util"
   | ReferenceBeforeDeclaration -> "reference-before-declaration"
   | RequireExplicitEnumChecks -> "require-explicit-enum-checks"
   | RequireExplicitEnumSwitchCases -> "require-explicit-enum-switch-cases"

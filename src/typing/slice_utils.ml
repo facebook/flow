@@ -1475,6 +1475,15 @@ let resolve
              { spread_reason = reason; interface_reason = r; use_op }
           );
         return cx use_op (AnyT.error reason)
+      | (Spread _, RecordKind) -> recurse cx use_op reason resolve_tool tool super
+      | (_, RecordKind) ->
+        let reason_op =
+          match tool with
+          | MakeExact -> replace_desc_reason (RType (OrdinaryName "$Exact")) reason
+          | _ -> reason
+        in
+        add_output cx (Error_message.ERecordBannedTypeUtil { reason_op; reason_record = r });
+        return cx use_op (AnyT.error reason)
       | _ -> recurse cx use_op reason resolve_tool tool super
     end
   (* Statics of a class. TODO: This logic is unfortunately duplicated from the

@@ -750,6 +750,10 @@ and 'loc t' =
     }
   | EMatchInvalidWildcardSyntax of 'loc
   | EMatchInvalidInstancePattern of 'loc
+  | ERecordBannedTypeUtil of {
+      reason_op: 'loc virtual_reason;
+      reason_record: 'loc virtual_reason;
+    }
   | EUndocumentedFeature of { loc: 'loc }
   | EIllegalAssertOperator of {
       op: 'loc virtual_reason;
@@ -1848,6 +1852,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EMatchInvalidCaseSyntax { loc = f loc; kind }
   | EMatchInvalidWildcardSyntax loc -> EMatchInvalidWildcardSyntax (f loc)
   | EMatchInvalidInstancePattern loc -> EMatchInvalidInstancePattern (f loc)
+  | ERecordBannedTypeUtil { reason_op; reason_record } ->
+    ERecordBannedTypeUtil
+      { reason_op = map_reason reason_op; reason_record = map_reason reason_record }
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
   | EIllegalAssertOperator { op; obj; specialized } ->
     EIllegalAssertOperator { op = map_reason op; obj = map_reason obj; specialized }
@@ -2234,6 +2241,7 @@ let util_use_op_of_msg nope util = function
   | EMatchInvalidCaseSyntax _
   | EMatchInvalidWildcardSyntax _
   | EMatchInvalidInstancePattern _
+  | ERecordBannedTypeUtil _
   | EUndocumentedFeature _
   | EIllegalAssertOperator _ ->
     nope
@@ -2313,7 +2321,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENegativeTypeGuardConsistency { return_reason = reason; _ }
   | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ }
   | EIllegalAssertOperator { op = reason; _ }
-  | EMatchUnusedPattern { reason; _ } ->
+  | EMatchUnusedPattern { reason; _ }
+  | ERecordBannedTypeUtil { reason_record = reason; _ } ->
     Some (loc_of_reason reason)
   | EExponentialSpread
       {
@@ -3688,6 +3697,8 @@ let friendly_message_of_msg = function
   | EMatchInvalidCaseSyntax { kind; _ } -> Normal (MessageMatchInvalidCaseSyntax kind)
   | EMatchInvalidWildcardSyntax _ -> Normal MessageMatchInvalidWildcardSyntax
   | EMatchInvalidInstancePattern _ -> Normal MessageMatchInvalidInstancePattern
+  | ERecordBannedTypeUtil { reason_op; reason_record } ->
+    Normal (MessageRecordBannedTypeUtil { reason_op; reason_record })
   | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
   | EIllegalAssertOperator { obj; specialized; _ } ->
     Normal (MessageIllegalAssertOperator { obj; specialized })
@@ -4095,5 +4106,6 @@ let error_code_of_message err : error_code option =
   | EMatchInvalidCaseSyntax _ -> Some UnsupportedSyntax
   | EMatchInvalidWildcardSyntax _ -> Some UnsupportedSyntax
   | EMatchInvalidInstancePattern _ -> Some MatchInvalidPattern
+  | ERecordBannedTypeUtil _ -> Some RecordBannedTypeUtil
   | EUndocumentedFeature _ -> Some UndocumentedFeature
   | EIllegalAssertOperator _ -> Some IllegalAssertOperator

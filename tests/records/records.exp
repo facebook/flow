@@ -215,5 +215,98 @@ Cannot implement `R` because it is not an interface. [cannot-implement]
                              ^
 
 
+Error -------------------------------------------------------------------------------------------- declaration.js:411:29
 
-Found 15 errors
+Operation `$ReadOnly` [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
+`{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
+
+   declaration.js:411:29
+   411|   type ReadonlyR = Readonly<R>; // ERROR
+                                    ^ [2]
+
+References:
+   declaration.js:411:20
+   411|   type ReadonlyR = Readonly<R>; // ERROR
+                           ^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declaration.js:412:27
+
+Operation partial `R` [1] is not allowed on record `R` [1]. To fix, turn the record type into an object type first using
+`{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
+
+   412|   type PartialR = Partial<R>; // ERROR
+                                  ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declaration.js:413:29
+
+Operation required of `R` [1] is not allowed on record `R` [1]. To fix, turn the record type into an object type first
+using `{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
+
+   413|   type RequiredR = Required<R>; // ERROR
+                                    ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declaration.js:414:21
+
+Operation `Pick` [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
+`{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
+
+   declaration.js:414:21
+    414|   type PickR = Pick<R, 'a'>; // ERROR
+                             ^ [2]
+
+References:
+   <BUILTINS>/core.js:3096:47
+   3096| type Pick<O: interface {}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+                                                       ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declaration.js:416:21
+
+Operation `Omit` [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
+`{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
+
+   declaration.js:416:21
+    416|   type OmitR = Omit<R, 'a'>; // ERROR
+                             ^ [2]
+
+References:
+   <BUILTINS>/core.js:3101:46
+   3101| type Omit<O: interface {}, Keys: $Keys<O>> = $Omit<O, Keys>;
+                                                      ^^^^^^^^^^^^^^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- declaration.js:418:24
+
+Operation `$Exact` [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
+`{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
+
+   declaration.js:418:24
+   418|   type ExactR = $Exact<R>; // ERROR
+                               ^ [2]
+
+References:
+   declaration.js:418:17
+   418|   type ExactR = $Exact<R>; // ERROR
+                        ^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:432:4
+
+Cannot cast object literal to `OmitObjR` because property `a` is extra in object literal [1] but missing in `Omit` [2].
+Exact objects do not accept extra props. [incompatible-type]
+
+   declaration.js:432:4
+   432|   ({a: 1, b: 's'}) as OmitObjR; // ERROR: property `a` is extra
+           ^^^^^^^^^^^^^^ [1]
+
+References:
+   declaration.js:432:23
+   432|   ({a: 1, b: 's'}) as OmitObjR; // ERROR: property `a` is extra
+                              ^^^^^^^^ [2]
+
+
+
+Found 22 errors
