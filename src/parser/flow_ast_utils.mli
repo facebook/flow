@@ -208,7 +208,7 @@ val unwrap_nonnull_lhs :
   'loc 'tloc. ('loc, 'tloc) Flow_ast.Pattern.t -> ('loc, 'tloc) Flow_ast.Pattern.t * bool
 
 val class_of_record :
-  'loc 'tloc. ('loc, 'tloc) Flow_ast.Statement.RecordDeclaration.t -> ('loc, 'tloc) Flow_ast.Class.t
+  'loc. ('loc, 'loc) Flow_ast.Statement.RecordDeclaration.t -> ('loc, 'loc) Flow_ast.Class.t
 
 val map_record_as_class :
   'loc 'tloc 'x.

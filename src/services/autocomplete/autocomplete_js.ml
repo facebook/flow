@@ -185,6 +185,8 @@ class process_request_searcher cx file_sig ~from_trigger_character ~cursor =
 
     method private make_declare_class_this _decl = "this"
 
+    method private make_record_this _cls = "this"
+
     val mutable enclosing_classes : Type.t Lazy.t list = []
 
     method private covers_target loc = covers_target cursor loc

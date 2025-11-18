@@ -811,8 +811,7 @@ let unwrap_nonnull_lhs : 'loc 'tloc. ('loc, 'tloc) Pattern.t -> ('loc, 'tloc) Pa
     end
   | _ -> (pat, false)
 
-let class_of_record :
-      'loc 'tloc. ('loc, 'tloc) Statement.RecordDeclaration.t -> ('loc, 'tloc) Class.t =
+let class_of_record : 'loc. ('loc, 'loc) Statement.RecordDeclaration.t -> ('loc, 'loc) Class.t =
  fun record ->
   let open Statement in
   let { RecordDeclaration.id; tparams; implements; body = (body_loc, body_details); comments } =
@@ -840,32 +839,32 @@ let class_of_record :
                 value;
                 annot = Type.Available annot;
                 static = false;
-                variance = Some (body_loc, { Variance.kind = Variance.Plus; comments = None });
+                variance = Some (prop_loc, { Variance.kind = Variance.Plus; comments = None });
                 decorators = [];
                 comments = prop_comments;
               }
             )
           in
           Class.Body.Property class_prop
-        | RecordDeclaration.Body.StaticProperty (static_prop_loc, static_prop) ->
+        | RecordDeclaration.Body.StaticProperty (prop_loc, static_prop) ->
           let {
             RecordDeclaration.StaticProperty.key;
             annot;
             value = init_expr;
-            comments = static_prop_comments;
+            comments = prop_comments;
           } =
             static_prop
           in
           let class_static_prop =
-            ( static_prop_loc,
+            ( prop_loc,
               {
                 Class.Property.key = E.Object.Property.Identifier key;
                 value = Class.Property.Initialized init_expr;
                 annot = Type.Available annot;
                 static = true;
-                variance = Some (body_loc, { Variance.kind = Variance.Plus; comments = None });
+                variance = Some (prop_loc, { Variance.kind = Variance.Plus; comments = None });
                 decorators = [];
-                comments = static_prop_comments;
+                comments = prop_comments;
               }
             )
           in
@@ -921,7 +920,7 @@ let record_of_class :
               in
               RecordDeclaration.Body.StaticProperty record_static_prop
             | _ -> failwith "record_of_class: Records only allows identifier keys"
-          else begin
+          else (
             match key with
             | E.Object.Property.Identifier key_id ->
               let annot =
@@ -947,7 +946,7 @@ let record_of_class :
               in
               RecordDeclaration.Body.Property record_prop
             | _ -> failwith "record_of_class: Records only allow identifier keys"
-          end
+          )
         | Class.Body.PrivateField _ ->
           failwith "record_of_class: Records do not allow private fields"
         | Class.Body.StaticBlock _ -> failwith "record_of_class: Records do not allow static blocks")

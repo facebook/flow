@@ -89,6 +89,8 @@ class virtual ['M, 'T, 'N, 'U, 'P] type_parameter_mapper_generic =
 
     method virtual make_declare_class_this : ('M, 'T) Ast.Statement.DeclareClass.t -> 'P
 
+    method virtual make_record_this : ('M, 'T) Ast.Statement.RecordDeclaration.t -> 'P
+
     (* Since the mapper wasn't originally written to pass an accumulator value
        through the calls, we're maintaining this accumulator imperatively. *)
     val mutable rev_bound_tparams : 'P list = []
@@ -155,7 +157,7 @@ class virtual ['M, 'T, 'N, 'U, 'P] type_parameter_mapper_generic =
       decl
 
     method! record_declaration record =
-      let this_tparam = self#make_class_this (Flow_ast_utils.class_of_record record) in
+      let this_tparam = self#make_record_this record in
       let originally_bound_tparams = rev_bound_tparams in
       rev_bound_tparams <- this_tparam :: rev_bound_tparams;
       let record = super#record_declaration record in
@@ -225,6 +227,19 @@ class type_parameter_mapper =
         Type.name = Subst_name.Name "this";
         reason = replace_desc_reason RThisType (TypeUtil.reason_of_t bound);
         bound;
+        polarity = Polarity.Positive;
+        default = None;
+        is_this = true;
+        is_const = false;
+      }
+
+    method private make_record_this record =
+      let open Reason in
+      let { Ast.Statement.RecordDeclaration.id = ((_, t), _); _ } = record in
+      {
+        Type.name = Subst_name.Name "this";
+        reason = replace_desc_reason RThisType (TypeUtil.reason_of_t t);
+        bound = t;
         polarity = Polarity.Positive;
         default = None;
         is_this = true;
