@@ -321,6 +321,10 @@ module rec Parse : PARSER = struct
     (* Remember kids, these look like statements but they're not
        * statements... (see section 13) *)
     | T_LET -> let_ env
+    | T_CONST when (parse_options env).enums && Peek.ith_token ~i:1 env = T_ENUM ->
+      error env Parse_error.EnumInvalidConstPrefix;
+      Eat.token env;
+      Declaration.enum_declaration env
     | T_CONST -> const env
     | _ when Peek.is_function env || Peek.is_hook env -> Declaration._function env
     | _ when Peek.is_class env -> class_declaration env decorators
