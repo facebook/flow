@@ -134,6 +134,7 @@ type t =
       method_: bool;
     }
   | RecordPrivateElementUnsupported
+  | RecordPropertyAnnotationRequired
   | Redeclaration of string * string
   | SetterArity
   | SetterMayNotHaveThisParam
@@ -462,6 +463,7 @@ module PP = struct
       in
       Printf.sprintf "Records may not have %s%s named `%s`." static_modifier category name
     | RecordPrivateElementUnsupported -> "Records to not support private elements. Remove the `#`."
+    | RecordPropertyAnnotationRequired -> "Record properties must have a type annotation."
     | Redeclaration (what, name) -> Printf.sprintf "%s '%s' has already been declared" what name
     | SetterArity -> "Setter should have exactly one parameter"
     | SetterMayNotHaveThisParam -> "A setter cannot have a `this` parameter."

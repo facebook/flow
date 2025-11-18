@@ -1220,6 +1220,13 @@ module Object
               env
               (key_loc, Parse_error.RecordInvalidPropertyName { name = key_name; static; method_ })
         in
+        let end_property () =
+          match Peek.token env with
+          | T_EOF
+          | T_RCURLY ->
+            ()
+          | _ -> Expect.token env T_COMMA
+        in
         (match Peek.token env with
         | T_COLON when static ->
           check_invalid_name env ~method_:false;
@@ -1230,11 +1237,7 @@ module Object
                 let annot = Type.annotation env in
                 Expect.token env T_ASSIGN;
                 let value = Expression.assignment env in
-                (match Peek.token env with
-                | T_EOF
-                | T_RCURLY ->
-                  ()
-                | _ -> Expect.token env T_COMMA);
+                end_property ();
                 let comments = Flow_ast_utils.mk_comments_opt ~leading () in
                 { StaticProperty.key; annot; value; comments })
               env
@@ -1253,16 +1256,22 @@ module Object
                   else
                     None
                 in
-                (match Peek.token env with
-                | T_EOF
-                | T_RCURLY ->
-                  ()
-                | _ -> Expect.token env T_COMMA);
+                end_property ();
                 let comments = Flow_ast_utils.mk_comments_opt ~leading () in
                 { Property.key; annot; default_value; comments })
               env
           in
           elements env (Body.Property prop :: acc)
+        | T_COMMA ->
+          error_at env (key_loc, Parse_error.RecordPropertyAnnotationRequired);
+          end_property ();
+          elements env acc
+        | T_ASSIGN ->
+          error_at env (key_loc, Parse_error.RecordPropertyAnnotationRequired);
+          Eat.token env;
+          ignore @@ Expression.assignment env;
+          end_property ();
+          elements env acc
         | _ ->
           check_invalid_name env ~method_:true;
           let meth =
