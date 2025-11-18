@@ -1211,6 +1211,15 @@ module Object
           Eat.token env;
           error_at env (error_loc, Parse_error.RecordPrivateElementUnsupported)
         );
+        if Peek.token env = T_LBRACKET then (
+          let start_loc = Peek.loc env in
+          Expect.token env T_LBRACKET;
+          ignore @@ Parse.assignment (env |> with_no_in false);
+          let end_loc = Peek.loc env in
+          Expect.token env T_RBRACKET;
+          let error_loc = Loc.btwn start_loc end_loc in
+          error_at env (error_loc, Parse_error.RecordComputedPropertyUnsupported)
+        );
         let key = identifier_name env in
         let (key_loc, { Identifier.name = key_name; _ }) = key in
         let check_invalid_name env ~method_ =

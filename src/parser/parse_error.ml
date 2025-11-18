@@ -127,6 +127,7 @@ type t =
   | PrivateDelete
   | PrivateNotInClass
   | PropertyAfterRestElement
+  | RecordComputedPropertyUnsupported
   | RecordExtendsUnsupported
   | RecordInvalidPropertyName of {
       name: string;
@@ -446,6 +447,7 @@ module PP = struct
     | PrivateDelete -> "Private fields may not be deleted."
     | PrivateNotInClass -> "Private fields can only be referenced from within a class."
     | PropertyAfterRestElement -> "Rest property must be final property of an object pattern"
+    | RecordComputedPropertyUnsupported -> "Records do not support computed properties."
     | RecordExtendsUnsupported ->
       "Records to not support `extends`: they do not allow hierarchies. Implementing an interface by using `implements` is supported."
     | RecordInvalidPropertyName { name; static; method_ } ->

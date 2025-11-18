@@ -1,0 +1,113 @@
+{
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":5}},
+      "message":"Records do not support computed properties."
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":6}},
+      "message":"Unexpected token `:`, expected an identifier"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":13}},
+      "message":"Unexpected identifier, expected the token `(`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":2,"column":13},"end":{"line":2,"column":14}},
+      "message":"Unexpected token `,`, expected an identifier"
+    },
+    {
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":1}},
+      "message":"Unexpected token `}`, expected the token `,`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+      "message":"Rest parameter must be final parameter of an argument list"
+    },
+    {
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+      "message":"Unexpected end of input, expected the token `)`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+      "message":"Unexpected end of input, expected the token `{`"
+    },
+    {
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+      "message":"Unexpected end of input, expected the token `}`"
+    }
+  ],
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":0}},
+  "range":[0,28],
+  "body":[
+    {
+      "type":"RecordDeclaration",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":0}},
+      "range":[0,28],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":8}},
+        "range":[7,8],
+        "name":"R",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "implements":[],
+      "body":{
+        "type":"RecordBody",
+        "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":4,"column":0}},
+        "range":[9,28],
+        "body":[
+          {
+            "type":"MethodDefinition",
+            "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":4,"column":0}},
+            "range":[16,28],
+            "key":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":6}},
+              "range":[16,17],
+              "name":"",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "value":{
+              "type":"FunctionExpression",
+              "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":4,"column":0}},
+              "range":[18,28],
+              "id":null,
+              "params":[
+                {
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":2,"column":13},"end":{"line":2,"column":14}},
+                  "range":[24,25],
+                  "name":"",
+                  "typeAnnotation":null,
+                  "optional":false
+                }
+              ],
+              "body":{
+                "type":"BlockStatement",
+                "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
+                "range":[28,28],
+                "body":[]
+              },
+              "async":false,
+              "generator":false,
+              "predicate":null,
+              "expression":false,
+              "returnType":null,
+              "typeParameters":null
+            },
+            "kind":"method",
+            "static":false,
+            "computed":false,
+            "decorators":[]
+          }
+        ]
+      }
+    }
+  ],
+  "comments":[]
+}
