@@ -127,6 +127,7 @@ type t =
   | PrivateDelete
   | PrivateNotInClass
   | PropertyAfterRestElement
+  | RecordExtendsUnsupported
   | RecordInvalidPropertyName of {
       name: string;
       static: bool;
@@ -444,6 +445,8 @@ module PP = struct
     | PrivateDelete -> "Private fields may not be deleted."
     | PrivateNotInClass -> "Private fields can only be referenced from within a class."
     | PropertyAfterRestElement -> "Rest property must be final property of an object pattern"
+    | RecordExtendsUnsupported ->
+      "Records to not support `extends`: they do not allow hierarchies. Implementing an interface by using `implements` is supported."
     | RecordInvalidPropertyName { name; static; method_ } ->
       let static_modifier =
         if static then

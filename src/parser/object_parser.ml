@@ -1319,6 +1319,12 @@ module Object
                )
               )
         in
+        if Peek.token env = T_EXTENDS then (
+          error_at env (Peek.loc env, Parse_error.RecordExtendsUnsupported);
+          let leading = Peek.comments env in
+          Eat.token env;
+          ignore @@ class_extends ~leading env
+        );
         let implements =
           if Peek.token env = T_IMPLEMENTS then
             Some (class_implements_remove_trailing env (class_implements env ~attach_leading:true))
