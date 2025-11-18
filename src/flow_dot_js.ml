@@ -111,6 +111,7 @@ let stub_metadata ~root ~checked =
     casting_syntax_only_support_as_excludes = [];
     component_syntax = true;
     deprecated_utilities = SMap.empty;
+    deprecated_utilities_excludes = [];
     dev_only_refinement_info_as_errors = false;
     enable_const_params = false;
     enable_custom_error = false;

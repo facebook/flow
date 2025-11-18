@@ -92,6 +92,8 @@ val component_syntax : config -> bool
 
 val deprecated_utilities : config -> string list SMap.t
 
+val deprecated_utilities_excludes : config -> string list
+
 val dev_only_refinement_info_as_errors : config -> bool
 
 val emoji : config -> bool option

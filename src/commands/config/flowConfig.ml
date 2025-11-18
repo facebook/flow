@@ -57,6 +57,7 @@ module Opts = struct
     channel_mode: [ `pipe | `socket ] option;
     component_syntax: bool;
     deprecated_utilities: string list SMap.t;
+    deprecated_utilities_excludes: string list;
     dev_only_refinement_info_as_errors: bool;
     emoji: bool option;
     enable_const_params: bool option;
@@ -206,6 +207,7 @@ module Opts = struct
       channel_mode = None;
       component_syntax = false;
       deprecated_utilities = SMap.empty;
+      deprecated_utilities_excludes = [];
       dev_only_refinement_info_as_errors = false;
       emoji = None;
       enable_const_params = None;
@@ -1082,6 +1084,13 @@ module Opts = struct
             in
             Ok { opts with deprecated_utilities = updated_map })
       );
+      ( "experimental.deprecated_utilities.excludes",
+        string
+          ~init:(fun opts -> { opts with deprecated_utilities_excludes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok { opts with deprecated_utilities_excludes = v :: opts.deprecated_utilities_excludes })
+      );
       ( "experimental.enable_custom_error",
         boolean (fun opts v -> Ok { opts with enable_custom_error = v })
       );
@@ -1875,6 +1884,8 @@ let channel_mode c = c.options.Opts.channel_mode
 let component_syntax c = c.options.Opts.component_syntax
 
 let deprecated_utilities c = c.options.Opts.deprecated_utilities
+
+let deprecated_utilities_excludes c = c.options.Opts.deprecated_utilities_excludes
 
 let dev_only_refinement_info_as_errors c = c.options.Opts.dev_only_refinement_info_as_errors
 

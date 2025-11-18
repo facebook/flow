@@ -91,6 +91,7 @@ type metadata = {
   casting_syntax_only_support_as_excludes: Str.regexp list;
   component_syntax: bool;
   deprecated_utilities: string list SMap.t;
+  deprecated_utilities_excludes: Str.regexp list;
   dev_only_refinement_info_as_errors: bool;
   enable_const_params: bool;
   enable_custom_error: bool;

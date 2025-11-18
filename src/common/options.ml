@@ -116,6 +116,7 @@ type t = {
   opt_component_syntax: bool;
   opt_debug: bool;
   opt_deprecated_utilities: string list SMap.t;
+  opt_deprecated_utilities_excludes: Str.regexp list;
   opt_dev_only_refinement_info_as_errors: bool;
   opt_distributed: bool;
   opt_enable_const_params: bool;
@@ -230,6 +231,8 @@ let channel_mode opts = opts.opt_channel_mode
 let component_syntax opts = opts.opt_component_syntax
 
 let deprecated_utilities opts = opts.opt_deprecated_utilities
+
+let deprecated_utilities_excludes opts = opts.opt_deprecated_utilities_excludes
 
 let dev_only_refinement_info_as_errors opts = opts.opt_dev_only_refinement_info_as_errors
 

@@ -1432,6 +1432,10 @@ let make_options
          )
         )
         (FlowConfig.deprecated_utilities flowconfig);
+    opt_deprecated_utilities_excludes =
+      Base.List.map
+        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        (FlowConfig.deprecated_utilities_excludes flowconfig);
     opt_dev_only_refinement_info_as_errors =
       FlowConfig.dev_only_refinement_info_as_errors flowconfig;
     opt_distributed = options_flags.distributed;

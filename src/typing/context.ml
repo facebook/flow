@@ -41,6 +41,7 @@ type metadata = {
   casting_syntax_only_support_as_excludes: Str.regexp list;
   component_syntax: bool;
   deprecated_utilities: string list SMap.t;
+  deprecated_utilities_excludes: Str.regexp list;
   dev_only_refinement_info_as_errors: bool;
   enable_const_params: bool;
   enable_custom_error: bool;
@@ -294,6 +295,7 @@ let metadata_of_options options =
     casting_syntax_only_support_as_excludes =
       Options.casting_syntax_only_support_as_excludes options;
     component_syntax = Options.component_syntax options;
+    deprecated_utilities_excludes = Options.deprecated_utilities_excludes options;
     hook_compatibility_excludes = Options.hook_compatibility_excludes options;
     hook_compatibility_includes = Options.hook_compatibility_includes options;
     hook_compatibility = Options.hook_compatibility options;
@@ -568,7 +570,12 @@ let is_utility_type_deprecated cx t =
     | Some dirs ->
       let filename = File_key.to_string (file cx) in
       let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-      List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
+      let excluded_dirs = cx.metadata.deprecated_utilities_excludes in
+      let is_excluded =
+        List.exists (fun r -> Str.string_match r normalized_filename 0) excluded_dirs
+      in
+      (not is_excluded)
+      && List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
 
 let enable_relay_integration cx =
   cx.metadata.enable_relay_integration

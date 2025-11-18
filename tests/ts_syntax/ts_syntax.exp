@@ -1,3 +1,61 @@
+Error ------------------------------------------------------------------------- deprecated/excluded_dir/readonly.js:7:23
+
+Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in object type [2].
+Exact objects do not accept extra props. [incompatible-type]
+
+   deprecated/excluded_dir/readonly.js:7:23
+   7| let a: exportedType = {b: 1}; // ERROR
+                            ^^^^^^ [1]
+
+References:
+   deprecated/excluded_dir/readonly.js:7:8
+   7| let a: exportedType = {b: 1}; // ERROR
+             ^^^^^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------- deprecated/excluded_dir/readonly_type.js:6:23
+
+Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in
+`exportedType` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   deprecated/excluded_dir/readonly_type.js:6:23
+   6| let a: exportedType = {b: 1}; // ERROR
+                            ^^^^^^ [1]
+
+References:
+   deprecated/excluded_dir/readonly_type.js:6:8
+   6| let a: exportedType = {b: 1}; // ERROR
+             ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------- deprecated/excluded_dir/readonly_type.js:10:29
+
+Cannot assign `3` to `b` because number [1] is incompatible with `exportedValuesType` [2]. [incompatible-type]
+
+   deprecated/excluded_dir/readonly_type.js:10:29
+   10| let b: exportedValuesType = 3; // ERROR
+                                   ^ [1]
+
+References:
+   deprecated/excluded_dir/readonly_type.js:10:8
+   10| let b: exportedValuesType = 3; // ERROR
+              ^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------- deprecated/excluded_dir/readonlymap.js:2:14
+
+Cannot assign `3` to `x` because number [1] is incompatible with `$ReadOnlyMap` [2]. [incompatible-type]
+
+   deprecated/excluded_dir/readonlymap.js:2:14
+   2| const x: T = 3; // ERROR
+                   ^ [1]
+
+References:
+   deprecated/excluded_dir/readonlymap.js:2:10
+   2| const x: T = 3; // ERROR
+               ^ [2]
+
+
 Error ----------------------------------------------------------------------------------------- deprecated/keyof.js:3:10
 
 The utility type `$Keys` is deprecated, use `keyof` instead. For example, `type KeyType = keyof MyObjectType;` 
@@ -670,4 +728,4 @@ types. [ts-syntax]
 
 
 
-Found 78 errors
+Found 82 errors
