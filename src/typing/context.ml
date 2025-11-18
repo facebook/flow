@@ -560,12 +560,15 @@ let enable_pattern_matching_instance_patterns cx =
 let enable_records cx = cx.metadata.enable_records
 
 let is_utility_type_deprecated cx t =
-  match SMap.find_opt t cx.metadata.deprecated_utilities with
-  | None -> false
-  | Some dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
+  if is_lib_file cx then
+    false
+  else
+    match SMap.find_opt t cx.metadata.deprecated_utilities with
+    | None -> false
+    | Some dirs ->
+      let filename = File_key.to_string (file cx) in
+      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+      List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
 
 let enable_relay_integration cx =
   cx.metadata.enable_relay_integration
