@@ -308,5 +308,93 @@ References:
                               ^^^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- declaration.js:464:9
 
-Found 22 errors
+Cannot call `R` with `oB` bound to `fields` because property `a` is missing in object literal [1] but exists in object
+type [2]. [incompatible-type]
+
+   declaration.js:464:9
+   464|   new R(oB); // ERROR: missing `a`
+                ^^
+
+References:
+   declaration.js:460:14
+   460|   const oB = {b: 's'};
+                     ^^^^^^^^ [1]
+   declaration.js:454:12
+                   v
+   454|   record R {
+   455|     a: number,
+   456|     b: string,
+   457|   }
+          ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:465:9
+
+Cannot call `R` with `oEmpty` bound to `fields` because properties `a` and `b` are missing in object literal [1] but
+exist in object type [2]. [incompatible-type]
+
+   declaration.js:465:9
+   465|   new R(oEmpty); // ERROR: missing `a` and `b`
+                ^^^^^^
+
+References:
+   declaration.js:459:18
+   459|   const oEmpty = {};
+                         ^^ [1]
+   declaration.js:454:12
+                   v
+   454|   record R {
+   455|     a: number,
+   456|     b: string,
+   457|   }
+          ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:477:9
+
+Cannot call `R` with `oExtra` bound to `fields` because property `xxx` is extra in object literal [1] but missing in
+object type [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   declaration.js:477:9
+   477|   new R(oExtra); // ERROR
+                ^^^^^^
+
+References:
+   declaration.js:476:18
+   476|   const oExtra = {a: 1, b: 's', xxx: false};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   declaration.js:454:12
+                   v
+   454|   record R {
+   455|     a: number,
+   456|     b: string,
+   457|   }
+          ^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- declaration.js:478:12
+
+Cannot call `ROpt` with `oExtra` bound to `fields` because property `xxx` is extra in object literal [1] but missing in
+object type [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   declaration.js:478:12
+   478|   new ROpt(oExtra); // ERROR
+                   ^^^^^^
+
+References:
+   declaration.js:476:18
+   476|   const oExtra = {a: 1, b: 's', xxx: false};
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   declaration.js:467:15
+                      v
+   467|   record ROpt {
+   468|     a: number = 0,
+   469|     b: string = '',
+   470|   }
+          ^ [2]
+
+
+
+Found 26 errors

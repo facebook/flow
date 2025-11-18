@@ -448,3 +448,32 @@ interface Equatable<T> {
   0 as ValuesR; // OK
   's' as ValuesR; // OK
 }
+
+// new
+{
+  record R {
+    a: number,
+    b: string,
+  }
+
+  const oEmpty = {};
+  const oB = {b: 's'};
+  const oAll = {a: 1, b: 's'};
+
+  new R(oAll); // OK
+  new R(oB); // ERROR: missing `a`
+  new R(oEmpty); // ERROR: missing `a` and `b`
+
+  record ROpt {
+    a: number = 0,
+    b: string = '',
+  }
+
+  new ROpt(oEmpty); // OK
+  new ROpt(oB); // OK
+  new ROpt(oAll); // OK
+
+  const oExtra = {a: 1, b: 's', xxx: false};
+  new R(oExtra); // ERROR
+  new ROpt(oExtra); // ERROR
+}
