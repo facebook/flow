@@ -396,6 +396,14 @@ References:
           ^ [2]
 
 
+Error --------------------------------------------------------------------------------------------- declaration.js:485:5
+
+`a` has already been declared in this record. Record property names must be unique. [duplicate-class-member]
+
+   485|     a: number, // ERROR
+            ^
+
+
 Error ----------------------------------------------------------------------------------------------- expression.js:5:16
 
 Records are not enabled. [unsupported-syntax]
@@ -405,4 +413,4 @@ Records are not enabled. [unsupported-syntax]
 
 
 
-Found 27 errors
+Found 28 errors

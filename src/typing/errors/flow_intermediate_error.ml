@@ -3509,18 +3509,26 @@ let to_printable_error :
       let upper_desc = loop (desc_of_reason upper) in
       let upper_r = replace_desc_reason upper_desc upper in
       [ref lower_r; text " does not render "; ref upper_r]
-    | MessageDuplicateClassMember { name; static } ->
-      let member_type =
+    | MessageDuplicateClassMember { name; static; class_kind } ->
+      let static =
         if static then
-          "Static class"
+          "static "
         else
-          "Class"
+          ""
       in
+      let (class_kind, item_name) =
+        match class_kind with
+        | ClassKind.Class -> ("class", "member")
+        | ClassKind.Record -> ("record", "property")
+      in
+      let member_type = String.capitalize_ascii (spf "%s%s %s" static class_kind item_name) in
       [
         code name;
-        text " has already been declared in this class. ";
+        text " has already been declared in this ";
+        text class_kind;
+        text ". ";
         text member_type;
-        text " member names must be unique.";
+        text " names must be unique.";
       ]
     | MessageDuplicateEnumMember { prev_use_loc; enum_reason } ->
       [

@@ -767,6 +767,7 @@ type 'loc message =
   | MessageDuplicateClassMember of {
       name: string;
       static: bool;
+      class_kind: ClassKind.t;
     }
   | MessageDuplicateEnumMember of {
       enum_reason: 'loc virtual_reason;

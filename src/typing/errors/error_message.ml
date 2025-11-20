@@ -625,6 +625,7 @@ and 'loc t' =
       loc: 'loc;
       name: string;
       static: bool;
+      class_kind: ClassKind.t;
     }
   | EEmptyArrayNoProvider of { loc: 'loc }
   | EUnusedPromise of {
@@ -1750,8 +1751,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         recursion = Base.List.map ~f recursion;
       }
   | EReferenceInAnnotation (bind_loc, name, loc) -> EReferenceInAnnotation (f bind_loc, name, f loc)
-  | EDuplicateClassMember { loc; name; static } ->
-    EDuplicateClassMember { loc = f loc; name; static }
+  | EDuplicateClassMember { loc; name; static; class_kind } ->
+    EDuplicateClassMember { loc = f loc; name; static; class_kind }
   | EEmptyArrayNoProvider { loc } -> EEmptyArrayNoProvider { loc = f loc }
   | EUnusedPromise { loc; async } -> EUnusedPromise { loc = f loc; async }
   | EReactIntrinsicOverlap { use; def; type_; mixed } ->
@@ -3507,8 +3508,8 @@ let friendly_message_of_msg = function
   | EComponentMissingReturn reason -> Normal (MessageComponentMissingReturn reason)
   | ENestedComponent _ -> Normal MessageCannotNestComponents
   | ENestedHook _ -> Normal MessageCannotNestHook
-  | EDuplicateClassMember { name; static; _ } ->
-    Normal (MessageDuplicateClassMember { name; static })
+  | EDuplicateClassMember { name; static; class_kind; loc = _ } ->
+    Normal (MessageDuplicateClassMember { name; static; class_kind })
   | EEmptyArrayNoProvider { loc = _ } -> Normal MessageCannotDetermineEmptyArrayLiteralType
   | EInvalidDeclaration
       { declaration = reason; null_write = None; possible_generic_escape_locs = [] } ->

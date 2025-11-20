@@ -7740,9 +7740,19 @@ module Make
                      setter for the name so that future getters/setters can have an error raised. *)
                   SMap.add name Class_Member_GetterSetter names_map
                 | _ ->
+                  let error_kind =
+                    match inst_kind with
+                    | ClassKind
+                    | InterfaceKind _ ->
+                      Flow_intermediate_error_types.ClassKind.Class
+                    | RecordKind -> Flow_intermediate_error_types.ClassKind.Record
+                  in
                   Flow.add_output
                     cx
-                    Error_message.(EDuplicateClassMember { loc = member_loc; name; static });
+                    Error_message.(
+                      EDuplicateClassMember
+                        { loc = member_loc; name; static; class_kind = error_kind }
+                    );
                   names_map)
               | None -> SMap.add name kind names_map
             in

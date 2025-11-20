@@ -477,3 +477,11 @@ interface Equatable<T> {
   new R(oExtra); // ERROR
   new ROpt(oExtra); // ERROR
 }
+
+// Duplicate property name
+{
+  record R {
+    a: number,
+    a: number, // ERROR
+  }
+}
