@@ -7381,40 +7381,32 @@ module Make
       )
 
   and mk_class cx class_loc ~name_loc ?tast_class_type reason c =
-    let node_cache = Context.node_cache cx in
-    match Node_cache.get_class node_cache class_loc with
-    | Some x ->
-      Debug_js.Verbose.print_if_verbose_lazy
-        cx
-        (lazy [spf "Class cache hit at %s" (ALoc.debug_to_string (loc_of_reason reason))]);
-      x
-    | None ->
-      let def_reason = repos_reason class_loc reason in
-      let (class_t, _, class_sig, class_ast_f) =
-        mk_class_sig cx ~name_loc ~class_loc ~inst_kind:ClassKind reason c
-      in
+    let def_reason = repos_reason class_loc reason in
+    let (class_t, _, class_sig, class_ast_f) =
+      mk_class_sig cx ~name_loc ~class_loc ~inst_kind:ClassKind reason c
+    in
 
-      let public_property_map =
-        Class_stmt_sig.fields_to_prop_map cx
-        @@ Class_stmt_sig.public_fields_of_signature ~static:false class_sig
-      in
-      let private_property_map =
-        Class_stmt_sig.fields_to_prop_map cx
-        @@ Class_stmt_sig.private_fields_of_signature ~static:false class_sig
-      in
-      Class_stmt_sig.check_signature_compatibility cx def_reason class_sig;
-      Class_stmt_sig.toplevels cx class_sig;
+    let public_property_map =
+      Class_stmt_sig.fields_to_prop_map cx
+      @@ Class_stmt_sig.public_fields_of_signature ~static:false class_sig
+    in
+    let private_property_map =
+      Class_stmt_sig.fields_to_prop_map cx
+      @@ Class_stmt_sig.private_fields_of_signature ~static:false class_sig
+    in
+    Class_stmt_sig.check_signature_compatibility cx def_reason class_sig;
+    Class_stmt_sig.toplevels cx class_sig;
 
-      let class_body = Ast.Class.((snd c.body).Body.body) in
-      Context.add_voidable_check
-        cx
-        {
-          Context.public_property_map;
-          private_property_map;
-          errors = Property_assignment.eval_property_assignment class_body;
-        };
-      let tast_class_type = Base.Option.value tast_class_type ~default:class_t in
-      (class_t, class_ast_f tast_class_type)
+    let class_body = Ast.Class.((snd c.body).Body.body) in
+    Context.add_voidable_check
+      cx
+      {
+        Context.public_property_map;
+        private_property_map;
+        errors = Property_assignment.eval_property_assignment class_body;
+      };
+    let tast_class_type = Base.Option.value tast_class_type ~default:class_t in
+    (class_t, class_ast_f tast_class_type)
 
   (* Process a class definition, returning a (polymorphic) class type. A class
      type is a wrapper around an instance type, which contains types of instance
