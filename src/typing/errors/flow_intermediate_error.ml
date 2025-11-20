@@ -3700,8 +3700,8 @@ let to_printable_error :
     | MessageIncompatibleClassToObject { reason_class; reason_obj; kind } ->
       let kind =
         match kind with
-        | `Class -> "Class instances"
-        | `Record -> "Records"
+        | Flow_intermediate_error_types.ClassKind.Class -> "Class instances"
+        | Flow_intermediate_error_types.ClassKind.Record -> "Records"
       in
       [
         ref reason_class;

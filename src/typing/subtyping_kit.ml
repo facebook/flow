@@ -2127,8 +2127,8 @@ module Make (Flow : INPUT) : OUTPUT = struct
         match inst_kind with
         | ClassKind
         | InterfaceKind _ ->
-          `Class
-        | RecordKind -> `Record
+          Flow_intermediate_error_types.ClassKind.Class
+        | RecordKind -> Flow_intermediate_error_types.ClassKind.Record
       in
       add_output
         cx

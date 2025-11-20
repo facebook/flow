@@ -566,7 +566,7 @@ and 'loc t' =
       reason_class: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
       use_op: 'loc virtual_use_op;
-      kind: [ `Class | `Record ];
+      kind: Flow_intermediate_error_types.ClassKind.t;
     }
   | EMethodUnbinding of {
       use_op: 'loc virtual_use_op;

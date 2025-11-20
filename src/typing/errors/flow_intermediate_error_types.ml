@@ -140,6 +140,12 @@ type 'loc strict_comparison_info = {
   strict_comparison_kind: strict_comparison_kind;
 }
 
+module ClassKind = struct
+  type t =
+    | Class
+    | Record
+end
+
 module MatchObjPatternKind = struct
   type t =
     | Object
@@ -808,7 +814,7 @@ type 'loc message =
   | MessageIncompatibleClassToObject of {
       reason_class: 'loc virtual_reason;
       reason_obj: 'loc virtual_reason;
-      kind: [ `Class | `Record ];
+      kind: ClassKind.t;
     }
   | MessageIncompatibleComponentRestParam of 'loc virtual_reason
   | MessageIncompatibleGeneral of {
