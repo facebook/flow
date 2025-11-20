@@ -186,6 +186,7 @@ type env = {
   no_anon_function_type: bool;
   no_conditional_type: bool;
   no_new: bool;
+  no_record: bool;
   allow_yield: bool;
   allow_await: bool;
   allow_directive: bool;
@@ -244,6 +245,7 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
     no_anon_function_type = false;
     no_conditional_type = false;
     no_new = false;
+    no_record = false;
     allow_yield = false;
     allow_await = false;
     allow_directive = false;
@@ -305,6 +307,8 @@ let no_anon_function_type env = env.no_anon_function_type
 let no_conditional_type env = env.no_conditional_type
 
 let no_new env = env.no_new
+
+let no_record env = env.no_record
 
 let errors env = !(env.errors)
 
@@ -465,6 +469,12 @@ let with_no_new no_new env =
     env
   else
     { env with no_new }
+
+let with_no_record no_record env =
+  if no_record = env.no_record then
+    env
+  else
+    { env with no_record }
 
 let with_in_switch in_switch env =
   if in_switch = env.in_switch then

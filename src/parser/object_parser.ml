@@ -582,7 +582,9 @@ module Object
   let class_extends ~leading =
     with_loc (fun env ->
         let expr =
-          let expr = Expression.left_hand_side (env |> with_allow_yield false) in
+          let expr =
+            Expression.left_hand_side (env |> with_allow_yield false |> with_no_record true)
+          in
           if Peek.token env <> T_LESS_THAN then
             expr
           else

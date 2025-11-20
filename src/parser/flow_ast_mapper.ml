@@ -269,6 +269,7 @@ class ['loc] mapper =
       | (loc, OptionalCall x) -> id (this#optional_call loc) x expr (fun x -> (loc, OptionalCall x))
       | (loc, OptionalMember x) ->
         id_loc this#optional_member loc x expr (fun x -> (loc, OptionalMember x))
+      | (loc, Record x) -> id_loc this#record loc x expr (fun x -> (loc, Record x))
       | (loc, Sequence x) -> id_loc this#sequence loc x expr (fun x -> (loc, Sequence x))
       | (loc, Super x) -> id_loc this#super_expression loc x expr (fun x -> (loc, Super x))
       | (loc, TaggedTemplate x) ->
@@ -2878,6 +2879,24 @@ class ['loc] mapper =
     method member_private_name (name : 'loc Ast.PrivateName.t) = this#private_name name
 
     method member_property_expression (expr : ('loc, 'loc) Ast.Expression.t) = this#expression expr
+
+    method record _loc (expr : ('loc, 'loc) Ast.Expression.Record.t) =
+      let open Ast.Expression.Record in
+      let { constructor; targs; properties = (props_loc, props); comments } = expr in
+      let constructor' = this#expression constructor in
+      let targs' = map_opt this#call_type_args targs in
+      let props' = this#object_ props_loc props in
+      let comments' = this#syntax_opt comments in
+      if constructor == constructor' && targs == targs' && props == props' && comments == comments'
+      then
+        expr
+      else
+        {
+          constructor = constructor';
+          targs = targs';
+          properties = (props_loc, props');
+          comments = comments';
+        }
 
     method meta_property _loc (expr : 'loc Ast.Expression.MetaProperty.t) =
       let open Ast.Expression.MetaProperty in

@@ -90,6 +90,7 @@ module Expression
     | (_, New _)
     | (_, OptionalCall _)
     | (_, OptionalMember _)
+    | (_, Record _)
     | (_, Sequence _)
     | (_, Super _)
     | (_, TaggedTemplate _)
@@ -313,6 +314,7 @@ module Expression
     | (_, Object _)
     | (_, OptionalCall _)
     | (_, OptionalMember _)
+    | (_, Record _)
     | (_, Sequence _)
     | (_, Super _)
     | (_, TaggedTemplate _)
@@ -828,11 +830,32 @@ module Expression
       let in_optional_chain = Option.is_some optional in
       call_cover ~allow_optional_chain ~in_optional_chain env start_loc (Cover_expr (loc, call))
     in
+    let should_parse_record env constructor =
+      (parse_options env).records
+      && (not (no_record env))
+      &&
+      match constructor with
+      | (_, Expression.Identifier _)
+      | (_, Expression.Member _) ->
+        true
+      | _ -> false
+    in
+    let parse_record env ~constructor ~targs =
+      let (obj_loc, obj, { if_expr; if_patt = _ }) = Parse.object_initializer env in
+      List.iter (error_at env) if_expr;
+      Cover_expr
+        ( Loc.btwn start_loc obj_loc,
+          Expression.Record
+            { Expression.Record.constructor; targs; properties = (obj_loc, obj); comments = None }
+        )
+    in
     if no_call env then
       left
     else
       match Peek.token env with
       | T_LPAREN -> arguments env (left_to_callee env)
+      | T_LCURLY when should_parse_record env (as_expression env left) ->
+        parse_record env ~constructor:(left_to_callee env) ~targs:None
       | T_LSHIFT
       | T_LESS_THAN
         when should_parse_types env ->
@@ -845,7 +868,10 @@ module Expression
         Try.or_else env ~fallback:left (fun env ->
             let callee = left_to_callee env in
             let targs = call_type_args env in
-            arguments ?targs env callee
+            match Peek.token env with
+            | T_LCURLY when should_parse_record env callee ->
+              parse_record env ~constructor:callee ~targs
+            | _ -> arguments ?targs env callee
         )
       | _ -> left
 
@@ -1711,6 +1737,8 @@ module Expression
             optional_member with
             OptionalMember.member = { member with Member.comments = merge_comments comments };
           }
+      | Record ({ Record.comments; _ } as e) ->
+        Record { e with Record.comments = merge_comments comments }
       | Sequence ({ Sequence.comments; _ } as e) ->
         Sequence { e with Sequence.comments = merge_comments comments }
       | Super { Super.comments; _ } -> Super { Super.comments = merge_comments comments }

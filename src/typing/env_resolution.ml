@@ -595,6 +595,7 @@ let rec resolve_binding cx def_scope_kind reason loc b =
         | Ast.Expression.New _
         | Ast.Expression.OptionalCall _
         | Ast.Expression.OptionalMember _
+        | Ast.Expression.Record _
         | Ast.Expression.Sequence _
         | Ast.Expression.Super _
         | Ast.Expression.TaggedTemplate _

@@ -1088,6 +1088,14 @@ let rec code_desc_of_expression : 'loc 'tloc. wrap:bool -> ('loc, 'tloc) Ast.Exp
     in
     do_wrap ("new " ^ code_desc_of_expression ~wrap:true callee ^ targs ^ args)
   | Object _ -> "{...}"
+  | Record { Record.constructor; targs; properties = _; comments = _ } ->
+    let targs =
+      match targs with
+      | None -> ""
+      | Some (_, { CallTypeArgs.arguments = []; comments = _ }) -> "<>"
+      | Some (_, { CallTypeArgs.arguments = _ :: _; comments = _ }) -> "<...>"
+    in
+    do_wrap (code_desc_of_expression ~wrap:true constructor ^ targs ^ " {...}")
   | OptionalCall
       {
         OptionalCall.call = { Call.callee; targs; arguments; comments = _ };

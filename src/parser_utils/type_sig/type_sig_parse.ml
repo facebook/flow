@@ -3343,6 +3343,11 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
       ( loc,
         SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Yield))
       )
+  | E.Record _ ->
+    Err
+      ( loc,
+        SigError (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.Record))
+      )
 
 and pattern opts scope tbls f def (_, p) =
   let module P = Ast.Pattern in

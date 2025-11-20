@@ -3259,6 +3259,11 @@ module Make
         object_ ~frozen:(frozen = FrozenDirect) ~as_const ~has_hint cx loc properties
       in
       ((loc, t), Object { Object.properties; comments })
+    | Record { Record.constructor = _; targs = _; properties = _; comments = _ } ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.Records));
+      Tast_utils.error_mapper#expression ex
     | Array { Array.elements; comments } ->
       (match elements with
       | [] when as_const ->

@@ -1521,6 +1521,16 @@ and Expression : sig
     [@@deriving show]
   end
 
+  module Record : sig
+    type ('M, 'T) t = {
+      constructor: ('M, 'T) Expression.t;
+      targs: ('M, 'T) Expression.CallTypeArgs.t option;
+      properties: 'M * ('M, 'T) Object.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Sequence : sig
     type ('M, 'T) t = {
       expressions: ('M, 'T) Expression.t list;
@@ -1832,6 +1842,7 @@ and Expression : sig
     | Object of ('M, 'T) Object.t
     | OptionalCall of ('M, 'T) OptionalCall.t
     | OptionalMember of ('M, 'T) OptionalMember.t
+    | Record of ('M, 'T) Record.t
     | Sequence of ('M, 'T) Sequence.t
     | Super of 'M Super.t
     | TaggedTemplate of ('M, 'T) TaggedTemplate.t

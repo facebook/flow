@@ -6325,6 +6325,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | New _
         | Object _
         | OptionalCall _
+        | Record _
         | Sequence _
         | Super _
         | TaggedTemplate _

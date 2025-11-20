@@ -396,5 +396,13 @@ References:
           ^ [2]
 
 
+Error ----------------------------------------------------------------------------------------------- expression.js:5:16
 
-Found 26 errors
+Records are not enabled. [unsupported-syntax]
+
+   5|   const x: R = R {}; // TODO: records
+                     ^^^^
+
+
+
+Found 27 errors

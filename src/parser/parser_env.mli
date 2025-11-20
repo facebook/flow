@@ -108,6 +108,8 @@ val no_conditional_type : env -> bool
 
 val no_new : env -> bool
 
+val no_record : env -> bool
+
 val errors : env -> (Loc.t * Parse_error.t) list
 
 val parse_options : env -> parse_options
@@ -176,6 +178,8 @@ val with_no_anon_function_type : bool -> env -> env
 val with_no_conditional_type : bool -> env -> env
 
 val with_no_new : bool -> env -> env
+
+val with_no_record : bool -> env -> env
 
 val with_in_switch : bool -> env -> env
 

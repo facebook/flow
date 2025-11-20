@@ -787,6 +787,8 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method program : ('M, 'T) Flow_ast.Program.t -> ('N, 'U) Flow_ast.Program.t
 
+    method record : ('M, 'T) Ast.Expression.Record.t -> ('N, 'U) Ast.Expression.Record.t
+
     method record_declaration :
       ('M, 'T) Ast.Statement.RecordDeclaration.t -> ('N, 'U) Ast.Statement.RecordDeclaration.t
 

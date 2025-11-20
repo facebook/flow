@@ -1580,6 +1580,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         meta_property loc m1 m2
       | ((loc, Ast.Expression.Import i1), (_, Ast.Expression.Import i2)) ->
         import_expression loc i1 i2
+      | ((loc, Ast.Expression.Record r1), (_, Ast.Expression.Record r2)) -> record loc r1 r2
       | ((loc, Ast.Expression.Match m1), (_, Ast.Expression.Match m2)) -> match_expression loc m1 m2
       (* TODO: handle AsConstExpression, OptionalCall, OptionalMember, TSSatisfies *)
       (* The catch all case where LHS and RHS are different AST nodes.
@@ -1597,10 +1598,10 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             | Ast.Expression.Logical _ | Ast.Expression.Match _ | Ast.Expression.Member _
             | Ast.Expression.MetaProperty _ | Ast.Expression.New _ | Ast.Expression.Object _
             | Ast.Expression.OptionalCall _ | Ast.Expression.OptionalMember _
-            | Ast.Expression.Sequence _ | Ast.Expression.Super _ | Ast.Expression.TaggedTemplate _
-            | Ast.Expression.TemplateLiteral _ | Ast.Expression.This _
-            | Ast.Expression.TSSatisfies _ | Ast.Expression.TypeCast _ | Ast.Expression.Unary _
-            | Ast.Expression.Update _ | Ast.Expression.Yield _ )
+            | Ast.Expression.Record _ | Ast.Expression.Sequence _ | Ast.Expression.Super _
+            | Ast.Expression.TaggedTemplate _ | Ast.Expression.TemplateLiteral _
+            | Ast.Expression.This _ | Ast.Expression.TSSatisfies _ | Ast.Expression.TypeCast _
+            | Ast.Expression.Unary _ | Ast.Expression.Update _ | Ast.Expression.Yield _ )
           ),
           _
         ) ->
@@ -2032,6 +2033,35 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let { properties = properties2; comments = comments2 } = obj2 in
     let comments = syntax_opt loc comments1 comments2 in
     join_diff_list [comments; diff_and_recurse_no_trivial object_property properties1 properties2]
+  and record loc rec1 rec2 =
+    let open Ast.Expression.Record in
+    let {
+      constructor = constructor1;
+      targs = targs1;
+      properties = (props_loc1, props1);
+      comments = comments1;
+    } =
+      rec1
+    in
+    let {
+      constructor = constructor2;
+      targs = targs2;
+      properties = (_, props2);
+      comments = comments2;
+    } =
+      rec2
+    in
+    let constructor_diff =
+      diff_if_changed
+        (expression ~parent:(ExpressionParentOfExpression (loc, Ast.Expression.Record rec2)))
+        constructor1
+        constructor2
+      |> Base.Option.return
+    in
+    let targs_diff = diff_if_changed_opt call_type_args targs1 targs2 in
+    let properties_diff = diff_if_changed_ret_opt (object_ props_loc1) props1 props2 in
+    let comments_diff = syntax_opt loc comments1 comments2 in
+    join_diff_list [constructor_diff; targs_diff; properties_diff; comments_diff]
   and binary
       (loc : Loc.t)
       (b1 : (Loc.t, Loc.t) Ast.Expression.Binary.t)

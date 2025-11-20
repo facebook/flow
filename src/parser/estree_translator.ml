@@ -745,6 +745,26 @@ with type t = Impl.t = struct
           "MetaProperty"
           loc
           [("meta", identifier meta); ("property", identifier property)]
+      | (loc, Record { Record.constructor; targs; properties; comments }) ->
+        let properties =
+          let (props_loc, { Expression.Object.properties = props; comments = props_comments }) =
+            properties
+          in
+          node
+            ?comments:(format_internal_comments props_comments)
+            "RecordExpressionProperties"
+            props_loc
+            [("properties", array_of_list object_property props)]
+        in
+        node
+          ?comments
+          "RecordExpression"
+          loc
+          [
+            ("constructor", expression constructor);
+            ("typeArguments", option call_type_args targs);
+            ("properties", properties);
+          ]
       | (loc, Import { Import.argument; comments }) ->
         node ?comments "ImportExpression" loc [("source", expression argument)]
     and match_expression_case case = match_case "MatchExpressionCase" ~on_case_body:expression case

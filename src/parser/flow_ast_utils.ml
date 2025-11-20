@@ -597,6 +597,7 @@ module ExpressionSort = struct
     | Object
     | OptionalCall
     | OptionalMember
+    | Record
     | Satisfies
     | Sequence
     | Super
@@ -631,6 +632,7 @@ module ExpressionSort = struct
     | Object -> "object"
     | OptionalCall -> "optional call expression"
     | OptionalMember -> "optional member expression"
+    | Record -> "record expression"
     | Satisfies -> "satisfies expression"
     | Sequence -> "sequence"
     | Super -> "`super` reference"

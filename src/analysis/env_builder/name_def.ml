@@ -711,6 +711,14 @@ let expression_is_definitely_synthesizable ~autocomplete_hooks =
             let (_, { Ast.Expression.Object.SpreadProperty.argument; comments = _ }) = s in
             synthesizable argument
           )
+    | Ast.Expression.Record { Ast.Expression.Record.targs; _ } ->
+      (match targs with
+      | Some (_, { Flow_ast.Expression.CallTypeArgs.arguments; _ }) ->
+        Base.List.for_all arguments ~f:(function
+            | Flow_ast.Expression.CallTypeArg.Explicit _ -> true
+            | Flow_ast.Expression.CallTypeArg.Implicit _ -> false
+            )
+      | None -> false)
     | Ast.Expression.Logical expr ->
       synthesizable expr.Ast.Expression.Logical.left
       && synthesizable expr.Ast.Expression.Logical.right
@@ -3030,6 +3038,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           x
       | Ast.Expression.Object expr ->
         this#visit_object_expression ~object_hints:hints_before_synthesizable_check expr
+      | Ast.Expression.Record expr ->
+        this#visit_record_expression ~record_hints:hints_before_synthesizable_check expr
       | Ast.Expression.Member m -> this#visit_member_expression ~cond ~hints loc m
       | Ast.Expression.OptionalMember m -> this#visit_optional_member_expression ~cond ~hints loc m
       | Ast.Expression.Binary expr -> this#visit_binary_expression ~cond expr
@@ -3307,6 +3317,19 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               ~cond:NoContext
               argument
       )
+
+    method private visit_record_expression ~record_hints expr =
+      let {
+        Ast.Expression.Record.constructor;
+        targs;
+        properties = (_props_loc, props);
+        comments = _;
+      } =
+        expr
+      in
+      this#visit_expression ~hints:[] ~cond:NoContext constructor;
+      Base.Option.iter targs ~f:(fun ta -> ignore @@ this#call_type_args ta);
+      this#visit_object_expression ~object_hints:record_hints props
 
     method! switch loc switch =
       let open Ast.Statement.Switch in

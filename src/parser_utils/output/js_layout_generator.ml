@@ -147,6 +147,7 @@ let precedence_of_expression expr =
   | (_, E.Match _)
   | (_, E.ModuleRefLiteral _)
   | (_, E.Object _)
+  | (_, E.Record _)
   | (_, E.Super _)
   | (_, E.TemplateLiteral _)
   | (_, E.This _)
@@ -1304,6 +1305,22 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       | E.Import { E.Import.argument; comments } ->
         layout_node_with_comments_opt loc comments
         @@ fuse [Atom "import"; wrap_in_parens (expression ~opts argument)]
+      | E.Record
+          {
+            E.Record.constructor;
+            targs;
+            properties = (props_loc, props);
+            comments = record_comments;
+          } ->
+        let constructor_layout = expression ~ctxt ~opts constructor in
+        layout_node_with_comments_opt loc record_comments
+        @@ group
+             [
+               constructor_layout;
+               option (call_type_args ~opts ~less_than:"<") targs;
+               pretty_space;
+               object_ ~opts props_loc props;
+             ]
     )
 
 and object_ ~opts loc { Ast.Expression.Object.properties; comments } =

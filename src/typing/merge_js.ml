@@ -562,6 +562,7 @@ let rec check_conditional
       | Match _
       | Binary _
       | Identifier _
+      | Record _
       | This _ ->
         use_type_to_check_conditional cx ttype
     in

@@ -363,6 +363,17 @@ function custom_ast_types(fork) {
     .field('typeAnnotation', def('TypeAnnotation'))
     .field('value', def('Expression'));
 
+  def('RecordExpression')
+    .bases('Expression')
+    .build('constructor', 'typeArguments', 'properties')
+    .field('constructor', def('Expression'))
+    .field('typeArguments', or(def('TypeParameterInstantiation'), null))
+    .field('properties', def('RecordExpressionProperties'));
+
+  def('RecordExpressionProperties')
+    .build('properties')
+    .field('properties', [or(def('Property'), def('SpreadElement'))]);
+
   /////////
   // es2018
   /////////

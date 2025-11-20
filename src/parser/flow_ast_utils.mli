@@ -147,6 +147,7 @@ module ExpressionSort : sig
     | Object
     | OptionalCall
     | OptionalMember
+    | Record
     | Satisfies
     | Sequence
     | Super

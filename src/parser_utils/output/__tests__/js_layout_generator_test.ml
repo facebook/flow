@@ -3102,6 +3102,12 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             "record R implements IFace {\n  static foo: number = 1,\n}"
+             "record R implements IFace {\n  static foo: number = 1,\n}";
+           assert_expression_string ~ctxt ~pretty:true "R {}";
+           assert_expression_string ~ctxt ~pretty:true "R { a: 1, b: 0 }";
+           assert_expression_string ~ctxt ~pretty:true "R { a: 1, b: 0 }";
+           assert_expression_string ~ctxt ~pretty:true "R { ...x, b: 0 }";
+           assert_expression_string ~ctxt ~pretty:true "R<> {}";
+           assert_expression_string ~ctxt ~pretty:true "R<T, S> {}"
          );
        ]

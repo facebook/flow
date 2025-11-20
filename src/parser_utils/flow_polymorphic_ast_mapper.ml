@@ -151,6 +151,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Object x -> Object (this#object_ x)
         | OptionalCall x -> OptionalCall (this#optional_call annot x)
         | OptionalMember x -> OptionalMember (this#optional_member annot x)
+        | Record x -> Record (this#record x)
         | Sequence x -> Sequence (this#sequence x)
         | Super x -> Super (this#super_expression x)
         | TaggedTemplate x -> TaggedTemplate (this#tagged_template x)
@@ -2654,6 +2655,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method predicate_expression (expr : ('M, 'T) Ast.Expression.t) : ('N, 'U) Ast.Expression.t =
       this#expression expr
+
+    method record (expr : ('M, 'T) Ast.Expression.Record.t) : ('N, 'U) Ast.Expression.Record.t =
+      let open Ast.Expression.Record in
+      let { constructor; targs; properties; comments } = expr in
+      let constructor' = this#expression constructor in
+      let targs' = Option.map ~f:this#call_type_args targs in
+      let properties' = (this#on_loc_annot * this#object_) properties in
+      let comments' = this#syntax_opt comments in
+      { constructor = constructor'; targs = targs'; properties = properties'; comments = comments' }
 
     method record_declaration (record : ('M, 'T) Ast.Statement.RecordDeclaration.t)
         : ('N, 'U) Ast.Statement.RecordDeclaration.t =
