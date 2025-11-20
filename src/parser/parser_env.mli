@@ -153,8 +153,6 @@ val with_strict : bool -> env -> env
 
 val with_in_formal_parameters : bool -> env -> env
 
-val with_in_function : bool -> env -> env
-
 val with_in_match_expression : bool -> env -> env
 
 val with_in_match_statement : bool -> env -> env
@@ -201,8 +199,6 @@ val is_contextually_reserved : string -> bool
 
 val is_reserved : string -> bool
 
-val token_is_contextually_reserved : Token.t -> bool
-
 val token_is_reserved : Token.t -> bool
 
 val token_is_reserved_type : Token.t -> bool
@@ -237,10 +233,6 @@ module Peek : sig
   val is_implicit_semicolon : env -> bool
 
   val is_identifier : env -> bool
-
-  val is_type_identifier : env -> bool
-
-  val is_identifier_name : env -> bool
 
   val is_function : env -> bool
 

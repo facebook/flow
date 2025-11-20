@@ -392,12 +392,6 @@ let with_in_formal_parameters in_formal_parameters env =
   else
     { env with in_formal_parameters }
 
-let with_in_function in_function env =
-  if in_function = env.in_function then
-    env
-  else
-    { env with in_function }
-
 let with_in_match_expression in_match_expression env =
   if in_match_expression = env.in_match_expression then
     env
@@ -584,19 +578,6 @@ let is_contextually_reserved str_val =
   match str_val with
   | "await"
   | "yield" ->
-    true
-  | _ -> false
-
-(** Words that are sometimes reserved, and sometimes allowed as identifiers
-    (namely "await" and "yield")
-
-    https://tc39.es/ecma262/#sec-keywords-and-reserved-words *)
-let token_is_contextually_reserved t =
-  let open Token in
-  match t with
-  | T_IDENTIFIER { raw; _ } -> is_contextually_reserved raw
-  | T_AWAIT
-  | T_YIELD ->
     true
   | _ -> false
 
@@ -1033,10 +1014,6 @@ module Peek = struct
   (* This returns true if the next token is identifier-ish (even if it is an
      error) *)
   let is_identifier env = ith_is_identifier ~i:0 env
-
-  let is_identifier_name env = ith_is_identifier_name ~i:0 env
-
-  let is_type_identifier env = ith_is_type_identifier ~i:0 env
 
   let is_function env =
     token env = T_FUNCTION
