@@ -154,8 +154,8 @@ References:
 
 Error ----------------------------------------------------------------------------------------- instance-pattern.js:26:5
 
-This object pattern hasn't considered all possible properties of the input. There could be additional properties due to
-`Point` [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
+This instance pattern hasn't considered all possible properties of the input. There could be additional properties due
+to `Point` [1]. To fix, add `...` to the end of the pattern to match all other properties. [match-not-exhaustive]
 
    instance-pattern.js:26:5
    26|     Point {const x, const y} => { // ERROR: instances are inexact
@@ -268,7 +268,7 @@ References:
 
 Error --------------------------------------------------------------------------------------- instance-pattern.js:161:18
 
-Duplicate property `x` in object pattern. [match-invalid-pattern]
+Duplicate property `x` in instance pattern. [match-invalid-pattern]
 
    161|     Point {x: _, x: _, ...} => {} // ERROR
                          ^
@@ -285,8 +285,8 @@ of the input type. To fix, either remove this pattern or restructure previous pa
 
 Error --------------------------------------------------------------------------------------- instance-pattern.js:170:12
 
-Unsupported object property literal in match pattern. String literals and int-like number literals are supported.
-[match-invalid-pattern]
+Unsupported instance pattern property literal in match pattern. String literals and int-like number literals are
+supported. [match-invalid-pattern]
 
    170|     Point {1.3: _, ...} => {} // ERROR
                    ^^^
@@ -294,7 +294,7 @@ Unsupported object property literal in match pattern. String literals and int-li
 
 Error --------------------------------------------------------------------------------------- instance-pattern.js:180:12
 
-`match` object patterns don't allow this property shorthand syntax. To fix, be explicit and either use `{const x}` if
+`match` instance patterns don't allow this property shorthand syntax. To fix, be explicit and either use `{const x}` if
 you want to create a new variable with the value of property `x`, or use `{x: x}` if you want to match property `x`
 against the value of the variable named `x`. [match-invalid-pattern]
 
@@ -841,8 +841,8 @@ of the input type. To fix, either remove this pattern or restructure previous pa
 
 Error ------------------------------------------------------------------------------------------- pattern-errors.js:25:6
 
-Unsupported object property literal in match pattern. String literals and int-like number literals are supported.
-[match-invalid-pattern]
+Unsupported object pattern property literal in match pattern. String literals and int-like number literals are
+supported. [match-invalid-pattern]
 
    25|     {1.1: _} => 0, // ERROR
             ^^^
@@ -1150,8 +1150,8 @@ you want to create a new variable with the value of property `foo`, or use `{foo
 
 Error ------------------------------------------------------------------------------------------ pattern-errors.js:181:6
 
-Unsupported object property literal in match pattern. String literals and int-like number literals are supported.
-[match-invalid-pattern]
+Unsupported object pattern property literal in match pattern. String literals and int-like number literals are
+supported. [match-invalid-pattern]
 
    181|     {1n: 1, ...} => 0, // ERROR
              ^^

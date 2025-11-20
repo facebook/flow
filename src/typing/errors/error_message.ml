@@ -716,6 +716,7 @@ and 'loc t' =
       loc: 'loc;
       rest: 'loc virtual_reason option;
       missing_props: string list;
+      pattern_kind: MatchObjPatternKind.t;
     }
   | EMatchNonExplicitEnumCheck of {
       loc: 'loc;
@@ -731,12 +732,16 @@ and 'loc t' =
       loc: 'loc;
       kind: Flow_ast.Variable.kind;
     }
-  | EMatchInvalidObjectPropertyLiteral of { loc: 'loc }
+  | EMatchInvalidObjectPropertyLiteral of {
+      loc: 'loc;
+      pattern_kind: MatchObjPatternKind.t;
+    }
   | EMatchInvalidUnaryZero of { loc: 'loc }
   | EMatchInvalidUnaryPlusBigInt of { loc: 'loc }
   | EMatchDuplicateObjectProperty of {
       loc: 'loc;
       name: string;
+      pattern_kind: MatchObjPatternKind.t;
     }
   | EMatchBindingInOrPattern of { loc: 'loc }
   | EMatchInvalidAsPattern of { loc: 'loc }
@@ -747,6 +752,7 @@ and 'loc t' =
   | EMatchInvalidObjectShorthand of {
       loc: 'loc;
       name: string;
+      pattern_kind: MatchObjPatternKind.t;
     }
   | EMatchStatementInvalidBody of { loc: 'loc }
   | EMatchInvalidCaseSyntax of {
@@ -1825,9 +1831,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchUnusedPattern { reason; already_seen } ->
     EMatchUnusedPattern
       { reason = map_reason reason; already_seen = Base.Option.map ~f:map_reason already_seen }
-  | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props } ->
+  | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props; pattern_kind } ->
     EMatchNonExhaustiveObjectPattern
-      { loc = f loc; rest = Base.Option.map ~f:map_reason rest; missing_props }
+      { loc = f loc; rest = Base.Option.map ~f:map_reason rest; missing_props; pattern_kind }
   | EMatchNonExplicitEnumCheck { loc; wildcard_reason; unchecked_members } ->
     EMatchNonExplicitEnumCheck
       { loc = f loc; wildcard_reason = map_reason wildcard_reason; unchecked_members }
@@ -1835,16 +1841,18 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EMatchInvalidIdentOrMemberPattern { loc; type_reason } ->
     EMatchInvalidIdentOrMemberPattern { loc = f loc; type_reason = map_reason type_reason }
   | EMatchInvalidBindingKind { loc; kind } -> EMatchInvalidBindingKind { loc = f loc; kind }
-  | EMatchInvalidObjectPropertyLiteral { loc } -> EMatchInvalidObjectPropertyLiteral { loc = f loc }
+  | EMatchInvalidObjectPropertyLiteral { loc; pattern_kind } ->
+    EMatchInvalidObjectPropertyLiteral { loc = f loc; pattern_kind }
   | EMatchInvalidUnaryZero { loc } -> EMatchInvalidUnaryZero { loc = f loc }
   | EMatchInvalidUnaryPlusBigInt { loc } -> EMatchInvalidUnaryPlusBigInt { loc = f loc }
-  | EMatchDuplicateObjectProperty { loc; name } ->
-    EMatchDuplicateObjectProperty { loc = f loc; name }
+  | EMatchDuplicateObjectProperty { loc; name; pattern_kind } ->
+    EMatchDuplicateObjectProperty { loc = f loc; name; pattern_kind }
   | EMatchBindingInOrPattern { loc } -> EMatchBindingInOrPattern { loc = f loc }
   | EMatchInvalidAsPattern { loc } -> EMatchInvalidAsPattern { loc = f loc }
   | EMatchInvalidPatternReference { loc; binding_reason } ->
     EMatchInvalidPatternReference { loc = f loc; binding_reason = map_reason binding_reason }
-  | EMatchInvalidObjectShorthand { loc; name } -> EMatchInvalidObjectShorthand { loc = f loc; name }
+  | EMatchInvalidObjectShorthand { loc; name; pattern_kind } ->
+    EMatchInvalidObjectShorthand { loc = f loc; name; pattern_kind }
   | EMatchStatementInvalidBody { loc } -> EMatchStatementInvalidBody { loc = f loc }
   | EMatchInvalidCaseSyntax { loc; kind } ->
     let kind =
@@ -2479,7 +2487,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchNonExhaustiveObjectPattern { loc; _ } -> Some loc
   | EMatchNonExplicitEnumCheck { loc; _ } -> Some loc
   | EMatchInvalidBindingKind { loc; _ } -> Some loc
-  | EMatchInvalidObjectPropertyLiteral { loc } -> Some loc
+  | EMatchInvalidObjectPropertyLiteral { loc; _ } -> Some loc
   | EMatchInvalidUnaryZero { loc } -> Some loc
   | EMatchInvalidUnaryPlusBigInt { loc } -> Some loc
   | EMatchDuplicateObjectProperty { loc; _ } -> Some loc
@@ -3685,26 +3693,26 @@ let friendly_message_of_msg = function
     Normal (MessageMatchNotExhaustive { examples })
   | EMatchUnusedPattern { reason; already_seen } ->
     Normal (MessageMatchUnnecessaryPattern { reason; already_seen })
-  | EMatchNonExhaustiveObjectPattern { loc = _; rest; missing_props } ->
-    Normal (MessageMatchNonExhaustiveObjectPattern { rest; missing_props })
+  | EMatchNonExhaustiveObjectPattern { loc = _; rest; missing_props; pattern_kind } ->
+    Normal (MessageMatchNonExhaustiveObjectPattern { rest; missing_props; pattern_kind })
   | EMatchNonExplicitEnumCheck { loc = _; wildcard_reason; unchecked_members } ->
     Normal (MessageMatchNonExplicitEnumCheck { wildcard_reason; unchecked_members })
   | EMatchInvalidGuardedWildcard _ -> Normal MessageMatchInvalidGuardedWildcard
   | EMatchInvalidIdentOrMemberPattern { loc = _; type_reason } ->
     Normal (MessageMatchInvalidIdentOrMemberPattern { type_reason })
   | EMatchInvalidBindingKind { loc = _; kind } -> Normal (MessageMatchInvalidBindingKind { kind })
-  | EMatchInvalidObjectPropertyLiteral { loc = _ } ->
-    Normal MessageMatchInvalidObjectPropertyLiteral
+  | EMatchInvalidObjectPropertyLiteral { loc = _; pattern_kind } ->
+    Normal (MessageMatchInvalidObjectPropertyLiteral { pattern_kind })
   | EMatchInvalidUnaryZero { loc = _ } -> Normal MessageMatchInvalidUnaryZero
   | EMatchInvalidUnaryPlusBigInt { loc = _ } -> Normal MessageMatchInvalidUnaryPlusBigInt
-  | EMatchDuplicateObjectProperty { loc = _; name } ->
-    Normal (MessageMatchDuplicateObjectProperty { name })
+  | EMatchDuplicateObjectProperty { loc = _; name; pattern_kind } ->
+    Normal (MessageMatchDuplicateObjectProperty { name; pattern_kind })
   | EMatchBindingInOrPattern { loc = _ } -> Normal MessageMatchBindingInOrPattern
   | EMatchInvalidAsPattern { loc = _ } -> Normal MessageMatchInvalidAsPattern
   | EMatchInvalidPatternReference { loc = _; binding_reason } ->
     Normal (MessageMatchInvalidPatternReference { binding_reason })
-  | EMatchInvalidObjectShorthand { loc = _; name } ->
-    Normal (MessageMatchInvalidObjectShorthand { name })
+  | EMatchInvalidObjectShorthand { loc = _; name; pattern_kind } ->
+    Normal (MessageMatchInvalidObjectShorthand { name; pattern_kind })
   | EMatchStatementInvalidBody _ -> Normal MessageMatchStatementInvalidBody
   | EMatchInvalidCaseSyntax { kind; _ } -> Normal (MessageMatchInvalidCaseSyntax kind)
   | EMatchInvalidWildcardSyntax _ -> Normal MessageMatchInvalidWildcardSyntax

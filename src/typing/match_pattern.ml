@@ -38,7 +38,7 @@ let object_named_property acc loc name =
       }
   )
 
-let object_property_key cx acc key :
+let object_property_key cx acc ~pattern_kind key :
     (ALoc.t, ALoc.t) Flow_ast.Expression.t
     * (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.ObjectPattern.Property.key
     * string =
@@ -57,11 +57,11 @@ let object_property_key cx acc key :
       let acc = object_named_property acc loc prop in
       (acc, Property.NumberLiteral (loc, lit), prop)
     else (
-      Flow_js.add_output cx (Error_message.EMatchInvalidObjectPropertyLiteral { loc });
+      Flow_js.add_output cx (Error_message.EMatchInvalidObjectPropertyLiteral { loc; pattern_kind });
       (acc, Property.NumberLiteral (loc, lit), prop)
     )
   | Property.BigIntLiteral (loc, { Ast.BigIntLiteral.raw; _ }) ->
-    Flow_js.add_output cx (Error_message.EMatchInvalidObjectPropertyLiteral { loc });
+    Flow_js.add_output cx (Error_message.EMatchInvalidObjectPropertyLiteral { loc; pattern_kind });
     (acc, Tast_utils.error_mapper#match_object_pattern_property_key key, raw)
 
 let binding cx ~on_binding ~kind acc name_loc name =
@@ -198,7 +198,16 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
         (array_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc pattern)
     | ObjectPattern pattern ->
       ObjectPattern
-        (object_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc pattern)
+        (object_pattern
+           cx
+           ~on_identifier
+           ~on_expression
+           ~on_binding
+           ~in_or_pattern
+           ~pattern_kind:Flow_intermediate_error_types.MatchObjPatternKind.Object
+           acc
+           pattern
+        )
     | InstancePattern x when not @@ Context.enable_pattern_matching_instance_patterns cx ->
       Flow_js.add_output
         cx
@@ -217,7 +226,15 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
       in
       let fields =
         ( fields_loc,
-          object_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc fields
+          object_pattern
+            cx
+            ~on_identifier
+            ~on_expression
+            ~on_binding
+            ~in_or_pattern
+            ~pattern_kind:Flow_intermediate_error_types.MatchObjPatternKind.Instance
+            acc
+            fields
         )
       in
       InstancePattern { constructor; fields; comments }
@@ -242,21 +259,31 @@ and array_elements cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern a
       { Element.pattern = p; index })
     elements
 
-and object_pattern cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc pattern =
+and object_pattern
+    cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern ~pattern_kind acc pattern =
   let open Ast.MatchPattern.ObjectPattern in
   let { properties; rest; comments } = pattern in
   let rest = rest_pattern cx ~on_binding ~in_or_pattern acc rest in
   let properties =
-    object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc properties
+    object_properties
+      cx
+      ~on_identifier
+      ~on_expression
+      ~on_binding
+      ~in_or_pattern
+      ~pattern_kind
+      acc
+      properties
   in
   { properties; rest; comments }
 
-and object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc props =
+and object_properties
+    cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern ~pattern_kind acc props =
   let open Ast.MatchPattern.ObjectPattern in
   let rec loop acc seen rev_props = function
     | [] -> List.rev rev_props
     | (loc, Property.Valid { Property.key; pattern = p; shorthand; comments }) :: props ->
-      let (acc, key, name) = object_property_key cx acc key in
+      let (acc, key, name) = object_property_key cx acc ~pattern_kind key in
       ( if SSet.mem name seen then
         let key_loc =
           match key with
@@ -273,13 +300,15 @@ and object_properties cx ~on_identifier ~on_expression ~on_binding ~in_or_patter
               loc
             | _ -> loc)
         in
-        Flow_js.add_output cx (Error_message.EMatchDuplicateObjectProperty { loc = key_loc; name })
+        Flow_js.add_output
+          cx
+          (Error_message.EMatchDuplicateObjectProperty { loc = key_loc; name; pattern_kind })
       );
       let p = pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc p in
       let prop = (loc, Property.Valid { Property.key; pattern = p; shorthand; comments }) in
       loop acc (SSet.add name seen) (prop :: rev_props) props
     | ((loc, Property.InvalidShorthand (_, { Ast.Identifier.name; _ })) as prop) :: props ->
-      Flow_js.add_output cx (Error_message.EMatchInvalidObjectShorthand { loc; name });
+      Flow_js.add_output cx (Error_message.EMatchInvalidObjectShorthand { loc; name; pattern_kind });
       loop acc (SSet.add name seen) (prop :: rev_props) props
   in
   loop acc SSet.empty [] props

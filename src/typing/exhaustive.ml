@@ -1244,6 +1244,10 @@ and filter_object_by_pattern
                            loc = Reason.loc_of_reason reason_pattern;
                            rest = value_rest;
                            missing_props;
+                           pattern_kind =
+                             (match pattern_class_info with
+                             | Some _ -> Flow_intermediate_error_types.MatchObjPatternKind.Instance
+                             | None -> Flow_intermediate_error_types.MatchObjPatternKind.Object);
                          }
                       )
                 );

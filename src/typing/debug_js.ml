@@ -2012,7 +2012,7 @@ let dump_error_message =
         "EMatchUnusedPattern (%s) (%s)"
         (dump_reason cx reason)
         (Base.Option.value_map ~default:"" ~f:(dump_reason cx) already_seen)
-    | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props = _ } ->
+    | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props = _; pattern_kind = _ } ->
       spf
         "EMatchNonExhaustiveObjectPattern (%s) (%s)"
         (string_of_aloc loc)
@@ -2034,12 +2034,12 @@ let dump_error_message =
         "EMatchInvalidBindingKind (%s) (%s)"
         (string_of_aloc loc)
         (Flow_ast_utils.string_of_variable_kind kind)
-    | EMatchInvalidObjectPropertyLiteral { loc } ->
+    | EMatchInvalidObjectPropertyLiteral { loc; pattern_kind = _ } ->
       spf "EMatchInvalidObjectPropertyLiteral (%s)" (string_of_aloc loc)
     | EMatchInvalidUnaryZero { loc } -> spf "EMatchInvalidUnaryZero (%s)" (string_of_aloc loc)
     | EMatchInvalidUnaryPlusBigInt { loc } ->
       spf "EMatchInvalidUnaryBigInt (%s)" (string_of_aloc loc)
-    | EMatchDuplicateObjectProperty { loc; name } ->
+    | EMatchDuplicateObjectProperty { loc; name; pattern_kind = _ } ->
       spf "EMatchDuplicateObjectProperty (%s) (%s)" (string_of_aloc loc) name
     | EMatchBindingInOrPattern { loc } -> spf "EMatchBindingInOrPattern (%s)" (string_of_aloc loc)
     | EMatchInvalidAsPattern { loc } -> spf "EMatchInvalidAsPattern (%s)" (string_of_aloc loc)
@@ -2048,7 +2048,7 @@ let dump_error_message =
         "EMatchInvalidPatternReference (%s) (%s)"
         (string_of_aloc loc)
         (dump_reason cx binding_reason)
-    | EMatchInvalidObjectShorthand { loc; name } ->
+    | EMatchInvalidObjectShorthand { loc; name; pattern_kind = _ } ->
       spf "EMatchInvalidObjectShorthand (%s) (%s)" (string_of_aloc loc) name
     | EMatchStatementInvalidBody { loc } ->
       spf "EMatchStatementInvalidBody (%s)" (string_of_aloc loc)

@@ -5171,9 +5171,14 @@ let to_printable_error :
       [text "This "; ref reason; text " is unused. "]
       @ msg
       @ [text "To fix, either remove this pattern or restructure previous patterns."]
-    | MessageMatchNonExhaustiveObjectPattern { rest; missing_props } ->
+    | MessageMatchNonExhaustiveObjectPattern { rest; missing_props; pattern_kind } ->
+      let pattern_kind_str = MatchObjPatternKind.to_string pattern_kind in
       let prefix =
-        [text "This object pattern hasn't considered all possible properties of the input. "]
+        [
+          text "This ";
+          text pattern_kind_str;
+          text " hasn't considered all possible properties of the input. ";
+        ]
       in
       let has_missing_props = not @@ Base.List.is_empty missing_props in
       let (properties_text, those_properties_text) =
@@ -5216,8 +5221,9 @@ let to_printable_error :
             @ [
                 text
                   (spf
-                     ". To fix, either add %s to the object pattern, or add "
+                     ". To fix, either add %s to the %s, or add "
                      those_properties_text
+                     pattern_kind_str
                   );
               ]
         in
@@ -5271,17 +5277,25 @@ let to_printable_error :
         code "const";
         text " is allowed.";
       ]
-    | MessageMatchInvalidObjectPropertyLiteral ->
+    | MessageMatchInvalidObjectPropertyLiteral { pattern_kind } ->
       [
-        text "Unsupported object property literal in match pattern. ";
+        text "Unsupported ";
+        text (MatchObjPatternKind.to_string pattern_kind);
+        text " property literal in match pattern. ";
         text "String literals and int-like number literals are supported.";
       ]
     | MessageMatchInvalidUnaryZero ->
       [text "Unary pattern on "; code "0"; text " is not supported."]
     | MessageMatchInvalidUnaryPlusBigInt ->
       [text "Unary pattern "; code "+"; text " on bigint literal is not supported."]
-    | MessageMatchDuplicateObjectProperty { name } ->
-      [text "Duplicate property "; code name; text " in object pattern."]
+    | MessageMatchDuplicateObjectProperty { name; pattern_kind } ->
+      [
+        text "Duplicate property ";
+        code name;
+        text " in ";
+        text (MatchObjPatternKind.to_string pattern_kind);
+        text ".";
+      ]
     | MessageMatchBindingInOrPattern ->
       [text "New bindings in 'or' patterns are not yet supported."]
     | MessageMatchInvalidAsPattern ->
@@ -5292,10 +5306,12 @@ let to_printable_error :
         ref binding_reason;
         text " within the same match pattern it is defined.";
       ]
-    | MessageMatchInvalidObjectShorthand { name } ->
+    | MessageMatchInvalidObjectShorthand { name; pattern_kind } ->
       [
         code "match";
-        text " object patterns don't allow this property shorthand syntax. ";
+        text " ";
+        text (MatchObjPatternKind.to_string pattern_kind);
+        text "s don't allow this property shorthand syntax. ";
         text "To fix, be explicit and either use ";
         code (spf "{const %s}" name);
         text " if you want to create a new variable with the value of property ";

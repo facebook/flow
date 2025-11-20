@@ -140,6 +140,16 @@ type 'loc strict_comparison_info = {
   strict_comparison_kind: strict_comparison_kind;
 }
 
+module MatchObjPatternKind = struct
+  type t =
+    | Object
+    | Instance
+
+  let to_string = function
+    | Object -> "object pattern"
+    | Instance -> "instance pattern"
+end
+
 module IncorrectType = struct
   type t =
     | Partial
@@ -1127,6 +1137,7 @@ type 'loc message =
   | MessageMatchNonExhaustiveObjectPattern of {
       rest: 'loc virtual_reason option;
       missing_props: string list;
+      pattern_kind: MatchObjPatternKind.t;
     }
   | MessageMatchNonExplicitEnumCheck of {
       wildcard_reason: 'loc virtual_reason;
@@ -1135,14 +1146,20 @@ type 'loc message =
   | MessageMatchInvalidGuardedWildcard
   | MessageMatchInvalidIdentOrMemberPattern of { type_reason: 'loc virtual_reason }
   | MessageMatchInvalidBindingKind of { kind: Flow_ast.Variable.kind }
-  | MessageMatchInvalidObjectPropertyLiteral
+  | MessageMatchInvalidObjectPropertyLiteral of { pattern_kind: MatchObjPatternKind.t }
   | MessageMatchInvalidUnaryZero
   | MessageMatchInvalidUnaryPlusBigInt
-  | MessageMatchDuplicateObjectProperty of { name: string }
+  | MessageMatchDuplicateObjectProperty of {
+      name: string;
+      pattern_kind: MatchObjPatternKind.t;
+    }
   | MessageMatchBindingInOrPattern
   | MessageMatchInvalidAsPattern
   | MessageMatchInvalidPatternReference of { binding_reason: 'loc virtual_reason }
-  | MessageMatchInvalidObjectShorthand of { name: string }
+  | MessageMatchInvalidObjectShorthand of {
+      name: string;
+      pattern_kind: MatchObjPatternKind.t;
+    }
   | MessageMatchStatementInvalidBody
   | MessageMatchInvalidCaseSyntax of 'loc match_invalid_case_syntax
   | MessageMatchInvalidWildcardSyntax

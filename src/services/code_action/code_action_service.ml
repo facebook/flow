@@ -1281,7 +1281,7 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EMatchInvalidObjectShorthand { loc = error_loc; name } ->
+  | Error_message.EMatchInvalidObjectShorthand { loc = error_loc; name; pattern_kind = _ } ->
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
@@ -1357,7 +1357,8 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EMatchNonExhaustiveObjectPattern { loc = error_loc; rest; missing_props } ->
+  | Error_message.EMatchNonExhaustiveObjectPattern
+      { loc = error_loc; rest; missing_props; pattern_kind = _ } ->
     if loc_opt_intersects ~error_loc ~loc then
       let add_only_rest =
         {
