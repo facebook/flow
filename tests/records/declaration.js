@@ -485,3 +485,10 @@ interface Equatable<T> {
     a: number, // ERROR
   }
 }
+
+// Invalid default values
+{
+  record R {
+    a: number = true, // ERROR
+  }
+}
