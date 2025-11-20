@@ -86,7 +86,34 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       | (_, DeclareFunction _)
       | (_, DeclareComponent _) ->
         this#flowmin_compatibility_statement stmt
-      | _ -> this#nonlexical_statement stmt
+      | (_, Block _)
+      | (_, Break _)
+      | (_, Continue _)
+      | (_, Debugger _)
+      | (_, DeclareEnum _)
+      | (_, DeclareInterface _)
+      | (_, DeclareModuleExports _)
+      | (_, DeclareNamespace _)
+      | (_, DeclareTypeAlias _)
+      | (_, DeclareOpaqueType _)
+      | (_, DoWhile _)
+      | (_, Empty _)
+      | (_, Expression _)
+      | (_, For _)
+      | (_, ForIn _)
+      | (_, ForOf _)
+      | (_, If _)
+      | (_, InterfaceDeclaration _)
+      | (_, Match _)
+      | (_, Return _)
+      | (_, Switch _)
+      | (_, Throw _)
+      | (_, Try _)
+      | (_, TypeAlias _)
+      | (_, OpaqueType _)
+      | (_, While _)
+      | (_, With _) ->
+        this#nonlexical_statement stmt
 
     method flowmin_compatibility_statement stmt =
       (* Flowmin treats function declarations as vars, even though
