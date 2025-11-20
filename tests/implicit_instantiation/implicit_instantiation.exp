@@ -12,6 +12,21 @@ References:
                 ^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------- new_map_perf_regression.js:19:31
+
+Cannot use `V` [1] in an input/output position because `V` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   new_map_perf_regression.js:19:31
+   19|   @@iterator(): Iterator_<[K, V]>;
+                                     ^
+
+References:
+   new_map_perf_regression.js:18:38
+   18| declare class $CustomReadOnlyMap<K, +V> {
+                                            ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------------ repos_use.js:20:1
 
 Cannot cast `err1` to string literal `FOO` because string literal `BAR` [1] is incompatible with string literal
@@ -331,4 +346,4 @@ References:
 
 
 
-Found 19 errors
+Found 20 errors

@@ -288,16 +288,16 @@ Cannot call `Array` because `T` [1] is underconstrained by new `Array` [2]. Eith
 the expression to your expected type. [underconstrained-implicit-instantiation]
 
    underconstrained_class_constructor.js:18:5
-    18| new Array(1); // Error
-            ^^^^^
+     18| new Array(1); // Error
+             ^^^^^
 
 References:
-   <BUILTINS>/core.js:979:21
-   979| declare class Array<T> extends $ReadOnlyArray<T> {
-                            ^ [1]
+   <BUILTINS>/core.js:1022:21
+   1022| declare class Array<T> extends $ReadOnlyArray<T> {
+                             ^ [1]
    underconstrained_class_constructor.js:18:1
-    18| new Array(1); // Error
-        ^^^^^^^^^^^^ [2]
+     18| new Array(1); // Error
+         ^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------- underconstrained_class_constructor.js:21:5
@@ -807,13 +807,13 @@ Error --------------------------------------------------------------------------
 Cannot get `r1.bad` because property `bad` is missing in `Array` [1]. [prop-missing]
 
    upper_non_t.js:99:6
-    99|   r1.bad; // error
-             ^^^
+     99|   r1.bad; // error
+              ^^^
 
 References:
-   <BUILTINS>/core.js:979:15
-   979| declare class Array<T> extends $ReadOnlyArray<T> {
-                      ^^^^^ [1]
+   <BUILTINS>/core.js:1022:15
+   1022| declare class Array<T> extends $ReadOnlyArray<T> {
+                       ^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:103:3
@@ -855,13 +855,13 @@ Error --------------------------------------------------------------------------
 Cannot get `r2.bad` because property `bad` is missing in `Array` [1]. [prop-missing]
 
    upper_non_t.js:104:6
-   104|   r2.bad; // error
-             ^^^
+    104|   r2.bad; // error
+              ^^^
 
 References:
-   <BUILTINS>/core.js:979:15
-   979| declare class Array<T> extends $ReadOnlyArray<T> {
-                      ^^^^^ [1]
+   <BUILTINS>/core.js:1022:15
+   1022| declare class Array<T> extends $ReadOnlyArray<T> {
+                       ^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:118:6

@@ -3219,7 +3219,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           Class_type_sig.add_default_constructor reason iface_sig
       in
       let (t_internal, t) =
-        Class_type_sig.classtype ~check_polarity:false ~inst_kind:ClassKind cx iface_sig
+        Class_type_sig.classtype ~check_polarity:true ~inst_kind:ClassKind cx iface_sig
       in
       ( t_internal,
         t,

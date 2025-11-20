@@ -26,11 +26,11 @@ is incompatible with `Iterator` [2]. [incompatible-type]
                        ^^
 
 References:
-   <BUILTINS>/core.js:1950:19
-   1950|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
+   <BUILTINS>/core.js:2004:19
+   2004|     @@iterator(): $IteratorProtocol<Yield,Return,Next>;
                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/core.js:1192:17
-   1192|   @@iterator(): Iterator<T>;
+   <BUILTINS>/core.js:1235:17
+   1235|   @@iterator(): Iterator<T>;
                          ^^^^^^^^^^^ [2]
 
 

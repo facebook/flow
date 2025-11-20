@@ -1477,8 +1477,8 @@ Error --------------------------------------------------------------------------
                                         ^^^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:1963:40
-   1963| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:2017:40
+   2017| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
@@ -1492,8 +1492,8 @@ it into an object and attempt to use it as a subtype of an interface. [incompati
                                         ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1949:11
-   1949| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:2003:11
+   2003| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -1506,8 +1506,8 @@ Cannot return `(typeof x) == "number"` because `$Generator` [1] is incompatible 
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1963:40
-   1963| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
+   <BUILTINS>/core.js:2017:40
+   2017| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    invalid.js:19:32
      19| function *generator(x: mixed): x is number { // error
@@ -1548,8 +1548,8 @@ Cannot return `(typeof x) == "number"` because `Promise` [1] is incompatible wit
                   ^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2199:15
-   2199| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2282:15
+   2282| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
    invalid.js:28:33
      28| async function async(x: mixed): x is number { // error
@@ -1841,6 +1841,36 @@ References:
    refinement.js:32:10
    32|     (x4: number); // error string ~> number
                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- refinement.js:40:21
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   refinement.js:40:21
+   40|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => value is S, thisArg?: This): Array<S>;
+                           ^
+
+References:
+   refinement.js:38:33
+   38|   declare class ReadOnlyArray_<+T> {
+                                       ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- refinement.js:41:128
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   refinement.js:41:128
+   41|     filter<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg : This): Array<T>;
+                                                                                                                                      ^
+
+References:
+   refinement.js:38:33
+   38|   declare class ReadOnlyArray_<+T> {
+                                       ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:47:35
@@ -2482,6 +2512,36 @@ References:
    refinement.js:238:13
    238|     (value: number); // error string ~> number
                     ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- refinement.js:243:21
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   refinement.js:243:21
+   243|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg?: This): Array<S>;
+                            ^
+
+References:
+   refinement.js:241:33
+   241|   declare class ReadOnlyArray_<+T> {
+                                        ^ [1]
+
+
+Error -------------------------------------------------------------------------------------------- refinement.js:244:128
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   refinement.js:244:128
+   244|     filter<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg : This): Array<T>;
+                                                                                                                                       ^
+
+References:
+   refinement.js:241:33
+   241|   declare class ReadOnlyArray_<+T> {
+                                        ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:249:7
@@ -3223,6 +3283,21 @@ Cannot resolve name `Unresolved`. [cannot-resolve-name]
                                           ^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------------------- this.js:137:33
+
+Cannot use `X` [1] in an input/output position because `X` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   this.js:137:33
+   137|   declare class D<+X> extends C<X> {}
+                                        ^
+
+References:
+   this.js:137:20
+   137|   declare class D<+X> extends C<X> {}
+                           ^ [1]
+
+
 Error ---------------------------------------------------------------------------------------------------- this.js:143:5
 
 Cannot cast `x` to `D` because in type argument `X` [1]: number [2] is incompatible with string [3]. [incompatible-type]
@@ -3728,7 +3803,7 @@ Cannot find type guard parameter `x` [1] in the parameters of this function (typ
 
 
 
-Found 219 errors
+Found 224 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

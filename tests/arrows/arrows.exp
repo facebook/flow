@@ -42,8 +42,8 @@ with number [2]. [incompatible-type]
                                             ^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1135:38
-   1135|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
+   <BUILTINS>/core.js:1178:38
+   1178|     sort(compareFn?: (a: T, b: T) => number): Array<T>;
                                               ^^^^^^ [2]
 
 

@@ -8,8 +8,8 @@ string [2] is incompatible with number [3]. [incompatible-type]
          ^^^^^^
 
 References:
-   <BUILTINS>/core.js:1833:30
-   1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1876:30
+   1876| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [1]
    array.js:7:2
       7| ['hi'] as Iterable<number>; // Error string ~> number
@@ -29,8 +29,8 @@ number [2] is incompatible with string [3]. [incompatible-type]
          ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1833:30
-   1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1876:30
+   1876| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [1]
    array.js:8:8
       8| ['hi', 1] as Iterable<string>; // Error number ~> string
@@ -58,8 +58,8 @@ References:
    caching_bug.js:21:53
      21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
                                                              ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1833:30
-   1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1876:30
+   1876| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
    caching_bug.js:21:43
      21| function miss_the_cache(x: Array<string | number>): Iterable<string> { return x; }
@@ -94,13 +94,13 @@ Cannot return object literal because property `value` is missing in object liter
                         ^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1823:5
+   <BUILTINS>/core.js:1866:5
              v
-   1823|   | {
-   1824|     done: false,
-   1825|     +value: Yield,
-   1826|     ...
-   1827| };
+   1866|   | {
+   1867|     done: false,
+   1868|     +value: Yield,
+   1869|     ...
+   1870| };
          ^ [2]
 
 
@@ -122,11 +122,11 @@ References:
    map.js:13:46
      13| function mapTest4(map: Map<number, string>): Iterable<string> {
                                                       ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1833:30
-   1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1876:30
+   1876| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
-   <BUILTINS>/core.js:2016:28
-   2016|     @@iterator(): Iterator<[K, V]>;
+   <BUILTINS>/core.js:2074:28
+   2074|     @@iterator(): Iterator<[K, V]>;
                                     ^^^^^^ [4]
    map.js:13:55
      13| function mapTest4(map: Map<number, string>): Iterable<string> {
@@ -151,8 +151,8 @@ References:
    set.js:13:38
      13| function setTest4(set: Set<string>): Iterable<number> {
                                               ^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1833:30
-   1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1876:30
+   1876| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
    set.js:13:28
      13| function setTest4(set: Set<string>): Iterable<number> {
@@ -172,11 +172,11 @@ Cannot cast `new String(...)` to `Iterable` because in property `@@iterator` > t
           ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1833:30
-   1833| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1876:30
+   1876| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [1]
-   <BUILTINS>/core.js:1252:28
-   1252|     @@iterator(): Iterator<string>;
+   <BUILTINS>/core.js:1295:28
+   1295|     @@iterator(): Iterator<string>;
                                     ^^^^^^ [2]
    string.js:3:29
       3| (new String("hi"): Iterable<number>); // Error - string is a Iterable<string>
