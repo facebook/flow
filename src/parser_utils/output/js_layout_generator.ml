@@ -1009,50 +1009,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         let elements_layout = list_add_internal_comments elements elements_layout comments in
         layout_node_with_comments_opt loc comments
         @@ group [wrap_and_indent (Atom "[", Atom "]") elements_layout]
-      | E.Object { E.Object.properties; comments } ->
-        let prop_loc = function
-          | E.Object.Property (loc, _) -> loc
-          | E.Object.SpreadProperty (loc, _) -> loc
-        in
-        let num_props = List.length properties in
-        let internal_comments =
-          match internal_comments comments with
-          | None -> []
-          | Some comments -> [comments]
-        in
-        let props =
-          Base.List.mapi
-            ~f:(fun i prop ->
-              (* Add trailing comma to last property *)
-              let prop_layout =
-                if
-                  i = num_props - 1
-                  && internal_comments = []
-                  && Trailing_commas.enabled_for_objects opts.trailing_commas
-                then
-                  fuse [object_property ~opts prop; if_break (Atom ",") Empty]
-                else
-                  object_property ~opts prop
-              in
-              (prop_loc prop, Comment_attachment.object_property_comment_bounds prop, prop_layout))
-            properties
-        in
-        let props = props @ internal_comments in
-        let props = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line props in
-        (* If first prop is on a different line then pretty print with line breaks *)
-        let break =
-          match properties with
-          | [] -> None
-          | first_prop :: _ ->
-            if Loc.(loc.start.line < (prop_loc first_prop).start.line) then
-              Some pretty_hardline
-            else if opts.bracket_spacing then
-              Some pretty_line
-            else
-              Some softline
-        in
-        let props_layout = wrap_and_indent ?break (Atom "{", Atom "}") props in
-        layout_node_with_comments_opt loc comments @@ group [props_layout]
+      | E.Object obj -> object_ ~opts loc obj
       | E.Sequence { E.Sequence.expressions; comments } ->
         (* to get an AST like `x, (y, z)`, then there must've been parens
            around the right side. we can force that by bumping the minimum
@@ -1348,6 +1305,52 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         layout_node_with_comments_opt loc comments
         @@ fuse [Atom "import"; wrap_in_parens (expression ~opts argument)]
     )
+
+and object_ ~opts loc { Ast.Expression.Object.properties; comments } =
+  let open Ast.Expression.Object in
+  let prop_loc = function
+    | Property (loc, _) -> loc
+    | SpreadProperty (loc, _) -> loc
+  in
+  let num_props = List.length properties in
+  let internal_comments =
+    match internal_comments comments with
+    | None -> []
+    | Some comments -> [comments]
+  in
+  let props =
+    Base.List.mapi
+      ~f:(fun i prop ->
+        (* Add trailing comma to last property *)
+        let prop_layout =
+          if
+            i = num_props - 1
+            && internal_comments = []
+            && Trailing_commas.enabled_for_objects opts.trailing_commas
+          then
+            fuse [object_property ~opts prop; if_break (Atom ",") Empty]
+          else
+            object_property ~opts prop
+        in
+        (prop_loc prop, Comment_attachment.object_property_comment_bounds prop, prop_layout))
+      properties
+  in
+  let props = props @ internal_comments in
+  let props = list_with_newlines ~sep:(Atom ",") ~sep_linebreak:pretty_line props in
+  (* If first prop is on a different line then pretty print with line breaks *)
+  let break =
+    match properties with
+    | [] -> None
+    | first_prop :: _ ->
+      if Loc.(loc.start.line < (prop_loc first_prop).start.line) then
+        Some pretty_hardline
+      else if opts.bracket_spacing then
+        Some pretty_line
+      else
+        Some softline
+  in
+  let props_layout = wrap_and_indent ?break (Atom "{", Atom "}") props in
+  layout_node_with_comments_opt loc comments @@ group [props_layout]
 
 and call ?(optional = Ast.Expression.OptionalCall.NonOptional) ~precedence ~ctxt ~opts call_node loc
     =
