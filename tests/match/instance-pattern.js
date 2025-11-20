@@ -152,3 +152,31 @@ declare class ThreeD extends Point {
     B {...} => {} // Terminates
   }
 }
+
+// Duplicate property
+{
+  declare const x: Point;
+
+  match (x) {
+    Point {x: _, x: _, ...} => {} // ERROR
+  }
+}
+
+// Invalid property
+{
+  declare const x: Point;
+
+  match (x) {
+    Point {1.3: _, ...} => {} // ERROR
+    _ => {}
+  }
+}
+
+// Invalid shorthand
+{
+  declare const x: Point;
+
+  match (x) {
+    Point {x, ...} => {} // ERROR
+  }
+}

@@ -266,6 +266,42 @@ References:
                            ^ [1]
 
 
+Error --------------------------------------------------------------------------------------- instance-pattern.js:161:18
+
+Duplicate property `x` in object pattern. [match-invalid-pattern]
+
+   161|     Point {x: _, x: _, ...} => {} // ERROR
+                         ^
+
+
+Error ---------------------------------------------------------------------------------------- instance-pattern.js:170:5
+
+This match pattern [1] is unused. The values it matches are either already covered by previous patterns, or are not part
+of the input type. To fix, either remove this pattern or restructure previous patterns. [match-unused-pattern]
+
+   170|     Point {1.3: _, ...} => {} // ERROR
+            ^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------- instance-pattern.js:170:12
+
+Unsupported object property literal in match pattern. String literals and int-like number literals are supported.
+[match-invalid-pattern]
+
+   170|     Point {1.3: _, ...} => {} // ERROR
+                   ^^^
+
+
+Error --------------------------------------------------------------------------------------- instance-pattern.js:180:12
+
+`match` object patterns don't allow this property shorthand syntax. To fix, be explicit and either use `{const x}` if
+you want to create a new variable with the value of property `x`, or use `{x: x}` if you want to match property `x`
+against the value of the variable named `x`. [match-invalid-pattern]
+
+   180|     Point {x, ...} => {} // ERROR
+                   ^
+
+
 Error ---------------------------------------------------------------------------------- invalid-break-statement.js:17:5
 
 Illegal break statement. `break` statements are not required in `match` statements, as unlike `switch` statements,
@@ -1764,4 +1800,4 @@ References:
 
 
 
-Found 132 errors
+Found 136 errors
