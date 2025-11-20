@@ -293,129 +293,162 @@ References:
                         ^^^^^^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- declaration.js:432:4
+Error --------------------------------------------------------------------------------------------- declaration.js:421:7
+
+Cannot call `fun` with `x` bound to `x` because `R` [1] is not a subtype of `Omit` [2]. Records are not subtypes of
+object types; consider rewriting `Omit` [2] as an interface. [class-object-subtyping]
+
+   declaration.js:421:7
+   421|   fun(x); // ERROR
+              ^
+
+References:
+   declaration.js:409:20
+   409|   declare const x: R;
+                           ^ [1]
+   declaration.js:420:30
+   420|   declare function fun<T>(x: Omit<T, 'a'>): T;
+                                     ^^^^^^^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:435:4
 
 Cannot cast object literal to `OmitObjR` because property `a` is extra in object literal [1] but missing in `Omit` [2].
 Exact objects do not accept extra props. [incompatible-type]
 
-   declaration.js:432:4
-   432|   ({a: 1, b: 's'}) as OmitObjR; // ERROR: property `a` is extra
+   declaration.js:435:4
+   435|   ({a: 1, b: 's'}) as OmitObjR; // ERROR: property `a` is extra
            ^^^^^^^^^^^^^^ [1]
 
 References:
-   declaration.js:432:23
-   432|   ({a: 1, b: 's'}) as OmitObjR; // ERROR: property `a` is extra
+   declaration.js:435:23
+   435|   ({a: 1, b: 's'}) as OmitObjR; // ERROR: property `a` is extra
                               ^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- declaration.js:464:9
+Error --------------------------------------------------------------------------------------------- declaration.js:467:9
 
 Cannot call `R` with `oB` bound to `fields` because property `a` is missing in object literal [1] but exists in object
 type [2]. [incompatible-type]
 
-   declaration.js:464:9
-   464|   new R(oB); // ERROR: missing `a`
+   declaration.js:467:9
+   467|   new R(oB); // ERROR: missing `a`
                 ^^
 
 References:
-   declaration.js:460:14
-   460|   const oB = {b: 's'};
+   declaration.js:463:14
+   463|   const oB = {b: 's'};
                      ^^^^^^^^ [1]
-   declaration.js:454:12
+   declaration.js:457:12
                    v
-   454|   record R {
-   455|     a: number,
-   456|     b: string,
-   457|   }
+   457|   record R {
+   458|     a: number,
+   459|     b: string,
+   460|   }
           ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- declaration.js:465:9
+Error --------------------------------------------------------------------------------------------- declaration.js:468:9
 
 Cannot call `R` with `oEmpty` bound to `fields` because properties `a` and `b` are missing in object literal [1] but
 exist in object type [2]. [incompatible-type]
 
-   declaration.js:465:9
-   465|   new R(oEmpty); // ERROR: missing `a` and `b`
+   declaration.js:468:9
+   468|   new R(oEmpty); // ERROR: missing `a` and `b`
                 ^^^^^^
 
 References:
-   declaration.js:459:18
-   459|   const oEmpty = {};
+   declaration.js:462:18
+   462|   const oEmpty = {};
                          ^^ [1]
-   declaration.js:454:12
+   declaration.js:457:12
                    v
-   454|   record R {
-   455|     a: number,
-   456|     b: string,
-   457|   }
+   457|   record R {
+   458|     a: number,
+   459|     b: string,
+   460|   }
           ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- declaration.js:477:9
+Error --------------------------------------------------------------------------------------------- declaration.js:480:9
 
 Cannot call `R` with `oExtra` bound to `fields` because property `xxx` is extra in object literal [1] but missing in
 object type [2]. Exact objects do not accept extra props. [incompatible-type]
 
-   declaration.js:477:9
-   477|   new R(oExtra); // ERROR
+   declaration.js:480:9
+   480|   new R(oExtra); // ERROR
                 ^^^^^^
 
 References:
-   declaration.js:476:18
-   476|   const oExtra = {a: 1, b: 's', xxx: false};
+   declaration.js:479:18
+   479|   const oExtra = {a: 1, b: 's', xxx: false};
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   declaration.js:454:12
+   declaration.js:457:12
                    v
-   454|   record R {
-   455|     a: number,
-   456|     b: string,
-   457|   }
+   457|   record R {
+   458|     a: number,
+   459|     b: string,
+   460|   }
           ^ [2]
 
 
-Error -------------------------------------------------------------------------------------------- declaration.js:478:12
+Error -------------------------------------------------------------------------------------------- declaration.js:481:12
 
 Cannot call `ROpt` with `oExtra` bound to `fields` because property `xxx` is extra in object literal [1] but missing in
 object type [2]. Exact objects do not accept extra props. [incompatible-type]
 
-   declaration.js:478:12
-   478|   new ROpt(oExtra); // ERROR
+   declaration.js:481:12
+   481|   new ROpt(oExtra); // ERROR
                    ^^^^^^
 
 References:
-   declaration.js:476:18
-   476|   const oExtra = {a: 1, b: 's', xxx: false};
+   declaration.js:479:18
+   479|   const oExtra = {a: 1, b: 's', xxx: false};
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   declaration.js:467:15
+   declaration.js:470:15
                       v
-   467|   record ROpt {
-   468|     a: number = 0,
-   469|     b: string = '',
-   470|   }
+   470|   record ROpt {
+   471|     a: number = 0,
+   472|     b: string = '',
+   473|   }
           ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- declaration.js:485:5
+Error --------------------------------------------------------------------------------------------- declaration.js:488:5
 
 `a` has already been declared in this record. Record property names must be unique. [duplicate-class-member]
 
-   485|     a: number, // ERROR
+   488|     a: number, // ERROR
             ^
 
 
-Error -------------------------------------------------------------------------------------------- declaration.js:492:17
+Error -------------------------------------------------------------------------------------------- declaration.js:495:17
 
 Cannot initialize property `a` with `true` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
-   declaration.js:492:17
-   492|     a: number = true, // ERROR
+   declaration.js:495:17
+   495|     a: number = true, // ERROR
                         ^^^^ [1]
 
 References:
-   declaration.js:492:8
-   492|     a: number = true, // ERROR
+   declaration.js:495:8
+   495|     a: number = true, // ERROR
                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- exported.js:5:34
+
+Operation `$ReadOnly` [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
+`{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
+
+   exported.js:5:34
+   5| export type ReadonlyR = Readonly<R>; // ERROR
+                                       ^ [2]
+
+References:
+   exported.js:5:25
+   5| export type ReadonlyR = Readonly<R>; // ERROR
+                              ^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:5:16
@@ -427,4 +460,4 @@ Records are not enabled. [unsupported-syntax]
 
 
 
-Found 29 errors
+Found 31 errors

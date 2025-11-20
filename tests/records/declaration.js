@@ -416,6 +416,9 @@ interface Equatable<T> {
   type OmitR = Omit<R, 'a'>; // ERROR
   x as OmitR;
   type ExactR = $Exact<R>; // ERROR
+
+  declare function fun<T>(x: Omit<T, 'a'>): T;
+  fun(x); // ERROR
 }
 
 // Spread is allowed
