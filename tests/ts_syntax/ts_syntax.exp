@@ -286,8 +286,8 @@ The equivalent of TypeScript's `readonly` type operator applied to an array type
 
 Error -------------------------------------------------------------------------------------------- readonly_type.js:3:10
 
-TypeScript's `readonly` type operator is not valid in Flow. For array types, you can use `$ReadOnlyArray<T>`. For object
-and tuple types you can use `$ReadOnly<T>`. [ts-syntax]
+TypeScript's `readonly` type operator is not valid in Flow. For array types, you can use `ReadonlyArray<T>`. For object
+and tuple types you can use `Readonly<T>`. [ts-syntax]
 
    3| type C = readonly number; // ERROR
                ^^^^^^^^^^^^^^^

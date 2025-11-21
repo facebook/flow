@@ -4680,9 +4680,9 @@ let to_printable_error :
         code "readonly";
         text " type operator is not valid in Flow. ";
         text "For array types, you can use ";
-        code "$ReadOnlyArray<T>";
+        code "ReadonlyArray<T>";
         text ". For object and tuple types you can use ";
-        code "$ReadOnly<T>";
+        code "Readonly<T>";
         text ".";
       ]
     | MessageTSSatisfiesType enabled_casting_syntax ->
