@@ -32,6 +32,7 @@ let union_flatten =
       let void_t = VoidT.why_with_use_desc ~use_desc r in
       void_t :: flatten cx seen t
     | DefT (_, EmptyT) -> []
+    | NominalT (_, { underlying_t = Nominal.CustomError { t; _ }; _ }) -> flatten cx seen t
     | EvalT { type_ = _; defer_use_t = TypeDestructorT (_, _, ValuesType); id } ->
       (match Eval.Map.find_opt id (Context.evaluated cx) with
       | Some cached_t -> flatten cx seen cached_t

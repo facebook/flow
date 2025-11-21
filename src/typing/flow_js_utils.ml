@@ -246,7 +246,8 @@ let needs_resolution = function
   | UnionT _
   | OptionalT _
   | MaybeT _
-  | AnnotT _ ->
+  | AnnotT _
+  | NominalT (_, { underlying_t = Nominal.CustomError _; _ }) ->
     true
   | _ -> false
 
