@@ -60,6 +60,7 @@ type metadata = {
   hook_compatibility_excludes: Str.regexp list;
   hook_compatibility_includes: Str.regexp list;
   ignore_non_literal_requires: bool;
+  records_includes: Str.regexp list;
   instance_t_objkit_fix: bool;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;
@@ -300,6 +301,7 @@ let metadata_of_options options =
     hook_compatibility_includes = Options.hook_compatibility_includes options;
     hook_compatibility = Options.hook_compatibility options;
     instance_t_objkit_fix = Options.instance_t_objkit_fix options;
+    records_includes = Base.List.map ~f:Str.regexp (Options.records_includes options);
     react_rules = Options.react_rules options;
     dev_only_refinement_info_as_errors = Options.dev_only_refinement_info_as_errors options;
     enable_const_params = Options.enable_const_params options;
@@ -559,7 +561,12 @@ let enable_pattern_matching cx =
 let enable_pattern_matching_instance_patterns cx =
   cx.metadata.enable_pattern_matching_instance_patterns
 
-let enable_records cx = cx.metadata.enable_records
+let enable_records cx =
+  cx.metadata.enable_records
+  &&
+  match cx.metadata.records_includes with
+  | [] -> true
+  | dirs -> in_dirlist cx dirs
 
 let is_utility_type_deprecated cx t =
   if is_lib_file cx then

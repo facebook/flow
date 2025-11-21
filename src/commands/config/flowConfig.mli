@@ -254,6 +254,8 @@ val react_runtime : config -> Options.react_runtime
 
 val records : config -> bool option
 
+val records_includes : config -> string list
+
 val recursion_limit : config -> int
 
 val relay_integration : config -> bool

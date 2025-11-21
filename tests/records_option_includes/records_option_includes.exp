@@ -1,0 +1,21 @@
+Error ----------------------------------------------------------------------------------------------- error/error.js:1:1
+
+Records are not enabled. [unsupported-syntax]
+
+      v------------------
+   1| record R { // ERROR
+   2|   a: number,
+   3| }
+      ^
+
+
+Error ---------------------------------------------------------------------------------------------- error/error.js:5:11
+
+Records are not enabled. [unsupported-syntax]
+
+   5| const x = R {a: 1}; // ERROR
+                ^^^^^^^^
+
+
+
+Found 2 errors

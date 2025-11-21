@@ -130,6 +130,7 @@ let stub_metadata ~root ~checked =
     hook_compatibility_excludes = [];
     hook_compatibility_includes = [];
     ignore_non_literal_requires = false;
+    records_includes = [];
     instance_t_objkit_fix = false;
     max_workers = 0;
     missing_module_generators = [];

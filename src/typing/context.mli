@@ -110,6 +110,7 @@ type metadata = {
   hook_compatibility_excludes: Str.regexp list;
   hook_compatibility_includes: Str.regexp list;
   ignore_non_literal_requires: bool;
+  records_includes: Str.regexp list;
   instance_t_objkit_fix: bool;
   max_workers: int;
   missing_module_generators: (Str.regexp * string) list;

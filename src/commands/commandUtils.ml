@@ -1532,6 +1532,10 @@ let make_options
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)
         (FlowConfig.pattern_matching_includes flowconfig);
+    opt_records_includes =
+      Base.List.map
+        ~f:(Files.expand_project_root_token ~root)
+        (FlowConfig.records_includes flowconfig);
     opt_profile = options_flags.profile;
     opt_projects_options =
       Flow_projects.mk_options

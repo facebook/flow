@@ -169,6 +169,7 @@ type t = {
   opt_opaque_type_new_bound_syntax: bool;
   opt_pattern_matching_includes: string list;
   opt_profile: bool;
+  opt_records_includes: string list;
   opt_projects_options: Flow_projects.options;
   opt_quiet: bool;
   opt_react_custom_jsx_typing: bool;
@@ -358,6 +359,8 @@ let opaque_type_new_bound_syntax opts = opts.opt_opaque_type_new_bound_syntax
 let pattern_matching_includes opts = opts.opt_pattern_matching_includes
 
 let projects_options opts = opts.opt_projects_options
+
+let records_includes opts = opts.opt_records_includes
 
 let react_custom_jsx_typing opts = opts.opt_react_custom_jsx_typing
 
