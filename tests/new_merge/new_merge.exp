@@ -278,7 +278,7 @@ Cannot assign `x14` to `y14` because in array element: `B14` [1] is not exactly 
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<B14>` [3] and `Array<A14>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    main.js:54:38

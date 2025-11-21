@@ -244,7 +244,7 @@ Cannot cast `r8` to function type because in the return value > array element: `
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<X>` [3] and `Array<empty>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    function_typeof.js:66:1

@@ -2103,7 +2103,7 @@ Cannot cast `badA` to `Mapped` because in array element: `{contents: string}` [1
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{contents: string}>` [3] and array type [4] exactly the same
-- Or make array type [5] a `$ReadOnlyArray`.
+- Or make array type [5] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:59:4

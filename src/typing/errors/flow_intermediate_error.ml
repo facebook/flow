@@ -1755,7 +1755,7 @@ let to_printable_error :
           text "\n- Or make ";
           ref upper_array_reason;
           text " a ";
-          code "$ReadOnlyArray";
+          code "ReadonlyArray";
           text ".\n";
           text "See ";
           text

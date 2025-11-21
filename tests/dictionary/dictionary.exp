@@ -128,7 +128,7 @@ Cannot assign `x` to `a` because in array element: `{[k: string]: B}` [1] is not
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: A}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:91:36
@@ -157,7 +157,7 @@ Cannot assign `x` to `c` because in array element: `{[k: string]: B}` [1] is not
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: C}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:96:36
@@ -320,7 +320,7 @@ Cannot assign `x` to `a` because in array element: `{[k: B]: any}` [1] is not ex
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: B]: any}>` [3] and `Array<{[k: A]: any}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:136:33
@@ -349,7 +349,7 @@ Cannot assign `x` to `c` because in array element: `{[k: B]: any}` [1] is not ex
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: B]: any}>` [3] and `Array<{[k: C]: any}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:138:33
@@ -436,7 +436,7 @@ Cannot assign `x` to `a` because in array element: `{[k: string]: B}` [1] is not
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: A}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:150:42
@@ -465,7 +465,7 @@ Cannot assign `x` to `c` because in array element: `{[k: string]: B}` [1] is not
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: C}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:155:42
@@ -511,7 +511,7 @@ Cannot assign `xa` to `a` because in array element: `{[k: string]: A, p: B}` [1]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: A, p: B}>` [3] and `Array<{[k: string]: A}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:164:36
@@ -540,7 +540,7 @@ Cannot assign `xc` to `c` because in array element: `{[k: string]: C, p: B}` [1]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: C, p: B}>` [3] and `Array<{[k: string]: C}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:169:36
@@ -732,7 +732,7 @@ Cannot return `x` because in array element: `{[k: string]: X}` [1] is not exactl
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: X}>` [3] and `Array<{p: X, ...}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:198:10
@@ -761,7 +761,7 @@ Cannot return `x` because in array element: `{p: X, ...}` [1] is not exactly the
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: X, ...}>` [3] and `Array<{[k: string]: X}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:202:10
@@ -992,7 +992,7 @@ Cannot assign `x` to `a` because in array element: `{[k: string]: B}` [1] is not
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: A}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:234:42
@@ -1021,7 +1021,7 @@ Cannot assign `x` to `c` because in array element: `{[k: string]: B}` [1] is not
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[k: string]: B}>` [3] and `Array<{[k: string]: B, p: C}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    dictionary.js:236:42
@@ -1348,7 +1348,7 @@ Cannot return `x` because in array element: `{[key: string]: number}` [1] is not
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: number}>` [3] and `Array<{[key: string]: string}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    incompatible.js:15:10
@@ -1378,7 +1378,7 @@ Cannot return `x` because in array element: `{[key: string]: number}` [1] is not
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: number}>` [3] and `Array<{[key: string]: number, fooBar: string}>` [4] exactly the
 same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    incompatible.js:22:10
@@ -1408,7 +1408,7 @@ Cannot return `x` because in array element: `{[key: string]: mixed}` [1] is not 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: mixed}>` [3] and `Array<{[key: string]: mixed, fooBar: string}>` [4] exactly the
 same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    incompatible.js:29:10
@@ -1469,7 +1469,7 @@ Cannot return `x` because in array element: `{[key: string]: number}` [1] is not
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{[key: string]: number}>` [3] and `Array<{foo: number, ...}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    incompatible.js:47:10
@@ -1498,7 +1498,7 @@ Cannot return `x` because in array element: `{foo: number, ...}` [1] is not exac
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{foo: number, ...}>` [3] and `Array<{[key: string]: number}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    incompatible.js:52:10

@@ -29,7 +29,7 @@ Cannot return `x` because in array element: `empty` [1] is not exactly the same 
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<empty>` [1] and `Array<T>` [3] exactly the same
-- Or make array type [3] a `$ReadOnlyArray`.
+- Or make array type [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    poly.js:10:38

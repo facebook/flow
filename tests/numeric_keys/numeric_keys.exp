@@ -381,7 +381,7 @@ Cannot cast `Object.keys(...)` to array type because in array element: `"2" | "1
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<"2" | "1">` [1] and `Array<number>` [3] exactly the same
-- Or make array type [3] a `$ReadOnlyArray`.
+- Or make array type [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:28:3

@@ -13,7 +13,7 @@ Cannot cast `x` to array type because in array element: `empty` [1] is not exact
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<empty>` [1] and `Array<{bar: string}>` [3] exactly the same
-- Or make array type [3] a `$ReadOnlyArray`.
+- Or make array type [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    fully_resolved_unification.js:20:2

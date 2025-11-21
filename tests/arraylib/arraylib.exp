@@ -39,7 +39,7 @@ Cannot assign `a.reverse()` to `e` because in array element: `number` [1] is not
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<number>` [3] and `Array<string>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    array_lib.js:13:24
@@ -68,7 +68,7 @@ Cannot assign `h.concat(...)` to `n` because in array element: `number | "a" | "
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<number | "a" | "b" | "c">` [3] and `Array<number>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    array_lib.js:26:24
@@ -131,7 +131,7 @@ Cannot cast `Array.from(...)` to array type because in array element: `string` [
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<string>` [3] and `Array<empty>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    array_lib.js:71:3
@@ -309,7 +309,7 @@ Cannot assign `arr1.flat()` to `result1_1` because in array element:
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<number extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<string>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:3:34
@@ -357,7 +357,7 @@ Cannot assign `arr2.flat()` to `result2_1` because in array element:
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<Array<number> extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<string>` [4] exactly the
 same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:9:34
@@ -386,7 +386,7 @@ Cannot assign `arr2.flat(...)` to `result2_3` because in array element: `Array<n
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<Array<number>>` [3] and `Array<number>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:11:34
@@ -416,7 +416,7 @@ Cannot assign `arr2.flat(...)` to `result2_5` because in array element:
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<Array<number> extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<string>` [4] exactly the
 same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:13:34
@@ -447,7 +447,7 @@ Cannot assign `arr3.flat()` to `result3_1` because in array element:
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<Array<Array<number>> extends $ReadOnlyArray<infer E> ? E : T>` [3] and `Array<number>` [4] exactly
 the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:17:34
@@ -476,7 +476,7 @@ Cannot assign `arr3.flat(...)` to `result3_2` because in array element: `mixed` 
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [3] and `Array<number>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:20:34
@@ -505,7 +505,7 @@ Cannot assign `arr2.flat(...)` to `result2_6` because in array element: `mixed` 
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<mixed>` [3] and `Array<number>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:25:34
@@ -536,7 +536,7 @@ Cannot assign `arr4.flat()` to `result4_1` because in array element:
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<(number | Array<number>) extends $ReadOnlyArray<infer E> ? E : T>` [3] and
 `Array<Array<number>>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    flat.js:30:41

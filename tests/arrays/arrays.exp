@@ -160,7 +160,7 @@ Cannot cast `arr` to array type because in array element: `Dog` [1] is not exact
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<Dog>` [3] and `Array<Animal>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    subtyping.js:5:4
@@ -189,7 +189,7 @@ Cannot cast `arr` to array type because in array element: `{foo: string, ...}` [
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{foo: string, ...}>` [3] and `Array<{...}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    subtyping.js:10:4
@@ -218,7 +218,7 @@ Cannot cast `arr` to array type because in array element: `{foo: string}` [1] is
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{foo: string}>` [3] and `Array<{}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    subtyping.js:15:4

@@ -823,7 +823,7 @@ Cannot cast array literal to array type because in array element: `{+p: A, ...}`
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{+p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:207:18
@@ -849,7 +849,7 @@ Cannot cast array literal to array type because in array element: `{-p: A, ...}`
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{-p: A, ...}>` [3] and `Array<{p: A, ...}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:209:18
@@ -875,7 +875,7 @@ Cannot cast array literal to array type because in array element: `{p: A, ...}` 
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:211:18
@@ -901,7 +901,7 @@ Cannot cast array literal to array type because in array element: `{-p: A, ...}`
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{-p: A, ...}>` [3] and `Array<{+p: A, ...}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:215:18
@@ -927,7 +927,7 @@ Cannot cast array literal to array type because in array element: `{p: A, ...}` 
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:217:18
@@ -953,7 +953,7 @@ Cannot cast array literal to array type because in array element: `{+p: A, ...}`
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<{+p: A, ...}>` [3] and `Array<{-p: A, ...}>` [4] exactly the same
-- Or make array type [4] a `$ReadOnlyArray`.
+- Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
    test.js:219:18
