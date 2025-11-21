@@ -7,6 +7,7 @@
 # shellcheck disable=SC2094
 
 queries_in_file autocomplete "keyword-expression.js" --pretty
+query_at_pos autocomplete "keyword-statement.js" 1 1 --pretty
 queries_in_file autocomplete "pattern-identifier.js" --pretty
 queries_in_file autocomplete "pattern-binding.js" --pretty
 queries_in_file autocomplete "pattern-object.js" --pretty

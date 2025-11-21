@@ -39,7 +39,19 @@ let expression_keywords ~pattern_matching_enabled =
     [const, class, ...], instead of [case, catch, class, const, continue].
     you can also trigger Quick Suggest without typing anything (cmd+space),
     but that's sorted purely alphabetically. *)
-let statement_keywords ~component_syntax_enabled =
+let statement_keywords ~component_syntax_enabled ~pattern_matching_enabled =
+  let component_keywords =
+    if component_syntax_enabled then
+      ["component"; "hook"]
+    else
+      []
+  in
+  let match_keywords =
+    if pattern_matching_enabled then
+      ["match"]
+    else
+      []
+  in
   [
     "await";
     "async";
@@ -80,11 +92,8 @@ let statement_keywords ~component_syntax_enabled =
     "while";
     "yield";
   ]
-  @
-  if component_syntax_enabled then
-    ["component"; "hook"]
-  else
-    []
+  @ component_keywords
+  @ match_keywords
 
 (** keywords that can appear after export default *)
 let export_default_keywords ~component_syntax_enabled =
@@ -160,7 +169,7 @@ let keywords_of_context ~component_syntax_enabled ~pattern_matching_enabled cont
   match context with
   | Expression :: ExpressionStatement :: _
   | Statement :: _ ->
-    statement_keywords ~component_syntax_enabled
+    statement_keywords ~component_syntax_enabled ~pattern_matching_enabled
   | ExportDefault :: _
   | Expression :: ExportDefault :: _ ->
     export_default_keywords ~component_syntax_enabled
