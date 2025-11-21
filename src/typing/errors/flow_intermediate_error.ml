@@ -4671,7 +4671,7 @@ let to_printable_error :
         text "The equivalent of TypeScript's ";
         code "readonly";
         text " type operator applied to a tuple type is ";
-        code "$ReadOnly<[T, S]>";
+        code "Readonly<[T, S]>";
         text ".";
       ]
     | MessageTSReadonlyType ->

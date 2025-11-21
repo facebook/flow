@@ -270,7 +270,7 @@ The closest equivalent of TypeScript's `never` type in Flow is `empty`. [ts-synt
 
 Error -------------------------------------------------------------------------------------------- readonly_type.js:1:10
 
-The equivalent of TypeScript's `readonly` type operator applied to a tuple type is `$ReadOnly<[T, S]>`. [ts-syntax]
+The equivalent of TypeScript's `readonly` type operator applied to a tuple type is `Readonly<[T, S]>`. [ts-syntax]
 
    1| type A = readonly [string, number]; // ERROR
                ^^^^^^^^^^^^^^^^^^^^^^^^^
