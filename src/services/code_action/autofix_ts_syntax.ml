@@ -24,7 +24,7 @@ class mapper target_loc kind =
       | (loc, ReadOnly { ReadOnly.argument = (_, Array { Array.argument; _ }); comments })
         when kind = `ReadOnlyArrayType && this#is_target loc ->
         let targs = Ast_builder.Types.type_args [super#type_ argument] in
-        Ast_builder.Types.unqualified_generic ?comments ~targs "$ReadOnlyArray"
+        Ast_builder.Types.unqualified_generic ?comments ~targs "ReadonlyArray"
       | (loc, ReadOnly { ReadOnly.argument = (_, Tuple _) as argument; comments })
         when kind = `ReadOnlyTupleType && this#is_target loc ->
         let targs = Ast_builder.Types.type_args [super#type_ argument] in

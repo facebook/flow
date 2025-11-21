@@ -1075,7 +1075,7 @@ let ast_transforms_of_error
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
-          title = "Convert to `$ReadOnlyArray`";
+          title = "Convert to `ReadonlyArray`";
           diagnostic_title = "convert_readonly_array_type";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_readonly_array_type;
           target_loc = error_loc;
