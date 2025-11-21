@@ -425,6 +425,11 @@ module rec TypeTerm : sig
         children: 'loc;
       }
     | ReactGetIntrinsic of { literal: 'loc virtual_reason }
+    | RecordCreate of {
+        op: 'loc virtual_reason;
+        constructor: 'loc virtual_reason;
+        properties: 'loc;
+      }
     | Speculation of 'loc virtual_use_op
     | TypeApplication of { type_: 'loc virtual_reason }
     | SetProperty of {
@@ -4177,6 +4182,7 @@ let string_of_root_use_op (type a) : a virtual_root_use_op -> string = function
   | JSXCreateElement _ -> "JSXCreateElement"
   | ReactCreateElementCall _ -> "ReactCreateElementCall"
   | ReactGetIntrinsic _ -> "ReactGetIntrinsic"
+  | RecordCreate _ -> "RecordCreate"
   | Speculation _ -> "Speculation"
   | TypeApplication _ -> "TypeApplication"
   | SetProperty _ -> "SetProperty"

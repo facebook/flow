@@ -462,6 +462,7 @@ type 'loc root_message =
     }
   | RootCannotConformToCommonInterface of { originate_from_import: bool }
   | RootCannotCreateElement of 'loc virtual_reason_desc
+  | RootCannotCreateRecord of 'loc virtual_reason_desc
   | RootCannotDeclareRef
   | RootCannotDeclareTypeGuard of {
       type_guard_loc: 'loc;

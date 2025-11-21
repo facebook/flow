@@ -3318,18 +3318,34 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               argument
       )
 
-    method private visit_record_expression ~record_hints expr =
+    method private visit_record_expression ~record_hints record =
       let {
         Ast.Expression.Record.constructor;
         targs;
-        properties = (_props_loc, props);
+        properties = (props_loc, props);
         comments = _;
       } =
-        expr
+        record
       in
+      let (constructor_loc, _) = constructor in
       this#visit_expression ~hints:[] ~cond:NoContext constructor;
       Base.Option.iter targs ~f:(fun ta -> ignore @@ this#call_type_args ta);
-      this#visit_object_expression ~object_hints:record_hints props
+      let call_argumemts_hints =
+        decompose_hints
+          Decomp_CallNew
+          [Hint_t (ValueHint (NoContext, constructor), ExpectedTypeHint)]
+      in
+      let arg = Ast.Expression.Expression (props_loc, Ast.Expression.Object props) in
+      let arg_list =
+        (constructor_loc, { Ast.Expression.ArgList.arguments = [arg]; comments = None })
+      in
+      let call_reason = mk_reason RRecord constructor_loc in
+      this#visit_call_arguments
+        ~call_reason
+        ~call_argumemts_hints
+        ~return_hints:record_hints
+        arg_list
+        targs
 
     method! switch loc switch =
       let open Ast.Statement.Switch in

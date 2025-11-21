@@ -140,6 +140,7 @@ type 'loc virtual_reason_desc =
   | RConstructor
   | RDefaultConstructor
   | RConstructorCall of 'loc virtual_reason_desc
+  | RRecord
   | RReturn
   | RRegExp
   | RSuper
@@ -304,7 +305,7 @@ let rec map_desc_locs f = function
   | ( RTemplateString | RUnknownString | RUnionEnum | REnum _ | RThis | RThisType
     | RImplicitInstantiation | RConstructorVoidReturn | RUnion | RUnionType | RIntersection
     | RIntersectionType | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype
-    | RFunctionPrototype | RDestructuring | RDefaultValue | RConstructor | RReturn
+    | RFunctionPrototype | RDestructuring | RDefaultValue | RConstructor | RRecord | RReturn
     | RDefaultConstructor | RRegExp | RSuper | RDummyPrototype | RDummyThis | RType _ | RTypeof _
     | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RPatternParameter _
     | RIdentifier _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _ | RMember _
@@ -675,6 +676,7 @@ let rec string_of_desc = function
   | RConstructorCall (RPolyType (RClass d)) -> string_of_desc d
   | RConstructorCall (RClass d) -> string_of_desc d
   | RConstructorCall d -> spf "new %s" (string_of_desc d)
+  | RRecord -> "record"
   | RReturn -> "return"
   | RRegExp -> "regexp"
   | RSuper -> "super"
@@ -1468,6 +1470,7 @@ let classification_of_reason_desc desc =
   | RConstructor
   | RDefaultConstructor
   | RConstructorCall _
+  | RRecord
   | RReturn
   | RSuper
   | RDummyPrototype

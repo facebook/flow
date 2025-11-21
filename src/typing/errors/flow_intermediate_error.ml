@@ -798,6 +798,15 @@ let rec make_intermediate_error :
           ~root_reason:literal
           ~root_message:(RootCannotCreateElement (desc literal))
           ~custom_error_message
+      | Frame (FunParam _, Op (RecordCreate { op; constructor; _ }))
+      | Op (RecordCreate { op; constructor; _ }) ->
+        root_with_specific_reason
+          ~loc
+          ~frames
+          ~root_reason:op
+          ~specific_reason:constructor
+          ~root_message:(RootCannotCreateRecord (desc constructor))
+          ~custom_error_message
       | Op (TypeApplication { type_ }) ->
         root
           ~loc
@@ -2107,6 +2116,8 @@ let to_printable_error :
       (OperationRoot, [text "Cannot conform to common interface module"])
     | RootCannotCreateElement component ->
       (OperationRoot, [text "Cannot create "; desc component; text " element"])
+    | RootCannotCreateRecord constructor ->
+      (OperationRoot, [text "Cannot create record "; desc constructor])
     | RootCannotDeclareRef ->
       ( ShortExplanationRoot,
         [text "The "; code "ref"; text " parameter must be a subtype of "; code "React.RefSetter"]

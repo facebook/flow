@@ -451,13 +451,151 @@ References:
                               ^^^^^^^^^^^ [1]
 
 
-Error ----------------------------------------------------------------------------------------------- expression.js:5:16
+Error ------------------------------------------------------------------------------------------------ expression.js:7:5
 
-Records are not enabled. [unsupported-syntax]
+Cannot create record `R` because property `xxx` is extra in record [1] but missing in object type [2]. Exact objects do
+not accept extra props. [incompatible-type]
 
-   5|   const x: R = R {}; // TODO: records
-                     ^^^^
+   expression.js:7:5
+   7|   R {xxx: 0}; // ERROR: extra field `xxx`
+          ^^^^^^^^ [1]
+
+References:
+   expression.js:3:12
+   3|   record R {}
+                 ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- expression.js:33:15
+
+Cannot create record `R` because in property `b`: null [1] is incompatible with boolean [2]. [incompatible-type]
+
+   expression.js:33:15
+   33|   R {a: 1, b: null}; // ERROR
+                     ^^^^ [1]
+
+References:
+   expression.js:26:8
+   26|     b: boolean = false,
+              ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:43:5
+
+Cannot create record `R` because property `b` is missing in record [1] but exists in object type [2].
+[incompatible-type]
+
+   expression.js:43:5
+   43|   R {a: 1}; // ERROR: missing `b`
+           ^^^^^^ [1]
+
+References:
+   expression.js:38:12
+                  v
+   38|   record R {
+   39|     a: number,
+   40|     b: string,
+   41|   }
+         ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:44:5
+
+Cannot create record `R` because property `a` is missing in record [1] but exists in object type [2].
+[incompatible-type]
+
+   expression.js:44:5
+   44|   R {b: 's'}; // ERROR: missing `a`
+           ^^^^^^^^ [1]
+
+References:
+   expression.js:38:12
+                  v
+   38|   record R {
+   39|     a: number,
+   40|     b: string,
+   41|   }
+         ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:45:5
+
+Cannot create record `R` because properties `a` and `b` are missing in record [1] but exist in object type [2].
+[incompatible-type]
+
+   expression.js:45:5
+   45|   R {}; // ERROR: missing `a` and `b`
+           ^^ [1]
+
+References:
+   expression.js:38:12
+                  v
+   38|   record R {
+   39|     a: number,
+   40|     b: string,
+   41|   }
+         ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:54:5
+
+Cannot create record `R` because property `b` is extra in record [1] but missing in object type [2]. Exact objects do
+not accept extra props. [incompatible-type]
+
+   expression.js:54:5
+   54|   R {a: 1, b: 's'}; // ERROR: extra field `b`
+           ^^^^^^^^^^^^^^ [1]
+
+References:
+   expression.js:50:12
+                  v
+   50|   record R {
+   51|     a: number,
+   52|   }
+         ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:64:9
+
+Cannot create record `R` because in property `a`: string [1] is incompatible with number [2]. [incompatible-type]
+
+   expression.js:64:9
+   64|   R {a: 's', b: 1}; // ERROR: wrong type for `a` and `b`
+               ^^^ [1]
+
+References:
+   expression.js:60:8
+   60|     a: number,
+              ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- expression.js:64:17
+
+Cannot create record `R` because in property `b`: number [1] is incompatible with string [2]. [incompatible-type]
+
+   expression.js:64:17
+   64|   R {a: 's', b: 1}; // ERROR: wrong type for `a` and `b`
+                       ^ [1]
+
+References:
+   expression.js:61:8
+   61|     b: string,
+              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- expression.js:65:9
+
+Cannot create record `R` because in property `a`: null [1] is incompatible with number [2]. [incompatible-type]
+
+   expression.js:65:9
+   65|   R {a: null, b: 's'}; // ERROR: wrong type for `a`
+               ^^^^ [1]
+
+References:
+   expression.js:60:8
+   60|     a: number,
+              ^^^^^^ [2]
 
 
 
-Found 31 errors
+Found 39 errors

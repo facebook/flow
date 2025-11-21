@@ -380,6 +380,9 @@ let rec mod_loc_of_virtual_use_op f =
       ReactCreateElementCall
         { op = mod_reason op; component = mod_reason component; children = f children }
     | ReactGetIntrinsic { literal } -> ReactGetIntrinsic { literal = mod_reason literal }
+    | RecordCreate { op; constructor; properties } ->
+      RecordCreate
+        { op = mod_reason op; constructor = mod_reason constructor; properties = f properties }
     | Speculation op -> Speculation (mod_loc_of_virtual_use_op f op)
     | TypeApplication { type_ } -> TypeApplication { type_ = mod_reason type_ }
     | SetProperty { lhs; prop; value } ->

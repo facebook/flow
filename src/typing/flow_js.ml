@@ -7488,6 +7488,7 @@ struct
               | GeneratorYield _
               | ReactCreateElementCall _
               | ReactGetIntrinsic _
+              | RecordCreate _
               | TypeGuardIncompatibility _
               | RenderTypeInstantiation _
               | ComponentRestParamCompatibility _

@@ -3259,11 +3259,47 @@ module Make
         object_ ~frozen:(frozen = FrozenDirect) ~as_const ~has_hint cx loc properties
       in
       ((loc, t), Object { Object.properties; comments })
-    | Record { Record.constructor = _; targs = _; properties = _; comments = _ } ->
-      Flow_js_utils.add_output
-        cx
-        (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.Records));
-      Tast_utils.error_mapper#expression ex
+    | Record
+        {
+          Record.constructor;
+          targs;
+          properties = (props_loc, { Object.properties; comments = props_comments });
+          comments;
+        } ->
+      if not @@ Context.enable_records cx then (
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.Records));
+        Tast_utils.error_mapper#expression ex
+      ) else
+        let (((_, constructor_t), _) as constructor_ast) = expression cx constructor in
+        let (targts, targs_ast) = convert_call_targs_opt cx targs in
+        let (props_t, props_ast) =
+          object_ ~frozen:(frozen = FrozenDirect) ~as_const ~has_hint cx props_loc properties
+        in
+        let props_t = mod_reason_of_t (replace_desc_reason RRecord) props_t in
+        let use_op =
+          Op
+            (RecordCreate
+               {
+                 op = mk_expression_reason ex;
+                 constructor = mk_expression_reason constructor;
+                 properties = props_loc;
+               }
+            )
+        in
+        let reason = reason_of_t constructor_t in
+        let (t, ctor_t) = new_call cx loc reason ~use_op constructor_t targts [Arg props_t] in
+        Context.set_ctor_callee cx loc ctor_t;
+        ( (loc, t),
+          Record
+            {
+              Record.constructor = constructor_ast;
+              targs = targs_ast;
+              properties = (props_loc, { Object.properties = props_ast; comments = props_comments });
+              comments;
+            }
+        )
     | Array { Array.elements; comments } ->
       (match elements with
       | [] when as_const ->
