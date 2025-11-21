@@ -39,7 +39,7 @@ let expression_keywords ~pattern_matching_enabled =
     [const, class, ...], instead of [case, catch, class, const, continue].
     you can also trigger Quick Suggest without typing anything (cmd+space),
     but that's sorted purely alphabetically. *)
-let statement_keywords ~component_syntax_enabled ~pattern_matching_enabled =
+let statement_keywords ~component_syntax_enabled ~pattern_matching_enabled ~records_enabled =
   let component_keywords =
     if component_syntax_enabled then
       ["component"; "hook"]
@@ -49,6 +49,12 @@ let statement_keywords ~component_syntax_enabled ~pattern_matching_enabled =
   let match_keywords =
     if pattern_matching_enabled then
       ["match"]
+    else
+      []
+  in
+  let record_keywords =
+    if records_enabled then
+      ["record"]
     else
       []
   in
@@ -94,6 +100,7 @@ let statement_keywords ~component_syntax_enabled ~pattern_matching_enabled =
   ]
   @ component_keywords
   @ match_keywords
+  @ record_keywords
 
 (** keywords that can appear after export default *)
 let export_default_keywords ~component_syntax_enabled =
@@ -165,11 +172,12 @@ class mapper target =
       super#identifier (loc, id)
   end
 
-let keywords_of_context ~component_syntax_enabled ~pattern_matching_enabled context =
+let keywords_of_context ~component_syntax_enabled ~pattern_matching_enabled ~records_enabled context
+    =
   match context with
   | Expression :: ExpressionStatement :: _
   | Statement :: _ ->
-    statement_keywords ~component_syntax_enabled ~pattern_matching_enabled
+    statement_keywords ~component_syntax_enabled ~pattern_matching_enabled ~records_enabled
   | ExportDefault :: _
   | Expression :: ExportDefault :: _ ->
     export_default_keywords ~component_syntax_enabled
@@ -180,7 +188,7 @@ let keywords_of_context ~component_syntax_enabled ~pattern_matching_enabled cont
   | MatchPattern :: _ when pattern_matching_enabled -> match_pattern_keywords
   | _ -> []
 
-let keywords_at_loc ~component_syntax_enabled ~pattern_matching_enabled ast loc =
+let keywords_at_loc ~component_syntax_enabled ~pattern_matching_enabled ~records_enabled ast loc =
   (* We're looking for an identifier, considering the first character is equivalent. *)
   let target = Loc.first_char loc in
   let mapper = new mapper target in
@@ -188,4 +196,5 @@ let keywords_at_loc ~component_syntax_enabled ~pattern_matching_enabled ast loc 
     ignore (mapper#program ast);
     []
   with
-  | Found context -> keywords_of_context ~component_syntax_enabled ~pattern_matching_enabled context
+  | Found context ->
+    keywords_of_context ~component_syntax_enabled ~pattern_matching_enabled ~records_enabled context
