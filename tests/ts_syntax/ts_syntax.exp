@@ -278,7 +278,7 @@ The equivalent of TypeScript's `readonly` type operator applied to a tuple type 
 
 Error -------------------------------------------------------------------------------------------- readonly_type.js:2:10
 
-The equivalent of TypeScript's `readonly` type operator applied to an array type is `$ReadOnlyArray<T>`. [ts-syntax]
+The equivalent of TypeScript's `readonly` type operator applied to an array type is `ReadonlyArray<T>`. [ts-syntax]
 
    2| type B = readonly string[]; // ERROR
                ^^^^^^^^^^^^^^^^^

@@ -4663,7 +4663,7 @@ let to_printable_error :
         text "The equivalent of TypeScript's ";
         code "readonly";
         text " type operator applied to an array type is ";
-        code "$ReadOnlyArray<T>";
+        code "ReadonlyArray<T>";
         text ".";
       ]
     | MessageTSReadonlyOperatorOnTuple ->
