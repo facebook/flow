@@ -1048,6 +1048,12 @@ module Peek = struct
     match token env with
     | T_IDENTIFIER { raw = "renders"; _ } -> true
     | _ -> false
+
+  let is_record env =
+    (parse_options env).records
+    && token env = T_RECORD
+    && (not (ith_is_line_terminator ~i:1 env))
+    && ith_is_identifier ~i:1 env
 end
 
 (*****************************************************************************)

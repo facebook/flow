@@ -242,6 +242,8 @@ module Peek : sig
 
   val is_component : env -> bool
 
+  val is_record : env -> bool
+
   val is_renders_ident : env -> bool
 
   val ith_token : i:int -> env -> Token.t

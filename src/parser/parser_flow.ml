@@ -333,6 +333,7 @@ module rec Parse : PARSER = struct
     | T_TYPE -> type_alias env
     | T_OPAQUE -> opaque_type env
     | T_ENUM when (parse_options env).enums -> Declaration.enum_declaration env
+    | T_RECORD when Peek.is_record env -> record_declaration env
     | _ when Peek.is_component env -> Declaration.component env
     | _ -> statement env
 
@@ -361,11 +362,6 @@ module rec Parse : PARSER = struct
       (match Try.to_parse env Statement.match_statement with
       | Try.ParsedSuccessfully m -> m
       | Try.FailedToParse -> expression env)
-    | T_RECORD
-      when (parse_options env).records
-           && (not (Peek.ith_is_line_terminator ~i:1 env))
-           && Peek.ith_is_identifier ~i:1 env ->
-      record_declaration env
     | T_THROW -> throw env
     | T_TRY -> try_ env
     | T_WHILE -> while_ env
