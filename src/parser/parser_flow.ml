@@ -333,7 +333,7 @@ module rec Parse : PARSER = struct
     | T_TYPE -> type_alias env
     | T_OPAQUE -> opaque_type env
     | T_ENUM when (parse_options env).enums -> Declaration.enum_declaration env
-    | T_RECORD when Peek.is_record env -> record_declaration env
+    | T_RECORD when Peek.is_record env -> Object.record_declaration env
     | _ when Peek.is_component env -> Declaration.component env
     | _ -> statement env
 
@@ -522,8 +522,6 @@ module rec Parse : PARSER = struct
   and pattern_from_expr = Pattern.from_expr
 
   and match_pattern = Match_pattern.match_pattern
-
-  and record_declaration = Object.record_declaration
 end
 
 (*****************************************************************************)

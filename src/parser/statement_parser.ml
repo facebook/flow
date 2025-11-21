@@ -1641,6 +1641,9 @@ module Statement
             else if Peek.is_component env then
               (* export default component foo { ... } *)
               (Declaration (Declaration.component env), [])
+            else if Peek.is_record env then
+              (* export default record R { ... } *)
+              (Declaration (Object.record_declaration env), [])
             else
               (* export default [assignment expression]; *)
               let expr = Parse.assignment env in
@@ -1786,6 +1789,21 @@ module Statement
             })
         env
     | T_ENUM when (parse_options env).enums ->
+      with_loc
+        ~start_loc
+        (fun env ->
+          let stmt = Parse.statement_list_item env ~decorators in
+          Statement.ExportNamedDeclaration
+            {
+              Statement.ExportNamedDeclaration.declaration = Some stmt;
+              specifiers = None;
+              source = None;
+              export_kind = Statement.ExportValue;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            })
+        env
+    (* export record R { ... } *)
+    | T_RECORD when Peek.is_record env ->
       with_loc
         ~start_loc
         (fun env ->

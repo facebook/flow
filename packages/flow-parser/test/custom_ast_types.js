@@ -332,7 +332,7 @@ function custom_ast_types(fork) {
     .field('target', or(def('Identifier'), def('MatchBindingPattern')));
 
   def('RecordDeclaration')
-    .bases('Statement')
+    .bases('Declaration')
     .build('id', 'typeParameters', 'implements', 'body')
     .field('id', def('Identifier'))
     .field('typeParameters', or(def('TypeParameterDeclaration'), null))
