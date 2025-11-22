@@ -1225,6 +1225,7 @@ let builtin_types =
     "empty";
     "false";
     "mixed";
+    "unknown";
     "null";
     "number";
     "bigint";
@@ -1314,9 +1315,13 @@ let utility_types =
     "$Exports";
     "$KeyMirror";
     "$Keys";
+    "keyof";
     "$NonMaybeType";
+    "NonNullable";
     "$ReadOnly";
+    "Readonly";
     "$Values";
+    "Values";
     "StringPrefix";
     "StringSuffix";
   ]

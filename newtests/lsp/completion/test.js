@@ -7851,10 +7851,46 @@ b.te
                   },
                 },
                 {
+                  label: 'unknown',
+                  kind: 6,
+                  detail: 'unknown',
+                  sortText: '00000000000000000027',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'unknown',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 27,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'unknown',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'void',
                   kind: 6,
                   detail: 'void',
-                  sortText: '00000000000000000027',
+                  sortText: '00000000000000000028',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -7877,7 +7913,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 27,
+                        index: 28,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'void',
@@ -7890,7 +7926,7 @@ b.te
                   label: '$Exact',
                   kind: 3,
                   detail: '$Exact',
-                  sortText: '00000000000000000028',
+                  sortText: '00000000000000000029',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -7913,7 +7949,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 28,
+                        index: 29,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$Exact',
@@ -7926,7 +7962,7 @@ b.te
                   label: '$Exports',
                   kind: 3,
                   detail: '$Exports',
-                  sortText: '00000000000000000029',
+                  sortText: '00000000000000000030',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -7949,7 +7985,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 29,
+                        index: 30,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$Exports',
@@ -7962,7 +7998,7 @@ b.te
                   label: '$KeyMirror',
                   kind: 3,
                   detail: '$KeyMirror',
-                  sortText: '00000000000000000030',
+                  sortText: '00000000000000000031',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -7985,7 +8021,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 30,
+                        index: 31,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$KeyMirror',
@@ -7998,7 +8034,7 @@ b.te
                   label: '$Keys',
                   kind: 3,
                   detail: '$Keys',
-                  sortText: '00000000000000000031',
+                  sortText: '00000000000000000032',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8021,7 +8057,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 31,
+                        index: 32,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$Keys',
@@ -8034,7 +8070,7 @@ b.te
                   label: '$NonMaybeType',
                   kind: 3,
                   detail: '$NonMaybeType',
-                  sortText: '00000000000000000032',
+                  sortText: '00000000000000000033',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8057,7 +8093,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 32,
+                        index: 33,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$NonMaybeType',
@@ -8070,7 +8106,7 @@ b.te
                   label: '$ReadOnly',
                   kind: 3,
                   detail: '$ReadOnly',
-                  sortText: '00000000000000000033',
+                  sortText: '00000000000000000034',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8093,7 +8129,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 33,
+                        index: 34,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$ReadOnly',
@@ -8106,7 +8142,7 @@ b.te
                   label: '$Values',
                   kind: 3,
                   detail: '$Values',
-                  sortText: '00000000000000000034',
+                  sortText: '00000000000000000035',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8129,7 +8165,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 34,
+                        index: 35,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$Values',
@@ -8142,7 +8178,7 @@ b.te
                   label: 'Class',
                   kind: 3,
                   detail: 'Class',
-                  sortText: '00000000000000000035',
+                  sortText: '00000000000000000036',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8165,7 +8201,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 35,
+                        index: 36,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Class',
@@ -8175,10 +8211,82 @@ b.te
                   },
                 },
                 {
+                  label: 'keyof',
+                  kind: 3,
+                  detail: 'keyof',
+                  sortText: '00000000000000000037',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'keyof',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 37,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'keyof',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'NonNullable',
+                  kind: 3,
+                  detail: 'NonNullable',
+                  sortText: '00000000000000000038',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'NonNullable',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 38,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'NonNullable',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'Partial',
                   kind: 3,
                   detail: 'Partial',
-                  sortText: '00000000000000000036',
+                  sortText: '00000000000000000039',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8201,7 +8309,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 36,
+                        index: 39,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Partial',
@@ -8211,10 +8319,46 @@ b.te
                   },
                 },
                 {
+                  label: 'Readonly',
+                  kind: 3,
+                  detail: 'Readonly',
+                  sortText: '00000000000000000040',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Readonly',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 40,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'Readonly',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'Required',
                   kind: 3,
                   detail: 'Required',
-                  sortText: '00000000000000000037',
+                  sortText: '00000000000000000041',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8237,7 +8381,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 37,
+                        index: 41,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Required',
@@ -8250,7 +8394,7 @@ b.te
                   label: 'StringPrefix',
                   kind: 3,
                   detail: 'StringPrefix',
-                  sortText: '00000000000000000038',
+                  sortText: '00000000000000000042',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8273,7 +8417,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 38,
+                        index: 42,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'StringPrefix',
@@ -8286,7 +8430,7 @@ b.te
                   label: 'StringSuffix',
                   kind: 3,
                   detail: 'StringSuffix',
-                  sortText: '00000000000000000039',
+                  sortText: '00000000000000000043',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -8309,10 +8453,46 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 39,
+                        index: 43,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'StringSuffix',
+                        ac_type: 'Actype',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Values',
+                  kind: 3,
+                  detail: 'Values',
+                  sortText: '00000000000000000044',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 27,
+                        character: 18,
+                      },
+                      end: {
+                        line: 27,
+                        character: 18,
+                      },
+                    },
+                    newText: 'Values',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 44,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'Values',
                         ac_type: 'Actype',
                       },
                     ],
@@ -9355,10 +9535,46 @@ b.te
                   },
                 },
                 {
+                  label: 'unknown',
+                  kind: 6,
+                  detail: 'unknown',
+                  sortText: '00000000000000000020',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'unknown',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 20,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'unknown',
+                        ac_type: 'Acmem',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'void',
                   kind: 6,
                   detail: 'void',
-                  sortText: '00000000000000000020',
+                  sortText: '00000000000000000021',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9381,7 +9597,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 20,
+                        index: 21,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'void',
@@ -9394,7 +9610,7 @@ b.te
                   label: '$Exact',
                   kind: 3,
                   detail: '$Exact',
-                  sortText: '00000000000000000021',
+                  sortText: '00000000000000000022',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9417,7 +9633,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 21,
+                        index: 22,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$Exact',
@@ -9430,7 +9646,7 @@ b.te
                   label: '$Exports',
                   kind: 3,
                   detail: '$Exports',
-                  sortText: '00000000000000000022',
+                  sortText: '00000000000000000023',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9453,7 +9669,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 22,
+                        index: 23,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$Exports',
@@ -9466,7 +9682,7 @@ b.te
                   label: '$KeyMirror',
                   kind: 3,
                   detail: '$KeyMirror',
-                  sortText: '00000000000000000023',
+                  sortText: '00000000000000000024',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9489,7 +9705,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 23,
+                        index: 24,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$KeyMirror',
@@ -9502,7 +9718,7 @@ b.te
                   label: '$Keys',
                   kind: 3,
                   detail: '$Keys',
-                  sortText: '00000000000000000024',
+                  sortText: '00000000000000000025',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9525,7 +9741,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 24,
+                        index: 25,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$Keys',
@@ -9538,7 +9754,7 @@ b.te
                   label: '$NonMaybeType',
                   kind: 3,
                   detail: '$NonMaybeType',
-                  sortText: '00000000000000000025',
+                  sortText: '00000000000000000026',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9561,7 +9777,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 25,
+                        index: 26,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$NonMaybeType',
@@ -9574,7 +9790,7 @@ b.te
                   label: '$ReadOnly',
                   kind: 3,
                   detail: '$ReadOnly',
-                  sortText: '00000000000000000026',
+                  sortText: '00000000000000000027',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9597,7 +9813,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 26,
+                        index: 27,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$ReadOnly',
@@ -9610,7 +9826,7 @@ b.te
                   label: '$Values',
                   kind: 3,
                   detail: '$Values',
-                  sortText: '00000000000000000027',
+                  sortText: '00000000000000000028',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9633,7 +9849,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 27,
+                        index: 28,
                         session_requests: 1,
                         typed_length: 0,
                         completion: '$Values',
@@ -9646,7 +9862,7 @@ b.te
                   label: 'Class',
                   kind: 3,
                   detail: 'Class',
-                  sortText: '00000000000000000028',
+                  sortText: '00000000000000000029',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9669,7 +9885,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 28,
+                        index: 29,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Class',
@@ -9679,10 +9895,82 @@ b.te
                   },
                 },
                 {
+                  label: 'keyof',
+                  kind: 3,
+                  detail: 'keyof',
+                  sortText: '00000000000000000030',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'keyof',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 30,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'keyof',
+                        ac_type: 'Acmem',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'NonNullable',
+                  kind: 3,
+                  detail: 'NonNullable',
+                  sortText: '00000000000000000031',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'NonNullable',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 31,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'NonNullable',
+                        ac_type: 'Acmem',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'Partial',
                   kind: 3,
                   detail: 'Partial',
-                  sortText: '00000000000000000029',
+                  sortText: '00000000000000000032',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9705,7 +9993,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 29,
+                        index: 32,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Partial',
@@ -9715,10 +10003,46 @@ b.te
                   },
                 },
                 {
+                  label: 'Readonly',
+                  kind: 3,
+                  detail: 'Readonly',
+                  sortText: '00000000000000000033',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'Readonly',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 33,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'Readonly',
+                        ac_type: 'Acmem',
+                      },
+                    ],
+                  },
+                },
+                {
                   label: 'Required',
                   kind: 3,
                   detail: 'Required',
-                  sortText: '00000000000000000030',
+                  sortText: '00000000000000000034',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9741,7 +10065,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 30,
+                        index: 34,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'Required',
@@ -9754,7 +10078,7 @@ b.te
                   label: 'StringPrefix',
                   kind: 3,
                   detail: 'StringPrefix',
-                  sortText: '00000000000000000031',
+                  sortText: '00000000000000000035',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9777,7 +10101,7 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 31,
+                        index: 35,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'StringPrefix',
@@ -9790,7 +10114,7 @@ b.te
                   label: 'StringSuffix',
                   kind: 3,
                   detail: 'StringSuffix',
-                  sortText: '00000000000000000032',
+                  sortText: '00000000000000000036',
                   insertTextFormat: 1,
                   textEdit: {
                     range: {
@@ -9813,10 +10137,46 @@ b.te
                       'builtin type',
                       {
                         token: 'AUTO332',
-                        index: 32,
+                        index: 36,
                         session_requests: 1,
                         typed_length: 0,
                         completion: 'StringSuffix',
+                        ac_type: 'Acmem',
+                      },
+                    ],
+                  },
+                },
+                {
+                  label: 'Values',
+                  kind: 3,
+                  detail: 'Values',
+                  sortText: '00000000000000000037',
+                  insertTextFormat: 1,
+                  textEdit: {
+                    range: {
+                      start: {
+                        line: 14,
+                        character: 11,
+                      },
+                      end: {
+                        line: 14,
+                        character: 11,
+                      },
+                    },
+                    newText: 'Values',
+                  },
+                  command: {
+                    title: '',
+                    command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
+                    arguments: [
+                      'textDocument/completion',
+                      'builtin type',
+                      {
+                        token: 'AUTO332',
+                        index: 37,
+                        session_requests: 1,
+                        typed_length: 0,
+                        completion: 'Values',
                         ac_type: 'Acmem',
                       },
                     ],

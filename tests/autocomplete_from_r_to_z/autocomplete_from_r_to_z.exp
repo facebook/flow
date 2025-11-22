@@ -2051,6 +2051,33 @@ Flags: --lsp
   }
 }
 {
+  "label":"unknown",
+  "kind":6,
+  "detail":"unknown",
+  "sortText":"00000000000000000200",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"unknown"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":27,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"unknown",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
   "label":"void",
   "kind":6,
   "detail":"void",
@@ -2068,7 +2095,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":27,
+        "index":28,
         "session_requests":null,
         "typed_length":null,
         "completion":"void",
@@ -2095,7 +2122,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":28,
+        "index":29,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exact",
@@ -2122,7 +2149,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":29,
+        "index":30,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Exports",
@@ -2149,7 +2176,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":30,
+        "index":31,
         "session_requests":null,
         "typed_length":null,
         "completion":"$KeyMirror",
@@ -2176,7 +2203,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":31,
+        "index":32,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Keys",
@@ -2203,7 +2230,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":32,
+        "index":33,
         "session_requests":null,
         "typed_length":null,
         "completion":"$NonMaybeType",
@@ -2230,7 +2257,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":33,
+        "index":34,
         "session_requests":null,
         "typed_length":null,
         "completion":"$ReadOnly",
@@ -2257,7 +2284,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":34,
+        "index":35,
         "session_requests":null,
         "typed_length":null,
         "completion":"$Values",
@@ -2284,10 +2311,64 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":35,
+        "index":36,
         "session_requests":null,
         "typed_length":null,
         "completion":"Class",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"keyof",
+  "kind":3,
+  "detail":"keyof",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"keyof"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":37,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"keyof",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"NonNullable",
+  "kind":3,
+  "detail":"NonNullable",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"NonNullable"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":38,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"NonNullable",
         "ac_type":"Actype"
       }
     ]
@@ -2311,10 +2392,37 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":36,
+        "index":39,
         "session_requests":null,
         "typed_length":null,
         "completion":"Partial",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Readonly",
+  "kind":3,
+  "detail":"Readonly",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Readonly"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":40,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Readonly",
         "ac_type":"Actype"
       }
     ]
@@ -2338,7 +2446,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":37,
+        "index":41,
         "session_requests":null,
         "typed_length":null,
         "completion":"Required",
@@ -2365,7 +2473,7 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":38,
+        "index":42,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringPrefix",
@@ -2392,10 +2500,37 @@ Flags: --lsp
       "builtin type",
       {
         "token":null,
-        "index":39,
+        "index":43,
         "session_requests":null,
         "typed_length":null,
         "completion":"StringSuffix",
+        "ac_type":"Actype"
+      }
+    ]
+  }
+}
+{
+  "label":"Values",
+  "kind":3,
+  "detail":"Values",
+  "sortText":"00000000000000000300",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":27,"character":17},"end":{"line":27,"character":17}},
+    "newText":"Values"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "builtin type",
+      {
+        "token":null,
+        "index":44,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Values",
         "ac_type":"Actype"
       }
     ]
