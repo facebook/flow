@@ -2,7 +2,7 @@
   "method": "textDocument/codeAction",
   "result": [
     {
-      "title": "Convert to `$ReadOnly`",
+      "title": "Convert to `Readonly`",
       "kind": "quickfix",
       "diagnostics": [],
       "edit": {
@@ -19,7 +19,7 @@
                   "character": 34
                 }
               },
-              "newText": "$ReadOnly<[string, number]>"
+              "newText": "Readonly<[string, number]>"
             }
           ]
         }
@@ -30,7 +30,7 @@
         "arguments": [
           "textDocument/codeAction",
           "convert_readonly_tuple_type",
-          "Convert to `$ReadOnly`"
+          "Convert to `Readonly`"
         ]
       }
     }

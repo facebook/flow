@@ -28,7 +28,7 @@ class mapper target_loc kind =
       | (loc, ReadOnly { ReadOnly.argument = (_, Tuple _) as argument; comments })
         when kind = `ReadOnlyTupleType && this#is_target loc ->
         let targs = Ast_builder.Types.type_args [super#type_ argument] in
-        Ast_builder.Types.unqualified_generic ?comments ~targs "$ReadOnly"
+        Ast_builder.Types.unqualified_generic ?comments ~targs "Readonly"
       | _ -> super#type_ t
 
     method! type_param ~kind:k (loc, tparam) =

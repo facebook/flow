@@ -50,9 +50,14 @@ module.exports = (suite(
           [
             'initialize',
             ['window/logMessage', '{Starting Flow server}'],
-            ['telemetry/connectionStatus', '{true}'],
+            {
+              method: 'telemetry/connectionStatus',
+              params: {
+                isConnected: true,
+              },
+            },
           ],
-          [...lspIgnoreStatusAndCancellation],
+          ['window/showStatus', '$/cancelRequest'],
         ),
       lspRequest('shutdown')
         .waitUntilLSPMessage(20000, 'shutdown')

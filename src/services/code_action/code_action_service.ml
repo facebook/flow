@@ -1089,7 +1089,7 @@ let ast_transforms_of_error
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
-          title = "Convert to `$ReadOnly`";
+          title = "Convert to `Readonly`";
           diagnostic_title = "convert_readonly_tuple_type";
           transform = untyped_ast_transform Autofix_ts_syntax.convert_readonly_tuple_type;
           target_loc = error_loc;
