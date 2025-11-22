@@ -36,8 +36,8 @@ Cannot yield `42` because number [1], a primitive, cannot be used as a subtype o
                                    ^^ [1]
 
 References:
-   <BUILTINS>/core.js:2045:7
-   2045|     : $Iterable<Yield, Return, Next>;
+   <BUILTINS>/core.js:2048:7
+   2048|     : $Iterable<Yield, Return, Next>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

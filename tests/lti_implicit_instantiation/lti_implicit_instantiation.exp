@@ -292,8 +292,8 @@ the expression to your expected type. [underconstrained-implicit-instantiation]
              ^^^^^
 
 References:
-   <BUILTINS>/core.js:1022:21
-   1022| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/core.js:1025:21
+   1025| declare class Array<T> extends $ReadOnlyArray<T> {
                              ^ [1]
    underconstrained_class_constructor.js:18:1
      18| new Array(1); // Error
@@ -811,8 +811,8 @@ Cannot get `r1.bad` because property `bad` is missing in `Array` [1]. [prop-miss
               ^^^
 
 References:
-   <BUILTINS>/core.js:1022:15
-   1022| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/core.js:1025:15
+   1025| declare class Array<T> extends $ReadOnlyArray<T> {
                        ^^^^^ [1]
 
 
@@ -859,8 +859,8 @@ Cannot get `r2.bad` because property `bad` is missing in `Array` [1]. [prop-miss
               ^^^
 
 References:
-   <BUILTINS>/core.js:1022:15
-   1022| declare class Array<T> extends $ReadOnlyArray<T> {
+   <BUILTINS>/core.js:1025:15
+   1025| declare class Array<T> extends $ReadOnlyArray<T> {
                        ^^^^^ [1]
 
 

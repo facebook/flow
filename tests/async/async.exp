@@ -7,8 +7,8 @@ Cannot return `1` because in type argument `R` [1]: number [2] is incompatible w
                   ^ [2]
 
 References:
-   <BUILTINS>/core.js:2282:24
-   2282| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:24
+   2285| declare class Promise<+R = mixed> {
                                 ^ [1]
    async.js:9:30
       9| async function f1(): Promise<boolean> {
@@ -25,8 +25,8 @@ Cannot return `await p` because in type argument `R` [1]: number [2] is incompat
                   ^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2282:24
-   2282| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:24
+   2285| declare class Promise<+R = mixed> {
                                 ^ [1]
    async.js:28:30
      28| async function f4(p: Promise<number>): Promise<boolean> {
@@ -99,8 +99,8 @@ incompatible with implicitly-returned undefined. [incompatible-type]
                      ^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2282:24
-   2282| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:24
+   2285| declare class Promise<+R = mixed> {
                                 ^ [1]
 
 
@@ -139,8 +139,8 @@ Cannot return undefined because in type argument `R` [1]: undefined [2] is incom
            ^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2282:24
-   2282| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:24
+   2285| declare class Promise<+R = mixed> {
                                 ^ [1]
    async_return_void.js:1:32
       1| async function foo1(): Promise<string> {
@@ -157,8 +157,8 @@ Cannot return `undefined` because in type argument `R` [1]: undefined [2] is inc
                   ^^^^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2282:24
-   2282| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:24
+   2285| declare class Promise<+R = mixed> {
                                 ^ [1]
    async_return_void.js:5:32
       5| async function foo2(): Promise<string> {
@@ -175,8 +175,8 @@ Cannot return `bar()` because in type argument `R` [1]: undefined [2] is incompa
                   ^^^^^
 
 References:
-   <BUILTINS>/core.js:2282:24
-   2282| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:24
+   2285| declare class Promise<+R = mixed> {
                                 ^ [1]
    async_return_void.js:10:17
      10|   function bar() { }
@@ -220,11 +220,11 @@ number [2] is incompatible with string [3]. [incompatible-type]
                                                      ^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2034:27
-   2034| interface AsyncGenerator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:2037:27
+   2037| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [1]
-   <BUILTINS>/core.js:2345:58
-   2345|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2348:58
+   2348|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [3]
 
 
@@ -237,11 +237,11 @@ In type argument `Yield` [1]: string [2] is incompatible with number [3]. [incom
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:2034:27
-   2034| interface AsyncGenerator<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:2037:27
+   2037| interface AsyncGenerator<+Yield,+Return,-Next> {
                                    ^^^^^ [1]
-   <BUILTINS>/core.js:2345:58
-   2345|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
+   <BUILTINS>/core.js:2348:58
+   2348|       T extends $ReadOnlyArray<mixed> ? {[K in keyof T]: Awaited<T[K]>} :
                                                                   ^^^^^^^^^^^^^ [2]
    generator.js:21:45
      21| async function *genError1(): AsyncGenerator<number, void, void> {
@@ -258,8 +258,8 @@ Cannot yield `1` because number [1], a primitive, cannot be used as a subtype of
                     ^ [1]
 
 References:
-   <BUILTINS>/core.js:2045:7
-   2045|     : $Iterable<Yield, Return, Next>;
+   <BUILTINS>/core.js:2048:7
+   2048|     : $Iterable<Yield, Return, Next>;
                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 

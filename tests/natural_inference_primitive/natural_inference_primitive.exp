@@ -2766,11 +2766,11 @@ Cannot call `Set` with array literal bound to `iterable` because: [incompatible-
                             ^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2238:29
-   2238|     constructor(iterable?: ?Iterable<T>): void;
+   <BUILTINS>/core.js:2241:29
+   2241|     constructor(iterable?: ?Iterable<T>): void;
                                      ^^^^^^^^^^^ [2]
-   <BUILTINS>/core.js:1876:30
-   1876| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+   <BUILTINS>/core.js:1879:30
+   1879| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
    local.js:658:21
     658|   fn(() => new Set(['C'])); // error 'C' ~> 'A' | 'B'

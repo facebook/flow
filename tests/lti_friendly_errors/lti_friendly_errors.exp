@@ -8,11 +8,11 @@ incompatible with string [3]. [incompatible-type]
           ^
 
 References:
-   <BUILTINS>/core.js:2282:24
-   2282| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:24
+   2285| declare class Promise<+R = mixed> {
                                 ^ [1]
-   <BUILTINS>/core.js:2282:28
-   2282| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:28
+   2285| declare class Promise<+R = mixed> {
                                     ^^^^^ [2]
    reason_of_inferred_targs.js:2:13
       2| (p: Promise<string>); // error

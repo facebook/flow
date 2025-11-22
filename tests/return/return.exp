@@ -40,8 +40,8 @@ incompatible with implicitly-returned undefined. [incompatible-type]
                                       ^^^^^^ [2]
 
 References:
-   <BUILTINS>/core.js:2282:24
-   2282| declare class Promise<+R = mixed> {
+   <BUILTINS>/core.js:2285:24
+   2285| declare class Promise<+R = mixed> {
                                 ^ [1]
 
 

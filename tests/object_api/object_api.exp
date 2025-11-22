@@ -1046,8 +1046,8 @@ Cannot assign `x.valueOf` to `xValueOf` because function type [1] is incompatibl
                                  ^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1730:5
-   1730|     valueOf(): number;
+   <BUILTINS>/core.js:1733:5
+   1733|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:122:16
     122| var xValueOf : number = x.valueOf; // error
@@ -1064,8 +1064,8 @@ Cannot get `x.valueOf` because property `valueOf` [1] cannot be unbound from the
                                    ^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1730:5
-   1730|     valueOf(): number;
+   <BUILTINS>/core.js:1733:5
+   1733|     valueOf(): number;
              ^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1141,8 +1141,8 @@ Cannot assign `x.toLocaleString` to `xToLocaleString` because function type [1] 
                                         ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1718:5
-   1718|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1721:5
+   1721|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    object_prototype.js:150:23
     150| var xToLocaleString : number = x.toLocaleString; // error
@@ -1159,8 +1159,8 @@ defined. [method-unbinding]
                                           ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1718:5
-   1718|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1721:5
+   1721|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1174,8 +1174,8 @@ number [2]. [incompatible-type]
                                                ^^^^^^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1718:93
-   1718|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1721:93
+   1721|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
                                                                                                      ^^^^^^ [1]
    object_prototype.js:151:30
     151| var xToLocaleString2 : () => number = x.toLocaleString; // error
@@ -1192,8 +1192,8 @@ defined. [method-unbinding]
                                                  ^^^^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:1718:5
-   1718|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
+   <BUILTINS>/core.js:1721:5
+   1721|     toLocaleString(locales?: string | Array<string>, options?: Intl$DateTimeFormatOptions): string;
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
