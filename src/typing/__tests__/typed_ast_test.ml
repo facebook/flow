@@ -55,7 +55,6 @@ let metadata =
     missing_module_generators = [];
     no_unchecked_indexed_access = false;
     opaque_type_new_bound_syntax = true;
-    pattern_matching_includes = [];
     projects_options = Flow_projects.default_options;
     react_custom_jsx_typing = false;
     react_ref_as_prop = Options.ReactRefAsProp.FullSupport;

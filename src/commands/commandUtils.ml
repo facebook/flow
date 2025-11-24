@@ -1528,10 +1528,6 @@ let make_options
           (Base.Option.map ~f:(Files.expand_project_root_token ~root) applicable_dir_opt, dirname)
       );
     opt_opaque_type_new_bound_syntax = FlowConfig.opaque_type_new_bound_syntax flowconfig;
-    opt_pattern_matching_includes =
-      Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
-        (FlowConfig.pattern_matching_includes flowconfig);
     opt_records_includes =
       Base.List.map
         ~f:(Files.expand_project_root_token ~root)

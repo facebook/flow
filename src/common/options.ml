@@ -167,7 +167,6 @@ type t = {
   opt_node_resolver_allow_root_relative: bool;
   opt_node_resolver_root_relative_dirnames: (string option * string) list;
   opt_opaque_type_new_bound_syntax: bool;
-  opt_pattern_matching_includes: string list;
   opt_profile: bool;
   opt_records_includes: string list;
   opt_projects_options: Flow_projects.options;
@@ -355,8 +354,6 @@ let node_resolver_allow_root_relative opts = opts.opt_node_resolver_allow_root_r
 let node_resolver_root_relative_dirnames opts = opts.opt_node_resolver_root_relative_dirnames
 
 let opaque_type_new_bound_syntax opts = opts.opt_opaque_type_new_bound_syntax
-
-let pattern_matching_includes opts = opts.opt_pattern_matching_includes
 
 let projects_options opts = opts.opt_projects_options
 

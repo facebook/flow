@@ -1,5 +1,0 @@
-[options]
-all=true
-experimental.pattern_matching=true
-experimental.pattern_matching.includes=<PROJECT_ROOT>/ok1
-experimental.pattern_matching.includes=<PROJECT_ROOT>/ok2

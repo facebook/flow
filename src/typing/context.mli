@@ -116,7 +116,6 @@ type metadata = {
   missing_module_generators: (Str.regexp * string) list;
   no_unchecked_indexed_access: bool;
   opaque_type_new_bound_syntax: bool;
-  pattern_matching_includes: string list;
   projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;

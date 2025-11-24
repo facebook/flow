@@ -66,7 +66,6 @@ type metadata = {
   missing_module_generators: (Str.regexp * string) list;
   no_unchecked_indexed_access: bool;
   opaque_type_new_bound_syntax: bool;
-  pattern_matching_includes: string list;
   projects_options: Flow_projects.options;
   react_custom_jsx_typing: bool;
   react_ref_as_prop: Options.ReactRefAsProp.t;
@@ -311,7 +310,6 @@ let metadata_of_options options =
     enable_pattern_matching = Options.enable_pattern_matching options;
     enable_pattern_matching_instance_patterns =
       Options.enable_pattern_matching_instance_patterns options;
-    pattern_matching_includes = Options.pattern_matching_includes options;
     enable_records = Options.enable_records options;
     enable_relay_integration = Options.enable_relay_integration options;
     exact_by_default = Options.exact_by_default options;
@@ -548,15 +546,7 @@ let enable_enums cx = cx.metadata.enable_enums
 
 let enable_jest_integration cx = cx.metadata.enable_jest_integration
 
-let enable_pattern_matching cx =
-  cx.metadata.enable_pattern_matching
-  &&
-  match cx.metadata.pattern_matching_includes with
-  | [] -> true
-  | dirs ->
-    let filename = File_key.to_string (file cx) in
-    let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-    List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
+let enable_pattern_matching cx = cx.metadata.enable_pattern_matching
 
 let enable_pattern_matching_instance_patterns cx =
   cx.metadata.enable_pattern_matching_instance_patterns
