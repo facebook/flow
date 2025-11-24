@@ -560,6 +560,10 @@ let enable_pattern_matching cx =
 
 let enable_pattern_matching_instance_patterns cx =
   cx.metadata.enable_pattern_matching_instance_patterns
+  &&
+  match cx.metadata.records_includes with
+  | [] -> true
+  | dirs -> in_dirlist cx dirs
 
 let enable_records cx =
   cx.metadata.enable_records

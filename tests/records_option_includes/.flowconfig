@@ -3,3 +3,5 @@ all=true
 experimental.records=true
 experimental.records.includes=<PROJECT_ROOT>/ok1
 experimental.records.includes=<PROJECT_ROOT>/ok2
+experimental.pattern_matching=true
+experimental.pattern_matching.instance_patterns=true
