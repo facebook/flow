@@ -1883,9 +1883,14 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ERecordDeclarationInvalidSyntax { loc; kind } ->
     let kind =
       match kind with
-      | InvalidRecordDeclarationSyntaxMultiple { invalid_suffix_semicolon_locs } ->
+      | InvalidRecordDeclarationSyntaxMultiple
+          { invalid_variance_locs; invalid_suffix_semicolon_locs } ->
         InvalidRecordDeclarationSyntaxMultiple
-          { invalid_suffix_semicolon_locs = List.map f invalid_suffix_semicolon_locs }
+          {
+            invalid_variance_locs = List.map f invalid_variance_locs;
+            invalid_suffix_semicolon_locs = List.map f invalid_suffix_semicolon_locs;
+          }
+      | InvalidRecordDeclarationSyntaxVariance -> InvalidRecordDeclarationSyntaxVariance
       | InvalidRecordDeclarationSyntaxSuffixSemicolon ->
         InvalidRecordDeclarationSyntaxSuffixSemicolon
     in

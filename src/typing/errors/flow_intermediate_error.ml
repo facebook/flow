@@ -5435,6 +5435,12 @@ let to_printable_error :
         text ".";
       ]
     | MessageRecordDeclarationInvalidSyntax kind ->
+      let msg_invalid_variance =
+        [
+          text "Record declaration properties are read-only by default, ";
+          text "so don't allow variance annotations. Remove to fix.";
+        ]
+      in
       let msg_invalid_suffix_semicolon =
         [
           text "Record declarations use commas ";
@@ -5448,12 +5454,28 @@ let to_printable_error :
         ]
       in
       (match kind with
-      | InvalidRecordDeclarationSyntaxMultiple { invalid_suffix_semicolon_locs } ->
+      | InvalidRecordDeclarationSyntaxMultiple
+          { invalid_variance_locs; invalid_suffix_semicolon_locs } ->
         let msg_with_locs msg locs =
-          let refs = Base.List.map locs ~f:(fun loc -> no_desc_ref loc) in
-          msg @ [text " At"] @ refs @ [text "."]
+          if Base.List.is_empty locs then
+            None
+          else
+            let refs = Base.List.map locs ~f:(fun loc -> no_desc_ref loc) in
+            Some (msg @ [text " At"] @ refs @ [text "."])
         in
-        msg_with_locs msg_invalid_suffix_semicolon invalid_suffix_semicolon_locs
+        let errors =
+          Base.List.filter_opt
+            [
+              msg_with_locs msg_invalid_variance invalid_variance_locs;
+              msg_with_locs msg_invalid_suffix_semicolon invalid_suffix_semicolon_locs;
+            ]
+        in
+        (match errors with
+        | [single] -> single
+        | multiple ->
+          text "Invalid record declaration syntax:"
+          :: Base.List.concat_map multiple ~f:(fun x -> text "\n- " :: x))
+      | InvalidRecordDeclarationSyntaxVariance -> msg_invalid_variance
       | InvalidRecordDeclarationSyntaxSuffixSemicolon -> msg_invalid_suffix_semicolon)
     | MessageIncompatiblETypeParamConstIncompatibility { lower; upper } ->
       [

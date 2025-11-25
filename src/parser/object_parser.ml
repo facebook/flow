@@ -1206,6 +1206,15 @@ module Object
         let (static, leading_static) = maybe_eat_and_get_comments T_STATIC env in
         let (async, leading_async) = maybe_eat_and_get_comments T_ASYNC env in
         let (generator, leading_generator) = Declaration.generator env in
+        let parse_readonly =
+          Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET
+        in
+        let variance = Declaration.variance env ~parse_readonly async generator in
+        let (generator, leading_generator) =
+          match (generator, variance) with
+          | (false, Some _) -> Declaration.generator env
+          | _ -> (generator, leading_generator)
+        in
         let leading_key = Peek.comments env in
         let leading = List.concat [leading_static; leading_async; leading_generator; leading_key] in
         if Peek.token env = T_POUND then (
@@ -1231,18 +1240,32 @@ module Object
               env
               (key_loc, Parse_error.RecordInvalidPropertyName { name = key_name; static; method_ })
         in
+        let empty_invalid_syntax =
+          { InvalidPropertySyntax.invalid_suffix_semicolon = None; invalid_variance = None }
+        in
+        let invalid_syntax =
+          Option.map
+            (fun variance ->
+              { empty_invalid_syntax with InvalidPropertySyntax.invalid_variance = Some variance })
+            variance
+        in
         let end_property () =
           match Peek.token env with
           | T_EOF
           | T_RCURLY ->
-            None
+            invalid_syntax
           | T_SEMICOLON ->
             let semicolon_loc = Peek.loc env in
             Eat.token env;
-            Some { InvalidPropertySyntax.invalid_suffix_semicolon = Some semicolon_loc }
+            let invalid_syntax = Option.value invalid_syntax ~default:empty_invalid_syntax in
+            Some
+              {
+                invalid_syntax with
+                InvalidPropertySyntax.invalid_suffix_semicolon = Some semicolon_loc;
+              }
           | _ ->
             Expect.token env T_COMMA;
-            None
+            invalid_syntax
         in
         (match Peek.token env with
         | T_COLON when static ->

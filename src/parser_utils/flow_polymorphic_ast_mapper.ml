@@ -2705,9 +2705,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         (invalid_syntax : 'M Ast.Statement.RecordDeclaration.InvalidPropertySyntax.t)
         : 'N Ast.Statement.RecordDeclaration.InvalidPropertySyntax.t =
       let open Ast.Statement.RecordDeclaration.InvalidPropertySyntax in
-      let { invalid_suffix_semicolon } = invalid_syntax in
+      let { invalid_suffix_semicolon; invalid_variance } = invalid_syntax in
       let invalid_suffix_semicolon' = Option.map ~f:this#on_loc_annot invalid_suffix_semicolon in
-      { invalid_suffix_semicolon = invalid_suffix_semicolon' }
+      let invalid_variance' = Option.map ~f:this#variance invalid_variance in
+      { invalid_suffix_semicolon = invalid_suffix_semicolon'; invalid_variance = invalid_variance' }
 
     method record_property (prop : ('M, 'T) Ast.Statement.RecordDeclaration.Property.t')
         : ('N, 'U) Ast.Statement.RecordDeclaration.Property.t' =

@@ -17,3 +17,26 @@
     static b: string = 's';
   }
 }
+
+// Variance: single
+{
+  record R {
+    +a: number, // ERROR
+  }
+}
+
+// Variance: multiple
+{
+  record R {
+    +a: number, // ERROR
+    static +b: string = 's', // ERROR
+  }
+}
+
+// Multiple different errors
+{
+  record R {
+    +a: number; // ERROR
+    +b: string; // ERROR
+  }
+}

@@ -117,7 +117,11 @@ type 'loc match_invalid_case_syntax =
   | InvalidMatchCaseSuffixSemicolon
 
 type 'loc record_declaration_invalid_syntax =
-  | InvalidRecordDeclarationSyntaxMultiple of { invalid_suffix_semicolon_locs: 'loc list }
+  | InvalidRecordDeclarationSyntaxMultiple of {
+      invalid_variance_locs: 'loc list;
+      invalid_suffix_semicolon_locs: 'loc list;
+    }
+  | InvalidRecordDeclarationSyntaxVariance
   | InvalidRecordDeclarationSyntaxSuffixSemicolon
 
 type 'loc invalid_render_type_kind =

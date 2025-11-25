@@ -1078,7 +1078,11 @@ and Statement : sig
 
   module RecordDeclaration : sig
     module InvalidPropertySyntax : sig
-      type 'M t = { invalid_suffix_semicolon: 'M option } [@@deriving show]
+      type 'M t = {
+        invalid_variance: 'M Variance.t option;
+        invalid_suffix_semicolon: 'M option;
+      }
+      [@@deriving show]
     end
 
     module Property : sig
