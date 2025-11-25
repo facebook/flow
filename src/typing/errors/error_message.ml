@@ -766,6 +766,10 @@ and 'loc t' =
       reason_op: 'loc virtual_reason;
       reason_record: 'loc virtual_reason;
     }
+  | ERecordDeclarationInvalidSyntax of {
+      loc: 'loc;
+      kind: 'loc record_declaration_invalid_syntax;
+    }
   | EUndocumentedFeature of { loc: 'loc }
   | EIllegalAssertOperator of {
       op: 'loc virtual_reason;
@@ -1876,6 +1880,16 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ERecordBannedTypeUtil { reason_op; reason_record } ->
     ERecordBannedTypeUtil
       { reason_op = map_reason reason_op; reason_record = map_reason reason_record }
+  | ERecordDeclarationInvalidSyntax { loc; kind } ->
+    let kind =
+      match kind with
+      | InvalidRecordDeclarationSyntaxMultiple { invalid_suffix_semicolon_locs } ->
+        InvalidRecordDeclarationSyntaxMultiple
+          { invalid_suffix_semicolon_locs = List.map f invalid_suffix_semicolon_locs }
+      | InvalidRecordDeclarationSyntaxSuffixSemicolon ->
+        InvalidRecordDeclarationSyntaxSuffixSemicolon
+    in
+    ERecordDeclarationInvalidSyntax { loc = f loc; kind }
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
   | EIllegalAssertOperator { op; obj; specialized } ->
     EIllegalAssertOperator { op = map_reason op; obj = map_reason obj; specialized }
@@ -2263,6 +2277,7 @@ let util_use_op_of_msg nope util = function
   | EMatchInvalidWildcardSyntax _
   | EMatchInvalidInstancePattern _
   | ERecordBannedTypeUtil _
+  | ERecordDeclarationInvalidSyntax _
   | EUndocumentedFeature _
   | EIllegalAssertOperator _ ->
     nope
@@ -2502,6 +2517,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMatchInvalidInstancePattern loc -> Some loc
   | EMatchInvalidGuardedWildcard loc -> Some loc
   | EMatchInvalidIdentOrMemberPattern { loc; _ } -> Some loc
+  | ERecordDeclarationInvalidSyntax { loc; _ } -> Some loc
   | EUndocumentedFeature { loc } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
@@ -3720,6 +3736,8 @@ let friendly_message_of_msg = function
   | EMatchInvalidInstancePattern _ -> Normal MessageMatchInvalidInstancePattern
   | ERecordBannedTypeUtil { reason_op; reason_record } ->
     Normal (MessageRecordBannedTypeUtil { reason_op; reason_record })
+  | ERecordDeclarationInvalidSyntax { loc = _; kind } ->
+    Normal (MessageRecordDeclarationInvalidSyntax kind)
   | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
   | EIllegalAssertOperator { obj; specialized; _ } ->
     Normal (MessageIllegalAssertOperator { obj; specialized })
@@ -4128,5 +4146,6 @@ let error_code_of_message err : error_code option =
   | EMatchInvalidWildcardSyntax _ -> Some UnsupportedSyntax
   | EMatchInvalidInstancePattern _ -> Some MatchInvalidPattern
   | ERecordBannedTypeUtil _ -> Some RecordBannedTypeUtil
+  | ERecordDeclarationInvalidSyntax _ -> Some RecordInvalidSyntax
   | EUndocumentedFeature _ -> Some UndocumentedFeature
   | EIllegalAssertOperator _ -> Some IllegalAssertOperator

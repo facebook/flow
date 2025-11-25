@@ -3351,7 +3351,7 @@ class ['loc] mapper =
 
     method record_property _loc (prop : ('loc, 'loc) Ast.Statement.RecordDeclaration.Property.t') =
       let open Ast.Statement.RecordDeclaration.Property in
-      let { key; annot; default_value; comments } = prop in
+      let { key; annot; default_value; comments; invalid_syntax } = prop in
       let key' = this#identifier key in
       let annot' = this#type_annotation annot in
       let default_value' = map_opt this#expression default_value in
@@ -3360,12 +3360,18 @@ class ['loc] mapper =
       then
         prop
       else
-        { key = key'; annot = annot'; default_value = default_value'; comments = comments' }
+        {
+          key = key';
+          annot = annot';
+          default_value = default_value';
+          comments = comments';
+          invalid_syntax;
+        }
 
     method record_static_property
         _loc (prop : ('loc, 'loc) Ast.Statement.RecordDeclaration.StaticProperty.t') =
       let open Ast.Statement.RecordDeclaration.StaticProperty in
-      let { key; annot; value; comments } = prop in
+      let { key; annot; value; comments; invalid_syntax } = prop in
       let key' = this#identifier key in
       let annot' = this#type_annotation annot in
       let value' = this#expression value in
@@ -3373,7 +3379,7 @@ class ['loc] mapper =
       if key' == key && annot' == annot && value' == value && comments' == comments then
         prop
       else
-        { key = key'; annot = annot'; value = value'; comments = comments' }
+        { key = key'; annot = annot'; value = value'; comments = comments'; invalid_syntax }
 
     method return _loc (stmt : ('loc, 'loc) Ast.Statement.Return.t) =
       let open Ast.Statement.Return in

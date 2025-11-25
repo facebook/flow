@@ -597,5 +597,39 @@ References:
               ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------- invalid-declaration-syntax.js:4:14
 
-Found 39 errors
+Record declarations use commas `,` to separate properties. To fix, replace the `;` with `,`. [record-invalid-syntax]
+
+   4|     a: number;
+                   ^
+
+
+Error ------------------------------------------------------------------------------- invalid-declaration-syntax.js:9:25
+
+Record declarations use commas `,` to separate properties. To fix, replace the `;` with `,`. [record-invalid-syntax]
+
+   9|     static a: number = 1;
+                              ^
+
+
+Error ------------------------------------------------------------------------------ invalid-declaration-syntax.js:15:10
+
+Record declarations use commas `,` to separate properties. To fix, replace the `;` with `,`. At [1] [2].
+[record-invalid-syntax]
+
+   invalid-declaration-syntax.js:15:10
+   15|   record R {
+                ^
+
+References:
+   invalid-declaration-syntax.js:17:27
+   17|     static b: string = 's';
+                                 ^ [1]
+   invalid-declaration-syntax.js:16:14
+   16|     a: number;
+                    ^ [2]
+
+
+
+Found 42 errors

@@ -2584,7 +2584,16 @@ and class_base
   group [decorator_parts; source_location_with_comments ?comments (loc, group parts)]
 
 and record_property
-    ~opts (loc, { Ast.Statement.RecordDeclaration.Property.key; annot; default_value; comments }) =
+    ~opts
+    ( loc,
+      {
+        Ast.Statement.RecordDeclaration.Property.key;
+        annot;
+        default_value;
+        invalid_syntax = _;
+        comments;
+      }
+    ) =
   let default_value =
     match default_value with
     | Some expr -> fuse [pretty_space; Atom "="; pretty_space; expression ~opts expr]
@@ -2595,7 +2604,16 @@ and record_property
     (loc, group [identifier key; type_annotation ~opts annot; default_value; Atom ","])
 
 and record_static_property
-    ~opts (loc, { Ast.Statement.RecordDeclaration.StaticProperty.key; annot; value; comments }) =
+    ~opts
+    ( loc,
+      {
+        Ast.Statement.RecordDeclaration.StaticProperty.key;
+        annot;
+        value;
+        invalid_syntax = _;
+        comments;
+      }
+    ) =
   source_location_with_comments
     ?comments
     ( loc,

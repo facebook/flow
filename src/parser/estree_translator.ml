@@ -179,8 +179,10 @@ with type t = Impl.t = struct
           loc
           [("discriminant", expression discriminant); ("cases", array_of_list case cases)]
       | (loc, RecordDeclaration { RecordDeclaration.id; tparams; implements; body; comments }) ->
-        let record_property (loc, { RecordDeclaration.Property.key; annot; default_value; comments })
-            =
+        let record_property
+            ( loc,
+              { RecordDeclaration.Property.key; annot; default_value; comments; invalid_syntax = _ }
+            ) =
           let key = identifier key in
           node
             ?comments
@@ -193,7 +195,9 @@ with type t = Impl.t = struct
             ]
         in
         let record_static_property
-            (loc, { RecordDeclaration.StaticProperty.key; annot; value; comments }) =
+            ( loc,
+              { RecordDeclaration.StaticProperty.key; annot; value; comments; invalid_syntax = _ }
+            ) =
           let key = identifier key in
           node
             ?comments

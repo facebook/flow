@@ -827,7 +827,13 @@ let class_of_record : 'loc. ('loc, 'loc) Statement.RecordDeclaration.t -> ('loc,
         | RecordDeclaration.Body.Method method_ ->
           (Class.Body.Method method_ :: class_body_elements, constructor_props)
         | RecordDeclaration.Body.Property (prop_loc, prop) ->
-          let { RecordDeclaration.Property.key; annot; default_value; comments = prop_comments } =
+          let {
+            RecordDeclaration.Property.key;
+            annot;
+            default_value;
+            comments = prop_comments;
+            invalid_syntax = _;
+          } =
             prop
           in
           let value =
@@ -872,6 +878,7 @@ let class_of_record : 'loc. ('loc, 'loc) Statement.RecordDeclaration.t -> ('loc,
             annot;
             value = init_expr;
             comments = prop_comments;
+            invalid_syntax = _;
           } =
             static_prop
           in
@@ -1001,6 +1008,7 @@ let record_of_class :
                     annot;
                     value = init_expr;
                     comments = prop_comments;
+                    invalid_syntax = None;
                   }
                 )
               in
@@ -1027,6 +1035,7 @@ let record_of_class :
                     annot;
                     default_value;
                     comments = prop_comments;
+                    invalid_syntax = None;
                   }
                 )
               in

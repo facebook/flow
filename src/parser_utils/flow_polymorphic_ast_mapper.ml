@@ -2701,26 +2701,48 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | StaticProperty (annot, prop) ->
         StaticProperty (this#on_type_annot annot, this#record_static_property prop)
 
+    method record_invalid_property_syntax
+        (invalid_syntax : 'M Ast.Statement.RecordDeclaration.InvalidPropertySyntax.t)
+        : 'N Ast.Statement.RecordDeclaration.InvalidPropertySyntax.t =
+      let open Ast.Statement.RecordDeclaration.InvalidPropertySyntax in
+      let { invalid_suffix_semicolon } = invalid_syntax in
+      let invalid_suffix_semicolon' = Option.map ~f:this#on_loc_annot invalid_suffix_semicolon in
+      { invalid_suffix_semicolon = invalid_suffix_semicolon' }
+
     method record_property (prop : ('M, 'T) Ast.Statement.RecordDeclaration.Property.t')
         : ('N, 'U) Ast.Statement.RecordDeclaration.Property.t' =
       let open Ast.Statement.RecordDeclaration.Property in
-      let { key; annot; default_value; comments } = prop in
+      let { key; annot; default_value; invalid_syntax; comments } = prop in
       let key' = this#t_identifier key in
       let annot' = this#type_annotation annot in
       let default_value' = Base.Option.map ~f:this#expression default_value in
+      let invalid_syntax' = Base.Option.map ~f:this#record_invalid_property_syntax invalid_syntax in
       let comments' = this#syntax_opt comments in
-      { key = key'; annot = annot'; default_value = default_value'; comments = comments' }
+      {
+        key = key';
+        annot = annot';
+        default_value = default_value';
+        invalid_syntax = invalid_syntax';
+        comments = comments';
+      }
 
     method record_static_property
         (prop : ('M, 'T) Ast.Statement.RecordDeclaration.StaticProperty.t')
         : ('N, 'U) Ast.Statement.RecordDeclaration.StaticProperty.t' =
       let open Ast.Statement.RecordDeclaration.StaticProperty in
-      let { key; annot; value; comments } = prop in
+      let { key; annot; value; invalid_syntax; comments } = prop in
       let key' = this#t_identifier key in
       let annot' = this#type_annotation annot in
       let value' = this#expression value in
+      let invalid_syntax' = Base.Option.map ~f:this#record_invalid_property_syntax invalid_syntax in
       let comments' = this#syntax_opt comments in
-      { key = key'; annot = annot'; value = value'; comments = comments' }
+      {
+        key = key';
+        annot = annot';
+        value = value';
+        invalid_syntax = invalid_syntax';
+        comments = comments';
+      }
 
     method return (stmt : ('M, 'T) Ast.Statement.Return.t) : ('N, 'U) Ast.Statement.Return.t =
       let open Ast.Statement.Return in

@@ -5434,6 +5434,27 @@ let to_printable_error :
         code "TypeUtil<{...MyRecord}>";
         text ".";
       ]
+    | MessageRecordDeclarationInvalidSyntax kind ->
+      let msg_invalid_suffix_semicolon =
+        [
+          text "Record declarations use commas ";
+          code ",";
+          text " to separate properties. ";
+          text "To fix, replace the ";
+          code ";";
+          text " with ";
+          code ",";
+          text ".";
+        ]
+      in
+      (match kind with
+      | InvalidRecordDeclarationSyntaxMultiple { invalid_suffix_semicolon_locs } ->
+        let msg_with_locs msg locs =
+          let refs = Base.List.map locs ~f:(fun loc -> no_desc_ref loc) in
+          msg @ [text " At"] @ refs @ [text "."]
+        in
+        msg_with_locs msg_invalid_suffix_semicolon invalid_suffix_semicolon_locs
+      | InvalidRecordDeclarationSyntaxSuffixSemicolon -> msg_invalid_suffix_semicolon)
     | MessageIncompatiblETypeParamConstIncompatibility { lower; upper } ->
       [
         text "type parameters ";

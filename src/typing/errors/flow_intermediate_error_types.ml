@@ -116,6 +116,10 @@ type 'loc match_invalid_case_syntax =
   | InvalidMatchCaseInfixColon
   | InvalidMatchCaseSuffixSemicolon
 
+type 'loc record_declaration_invalid_syntax =
+  | InvalidRecordDeclarationSyntaxMultiple of { invalid_suffix_semicolon_locs: 'loc list }
+  | InvalidRecordDeclarationSyntaxSuffixSemicolon
+
 type 'loc invalid_render_type_kind =
   | InvalidRendersNullVoidFalse
   | InvalidRendersIterable
@@ -1176,6 +1180,7 @@ type 'loc message =
       reason_op: 'loc virtual_reason;
       reason_record: 'loc virtual_reason;
     }
+  | MessageRecordDeclarationInvalidSyntax of 'loc record_declaration_invalid_syntax
   | MessageConstantCondition of {
       is_truthy: bool;
       show_warning: bool;

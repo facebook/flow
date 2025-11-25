@@ -1794,10 +1794,26 @@ module Make
       ) else
         let {
           Ast.Statement.RecordDeclaration.id = (name_loc, { Ast.Identifier.name; comments = _ });
+          body = (_, { Ast.Statement.RecordDeclaration.Body.body = elements; comments = _ });
           _;
         } =
           record
         in
+        let invalid_syntax_list =
+          Base.List.filter_map elements ~f:(fun element ->
+              match element with
+              | Ast.Statement.RecordDeclaration.Body.Method _ -> None
+              | Ast.Statement.RecordDeclaration.Body.Property
+                  (_, { Ast.Statement.RecordDeclaration.Property.invalid_syntax; _ })
+              | Ast.Statement.RecordDeclaration.Body.StaticProperty
+                  (_, { Ast.Statement.RecordDeclaration.StaticProperty.invalid_syntax; _ }) ->
+                invalid_syntax
+          )
+        in
+        error_on_record_declaration_invalid_syntax
+          cx
+          ~multiple_error_loc:name_loc
+          invalid_syntax_list;
         let name = OrdinaryName name in
         let reason = DescFormat.instance_reason name name_loc in
         let tast_record_type = Type_env.read_declared_type cx reason name_loc in
@@ -9213,6 +9229,51 @@ module Make
                    invalid_infix_colon_locs;
                    invalid_suffix_semicolon_locs;
                  };
+           }
+        )
+
+  and error_on_record_declaration_invalid_syntax
+      cx
+      ~multiple_error_loc
+      (invalid_syntax_list :
+        ALoc.t Flow_ast.Statement.RecordDeclaration.InvalidPropertySyntax.t list
+        ) : unit =
+    let error_locs =
+      Base.List.fold invalid_syntax_list ~init:[] ~f:(fun suffix_acc invalid_syntax ->
+          let {
+            Flow_ast.Statement.RecordDeclaration.InvalidPropertySyntax.invalid_suffix_semicolon;
+          } =
+            invalid_syntax
+          in
+          let suffix_acc =
+            Base.Option.value_map invalid_suffix_semicolon ~default:suffix_acc ~f:(fun loc ->
+                loc :: suffix_acc
+            )
+          in
+          suffix_acc
+      )
+    in
+    (* If we only have one error in this `record`, error there, otherwise coalesce into a single error. *)
+    match error_locs with
+    | [] -> ()
+    | [loc] ->
+      Flow.add_output
+        cx
+        (Error_message.ERecordDeclarationInvalidSyntax
+           {
+             loc;
+             kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxSuffixSemicolon;
+           }
+        )
+    | invalid_suffix_semicolon_locs ->
+      Flow.add_output
+        cx
+        (Error_message.ERecordDeclarationInvalidSyntax
+           {
+             loc = multiple_error_loc;
+             kind =
+               Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxMultiple
+                 { invalid_suffix_semicolon_locs };
            }
         )
 

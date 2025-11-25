@@ -1235,8 +1235,14 @@ module Object
           match Peek.token env with
           | T_EOF
           | T_RCURLY ->
-            ()
-          | _ -> Expect.token env T_COMMA
+            None
+          | T_SEMICOLON ->
+            let semicolon_loc = Peek.loc env in
+            Eat.token env;
+            Some { InvalidPropertySyntax.invalid_suffix_semicolon = Some semicolon_loc }
+          | _ ->
+            Expect.token env T_COMMA;
+            None
         in
         (match Peek.token env with
         | T_COLON when static ->
@@ -1248,9 +1254,9 @@ module Object
                 let annot = Type.annotation env in
                 Expect.token env T_ASSIGN;
                 let value = Expression.assignment env in
-                end_property ();
+                let invalid_syntax = end_property () in
                 let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-                { StaticProperty.key; annot; value; comments })
+                { StaticProperty.key; annot; value; comments; invalid_syntax })
               env
           in
           elements env (Body.StaticProperty prop :: acc)
@@ -1267,21 +1273,22 @@ module Object
                   else
                     None
                 in
-                end_property ();
+                let invalid_syntax = end_property () in
                 let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-                { Property.key; annot; default_value; comments })
+                { Property.key; annot; default_value; comments; invalid_syntax })
               env
           in
           elements env (Body.Property prop :: acc)
+        | T_SEMICOLON
         | T_COMMA ->
           error_at env (key_loc, Parse_error.RecordPropertyAnnotationRequired);
-          end_property ();
+          ignore @@ end_property ();
           elements env acc
         | T_ASSIGN ->
           error_at env (key_loc, Parse_error.RecordPropertyAnnotationRequired);
           Eat.token env;
           ignore @@ Expression.assignment env;
-          end_property ();
+          ignore @@ end_property ();
           elements env acc
         | _ ->
           check_invalid_name env ~method_:true;

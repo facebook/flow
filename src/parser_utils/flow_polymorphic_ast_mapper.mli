@@ -800,6 +800,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.RecordDeclaration.Body.element ->
       ('N, 'U) Ast.Statement.RecordDeclaration.Body.element
 
+    method record_invalid_property_syntax :
+      'M Ast.Statement.RecordDeclaration.InvalidPropertySyntax.t ->
+      'N Ast.Statement.RecordDeclaration.InvalidPropertySyntax.t
+
     method record_property :
       ('M, 'T) Ast.Statement.RecordDeclaration.Property.t' ->
       ('N, 'U) Ast.Statement.RecordDeclaration.Property.t'

@@ -1077,6 +1077,10 @@ and Statement : sig
   end
 
   module RecordDeclaration : sig
+    module InvalidPropertySyntax : sig
+      type 'M t = { invalid_suffix_semicolon: 'M option } [@@deriving show]
+    end
+
     module Property : sig
       type ('M, 'T) t = 'T * ('M, 'T) t'
 
@@ -1085,6 +1089,7 @@ and Statement : sig
         annot: ('M, 'T) Type.annotation;
         default_value: ('M, 'T) Expression.t option;
         comments: ('M, unit) Syntax.t option;
+        invalid_syntax: 'M InvalidPropertySyntax.t option;
       }
       [@@deriving show]
     end
@@ -1097,6 +1102,7 @@ and Statement : sig
         annot: ('M, 'T) Type.annotation;
         value: ('M, 'T) Expression.t;
         comments: ('M, unit) Syntax.t option;
+        invalid_syntax: 'M InvalidPropertySyntax.t option;
       }
       [@@deriving show]
     end
