@@ -3293,7 +3293,7 @@ module Make
         let (props_t, props_ast) =
           object_ ~frozen:(frozen = FrozenDirect) ~as_const ~has_hint cx props_loc properties
         in
-        let props_t = mod_reason_of_t (replace_desc_reason RRecord) props_t in
+        let props_t = mod_reason_of_t (replace_desc_reason RRecordProperties) props_t in
         let use_op =
           Op
             (RecordCreate
@@ -7755,6 +7755,108 @@ module Make
             implements_ast
           )
         in
+        let mk_record_constructor cx tparams_map_with_this elements record_name name_loc =
+          (* Build an object type with properties for each instance field. *)
+          let props =
+            List.fold_left
+              (fun acc elem ->
+                let open Ast.Class in
+                match elem with
+                | Body.Property
+                    ( _,
+                      {
+                        Property.key =
+                          Ast.Expression.Object.Property.Identifier
+                            (id_loc, { Ast.Identifier.name; _ });
+                        annot;
+                        value;
+                        static = false;
+                        _;
+                      }
+                    ) ->
+                  let has_initializer =
+                    match value with
+                    | Property.Initialized _ -> true
+                    | Property.Declared
+                    | Property.Uninitialized ->
+                      false
+                  in
+                  let field_t =
+                    match annot with
+                    | Ast.Type.Available annot ->
+                      let (t, _) =
+                        Anno.mk_type_available_annotation cx tparams_map_with_this annot
+                      in
+                      t
+                    | Ast.Type.Missing loc -> AnyT.at (AnyError None) loc
+                  in
+                  (* Create an optional property if it has an initializer (i.e. has a default value). *)
+                  let prop_t =
+                    if has_initializer then
+                      let field_reason = mk_reason (RProperty (Some (OrdinaryName name))) id_loc in
+                      Type.OptionalT
+                        {
+                          reason = mk_reason (ROptional (desc_of_reason field_reason)) id_loc;
+                          type_ = field_t;
+                          use_desc = false;
+                        }
+                    else
+                      field_t
+                  in
+                  let prop =
+                    Field
+                      {
+                        preferred_def_locs = None;
+                        key_loc = Some id_loc;
+                        type_ = prop_t;
+                        polarity = Polarity.Positive;
+                      }
+                  in
+                  NameUtils.Map.add (OrdinaryName name) prop acc
+                | _ -> acc)
+              NameUtils.Map.empty
+              elements
+          in
+          let record_reason = mk_reason (RRecordType record_name) name_loc in
+          let obj_t =
+            Obj_type.mk_with_proto
+              cx
+              record_reason
+              ~obj_kind:Type.Exact
+              ~props
+              (Type.NullProtoT record_reason)
+          in
+          let param =
+            Func_stmt_config_types.Types.Param
+              {
+                t = obj_t;
+                loc = name_loc;
+                ploc = name_loc;
+                pattern =
+                  Func_stmt_config_types.Types.Object
+                    { annot = Ast.Type.Missing (name_loc, obj_t); properties = []; comments = None };
+                default = None;
+                has_anno = false;
+              }
+          in
+          {
+            Func_stmt_sig_types.reason = mk_reason RConstructor name_loc;
+            kind = Func_class_sig_types.Func.Ctor;
+            tparams = None;
+            fparams =
+              {
+                Func_stmt_params_types.params_rev = [param];
+                rest = None;
+                this_ = None;
+                reconstruct = (fun _ _ _ -> None);
+              };
+            body = None;
+            return_t = Type.Inferred (Type.VoidT.at name_loc);
+            effect_ = Type.ArbitraryEffect;
+            ret_annot_loc = name_loc;
+            statics = None;
+          }
+        in
         (* In case there is no constructor, pick up a default one. *)
         let class_sig =
           if extends <> None then
@@ -7763,6 +7865,12 @@ module Make
                inheritance machinery. *)
             (* TODO: Does this distinction matter for the type checker? *)
             class_sig
+          else if inst_kind = RecordKind then
+            let record_name = class_name |> Base.Option.value_exn in
+            let func_sig =
+              mk_record_constructor cx tparams_map_with_this elements record_name name_loc
+            in
+            Class_stmt_sig.add_constructor ~id_loc:None ~func_sig class_sig
           else
             let reason = replace_desc_reason RDefaultConstructor reason in
             Class_stmt_sig.add_default_constructor reason class_sig

@@ -108,7 +108,8 @@ type 'loc virtual_reason_desc =
   | RConstructor
   | RDefaultConstructor
   | RConstructorCall of 'loc virtual_reason_desc
-  | RRecord
+  | RRecordProperties
+  | RRecordType of string
   | RReturn
   | RRegExp
   | RSuper
@@ -307,6 +308,8 @@ val is_literal_object_reason : 'loc virtual_reason -> bool
 val is_literal_array_reason : 'loc virtual_reason -> bool
 
 val is_literal_function_reason : 'loc virtual_reason -> bool
+
+val is_record_reason : 'loc virtual_reason -> bool
 
 val is_lib_reason : reason -> bool
 

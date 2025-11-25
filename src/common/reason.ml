@@ -140,7 +140,8 @@ type 'loc virtual_reason_desc =
   | RConstructor
   | RDefaultConstructor
   | RConstructorCall of 'loc virtual_reason_desc
-  | RRecord
+  | RRecordProperties
+  | RRecordType of string
   | RReturn
   | RRegExp
   | RSuper
@@ -305,20 +306,20 @@ let rec map_desc_locs f = function
   | ( RTemplateString | RUnknownString | RUnionEnum | REnum _ | RThis | RThisType
     | RImplicitInstantiation | RConstructorVoidReturn | RUnion | RUnionType | RIntersection
     | RIntersectionType | RKeySet | RAnd | RConditional | RPrototype | RObjectPrototype
-    | RFunctionPrototype | RDestructuring | RDefaultValue | RConstructor | RRecord | RReturn
-    | RDefaultConstructor | RRegExp | RSuper | RDummyPrototype | RDummyThis | RType _ | RTypeof _
-    | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _ | RPatternParameter _
-    | RIdentifier _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _ | RMember _
-    | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _ | RUndefinedProperty _
-    | RSomeProperty | RNamedImportedType _ | RImportStarType _ | RImportStarTypeOf _ | RImportStar _
-    | RDefaultImportedType _ | RAsyncImport | RCode _ | RCustom _ | RNonnullAssert | RMixins
-    | RUnaryMinus | RUnaryNot | RRest | RGlobalObject | RProviders | RForOfElement | RUpdate
-    | RUnusedYield | RUnusedReturn | RCommonInterface | RContextualVariable | RNext
-    | RModuleReference | RNewFunction | RNewArray | RArrayLength | RImportMeta | RAwait
-    | RAsyncReturn | RCallableObjectType | RClassExtends | RClassMixins | RReactKey | RNoProviders
-    | RIncompatibleInstantiation _ | ROpaqueType _ | RObjectKeyMirror | RIndexedAccess _
-    | RConditionalType | RRendersNothing | RAutocompleteToken | RMatch | RMatchPattern
-    | RMatchWildcard ) as r ->
+    | RFunctionPrototype | RDestructuring | RDefaultValue | RConstructor | RRecordProperties
+    | RRecordType _ | RReturn | RDefaultConstructor | RRegExp | RSuper | RDummyPrototype
+    | RDummyThis | RType _ | RTypeof _ | RMethod _ | RMethodCall _ | RParameter _ | RRestParameter _
+    | RPatternParameter _ | RIdentifier _ | RPropertyAssignment _ | RProperty _ | RPrivateProperty _
+    | RMember _ | RPropertyIsAString _ | RMissingProperty _ | RUnknownProperty _
+    | RUndefinedProperty _ | RSomeProperty | RNamedImportedType _ | RImportStarType _
+    | RImportStarTypeOf _ | RImportStar _ | RDefaultImportedType _ | RAsyncImport | RCode _
+    | RCustom _ | RNonnullAssert | RMixins | RUnaryMinus | RUnaryNot | RRest | RGlobalObject
+    | RProviders | RForOfElement | RUpdate | RUnusedYield | RUnusedReturn | RCommonInterface
+    | RContextualVariable | RNext | RModuleReference | RNewFunction | RNewArray | RArrayLength
+    | RImportMeta | RAwait | RAsyncReturn | RCallableObjectType | RClassExtends | RClassMixins
+    | RReactKey | RNoProviders | RIncompatibleInstantiation _ | ROpaqueType _ | RObjectKeyMirror
+    | RIndexedAccess _ | RConditionalType | RRendersNothing | RAutocompleteToken | RMatch
+    | RMatchPattern | RMatchWildcard ) as r ->
     r
   | RConstructorCall desc -> RConstructorCall (map_desc_locs f desc)
   | RTypeAlias (s, None, d) -> RTypeAlias (s, None, map_desc_locs f d)
@@ -676,7 +677,8 @@ let rec string_of_desc = function
   | RConstructorCall (RPolyType (RClass d)) -> string_of_desc d
   | RConstructorCall (RClass d) -> string_of_desc d
   | RConstructorCall d -> spf "new %s" (string_of_desc d)
-  | RRecord -> "record"
+  | RRecordProperties -> "record properties"
+  | RRecordType name -> spf "record `%s`" name
   | RReturn -> "return"
   | RRegExp -> "regexp"
   | RSuper -> "super"
@@ -902,6 +904,11 @@ let is_literal_array_reason r =
 let is_literal_function_reason r =
   match desc_of_reason r with
   | RFunction _ -> true
+  | _ -> false
+
+let is_record_reason r =
+  match desc_of_reason r with
+  | RRecordType _ -> true
   | _ -> false
 
 let is_lib_reason r =
@@ -1470,7 +1477,8 @@ let classification_of_reason_desc desc =
   | RConstructor
   | RDefaultConstructor
   | RConstructorCall _
-  | RRecord
+  | RRecordProperties
+  | RRecordType _
   | RReturn
   | RSuper
   | RDummyPrototype

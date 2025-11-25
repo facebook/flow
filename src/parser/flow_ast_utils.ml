@@ -820,12 +820,11 @@ let class_of_record : 'loc. ('loc, 'loc) Statement.RecordDeclaration.t -> ('loc,
     record
   in
   let { RecordDeclaration.Body.body = record_body; comments = body_comments } = body_details in
-  let (class_body_elements_rev, constructor_props_rev) =
-    List.fold_left
-      (fun (class_body_elements, constructor_props) element ->
+  let class_body_elements =
+    List.map
+      (fun element ->
         match element with
-        | RecordDeclaration.Body.Method method_ ->
-          (Class.Body.Method method_ :: class_body_elements, constructor_props)
+        | RecordDeclaration.Body.Method method_ -> Class.Body.Method method_
         | RecordDeclaration.Body.Property (prop_loc, prop) ->
           let {
             RecordDeclaration.Property.key;
@@ -842,36 +841,18 @@ let class_of_record : 'loc. ('loc, 'loc) Statement.RecordDeclaration.t -> ('loc,
             | None -> Class.Property.Uninitialized
           in
           let variance = Some (prop_loc, { Variance.kind = Variance.Plus; comments = None }) in
-          let class_prop =
-            Class.Body.Property
-              ( prop_loc,
-                {
-                  Class.Property.key = E.Object.Property.Identifier key;
-                  value;
-                  annot = Type.Available annot;
-                  static = false;
-                  variance;
-                  decorators = [];
-                  comments = prop_comments;
-                }
-              )
-          in
-          let constructor_prop =
-            Type.Object.Property
-              ( prop_loc,
-                {
-                  Type.Object.Property.key = E.Object.Property.Identifier key;
-                  value = Type.Object.Property.Init (snd annot);
-                  optional = Option.is_some default_value;
-                  static = false;
-                  proto = false;
-                  _method = false;
-                  variance;
-                  comments = prop_comments;
-                }
-              )
-          in
-          (class_prop :: class_body_elements, constructor_prop :: constructor_props)
+          Class.Body.Property
+            ( prop_loc,
+              {
+                Class.Property.key = E.Object.Property.Identifier key;
+                value;
+                annot = Type.Available annot;
+                static = false;
+                variance;
+                decorators = [];
+                comments = prop_comments;
+              }
+            )
         | RecordDeclaration.Body.StaticProperty (prop_loc, static_prop) ->
           let {
             RecordDeclaration.StaticProperty.key;
@@ -882,87 +863,20 @@ let class_of_record : 'loc. ('loc, 'loc) Statement.RecordDeclaration.t -> ('loc,
           } =
             static_prop
           in
-          let class_static_prop =
-            Class.Body.Property
-              ( prop_loc,
-                {
-                  Class.Property.key = E.Object.Property.Identifier key;
-                  value = Class.Property.Initialized init_expr;
-                  annot = Type.Available annot;
-                  static = true;
-                  variance = Some (prop_loc, { Variance.kind = Variance.Plus; comments = None });
-                  decorators = [];
-                  comments = prop_comments;
-                }
-              )
-          in
-          (class_static_prop :: class_body_elements, constructor_props))
-      ([], [])
+          Class.Body.Property
+            ( prop_loc,
+              {
+                Class.Property.key = E.Object.Property.Identifier key;
+                value = Class.Property.Initialized init_expr;
+                annot = Type.Available annot;
+                static = true;
+                variance = Some (prop_loc, { Variance.kind = Variance.Plus; comments = None });
+                decorators = [];
+                comments = prop_comments;
+              }
+            ))
       record_body
   in
-  (* For `record R {a: number, b: string = ''}` we derive `constructor(fields: {a: number, b?: string})` *)
-  let constructor =
-    let param_type =
-      ( body_loc,
-        Type.Object
-          {
-            Type.Object.exact = true;
-            inexact = false;
-            properties = List.rev constructor_props_rev;
-            comments = None;
-          }
-      )
-    in
-    let param =
-      ( body_loc,
-        {
-          Function.Param.argument =
-            ( body_loc,
-              Pattern.Identifier
-                {
-                  Pattern.Identifier.name =
-                    (body_loc, { Identifier.name = "fields"; comments = None });
-                  annot = Type.Available (body_loc, param_type);
-                  optional = false;
-                }
-            );
-          default = None;
-        }
-      )
-    in
-    let params =
-      (body_loc, { Function.Params.this_ = None; params = [param]; rest = None; comments = None })
-    in
-    let func =
-      {
-        Function.id = None;
-        params;
-        body = Function.BodyBlock (body_loc, { Statement.Block.body = []; comments = None });
-        async = false;
-        generator = false;
-        effect_ = Function.Arbitrary;
-        predicate = None;
-        return = Function.ReturnAnnot.Missing body_loc;
-        tparams = None;
-        comments = None;
-        sig_loc = body_loc;
-      }
-    in
-    Class.Body.Method
-      ( body_loc,
-        {
-          Class.Method.kind = Class.Method.Constructor;
-          key =
-            E.Object.Property.Identifier
-              (body_loc, { Identifier.name = "constructor"; comments = None });
-          value = (body_loc, func);
-          static = false;
-          decorators = [];
-          comments;
-        }
-      )
-  in
-  let class_body_elements = constructor :: List.rev class_body_elements_rev in
   let class_body =
     (body_loc, { Class.Body.body = class_body_elements; comments = body_comments })
   in

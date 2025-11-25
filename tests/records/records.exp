@@ -328,8 +328,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- declaration.js:467:9
 
-Cannot call `R` with `oB` bound to `fields` because property `a` is missing in object literal [1] but exists in object
-type [2]. [incompatible-type]
+Cannot call `R` with `oB` bound to the first parameter because property `a` is missing in object literal [1] but exists
+in record `R` [2]. [incompatible-type]
 
    declaration.js:467:9
    467|   new R(oB); // ERROR: missing `a`
@@ -339,19 +339,15 @@ References:
    declaration.js:463:14
    463|   const oB = {b: 's'};
                      ^^^^^^^^ [1]
-   declaration.js:457:12
-                   v
+   declaration.js:457:10
    457|   record R {
-   458|     a: number,
-   459|     b: string,
-   460|   }
-          ^ [2]
+                 ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- declaration.js:468:9
 
-Cannot call `R` with `oEmpty` bound to `fields` because properties `a` and `b` are missing in object literal [1] but
-exist in object type [2]. [incompatible-type]
+Cannot call `R` with `oEmpty` bound to the first parameter because properties `a` and `b` are missing in object
+literal [1] but exist in record `R` [2]. [incompatible-type]
 
    declaration.js:468:9
    468|   new R(oEmpty); // ERROR: missing `a` and `b`
@@ -361,19 +357,15 @@ References:
    declaration.js:462:18
    462|   const oEmpty = {};
                          ^^ [1]
-   declaration.js:457:12
-                   v
+   declaration.js:457:10
    457|   record R {
-   458|     a: number,
-   459|     b: string,
-   460|   }
-          ^ [2]
+                 ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- declaration.js:480:9
 
-Cannot call `R` with `oExtra` bound to `fields` because property `xxx` is extra in object literal [1] but missing in
-object type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot call `R` with `oExtra` bound to the first parameter because property `xxx` is extra in object literal [1] but
+missing in record `R` [2]. Records do not accept extra props. [incompatible-type]
 
    declaration.js:480:9
    480|   new R(oExtra); // ERROR
@@ -383,19 +375,15 @@ References:
    declaration.js:479:18
    479|   const oExtra = {a: 1, b: 's', xxx: false};
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   declaration.js:457:12
-                   v
+   declaration.js:457:10
    457|   record R {
-   458|     a: number,
-   459|     b: string,
-   460|   }
-          ^ [2]
+                 ^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- declaration.js:481:12
 
-Cannot call `ROpt` with `oExtra` bound to `fields` because property `xxx` is extra in object literal [1] but missing in
-object type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot call `ROpt` with `oExtra` bound to the first parameter because property `xxx` is extra in object literal [1] but
+missing in record `ROpt` [2]. Records do not accept extra props. [incompatible-type]
 
    declaration.js:481:12
    481|   new ROpt(oExtra); // ERROR
@@ -405,13 +393,9 @@ References:
    declaration.js:479:18
    479|   const oExtra = {a: 1, b: 's', xxx: false};
                          ^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   declaration.js:470:15
-                      v
+   declaration.js:470:10
    470|   record ROpt {
-   471|     a: number = 0,
-   472|     b: string = '',
-   473|   }
-          ^ [2]
+                 ^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- declaration.js:488:5
@@ -453,17 +437,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ expression.js:7:5
 
-Cannot create record `R` because property `xxx` is extra in record [1] but missing in object type [2]. Exact objects do
-not accept extra props. [incompatible-type]
+Cannot create record `R` because property `xxx` is extra in record properties [1] but missing in record `R` [2]. Records
+do not accept extra props. [incompatible-type]
 
    expression.js:7:5
    7|   R {xxx: 0}; // ERROR: extra field `xxx`
           ^^^^^^^^ [1]
 
 References:
-   expression.js:3:12
+   expression.js:3:10
    3|   record R {}
-                 ^^ [2]
+               ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- expression.js:33:15
@@ -482,7 +466,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- expression.js:43:5
 
-Cannot create record `R` because property `b` is missing in record [1] but exists in object type [2].
+Cannot create record `R` because property `b` is missing in record properties [1] but exists in record `R` [2].
 [incompatible-type]
 
    expression.js:43:5
@@ -490,18 +474,14 @@ Cannot create record `R` because property `b` is missing in record [1] but exist
            ^^^^^^ [1]
 
 References:
-   expression.js:38:12
-                  v
+   expression.js:38:10
    38|   record R {
-   39|     a: number,
-   40|     b: string,
-   41|   }
-         ^ [2]
+                ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:44:5
 
-Cannot create record `R` because property `a` is missing in record [1] but exists in object type [2].
+Cannot create record `R` because property `a` is missing in record properties [1] but exists in record `R` [2].
 [incompatible-type]
 
    expression.js:44:5
@@ -509,50 +489,39 @@ Cannot create record `R` because property `a` is missing in record [1] but exist
            ^^^^^^^^ [1]
 
 References:
-   expression.js:38:12
-                  v
+   expression.js:38:10
    38|   record R {
-   39|     a: number,
-   40|     b: string,
-   41|   }
-         ^ [2]
+                ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:45:5
 
-Cannot create record `R` because properties `a` and `b` are missing in record [1] but exist in object type [2].
-[incompatible-type]
+Cannot create record `R` because properties `a` and `b` are missing in record properties [1] but exist in record
+`R` [2]. [incompatible-type]
 
    expression.js:45:5
    45|   R {}; // ERROR: missing `a` and `b`
            ^^ [1]
 
 References:
-   expression.js:38:12
-                  v
+   expression.js:38:10
    38|   record R {
-   39|     a: number,
-   40|     b: string,
-   41|   }
-         ^ [2]
+                ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:54:5
 
-Cannot create record `R` because property `b` is extra in record [1] but missing in object type [2]. Exact objects do
-not accept extra props. [incompatible-type]
+Cannot create record `R` because property `b` is extra in record properties [1] but missing in record `R` [2]. Records
+do not accept extra props. [incompatible-type]
 
    expression.js:54:5
    54|   R {a: 1, b: 's'}; // ERROR: extra field `b`
            ^^^^^^^^^^^^^^ [1]
 
 References:
-   expression.js:50:12
-                  v
+   expression.js:50:10
    50|   record R {
-   51|     a: number,
-   52|   }
-         ^ [2]
+                ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- expression.js:64:9

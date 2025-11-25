@@ -3339,7 +3339,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let arg_list =
         (constructor_loc, { Ast.Expression.ArgList.arguments = [arg]; comments = None })
       in
-      let call_reason = mk_reason RRecord constructor_loc in
+      let call_reason = mk_reason RRecordProperties constructor_loc in
       this#visit_call_arguments
         ~call_reason
         ~call_argumemts_hints

@@ -4363,6 +4363,12 @@ let to_printable_error :
         | [] -> false
         | _ :: _ -> true
       in
+      let upper_kind =
+        if is_record_reason upper then
+          "Records"
+        else
+          "Exact objects"
+      in
       prop_message
       @ [
           text " ";
@@ -4377,7 +4383,7 @@ let to_printable_error :
         ]
       @ [text " but missing in "]
       @ [ref upper]
-      @ [text ". Exact objects do not accept extra props"]
+      @ [text ". "; text upper_kind; text " do not accept extra props"]
     | MessagePropMissing { lower; upper; prop; suggestion; reason_indexer } ->
       (* If we were subtyping that add to the error message so our user knows what
        * object required the missing property. *)
