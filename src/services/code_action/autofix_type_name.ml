@@ -9,6 +9,13 @@ class mapper target_loc ~incorrect_name ~replacement_name =
   object (this)
     inherit Flow_ast_contains_mapper.mapper target_loc as super
 
+    method! type_ t =
+      let open Flow_ast.Type in
+      match t with
+      | (loc, Mixed comments) when incorrect_name = "mixed" && this#is_target loc ->
+        (loc, Unknown comments)
+      | _ -> super#type_ t
+
     method! generic_type loc t =
       let open Flow_ast.Type in
       let { Generic.id; targs; comments } = t in
