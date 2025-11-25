@@ -5441,6 +5441,22 @@ let to_printable_error :
           text "so don't allow variance annotations. Remove to fix.";
         ]
       in
+      let msg_invalid_optional =
+        [
+          text "Record declaration properties can't be optional. ";
+          text "Instead, you can specify a default value for the property using ";
+          code "= <expression>,";
+          text " after the type annotation. ";
+          text "This default value will be used if the property ";
+          text "is omitted when creating the record. ";
+          text "To closely mimic the existing behavior of an optional property, ";
+          text "you can change ";
+          code "foo?: T,";
+          text " to ";
+          code "foo: T | void = undefined,";
+          text ", though there is likely a better default value you could use instead.";
+        ]
+      in
       let msg_invalid_suffix_semicolon =
         [
           text "Record declarations use commas ";
@@ -5455,7 +5471,7 @@ let to_printable_error :
       in
       (match kind with
       | InvalidRecordDeclarationSyntaxMultiple
-          { invalid_variance_locs; invalid_suffix_semicolon_locs } ->
+          { invalid_variance_locs; invalid_optional_locs; invalid_suffix_semicolon_locs } ->
         let msg_with_locs msg locs =
           if Base.List.is_empty locs then
             None
@@ -5467,6 +5483,7 @@ let to_printable_error :
           Base.List.filter_opt
             [
               msg_with_locs msg_invalid_variance invalid_variance_locs;
+              msg_with_locs msg_invalid_optional invalid_optional_locs;
               msg_with_locs msg_invalid_suffix_semicolon invalid_suffix_semicolon_locs;
             ]
         in
@@ -5476,6 +5493,7 @@ let to_printable_error :
           text "Invalid record declaration syntax:"
           :: Base.List.concat_map multiple ~f:(fun x -> text "\n- " :: x))
       | InvalidRecordDeclarationSyntaxVariance -> msg_invalid_variance
+      | InvalidRecordDeclarationSyntaxOptional -> msg_invalid_optional
       | InvalidRecordDeclarationSyntaxSuffixSemicolon -> msg_invalid_suffix_semicolon)
     | MessageIncompatiblETypeParamConstIncompatibility { lower; upper } ->
       [

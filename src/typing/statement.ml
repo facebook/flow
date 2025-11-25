@@ -9241,10 +9241,11 @@ module Make
     let error_locs =
       Base.List.fold
         invalid_syntax_list
-        ~init:([], [])
-        ~f:(fun (variance_acc, suffix_acc) invalid_syntax ->
+        ~init:([], [], [])
+        ~f:(fun (variance_acc, optional_acc, suffix_acc) invalid_syntax ->
           let {
             Flow_ast.Statement.RecordDeclaration.InvalidPropertySyntax.invalid_variance;
+            invalid_optional;
             invalid_suffix_semicolon;
           } =
             invalid_syntax
@@ -9254,24 +9255,35 @@ module Make
                 loc :: variance_acc
             )
           in
+          let optional_acc =
+            Base.Option.value_map invalid_optional ~default:optional_acc ~f:(fun loc ->
+                loc :: optional_acc
+            )
+          in
           let suffix_acc =
             Base.Option.value_map invalid_suffix_semicolon ~default:suffix_acc ~f:(fun loc ->
                 loc :: suffix_acc
             )
           in
-          (variance_acc, suffix_acc)
+          (variance_acc, optional_acc, suffix_acc)
       )
     in
     (* If we only have one error in this `record`, error there, otherwise coalesce into a single error. *)
     match error_locs with
-    | ([], []) -> ()
-    | ([loc], []) ->
+    | ([], [], []) -> ()
+    | ([loc], [], []) ->
       Flow.add_output
         cx
         (Error_message.ERecordDeclarationInvalidSyntax
            { loc; kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxVariance }
         )
-    | ([], [loc]) ->
+    | ([], [loc], []) ->
+      Flow.add_output
+        cx
+        (Error_message.ERecordDeclarationInvalidSyntax
+           { loc; kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxOptional }
+        )
+    | ([], [], [loc]) ->
       Flow.add_output
         cx
         (Error_message.ERecordDeclarationInvalidSyntax
@@ -9280,7 +9292,7 @@ module Make
              kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxSuffixSemicolon;
            }
         )
-    | (invalid_variance_locs, invalid_suffix_semicolon_locs) ->
+    | (invalid_variance_locs, invalid_optional_locs, invalid_suffix_semicolon_locs) ->
       Flow.add_output
         cx
         (Error_message.ERecordDeclarationInvalidSyntax
@@ -9288,7 +9300,7 @@ module Make
              loc = multiple_error_loc;
              kind =
                Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxMultiple
-                 { invalid_variance_locs; invalid_suffix_semicolon_locs };
+                 { invalid_variance_locs; invalid_optional_locs; invalid_suffix_semicolon_locs };
            }
         )
 

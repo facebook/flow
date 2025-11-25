@@ -1241,13 +1241,26 @@ module Object
               (key_loc, Parse_error.RecordInvalidPropertyName { name = key_name; static; method_ })
         in
         let empty_invalid_syntax =
-          { InvalidPropertySyntax.invalid_suffix_semicolon = None; invalid_variance = None }
+          {
+            InvalidPropertySyntax.invalid_suffix_semicolon = None;
+            invalid_optional = None;
+            invalid_variance = None;
+          }
         in
         let invalid_syntax =
           Option.map
             (fun variance ->
               { empty_invalid_syntax with InvalidPropertySyntax.invalid_variance = Some variance })
             variance
+        in
+        let invalid_syntax =
+          if Peek.token env = T_PLING then (
+            let error_loc = Peek.loc env in
+            Eat.token env;
+            let invalid_syntax = Option.value invalid_syntax ~default:empty_invalid_syntax in
+            Some { invalid_syntax with InvalidPropertySyntax.invalid_optional = Some error_loc }
+          ) else
+            invalid_syntax
         in
         let end_property () =
           match Peek.token env with

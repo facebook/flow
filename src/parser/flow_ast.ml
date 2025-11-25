@@ -1080,6 +1080,7 @@ and Statement : sig
     module InvalidPropertySyntax : sig
       type 'M t = {
         invalid_variance: 'M Variance.t option;
+        invalid_optional: 'M option;
         invalid_suffix_semicolon: 'M option;
       }
       [@@deriving show]

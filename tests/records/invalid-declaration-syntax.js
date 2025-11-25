@@ -33,10 +33,25 @@
   }
 }
 
+// Optional: single
+{
+  record R {
+    a?: number, // ERROR
+  }
+}
+
+// Optional: multiple
+{
+  record R {
+    a?: number, // ERROR
+    b?: string, // ERROR
+  }
+}
+
 // Multiple different errors
 {
   record R {
-    +a: number; // ERROR
-    +b: string; // ERROR
+    +a?: number; // ERROR
+    +b?: string; // ERROR
   }
 }
