@@ -59,6 +59,8 @@ type hook_state_t = {
   obj_prop_decl_hook: Context.t -> string -> ALoc.t -> bool;
   (* Called when ObjT 1 ~> ObjT 2 *)
   obj_to_obj_hook: Context.t -> Type.t (* ObjT 1 *) -> Type.t (* ObjT 2 *) -> unit;
+  (* Flag to indicate if the current check is for IDE services *)
+  for_ide: bool;
 }
 
 let nop_hook_state =
@@ -68,6 +70,7 @@ let nop_hook_state =
     jsx_hook = jsx_nop;
     obj_prop_decl_hook = obj_prop_decl_nop;
     obj_to_obj_hook = obj_to_obj_nop;
+    for_ide = false;
   }
 
 let hook_state = ref nop_hook_state
@@ -82,6 +85,20 @@ let set_obj_prop_decl_hook hook = hook_state := { !hook_state with obj_prop_decl
 
 let set_obj_to_obj_hook hook = hook_state := { !hook_state with obj_to_obj_hook = hook }
 
+let set_for_ide flag = hook_state := { !hook_state with for_ide = flag }
+
+let with_for_ide ~enabled f =
+  let old_flag = !hook_state.for_ide in
+  set_for_ide enabled;
+  try
+    let result = f () in
+    set_for_ide old_flag;
+    result
+  with
+  | e ->
+    set_for_ide old_flag;
+    raise e
+
 let reset_hooks () = hook_state := nop_hook_state
 
 let dispatch_id_hook cx name loc = !hook_state.id_hook cx name loc
@@ -93,3 +110,5 @@ let dispatch_jsx_hook cx name loc = !hook_state.jsx_hook cx name loc
 let dispatch_obj_prop_decl_hook cx name loc = !hook_state.obj_prop_decl_hook cx name loc
 
 let dispatch_obj_to_obj_hook cx t1 t2 = !hook_state.obj_to_obj_hook cx t1 t2
+
+let is_for_ide () = !hook_state.for_ide

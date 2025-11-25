@@ -55,13 +55,5 @@ Unused suppression comment. [InferError]
        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
-Warning ------------------------------------------------------------------------------------------------------- B.js:1:1
 
-Unused suppression comment. [InferError]
-
-   1| // $FlowFixMe[incompatible-type]
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-
-
-Found 2 errors and 2 warnings
+Found 2 errors and 1 warning

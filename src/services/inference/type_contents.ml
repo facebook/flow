@@ -241,9 +241,19 @@ let check_contents ~options ~profiling ~reader master_cx filename docblock ast r
 
 let compute_env_of_contents
     ~options ~profiling ~reader master_cx filename docblock ast requires file_sig =
-  with_timer ~options "MergeContents" profiling (fun () ->
-      let () = ensure_checked_dependencies ~options ~reader filename requires in
-      Merge_service.compute_env_of_contents ~reader options master_cx filename ast docblock file_sig
+  (* IDE service: enable for_ide flag to ensure declaration files are fully checked *)
+  Type_inference_hooks_js.with_for_ide ~enabled:true (fun () ->
+      with_timer ~options "MergeContents" profiling (fun () ->
+          let () = ensure_checked_dependencies ~options ~reader filename requires in
+          Merge_service.compute_env_of_contents
+            ~reader
+            options
+            master_cx
+            filename
+            ast
+            docblock
+            file_sig
+      )
   )
 
 let type_parse_artifacts ~options ~profiling master_cx filename intermediate_result =
@@ -253,17 +263,20 @@ let type_parse_artifacts ~options ~profiling master_cx filename intermediate_res
     let reader = State_reader.create () in
     let ((cx, typed_ast), obj_to_obj_map) =
       let loc_of_aloc = Parsing_heaps.Reader.loc_of_aloc ~reader in
-      Obj_to_obj_hook.with_obj_to_obj_hook ~enabled:true ~loc_of_aloc ~f:(fun () ->
-          check_contents
-            ~options
-            ~profiling
-            ~reader
-            master_cx
-            filename
-            docblock
-            ast
-            requires
-            file_sig
+      (* IDE service: enable for_ide flag to ensure declaration files are fully checked *)
+      Type_inference_hooks_js.with_for_ide ~enabled:true (fun () ->
+          Obj_to_obj_hook.with_obj_to_obj_hook ~enabled:true ~loc_of_aloc ~f:(fun () ->
+              check_contents
+                ~options
+                ~profiling
+                ~reader
+                master_cx
+                filename
+                docblock
+                ast
+                requires
+                file_sig
+          )
       )
     in
     Ok (parse_artifacts, Typecheck_artifacts { cx; typed_ast; obj_to_obj_map })

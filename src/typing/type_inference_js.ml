@@ -405,21 +405,29 @@ let initialize_env ?(exclude_syms = SSet.empty) cx aloc_ast =
 (* Lint suppressions are handled iff lint_severities is Some. *)
 let infer_ast ~lint_severities cx filename file_sig metadata loc_comments aloc_ast =
   assert (Context.is_checked cx);
-  let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
-  initialize_env cx aloc_ast;
-  let typed_statements = Statement.statement_list cx statements in
-  let tast =
-    (prog_aloc, { Ast.Program.statements = typed_statements; interpreter; comments; all_comments })
-  in
-  Merge_js.post_merge_checks cx file_sig aloc_ast tast metadata;
-  let (severity_cover, suppressions, suppression_errors) =
-    scan_for_suppressions ~in_libdef:false lint_severities [(filename, loc_comments)]
-  in
-  Context.add_severity_covers cx severity_cover;
-  Context.add_error_suppressions cx suppressions;
-  List.iter (Flow_js.add_output cx) suppression_errors;
-  Context.reset_errors cx (Flow_intermediate_error.post_process_errors (Context.errors cx));
-  tast
+  (* Check if the file is in declarations mode and we're not in IDE mode.
+   * IDE services should still get full type checking even for declaration files. *)
+  if
+    Files.is_declaration (Context.file_options cx) (File_key.to_string filename)
+    && not (Type_inference_hooks_js.is_for_ide ())
+  then
+    Typed_ast_utils.error_mapper#program aloc_ast
+  else
+    let (prog_aloc, { Ast.Program.statements; interpreter; comments; all_comments }) = aloc_ast in
+    initialize_env cx aloc_ast;
+    let typed_statements = Statement.statement_list cx statements in
+    let tast =
+      (prog_aloc, { Ast.Program.statements = typed_statements; interpreter; comments; all_comments })
+    in
+    Merge_js.post_merge_checks cx file_sig aloc_ast tast metadata;
+    let (severity_cover, suppressions, suppression_errors) =
+      scan_for_suppressions ~in_libdef:false lint_severities [(filename, loc_comments)]
+    in
+    Context.add_severity_covers cx severity_cover;
+    Context.add_error_suppressions cx suppressions;
+    List.iter (Flow_js.add_output cx) suppression_errors;
+    Context.reset_errors cx (Flow_intermediate_error.post_process_errors (Context.errors cx));
+    tast
 
 class lib_def_loc_mapper_and_validator cx =
   let stmt_validator ~in_toplevel_scope (loc, stmt) =
