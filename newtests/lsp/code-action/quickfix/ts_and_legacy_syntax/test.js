@@ -48,6 +48,32 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]).flowConfig('_flowconfig_ts_utility_syntax'),
+    test('provide quickfix for `mixed` type', [
+      addFile('fix-mixed-type.js.ignored', 'fix-mixed-type.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-mixed-type.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 9,
+          },
+          end: {
+            line: 2,
+            character: 14,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(__dirname, '__snapshots__', 'quickfix-mixed-type.json'),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_ts_utility_syntax'),
     test('provide quickfix for `unknown` type', [
       addFile('fix-unknown-type.js.ignored', 'fix-unknown-type.js'),
       lspStartAndConnect(),
