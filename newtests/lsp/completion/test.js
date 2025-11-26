@@ -6064,7 +6064,7 @@ b.te
                   label: 'apply',
                   kind: 3,
                   detail:
-                    '<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R',
+                    '<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, args?: A) => R',
                   sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
@@ -6173,7 +6173,7 @@ b.te
                   label: 'call',
                   kind: 3,
                   detail:
-                    '<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R',
+                    '<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, ...args: A) => R',
                   sortText: '00000000000000000007',
                   insertTextFormat: 1,
                   textEdit: {
@@ -6531,7 +6531,7 @@ b.te
                   label: 'apply',
                   kind: 3,
                   detail:
-                    '<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R',
+                    '<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, args?: A) => R',
                   sortText: '00000000000000000004',
                   insertTextFormat: 1,
                   textEdit: {
@@ -6640,7 +6640,7 @@ b.te
                   label: 'call',
                   kind: 3,
                   detail:
-                    '<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R',
+                    '<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, ...args: A) => R',
                   sortText: '00000000000000000007',
                   insertTextFormat: 1,
                   textEdit: {
