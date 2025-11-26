@@ -179,7 +179,7 @@ module.exports = (suite(
               contents: [
                 {
                   language: 'flow',
-                  value: 'type ValuesPoly<X> = $Values<X>',
+                  value: 'type ValuesPoly<X> = Values<X>',
                 },
                 '`ValuesPoly` defined at [`cached_hover.js:3:5`](<PLACEHOLDER_PROJECT_URL>/cached_hover.js#L3,6)',
               ],
@@ -209,7 +209,7 @@ module.exports = (suite(
               contents: [
                 {
                   language: 'flow',
-                  value: 'type ValuesPoly<X> = $Values<X>',
+                  value: 'type ValuesPoly<X> = Values<X>',
                 },
                 '`ValuesPoly` defined at [`cached_hover.js:3:5`](<PLACEHOLDER_PROJECT_URL>/cached_hover.js#L3,6)',
               ],
