@@ -44,3 +44,241 @@ Flags: --pretty
   ]
 }
 
+records.js:10:13
+Flags: --pretty --lsp
+{
+  "label":"Person",
+  "kind":7,
+  "detail":"class Person",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":10},"end":{"line":9,"character":12}},
+    "newText":"Person"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Person",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+records.js:20:13
+Flags: --pretty --lsp
+{
+  "label":"User",
+  "kind":7,
+  "detail":"class User",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":19,"character":10},"end":{"line":19,"character":12}},
+    "newText":"User"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"User",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+records.js:31:13
+Flags: --pretty --lsp
+{
+  "label":"Data",
+  "kind":7,
+  "detail":"class Data",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":30,"character":10},"end":{"line":30,"character":12}},
+    "newText":"Data"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Data",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+records.js:40:14
+Flags: --pretty --lsp
+{
+  "label":"Container",
+  "kind":7,
+  "detail":"class Container<T>",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":39,"character":10},"end":{"line":39,"character":13}},
+    "newText":"Container"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Container",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+records.js:49:16
+Flags: --pretty --lsp
+{
+  "label":"Optional",
+  "kind":7,
+  "detail":"class Optional",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":48,"character":12},"end":{"line":48,"character":15}},
+    "newText":"Optional"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Optional",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"opt",
+  "labelDetails":{"detail":": empty"},
+  "kind":6,
+  "detail":"empty",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":48,"character":12},"end":{"line":48,"character":15}},
+    "newText":"opt"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"opt",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+records.js:58:18
+Flags: --pretty --lsp
+{
+  "label":"WithMethods",
+  "kind":7,
+  "detail":"class WithMethods",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":57,"character":11},"end":{"line":57,"character":17}},
+    "newText":"WithMethods"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"WithMethods",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+
+records.js:68:18
+Flags: --pretty --lsp
+{
+  "label":"WithStatics",
+  "kind":7,
+  "detail":"class WithStatics",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":67,"character":11},"end":{"line":67,"character":17}},
+    "newText":"WithStatics"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "local value identifier",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"WithStatics",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+

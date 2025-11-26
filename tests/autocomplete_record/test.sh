@@ -7,3 +7,4 @@
 # shellcheck disable=SC2094
 
 query_at_pos autocomplete "keyword.js" 1 1 --pretty
+queries_in_file autocomplete "records.js" --pretty --lsp
