@@ -450,7 +450,7 @@ let layout_of_elt
   and type_array ~depth { arr_readonly; arr_literal = _; arr_elt_t } =
     let arr =
       if arr_readonly then
-        "$ReadOnlyArray"
+        "ReadonlyArray"
       else
         "Array"
     in

@@ -18,7 +18,7 @@ conditional-types.js:4:6,4:7
 
 conditional-types.js:7:6
 Flags:
-type T3 = Array<string> extends $ReadOnlyArray<infer X> ? X : empty
+type T3 = Array<string> extends ReadonlyArray<infer X> ? X : empty
 = string
 
 'T3' defined at conditional-types.js:7:5
@@ -685,7 +685,7 @@ type-destructor.js:79:6,79:31
 type-destructor.js:92:6
 Flags:
 type ConditionalNestedObjType = NestedObj extends {
-  +data: ?$ReadOnlyArray<{+foo: ?{+bar: ?infer T, ...}, ...}>,
+  +data: ?ReadonlyArray<{+foo: ?{+bar: ?infer T, ...}, ...}>,
   ...
 }
   ? T

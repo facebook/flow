@@ -158,7 +158,7 @@ Flags: --pretty
   "result":[
     {
       "name":"ChildrenArray",
-      "type":"type ChildrenArray<+T> = $ReadOnlyArray<ChildrenArray<T>> | T"
+      "type":"type ChildrenArray<+T> = ReadonlyArray<ChildrenArray<T>> | T"
     },
     {
       "name":"ComponentType",

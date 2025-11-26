@@ -372,7 +372,7 @@ Flags: --pretty
     {"name":"Iterator","type":"typeof Iterator"},
     {
       "name":"JSON",
-      "type":"{|+parse: (text: string, reviver?: (key: any, value: any) => any) => any, +stringify: ((value: null | string | number | boolean | interface {} | $ReadOnlyArray<mixed>, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string) & ((value: mixed, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string | void)|}"
+      "type":"{|+parse: (text: string, reviver?: (key: any, value: any) => any) => any, +stringify: ((value: null | string | number | boolean | interface {} | ReadonlyArray<mixed>, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string) & ((value: mixed, replacer?: ?((key: string, value: any) => any) | Array<any>, space?: string | number) => string | void)|}"
     },
     {"name":"Map","type":"typeof Map"},
     {
@@ -392,7 +392,7 @@ Flags: --pretty
     {"name":"Proxy","type":"typeof Proxy"},
     {
       "name":"queueMicrotask",
-      "type":"<TArguments: $ReadOnlyArray<mixed>>(callback: (...args: TArguments) => mixed) => void"
+      "type":"<TArguments: ReadonlyArray<mixed>>(callback: (...args: TArguments) => mixed) => void"
     },
     {"name":"RangeError","type":"typeof RangeError"},
     {"name":"ReferenceError","type":"typeof ReferenceError"},
