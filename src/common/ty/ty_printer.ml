@@ -534,6 +534,7 @@ let layout_of_elt
   and utility ~depth u =
     match u with
     | ReadOnly (Tup _ as t) when ts_syntax -> fuse [Atom "readonly"; space; type_ ~depth t]
+    | Keys t -> fuse [Atom "keyof"; space; type_with_parens ~depth t]
     | _ ->
       let ctor = Ty.string_of_utility_ctor u in
       let ts = Ty.types_of_utility u in
