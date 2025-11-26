@@ -54,6 +54,33 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":9,"character":10},"end":{"line":9,"character":12}},
+    "newText":"Person { active: null, age: null, name: null }"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Person",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"Person",
+  "kind":7,
+  "detail":"class Person",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":10},"end":{"line":9,"character":12}},
     "newText":"Person"
   },
   "command":{
@@ -64,7 +91,7 @@ Flags: --pretty --lsp
       "local value identifier",
       {
         "token":null,
-        "index":0,
+        "index":1,
         "session_requests":null,
         "typed_length":null,
         "completion":"Person",
@@ -84,6 +111,33 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":19,"character":10},"end":{"line":19,"character":12}},
+    "newText":"User { email: null, id: null, verified: null }"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"User",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"User",
+  "kind":7,
+  "detail":"class User",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":19,"character":10},"end":{"line":19,"character":12}},
     "newText":"User"
   },
   "command":{
@@ -94,7 +148,7 @@ Flags: --pretty --lsp
       "local value identifier",
       {
         "token":null,
-        "index":0,
+        "index":1,
         "session_requests":null,
         "typed_length":null,
         "completion":"User",
@@ -114,6 +168,33 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":30,"character":10},"end":{"line":30,"character":12}},
+    "newText":"Data { ref: null, value: null }"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Data",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"Data",
+  "kind":7,
+  "detail":"class Data",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":30,"character":10},"end":{"line":30,"character":12}},
     "newText":"Data"
   },
   "command":{
@@ -124,7 +205,7 @@ Flags: --pretty --lsp
       "local value identifier",
       {
         "token":null,
-        "index":0,
+        "index":1,
         "session_requests":null,
         "typed_length":null,
         "completion":"Data",
@@ -174,6 +255,33 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":48,"character":12},"end":{"line":48,"character":15}},
+    "newText":"Optional { a: null, b: null }"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"Optional",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"Optional",
+  "kind":7,
+  "detail":"class Optional",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":48,"character":12},"end":{"line":48,"character":15}},
     "newText":"Optional"
   },
   "command":{
@@ -184,7 +292,7 @@ Flags: --pretty --lsp
       "local value identifier",
       {
         "token":null,
-        "index":0,
+        "index":1,
         "session_requests":null,
         "typed_length":null,
         "completion":"Optional",
@@ -212,7 +320,7 @@ Flags: --pretty --lsp
       "local value identifier",
       {
         "token":null,
-        "index":1,
+        "index":2,
         "session_requests":null,
         "typed_length":null,
         "completion":"opt",
@@ -232,6 +340,33 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":57,"character":11},"end":{"line":57,"character":17}},
+    "newText":"WithMethods { field: null }"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"WithMethods",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"WithMethods",
+  "kind":7,
+  "detail":"class WithMethods",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":57,"character":11},"end":{"line":57,"character":17}},
     "newText":"WithMethods"
   },
   "command":{
@@ -242,7 +377,7 @@ Flags: --pretty --lsp
       "local value identifier",
       {
         "token":null,
-        "index":0,
+        "index":1,
         "session_requests":null,
         "typed_length":null,
         "completion":"WithMethods",
@@ -262,6 +397,33 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":67,"character":11},"end":{"line":67,"character":17}},
+    "newText":"WithStatics { field: null }"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"WithStatics",
+        "ac_type":"Acid"
+      }
+    ]
+  }
+}
+{
+  "label":"WithStatics",
+  "kind":7,
+  "detail":"class WithStatics",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":67,"character":11},"end":{"line":67,"character":17}},
     "newText":"WithStatics"
   },
   "command":{
@@ -272,7 +434,7 @@ Flags: --pretty --lsp
       "local value identifier",
       {
         "token":null,
-        "index":0,
+        "index":1,
         "session_requests":null,
         "typed_length":null,
         "completion":"WithStatics",

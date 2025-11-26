@@ -517,6 +517,57 @@ let members_of_type
         | _ :: _ -> Printf.sprintf "members_of_type %s" (Debug_js.dump_t cx t) :: errors
       )
 
+(* Internal type to track whether a local value is a record type or not *)
+type ac_id_type =
+  | Ac_id_type_normal
+  | Ac_id_type_record of Type.t
+
+let extract_record_fields ~typing record_type =
+  match members_of_type ~typing ~exclude_proto_members:true ~force_instance:true record_type with
+  | Error err -> Error err
+  | Ok (mems, _errors_to_log) ->
+    let fields =
+      Base.List.filter_map mems ~f:(fun (name, _, Ty_members.{ ty; _ }) ->
+          match ty with
+          | Ty.Fun _ -> None
+          | _ -> Some name
+      )
+    in
+    Ok fields
+
+let autocomplete_record ~typing ~edit_locs ~documentation_and_tags record_name record_type =
+  let { cx; norm_genv = genv; _ } = typing in
+  let exact_by_default = Context.exact_by_default cx in
+  match Ty_normalizer_flow.from_type genv record_type with
+  | Error _ -> None
+  | Ok ty ->
+    (match ty with
+    | Ty.Decl (Ty.ClassDecl (_, _) as class_decl) ->
+      (match extract_record_fields ~typing record_type with
+      | Error _ -> None
+      | Ok fields ->
+        let field_list =
+          fields
+          |> Base.List.map ~f:(fun name -> Printf.sprintf "%s: null" name)
+          |> String.concat ", "
+        in
+        let insert_text = Printf.sprintf "%s { %s }" record_name field_list in
+        let item =
+          autocomplete_create_result_decl
+            ~insert_text
+            ~rank:0
+            ~documentation_and_tags
+            ~exact_by_default
+            ~ts_syntax:(Context.ts_syntax cx)
+            ~log_info:"record"
+            (record_name, edit_locs)
+            class_decl
+        in
+        Some item)
+    | _ ->
+      (* Not a record type *)
+      None)
+
 let local_value_identifiers ~typing ~genv ~ac_loc =
   let { loc_of_aloc; get_ast_from_shared_mem; cx; ast; aloc_ast; file_sig; _ } = typing in
   let scope_info =
@@ -555,6 +606,19 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
       ac_scope_id
       SMap.empty
   in
+  let is_record_type t =
+    let open Type in
+    let t =
+      match t with
+      | OpenT (r, id) -> Flow_js_utils.merge_tvar ~no_lowers:(fun _cx _r -> t) cx r id
+      | _ -> t
+    in
+    match t with
+    | DefT (_, ClassT (ThisInstanceT (_, { inst = { inst_kind = RecordKind; _ }; _ }, _, _))) ->
+      true
+    | DefT (_, ClassT (DefT (_, InstanceT { inst = { inst_kind = RecordKind; _ }; _ }))) -> true
+    | _ -> false
+  in
   names_and_locs
   |> SMap.bindings
   |> Base.List.filter_map ~f:(fun (name, loc) ->
@@ -572,7 +636,13 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
              ~aloc_ast
              loc
          in
-         ((name, documentation_and_tags), type_)
+         let ac_id_type =
+           if is_record_type type_ then
+             Ac_id_type_record type_
+           else
+             Ac_id_type_normal
+         in
+         ((name, documentation_and_tags, ac_id_type), type_)
      )
   |> Ty_normalizer_flow.from_types genv
 
@@ -894,9 +964,19 @@ let autocomplete_id
   let (items_rev, errors_to_log) =
     identifiers
     |> List.fold_left
-         (fun (items_rev, errors_to_log) ((name, documentation_and_tags), elt_result) ->
+         (fun (items_rev, errors_to_log) ((name, documentation_and_tags, ac_id_type), elt_result) ->
            match elt_result with
            | Ok elt ->
+             let items_rev =
+               match ac_id_type with
+               | Ac_id_type_record record_type ->
+                 (match
+                    autocomplete_record ~typing ~edit_locs ~documentation_and_tags name record_type
+                  with
+                 | Some item -> item :: items_rev
+                 | None -> items_rev)
+               | Ac_id_type_normal -> items_rev
+             in
              let result =
                autocomplete_create_result_elt
                  ~insert_text:name
@@ -985,7 +1065,9 @@ let autocomplete_id
          * results, and might hurt performance. *)
         (items_rev, true, false)
       else
-        let locals = set_of_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) identifiers in
+        let locals =
+          set_of_locals ~f:(fun ((name, _docs_and_tags, _ac_id_type), _ty) -> name) identifiers
+        in
         let { Export_search_types.results = auto_imports; is_incomplete } =
           typing.search_exported_values ~ac_options before
         in
@@ -1414,7 +1496,7 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
   let (items_rev, errors_to_log) =
     value_identifiers
     |> List.fold_left
-         (fun (items_rev, errors_to_log) ((name, documentation_and_tags), ty_res) ->
+         (fun (items_rev, errors_to_log) ((name, documentation_and_tags, _ac_id_type), ty_res) ->
            match ty_res with
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
@@ -1486,7 +1568,7 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
     else if ac_options.imports then
       let locals =
         let set = set_of_locals ~f:(fun ((name, _aloc), _ty) -> name) type_identifiers in
-        add_locals ~f:(fun ((name, _docs_and_tags), _ty) -> name) value_identifiers set;
+        add_locals ~f:(fun ((name, _docs_and_tags, _ac_id_type), _ty) -> name) value_identifiers set;
         set
       in
       let { Export_search_types.results = auto_imports; is_incomplete } =
