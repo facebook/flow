@@ -60,6 +60,12 @@ type autocomplete_type =
       has_value: bool;
     }  (** JSX attributes *)
   | Ac_jsx_text  (** JSX text child *)
+  | Ac_record_field of {
+      field_name: string;
+      used_field_names: SSet.t;
+      record_t: Type.t;
+      has_value: bool;
+    }  (** record fields *)
 
 type process_location_result = {
   tparams_rev: string list;
@@ -645,6 +651,51 @@ class process_request_searcher cx file_sig ~from_trigger_character ~cursor =
                  Ac_member { member with bracket_syntax = Some { id with include_this = true } };
              }
           )
+
+    method! record expr =
+      let open Flow_ast.Expression.Record in
+      let { constructor; targs = _; properties = (_, props_obj); comments = _ } = expr in
+      let record_t = lazy (Inference.type_of_expression cx constructor) in
+      ignore @@ this#visit_record_properties (Lazy.force record_t) props_obj;
+      super#record expr
+
+    method private visit_record_properties record_t props_obj =
+      let open Flow_ast.Expression.Object in
+      let { properties; comments = _ } = props_obj in
+      let (used_field_names, found) =
+        List.fold_left
+          (fun (used_field_names, found) -> function
+            | Property
+                ( _,
+                  Property.Init
+                    {
+                      key =
+                        Property.Identifier
+                          (loc, { Flow_ast.Identifier.name = field_name; comments = _ });
+                      value;
+                      shorthand = _;
+                    }
+                ) ->
+              let found' =
+                match found with
+                | Some _ -> found
+                | None when this#covers_target loc ->
+                  let has_value = not (ALoc.equal loc (fst value)) in
+                  Some (field_name, loc, record_t, has_value)
+                | None -> None
+              in
+              (SSet.add field_name used_field_names, found')
+            | _ -> (used_field_names, found))
+          (SSet.empty, None)
+          properties
+      in
+      Base.Option.iter
+        ~f:(fun (field_name, loc, record_t, has_value) ->
+          this#find
+            loc
+            field_name
+            (Ac_record_field { field_name; used_field_names; record_t; has_value }))
+        found
 
     method! typeof_expression id =
       let open Flow_ast.Type.Typeof.Target in

@@ -1959,6 +1959,46 @@ let autocomplete_jsx_element ~typing ~ac_loc ~ac_options ~edit_locs ~token ~type
   else
     AcResult results
 
+let autocomplete_record_field ~typing ~used_field_names ~has_value:_ ~edit_locs ~token record_t =
+  let { cx; _ } = typing in
+  let exact_by_default = Context.exact_by_default cx in
+  let mems_result =
+    members_of_type
+      ~typing
+      ~exclude_proto_members:true
+      ~exclude_keys:used_field_names
+      ~force_instance:true
+      record_t
+  in
+  match mems_result with
+  | Error err -> AcFatalError err
+  | Ok (mems, errors_to_log) ->
+    let items =
+      mems
+      |> Base.List.map
+           ~f:(fun
+                ( name,
+                  documentation_and_tags,
+                  Ty_members.
+                    { ty; optional; def_locs = _; inherited = _; source = _; from_nullable = _ }
+                )
+              ->
+             let insert_text = name in
+             autocomplete_create_result
+               ~insert_text
+               ~documentation_and_tags
+               ~exact_by_default
+               ~ts_syntax:(Context.ts_syntax cx)
+               ~log_info:"record field"
+               (name, edit_locs)
+               ~optional
+               ty
+         )
+    in
+    let items = filter_by_token_and_sort token items in
+    let result = { AcCompletion.items; is_incomplete = false } in
+    AcResult { result; errors_to_log }
+
 (* Similar to autocomplete_member, except that we're not directly given an
    object type whose members we want to enumerate: instead, we are given a
    component class and we want to enumerate the members of its declared props
@@ -2339,6 +2379,7 @@ let string_of_autocomplete_type ac_type =
   | Ac_member _ -> "Acmem"
   | Ac_jsx_element _ -> "Ac_jsx_element"
   | Ac_jsx_attribute _ -> "Acjsx"
+  | Ac_record_field _ -> "Ac_record_field"
 
 let autocomplete_get_results typing ac_options trigger_character cursor =
   let {
@@ -2515,6 +2556,8 @@ let autocomplete_get_results typing ac_options trigger_character cursor =
           ~token
           component_t
           (ac_loc, attribute_name)
+      | Ac_record_field { field_name = _; used_field_names; record_t; has_value } ->
+        autocomplete_record_field ~typing ~used_field_names ~has_value ~edit_locs ~token record_t
       | Ac_type ->
         AcResult
           (autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit_locs ~token)

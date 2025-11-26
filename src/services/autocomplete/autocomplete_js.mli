@@ -58,6 +58,12 @@ type autocomplete_type =
       has_value: bool;
     }  (** JSX attributes *)
   | Ac_jsx_text  (** JSX text child *)
+  | Ac_record_field of {
+      field_name: string;
+      used_field_names: SSet.t;
+      record_t: Type.t;
+      has_value: bool;
+    }  (** record fields *)
 
 type process_location_result = {
   tparams_rev: string list;

@@ -444,3 +444,568 @@ Flags: --pretty --lsp
   }
 }
 
+fields.js:10:21
+Flags: --pretty --lsp
+{
+  "label":"active",
+  "labelDetails":{"detail":": boolean"},
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":20},"end":{"line":9,"character":20}},
+    "newText":"active"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"active",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+{
+  "label":"age",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":20},"end":{"line":9,"character":20}},
+    "newText":"age"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"age",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+{
+  "label":"name",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":9,"character":20},"end":{"line":9,"character":20}},
+    "newText":"name"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"name",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+
+fields.js:14:23
+Flags: --pretty --lsp
+{
+  "label":"name",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":13,"character":20},"end":{"line":13,"character":22}},
+    "newText":"name"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"name",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+
+fields.js:18:35
+Flags: --pretty --lsp
+{
+  "label":"active",
+  "labelDetails":{"detail":": boolean"},
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":34},"end":{"line":17,"character":34}},
+    "newText":"active"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"active",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+{
+  "label":"age",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":17,"character":34},"end":{"line":17,"character":34}},
+    "newText":"age"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"age",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+
+fields.js:22:37
+Flags: --pretty --lsp
+{
+  "label":"active",
+  "labelDetails":{"detail":": boolean"},
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":21,"character":36},"end":{"line":21,"character":36}},
+    "newText":"active"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"active",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+{
+  "label":"age",
+  "labelDetails":{"detail":": number"},
+  "kind":6,
+  "detail":"number",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":21,"character":36},"end":{"line":21,"character":36}},
+    "newText":"age"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"age",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+
+fields.js:26:59
+Flags: --pretty --lsp
+
+fields.js:36:19
+Flags: --pretty --lsp
+{
+  "label":"email",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":35,"character":18},"end":{"line":35,"character":18}},
+    "newText":"email"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"email",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+{
+  "label":"id",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":35,"character":18},"end":{"line":35,"character":18}},
+    "newText":"id"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"id",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+{
+  "label":"verified",
+  "labelDetails":{"detail":": boolean"},
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":35,"character":18},"end":{"line":35,"character":18}},
+    "newText":"verified"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":2,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"verified",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+
+fields.js:40:30
+Flags: --pretty --lsp
+{
+  "label":"email",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":39,"character":29},"end":{"line":39,"character":29}},
+    "newText":"email"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"email",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+{
+  "label":"verified",
+  "labelDetails":{"detail":": boolean"},
+  "kind":6,
+  "detail":"boolean",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":39,"character":29},"end":{"line":39,"character":29}},
+    "newText":"verified"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"verified",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+
+fields.js:54:23
+Flags: --pretty --lsp
+{
+  "label":"address",
+  "labelDetails":{"detail":": Address"},
+  "kind":6,
+  "detail":"Address",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":53,"character":22},"end":{"line":53,"character":22}},
+    "newText":"address"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"address",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+{
+  "label":"name",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":53,"character":22},"end":{"line":53,"character":22}},
+    "newText":"name"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"name",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+
+fields.js:57:37
+Flags: --pretty --lsp
+{
+  "label":"address",
+  "labelDetails":{"detail":": Address"},
+  "kind":6,
+  "detail":"Address",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":56,"character":36},"end":{"line":56,"character":36}},
+    "newText":"address"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"address",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+
+fields.js:66:24
+Flags: --pretty --lsp
+{
+  "label":"content",
+  "labelDetails":{"detail":": T"},
+  "kind":6,
+  "detail":"T",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":65,"character":23},"end":{"line":65,"character":23}},
+    "newText":"content"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"content",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+{
+  "label":"id",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":65,"character":23},"end":{"line":65,"character":23}},
+    "newText":"id"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":1,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"id",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+
+fields.js:75:27
+Flags: --pretty --lsp
+{
+  "label":"field",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":74,"character":26},"end":{"line":74,"character":26}},
+    "newText":"field"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "record field",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"field",
+        "ac_type":"Ac_record_field"
+      }
+    ]
+  }
+}
+
