@@ -208,7 +208,7 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
         with_loc
           ~start_loc
           (fun env ->
-            let fields = with_loc (fun env -> object_pattern env) env in
+            let properties = with_loc (fun env -> object_pattern env) env in
             let constructor =
               match base with
               | MemberPattern.BaseIdentifier id -> InstancePattern.IdentifierConstructor id
@@ -216,7 +216,7 @@ module Match_pattern (Parse : PARSER) : Parser_common.MATCH_PATTERN = struct
             in
             let trailing = Eat.trailing_comments env in
             let comments = Flow_ast_utils.mk_comments_opt ~trailing () in
-            InstancePattern { InstancePattern.constructor; fields; comments })
+            InstancePattern { InstancePattern.constructor; properties; comments })
           env
       | _ ->
         (match base with

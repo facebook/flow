@@ -358,7 +358,7 @@ end = struct
       object_pattern cx ~raise_errors ~reason ~next_i ~pattern_union ~guarded ~class_info:None x
     | InstancePattern _ when not @@ Context.enable_pattern_matching_instance_patterns cx ->
       (pattern_union, next_i)
-    | InstancePattern { InstancePattern.constructor; fields = (_, fields); _ } ->
+    | InstancePattern { InstancePattern.constructor; properties = (_, properties); _ } ->
       let (constructor_t, constructor_name) =
         match constructor with
         | InstancePattern.IdentifierConstructor ((_, t), { Flow_ast.Identifier.name; _ })
@@ -377,7 +377,15 @@ end = struct
       | Some (class_id, class_name) ->
         let class_name = Base.Option.first_some constructor_name class_name in
         let class_info = Some (class_id, class_name) in
-        object_pattern cx ~raise_errors ~reason ~next_i ~pattern_union ~guarded ~class_info fields
+        object_pattern
+          cx
+          ~raise_errors
+          ~reason
+          ~next_i
+          ~pattern_union
+          ~guarded
+          ~class_info
+          properties
       | _ -> (pattern_union, next_i))
 
   and object_pattern cx ~raise_errors ~reason ~next_i ~pattern_union ~guarded ~class_info pattern =

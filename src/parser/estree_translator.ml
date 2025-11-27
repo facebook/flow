@@ -828,7 +828,7 @@ with type t = Impl.t = struct
       | MemberPattern member -> match_member_pattern member
       | ObjectPattern obj -> match_object_pattern "MatchObjectPattern" (loc, obj)
       | ArrayPattern arr -> match_array_pattern (loc, arr)
-      | InstancePattern { InstancePattern.constructor; fields; comments } ->
+      | InstancePattern { InstancePattern.constructor; properties; comments } ->
         let constructor =
           match constructor with
           | InstancePattern.IdentifierConstructor id -> match_identifier_pattern id
@@ -840,7 +840,7 @@ with type t = Impl.t = struct
           loc
           [
             ("constructor", constructor);
-            ("fields", match_object_pattern "MatchInstanceObjectPattern" fields);
+            ("properties", match_object_pattern "MatchInstanceObjectPattern" properties);
           ]
       | OrPattern { OrPattern.patterns; comments } ->
         node ?comments "MatchOrPattern" loc [("patterns", array_of_list match_pattern patterns)]

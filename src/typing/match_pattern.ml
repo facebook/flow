@@ -213,7 +213,8 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
         cx
         (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MatchInstancePattern));
       InstancePattern (Tast_utils.error_mapper#match_instance_pattern x)
-    | InstancePattern { InstancePattern.constructor; fields = (fields_loc, fields); comments } ->
+    | InstancePattern
+        { InstancePattern.constructor; properties = (properties_loc, properties); comments } ->
       let open InstancePattern in
       let constructor =
         match constructor with
@@ -224,8 +225,8 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
           let (_, mem) = member cx ~on_identifier ~on_expression mem in
           MemberConstructor mem
       in
-      let fields =
-        ( fields_loc,
+      let properties =
+        ( properties_loc,
           object_pattern
             cx
             ~on_identifier
@@ -234,10 +235,10 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
             ~in_or_pattern
             ~pattern_kind:Flow_intermediate_error_types.MatchObjPatternKind.Instance
             acc
-            fields
+            properties
         )
       in
-      InstancePattern { constructor; fields; comments }
+      InstancePattern { constructor; properties; comments }
   in
   (loc, p)
 

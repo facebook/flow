@@ -54,7 +54,7 @@
                       "optional":false
                     }
                   },
-                  "fields":{
+                  "properties":{
                     "type":"MatchInstanceObjectPattern",
                     "loc":{"source":null,"start":{"line":2,"column":7},"end":{"line":2,"column":23}},
                     "range":[29,45],
@@ -145,7 +145,7 @@
                       "optional":false
                     }
                   },
-                  "fields":{
+                  "properties":{
                     "type":"MatchInstanceObjectPattern",
                     "loc":{"source":null,"start":{"line":3,"column":7},"end":{"line":3,"column":21}},
                     "range":[59,73],
@@ -218,7 +218,7 @@
                       "optional":false
                     }
                   },
-                  "fields":{
+                  "properties":{
                     "type":"MatchInstanceObjectPattern",
                     "loc":{"source":null,"start":{"line":4,"column":7},"end":{"line":4,"column":25}},
                     "range":[87,105],
@@ -315,7 +315,7 @@
                       "optional":false
                     }
                   },
-                  "fields":{
+                  "properties":{
                     "type":"MatchInstanceObjectPattern",
                     "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":13}},
                     "range":[123,125],
@@ -365,7 +365,7 @@
                       "raw":"\"Bart\""
                     }
                   },
-                  "fields":{
+                  "properties":{
                     "type":"MatchInstanceObjectPattern",
                     "loc":{"source":null,"start":{"line":6,"column":14},"end":{"line":6,"column":19}},
                     "range":[146,151],
@@ -420,7 +420,7 @@
                       "raw":"0"
                     }
                   },
-                  "fields":{
+                  "properties":{
                     "type":"MatchInstanceObjectPattern",
                     "loc":{"source":null,"start":{"line":7,"column":9},"end":{"line":7,"column":21}},
                     "range":[167,179],

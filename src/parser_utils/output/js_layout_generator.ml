@@ -3644,15 +3644,22 @@ and match_array_pattern ~opts loc { Ast.MatchPattern.ArrayPattern.elements; rest
 and match_instance_pattern
     ~opts
     loc
-    { Ast.MatchPattern.InstancePattern.constructor; fields = (fields_loc, fields); comments } =
+    {
+      Ast.MatchPattern.InstancePattern.constructor;
+      properties = (properties_loc, properties);
+      comments;
+    } =
   let open Ast.MatchPattern.InstancePattern in
   let constructor =
     match constructor with
     | IdentifierConstructor id -> identifier id
     | MemberConstructor mem -> match_member_pattern ~opts mem
   in
-  let fields = match_object_pattern ~opts fields_loc fields in
-  layout_node_with_comments_opt loc comments (fuse [constructor; pretty_space; fields])
+  let properties = match_object_pattern ~opts properties_loc properties in
+  match comments with
+  | Some _ ->
+    layout_node_with_comments_opt loc comments (fuse [constructor; pretty_space; properties])
+  | None -> layout_node_with_comments_opt loc comments (fuse [constructor; pretty_space; properties])
 
 and match_rest_pattern (loc, { Ast.MatchPattern.RestPattern.argument; comments }) =
   match argument with

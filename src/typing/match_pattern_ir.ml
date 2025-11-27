@@ -342,7 +342,7 @@ end = struct
           MatchPattern.InstancePattern
             {
               MatchPattern.InstancePattern.constructor;
-              fields = (Loc.none, obj_pattern);
+              properties = (Loc.none, obj_pattern);
               comments = None;
             }
         )

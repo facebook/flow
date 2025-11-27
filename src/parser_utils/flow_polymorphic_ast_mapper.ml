@@ -2273,15 +2273,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method match_instance_pattern (instance_pattern : ('M, 'T) Ast.MatchPattern.InstancePattern.t)
         : ('N, 'U) Ast.MatchPattern.InstancePattern.t =
       let open Ast.MatchPattern.InstancePattern in
-      let { constructor; fields = (fields_loc, fields); comments } = instance_pattern in
+      let { constructor; properties = (properties_loc, properties); comments } = instance_pattern in
       let constructor' =
         match constructor with
         | IdentifierConstructor ident -> IdentifierConstructor (this#t_identifier ident)
         | MemberConstructor member -> MemberConstructor (this#match_member_pattern member)
       in
-      let fields' = (this#on_loc_annot fields_loc, this#match_object_pattern fields) in
+      let properties' = (this#on_loc_annot properties_loc, this#match_object_pattern properties) in
       let comments' = this#syntax_opt comments in
-      { constructor = constructor'; fields = fields'; comments = comments' }
+      { constructor = constructor'; properties = properties'; comments = comments' }
 
     method match_rest_pattern (rest : ('M, 'T) Ast.MatchPattern.RestPattern.t')
         : ('N, 'U) Ast.MatchPattern.RestPattern.t' =

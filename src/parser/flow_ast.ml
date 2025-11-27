@@ -2161,7 +2161,7 @@ and MatchPattern : sig
 
     and ('M, 'T) t = {
       constructor: ('M, 'T) constructor;
-      fields: 'M * ('M, 'T) ObjectPattern.t;
+      properties: 'M * ('M, 'T) ObjectPattern.t;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

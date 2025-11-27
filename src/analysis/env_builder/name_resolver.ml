@@ -3293,7 +3293,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               non_binding_leaves
           | (loc, ArrayPattern pattern) ->
             array_pattern acc (loc, pattern) bindings non_binding_leaves
-          | (loc, InstancePattern { InstancePattern.constructor; fields; _ }) ->
+          | (loc, InstancePattern { InstancePattern.constructor; properties; _ }) ->
             let (expr, id) =
               match constructor with
               | InstancePattern.IdentifierConstructor ((id_loc, _) as id) ->
@@ -3306,7 +3306,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             in
             check_invalid_reference bindings id;
             this#instance_test ~context:Env_api.Refi.MatchInstancePattern loc acc expr;
-            object_pattern_props ~instance_pattern:true acc fields bindings non_binding_leaves
+            object_pattern_props ~instance_pattern:true acc properties bindings non_binding_leaves
         and array_pattern
             acc (loc, { ArrayPattern.elements; rest; comments = _ }) bindings non_binding_leaves =
           (match RefinementKey.of_expression acc with

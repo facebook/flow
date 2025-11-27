@@ -2775,16 +2775,17 @@ class ['loc] mapper =
         { pattern = pattern'; index }
 
     method match_instance_pattern
-        (instance_pattern : ('loc, 'loc) Ast.MatchPattern.InstancePattern.t) =
+        (instance_pattern : ('loc, 'loc) Ast.MatchPattern.InstancePattern.t)
+        : ('loc, 'loc) Ast.MatchPattern.InstancePattern.t =
       let open Ast.MatchPattern.InstancePattern in
-      let { constructor; fields; comments } = instance_pattern in
+      let { constructor; properties; comments } = instance_pattern in
       let constructor' = this#match_instance_pattern_constructor constructor in
-      let fields' = map_loc this#match_object_pattern fields in
+      let properties' = map_loc this#match_object_pattern properties in
       let comments' = this#syntax_opt comments in
-      if constructor' == constructor && fields' == fields && comments' == comments then
+      if constructor == constructor' && properties == properties' && comments == comments' then
         instance_pattern
       else
-        { constructor = constructor'; fields = fields'; comments = comments' }
+        { constructor = constructor'; properties = properties'; comments = comments' }
 
     method match_instance_pattern_constructor
         (constructor : ('loc, 'loc) Ast.MatchPattern.InstancePattern.constructor) =

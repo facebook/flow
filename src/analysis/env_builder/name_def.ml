@@ -375,7 +375,7 @@ end = struct
         loc
         acc
         pattern
-    | InstancePattern { InstancePattern.constructor; fields = (_, fields); comments = _ } ->
+    | InstancePattern { InstancePattern.constructor; properties = (_, properties); comments = _ } ->
       (match constructor with
       | InstancePattern.IdentifierConstructor ((id_loc, _) as id) ->
         visit_expression (id_loc, Ast.Expression.Identifier id)
@@ -388,7 +388,7 @@ end = struct
         ~visit_intermediate
         loc
         acc
-        fields
+        properties
     | OrPattern { OrPattern.patterns; comments = _ } ->
       Base.List.iter
         patterns
