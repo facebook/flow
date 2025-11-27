@@ -918,7 +918,7 @@ let resolve_class cx id_loc reason ~kind class_loc class_ =
   let inst_kind =
     match kind with
     | ClassKind.Class -> ClassKind
-    | ClassKind.Record -> RecordKind
+    | ClassKind.Record { defaulted_props } -> RecordKind { defaulted_props }
   in
   let ((class_t, class_t_internal, _, _) as sig_info) =
     Statement.mk_class_sig cx ~name_loc:id_loc ~class_loc ~inst_kind reason class_

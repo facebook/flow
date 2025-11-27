@@ -2128,7 +2128,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | ClassKind
         | InterfaceKind _ ->
           Flow_intermediate_error_types.ClassKind.Class
-        | RecordKind -> Flow_intermediate_error_types.ClassKind.Record
+        | RecordKind _ -> Flow_intermediate_error_types.ClassKind.Record
       in
       add_output
         cx

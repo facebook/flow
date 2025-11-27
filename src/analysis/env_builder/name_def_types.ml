@@ -169,7 +169,7 @@ type expression_def = {
 module ClassKind = struct
   type t =
     | Class
-    | Record
+    | Record of { defaulted_props: SSet.t }
 end
 
 type def =
@@ -338,7 +338,7 @@ module Print = struct
       let kind =
         match kind with
         | ClassKind.Class -> "class"
-        | ClassKind.Record -> "record"
+        | ClassKind.Record _ -> "record"
       in
       spf
         "%s %s"

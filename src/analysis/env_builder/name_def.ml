@@ -2028,8 +2028,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       meth
 
     method! record_declaration loc record =
-      ignore
-      @@ this#class_internal ~kind:ClassKind.Record loc (Flow_ast_utils.class_of_record record);
+      let defaulted_props = Flow_ast_utils.defaulted_props_of_record record in
+      let kind = ClassKind.Record { defaulted_props } in
+      ignore @@ this#class_internal ~kind loc (Flow_ast_utils.class_of_record record);
       record
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =

@@ -976,3 +976,16 @@ let map_record_as_class :
  fun record ~f ->
   let (x, class_) = f (class_of_record record) in
   (x, record_of_class class_)
+
+(* The set of record properties that have a default value supplied, e.g. `foo: number = 0,` *)
+let defaulted_props_of_record record =
+  let open Flow_ast.Statement.RecordDeclaration in
+  let { body = (_, { Body.body; _ }); _ } = record in
+  List.fold_left
+    (fun acc -> function
+      | Body.Property (_, { Property.key; default_value = Some _; _ }) ->
+        let (_, { Flow_ast.Identifier.name; _ }) = key in
+        SSet.add name acc
+      | _ -> acc)
+    SSet.empty
+    body

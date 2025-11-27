@@ -1418,7 +1418,7 @@ let interface_slice cx r ~static ~inst id generics =
   let obj_kind =
     match (inst.inst_kind, inst.inst_dict) with
     | (_, Some dict) -> Indexed dict
-    | (RecordKind, _) -> Exact
+    | (RecordKind _, _) -> Exact
     | _ -> Inexact
   in
   let flags = { obj_kind; react_dro = None } in
@@ -1475,8 +1475,8 @@ let resolve
              { spread_reason = reason; interface_reason = r; use_op }
           );
         return cx use_op (AnyT.error reason)
-      | (Spread _, RecordKind) -> recurse cx use_op reason resolve_tool tool super
-      | (_, RecordKind) ->
+      | (Spread _, RecordKind _) -> recurse cx use_op reason resolve_tool tool super
+      | (_, RecordKind _) ->
         let reason_op =
           match tool with
           | MakeExact -> replace_desc_reason (RType (OrdinaryName "$Exact")) reason

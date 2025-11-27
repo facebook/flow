@@ -7755,7 +7755,8 @@ module Make
             implements_ast
           )
         in
-        let mk_record_constructor cx tparams_map_with_this elements record_name name_loc =
+        let mk_record_constructor
+            cx tparams_map_with_this elements defaulted_props record_name name_loc =
           (* Build an object type with properties for each instance field. *)
           let props =
             List.fold_left
@@ -7769,18 +7770,10 @@ module Make
                           Ast.Expression.Object.Property.Identifier
                             (id_loc, { Ast.Identifier.name; _ });
                         annot;
-                        value;
                         static = false;
                         _;
                       }
                     ) ->
-                  let has_initializer =
-                    match value with
-                    | Property.Initialized _ -> true
-                    | Property.Declared
-                    | Property.Uninitialized ->
-                      false
-                  in
                   let field_t =
                     match annot with
                     | Ast.Type.Available annot ->
@@ -7792,7 +7785,7 @@ module Make
                   in
                   (* Create an optional property if it has an initializer (i.e. has a default value). *)
                   let prop_t =
-                    if has_initializer then
+                    if SSet.mem name defaulted_props then
                       let field_reason = mk_reason (RProperty (Some (OrdinaryName name))) id_loc in
                       Type.OptionalT
                         {
@@ -7865,15 +7858,23 @@ module Make
                inheritance machinery. *)
             (* TODO: Does this distinction matter for the type checker? *)
             class_sig
-          else if inst_kind = RecordKind then
-            let record_name = class_name |> Base.Option.value_exn in
-            let func_sig =
-              mk_record_constructor cx tparams_map_with_this elements record_name name_loc
-            in
-            Class_stmt_sig.add_constructor ~id_loc:None ~func_sig class_sig
           else
-            let reason = replace_desc_reason RDefaultConstructor reason in
-            Class_stmt_sig.add_default_constructor reason class_sig
+            match inst_kind with
+            | RecordKind { defaulted_props } ->
+              let record_name = class_name |> Base.Option.value_exn in
+              let func_sig =
+                mk_record_constructor
+                  cx
+                  tparams_map_with_this
+                  elements
+                  defaulted_props
+                  record_name
+                  name_loc
+              in
+              Class_stmt_sig.add_constructor ~id_loc:None ~func_sig class_sig
+            | _ ->
+              let reason = replace_desc_reason RDefaultConstructor reason in
+              Class_stmt_sig.add_default_constructor reason class_sig
         in
         (* All classes have a static "name" property. *)
         let class_sig = Class_stmt_sig.add_name_field class_sig in
@@ -7905,7 +7906,7 @@ module Make
                     | ClassKind
                     | InterfaceKind _ ->
                       Flow_intermediate_error_types.ClassKind.Class
-                    | RecordKind -> Flow_intermediate_error_types.ClassKind.Record
+                    | RecordKind _ -> Flow_intermediate_error_types.ClassKind.Record
                   in
                   Flow.add_output
                     cx
@@ -8340,9 +8341,11 @@ module Make
 
   and mk_record cx record_loc ~name_loc ?tast_record_type reason record =
     let def_reason = repos_reason record_loc reason in
+    let defaulted_props = Flow_ast_utils.defaulted_props_of_record record in
+    let inst_kind = RecordKind { defaulted_props } in
     Flow_ast_utils.map_record_as_class record ~f:(fun class_ ->
         let (t, _, class_sig, class_ast_f) =
-          mk_class_sig cx ~name_loc ~class_loc:record_loc ~inst_kind:RecordKind reason class_
+          mk_class_sig cx ~name_loc ~class_loc:record_loc ~inst_kind reason class_
         in
         Class_stmt_sig.check_signature_compatibility cx def_reason class_sig;
         Class_stmt_sig.toplevels cx class_sig;

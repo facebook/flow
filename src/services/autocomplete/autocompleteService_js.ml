@@ -614,9 +614,9 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
       | _ -> t
     in
     match t with
-    | DefT (_, ClassT (ThisInstanceT (_, { inst = { inst_kind = RecordKind; _ }; _ }, _, _))) ->
+    | DefT (_, ClassT (ThisInstanceT (_, { inst = { inst_kind = RecordKind _; _ }; _ }, _, _)))
+    | DefT (_, ClassT (DefT (_, InstanceT { inst = { inst_kind = RecordKind _; _ }; _ }))) ->
       true
-    | DefT (_, ClassT (DefT (_, InstanceT { inst = { inst_kind = RecordKind; _ }; _ }))) -> true
     | _ -> false
   in
   names_and_locs

@@ -46,7 +46,7 @@ let get_class_info cx (t : Type.t) : (ALoc.id * string option) option =
         Type.InstanceT
           {
             Type.inst =
-              { Type.inst_kind = Type.ClassKind | Type.RecordKind; class_id; class_name; _ };
+              { Type.inst_kind = Type.ClassKind | Type.RecordKind _; class_id; class_name; _ };
             _;
           }
       ) ->
@@ -685,7 +685,7 @@ end = struct
             ) ->
           let rest =
             match inst_kind with
-            | Type.RecordKind -> None
+            | Type.RecordKind _ -> None
             | Type.ClassKind
             | Type.InterfaceKind _ ->
               Some reason
@@ -700,7 +700,7 @@ end = struct
                         {
                           Type.inst =
                             {
-                              Type.inst_kind = Type.ClassKind | Type.RecordKind;
+                              Type.inst_kind = Type.ClassKind | Type.RecordKind _;
                               class_id = super_class_id;
                               _;
                             };

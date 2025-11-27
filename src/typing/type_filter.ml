@@ -903,7 +903,7 @@ and tag_of_inst inst =
   let tags =
     match inst_kind with
     | ClassKind
-    | RecordKind ->
+    | RecordKind _ ->
       TypeTagSet.add ClassInstanceTag tags
     | InterfaceKind _ ->
       tags

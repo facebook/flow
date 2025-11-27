@@ -1485,7 +1485,7 @@ module rec TypeTerm : sig
   and instance_kind =
     | ClassKind
     | InterfaceKind of { inline: bool }
-    | RecordKind
+    | RecordKind of { defaulted_props: SSet.t }
 
   and instance_t = {
     inst: insttype;

@@ -567,12 +567,12 @@ and intersect =
     | ( DefT
           ( _,
             InstanceT
-              { inst = { inst_kind = ClassKind | RecordKind; type_args = ts1; _ } as inst1; _ }
+              { inst = { inst_kind = ClassKind | RecordKind _; type_args = ts1; _ } as inst1; _ }
           ),
         DefT
           ( _,
             InstanceT
-              { inst = { inst_kind = ClassKind | RecordKind; type_args = ts2; _ } as inst2; _ }
+              { inst = { inst_kind = ClassKind | RecordKind _; type_args = ts2; _ } as inst2; _ }
           )
       )
       when Flow_js_utils.is_same_instance_type inst1 inst2 ->

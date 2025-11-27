@@ -216,3 +216,5 @@ val map_record_as_class :
   ('loc, 'loc) Flow_ast.Statement.RecordDeclaration.t ->
   f:(('loc, 'loc) Flow_ast.Class.t -> 'x * ('loc, 'tloc) Flow_ast.Class.t) ->
   'x * ('loc, 'tloc) Flow_ast.Statement.RecordDeclaration.t
+
+val defaulted_props_of_record : 'loc. ('loc, 'loc) Flow_ast.Statement.RecordDeclaration.t -> SSet.t
