@@ -566,6 +566,129 @@ References:
               ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- imported.js:13:3
+
+Cannot cast `x` to empty because `RNamed` [1] is incompatible with empty [2]. [incompatible-type]
+
+   imported.js:13:3
+   13|   x as empty; // ERROR
+         ^
+
+References:
+   imported.js:11:13
+   11|   const x = RNamed {a: 1}; // OK
+                   ^^^^^^ [1]
+   imported.js:13:8
+   13|   x as empty; // ERROR
+              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:16:10
+
+Cannot create record `RNamed` because property `a` is missing in record properties [1] but exists in record
+`RNamed` [2]. [incompatible-type]
+
+   imported.js:16:10
+   16|   RNamed {}; // ERROR
+                ^^ [1]
+
+References:
+   exported.js:7:15
+    7| export record RNamed {
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:17:10
+
+Cannot create record `RNamed` because property `xxx` is extra in record properties [1] but missing in record
+`RNamed` [2]. Records do not accept extra props. [incompatible-type]
+
+   imported.js:17:10
+   17|   RNamed {a: 1, b: 's', xxx: true}; // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   exported.js:7:15
+    7| export record RNamed {
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:18:14
+
+Cannot create record `RNamed` because in property `a`: boolean [1] is incompatible with number [2]. [incompatible-type]
+
+   imported.js:18:14
+   18|   RNamed {a: false}; // ERROR
+                    ^^^^^ [1]
+
+References:
+   exported.js:8:6
+    8|   a: number,
+            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------- imported.js:25:3
+
+Cannot cast `x` to empty because `RDefault` [1] is incompatible with empty [2]. [incompatible-type]
+
+   imported.js:25:3
+   25|   x as empty; // ERROR
+         ^
+
+References:
+   imported.js:23:13
+   23|   const x = RDefault {a: 1}; // OK
+                   ^^^^^^^^ [1]
+   imported.js:25:8
+   25|   x as empty; // ERROR
+              ^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:28:12
+
+Cannot create record `RDefault` because property `a` is missing in record properties [1] but exists in record
+`RDefault` [2]. [incompatible-type]
+
+   imported.js:28:12
+   28|   RDefault {}; // ERROR
+                  ^^ [1]
+
+References:
+   exported-default.js:1:23
+    1| export default record RDefault {
+                             ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:29:12
+
+Cannot create record `RDefault` because property `xxx` is extra in record properties [1] but missing in record
+`RDefault` [2]. Records do not accept extra props. [incompatible-type]
+
+   imported.js:29:12
+   29|   RDefault {a: 1, b: 's', xxx: true}; // ERROR
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   exported-default.js:1:23
+    1| export default record RDefault {
+                             ^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:30:16
+
+Cannot create record `RDefault` because in property `a`: boolean [1] is incompatible with number [2].
+[incompatible-type]
+
+   imported.js:30:16
+   30|   RDefault {a: false}; // ERROR
+                      ^^^^^ [1]
+
+References:
+   exported-default.js:2:6
+    2|   a: number,
+            ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------- invalid-declaration-syntax.js:4:14
 
 Record declarations use commas `,` to separate properties. To fix, replace the `;` with `,`. [record-invalid-syntax]
@@ -698,4 +821,4 @@ References:
 
 
 
-Found 47 errors
+Found 55 errors

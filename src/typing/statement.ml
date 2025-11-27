@@ -1986,7 +1986,8 @@ module Make
             | FunctionDeclaration { Ast.Function.id = Some id; _ }
             | ClassDeclaration { Ast.Class.id = Some id; _ }
             | EnumDeclaration { EnumDeclaration.id; _ }
-            | ComponentDeclaration { ComponentDeclaration.id; _ } ->
+            | ComponentDeclaration { ComponentDeclaration.id; _ }
+            | RecordDeclaration { RecordDeclaration.id; _ } ->
               let stmt = statement cx (loc, stmt) in
               let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
               let t =

@@ -220,6 +220,12 @@ and 'loc local_binding =
       name: string;
       def: ('loc loc_node, 'loc parsed) declare_class_sig Lazy.t;
     }
+  | RecordBinding of {
+      id_loc: 'loc loc_node;
+      name: string;
+      def: ('loc loc_node, 'loc parsed) class_sig Lazy.t option;
+      defaulted_props: SSet.t;
+    }
   | FunBinding of {
       id_loc: 'loc loc_node;
       name: string;
@@ -352,6 +358,7 @@ let loc_of_binding = function
     | ConstFunBinding { id_loc; _ }
     | ClassBinding { id_loc; _ }
     | DeclareClassBinding { id_loc; _ }
+    | RecordBinding { id_loc; _ }
     | FunBinding { id_loc; _ }
     | ComponentBinding { id_loc; _ }
     | EnumBinding { id_loc; _ }
@@ -623,6 +630,7 @@ module Scope = struct
     | ComponentBinding _
     | ClassBinding _
     | DeclareClassBinding _
+    | RecordBinding _
     | EnumBinding _
     | NamespaceBinding _ ->
       true
@@ -834,6 +842,15 @@ module Scope = struct
           (binding_opt, false)
     )
 
+  let bind_record scope tbls id_loc name def defaulted_props =
+    bind_local
+      ~type_only:false
+      scope
+      tbls
+      name
+      id_loc
+      (RecordBinding { id_loc; name; def; defaulted_props })
+
   let bind_enum scope tbls id_loc name def =
     bind_local ~type_only:false scope tbls name id_loc (EnumBinding { id_loc; name; def })
 
@@ -951,6 +968,7 @@ module Scope = struct
       | ParamBinding _
       | ClassBinding _
       | DeclareClassBinding _
+      | RecordBinding _
       | DeclareFunBinding _
       | EnumBinding _
       | ComponentBinding _
@@ -1102,6 +1120,7 @@ module Scope = struct
                   | ConstFunBinding _
                   | ClassBinding _
                   | DeclareClassBinding _
+                  | RecordBinding _
                   | FunBinding _
                   | DeclareFunBinding _
                   | ComponentBinding _
@@ -1126,6 +1145,7 @@ module Scope = struct
                   | ConstFunBinding _
                   | ClassBinding _
                   | DeclareClassBinding _
+                  | RecordBinding _
                   | FunBinding _
                   | DeclareFunBinding _
                   | ComponentBinding _
@@ -1161,6 +1181,7 @@ module Scope = struct
             | ConstFunBinding { id_loc; _ }
             | ClassBinding { id_loc; _ }
             | DeclareClassBinding { id_loc; _ }
+            | RecordBinding { id_loc; _ }
             | FunBinding { id_loc; _ }
             | ComponentBinding { id_loc; _ }
             | EnumBinding { id_loc; _ }
@@ -1188,6 +1209,7 @@ module Scope = struct
             | ConstFunBinding _
             | ClassBinding _
             | DeclareClassBinding _
+            | RecordBinding _
             | FunBinding _
             | ComponentBinding _
             | EnumBinding _
@@ -4272,6 +4294,40 @@ let class_decl opts scope tbls decl =
   let def = lazy (splice tbls id_loc (fun tbls -> class_def opts scope tbls decl)) in
   Scope.bind_class scope tbls id_loc name def
 
+let record_decl opts scope tbls decl =
+  let open Ast.Statement.RecordDeclaration in
+  let { id = (id_loc, { Ast.Identifier.name; comments = _ }); body; _ } = decl in
+  let id_loc = push_loc tbls id_loc in
+  let defaulted_props =
+    let (_, { Body.body = elements; _ }) = body in
+    Base.List.fold elements ~init:SSet.empty ~f:(fun acc element ->
+        match element with
+        | Body.Property
+            ( _,
+              {
+                Property.key = (_, { Ast.Identifier.name = prop_name; _ });
+                default_value = Some _;
+                _;
+              }
+            ) ->
+          SSet.add prop_name acc
+        | _ -> acc
+    )
+  in
+  let def =
+    if opts.enable_records then
+      Some
+        ( lazy
+          (splice tbls id_loc (fun tbls ->
+               class_def opts scope tbls (Flow_ast_utils.class_of_record decl)
+           )
+          )
+          )
+    else
+      None
+  in
+  Scope.bind_record scope tbls id_loc name def defaulted_props
+
 let function_decl opts scope tbls decl =
   let { Ast.Function.id; async; generator; effect_; sig_loc; _ } = decl in
   let (id_loc, { Ast.Identifier.name; comments = _ }) = Base.Option.value_exn id in
@@ -4553,6 +4609,7 @@ let export_named_decl opts scope tbls ?export_comments kind stmt =
     match stmt with
     | S.FunctionDeclaration f -> function_decl opts scope tbls f
     | S.ClassDeclaration c -> class_decl opts scope tbls c
+    | S.RecordDeclaration r -> record_decl opts scope tbls r
     | S.TypeAlias t -> type_alias_decl opts scope tbls ?export_comments t
     | S.OpaqueType t -> opaque_type_decl opts scope tbls t
     | S.InterfaceDeclaration i -> interface_decl opts scope tbls i
@@ -4617,6 +4674,8 @@ let export_default_decl =
     | D.Declaration (loc, S.ClassDeclaration decl) ->
       let loc = push_loc tbls loc in
       export_default_class opts scope tbls default_loc loc decl
+    | D.Declaration (_, S.RecordDeclaration decl) ->
+      record_decl opts scope tbls decl (Scope.export_default_binding scope default_loc)
     | D.Declaration (loc, S.FunctionDeclaration decl) ->
       let loc = push_loc tbls loc in
       export_default_fun opts scope tbls default_loc loc decl
@@ -4749,9 +4808,7 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.OpaqueType decl -> opaque_type_decl opts scope tbls decl ignore2
   | S.DeclareOpaqueType decl -> opaque_type_decl opts scope tbls decl ignore2
   | S.ClassDeclaration decl -> class_decl opts scope tbls decl ignore2
-  | S.RecordDeclaration _ ->
-    (* TODO: records *)
-    ()
+  | S.RecordDeclaration decl -> record_decl opts scope tbls decl ignore2
   | S.DeclareClass decl -> declare_class_decl opts scope tbls decl ignore2
   | S.DeclareComponent decl -> declare_component_decl opts scope tbls loc decl ignore2
   | S.InterfaceDeclaration decl -> interface_decl opts scope tbls decl ignore2

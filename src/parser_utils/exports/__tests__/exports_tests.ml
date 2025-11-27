@@ -60,6 +60,7 @@ let sig_opts =
     enable_ts_syntax = true;
     enable_ts_utility_syntax = true;
     hook_compatibility = true;
+    enable_records = true;
     enable_relay_integration = false;
     relay_integration_module_prefix = None;
     for_builtins = false;

@@ -126,6 +126,11 @@ and mark_local_binding ~locs_to_dirtify ~visit_loc = function
     mark_loc ~visit_loc id_loc;
     mark_loc ~visit_loc nominal_id_loc;
     mark_declare_class ~locs_to_dirtify ~visit_loc (Lazy.force def)
+  | P.RecordBinding { id_loc; name = _; def; defaulted_props = _ } ->
+    mark_loc ~visit_loc id_loc;
+    (match def with
+    | None -> ()
+    | Some (lazy def) -> mark_record ~locs_to_dirtify ~visit_loc def)
   | P.DeclareFunBinding { name = _; defs_rev } ->
     Nel.iter
       (fun (id_loc, fn_loc, def) ->
@@ -197,6 +202,9 @@ and mark_class ~locs_to_dirtify ~visit_loc def =
 
 and mark_declare_class ~locs_to_dirtify ~visit_loc def =
   iter_declare_class_sig (mark_loc ~visit_loc) (mark_parsed ~locs_to_dirtify ~visit_loc) def
+
+and mark_record ~locs_to_dirtify ~visit_loc def =
+  iter_class_sig (mark_loc ~visit_loc) (mark_parsed ~locs_to_dirtify ~visit_loc) def
 
 and mark_op ~locs_to_dirtify ~visit_loc op = iter_op (mark_parsed ~locs_to_dirtify ~visit_loc) op
 

@@ -74,6 +74,7 @@ module SignatureVerification = struct
         component_syntax_enabled_in_config = Options.component_syntax options;
         enable_ts_syntax = Options.ts_syntax options;
         enable_ts_utility_syntax = Options.ts_utility_syntax options;
+        enable_records = Options.enable_records options;
         enable_relay_integration = Options.enable_relay_integration options;
         relay_integration_module_prefix = Options.relay_integration_module_prefix options;
         hook_compatibility = Options.hook_compatibility_in_file options file;

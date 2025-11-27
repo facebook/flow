@@ -3,3 +3,8 @@ record R {
 }
 
 export type ReadonlyR = Readonly<R>; // ERROR
+
+export record RNamed {
+  a: number,
+  b: string = "",
+}

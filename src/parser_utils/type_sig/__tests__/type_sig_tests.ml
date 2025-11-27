@@ -197,7 +197,14 @@ let make_test_formatter () =
 
 let parse_options ~module_ref_prefix =
   let open Parser_env in
-  Some { default_parse_options with components = true; enums = true; module_ref_prefix }
+  Some
+    {
+      default_parse_options with
+      components = true;
+      enums = true;
+      records = true;
+      module_ref_prefix;
+    }
 
 let sig_options
     ?(munge = false)
@@ -210,6 +217,7 @@ let sig_options
     ?(enable_ts_syntax = true)
     ?(enable_ts_utility_syntax = true)
     ?(hook_compatibility = true)
+    ?(enable_records = true)
     ?(enable_relay_integration = false)
     ?relay_integration_module_prefix
     ?(for_builtins = false)
@@ -227,6 +235,7 @@ let sig_options
     enable_ts_syntax;
     enable_ts_utility_syntax;
     hook_compatibility;
+    enable_records;
     enable_relay_integration;
     relay_integration_module_prefix;
     for_builtins;
@@ -246,6 +255,7 @@ let print_sig
     ?enable_custom_error
     ?enable_enums
     ?(enable_component_syntax = true)
+    ?enable_records
     ?enable_relay_integration
     ?relay_integration_module_prefix
     ?for_builtins
@@ -260,6 +270,7 @@ let print_sig
       ?exact_by_default
       ?enable_custom_error
       ?enable_enums
+      ?enable_records
       ?enable_relay_integration
       ?relay_integration_module_prefix
       ?for_builtins
@@ -6621,4 +6632,77 @@ let%expect_test "function_const_type_param" =
            return = (Annot Bound {ref_loc = [1:36-37]; name = "X"});
            type_guard = None; effect_ = ArbitraryEffect};
          statics = {}}
+  |}]
+
+let%expect_test "record_named_export" =
+  print_sig {|
+    export record R {
+      a: number,
+      b: string = '',
+    }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"R"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. RecordBinding {id_loc = [1:14-15];
+         name = "R";
+         def =
+         ClassSig {tparams = Mono; extends = ClassImplicitExtends;
+           implements = []; static_props = {};
+           proto_props = {};
+           own_props =
+           { "a" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Positive));
+             "b" -> (ObjValueField ([3:2-3], (Annot (String [3:5-11])), Polarity.Positive)) }};
+         defaulted_props = { "b" }}
+  |}]
+
+let%expect_test "record_default_export" =
+  print_sig {|
+    export default record R {
+      a: number,
+      b: string = '',
+    }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||];
+      exports = [|ExportDefaultBinding {default_loc = [1:7-14]; index = 0}|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"default"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. RecordBinding {id_loc = [1:22-23];
+         name = "R";
+         def =
+         ClassSig {tparams = Mono; extends = ClassImplicitExtends;
+           implements = []; static_props = {};
+           proto_props = {};
+           own_props =
+           { "a" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Positive));
+             "b" -> (ObjValueField ([3:2-3], (Annot (String [3:5-11])), Polarity.Positive)) }};
+         defaulted_props = { "b" }}
+  |}]
+
+let%expect_test "record_disabled" =
+  print_sig ~enable_records:false {|
+    export record R {
+      a: number,
+      b: string = '',
+    }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"R"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. DisabledRecordBinding {id_loc = [1:14-15]; name = "R"}
   |}]

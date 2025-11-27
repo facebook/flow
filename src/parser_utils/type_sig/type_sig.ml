@@ -304,6 +304,16 @@ type ('loc, 'a) def =
       name: string;
       def: ('loc, 'a) class_sig;
     }
+  | RecordBinding of {
+      id_loc: 'loc;
+      name: string;
+      def: ('loc, 'a) class_sig;
+      defaulted_props: SSet.t;
+    }
+  | DisabledRecordBinding of {
+      id_loc: 'loc;
+      name: string;
+    }
   | DeclareClassBinding of {
       id_loc: 'loc;
       nominal_id_loc: 'loc;
@@ -374,6 +384,8 @@ let def_id_loc = function
   | Interface { id_loc; _ }
   | ClassBinding { id_loc; _ }
   | DeclareClassBinding { id_loc; _ }
+  | RecordBinding { id_loc; _ }
+  | DisabledRecordBinding { id_loc; _ }
   | FunBinding { id_loc; _ }
   | DeclareFun { id_loc; _ }
   | ComponentBinding { id_loc; _ }
@@ -391,6 +403,8 @@ let def_name = function
   | Interface { name; _ }
   | ClassBinding { name; _ }
   | DeclareClassBinding { name; _ }
+  | RecordBinding { name; _ }
+  | DisabledRecordBinding { name; _ }
   | FunBinding { name; _ }
   | DeclareFun { name; _ }
   | ComponentBinding { name; _ }

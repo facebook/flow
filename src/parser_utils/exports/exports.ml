@@ -168,6 +168,8 @@ module Eval = struct
     | TypeAlias { body; name; _ } -> packed ~name type_sig seen body
     | ClassBinding { name; _ } -> ClassDecl name
     | DeclareClassBinding { name; _ } -> ClassDecl name
+    | RecordBinding { name; _ } -> ClassDecl name
+    | DisabledRecordBinding { name; _ } -> ClassDecl name
     | EnumBinding { name; _ } -> EnumDecl name
     | DisabledEnumBinding { name; _ } -> EnumDecl name
     | ComponentBinding { name; _ } -> ComponentDecl name
@@ -447,6 +449,8 @@ let add_global =
       NamedType name :: acc
     | Type_sig.ClassBinding _
     | Type_sig.DeclareClassBinding _
+    | Type_sig.RecordBinding _
+    | Type_sig.DisabledRecordBinding _
     | Type_sig.EnumBinding _
     | Type_sig.DisabledEnumBinding _ ->
       add_named name (NamedType name :: acc)

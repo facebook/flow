@@ -17,6 +17,7 @@ type t = {
   enable_ts_syntax: bool;
   enable_ts_utility_syntax: bool;
   hook_compatibility: bool;
+  enable_records: bool;
   enable_relay_integration: bool;
   relay_integration_module_prefix: string option;
   for_builtins: bool;
@@ -59,6 +60,7 @@ let of_options options docblock locs_to_dirtify file =
     component_syntax_enabled_in_config = Options.component_syntax options;
     enable_ts_syntax = Options.ts_syntax options;
     enable_ts_utility_syntax = Options.ts_utility_syntax options;
+    enable_records = Options.enable_records options;
     for_builtins = false;
   }
 
@@ -81,6 +83,7 @@ let builtin_options options =
     enable_ts_syntax = false;
     enable_ts_utility_syntax = false;
     hook_compatibility = Options.hook_compatibility options;
+    enable_records = Options.enable_records options;
     for_builtins = true;
     locs_to_dirtify = [];
   }

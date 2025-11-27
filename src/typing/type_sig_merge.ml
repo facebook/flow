@@ -55,7 +55,9 @@ let def_reason = function
     Type.DescFormat.type_reason (Reason.OrdinaryName name) id_loc
   | Interface { id_loc; name; _ }
   | ClassBinding { id_loc; name; _ }
-  | DeclareClassBinding { id_loc; name; _ } ->
+  | DeclareClassBinding { id_loc; name; _ }
+  | RecordBinding { id_loc; name; _ }
+  | DisabledRecordBinding { id_loc; name; _ } ->
     Type.DescFormat.instance_reason (Reason.OrdinaryName name) id_loc
   | FunBinding { fn_loc; async; generator; _ } -> Reason.func_reason ~async ~generator fn_loc
   | DeclareFun { id_loc; _ } -> Reason.(mk_reason RFunctionType id_loc)
@@ -185,6 +187,54 @@ let add_default_constructor reason extends props =
           Some Type.(Method { key_loc = None; type_ = DefT (reason, FunT (statics, funtype)) })
         | prop -> prop)
       props
+
+let add_record_constructor file reason name own_props defaulted_props class_props =
+  let record_reason = Reason.(replace_desc_reason (RRecordType name) reason) in
+  let return = Type.VoidT.why reason in
+  let statics = Type.dummy_static reason in
+  let props =
+    SMap.mapi
+      (fun prop_name prop ->
+        match prop with
+        | Type.Field { preferred_def_locs; key_loc; type_; polarity } ->
+          if SSet.mem prop_name defaulted_props then
+            let reason = TypeUtil.reason_of_t type_ in
+            let optional_reason =
+              Reason.(update_desc_new_reason (fun desc -> ROptional desc) reason)
+            in
+            Type.Field
+              {
+                preferred_def_locs;
+                key_loc;
+                type_ = Type.OptionalT { reason = optional_reason; type_; use_desc = false };
+                polarity;
+              }
+          else
+            prop
+        | _ -> prop)
+      own_props
+  in
+  let param =
+    Obj_type.mk_with_proto
+      file.cx
+      record_reason
+      ~obj_kind:Type.Exact
+      ~props:(NameUtils.namemap_of_smap props)
+      (Type.NullProtoT record_reason)
+  in
+  let funtype =
+    Type.mk_boundfunctiontype
+      [param]
+      return
+      ~this:(Type.implicit_mixed_this reason)
+      ~rest_param:None
+      ~def_reason:reason
+      ~type_guard:None
+  in
+  let constructor =
+    Type.(Method { key_loc = None; type_ = DefT (reason, FunT (statics, funtype)) })
+  in
+  SMap.add "constructor" constructor class_props
 
 let add_name_field reason =
   let f = function
@@ -1550,10 +1600,9 @@ and merge_class_mixin =
       let targs = List.map (merge env file) targs in
       TypeUtil.this_typeapp ~annot_loc:loc t this (Some targs)
 
-and merge_class env file reason class_name id def =
-  let (ClassSig { tparams; extends; implements; static_props; own_props; proto_props }) = def in
-  let this_reason = Reason.(replace_desc_reason RThisType reason) in
-  let this_class_t env targs rec_type =
+and merge_this_class_t file reason class_name id def this_reason inst_kind =
+  let (ClassSig { extends; implements; static_props; own_props; proto_props; tparams = _ }) = def in
+  fun env targs rec_type ->
     let this =
       let this_tp =
         {
@@ -1578,13 +1627,25 @@ and merge_class env file reason class_name id def =
       let props = NameUtils.namemap_of_smap props in
       Obj_type.mk_with_proto file.cx static_reason static_proto ~props ~obj_kind:Type.Inexact
     in
+    let own_props = SMap.map (merge_class_prop env file) own_props in
+    let proto_props = SMap.map (merge_class_prop env file) proto_props in
+    let proto_props =
+      match inst_kind with
+      | Type.RecordKind { defaulted_props } ->
+        add_record_constructor
+          file
+          reason
+          (Base.Option.value_exn class_name)
+          own_props
+          defaulted_props
+          proto_props
+      | _ -> proto_props
+    in
     let own_props =
-      SMap.map (merge_class_prop env file) own_props
-      |> NameUtils.namemap_of_smap
-      |> Context.generate_property_map file.cx
+      own_props |> NameUtils.namemap_of_smap |> Context.generate_property_map file.cx
     in
     let proto_props =
-      SMap.map (merge_class_prop env file) proto_props
+      proto_props
       |> add_default_constructor reason extends
       |> NameUtils.namemap_of_smap
       |> Context.generate_property_map file.cx
@@ -1600,7 +1661,7 @@ and merge_class env file reason class_name id def =
         inst_call_t = None;
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
-        inst_kind = Type.ClassKind;
+        inst_kind;
         inst_dict = None;
         class_private_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
@@ -1613,6 +1674,36 @@ and merge_class env file reason class_name id def =
       (Type.ThisInstanceT
          (reason, { Type.static; super; implements; inst }, false, Subst_name.Name "this")
       )
+
+and merge_class env file reason class_name id def =
+  let (ClassSig { tparams; _ }) = def in
+  let this_reason = Reason.(replace_desc_reason RThisType reason) in
+  let this_class_t = merge_this_class_t file reason class_name id def this_reason Type.ClassKind in
+  let t (env, targs) =
+    let rec t =
+      lazy
+        (let rec_type =
+           Tvar.mk_fully_resolved_lazy file.cx this_reason ~force_post_component:false t
+         in
+         this_class_t env targs rec_type
+        )
+    in
+    Lazy.force t
+  in
+  merge_tparams_targs env file reason t tparams
+
+and merge_record env file reason record_name id def defaulted_props =
+  let (ClassSig { tparams; _ }) = def in
+  let this_reason = Reason.(replace_desc_reason RThisType reason) in
+  let this_class_t =
+    merge_this_class_t
+      file
+      reason
+      record_name
+      id
+      def
+      this_reason
+      (Type.RecordKind { defaulted_props })
   in
   let t (env, targs) =
     let rec t =
@@ -1994,6 +2085,9 @@ let merge_def ~const_decl file reason = function
   | DeclareClassBinding { id_loc = _; nominal_id_loc; name; def } ->
     let nominal_id = Context.make_aloc_id file.cx nominal_id_loc in
     merge_declare_class file reason name nominal_id def
+  | RecordBinding { id_loc; name; def; defaulted_props } ->
+    let id = Context.make_aloc_id file.cx id_loc in
+    merge_record (mk_merge_env SMap.empty) file reason (Some name) id def defaulted_props
   | FunBinding { id_loc = _; name = _; async = _; generator = _; fn_loc = _; def; statics } ->
     let statics = merge_fun_statics (mk_merge_env SMap.empty) file reason statics in
     merge_fun (mk_merge_env SMap.empty) file reason def statics
@@ -2012,7 +2106,8 @@ let merge_def ~const_decl file reason = function
     let t (env, _targs) = merge ~const_decl env file def in
     merge_tparams_targs (mk_merge_env SMap.empty) file reason t tparams
   | DisabledComponentBinding _
-  | DisabledEnumBinding _ ->
+  | DisabledEnumBinding _
+  | DisabledRecordBinding _ ->
     Type.AnyT.error reason
   | EnumBinding { id_loc; rep; members; has_unknown_members; name } ->
     merge_enum file reason id_loc name rep members has_unknown_members

@@ -330,6 +330,13 @@ and pack_local_binding cx = function
     let nominal_id_loc = pack_loc nominal_id_loc in
     let def = pack_declare_class cx (Lazy.force def) in
     DeclareClassBinding { id_loc; nominal_id_loc; name; def }
+  | P.RecordBinding { id_loc; name; def; defaulted_props } ->
+    let id_loc = pack_loc id_loc in
+    (match def with
+    | Some (lazy def) ->
+      let def = pack_record cx def in
+      RecordBinding { id_loc; name; def; defaulted_props }
+    | None -> DisabledRecordBinding { id_loc; name })
   | P.FunBinding { id_loc; name; async; generator; fn_loc; def; statics } ->
     let id_loc = pack_loc id_loc in
     let fn_loc = pack_loc fn_loc in
@@ -530,6 +537,8 @@ and pack_component cx def = map_component_sig pack_loc (pack_parsed cx) def
 and pack_class cx def = map_class_sig pack_loc (pack_parsed cx) def
 
 and pack_declare_class cx def = map_declare_class_sig pack_loc (pack_parsed cx) def
+
+and pack_record cx def = map_class_sig pack_loc (pack_parsed cx) def
 
 and pack_interface cx def = map_interface_sig pack_loc (pack_parsed cx) def
 

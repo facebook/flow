@@ -185,6 +185,7 @@ end = struct
         enable_ts_syntax = true;
         enable_ts_utility_syntax = true;
         hook_compatibility = true;
+        enable_records = true;
         for_builtins = true;
         locs_to_dirtify = [];
       }
