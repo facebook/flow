@@ -4294,6 +4294,64 @@ let class_decl opts scope tbls decl =
   let def = lazy (splice tbls id_loc (fun tbls -> class_def opts scope tbls decl)) in
   Scope.bind_class scope tbls id_loc name def
 
+let record_def opts scope tbls decl =
+  let open Ast.Statement.RecordDeclaration in
+  let { id = _; body; tparams = tps; implements; _ } = decl in
+  let module Acc = ClassAcc in
+  let (_, { Body.body = elements; _ }) = body in
+  let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+  let xs = SSet.add "this" xs in
+  let extends = ClassImplicitExtends in
+  let implements = class_implements opts scope tbls xs implements in
+  let acc = Acc.empty in
+  (* Process record properties *)
+  let acc =
+    List.fold_left
+      (fun acc element ->
+        match element with
+        | Body.Property
+            ( _,
+              {
+                Property.key = (id_loc, { Ast.Identifier.name; _ });
+                annot = (_, t);
+                default_value = _;
+                comments = _;
+                invalid_syntax = _;
+              }
+            ) ->
+          let id_loc = push_loc tbls id_loc in
+          let t = annot opts scope tbls xs t in
+          (* Records have covariant fields *)
+          Acc.add_field ~static:false name id_loc Polarity.Positive t acc
+        | Body.Method
+            (fn_loc, { Ast.Class.Method.key; value = (_, fn); static; kind; comments = _; _ }) ->
+          let module P = Ast.Expression.Object.Property in
+          (match (key, kind) with
+          | (P.Identifier (id_loc, { Ast.Identifier.name; _ }), Ast.Class.Method.Method) ->
+            let { Ast.Function.async; generator; _ } = fn in
+            let fn_loc = push_loc tbls fn_loc in
+            let id_loc = push_loc tbls id_loc in
+            let def = function_def opts scope tbls xs fn_loc fn in
+            Acc.add_method ~static name id_loc fn_loc ~async ~generator def acc
+          | _ -> acc)
+        | Body.StaticProperty
+            ( _,
+              {
+                StaticProperty.key = (id_loc, { Ast.Identifier.name; _ });
+                annot = (_, t);
+                value = _;
+                comments = _;
+                invalid_syntax = _;
+              }
+            ) ->
+          let id_loc = push_loc tbls id_loc in
+          let t = annot opts scope tbls xs t in
+          Acc.add_field ~static:true name id_loc Polarity.Positive t acc)
+      acc
+      elements
+  in
+  Acc.class_def tparams extends implements acc
+
 let record_decl opts scope tbls decl =
   let open Ast.Statement.RecordDeclaration in
   let { id = (id_loc, { Ast.Identifier.name; comments = _ }); body; _ } = decl in
@@ -4316,13 +4374,7 @@ let record_decl opts scope tbls decl =
   in
   let def =
     if opts.enable_records then
-      Some
-        ( lazy
-          (splice tbls id_loc (fun tbls ->
-               class_def opts scope tbls (Flow_ast_utils.class_of_record decl)
-           )
-          )
-          )
+      Some (lazy (splice tbls id_loc (fun tbls -> record_def opts scope tbls decl)))
     else
       None
   in
