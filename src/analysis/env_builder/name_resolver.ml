@@ -4699,8 +4699,71 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         )
 
       method! record_declaration loc record =
-        ignore @@ this#class_ loc (Flow_ast_utils.class_of_record record);
-        record
+        let open Ast.Statement.RecordDeclaration in
+        let { id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } = record in
+        let class_stack_old = class_stack in
+        class_stack <- loc :: class_stack;
+        this#check_class_name name_loc name;
+        (* Give record body the location of the entire record,
+           so record body visitor can use it as the def loc of super. *)
+        let record' = super#record_declaration loc { record with body = (loc, snd record.body) } in
+        let record_self_reason = mk_reason (RType (OrdinaryName name)) name_loc in
+        ( if this#is_assigning_write (Env_api.OrdinaryNameLoc, name_loc) then
+          let self_write = Env_api.AssigningWrite record_self_reason in
+          let this_write = Env_api.AssigningWrite (mk_reason RThis loc) in
+          let super_write = Env_api.AssigningWrite (mk_reason RSuper loc) in
+          let write_entries =
+            env_state.write_entries
+            |> EnvMap.add (Env_api.ClassSelfLoc, loc) self_write
+            |> EnvMap.add (Env_api.ClassInstanceThisLoc, loc) this_write
+            |> EnvMap.add (Env_api.ClassInstanceSuperLoc, loc) super_write
+            |> EnvMap.add (Env_api.ClassStaticThisLoc, loc) this_write
+            |> EnvMap.add (Env_api.ClassStaticSuperLoc, loc) super_write
+          in
+          env_state <- { env_state with write_entries }
+        );
+        class_stack <- class_stack_old;
+        record'
+
+      method! record_body body =
+        let open Ast.Statement.RecordDeclaration.Body in
+        let (loc, { body = elements; comments }) = body in
+        let (static_elements, instance_elements) =
+          Base.List.partition_tf elements ~f:(function
+              | Method (_, { Ast.Class.Method.static; _ }) -> static
+              | Property _ -> false
+              | StaticProperty _ -> true
+              )
+        in
+        let static_body = (loc, { body = static_elements; comments }) in
+        let instance_body = (loc, { body = instance_elements; comments }) in
+        let this_super_bindings =
+          Bindings.empty
+          |> Bindings.add ((loc, { Ast.Identifier.name = "this"; comments = None }), Bindings.Const)
+          |> Bindings.add ((loc, { Ast.Identifier.name = "super"; comments = None }), Bindings.Const)
+        in
+        this#with_scoped_bindings
+          ~this_super_binding_env:ClassInstanceEnv
+          loc
+          this_super_bindings
+          (fun () -> run super#record_body instance_body
+        );
+        this#with_scoped_bindings
+          ~this_super_binding_env:ClassStaticEnv
+          loc
+          this_super_bindings
+          (fun () -> run super#record_body static_body
+        );
+        body
+
+      method! record_property loc prop =
+        this#under_uninitialized_env ~f:(fun () ->
+            let env = this#env_snapshot in
+            this#run
+              (fun () -> ignore @@ super#record_property loc prop)
+              ~finally:(fun () -> this#reset_env env)
+        );
+        prop
 
       method! object_ loc expr =
         let open Ast.Expression.Object in
