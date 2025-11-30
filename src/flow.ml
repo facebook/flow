@@ -20,6 +20,7 @@ end = struct
       AutocompleteCommand.command;
       AutofixCommand.command;
       CheckCommands.CheckCommand.command;
+      CheckCommands.FullCheckCommand.command;
       CheckCommands.FocusCheckCommand.command;
       CheckContentsCommand.command;
       CodemodCommand.command;
