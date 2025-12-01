@@ -3,6 +3,8 @@ title: Arrays
 slug: /types/arrays
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 Array types represent lists of **unknown length**, where all items have the **same type**.
 This is in contrast to [tuple types](../tuples), which have a fixed length and where each element can have a different type.
 
@@ -30,13 +32,13 @@ const arr2: Array<string> = ["A", "B", "C"];
 const arr3: Array<mixed> = [1, true, "three"];
 ```
 
-## `$ReadOnlyArray` Type {#toc-readonlyarray}
+## `ReadonlyArray<T>` <SinceVersion version="0.290" /> (alias `$ReadOnlyArray`) Type {#toc-readonlyarray}
 
-You can use the type `$ReadOnlyArray<T>` instead of `Array<T>` to represent a [read-only](../../lang/variance) array which cannot be mutated.
+You can use the type `ReadonlyArray<T>` instead of `Array<T>` to represent a [read-only](../../lang/variance) array which cannot be mutated.
 You can't write to a read-only array directly, and can't use methods which mutate the array like `.push()`, `.unshift()`, etc.
 
 ```js flow-check
-const readonlyArray: $ReadOnlyArray<number> = [1, 2, 3]
+const readonlyArray: ReadonlyArray<number> = [1, 2, 3]
 
 const first = readonlyArray[0]; // OK to read
 readonlyArray[1] = 20;          // Error!
@@ -44,20 +46,20 @@ readonlyArray.push(4);          // Error!
 readonlyArray.unshift(4);       // Error!
 ```
 
-Note that an array of type `$ReadOnlyArray<T>` can still have mutable _elements_:
+Note that an array of type `ReadonlyArray<T>` can still have mutable _elements_:
 
 ```js flow-check
-const readonlyArray: $ReadOnlyArray<{x: number}> = [{x: 1}];
+const readonlyArray: ReadonlyArray<{x: number}> = [{x: 1}];
 readonlyArray[0] = {x: 42}; // Error!
 readonlyArray[0].x = 42; // Works
 ```
 
-The main advantage to using `$ReadOnlyArray` instead of `Array` is that `$ReadOnlyArray`'s
+The main advantage to using `ReadonlyArray` instead of `Array` is that `ReadonlyArray`'s
 type parameter is [*covariant*](../../lang/variance/#toc-covariance)
 while `Array`'s type parameter is [*invariant*](../../lang/variance/#toc-invariance).
-That means that `$ReadOnlyArray<number>` is a subtype of `$ReadOnlyArray<number | string>` while
+That means that `ReadonlyArray<number>` is a subtype of `ReadonlyArray<number | string>` while
 `Array<number>` is NOT a subtype of `Array<number | string>`. So it's often useful to use
-`$ReadOnlyArray` in type annotations for arrays of various types of elements.
+`ReadonlyArray` in type annotations for arrays of various types of elements.
 Take, for instance, the following scenario:
 
 ```js flow-check
@@ -72,11 +74,11 @@ someOperation(array) // Error!
 Since the parameter `arr` of the `someOperation` function is typed as a mutable
 `Array`, pushing a string into it would be possible inside that scope, which
 would then break the type contract of the outside `array` variable. By
-annotating the parameter as `$ReadOnlyArray` instead in this case, Flow can be
+annotating the parameter as `ReadonlyArray` instead in this case, Flow can be
 sure this won't happen and no errors will occur:
 
 ```js flow-check
-const someOperation = (arr: $ReadOnlyArray<number | string>) => {
+const someOperation = (arr: ReadonlyArray<number | string>) => {
   // Nothing can be added to `arr`
 }
 
@@ -84,13 +86,13 @@ const array: Array<number> = [1];
 someOperation(array); // Works
 ```
 
-`$ReadOnlyArray<mixed>` represents the supertype of all arrays and all [tuples](../tuples):
+`ReadonlyArray<unknown>` represents the supertype of all arrays and all [tuples](../tuples):
 
 ```js flow-check
 const tup: [number, string] = [1, 'hi'];
 const arr: Array<number> = [1, 2];
 
-function f(xs: $ReadOnlyArray<mixed>) { /* ... */ }
+function f(xs: ReadonlyArray<unknown>) { /* ... */ }
 
 f(tup); // Works
 f(arr); // Works
