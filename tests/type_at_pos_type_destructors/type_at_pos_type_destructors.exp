@@ -528,7 +528,7 @@ type-destructor.js:23:6,23:13
 
 type-destructor.js:27:6
 Flags:
-type Prop$Values = $Values<Props>
+type Prop$Values = Values<Props>
 = string | number
 
 'Prop$Values' defined at type-destructor.js:27:5
@@ -538,7 +538,7 @@ type-destructor.js:27:6,27:16
 
 type-destructor.js:31:6
 Flags:
-type ValuesOfFrozenObject = $Values<{|+A: "a", +B: "b"|}>
+type ValuesOfFrozenObject = Values<{|+A: "a", +B: "b"|}>
 = "b" | "a"
 
 'ValuesOfFrozenObject' defined at type-destructor.js:31:5
@@ -547,7 +547,7 @@ type-destructor.js:31:6,31:25
 
 type-destructor.js:34:6
 Flags:
-type ValuesPoly<X> = $Values<X>
+type ValuesPoly<X> = Values<X>
 
 'ValuesPoly' defined at type-destructor.js:34:5
 
@@ -555,7 +555,7 @@ type-destructor.js:34:6,34:15
 
 type-destructor.js:37:6
 Flags:
-type ValuesPolyBound<X: {f: number, ...}> = $Values<X>
+type ValuesPolyBound<X: {f: number, ...}> = Values<X>
 = number
 
 'ValuesPolyBound' defined at type-destructor.js:37:5
