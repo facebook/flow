@@ -1,12 +1,12 @@
 {
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":1}},
-  "range":[0,87],
+  "range":[0,89],
   "body":[
     {
       "type":"RecordDeclaration",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":7,"column":1}},
-      "range":[0,87],
+      "range":[0,89],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":1,"column":8}},
@@ -20,7 +20,7 @@
       "body":{
         "type":"RecordBody",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":7,"column":1}},
-        "range":[9,87],
+        "range":[9,89],
         "body":[
           {
             "type":"RecordProperty",
@@ -49,7 +49,7 @@
           {
             "type":"MethodDefinition",
             "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":6,"column":3}},
-            "range":[29,85],
+            "range":[29,87],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":4,"column":2},"end":{"line":4,"column":8}},
@@ -61,7 +61,7 @@
             "value":{
               "type":"FunctionExpression",
               "loc":{"source":null,"start":{"line":4,"column":8},"end":{"line":6,"column":3}},
-              "range":[35,85],
+              "range":[35,87],
               "id":null,
               "params":[
                 {
@@ -85,17 +85,17 @@
               "body":{
                 "type":"BlockStatement",
                 "loc":{"source":null,"start":{"line":4,"column":24},"end":{"line":6,"column":3}},
-                "range":[51,85],
+                "range":[51,87],
                 "body":[
                   {
                     "type":"ReturnStatement",
-                    "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":28}},
-                    "range":[57,81],
+                    "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":30}},
+                    "range":[57,83],
                     "argument":{
-                      "type":"AssignmentExpression",
-                      "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":27}},
-                      "range":[64,80],
-                      "operator":"=",
+                      "type":"BinaryExpression",
+                      "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":29}},
+                      "range":[64,82],
+                      "operator":"===",
                       "left":{
                         "type":"MemberExpression",
                         "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":19}},
@@ -117,8 +117,8 @@
                       },
                       "right":{
                         "type":"Identifier",
-                        "loc":{"source":null,"start":{"line":5,"column":22},"end":{"line":5,"column":27}},
-                        "range":[75,80],
+                        "loc":{"source":null,"start":{"line":5,"column":24},"end":{"line":5,"column":29}},
+                        "range":[77,82],
                         "name":"other",
                         "typeAnnotation":null,
                         "optional":false
