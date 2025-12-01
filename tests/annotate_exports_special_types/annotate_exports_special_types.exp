@@ -13,12 +13,12 @@ declare var funProtoCall: typeof Function.prototype.call;
 
 export function foo(): {
   funProto: typeof Object.prototype,
-  funProtoApply: <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(
+  funProtoApply: <T, R, A: $ArrayLike<mixed> = Readonly<[]>>(
     thisArg: T,
     args?: A
   ) => R,
   funProtoBind: typeof Function.prototype.bind,
-  funProtoCall: <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(
+  funProtoCall: <T, R, A: $ArrayLike<mixed> = Readonly<[]>>(
     thisArg: T,
     ...args: A
   ) => R,
@@ -74,12 +74,12 @@ declare var funProtoCall: typeof Function.prototype.call;
 
 export function foo(): {
   funProto: typeof Object.prototype,
-  funProtoApply: <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(
+  funProtoApply: <T, R, A: $ArrayLike<mixed> = Readonly<[]>>(
     thisArg: T,
     args?: A
   ) => R,
   funProtoBind: typeof Function.prototype.bind,
-  funProtoCall: <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(
+  funProtoCall: <T, R, A: $ArrayLike<mixed> = Readonly<[]>>(
     thisArg: T,
     ...args: A
   ) => R,

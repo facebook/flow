@@ -1,6 +1,6 @@
 main.js:7:13
 Flags:
-type SurfaceEntryPoint<TRoute: Route<>> = $ReadOnly<
+type SurfaceEntryPoint<TRoute: Route<>> = Readonly<
   {
     getComponent: () => JSResourceReference<Module<TRoute>>,
     getNavigationOptions: () => number,

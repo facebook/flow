@@ -877,8 +877,8 @@ type S = [0, ...T, d?: void | 4]
 tuple.js:6:6,6:6
 
 At tuple.js:10:6
-type R = $ReadOnly<Tup>
-= $ReadOnly<[a: number, string, boolean]>
+type R = Readonly<Tup>
+= Readonly<[a: number, string, boolean]>
 
 'R' defined at tuple.js:10:5
 'Tup' defined at tuple.js:9:5
@@ -896,7 +896,7 @@ tuple.js:13:6,13:6
 
 At tuple.js:16:6
 type Q = Partial<R>
-= $ReadOnly<[a?: number, _1?: string, _2?: boolean]>
+= Readonly<[a?: number, _1?: string, _2?: boolean]>
 
 'Q' defined at tuple.js:16:5
 'R' defined at tuple.js:10:5
@@ -904,8 +904,8 @@ type Q = Partial<R>
 tuple.js:16:6,16:6
 
 At tuple.js:20:6
-type ROM = $ReadOnly<M>
-= $ReadOnly<[1, 2, 3]>
+type ROM = Readonly<M>
+= Readonly<[1, 2, 3]>
 
 'M' defined at tuple.js:19:5
 'ROM' defined at tuple.js:20:5

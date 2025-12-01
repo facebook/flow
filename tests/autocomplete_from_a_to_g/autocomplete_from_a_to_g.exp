@@ -485,13 +485,13 @@ Flags: --pretty
     {"name":"bar","type":"string"},
     {
       "name":"apply",
-      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R"
+      "type":"<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, args?: A) => R"
     },
     {"name":"arguments","type":"any"},
     {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
     {
       "name":"call",
-      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R"
+      "type":"<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, ...args: A) => R"
     },
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},
@@ -510,13 +510,13 @@ Flags: --pretty
   "result":[
     {
       "name":"apply",
-      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R"
+      "type":"<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, args?: A) => R"
     },
     {"name":"arguments","type":"any"},
     {"name":"bind","type":"(thisArg: any, ...argArray: Array<any>) => any"},
     {
       "name":"call",
-      "type":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R"
+      "type":"<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, ...args: A) => R"
     },
     {"name":"caller","type":"any | null"},
     {"name":"length","type":"number"},

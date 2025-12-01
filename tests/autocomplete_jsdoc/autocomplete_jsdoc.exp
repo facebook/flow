@@ -1899,10 +1899,10 @@ Flags: --lsp
 {
   "label":"apply",
   "labelDetails":{
-    "detail":": <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R"
+    "detail":": <T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, args?: A) => R"
   },
   "kind":3,
-  "detail":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, args?: A) => R",
+  "detail":"<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, args?: A) => R",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{
@@ -1985,10 +1985,10 @@ Flags: --lsp
 {
   "label":"call",
   "labelDetails":{
-    "detail":": <T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R"
+    "detail":": <T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, ...args: A) => R"
   },
   "kind":3,
-  "detail":"<T, R, A: $ArrayLike<mixed> = $ReadOnly<[]>>(thisArg: T, ...args: A) => R",
+  "detail":"<T, R, A: $ArrayLike<mixed> = Readonly<[]>>(thisArg: T, ...args: A) => R",
   "sortText":"00000000000000000001",
   "insertTextFormat":1,
   "textEdit":{

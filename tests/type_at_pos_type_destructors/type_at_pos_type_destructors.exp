@@ -564,7 +564,7 @@ type-destructor.js:37:6,37:20
 
 type-destructor.js:41:6
 Flags:
-type ReadOnlyObj = $ReadOnly<{key: any, ...}>
+type ReadOnlyObj = Readonly<{key: any, ...}>
 = {+key: any, ...}
 
 'ReadOnlyObj' defined at type-destructor.js:41:5

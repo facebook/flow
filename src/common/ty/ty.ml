@@ -839,7 +839,7 @@ let debug_string_of_generic_kind = function
 let string_of_utility_ctor = function
   | Keys _ -> "$Keys"
   | Values _ -> "Values"
-  | ReadOnly _ -> "$ReadOnly"
+  | ReadOnly _ -> "Readonly"
   | Partial _ -> "Partial"
   | Required _ -> "Required"
   | Exact _ -> "$Exact"
