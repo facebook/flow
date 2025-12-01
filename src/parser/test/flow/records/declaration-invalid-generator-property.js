@@ -1,0 +1,3 @@
+record R {
+  *foo: string,
+}
