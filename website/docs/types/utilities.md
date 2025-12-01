@@ -376,14 +376,14 @@ const user = {name: 'John Wilkes Booth'};
 const a: ExactUser = user;
 ```
 
-## `$NonMaybeType<T>` {#toc-nonmaybe}
+## `NonNullable<T>` <SinceVersion version="0.290" /> (alias `$NonMaybeType<T>`) {#toc-nonmaybe}
 
-`$NonMaybeType<T>` converts a type `T` to a non-[maybe type](../maybe).
-In other words, the values of `$NonMaybeType<T>` are the values of `T` except for `null` and `undefined`.
+`NonNullable<T>` converts a type `T` to a non-[maybe type](../maybe).
+In other words, the values of `NonNullable<T>` are the values of `T` except for `null` and `undefined`.
 
 ```js flow-check
 type MaybeName = ?string;
-type Name = $NonMaybeType<MaybeName>;
+type Name = NonNullable<MaybeName>;
 
 'Gabriel' as MaybeName; // Works
 null as MaybeName; // Works
