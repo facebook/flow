@@ -59,7 +59,7 @@ test.js:26:6,26:7
 
 test.js:29:6
 Flags:
-type T7 = $Keys<Foo>
+type T7 = keyof Foo
 = "bar"
 
 'Foo' defined at test.js:3:5
@@ -69,7 +69,7 @@ test.js:29:6,29:7
 
 test.js:32:6
 Flags:
-type T8 = $Keys<{bar: number, baz: bigint, foo: string}>
+type T8 = keyof {bar: number, baz: bigint, foo: string}
 = "foo" | "baz" | "bar"
 
 'T8' defined at test.js:32:5
