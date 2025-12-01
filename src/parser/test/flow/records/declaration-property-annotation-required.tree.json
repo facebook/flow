@@ -32,10 +32,10 @@
       "typeParameters":null,
       "implements":[],
       "body":{
-        "type":"RecordBody",
+        "type":"RecordDeclarationBody",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":5,"column":1}},
         "range":[9,52],
-        "body":[]
+        "elements":[]
       }
     }
   ],

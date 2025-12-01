@@ -18,12 +18,12 @@
       "typeParameters":null,
       "implements":[],
       "body":{
-        "type":"RecordBody",
+        "type":"RecordDeclarationBody",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":4,"column":1}},
         "range":[9,40],
-        "body":[
+        "elements":[
           {
-            "type":"RecordProperty",
+            "type":"RecordDeclarationProperty",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":13}},
             "range":[13,24],
             "key":{
@@ -47,7 +47,7 @@
             "defaultValue":null
           },
           {
-            "type":"RecordProperty",
+            "type":"RecordDeclarationProperty",
             "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":13}},
             "range":[27,38],
             "key":{

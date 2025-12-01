@@ -48,10 +48,10 @@
       "typeParameters":null,
       "implements":[],
       "body":{
-        "type":"RecordBody",
+        "type":"RecordDeclarationBody",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":4,"column":0}},
         "range":[9,29],
-        "body":[
+        "elements":[
           {
             "type":"MethodDefinition",
             "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":4,"column":0}},

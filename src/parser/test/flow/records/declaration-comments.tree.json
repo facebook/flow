@@ -34,12 +34,12 @@
       "typeParameters":null,
       "implements":[],
       "body":{
-        "type":"RecordBody",
+        "type":"RecordDeclarationBody",
         "loc":{"source":null,"start":{"line":9,"column":9},"end":{"line":18,"column":1}},
         "range":[59,174],
-        "body":[
+        "elements":[
           {
-            "type":"RecordProperty",
+            "type":"RecordDeclarationProperty",
             "leadingComments":[
               {
                 "type":"Block",
@@ -79,7 +79,7 @@
             "defaultValue":null
           },
           {
-            "type":"RecordProperty",
+            "type":"RecordDeclarationProperty",
             "leadingComments":[
               {
                 "type":"Block",

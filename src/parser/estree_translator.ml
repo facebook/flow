@@ -186,7 +186,7 @@ with type t = Impl.t = struct
           let key = identifier key in
           node
             ?comments
-            "RecordProperty"
+            "RecordDeclarationProperty"
             loc
             [
               ("key", key);
@@ -201,7 +201,7 @@ with type t = Impl.t = struct
           let key = identifier key in
           node
             ?comments
-            "RecordStaticProperty"
+            "RecordDeclarationStaticProperty"
             loc
             [("key", key); ("typeAnnotation", type_annotation annot); ("value", expression value)]
         in
@@ -214,9 +214,18 @@ with type t = Impl.t = struct
           | Method meth -> class_method meth
         in
         let record_body (loc, { RecordDeclaration.Body.body; comments }) =
-          node ?comments "RecordBody" loc [("body", array_of_list record_element body)]
+          node
+            ?comments
+            "RecordDeclarationBody"
+            loc
+            [("elements", array_of_list record_element body)]
         in
-        let record_implements = implements_helper "RecordImplements" in
+        let record_implements (loc, { Class.Implements.Interface.id; targs }) =
+          node
+            "RecordDeclarationImplements"
+            loc
+            [("id", identifier id); ("typeArguments", option type_args targs)]
+        in
         let implements =
           match implements with
           | Some (_, { Class.Implements.interfaces; comments = _ }) ->
@@ -1322,9 +1331,8 @@ with type t = Impl.t = struct
         ]
     and class_decorator (loc, { Class.Decorator.expression = expr; comments }) =
       node ?comments "Decorator" loc [("expression", expression expr)]
-    and implements_helper node_type (loc, { Class.Implements.Interface.id; targs }) =
-      node node_type loc [("id", identifier id); ("typeParameters", option type_args targs)]
-    and class_implements node = implements_helper "ClassImplements" node
+    and class_implements (loc, { Class.Implements.Interface.id; targs }) =
+      node "ClassImplements" loc [("id", identifier id); ("typeParameters", option type_args targs)]
     and class_body (loc, { Class.Body.body; comments }) =
       node ?comments "ClassBody" loc [("body", array_of_list class_element body)]
     and class_element =

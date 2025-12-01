@@ -23,12 +23,12 @@
           "typeParameters":null,
           "implements":[],
           "body":{
-            "type":"RecordBody",
+            "type":"RecordDeclarationBody",
             "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":6,"column":3}},
             "range":[13,87],
-            "body":[
+            "elements":[
               {
-                "type":"RecordProperty",
+                "type":"RecordDeclarationProperty",
                 "loc":{"source":null,"start":{"line":3,"column":4},"end":{"line":3,"column":19}},
                 "range":[19,34],
                 "key":{
@@ -52,7 +52,7 @@
                 "defaultValue":null
               },
               {
-                "type":"RecordProperty",
+                "type":"RecordDeclarationProperty",
                 "loc":{"source":null,"start":{"line":4,"column":4},"end":{"line":4,"column":18}},
                 "range":[39,53],
                 "key":{
@@ -76,7 +76,7 @@
                 "defaultValue":null
               },
               {
-                "type":"RecordStaticProperty",
+                "type":"RecordDeclarationStaticProperty",
                 "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":29}},
                 "range":[65,83],
                 "key":{
@@ -130,10 +130,10 @@
           "typeParameters":null,
           "implements":[],
           "body":{
-            "type":"RecordBody",
+            "type":"RecordDeclarationBody",
             "loc":{"source":null,"start":{"line":9,"column":11},"end":{"line":13,"column":3}},
             "range":[103,161],
-            "body":[
+            "elements":[
               {
                 "type":"MethodDefinition",
                 "loc":{"source":null,"start":{"line":10,"column":4},"end":{"line":10,"column":15}},
@@ -267,10 +267,10 @@
           "typeParameters":null,
           "implements":[],
           "body":{
-            "type":"RecordBody",
+            "type":"RecordDeclarationBody",
             "loc":{"source":null,"start":{"line":16,"column":11},"end":{"line":20,"column":3}},
             "range":[177,244],
-            "body":[
+            "elements":[
               {
                 "type":"MethodDefinition",
                 "loc":{"source":null,"start":{"line":17,"column":4},"end":{"line":17,"column":18}},
@@ -452,10 +452,10 @@
           "typeParameters":null,
           "implements":[],
           "body":{
-            "type":"RecordBody",
+            "type":"RecordDeclarationBody",
             "loc":{"source":null,"start":{"line":23,"column":11},"end":{"line":25,"column":3}},
             "range":[260,287],
-            "body":[
+            "elements":[
               {
                 "type":"MethodDefinition",
                 "loc":{"source":null,"start":{"line":24,"column":10},"end":{"line":24,"column":21}},
@@ -517,10 +517,10 @@
           "typeParameters":null,
           "implements":[],
           "body":{
-            "type":"RecordBody",
+            "type":"RecordDeclarationBody",
             "loc":{"source":null,"start":{"line":28,"column":11},"end":{"line":30,"column":3}},
             "range":[303,333],
-            "body":[
+            "elements":[
               {
                 "type":"MethodDefinition",
                 "loc":{"source":null,"start":{"line":29,"column":10},"end":{"line":29,"column":24}},

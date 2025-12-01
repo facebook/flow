@@ -336,28 +336,31 @@ function custom_ast_types(fork) {
     .build('id', 'typeParameters', 'implements', 'body')
     .field('id', def('Identifier'))
     .field('typeParameters', or(def('TypeParameterDeclaration'), null))
-    .field('implements', [def('RecordImplements')])
-    .field('body', def('RecordBody'));
+    .field('implements', [def('RecordDeclarationImplements')])
+    .field('body', def('RecordDeclarationBody'));
 
-  def('RecordImplements').bases('ClassImplements');
+  def('RecordDeclarationImplements')
+    .build('id', 'typeArguments')
+    .field('id', def('Identifier'))
+    .field('typeArguments', or(def('TypeParameterInstantiation'), null));
 
-  def('RecordBody')
-    .build('body')
-    .field('body', [
+  def('RecordDeclarationBody')
+    .build('elements')
+    .field('elements', [
       or(
-        def('RecordProperty'),
-        def('RecordStaticProperty'),
+        def('RecordDeclarationProperty'),
+        def('RecordDeclarationStaticProperty'),
         def('MethodDefinition'),
       ),
     ]);
 
-  def('RecordProperty')
+  def('RecordDeclarationProperty')
     .build('key', 'typeAnnotation', 'defaultValue')
     .field('key', def('Identifier'))
     .field('typeAnnotation', def('TypeAnnotation'))
     .field('defaultValue', or(def('Expression'), null));
 
-  def('RecordStaticProperty')
+  def('RecordDeclarationStaticProperty')
     .build('key', 'typeAnnotation', 'value')
     .field('key', def('Identifier'))
     .field('typeAnnotation', def('TypeAnnotation'))

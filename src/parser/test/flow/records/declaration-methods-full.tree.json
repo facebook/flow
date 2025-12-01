@@ -18,12 +18,12 @@
       "typeParameters":null,
       "implements":[],
       "body":{
-        "type":"RecordBody",
+        "type":"RecordDeclarationBody",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":19,"column":1}},
         "range":[9,253],
-        "body":[
+        "elements":[
           {
-            "type":"RecordProperty",
+            "type":"RecordDeclarationProperty",
             "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":14}},
             "range":[13,25],
             "key":{
