@@ -1546,7 +1546,7 @@ Flags: --strip-root --pretty
   "documentation":"\n `Children`lets you manipulate and transform the JSX received as the\n children prop.\n\n Using `Children` is uncommon and can lead to fragile code.\n [See common alternatives](https://react.dev/reference/react/Children#alternatives).\n\n**@see**  https://react.dev/reference/react/Children",
   "types":{
     "unevaluated":{
-      "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (child: $NonMaybeType<T>, index: number) => U, thisArg: This): Array<$NonMaybeType<U>>, only<T>(children: ChildrenArray<T>): $NonMaybeType<T>, toArray<T>(children: ChildrenArray<T>): Array<$NonMaybeType<T>>, ...}"
+      "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (child: NonNullable<T>, index: number) => U, thisArg: This): Array<NonNullable<U>>, only<T>(children: ChildrenArray<T>): NonNullable<T>, toArray<T>(children: ChildrenArray<T>): Array<NonNullable<T>>, ...}"
     },
     "evaluated":{
       "type":"{count(children: ChildrenArray<any>): number, forEach<T, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => mixed, thisArg: This): void, map<T, U, This>(children: ChildrenArray<T>, fn: (child: T, index: number) => U, thisArg: This): Array<U>, only<T>(children: ChildrenArray<T>): T, toArray<T>(children: ChildrenArray<T>): Array<T>, ...}"

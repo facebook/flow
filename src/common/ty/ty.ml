@@ -846,7 +846,7 @@ let string_of_utility_ctor = function
   | Enum _ -> "Enum"
   | Omit _ -> "Omit"
   | ElementType _ -> "$ElementType"
-  | NonMaybeType _ -> "$NonMaybeType"
+  | NonMaybeType _ -> "NonNullable"
   | ObjKeyMirror _ -> "$KeyMirror"
   | Class _ -> "Class"
   | StringPrefix _ -> "StringPrefix"

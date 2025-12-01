@@ -216,8 +216,8 @@ react-component.js:14:6,14:12
 react-component.js:20:13
 Flags:
 {
-  x: {m<T>(x: $NonMaybeType<T>): T, ...},
-  y: {m<T>(x: $NonMaybeType<T>): T, ...},
+  x: {m<T>(x: NonNullable<T>): T, ...},
+  y: {m<T>(x: NonNullable<T>): T, ...},
   ...
 }
 = {x: {m<T>(x: T): T, ...}, y: {m<T>(x: T): T, ...}, ...}
@@ -611,7 +611,7 @@ type-destructor.js:56:6,56:37
 
 type-destructor.js:60:6
 Flags:
-type NonMaybeTypeNumber = $NonMaybeType<?number>
+type NonMaybeTypeNumber = NonNullable<?number>
 = number
 
 'NonMaybeTypeNumber' defined at type-destructor.js:60:5
@@ -620,7 +620,7 @@ type-destructor.js:60:6,60:23
 
 type-destructor.js:62:6
 Flags:
-type NonMaybeTypeAbstract<X> = $NonMaybeType<X>
+type NonMaybeTypeAbstract<X> = NonNullable<X>
 = X
 
 'NonMaybeTypeAbstract' defined at type-destructor.js:62:5
@@ -764,7 +764,7 @@ type-destructor.js:126:6,126:32
 
 type-destructor.js:132:6
 Flags:
-type $Pick<O: {...}, K: $Keys<O>> = $NonMaybeType<O>[K]
+type $Pick<O: {...}, K: $Keys<O>> = NonNullable<O>[K]
 = empty
 
 '$Pick' defined at type-destructor.js:132:5

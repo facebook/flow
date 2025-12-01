@@ -49,7 +49,7 @@ test.js:23:6,23:7
 
 test.js:26:6
 Flags:
-type T6 = $NonMaybeType<Foo["bar"]["baz"]?.["qux"][number]>
+type T6 = NonNullable<Foo["bar"]["baz"]?.["qux"][number]>
 = string
 
 'Foo' defined at test.js:3:5
