@@ -89,9 +89,9 @@ acceptsValues(3); // Error! Because the type was interpreted as `1 | 2`.
 
 If you want to create an enum type, [Flow Enums](../../enums) might be a better fit for your use-case.
 
-## `$ReadOnly<T>` {#toc-readonly}
+## `Readonly<T>` <SinceVersion version="0.290" /> (alias `$ReadOnly<T>`) {#toc-readonly}
 
-`$ReadOnly<T>` is a type that represents the read-only version of a given [object type](../objects/)
+`Readonly<T>` is a type that represents the read-only version of a given [object type](../objects/)
 or [tuple type](../tuples) `T` (support for tuples is for Flow <SinceVersion version="0.212" />).
 A read-only object type is an object type whose keys are all [read-only](../objects/#read-only-object-properties).
 Similarly, a read-only tuple is one where each element is [read-only](../tuples/#variance-annotations-and-read-only-tuples).
@@ -105,10 +105,10 @@ type ReadOnlyTuple = [+foo: number];
 ```
 &rarr;
 ```js flow-check
-type ReadOnlyObj = $ReadOnly<{
+type ReadOnlyObj = Readonly<{
   key: number,
 }>;
-type ReadOnlyTuple = $ReadOnly<[number]>;
+type ReadOnlyTuple = Readonly<[number]>;
 ```
 
 This is useful when you need to use a read-only version of an object type you've already defined, without manually having to re-define and annotate each key as read-only. For example:
@@ -119,7 +119,7 @@ type Props = {
   age: number,
 };
 
-type ReadOnlyProps = $ReadOnly<Props>;
+type ReadOnlyProps = Readonly<Props>;
 
 function render(props: ReadOnlyProps) {
   const {name, age} = props;  // Works
@@ -127,23 +127,23 @@ function render(props: ReadOnlyProps) {
 }
 ```
 
-Additionally, other utility types, such as [spread](../objects/#object-type-spread), may strip any read/write annotations, so `$ReadOnly<T>` is a handy way to quickly make the object read-only again after operating on it:
+Additionally, other utility types, such as [spread](../objects/#object-type-spread), may strip any read/write annotations, so `Readonly<T>` is a handy way to quickly make the object read-only again after operating on it:
 
 ```js flow-check
 type Obj = {
   +key: number,
 };
 
-type MappedObj = $ReadOnly<{...Obj, foo: string}> // Still read-only
+type MappedObj = Readonly<{...Obj, foo: string}> // Still read-only
 ```
 
-The `$ReadOnly` utility works on object and tuple types.
+The `Readonly` utility works on object and tuple types.
 If you want to make other types read-only, you can use one of the following:
-- `Array<T>` -> [`$ReadOnlyArray<T>`](../arrays/#toc-readonlyarray)
-- `Set<T>` -> `$ReadOnlySet<T>`
-- `Map<K, V>` -> `$ReadOnlyMap<K, V>`
-- `WeakSet<T>` -> `$ReadOnlyWeakSet<T>`
-- `WeakMap<K, V>` -> `$ReadOnlyWeakMap<K, V>`
+- `Array<T>` -> [`ReadonlyArray<T>`](../arrays/#toc-readonlyarray)
+- `Set<T>` -> `ReadonlySet<T>`
+- `Map<K, V>` -> `ReadonlyMap<K, V>`
+- `WeakSet<T>` -> `ReadonlyWeakSet<T>`
+- `WeakMap<K, V>` -> `ReadonlyWeakMap<K, V>`
 
 ## `Partial<T>`  <SinceVersion version="0.201" /> {#toc-partial}
 
