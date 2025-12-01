@@ -28,9 +28,9 @@ In the example above, the type of `Country` is equivalent to `type Country = 'US
 
 If you want to create an enum type, [Flow Enums](../../enums) might be a better fit for your use-case.
 
-## `$Values<T>` {#toc-values}
+## `Values<T>` <SinceVersion version="0.290" /> (alias `$Values<T>`) {#toc-values}
 
-`$Values<T>` represents the union type of all the value types of the enumerable properties in an [object type](../objects/),
+`Values<T>` represents the union type of all the value types of the enumerable properties in an [object type](../objects/),
 or the elements of an [array](../arrays) or [tuple](../tuples) type (support for arrays and tuples in Flow version <SinceVersion version="0.240" />):
 
 ```js flow-check
@@ -41,7 +41,7 @@ type Props = {
 
 // The following two types are equivalent:
 type PropValues = string | number;
-type Prop$Values = $Values<Props>;
+type Prop$Values = Values<Props>;
 
 const name: Prop$Values = 'Jon';  // Works
 const age: Prop$Values = 42;  // Works
@@ -51,15 +51,15 @@ const fn: Prop$Values = true; // Error!
 For arrays and tuples:
 ```js flow-check
 type Arr = Array<string>;
-type Str = $Values<Arr>; //=> string
+type Str = Values<Arr>; //=> string
 's' as Str; // OK
 
 type Tup = [1, 2];
-type Num = $Values<Tup>; //=> 1 | 2
+type Num = Values<Tup>; //=> 1 | 2
 1 as Num; // OK
 ```
 
-Note that using `$Values` on the [`typeof`](../typeof) an object or array literal will result in a type more general than you might expect:
+Note that using `Values` on the [`typeof`](../typeof) an object or array literal will result in a type more general than you might expect:
 
 ```js flow-check
 const obj = {
@@ -67,7 +67,7 @@ const obj = {
   bar: 2,
 };
 
-function acceptsValues(x: $Values<typeof obj>) { /* ... */ }
+function acceptsValues(x: Values<typeof obj>) { /* ... */ }
 
 acceptsValues(1); // Works
 acceptsValues(3); // Works, because the type was interpreted as `number`.
@@ -81,7 +81,7 @@ const obj = Object.freeze({
   bar: 2,
 });
 
-function acceptsValues(x: $Values<typeof obj>) { /* ... */ }
+function acceptsValues(x: Values<typeof obj>) { /* ... */ }
 
 acceptsValues(1); // Works
 acceptsValues(3); // Error! Because the type was interpreted as `1 | 2`.
