@@ -820,5 +820,107 @@ References:
                       ^ [6]
 
 
+Error --------------------------------------------------------------------------------------- static-async-names.js:10:3
 
-Found 55 errors
+Cannot cast `x.static` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   static-async-names.js:10:3
+   10|   x.static as empty; // ERROR: `string`
+         ^^^^^^^^
+
+References:
+   static-async-names.js:4:13
+    4|     static: string,
+                   ^^^^^^ [1]
+   static-async-names.js:10:15
+   10|   x.static as empty; // ERROR: `string`
+                     ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- static-async-names.js:13:3
+
+Cannot cast `x.async` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   static-async-names.js:13:3
+   13|   x.async as empty; // ERROR: `number`
+         ^^^^^^^
+
+References:
+   static-async-names.js:5:12
+    5|     async: number,
+                  ^^^^^^ [1]
+   static-async-names.js:13:14
+   13|   x.async as empty; // ERROR: `number`
+                    ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- static-async-names.js:29:3
+
+Cannot cast `x.static()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   static-async-names.js:29:3
+   29|   x.static() as empty; // ERROR: `number`
+         ^^^^^^^^^^
+
+References:
+   static-async-names.js:19:15
+   19|     static(): number {
+                     ^^^^^^ [1]
+   static-async-names.js:29:17
+   29|   x.static() as empty; // ERROR: `number`
+                       ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- static-async-names.js:32:3
+
+Cannot cast `x.async()` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   static-async-names.js:32:3
+   32|   x.async() as empty; // ERROR: `string`
+         ^^^^^^^^^
+
+References:
+   static-async-names.js:22:14
+   22|     async(): string {
+                    ^^^^^^ [1]
+   static-async-names.js:32:16
+   32|   x.async() as empty; // ERROR: `string`
+                      ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- static-async-names.js:42:3
+
+Cannot cast `R.async` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   static-async-names.js:42:3
+   42|   R.async as empty; // ERROR: `number`
+         ^^^^^^^
+
+References:
+   static-async-names.js:38:19
+   38|     static async: number = 1,
+                         ^^^^^^ [1]
+   static-async-names.js:42:14
+   42|   R.async as empty; // ERROR: `number`
+                    ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------- static-async-names.js:54:3
+
+Cannot cast `R.async()` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+
+   static-async-names.js:54:3
+   54|   R.async() as empty; // ERROR: `boolean`
+         ^^^^^^^^^
+
+References:
+   static-async-names.js:48:21
+   48|     static async(): boolean {
+                           ^^^^^^^ [1]
+   static-async-names.js:54:16
+   54|   R.async() as empty; // ERROR: `boolean`
+                      ^^^^^ [2]
+
+
+
+Found 61 errors
