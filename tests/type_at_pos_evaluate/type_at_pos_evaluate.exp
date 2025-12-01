@@ -10,7 +10,7 @@ test.js:11:6,11:7
 test.js:14:6
 Flags:
 type T2 = Foo["bar"]
-= {baz: ?{qux: $ReadOnlyArray<string>}}
+= {baz: ?{qux: ReadonlyArray<string>}}
 
 'Foo' defined at test.js:3:5
 'T2' defined at test.js:14:5
@@ -20,7 +20,7 @@ test.js:14:6,14:7
 test.js:17:6
 Flags:
 type T3 = Foo["bar"]["baz"]
-= ?{qux: $ReadOnlyArray<string>}
+= ?{qux: ReadonlyArray<string>}
 
 'Foo' defined at test.js:3:5
 'T3' defined at test.js:17:5
@@ -30,7 +30,7 @@ test.js:17:6,17:7
 test.js:20:6
 Flags:
 type T4 = Foo["bar"]["baz"]?.["qux"]
-= $ReadOnlyArray<string> | void
+= ReadonlyArray<string> | void
 
 'Foo' defined at test.js:3:5
 'T4' defined at test.js:20:5

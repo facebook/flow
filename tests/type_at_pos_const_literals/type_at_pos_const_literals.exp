@@ -55,7 +55,7 @@ file.js:30:7,30:10
 
 file.js:32:7
 Flags:
-$ReadOnlyArray<number>
+ReadonlyArray<number>
 file.js:32:7,32:10
 
 file.js:34:14

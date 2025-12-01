@@ -35,7 +35,7 @@ array.js:3:16,3:20
 At array.js:5:26
 
  A class of Array methods and properties that don't mutate the array.
-$ReadOnlyArray<{|+nums: number|}>
+ReadonlyArray<{|+nums: number|}>
 array.js:5:24,5:37
 
 At array.js:8:16
@@ -323,7 +323,7 @@ mixed.js:18:17,18:18
 
 callable-object.js
 At callable-object.js:8:8
-type Obj1 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}
+type Obj1 = {(...args: ReadonlyArray<mixed>): void, f: <T>(x: T) => T, ...}
 
 'Obj1' defined at callable-object.js:8:5
 
@@ -331,7 +331,7 @@ callable-object.js:8:6,8:9
 
 At callable-object.js:14:8
 type Obj2 = {
-  $call: (...args: $ReadOnlyArray<mixed>) => void,
+  $call: (...args: ReadonlyArray<mixed>) => void,
   f: <T>(x: T) => T,
   ...
 }
@@ -341,7 +341,7 @@ type Obj2 = {
 callable-object.js:14:6,14:9
 
 At callable-object.js:20:8
-type Obj3 = {(...args: $ReadOnlyArray<mixed>): void, f: <T>(x: T) => T, ...}
+type Obj3 = {(...args: ReadonlyArray<mixed>): void, f: <T>(x: T) => T, ...}
 
 'Obj3' defined at callable-object.js:20:5
 
@@ -349,20 +349,20 @@ callable-object.js:20:6,20:9
 
 At callable-object.js:26:8
 type Obj4 = {
-  (...args: $ReadOnlyArray<mixed>): O1,
-  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  (...args: ReadonlyArray<mixed>): O1,
+  $call: (...args: ReadonlyArray<mixed>) => O3,
   f: <T>(x: T) => T,
   ...
 }
 & {
-  (...args: $ReadOnlyArray<mixed>): O2,
-  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  (...args: ReadonlyArray<mixed>): O2,
+  $call: (...args: ReadonlyArray<mixed>) => O3,
   f: <T>(x: T) => T,
   ...
 }
 & {
-  (...args: $ReadOnlyArray<mixed>): O4,
-  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  (...args: ReadonlyArray<mixed>): O4,
+  $call: (...args: ReadonlyArray<mixed>) => O3,
   f: <T>(x: T) => T,
   ...
 }
@@ -377,20 +377,20 @@ callable-object.js:26:6,26:9
 
 At callable-object.js:35:8
 type Obj5 = {
-  (...args: $ReadOnlyArray<mixed>): O4,
-  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  (...args: ReadonlyArray<mixed>): O4,
+  $call: (...args: ReadonlyArray<mixed>) => O3,
   f: <T>(x: T) => T,
   ...
 }
 & {
-  (...args: $ReadOnlyArray<mixed>): O1,
-  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  (...args: ReadonlyArray<mixed>): O1,
+  $call: (...args: ReadonlyArray<mixed>) => O3,
   f: <T>(x: T) => T,
   ...
 }
 & {
-  (...args: $ReadOnlyArray<mixed>): O2,
-  $call: (...args: $ReadOnlyArray<mixed>) => O3,
+  (...args: ReadonlyArray<mixed>): O2,
+  $call: (...args: ReadonlyArray<mixed>) => O3,
   f: <T>(x: T) => T,
   ...
 }
@@ -639,14 +639,14 @@ string
 recursive.js:56:4,56:4
 
 At recursive.js:59:6
-type CA<+T> = $ReadOnlyArray<CA<T>>
+type CA<+T> = ReadonlyArray<CA<T>>
 
 'CA' defined at recursive.js:59:5
 
 recursive.js:59:6,59:7
 
 At recursive.js:61:19
-type CA<+T> = $ReadOnlyArray<CA<T>>
+type CA<+T> = ReadonlyArray<CA<T>>
 
 'CA' defined at recursive.js:59:5
 

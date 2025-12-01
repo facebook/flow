@@ -2503,7 +2503,7 @@ Flags: --pretty
     {"name":"?.at","type":"void | ((index: number) => T | void)"},
     {
       "name":"?.concat",
-      "type":"void | (<S = T>(...items: Array<$ReadOnlyArray<S> | S>) => Array<T | S>)"
+      "type":"void | (<S = T>(...items: Array<ReadonlyArray<S> | S>) => Array<T | S>)"
     },
     {
       "name":"?.copyWithin",
@@ -2532,16 +2532,16 @@ Flags: --pretty
     },
     {
       "name":"?.findLast",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => T | void)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg: This) => T | void)"
     },
     {
       "name":"?.findLastIndex",
-      "type":"void | (<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => number)"
+      "type":"void | (<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg: This) => number)"
     },
     {"name":"?.flat","type":"void | ((depth: number) => Array<mixed>)"},
     {
       "name":"?.flatMap",
-      "type":"void | (<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => $ReadOnlyArray<U> | U, thisArg: This) => Array<U>)"
+      "type":"void | (<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>)"
     },
     {
       "name":"?.forEach",
@@ -2615,7 +2615,7 @@ Flags: --pretty
     {"name":"at","type":"(index: number) => T | void"},
     {
       "name":"concat",
-      "type":"<S = T>(...items: Array<$ReadOnlyArray<S> | S>) => Array<T | S>"
+      "type":"<S = T>(...items: Array<ReadonlyArray<S> | S>) => Array<T | S>"
     },
     {
       "name":"copyWithin",
@@ -2641,16 +2641,16 @@ Flags: --pretty
     },
     {
       "name":"findLast",
-      "type":"<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => T | void"
+      "type":"<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg: This) => T | void"
     },
     {
       "name":"findLastIndex",
-      "type":"<This>(callbackfn: (value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg: This) => number"
+      "type":"<This>(callbackfn: (value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg: This) => number"
     },
     {"name":"flat","type":"(depth: number) => Array<mixed>"},
     {
       "name":"flatMap",
-      "type":"<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => $ReadOnlyArray<U> | U, thisArg: This) => Array<U>"
+      "type":"<U, This>(callbackfn: (value: T, index: number, array: Array<T>) => ReadonlyArray<U> | U, thisArg: This) => Array<U>"
     },
     {
       "name":"forEach",
