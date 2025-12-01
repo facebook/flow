@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":29}},
-  "range":[0,134],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":11,"column":52}},
+  "range":[0,188],
   "body":[
     {
       "type":"FunctionDeclaration",
@@ -393,6 +393,37 @@
         }
       ],
       "kind":"const"
+    },
+    {
+      "type":"ClassDeclaration",
+      "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":52}},
+      "range":[136,188],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":11,"column":6},"end":{"line":11,"column":7}},
+        "range":[142,143],
+        "name":"C",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "body":{
+        "type":"ClassBody",
+        "loc":{"source":null,"start":{"line":11,"column":50},"end":{"line":11,"column":52}},
+        "range":[186,188],
+        "body":[]
+      },
+      "typeParameters":null,
+      "superClass":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":11,"column":16},"end":{"line":11,"column":49}},
+        "range":[152,185],
+        "name":"not_parsed_as_a_record_expression",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "superTypeArguments":null,
+      "implements":[],
+      "decorators":[]
     }
   ],
   "comments":[]
