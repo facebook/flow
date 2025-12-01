@@ -7,7 +7,7 @@ import {SinceVersion, UntilVersion} from '../../components/VersionTags';
 
 Flow provides a set of utility types to operate on other types to create new types.
 
-## `$Keys<T>` {#toc-keys}
+## `keyof T` <SinceVersion version="0.290" /> (alias `$Keys<T>`) {#toc-keys}
 
 You can extract the type of the keys from an [object type](../objects). Typically this will be a [union](../unions) of [string literal](../literals) types:
 
@@ -18,7 +18,7 @@ const countries = {
   FR: "France"
 };
 
-type Country = $Keys<typeof countries>;
+type Country = keyof typeof countries;
 
 const italy: Country = 'IT'; // Works
 const nope: Country = 'nope'; // Error!
