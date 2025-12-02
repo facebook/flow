@@ -1247,7 +1247,7 @@ module Opts = struct
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("unsuppressable_error_codes", unsuppressable_error_codes_parser);
-      ("use_mixed_in_catch_variables", use_mixed_in_catch_variables_parser);
+      ("use_unknown_in_catch_variables", use_mixed_in_catch_variables_parser);
       ("vpn_less", boolean (fun opts v -> Ok { opts with vpn_less = v }));
       ("wait_for_recheck", boolean (fun opts v -> Ok { opts with wait_for_recheck = v }));
     ]
