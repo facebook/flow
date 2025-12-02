@@ -7461,6 +7461,40 @@ module Make
     let tast_class_type = Base.Option.value tast_class_type ~default:class_t in
     (class_t, class_ast_f tast_class_type)
 
+  and check_duplicate_class_member
+      cx public_seen_names member_loc name ~static ~private_ kind class_kind =
+    if private_ then
+      (* duplicate private names are a parser error - so we don't need to check them *)
+      public_seen_names
+    else
+      let names_map =
+        if static then
+          public_seen_names.static_names
+        else
+          public_seen_names.instance_names
+      in
+      let names_map' =
+        match SMap.find_opt name names_map with
+        | Some seen ->
+          (match (kind, seen) with
+          | (Class_Member_Getter, Class_Member_Setter)
+          | (Class_Member_Setter, Class_Member_Getter) ->
+            (* One getter and one setter are allowed as long as it's not used as a field
+               We use the special type here to indicate we've seen both a getter and a
+               setter for the name so that future getters/setters can have an error raised. *)
+            SMap.add name Class_Member_GetterSetter names_map
+          | _ ->
+            Flow.add_output
+              cx
+              Error_message.(EDuplicateClassMember { loc = member_loc; name; static; class_kind });
+            names_map)
+        | None -> SMap.add name kind names_map
+      in
+      if static then
+        { public_seen_names with static_names = names_map' }
+      else
+        { public_seen_names with instance_names = names_map' }
+
   (* Process a class definition, returning a (polymorphic) class type. A class
      type is a wrapper around an instance type, which contains types of instance
      members, a pointer to the super instance type, and a container for types of
@@ -7881,47 +7915,22 @@ module Make
         let class_sig = Class_stmt_sig.add_name_field class_sig in
 
         let check_duplicate_name public_seen_names member_loc name ~static ~private_ kind =
-          if private_ then
-            (* duplicate private names are a parser error - so we don't need to check them *)
+          let class_kind =
+            match inst_kind with
+            | ClassKind
+            | InterfaceKind _ ->
+              Flow_intermediate_error_types.ClassKind.Class
+            | RecordKind _ -> Flow_intermediate_error_types.ClassKind.Record
+          in
+          check_duplicate_class_member
+            cx
             public_seen_names
-          else
-            let names_map =
-              if static then
-                public_seen_names.static_names
-              else
-                public_seen_names.instance_names
-            in
-            let names_map' =
-              match SMap.find_opt name names_map with
-              | Some seen ->
-                (match (kind, seen) with
-                | (Class_Member_Getter, Class_Member_Setter)
-                | (Class_Member_Setter, Class_Member_Getter) ->
-                  (* One getter and one setter are allowed as long as it's not used as a field
-                     We use the special type here to indicate we've seen both a getter and a
-                     setter for the name so that future getters/setters can have an error raised. *)
-                  SMap.add name Class_Member_GetterSetter names_map
-                | _ ->
-                  let error_kind =
-                    match inst_kind with
-                    | ClassKind
-                    | InterfaceKind _ ->
-                      Flow_intermediate_error_types.ClassKind.Class
-                    | RecordKind _ -> Flow_intermediate_error_types.ClassKind.Record
-                  in
-                  Flow.add_output
-                    cx
-                    Error_message.(
-                      EDuplicateClassMember
-                        { loc = member_loc; name; static; class_kind = error_kind }
-                    );
-                  names_map)
-              | None -> SMap.add name kind names_map
-            in
-            if static then
-              { public_seen_names with static_names = names_map' }
-            else
-              { public_seen_names with instance_names = names_map' }
+            member_loc
+            name
+            ~static
+            ~private_
+            kind
+            class_kind
         in
 
         (* NOTE: We used to mine field declarations from field assignments in a
@@ -8578,45 +8587,15 @@ module Make
         let class_sig = Class_stmt_sig.add_name_field class_sig in
 
         let check_duplicate_name public_seen_names member_loc name ~static ~private_ kind =
-          if private_ then
-            (* duplicate private names are a parser error - so we don't need to check them *)
+          check_duplicate_class_member
+            cx
             public_seen_names
-          else
-            let names_map =
-              if static then
-                public_seen_names.static_names
-              else
-                public_seen_names.instance_names
-            in
-            let names_map' =
-              match SMap.find_opt name names_map with
-              | Some seen ->
-                (match (kind, seen) with
-                | (Class_Member_Getter, Class_Member_Setter)
-                | (Class_Member_Setter, Class_Member_Getter) ->
-                  (* One getter and one setter are allowed as long as it's not used as a field
-                     We use the special type here to indicate we've seen both a getter and a
-                     setter for the name so that future getters/setters can have an error raised. *)
-                  SMap.add name Class_Member_GetterSetter names_map
-                | _ ->
-                  Flow.add_output
-                    cx
-                    Error_message.(
-                      EDuplicateClassMember
-                        {
-                          loc = member_loc;
-                          name;
-                          static;
-                          class_kind = Flow_intermediate_error_types.ClassKind.Record;
-                        }
-                    );
-                  names_map)
-              | None -> SMap.add name kind names_map
-            in
-            if static then
-              { public_seen_names with static_names = names_map' }
-            else
-              { public_seen_names with instance_names = names_map' }
+            member_loc
+            name
+            ~static
+            ~private_
+            kind
+            Flow_intermediate_error_types.ClassKind.Record
         in
 
         let (class_sig, rev_elements, _) =
