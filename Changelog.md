@@ -1,3 +1,11 @@
+### 0.292.0
+
+Likely to cause new Flow errors:
+* Flow will start to validate variance for declare classes.
+
+Parser:
+* Rename ClassDeclaration property 'superTypeParameters' to 'superTypeArguments'
+
 ### 0.291.0
 
 IDE:
