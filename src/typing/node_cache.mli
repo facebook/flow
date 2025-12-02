@@ -61,6 +61,15 @@ val set_class_sig :
   * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t) ->
   unit
 
+val set_record_sig :
+  t ->
+  ALoc.t ->
+  Type.t
+  * Type.t
+  * Func_class_sig_types.Class_stmt_sig_types.t
+  * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.RecordDeclaration.t) ->
+  unit
+
 val set_tparam :
   t -> (ALoc.t, ALoc.t * Type.t) Ast.Type.TypeParam.t * Type.typeparam * Type.t -> unit
 
@@ -128,6 +137,16 @@ val get_class_sig :
   * Type.t
   * Func_class_sig_types.Class_stmt_sig_types.t
   * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t)
+  )
+  option
+
+val get_record_sig :
+  t ->
+  ALoc.t ->
+  ( Type.t
+  * Type.t
+  * Func_class_sig_types.Class_stmt_sig_types.t
+  * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.RecordDeclaration.t)
   )
   option
 

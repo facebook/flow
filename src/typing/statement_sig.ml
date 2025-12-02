@@ -191,6 +191,18 @@ module type S = sig
     (ALoc.t, ALoc.t) Ast.Class.t ->
     Type.t * Type.t * Class_stmt_sig.Types.t * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t)
 
+  val mk_record_sig :
+    Context.t ->
+    name_loc:ALoc.t ->
+    record_loc:ALoc.t ->
+    defaulted_props:SSet.t ->
+    Reason.t ->
+    (ALoc.t, ALoc.t) Ast.Statement.RecordDeclaration.t ->
+    Type.t
+    * Type.t
+    * Class_stmt_sig.Types.t
+    * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.RecordDeclaration.t)
+
   val type_alias :
     Context.t ->
     ALoc.t ->

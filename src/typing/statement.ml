@@ -8340,19 +8340,545 @@ module Make
       in
       Lazy.force lazy_sig_info
 
+  and mk_record_sig =
+    let open Class_stmt_sig_types in
+    let mk_record_field cx tparams_map reason annot default_value =
+      let (annot_t, annot_ast) = Anno.mk_type_available_annotation cx tparams_map annot in
+      match default_value with
+      | None -> (Annot annot_t, annot_t, annot_ast, Fun.const None)
+      | Some expr ->
+        let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
+        let (annot_loc, _) = annot in
+        ( Infer
+            ( Func_stmt_sig.field_initializer reason expr annot_loc (Annotated annot_t),
+              (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
+            ),
+          annot_t,
+          annot_ast,
+          (fun () -> !value_ref)
+        )
+    in
+
+    let mk_record_static_field cx tparams_map reason annot value_expr =
+      let (annot_t, annot_ast) = Anno.mk_type_available_annotation cx tparams_map annot in
+      let value_ref : (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option ref = ref None in
+      let (annot_loc, _) = annot in
+      ( Infer
+          ( Func_stmt_sig.field_initializer reason value_expr annot_loc (Annotated annot_t),
+            (fun (_, _, value_opt) -> value_ref := Some (Base.Option.value_exn value_opt))
+          ),
+        annot_t,
+        annot_ast,
+        (fun () -> Base.Option.value_exn !value_ref)
+      )
+    in
+
+    let mk_method cx ~constructor ~getset =
+      mk_func_sig
+        cx
+        ~require_return_annot:(not constructor)
+        ~constructor
+        ~getset
+        ~statics:SMap.empty
+    in
+
+    let mk_record_sig_with_self cx ~name_loc ~record_loc ~defaulted_props reason self record =
+      let node_cache = Context.node_cache cx in
+      match Node_cache.get_record_sig node_cache record_loc with
+      | Some x ->
+        Debug_js.Verbose.print_if_verbose_lazy
+          cx
+          (lazy [spf "Record sig cache hit at %s" (ALoc.debug_to_string (loc_of_reason reason))]);
+        x
+      | None ->
+        let {
+          Ast.Statement.RecordDeclaration.id =
+            (id_loc, ({ Ast.Identifier.name = record_name_str; _ } as id_name));
+          tparams;
+          implements;
+          body =
+            ( body_loc,
+              { Ast.Statement.RecordDeclaration.Body.body = elements; comments = body_comments }
+            );
+          comments;
+        } =
+          record
+        in
+
+        let (tparams, tparams_map, tparams_ast) =
+          Anno.mk_type_param_declarations cx ~kind:Flow_ast_mapper.ClassTP tparams
+        in
+
+        let (this_tparam, this_t) = Class_stmt_sig.mk_this ~self cx reason in
+        let tparams_map_with_this =
+          Subst_name.Map.add (Subst_name.Name "this") this_t tparams_map
+        in
+
+        let record_name = Some record_name_str in
+
+        let (class_sig, implements_ast) =
+          let aloc_id = Context.make_aloc_id cx name_loc in
+          let (implements, implements_ast) =
+            match implements with
+            | None -> ([], None)
+            | Some (implements_loc, { Ast.Class.Implements.interfaces; comments }) ->
+              let (implements, interfaces_ast) =
+                interfaces
+                |> Base.List.map ~f:(fun (loc, i) ->
+                       let {
+                         Ast.Class.Implements.Interface.id =
+                           (impl_id_loc, ({ Ast.Identifier.name; comments = _ } as impl_id));
+                         targs;
+                       } =
+                         i
+                       in
+                       let c = Type_env.get_var ~lookup_mode:ForType cx name impl_id_loc in
+                       let (typeapp, targs) =
+                         match targs with
+                         | None -> ((loc, c, None), None)
+                         | Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs; comments }) ->
+                           let (ts, targs_ast) = Anno.convert_list cx tparams_map targs in
+                           ( (loc, c, Some ts),
+                             Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
+                           )
+                       in
+                       ( typeapp,
+                         ( loc,
+                           {
+                             Ast.Class.Implements.Interface.id = ((impl_id_loc, c), impl_id);
+                             targs;
+                           }
+                         )
+                       )
+                   )
+                |> List.split
+              in
+              ( implements,
+                Some (implements_loc, { Ast.Class.Implements.interfaces = interfaces_ast; comments })
+              )
+          in
+          (* Records have no extends clause *)
+          let super =
+            Class
+              {
+                Class_stmt_sig_types.extends = Implicit { null = false };
+                mixins = [];
+                implements;
+                this_t;
+                this_tparam;
+              }
+          in
+          ( Class_stmt_sig.empty aloc_id record_name record_loc reason tparams tparams_map super,
+            implements_ast
+          )
+        in
+
+        let mk_record_constructor
+            cx tparams_map_with_this elements defaulted_props record_name name_loc =
+          let props =
+            List.fold_left
+              (fun acc elem ->
+                match elem with
+                | Ast.Statement.RecordDeclaration.Body.Property (_, prop) ->
+                  let {
+                    Ast.Statement.RecordDeclaration.Property.key =
+                      (prop_id_loc, { Ast.Identifier.name; _ });
+                    annot;
+                    default_value = _;
+                    comments = _;
+                    invalid_syntax = _;
+                  } =
+                    prop
+                  in
+                  let (annot_t, _) =
+                    Anno.mk_type_available_annotation cx tparams_map_with_this annot
+                  in
+                  let prop_t =
+                    if SSet.mem name defaulted_props then
+                      let field_reason =
+                        mk_reason (RProperty (Some (OrdinaryName name))) prop_id_loc
+                      in
+                      Type.OptionalT
+                        {
+                          reason = mk_reason (ROptional (desc_of_reason field_reason)) prop_id_loc;
+                          type_ = annot_t;
+                          use_desc = false;
+                        }
+                    else
+                      annot_t
+                  in
+                  let prop =
+                    Field
+                      {
+                        preferred_def_locs = None;
+                        key_loc = Some prop_id_loc;
+                        type_ = prop_t;
+                        polarity = Polarity.Positive;
+                      }
+                  in
+                  NameUtils.Map.add (OrdinaryName name) prop acc
+                | _ -> acc)
+              NameUtils.Map.empty
+              elements
+          in
+          let record_reason = mk_reason (RRecordType record_name) name_loc in
+          let obj_t =
+            Obj_type.mk_with_proto
+              cx
+              record_reason
+              ~obj_kind:Type.Exact
+              ~props
+              (Type.NullProtoT record_reason)
+          in
+          let param =
+            Func_stmt_config_types.Types.Param
+              {
+                t = obj_t;
+                loc = name_loc;
+                ploc = name_loc;
+                pattern =
+                  Func_stmt_config_types.Types.Object
+                    { annot = Ast.Type.Missing (name_loc, obj_t); properties = []; comments = None };
+                default = None;
+                has_anno = false;
+              }
+          in
+          {
+            Func_stmt_sig_types.reason = mk_reason RConstructor name_loc;
+            kind = Func_class_sig_types.Func.Ctor;
+            tparams = None;
+            fparams =
+              {
+                Func_stmt_params_types.params_rev = [param];
+                rest = None;
+                this_ = None;
+                reconstruct = (fun _ _ _ -> None);
+              };
+            body = None;
+            return_t = Type.Inferred (Type.VoidT.at name_loc);
+            effect_ = Type.ArbitraryEffect;
+            ret_annot_loc = name_loc;
+            statics = None;
+          }
+        in
+
+        let class_sig =
+          let func_sig =
+            mk_record_constructor
+              cx
+              tparams_map_with_this
+              elements
+              defaulted_props
+              record_name_str
+              name_loc
+          in
+          Class_stmt_sig.add_constructor ~id_loc:None ~func_sig class_sig
+        in
+
+        let class_sig = Class_stmt_sig.add_name_field class_sig in
+
+        let check_duplicate_name public_seen_names member_loc name ~static ~private_ kind =
+          if private_ then
+            (* duplicate private names are a parser error - so we don't need to check them *)
+            public_seen_names
+          else
+            let names_map =
+              if static then
+                public_seen_names.static_names
+              else
+                public_seen_names.instance_names
+            in
+            let names_map' =
+              match SMap.find_opt name names_map with
+              | Some seen ->
+                (match (kind, seen) with
+                | (Class_Member_Getter, Class_Member_Setter)
+                | (Class_Member_Setter, Class_Member_Getter) ->
+                  (* One getter and one setter are allowed as long as it's not used as a field
+                     We use the special type here to indicate we've seen both a getter and a
+                     setter for the name so that future getters/setters can have an error raised. *)
+                  SMap.add name Class_Member_GetterSetter names_map
+                | _ ->
+                  Flow.add_output
+                    cx
+                    Error_message.(
+                      EDuplicateClassMember
+                        {
+                          loc = member_loc;
+                          name;
+                          static;
+                          class_kind = Flow_intermediate_error_types.ClassKind.Record;
+                        }
+                    );
+                  names_map)
+              | None -> SMap.add name kind names_map
+            in
+            if static then
+              { public_seen_names with static_names = names_map' }
+            else
+              { public_seen_names with instance_names = names_map' }
+        in
+
+        let (class_sig, rev_elements, _) =
+          List.fold_left
+            (fun (c, rev_elements, public_seen_names) element ->
+              match element with
+              | Ast.Statement.RecordDeclaration.Body.Method
+                  ( method_loc,
+                    {
+                      Ast.Class.Method.key =
+                        Ast.Expression.Object.Property.Identifier
+                          (method_id_loc, ({ Ast.Identifier.name; comments = _ } as method_id));
+                      value = (func_loc, func);
+                      kind;
+                      static;
+                      decorators = _;
+                      comments = method_comments;
+                    }
+                  ) ->
+                let reason =
+                  Ast.Function.(func_reason ~async:func.async ~generator:func.generator method_loc)
+                in
+                let (method_sig, reconstruct_func) =
+                  mk_method
+                    cx
+                    ~constructor:false
+                    ~getset:(kind = Ast.Class.Method.Get || kind = Ast.Class.Method.Set)
+                    tparams_map_with_this
+                    reason
+                    func
+                in
+                let params_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.Params.t option ref =
+                  ref None
+                in
+                let body_ref : (ALoc.t, ALoc.t * Type.t) Ast.Function.body option ref = ref None in
+                let set_asts (params_opt, body_opt, _) =
+                  params_ref := Some (Base.Option.value_exn params_opt);
+                  body_ref := Some (Base.Option.value_exn body_opt)
+                in
+                let func_t_ref : Type.t option ref = ref None in
+                let set_type t = func_t_ref := Some t in
+                let get_element () =
+                  let params =
+                    Base.Option.value
+                      !params_ref
+                      ~default:(Tast_utils.error_mapper#function_params func.Ast.Function.params)
+                  in
+                  let body =
+                    Base.Option.value
+                      !body_ref
+                      ~default:(Tast_utils.error_mapper#function_body_any func.Ast.Function.body)
+                  in
+                  let func_t = Base.Option.value !func_t_ref ~default:(EmptyT.at method_id_loc) in
+                  let func = reconstruct_func params body func_t in
+                  Ast.Statement.RecordDeclaration.Body.Method
+                    ( (method_loc, func_t),
+                      {
+                        Ast.Class.Method.key =
+                          Ast.Expression.Object.Property.Identifier
+                            ((method_id_loc, func_t), method_id);
+                        value = (func_loc, func);
+                        kind;
+                        static;
+                        decorators = [];
+                        comments = method_comments;
+                      }
+                    )
+                in
+                let (add, class_member_kind) =
+                  match kind with
+                  | Ast.Class.Method.Constructor -> failwith "Records cannot have constructors"
+                  | Ast.Class.Method.Get -> failwith "Records cannot have getters"
+                  | Ast.Class.Method.Set -> failwith "Records cannot have setters"
+                  | Ast.Class.Method.Method ->
+                    let add =
+                      Class_stmt_sig.add_method
+                        ~static
+                        name
+                        ~id_loc:method_id_loc
+                        ~this_write_loc:(Some func_loc)
+                        ~set_asts
+                        ~set_type
+                    in
+                    (add, Some Class_Member_Method)
+                in
+                let public_seen_names' =
+                  match class_member_kind with
+                  | Some k ->
+                    check_duplicate_name
+                      public_seen_names
+                      method_id_loc
+                      name
+                      ~static
+                      ~private_:false
+                      k
+                  | None -> public_seen_names
+                in
+                (add ~func_sig:method_sig c, get_element :: rev_elements, public_seen_names')
+              | Ast.Statement.RecordDeclaration.Body.Property (prop_loc, prop) ->
+                let {
+                  Ast.Statement.RecordDeclaration.Property.key =
+                    (prop_id_loc, ({ Ast.Identifier.name; comments = _ } as prop_id));
+                  annot;
+                  default_value;
+                  comments = prop_comments;
+                  invalid_syntax = _;
+                } =
+                  prop
+                in
+                let reason = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
+                let (field, annot_t, annot_ast, get_value) =
+                  mk_record_field cx tparams_map_with_this reason annot default_value
+                in
+                let get_element () =
+                  Ast.Statement.RecordDeclaration.Body.Property
+                    ( (prop_loc, annot_t),
+                      {
+                        Ast.Statement.RecordDeclaration.Property.key =
+                          ((prop_id_loc, annot_t), prop_id);
+                        annot = annot_ast;
+                        default_value = get_value ();
+                        comments = prop_comments;
+                        invalid_syntax = None;
+                      }
+                    )
+                in
+                let public_seen_names' =
+                  check_duplicate_name
+                    public_seen_names
+                    prop_id_loc
+                    name
+                    ~static:false
+                    ~private_:false
+                    Class_Member_Field
+                in
+                ( Class_stmt_sig.add_field ~static:false name prop_id_loc Polarity.Positive field c,
+                  get_element :: rev_elements,
+                  public_seen_names'
+                )
+              | Ast.Statement.RecordDeclaration.Body.StaticProperty (prop_loc, static_prop) ->
+                let {
+                  Ast.Statement.RecordDeclaration.StaticProperty.key =
+                    (prop_id_loc, ({ Ast.Identifier.name; comments = _ } as prop_id));
+                  annot;
+                  value = value_expr;
+                  comments = prop_comments;
+                  invalid_syntax = _;
+                } =
+                  static_prop
+                in
+                let reason = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
+                let (field, annot_t, annot_ast, get_value) =
+                  mk_record_static_field cx tparams_map_with_this reason annot value_expr
+                in
+                let get_element () =
+                  Ast.Statement.RecordDeclaration.Body.StaticProperty
+                    ( (prop_loc, annot_t),
+                      {
+                        Ast.Statement.RecordDeclaration.StaticProperty.key =
+                          ((prop_id_loc, annot_t), prop_id);
+                        annot = annot_ast;
+                        value = get_value ();
+                        comments = prop_comments;
+                        invalid_syntax = None;
+                      }
+                    )
+                in
+                let public_seen_names' =
+                  check_duplicate_name
+                    public_seen_names
+                    prop_id_loc
+                    name
+                    ~static:true
+                    ~private_:false
+                    Class_Member_Field
+                in
+                ( Class_stmt_sig.add_field ~static:true name prop_id_loc Polarity.Positive field c,
+                  get_element :: rev_elements,
+                  public_seen_names'
+                )
+              | Ast.Statement.RecordDeclaration.Body.Method
+                  (_, { Ast.Class.Method.key = Ast.Expression.Object.Property.PrivateName _; _ }) ->
+                failwith "Records cannot have private methods"
+              | Ast.Statement.RecordDeclaration.Body.Method
+                  (_, { Ast.Class.Method.key = Ast.Expression.Object.Property.StringLiteral _; _ })
+              | Ast.Statement.RecordDeclaration.Body.Method
+                  (_, { Ast.Class.Method.key = Ast.Expression.Object.Property.NumberLiteral _; _ })
+              | Ast.Statement.RecordDeclaration.Body.Method
+                  (_, { Ast.Class.Method.key = Ast.Expression.Object.Property.BigIntLiteral _; _ })
+              | Ast.Statement.RecordDeclaration.Body.Method
+                  (_, { Ast.Class.Method.key = Ast.Expression.Object.Property.Computed _; _ }) ->
+                failwith "Records can only have identifier method keys")
+            (class_sig, [], empty_seen_names)
+            elements
+        in
+
+        let ({ Loc_env.class_bindings; _ } as env) = Context.environment cx in
+        Context.set_environment
+          cx
+          {
+            env with
+            Loc_env.class_bindings =
+              Loc_collections.ALocMap.add
+                record_loc
+                (Class_stmt_sig.mk_class_binding cx class_sig)
+                class_bindings;
+          };
+
+        let elements = List.rev rev_elements in
+        let (instance_this_default, static_this_default, super, static_super) =
+          Type_env.in_class_scope cx record_loc (fun () -> Class_stmt_sig.make_thises cx class_sig)
+        in
+        Type_env.bind_class_instance_this cx instance_this_default record_loc;
+        Type_env.bind_class_static_this cx static_this_default record_loc;
+        Type_env.bind_class_instance_super cx super record_loc;
+        Type_env.bind_class_static_super cx static_super record_loc;
+
+        let inst_kind = RecordKind { defaulted_props } in
+        let (class_t_internal, class_t) = Class_stmt_sig.classtype cx ~inst_kind class_sig in
+
+        ( class_t,
+          class_t_internal,
+          class_sig,
+          fun record_t ->
+            {
+              Ast.Statement.RecordDeclaration.id = ((id_loc, record_t), id_name);
+              body =
+                ( body_loc,
+                  {
+                    Ast.Statement.RecordDeclaration.Body.body =
+                      Base.List.map ~f:(fun f -> f ()) elements;
+                    comments = body_comments;
+                  }
+                );
+              tparams = tparams_ast;
+              implements = implements_ast;
+              comments;
+            }
+        )
+    in
+
+    fun cx ~name_loc ~record_loc ~defaulted_props reason record ->
+      let rec lazy_sig_info =
+        lazy
+          (let self =
+             Tvar.mk_fully_resolved_lazy cx reason (Lazy.map (fun (_, t, _, _) -> t) lazy_sig_info)
+           in
+           mk_record_sig_with_self cx ~name_loc ~record_loc ~defaulted_props reason self record
+          )
+      in
+      Lazy.force lazy_sig_info
+
   and mk_record cx record_loc ~name_loc ?tast_record_type reason record =
     let def_reason = repos_reason record_loc reason in
     let defaulted_props = Flow_ast_utils.defaulted_props_of_record record in
-    let inst_kind = RecordKind { defaulted_props } in
-    Flow_ast_utils.map_record_as_class record ~f:(fun class_ ->
-        let (t, _, class_sig, class_ast_f) =
-          mk_class_sig cx ~name_loc ~class_loc:record_loc ~inst_kind reason class_
-        in
-        Class_stmt_sig.check_signature_compatibility cx def_reason class_sig;
-        Class_stmt_sig.toplevels cx class_sig;
-        let tast_type = Base.Option.value tast_record_type ~default:t in
-        (t, class_ast_f tast_type)
-    )
+    let (t, _, class_sig, record_ast_f) =
+      mk_record_sig cx ~name_loc ~record_loc ~defaulted_props reason record
+    in
+    Class_stmt_sig.check_signature_compatibility cx def_reason class_sig;
+    Class_stmt_sig.toplevels cx class_sig;
+    let tast_type = Base.Option.value tast_record_type ~default:t in
+    (t, record_ast_f tast_type)
 
   and mk_component_sig =
     let mk_param_annot cx tparams_map reason = function

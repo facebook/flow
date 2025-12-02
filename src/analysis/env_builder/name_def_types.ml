@@ -218,6 +218,13 @@ type def =
       this_super_write_locs: Env_api.EnvSet.t;
       kind: ClassKind.t;
     }
+  | Record of {
+      record: (ALoc.t, ALoc.t) Ast.Statement.RecordDeclaration.t;
+      record_loc: ALoc.t;
+      (* A set of this and super write locations that can be resolved by resolving the record. *)
+      this_super_write_locs: Env_api.EnvSet.t;
+      defaulted_props: SSet.t;
+    }
   | DeclaredClass of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t
   | DeclaredComponent of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.DeclareComponent.t
   | TypeAlias of ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.TypeAlias.t
@@ -348,6 +355,10 @@ module Print = struct
            ~default:"<anonymous>"
            id
         )
+    | Record
+        { record = { Ast.Statement.RecordDeclaration.id = (_, { Ast.Identifier.name; _ }); _ }; _ }
+      ->
+      spf "record %s" name
     | TypeAlias (_, { Ast.Statement.TypeAlias.right = (loc, _); _ }) ->
       spf "alias %s" (ALoc.debug_to_string loc)
     | OpaqueType (_, { Ast.Statement.OpaqueType.id = (loc, _); _ }) ->

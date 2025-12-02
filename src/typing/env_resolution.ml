@@ -927,6 +927,15 @@ let resolve_class cx id_loc reason ~kind class_loc class_ =
   Type_env.bind_class_self_type cx class_t_internal class_loc;
   class_t
 
+let resolve_record cx id_loc reason record_loc defaulted_props record =
+  let cache = Context.node_cache cx in
+  let ((record_t, record_t_internal, _, _) as sig_info) =
+    Statement.mk_record_sig cx ~name_loc:id_loc ~record_loc ~defaulted_props reason record
+  in
+  Node_cache.set_record_sig cache record_loc sig_info;
+  Type_env.bind_class_self_type cx record_t_internal record_loc;
+  record_t
+
 let resolve_op_assign cx ~exp_loc lhs assertion op rhs =
   let open Ast.Expression in
   let reason = mk_reason (RCustom (Flow_ast_utils.string_of_assignment_operator op)) exp_loc in
@@ -1199,6 +1208,8 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
         function_
     | Class { class_; class_loc; kind; this_super_write_locs = _ } ->
       resolve_class cx id_loc def_reason ~kind class_loc class_
+    | Record { record; record_loc; this_super_write_locs = _; defaulted_props } ->
+      resolve_record cx id_loc def_reason record_loc defaulted_props record
     | MemberAssign { member_loc = _; member = _; rhs } -> expression cx rhs
     | OpAssign { exp_loc; lhs; op; rhs; assertion } ->
       resolve_op_assign cx ~exp_loc lhs assertion op rhs
@@ -1276,6 +1287,7 @@ let entries_of_def graph (kind, loc) =
   match EnvMap.find (kind, loc) graph with
   | (Binding b, _, _, _) -> add_from_bindings acc b
   | (Class { this_super_write_locs; _ }, _, _, _) -> EnvSet.union this_super_write_locs acc
+  | (Record { this_super_write_locs; _ }, _, _, _) -> EnvSet.union this_super_write_locs acc
   | ( Function
         {
           has_this_def = true;
@@ -1328,6 +1340,10 @@ let init_type_param =
         (name, tparam, t)
       | Class { class_loc; _ } ->
         let self = Type_env.read_class_self_type cx class_loc in
+        let (this_param, this_t) = Statement.Class_stmt_sig.mk_this ~self cx reason in
+        (Subst_name.Name "this", this_param, this_t)
+      | Record { record_loc; _ } ->
+        let self = Type_env.read_class_self_type cx record_loc in
         let (this_param, this_t) = Statement.Class_stmt_sig.mk_this ~self cx reason in
         (Subst_name.Name "this", this_param, this_t)
       | _ ->
@@ -1418,6 +1434,27 @@ let resolve_component_type_params cx graph component =
           env with
           Loc_env.tparams = ALocMap.add loc (name, tparam, AnyT.at (AnyError None) loc) tparams;
         }
+    | (Record _, _, _, _) ->
+      let name = Subst_name.Name "this" in
+      let reason = mk_annot_reason RThis loc in
+      let tparam =
+        {
+          reason;
+          name;
+          bound = DefT (reason, MixedT Mixed_everything);
+          polarity = Polarity.Neutral;
+          default = None;
+          is_this = true;
+          is_const = false;
+        }
+      in
+      let ({ Loc_env.tparams; _ } as env) = Context.environment cx in
+      Context.set_environment
+        cx
+        {
+          env with
+          Loc_env.tparams = ALocMap.add loc (name, tparam, AnyT.at (AnyError None) loc) tparams;
+        }
     | _ -> ()
   in
   let resolve_element = function
@@ -1428,7 +1465,8 @@ let resolve_component_type_params cx graph component =
     | Resolvable key ->
       (match EnvMap.find key graph with
       | (TypeParam _, _, _, _)
-      | (Class _, _, _, _) ->
+      | (Class _, _, _, _)
+      | (Record _, _, _, _) ->
         let (_kind, loc) = key in
         ignore @@ init_type_param cx graph loc
       | _ -> ())

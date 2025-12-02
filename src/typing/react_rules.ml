@@ -472,6 +472,7 @@ let effect_visitor cx ~is_hook rrid tast =
                | Function { function_ = func; _ } -> acc @ visit_func func
                | Component _ -> acc
                | Class { class_ = cls; _ } -> acc @ visit_class cls
+               | Record _ -> acc (* Records don't contain React hooks/rules violations *)
                | Binding bind ->
                  let rec handle_binding bind =
                    match bind with

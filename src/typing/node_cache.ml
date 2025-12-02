@@ -39,6 +39,13 @@ type cache = {
     * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Class.t)
     )
     ALocMap.t;
+  record_sigs:
+    ( Type.t
+    * Type.t
+    * Func_class_sig_types.Class_stmt_sig_types.t
+    * (Type.t -> (ALoc.t, ALoc.t * Type.t) Ast.Statement.RecordDeclaration.t)
+    )
+    ALocMap.t;
   tparams: ((ALoc.t, ALoc.t * Type.t) Ast.Type.TypeParam.t * Type.typeparam * Type.t) ALocMap.t;
   component_sigs:
     ( Component_sig_types.Component_declaration_sig_types.t
@@ -71,6 +78,7 @@ let mk_empty () =
       declared_components = ALocMap.empty;
       declared_namespaces = ALocMap.empty;
       class_sigs = ALocMap.empty;
+      record_sigs = ALocMap.empty;
       tparams = ALocMap.empty;
       component_sigs = ALocMap.empty;
       match_patterns = ALocMap.empty;
@@ -117,6 +125,9 @@ let set_declared_namespace cache loc ns =
 let set_class_sig cache loc class_ =
   cache := { !cache with class_sigs = ALocMap.add loc class_ !cache.class_sigs }
 
+let set_record_sig cache loc record =
+  cache := { !cache with record_sigs = ALocMap.add loc record !cache.record_sigs }
+
 let set_tparam cache (((loc, _), _, _) as param) =
   cache := { !cache with tparams = ALocMap.add loc param !cache.tparams }
 
@@ -155,6 +166,8 @@ let get_declared_component cache loc = ALocMap.find_opt loc !cache.declared_comp
 let get_declared_namespace cache loc = ALocMap.find_opt loc !cache.declared_namespaces
 
 let get_class_sig cache loc = ALocMap.find_opt loc !cache.class_sigs
+
+let get_record_sig cache loc = ALocMap.find_opt loc !cache.record_sigs
 
 let get_tparam cache loc = ALocMap.find_opt loc !cache.tparams
 

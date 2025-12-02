@@ -686,6 +686,46 @@ struct
           | Ast.Type.Missing _ -> this#class_property_value_annotated value
           | Ast.Type.Available _ -> ()
 
+        method record_body_annotated (rec_body : ('loc, 'loc) Ast.Statement.RecordDeclaration.Body.t)
+            =
+          let open Ast.Statement.RecordDeclaration.Body in
+          let (_, { body; comments = _ }) = rec_body in
+          Base.List.iter ~f:this#record_element_annotated body;
+          rec_body
+
+        method record_element_annotated
+            (elem : ('loc, 'loc) Ast.Statement.RecordDeclaration.Body.element) =
+          let open Ast.Statement.RecordDeclaration.Body in
+          match elem with
+          | Method (_, meth) -> this#class_method_annotated meth
+          | Property prop -> this#record_property_annotated prop
+          | StaticProperty prop -> this#record_static_property_annotated prop
+
+        method record_property_annotated
+            ((_loc, prop) : ('loc, 'loc) Ast.Statement.RecordDeclaration.Property.t) =
+          let open Ast.Statement.RecordDeclaration.Property in
+          let { key = _; annot; default_value; comments = _; invalid_syntax = _ } = prop in
+          run this#type_annotation annot;
+          (* Records always have annotations, but check default_value for functions *)
+          Base.Option.iter default_value ~f:(fun value ->
+              match value with
+              | (_, Ast.Expression.ArrowFunction function_)
+              | (_, Ast.Expression.Function function_) ->
+                this#function_def ~fully_annotated:true function_
+              | _ -> ()
+          )
+
+        method record_static_property_annotated
+            ((_loc, prop) : ('loc, 'loc) Ast.Statement.RecordDeclaration.StaticProperty.t) =
+          let open Ast.Statement.RecordDeclaration.StaticProperty in
+          let { key = _; annot; value; comments = _; invalid_syntax = _ } = prop in
+          run this#type_annotation annot;
+          match value with
+          | (_, Ast.Expression.ArrowFunction function_)
+          | (_, Ast.Expression.Function function_) ->
+            this#function_def ~fully_annotated:true function_
+          | _ -> ()
+
         (* In order to resolve a def containing a read, the writes that the
            Name_resolver determines reach the variable must be resolved *)
         method! expression ((loc, _) as expr) =
@@ -885,6 +925,16 @@ struct
             run_opt visitor#class_implements implements;
             run_list visitor#class_decorator class_decorators;
             run_opt (visitor#type_params ~kind:Flow_ast_mapper.ClassTP) tparams;
+            ())
+          EnvMap.empty
+      in
+      let depends_of_record
+          { Ast.Statement.RecordDeclaration.id = _; tparams; implements; body; comments = _ } =
+        depends_of_node
+          (fun visitor ->
+            run visitor#record_body_annotated body;
+            run_opt visitor#class_implements implements;
+            run_opt (visitor#type_params ~kind:Flow_ast_mapper.RecordTP) tparams;
             ())
           EnvMap.empty
       in
@@ -1220,6 +1270,8 @@ struct
         depends_of_component tparams_map component EnvMap.empty
       | Class { class_; class_loc = _; this_super_write_locs = _; kind = _ } ->
         depends_of_class class_
+      | Record { record; record_loc = _; this_super_write_locs = _; defaulted_props = _ } ->
+        depends_of_record record
       | DeclaredClass (_, decl) -> depends_of_declared_class decl
       | DeclaredComponent (loc, decl) -> depends_of_declared_component loc decl
       | TypeAlias (_, alias) -> depends_of_alias alias
@@ -1295,6 +1347,7 @@ struct
             _;
           }
       | Class _
+      | Record _
       | MissingThisAnnot
       | DeclaredComponent _
       | DeclaredClass _
@@ -1384,6 +1437,7 @@ struct
     | Enum _
     | Import _
     | Class _
+    | Record _
     | DeclaredClass _
     | DeclaredComponent _
     | MatchCasePattern _
@@ -1427,6 +1481,7 @@ struct
         (fun kind_and_loc def acc ->
           match def with
           | (Class { this_super_write_locs = locs; _ }, _, _, _)
+          | (Record { this_super_write_locs = locs; _ }, _, _, _)
           | ( Binding
                 (Root
                   (ObjectValue { synthesizable = ObjectSynthesizable { this_write_locs = locs }; _ })

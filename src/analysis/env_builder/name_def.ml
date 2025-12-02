@@ -2027,10 +2027,111 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       run_list this#class_decorator decorators;
       meth
 
-    method! record_declaration loc record =
+    method private record_declaration_internal loc record =
+      let open Ast.Statement.RecordDeclaration in
+      let {
+        id = (id_loc, { Ast.Identifier.name = record_name; _ }) as id;
+        tparams;
+        implements;
+        body;
+        comments = _;
+      } =
+        record
+      in
       let defaulted_props = Flow_ast_utils.defaulted_props_of_record record in
-      let kind = ClassKind.Record { defaulted_props } in
-      ignore @@ this#class_internal ~kind loc (Flow_ast_utils.class_of_record record);
+      this#in_new_tparams_env (fun () ->
+          let old_stack = class_stack in
+          class_stack <- loc :: class_stack;
+          let () =
+            this#in_scope
+              (fun () ->
+                ignore @@ this#class_identifier id;
+                run_opt (this#type_params ~kind:Flow_ast_mapper.ClassTP) tparams;
+                this#add_tparam id_loc "this";
+                ignore @@ this#record_declaration_internal_body body;
+                run_opt this#class_implements implements;
+                ())
+              Ordinary
+              ()
+          in
+          class_stack <- old_stack;
+          let this_super_write_locs =
+            let (_, { Ast.Statement.RecordDeclaration.Body.body = elements; _ }) = body in
+            Base.List.fold elements ~init:EnvSet.empty ~f:(fun acc -> function
+              | Ast.Statement.RecordDeclaration.Body.Property
+                  ( _,
+                    {
+                      Ast.Statement.RecordDeclaration.Property.default_value =
+                        Some (f_loc, Ast.Expression.Function _);
+                      _;
+                    }
+                  ) ->
+                EnvSet.add (Env_api.FunctionThisLoc, f_loc) acc
+              | Ast.Statement.RecordDeclaration.Body.StaticProperty
+                  ( _,
+                    {
+                      Ast.Statement.RecordDeclaration.StaticProperty.value =
+                        (f_loc, Ast.Expression.Function _);
+                      _;
+                    }
+                  ) ->
+                EnvSet.add (Env_api.FunctionThisLoc, f_loc) acc
+              | _ -> acc
+            )
+          in
+          let this_super_write_locs =
+            this_super_write_locs
+            |> EnvSet.add (Env_api.ClassSelfLoc, loc)
+            |> EnvSet.add (Env_api.ClassInstanceThisLoc, loc)
+            |> EnvSet.add (Env_api.ClassStaticThisLoc, loc)
+            |> EnvSet.add (Env_api.ClassInstanceSuperLoc, loc)
+            |> EnvSet.add (Env_api.ClassStaticSuperLoc, loc)
+          in
+          let reason = mk_reason (RType (OrdinaryName record_name)) id_loc in
+          this#add_ordinary_binding
+            id_loc
+            reason
+            (Record { record_loc = loc; record; this_super_write_locs; defaulted_props });
+          record
+      )
+
+    method private record_declaration_internal_body
+        (body_loc, { Ast.Statement.RecordDeclaration.Body.body = elements; comments = _ }) =
+      let open Ast.Statement.RecordDeclaration.Body in
+      Base.List.iter elements ~f:(fun element ->
+          match element with
+          | Method method_ -> ignore @@ this#class_method (fst method_) (snd method_)
+          | Property (_prop_loc, prop) ->
+            let {
+              Ast.Statement.RecordDeclaration.Property.key = _;
+              annot;
+              default_value;
+              comments = _;
+              invalid_syntax = _;
+            } =
+              prop
+            in
+            ignore @@ this#type_annotation annot;
+            Base.Option.iter default_value ~f:(fun e ->
+                ignore @@ this#visit_expression ~cond:NoContext ~hints:[] e
+            )
+          | StaticProperty (_prop_loc, static_prop) ->
+            let {
+              Ast.Statement.RecordDeclaration.StaticProperty.key = _;
+              annot;
+              value;
+              comments = _;
+              invalid_syntax = _;
+            } =
+              static_prop
+            in
+            ignore @@ this#type_annotation annot;
+            ignore @@ this#visit_expression ~cond:NoContext ~hints:[] value
+      );
+      (body_loc, { Ast.Statement.RecordDeclaration.Body.body = elements; comments = None })
+
+    method! record_declaration loc record =
+      ignore @@ this#record_declaration_internal loc record;
       record
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
