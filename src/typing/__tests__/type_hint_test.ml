@@ -73,7 +73,7 @@ let metadata =
     ts_syntax = true;
     ts_utility_syntax = true;
     type_expansion_recursion_limit = 3;
-    use_mixed_in_catch_variables = false;
+    use_unknown_in_catch_variables = false;
   }
 
 let dummy_filename = File_key.SourceFile ""

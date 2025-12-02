@@ -1581,8 +1581,8 @@ let make_options
     opt_ts_utility_syntax = FlowConfig.ts_utility_syntax flowconfig;
     opt_type_expansion_recursion_limit = FlowConfig.type_expansion_recursion_limit flowconfig;
     opt_unsuppressable_error_codes = FlowConfig.unsuppressable_error_codes flowconfig;
-    opt_use_mixed_in_catch_variables =
-      Base.Option.value (FlowConfig.use_mixed_in_catch_variables flowconfig) ~default:false;
+    opt_use_unknown_in_catch_variables =
+      Base.Option.value (FlowConfig.use_unknown_in_catch_variables flowconfig) ~default:false;
     opt_verbose = options_flags.verbose;
     opt_vpn_less;
     opt_wait_for_recheck;

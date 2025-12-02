@@ -155,7 +155,7 @@ let stub_metadata ~root ~checked =
     ts_syntax = true;
     ts_utility_syntax = true;
     type_expansion_recursion_limit = 3;
-    use_mixed_in_catch_variables = false;
+    use_unknown_in_catch_variables = false;
   }
 
 let master_cx_ref : (File_path.t * Context.master_context) option ref = ref None
@@ -196,8 +196,8 @@ let merge_custom_check_config js_config_object metadata =
     | "classic" -> Options.ReactRuntimeClassic
     | s -> failwith ("Unsupported config option: " ^ s)
   in
-  let use_mixed_in_catch_variables =
-    Js.Unsafe.get js_config_object "use_mixed_in_catch_variables" |> Js.to_bool
+  let use_unknown_in_catch_variables =
+    Js.Unsafe.get js_config_object "use_unknown_in_catch_variables" |> Js.to_bool
   in
   {
     metadata with
@@ -208,7 +208,7 @@ let merge_custom_check_config js_config_object metadata =
     react_runtime;
     ts_syntax;
     assert_operator;
-    use_mixed_in_catch_variables;
+    use_unknown_in_catch_variables;
   }
 
 (* Keep this in sync with configSchema below. *)

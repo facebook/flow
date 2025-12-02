@@ -292,7 +292,7 @@ val type_expansion_recursion_limit : config -> int
 
 val unsuppressable_error_codes : config -> SSet.t
 
-val use_mixed_in_catch_variables : config -> bool option
+val use_unknown_in_catch_variables : config -> bool option
 
 val vpn_less : config -> bool
 

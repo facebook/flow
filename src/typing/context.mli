@@ -132,7 +132,7 @@ type metadata = {
   ts_syntax: bool;
   ts_utility_syntax: bool;
   type_expansion_recursion_limit: int;
-  use_mixed_in_catch_variables: bool;
+  use_unknown_in_catch_variables: bool;
 }
 
 type typing_mode =
@@ -626,7 +626,7 @@ val take_cache_snapshot : t -> cache_snapshot
 
 val restore_cache_snapshot : t -> cache_snapshot -> unit
 
-val use_mixed_in_catch_variables : t -> bool
+val use_unknown_in_catch_variables : t -> bool
 
 val ban_spread_key_props : t -> bool
 

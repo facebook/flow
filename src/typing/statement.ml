@@ -1177,7 +1177,7 @@ module Make
             match annot with
             | Ast.Type.Missing mloc ->
               let t =
-                if Context.use_mixed_in_catch_variables cx then
+                if Context.use_unknown_in_catch_variables cx then
                   MixedT.at loc
                 else
                   AnyT.why CatchAny (mk_reason RAnyImplicit loc)

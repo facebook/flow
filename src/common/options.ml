@@ -197,7 +197,7 @@ type t = {
   opt_ts_utility_syntax: bool;
   opt_type_expansion_recursion_limit: int;
   opt_unsuppressable_error_codes: SSet.t;
-  opt_use_mixed_in_catch_variables: bool;
+  opt_use_unknown_in_catch_variables: bool;
   opt_verbose: Verbose.t option;
   opt_vpn_less: bool;
   opt_wait_for_recheck: bool;
@@ -423,7 +423,7 @@ let typecheck_component_syntax_in_file opts file =
 
 let unsuppressable_error_codes opts = opts.opt_unsuppressable_error_codes
 
-let use_mixed_in_catch_variables opts = opts.opt_use_mixed_in_catch_variables
+let use_unknown_in_catch_variables opts = opts.opt_use_unknown_in_catch_variables
 
 let verbose opts = opts.opt_verbose
 

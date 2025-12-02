@@ -82,7 +82,7 @@ type metadata = {
   ts_syntax: bool;
   ts_utility_syntax: bool;
   type_expansion_recursion_limit: int;
-  use_mixed_in_catch_variables: bool;
+  use_unknown_in_catch_variables: bool;
 }
 
 type test_prop_hit_or_miss =
@@ -340,7 +340,7 @@ let metadata_of_options options =
     deprecated_utilities = Options.deprecated_utilities options;
     assert_operator = Options.assert_operator options;
     type_expansion_recursion_limit = Options.type_expansion_recursion_limit options;
-    use_mixed_in_catch_variables = Options.use_mixed_in_catch_variables options;
+    use_unknown_in_catch_variables = Options.use_unknown_in_catch_variables options;
     ban_spread_key_props = Options.ban_spread_key_props options;
   }
 
@@ -736,7 +736,7 @@ let array_or_object_literal_declaration_upper_bounds cx =
 
 let inferred_component_return cx = cx.ccx.inferred_component_return
 
-let use_mixed_in_catch_variables cx = cx.metadata.use_mixed_in_catch_variables
+let use_unknown_in_catch_variables cx = cx.metadata.use_unknown_in_catch_variables
 
 let ban_spread_key_props cx = cx.metadata.ban_spread_key_props
 

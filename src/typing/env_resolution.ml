@@ -827,7 +827,7 @@ let rec resolve_binding cx def_scope_kind reason loc b =
       );
     t
   | Root CatchUnannotated ->
-    if Context.use_mixed_in_catch_variables cx then
+    if Context.use_unknown_in_catch_variables cx then
       MixedT.at loc
     else
       AnyT (mk_reason RAnyImplicit loc, AnyError (Some MissingAnnotation))
