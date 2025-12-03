@@ -285,6 +285,9 @@ and instantiate_component cx opts component instantiation_hint =
     | DefT (_, PolyT { t_out = DefT (_, FunT _); _ }) as poly_fun_t ->
       instantiate_component cx opts poly_fun_t instantiation_hint
     | _ -> t)
+  | TypeAppT { reason; _ } as t ->
+    let component = Flow_js.singleton_concrete_type_for_inspection cx reason t in
+    instantiate_component cx opts component instantiation_hint
   | t -> t
 
 and type_of_hint_decomposition cx opts op reason t =
