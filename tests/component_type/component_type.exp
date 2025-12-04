@@ -51,8 +51,8 @@ References:
    class_to_component_type.js:11:26
     11|     ref: React.RefSetter<string>
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:105:13
-   105|     | ((T | null) => mixed)
+   <BUILTINS>/react.js:108:13
+   108|     | ((T | null) => mixed)
                     ^^^^ [3]
 
 
@@ -73,8 +73,8 @@ References:
    class_to_component_type.js:11:26
     11|     ref: React.RefSetter<string>
                                  ^^^^^^ [2]
-   <BUILTINS>/react.js:104:23
-   104|     | { -current: T | null, ... }
+   <BUILTINS>/react.js:107:23
+   107|     | { -current: T | null, ... }
                               ^^^^ [3]
 
 
@@ -92,11 +92,11 @@ References:
    class_to_component_type.js:15:10
     15|     ref: ImNotARefSetter // ok: ref prop in component type can be arbitrary
                  ^^^^^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:105:8
-   105|     | ((T | null) => mixed)
+   <BUILTINS>/react.js:108:8
+   108|     | ((T | null) => mixed)
                ^^^^^^^^^^^^^^^^^^^ [2]
-   <BUILTINS>/react.js:106:7
-   106|     | null
+   <BUILTINS>/react.js:109:7
+   109|     | null
               ^^^^ [3]
 
 
@@ -171,8 +171,8 @@ References:
    classes_lower.js:19:53
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
                                                             ^^^^^^^^^ [2]
-   <BUILTINS>/react.js:105:13
-   105|     | ((T | null) => mixed)
+   <BUILTINS>/react.js:108:13
+   108|     | ((T | null) => mixed)
                     ^^^^ [3]
 
 
@@ -193,8 +193,8 @@ References:
    classes_lower.js:19:53
     19| ComponentNarrower as component(ref: React.RefSetter<Component>, ...{...}); // Error instance type is wrong
                                                             ^^^^^^^^^ [2]
-   <BUILTINS>/react.js:104:23
-   104|     | { -current: T | null, ... }
+   <BUILTINS>/react.js:107:23
+   107|     | { -current: T | null, ... }
                               ^^^^ [3]
 
 
@@ -226,8 +226,8 @@ Cannot return `x` because in property `ref` > type argument `T` [1]: `Subcompone
                  ^
 
 References:
-   <BUILTINS>/react.js:271:34
-   271|   declare export type RefSetter<-T> = React.RefSetter<T>;
+   <BUILTINS>/react.js:274:34
+   274|   declare export type RefSetter<-T> = React.RefSetter<T>;
                                          ^ [1]
    component_to_component.js:27:35
     27| ): component(ref: React.RefSetter<Subcomponent>, ...{...}) { // Error instance is covariant
@@ -326,8 +326,8 @@ References:
    create_element.js:21:32
     21| const refBad = React.createRef<string>();
                                        ^^^^^^ [2]
-   <BUILTINS>/react.js:617:28
-   617|     ): React$RefObject<T | null>;
+   <BUILTINS>/react.js:620:28
+   620|     ): React$RefObject<T | null>;
                                    ^^^^ [3]
 
 
@@ -460,8 +460,8 @@ incompatible with string [4]. [incompatible-type]
          ^
 
 References:
-   <BUILTINS>/react.js:103:19
-    103|   type RefSetter<-T> =
+   <BUILTINS>/react.js:106:19
+    106|   type RefSetter<-T> =
                            ^ [1]
    <BUILTINS>/core.js:2239:19
    2239| declare class Set<T> extends $ReadOnlySet<T> {
@@ -813,8 +813,8 @@ incompatible with string [4]. [incompatible-type]
          ^
 
 References:
-   <BUILTINS>/react.js:103:19
-    103|   type RefSetter<-T> =
+   <BUILTINS>/react.js:106:19
+    106|   type RefSetter<-T> =
                            ^ [1]
    <BUILTINS>/core.js:2239:19
    2239| declare class Set<T> extends $ReadOnlySet<T> {

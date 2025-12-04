@@ -19,8 +19,8 @@ References:
    test1.js:14:3
     14|   _handleChild = (child: ?HocChild): void => {}; // Error
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:104:7
-   104|     | { -current: T | null, ... }
+   <BUILTINS>/react.js:107:7
+   107|     | { -current: T | null, ... }
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 

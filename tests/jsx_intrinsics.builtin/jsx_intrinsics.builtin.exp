@@ -39,8 +39,8 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:105:13
-   105|     | ((T | null) => mixed)
+   <BUILTINS>/react.js:108:13
+   108|     | ((T | null) => mixed)
                     ^^^^ [4]
 
 
@@ -64,8 +64,8 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:104:23
-   104|     | { -current: T | null, ... }
+   <BUILTINS>/react.js:107:23
+   107|     | { -current: T | null, ... }
                               ^^^^ [4]
 
 
@@ -82,8 +82,8 @@ References:
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:641:29
-   641|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:644:29
+   644|     declare class Component<Props, State = void> {
                                     ^^^^^ [2]
    main.js:10:59
     10| var c: ExactReactElement_DEPRECATED<Class<React.Component<{prop1: string}, void>>> =
@@ -106,8 +106,8 @@ References:
    <BUILTINS>/react.js:58:51
     58| declare opaque type ExactReactElement_DEPRECATED<+ElementType: React$ElementType, +P = React$ElementConfig<ElementType>>: {...};
                                                           ^^^^^^^^^^^ [1]
-   <BUILTINS>/react.js:641:29
-   641|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:644:29
+   644|     declare class Component<Props, State = void> {
                                     ^^^^^ [2]
    main.js:3:47
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
@@ -158,8 +158,8 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:105:13
-   105|     | ((T | null) => mixed)
+   <BUILTINS>/react.js:108:13
+   108|     | ((T | null) => mixed)
                     ^^^^ [4]
 
 
@@ -183,8 +183,8 @@ References:
    main.js:3:7
      3| class CustomComponent extends React.Component<{prop: string}, void> {}
               ^^^^^^^^^^^^^^^ [3]
-   <BUILTINS>/react.js:104:23
-   104|     | { -current: T | null, ... }
+   <BUILTINS>/react.js:107:23
+   107|     | { -current: T | null, ... }
                               ^^^^ [4]
 
 

@@ -1088,8 +1088,8 @@ type [3]. [incompatible-type]
           ^
 
 References:
-   <BUILTINS>/react.js:255:38
-   255|   declare export type ComponentType<-P: {...}> = component(...P);
+   <BUILTINS>/react.js:258:38
+   258|   declare export type ComponentType<-P: {...}> = component(...P);
                                              ^ [1]
    react.js:11:38
     11|   declare var a: React.ComponentType<Props>;
@@ -1109,8 +1109,8 @@ Cannot cast `b` to `React.Component` because in type argument `Props` [1]: objec
           ^
 
 References:
-   <BUILTINS>/react.js:641:29
-   641|     declare class Component<Props, State = void> {
+   <BUILTINS>/react.js:644:29
+   644|     declare class Component<Props, State = void> {
                                     ^^^^^ [1]
    react.js:12:34
     12|   declare var b: React.Component<{+a: number}>;
