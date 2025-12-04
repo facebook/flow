@@ -153,12 +153,35 @@ let haste_name_opt ~options =
   let matches_excludes name =
     List.exists (fun r -> Str.string_match r name 0) options.haste_paths_excludes
   in
-  let regexp = Str.regexp "^\\(.*/\\)?\\([a-zA-Z0-9$_.-]+\\)\\.js\\(\\.flow\\)?$" in
+  let is_valid_haste_char c =
+    (c >= 'a' && c <= 'z')
+    || (c >= 'A' && c <= 'Z')
+    || (c >= '0' && c <= '9')
+    || c = '$'
+    || c = '_'
+    || c = '.'
+    || c = '-'
+  in
+  let extract_haste_name normalized_file_name =
+    let basename = Filename.basename normalized_file_name in
+    let without_flow =
+      match Base.String.chop_suffix basename ~suffix:".flow" with
+      | Some s -> s
+      | None -> basename
+    in
+    match Base.String.chop_suffix without_flow ~suffix:".js" with
+    | None -> normalized_file_name
+    | Some name ->
+      if String.length name > 0 && String.for_all is_valid_haste_char name then
+        name
+      else
+        normalized_file_name
+  in
   fun file ->
     (* Standardize \ to / in path for Windows *)
     let normalized_file_name = Sys_utils.normalize_filename_dir_sep (File_key.to_string file) in
     if matches_includes normalized_file_name && not (matches_excludes normalized_file_name) then
-      Some (Str.global_replace regexp "\\2" normalized_file_name)
+      Some (extract_haste_name normalized_file_name)
     else
       None
 
