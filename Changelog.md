@@ -1,3 +1,8 @@
+### 0.293.0
+
+Config:
+* `use_mixed_in_catch_variables` option was renamed `use_unknown_in_catch_variables` because `mixed` is being renamed to `unknown`
+
 ### 0.292.0
 
 Likely to cause new Flow errors:
