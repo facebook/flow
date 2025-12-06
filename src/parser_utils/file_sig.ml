@@ -357,7 +357,7 @@ class requires_calculator ~file_key ~ast ~opts =
 
     method! import import_loc (expr : (Loc.t, Loc.t) Ast.Expression.Import.t) =
       let open Ast.Expression in
-      let { Import.argument; comments = _ } = expr in
+      let { Import.argument; options = _; comments = _ } = expr in
       begin
         match argument with
         | ( loc,

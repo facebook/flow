@@ -3648,8 +3648,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (import1 : (Loc.t, Loc.t) Ast.Expression.Import.t)
       (import2 : (Loc.t, Loc.t) Ast.Expression.Import.t) : node change list option =
     let open Ast.Expression.Import in
-    let { argument = argument1; comments = comments1 } = import1 in
-    let { argument = argument2; comments = comments2 } = import2 in
+    let { argument = argument1; options = options1; comments = comments1 } = import1 in
+    let { argument = argument2; options = options2; comments = comments2 } = import2 in
     let argument =
       Some
         (diff_if_changed
@@ -3658,8 +3658,17 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
            argument2
         )
     in
+    let options =
+      Base.Option.map2
+        options1
+        options2
+        ~f:
+          (diff_if_changed
+             (expression ~parent:(ExpressionParentOfExpression (loc, Ast.Expression.Import import2)))
+          )
+    in
     let comments = syntax_opt loc comments1 comments2 in
-    join_diff_list [argument; comments]
+    join_diff_list [argument; options; comments]
   and match_expression
       (loc : Loc.t)
       (m1 : (Loc.t, Loc.t) Ast.Expression.match_expression)

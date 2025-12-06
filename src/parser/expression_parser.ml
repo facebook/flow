@@ -791,11 +791,18 @@ module Expression
           let leading_arg = Peek.comments env in
           Expect.token env T_LPAREN;
           let argument = add_comments (assignment (with_no_in false env)) ~leading:leading_arg in
+          let options =
+            if Eat.maybe env T_COMMA then
+              Some (assignment (with_no_in false env))
+            else
+              None
+          in
           Expect.token env T_RPAREN;
           let trailing = Eat.trailing_comments env in
           Expression.Import
             {
               Expression.Import.argument;
+              options;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             })
       env

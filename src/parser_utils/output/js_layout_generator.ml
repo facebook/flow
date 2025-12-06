@@ -1302,9 +1302,18 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       | E.AsConstExpression cast -> as_const_expression ~ctxt ~opts ~precedence loc cast
       | E.AsExpression cast -> as_expression ~ctxt ~opts ~precedence loc cast
       | E.TSSatisfies cast -> ts_satisfies ~opts loc cast
-      | E.Import { E.Import.argument; comments } ->
+      | E.Import { E.Import.argument; options; comments } ->
         layout_node_with_comments_opt loc comments
-        @@ fuse [Atom "import"; wrap_in_parens (expression ~opts argument)]
+        @@ fuse
+             [
+               Atom "import";
+               wrap_in_parens
+                 (match options with
+                 | Some options_arg ->
+                   fuse
+                     [expression ~opts argument; Atom ","; Atom " "; expression ~opts options_arg]
+                 | None -> expression ~opts argument);
+             ]
       | E.Record
           {
             E.Record.constructor;

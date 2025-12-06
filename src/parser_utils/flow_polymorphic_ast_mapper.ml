@@ -1761,10 +1761,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method import _annot (expr : ('M, 'T) Ast.Expression.Import.t)
         : ('N, 'U) Ast.Expression.Import.t =
       let open Ast.Expression.Import in
-      let { argument; comments } = expr in
+      let { argument; options; comments } = expr in
       let argument' = this#expression argument in
+      let options' = Option.map ~f:this#expression options in
       let comments' = this#syntax_opt comments in
-      { argument = argument'; comments = comments' }
+      { argument = argument'; options = options'; comments = comments' }
 
     method if_consequent_statement ~has_else (stmt : ('M, 'T) Ast.Statement.t)
         : ('N, 'U) Ast.Statement.t =

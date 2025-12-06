@@ -3900,7 +3900,7 @@ module Make
         (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.MetaPropertyExpression)
         );
       Tast_utils.error_mapper#expression ex
-    | Import { Import.argument = (source_loc, argument); comments } ->
+    | Import { Import.argument = (source_loc, argument); options = opts; comments } ->
       let t module_name =
         let ns_t =
           let reason = mk_reason (RModule module_name) loc in
@@ -3917,11 +3917,17 @@ module Make
         let reason = mk_annot_reason RAsyncImport loc in
         Flow.get_builtin_typeapp cx reason "Promise" [ns_t]
       in
+      let opts' = Option.map (expression cx) opts in
       (match argument with
       | Ast.Expression.StringLiteral ({ Ast.StringLiteral.value = module_name; _ } as lit) ->
         let t = t (Flow_import_specifier.userland module_name) in
         ( (loc, t),
-          Import { Import.argument = ((source_loc, t), Ast.Expression.StringLiteral lit); comments }
+          Import
+            {
+              Import.argument = ((source_loc, t), Ast.Expression.StringLiteral lit);
+              options = opts';
+              comments;
+            }
         )
       | TemplateLiteral ({ TemplateLiteral.quasis = [quasi]; expressions = []; _ } as lit) ->
         let ( _,
@@ -3933,7 +3939,10 @@ module Make
           quasi
         in
         let t = t (Flow_import_specifier.userland module_name) in
-        ((loc, t), Import { Import.argument = ((source_loc, t), TemplateLiteral lit); comments })
+        ( (loc, t),
+          Import
+            { Import.argument = ((source_loc, t), TemplateLiteral lit); options = opts'; comments }
+        )
       | _ ->
         let ignore_non_literals = Context.should_ignore_non_literal_requires cx in
         if not ignore_non_literals then (

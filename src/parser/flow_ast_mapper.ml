@@ -2171,13 +2171,14 @@ class ['loc] mapper =
 
     method import _loc (expr : ('loc, 'loc) Ast.Expression.Import.t) =
       let open Ast.Expression.Import in
-      let { argument; comments } = expr in
+      let { argument; options; comments } = expr in
       let argument' = this#expression argument in
+      let options' = map_opt this#expression options in
       let comments' = this#syntax_opt comments in
-      if argument == argument' && comments == comments' then
+      if argument == argument' && options == options' && comments == comments' then
         expr
       else
-        { argument = argument'; comments = comments' }
+        { argument = argument'; options = options'; comments = comments' }
 
     method if_consequent_statement ~has_else (stmt : ('loc, 'loc) Ast.Statement.t) =
       ignore has_else;

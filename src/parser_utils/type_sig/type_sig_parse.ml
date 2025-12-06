@@ -3286,7 +3286,7 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
     let obj_loc = push_loc tbls obj_loc in
     key_mirror tbls obj_loc properties
   | E.JSXElement elem -> jsx_element opts tbls loc elem
-  | E.Import { E.Import.argument = (_, e); comments = _ } -> begin
+  | E.Import { E.Import.argument = (_, e); options = _; comments = _ } -> begin
     match extract_string_literal e with
     | None ->
       (* error case: non-literal require *)

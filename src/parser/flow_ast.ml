@@ -1814,6 +1814,7 @@ and Expression : sig
   module Import : sig
     type ('M, 'T) t = {
       argument: ('M, 'T) Expression.t;
+      options: ('M, 'T) Expression.t option;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

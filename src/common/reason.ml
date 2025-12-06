@@ -1051,7 +1051,7 @@ let rec code_desc_of_expression : 'loc 'tloc. wrap:bool -> ('loc, 'tloc) Ast.Exp
       )
   | Function _ -> "function () { ... }"
   | Identifier (_, { Ast.Identifier.name = x; comments = _ }) -> x
-  | Import { Import.argument; comments = _ } ->
+  | Import { Import.argument; options = _; comments = _ } ->
     "import(" ^ code_desc_of_expression ~wrap:false argument ^ ")"
   | JSXElement x -> code_desc_of_jsx_element x
   | JSXFragment _ -> "<>...</>"

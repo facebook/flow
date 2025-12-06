@@ -778,8 +778,15 @@ with type t = Impl.t = struct
             ("typeArguments", option call_type_args targs);
             ("properties", properties);
           ]
-      | (loc, Import { Import.argument; comments }) ->
-        node ?comments "ImportExpression" loc [("source", expression argument)]
+      | (loc, Import { Import.argument; options; comments }) ->
+        let fields =
+          ("source", expression argument)
+          ::
+          (match options with
+          | Some opts -> [("options", expression opts)]
+          | None -> [])
+        in
+        node ?comments "ImportExpression" loc fields
     and match_expression_case case = match_case "MatchExpressionCase" ~on_case_body:expression case
     and match_case
           : 'B. string -> on_case_body:('B -> Impl.t) -> (Loc.t, Loc.t, 'B) Match.Case.t -> Impl.t =
