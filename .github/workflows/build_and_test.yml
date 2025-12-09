@@ -150,12 +150,12 @@ jobs:
         path: |
           dist/flow-linux64-arm64.zip
   build_macos_arm64:
-    runs-on: macos-13-xlarge
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
-        xcode-version: '14.3.1'
+        xcode-version: '16.4.0'
     - name: Update curl cacerts
       run: echo "cacert $GITHUB_WORKSPACE/.circleci/cacert.pem" >> ~/.curlrc
     - uses: ./.github/actions/install-opam-mac
@@ -292,7 +292,7 @@ jobs:
     steps:
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
-        xcode-version: '16.1.0'
+        xcode-version: '16.4.0'
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
       with:
@@ -323,7 +323,7 @@ jobs:
     steps:
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
-        xcode-version: '16.1.0'
+        xcode-version: '16.4.0'
     - uses: actions/checkout@v3.6.0
     - uses: actions/download-artifact@v4.1.7
       with:
@@ -385,12 +385,12 @@ jobs:
     - name: Run ounit tests
       run: opam exec -- make ounit-tests-ci
   ounit_test_macos:
-    runs-on: macos-13-xlarge
+    runs-on: macos-15
     steps:
     - uses: actions/checkout@v3.6.0
     - uses: maxim-lobanov/setup-xcode@v1.6.0
       with:
-        xcode-version: '14.3.1'
+        xcode-version: '16.4.0'
     - name: Update curl cacerts
       run: echo "cacert $GITHUB_WORKSPACE/.circleci/cacert.pem" >> ~/.curlrc
     - uses: ./.github/actions/install-opam-mac
