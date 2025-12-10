@@ -62,8 +62,8 @@
         "elements":[
           {
             "type":"MethodDefinition",
-            "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":4,"column":0}},
-            "range":[16,28],
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":4,"column":0}},
+            "range":[13,28],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":6}},

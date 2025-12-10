@@ -48,8 +48,8 @@
           },
           {
             "type":"RecordDeclarationStaticProperty",
-            "loc":{"source":null,"start":{"line":3,"column":9},"end":{"line":3,"column":25}},
-            "range":[33,49],
+            "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":25}},
+            "range":[26,49],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":3,"column":9},"end":{"line":3,"column":10}},

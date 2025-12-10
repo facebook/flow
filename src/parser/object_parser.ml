@@ -1203,6 +1203,7 @@ module Object
           in
           (cond, comments)
         in
+        let start_loc = Peek.loc env in
         let (static, leading_static) = maybe_eat_and_get_comments T_STATIC env in
         let (async, leading_async) = maybe_eat_and_get_comments T_ASYNC env in
         let (generator, leading_generator) = Declaration.generator env in
@@ -1223,7 +1224,6 @@ module Object
           error_at env (error_loc, Parse_error.RecordPrivateElementUnsupported)
         );
         if Peek.token env = T_LBRACKET then (
-          let start_loc = Peek.loc env in
           Expect.token env T_LBRACKET;
           ignore @@ Parse.assignment (env |> with_no_in false);
           let end_loc = Peek.loc env in
@@ -1285,7 +1285,7 @@ module Object
           check_invalid_name env ~method_:false;
           let prop =
             with_loc
-              ~start_loc:key_loc
+              ~start_loc
               (fun env ->
                 let annot = Type.annotation env in
                 Expect.token env T_ASSIGN;
@@ -1300,7 +1300,7 @@ module Object
           check_invalid_name env ~method_:false;
           let prop =
             with_loc
-              ~start_loc:key_loc
+              ~start_loc
               (fun env ->
                 let annot = Type.annotation env in
                 let default_value =
@@ -1330,7 +1330,7 @@ module Object
           check_invalid_name env ~method_:true;
           let meth =
             with_loc
-              ~start_loc:key_loc
+              ~start_loc
               (fun env ->
                 let value = parse_method env ~async ~generator ~leading in
                 let comments = Flow_ast_utils.mk_comments_opt ~leading () in

@@ -77,8 +77,8 @@
               },
               {
                 "type":"RecordDeclarationStaticProperty",
-                "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":29}},
-                "range":[65,83],
+                "loc":{"source":null,"start":{"line":5,"column":4},"end":{"line":5,"column":29}},
+                "range":[58,83],
                 "key":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":5,"column":11},"end":{"line":5,"column":16}},
@@ -208,8 +208,8 @@
               },
               {
                 "type":"MethodDefinition",
-                "loc":{"source":null,"start":{"line":12,"column":11},"end":{"line":12,"column":21}},
-                "range":[147,157],
+                "loc":{"source":null,"start":{"line":12,"column":4},"end":{"line":12,"column":21}},
+                "range":[140,157],
                 "key":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":12,"column":11},"end":{"line":12,"column":16}},
@@ -377,8 +377,8 @@
               },
               {
                 "type":"MethodDefinition",
-                "loc":{"source":null,"start":{"line":19,"column":11},"end":{"line":19,"column":24}},
-                "range":[227,240],
+                "loc":{"source":null,"start":{"line":19,"column":4},"end":{"line":19,"column":24}},
+                "range":[220,240],
                 "key":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":19,"column":11},"end":{"line":19,"column":16}},
@@ -458,8 +458,8 @@
             "elements":[
               {
                 "type":"MethodDefinition",
-                "loc":{"source":null,"start":{"line":24,"column":10},"end":{"line":24,"column":21}},
-                "range":[272,283],
+                "loc":{"source":null,"start":{"line":24,"column":4},"end":{"line":24,"column":21}},
+                "range":[266,283],
                 "key":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":24,"column":10},"end":{"line":24,"column":16}},
@@ -523,8 +523,8 @@
             "elements":[
               {
                 "type":"MethodDefinition",
-                "loc":{"source":null,"start":{"line":29,"column":10},"end":{"line":29,"column":24}},
-                "range":[315,329],
+                "loc":{"source":null,"start":{"line":29,"column":4},"end":{"line":29,"column":24}},
+                "range":[309,329],
                 "key":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":29,"column":10},"end":{"line":29,"column":16}},
