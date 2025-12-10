@@ -1897,9 +1897,12 @@ module Make (I : INPUT) : S = struct
             TypeConverter.convert_inline_interface ~env super own_props inst_call_t inst_dict
           in
           Ty.Type ty
-        | ((T.ClassKind | T.RecordKind _), _) ->
+        | (T.ClassKind, _) ->
           let%map symbol = Reason_utils.instance_symbol env r in
           Ty.Decl (Ty.ClassDecl (symbol, ps))
+        | (T.RecordKind _, _) ->
+          let%map symbol = Reason_utils.instance_symbol env r in
+          Ty.Decl (Ty.RecordDecl (symbol, ps))
       in
       let component_decl ~env ?targs tparams config renders name reason =
         let%bind tparams =
@@ -2161,6 +2164,7 @@ module Make (I : INPUT) : S = struct
       | TypeAliasDecl { import = false; name = { sym_def_loc; _ }; _ }
       | ClassDecl ({ sym_def_loc; _ }, _)
       | InterfaceDecl ({ sym_def_loc; _ }, _)
+      | RecordDecl ({ sym_def_loc; _ }, _)
       | EnumDecl { sym_def_loc; _ }
       | NominalComponentDecl { name = { sym_def_loc; _ }; _ } ->
         Some sym_def_loc

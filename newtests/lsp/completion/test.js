@@ -7057,7 +7057,7 @@ b.te
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
-                      'unqualified type: class or enum',
+                      'unqualified type: class, record, enum',
                       {
                         token: 'AUTO332',
                         index: 5,
@@ -7165,7 +7165,7 @@ b.te
                     command: 'log:org.flow:<PLACEHOLDER_PROJECT_URL>',
                     arguments: [
                       'textDocument/completion',
-                      'unqualified type: class or enum',
+                      'unqualified type: class, record, enum',
                       {
                         token: 'AUTO332',
                         index: 8,

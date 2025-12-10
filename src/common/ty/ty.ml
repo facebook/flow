@@ -329,6 +329,7 @@ and decl =
     }
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
+  | RecordDecl of symbol * type_param list option
   | EnumDecl of symbol
   | NominalComponentDecl of {
       name: symbol;
@@ -600,10 +601,11 @@ class ['A] comparator_ty =
       | TypeAliasDecl _ -> 1
       | ClassDecl _ -> 2
       | InterfaceDecl _ -> 3
-      | EnumDecl _ -> 4
-      | NominalComponentDecl _ -> 5
-      | NamespaceDecl _ -> 6
-      | ModuleDecl _ -> 7
+      | RecordDecl _ -> 4
+      | EnumDecl _ -> 5
+      | NominalComponentDecl _ -> 6
+      | NamespaceDecl _ -> 7
+      | ModuleDecl _ -> 8
 
     method tag_of_elt _ =
       function
@@ -939,6 +941,7 @@ let symbols_of_elt ~loc_of_aloc =
   | Decl (TypeAliasDecl _ as d)
   | Decl (ClassDecl _ as d)
   | Decl (InterfaceDecl _ as d)
+  | Decl (RecordDecl _ as d)
   | Decl (EnumDecl _ as d)
   | Decl (NominalComponentDecl _ as d) ->
     o#on_decl () d

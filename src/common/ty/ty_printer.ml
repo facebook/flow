@@ -582,6 +582,15 @@ let layout_of_elt
         option ~f:(type_parameter ~depth) typeParameters;
       ]
   in
+  let record_decl ~depth s tparams =
+    fuse
+      [
+        Atom "record";
+        space;
+        identifier (local_name_of_symbol s);
+        option ~f:(type_parameter ~depth) tparams;
+      ]
+  in
   let nominal_component_decl ~depth s typeParameters typeArgs regular_props renders is_type =
     if is_type then
       fuse
@@ -653,6 +662,7 @@ let layout_of_elt
     | TypeAliasDecl { name; tparams; type_; _ } -> type_alias ~depth name tparams type_
     | ClassDecl (s, ps) -> class_decl ~depth s ps
     | InterfaceDecl (s, ps) -> interface_decl ~depth s ps
+    | RecordDecl (s, ps) -> record_decl ~depth s ps
     | EnumDecl n -> enum_decl n
     | NominalComponentDecl { name; tparams; targs; props; renders; is_type } ->
       nominal_component_decl ~depth name tparams targs props renders is_type

@@ -144,6 +144,7 @@ let lsp_completion_of_decl =
     | None -> Lsp.Completion.Enum)
   | ClassDecl _ -> Lsp.Completion.Class
   | InterfaceDecl _ -> Lsp.Completion.Interface
+  | RecordDecl _ -> Lsp.Completion.Struct
   | EnumDecl _ -> Lsp.Completion.Enum
   | NominalComponentDecl _ -> Lsp.Completion.Variable
   | NamespaceDecl _ -> Lsp.Completion.Module
@@ -176,6 +177,7 @@ let detail_of_ty_decl ~exact_by_default ~ts_syntax d =
     | Ty.ClassDecl _ -> None
     | Ty.EnumDecl _ -> None
     | Ty.InterfaceDecl _ -> None
+    | Ty.RecordDecl _ -> None
     | Ty.NominalComponentDecl _ -> None
     | Ty.NamespaceDecl _ -> None
     | Ty.ModuleDecl _ -> None
@@ -542,7 +544,7 @@ let autocomplete_record ~typing ~edit_locs ~documentation_and_tags record_name r
   | Error _ -> None
   | Ok ty ->
     (match ty with
-    | Ty.Decl (Ty.ClassDecl (_, _) as class_decl) ->
+    | Ty.Decl (Ty.RecordDecl (_, _) as record_decl) ->
       (match extract_record_fields ~typing record_type with
       | Error _ -> None
       | Ok fields ->
@@ -561,7 +563,7 @@ let autocomplete_record ~typing ~edit_locs ~documentation_and_tags record_name r
             ~ts_syntax:(Context.ts_syntax cx)
             ~log_info:"record"
             (record_name, edit_locs)
-            class_decl
+            record_decl
         in
         Some item)
     | _ ->
@@ -1158,6 +1160,19 @@ let exports_of_module_ty
                (sym_name, edit_locs)
                d
             )
+        | RecordDecl ({ Ty.sym_name; sym_def_loc; _ }, _) as d when is_ok `Either sym_name ->
+          let sym_name = Reason.display_string_of_name sym_name in
+          let documentation_and_tags = documentation_and_tags_of_module_member sym_def_loc in
+          Some
+            (autocomplete_create_result_decl
+               ~rank:0
+               ~documentation_and_tags
+               ~exact_by_default
+               ~ts_syntax
+               ~log_info:"qualified record"
+               (sym_name, edit_locs)
+               d
+            )
         | EnumDecl { Ty.sym_name; sym_def_loc; _ } as d when is_ok `Either sym_name ->
           let sym_name = Reason.display_string_of_name sym_name in
           let documentation_and_tags = documentation_and_tags_of_module_member sym_def_loc in
@@ -1501,13 +1516,13 @@ let autocomplete_unqualified_type ~typing ~ac_options ~tparams_rev ~ac_loc ~edit
            | Error err ->
              let error_to_log = Ty_normalizer.error_to_string err in
              (items_rev, error_to_log :: errors_to_log)
-           | Ok (Ty.Decl (Ty.ClassDecl _ | Ty.EnumDecl _) as elt) ->
+           | Ok (Ty.Decl (Ty.ClassDecl _ | Ty.RecordDecl _ | Ty.EnumDecl _) as elt) ->
              let result =
                autocomplete_create_result_elt
                  ~documentation_and_tags
                  ~exact_by_default
                  ~ts_syntax:(Context.ts_syntax cx)
-                 ~log_info:"unqualified type: class or enum"
+                 ~log_info:"unqualified type: class, record, enum"
                  (name, edit_locs)
                  elt
              in
