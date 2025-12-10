@@ -1,0 +1,9 @@
+// @flow
+
+record R {
+//     ^
+  a?: number,
+  b?: number | void,
+  c?: ?number,
+  d?: number = 0,
+}
