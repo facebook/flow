@@ -1430,22 +1430,20 @@ with type t = Impl.t = struct
           []
       in
       node ?comments "PropertyDefinition" loc props
+    and property_key ~comments = function
+      | Expression.Object.Property.StringLiteral lit -> (string_literal lit, false, comments)
+      | Expression.Object.Property.NumberLiteral lit -> (number_literal lit, false, comments)
+      | Expression.Object.Property.BigIntLiteral lit -> (bigint_literal lit, false, comments)
+      | Expression.Object.Property.Identifier id -> (identifier id, false, comments)
+      | Expression.Object.Property.PrivateName _ -> failwith "Internal Error: Private name"
+      | Expression.Object.Property.Computed
+          (_, { ComputedKey.expression = expr; comments = key_comments }) ->
+        (expression expr, true, Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments)
     and class_property
         ( loc,
           { Class.Property.key; value; annot; static; variance = variance_; decorators; comments }
         ) =
-      let (key, computed, comments) =
-        match key with
-        | Expression.Object.Property.StringLiteral lit -> (string_literal lit, false, comments)
-        | Expression.Object.Property.NumberLiteral lit -> (number_literal lit, false, comments)
-        | Expression.Object.Property.BigIntLiteral lit -> (bigint_literal lit, false, comments)
-        | Expression.Object.Property.Identifier id -> (identifier id, false, comments)
-        | Expression.Object.Property.PrivateName _ ->
-          failwith "Internal Error: Private name found in class prop"
-        | Expression.Object.Property.Computed
-            (_, { ComputedKey.expression = expr; comments = key_comments }) ->
-          (expression expr, true, Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments)
-      in
+      let (key, computed, comments) = property_key ~comments key in
       let (value, declare) =
         match value with
         | Class.Property.Declared -> (None, true)
@@ -1738,19 +1736,7 @@ with type t = Impl.t = struct
             | Set { key; value = (loc, func); comments } ->
               (key, function_expression (loc, func), "set", false, false, comments)
           in
-          let (key, computed, comments) =
-            match key with
-            | StringLiteral lit -> (string_literal lit, false, comments)
-            | NumberLiteral lit -> (number_literal lit, false, comments)
-            | BigIntLiteral lit -> (bigint_literal lit, false, comments)
-            | Identifier id -> (identifier id, false, comments)
-            | PrivateName _ -> failwith "Internal Error: Found private field in object props"
-            | Computed (_, { ComputedKey.expression = expr; comments = key_comments }) ->
-              ( expression expr,
-                true,
-                Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments
-              )
-          in
+          let (key, computed, comments) = property_key ~comments key in
           node
             ?comments
             "Property"
@@ -2083,17 +2069,8 @@ with type t = Impl.t = struct
             comments;
           }
         ) =
-      let key =
-        match key with
-        | Expression.Object.Property.StringLiteral lit -> string_literal lit
-        | Expression.Object.Property.NumberLiteral lit -> number_literal lit
-        | Expression.Object.Property.BigIntLiteral lit -> bigint_literal lit
-        | Expression.Object.Property.Identifier id -> identifier id
-        | Expression.Object.Property.PrivateName _ ->
-          failwith "Internal Error: Found private field in object props"
-        | Expression.Object.Property.Computed _ ->
-          failwith "There should not be computed object type property keys"
-      in
+      let (key, computed, comments) = property_key ~comments key in
+      if computed then failwith "There should not be computed object type property keys";
       let (value, kind) =
         match value with
         | Type.Object.Property.Init value -> (_type value, "init")
