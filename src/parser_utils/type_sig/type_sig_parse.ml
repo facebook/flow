@@ -4354,24 +4354,9 @@ let record_def opts scope tbls decl =
 
 let record_decl opts scope tbls decl =
   let open Ast.Statement.RecordDeclaration in
-  let { id = (id_loc, { Ast.Identifier.name; comments = _ }); body; _ } = decl in
+  let { id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } = decl in
   let id_loc = push_loc tbls id_loc in
-  let defaulted_props =
-    let (_, { Body.body = elements; _ }) = body in
-    Base.List.fold elements ~init:SSet.empty ~f:(fun acc element ->
-        match element with
-        | Body.Property
-            ( _,
-              {
-                Property.key = (_, { Ast.Identifier.name = prop_name; _ });
-                default_value = Some _;
-                _;
-              }
-            ) ->
-          SSet.add prop_name acc
-        | _ -> acc
-    )
-  in
+  let defaulted_props = Flow_ast_utils.defaulted_props_of_record decl in
   let def =
     if opts.enable_records then
       Some (lazy (splice tbls id_loc (fun tbls -> record_def opts scope tbls decl)))
