@@ -8,3 +8,8 @@ export record RNamed {
   a: number,
   b: string = "",
 }
+
+export record RKeyNames {
+  'foo': string,
+  42: number,
+}

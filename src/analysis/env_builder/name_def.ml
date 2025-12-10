@@ -2038,7 +2038,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       } =
         record
       in
-      let defaulted_props = Flow_ast_utils.defaulted_props_of_record record in
+      let defaulted_props = Record_utils.defaulted_props_of_record record in
       this#in_new_tparams_env (fun () ->
           let old_stack = class_stack in
           class_stack <- loc :: class_stack;

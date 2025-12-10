@@ -2610,7 +2610,9 @@ and record_property
   in
   source_location_with_comments
     ?comments
-    (loc, group [identifier key; type_annotation ~opts annot; default_value; Atom ","])
+    ( loc,
+      group [object_property_key ~opts key; type_annotation ~opts annot; default_value; Atom ","]
+    )
 
 and record_static_property
     ~opts
@@ -2630,7 +2632,7 @@ and record_static_property
         [
           Atom "static";
           space;
-          identifier key;
+          object_property_key ~opts key;
           type_annotation ~opts annot;
           pretty_space;
           Atom "=";

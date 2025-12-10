@@ -207,5 +207,3 @@ val unwrap_nonnull_lhs_expr :
 
 val unwrap_nonnull_lhs :
   'loc 'tloc. ('loc, 'tloc) Flow_ast.Pattern.t -> ('loc, 'tloc) Flow_ast.Pattern.t * bool
-
-val defaulted_props_of_record : 'loc. ('loc, 'loc) Flow_ast.Statement.RecordDeclaration.t -> SSet.t

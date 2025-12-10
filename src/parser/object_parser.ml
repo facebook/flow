@@ -1223,22 +1223,23 @@ module Object
           Eat.token env;
           error_at env (error_loc, Parse_error.RecordPrivateElementUnsupported)
         );
-        if Peek.token env = T_LBRACKET then (
-          Expect.token env T_LBRACKET;
-          ignore @@ Parse.assignment (env |> with_no_in false);
-          let end_loc = Peek.loc env in
-          Expect.token env T_RBRACKET;
-          let error_loc = Loc.btwn start_loc end_loc in
-          error_at env (error_loc, Parse_error.RecordComputedPropertyUnsupported)
-        );
-        let key = identifier_name env in
-        let (key_loc, { Identifier.name = key_name; _ }) = key in
+        let (key_loc, key) = key ~class_body:false env in
+        let key =
+          match key with
+          | Ast.Expression.Object.Property.Computed _ ->
+            error_at env (key_loc, Parse_error.RecordComputedPropertyUnsupported);
+            Ast.Expression.Object.Property.Identifier
+              (key_loc, { Identifier.name = ""; comments = None })
+          | _ -> key
+        in
         let check_invalid_name env ~method_ =
-          if String.equal key_name "constructor" || (String.equal key_name "prototype" && static)
-          then
+          match (string_value_of_key key, static) with
+          | (Some (key_loc, ("constructor" as key_name)), _)
+          | (Some (key_loc, ("prototype" as key_name)), true) ->
             error_at
               env
               (key_loc, Parse_error.RecordInvalidPropertyName { name = key_name; static; method_ })
+          | _ -> ()
         in
         let empty_invalid_syntax =
           {
@@ -1335,7 +1336,7 @@ module Object
                 let value = parse_method env ~async ~generator ~leading in
                 let comments = Flow_ast_utils.mk_comments_opt ~leading () in
                 {
-                  Class.Method.key = Ast.Expression.Object.Property.Identifier key;
+                  Class.Method.key;
                   value;
                   kind = Class.Method.Method;
                   static;

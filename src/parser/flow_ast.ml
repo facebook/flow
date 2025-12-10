@@ -1090,7 +1090,7 @@ and Statement : sig
       type ('M, 'T) t = 'T * ('M, 'T) t'
 
       and ('M, 'T) t' = {
-        key: ('M, 'T) Identifier.t;
+        key: ('M, 'T) Expression.Object.Property.key;
         annot: ('M, 'T) Type.annotation;
         default_value: ('M, 'T) Expression.t option;
         comments: ('M, unit) Syntax.t option;
@@ -1103,7 +1103,7 @@ and Statement : sig
       type ('M, 'T) t = 'T * ('M, 'T) t'
 
       and ('M, 'T) t' = {
-        key: ('M, 'T) Identifier.t;
+        key: ('M, 'T) Expression.Object.Property.key;
         annot: ('M, 'T) Type.annotation;
         value: ('M, 'T) Expression.t;
         comments: ('M, unit) Syntax.t option;
