@@ -30,8 +30,8 @@
         "elements":[
           {
             "type":"RecordDeclarationProperty",
-            "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":15}},
-            "range":[14,26],
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":15}},
+            "range":[13,26],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":6}},

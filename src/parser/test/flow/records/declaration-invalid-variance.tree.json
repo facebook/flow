@@ -24,8 +24,8 @@
         "elements":[
           {
             "type":"RecordDeclarationProperty",
-            "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":13}},
-            "range":[14,24],
+            "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":13}},
+            "range":[13,24],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":2,"column":3},"end":{"line":2,"column":4}},
@@ -48,8 +48,8 @@
           },
           {
             "type":"RecordDeclarationStaticProperty",
-            "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":26}},
-            "range":[35,51],
+            "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":26}},
+            "range":[27,51],
             "key":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":11}},
