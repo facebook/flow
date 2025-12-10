@@ -1456,6 +1456,19 @@ let ast_transforms_of_error
       ]
     else
       []
+  | Error_message.ERecordDeclarationInvalidSyntax { loc = error_loc; kind = _ } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Fix invalid record syntax";
+          diagnostic_title = "fix_record_invalid_syntax";
+          transform = untyped_ast_transform Autofix_record_declaration.fix_invalid_syntax;
+          target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
+        };
+      ]
+    else
+      []
   | Error_message.EInvariantSubtypingWithUseOp
       {
         explanation =
