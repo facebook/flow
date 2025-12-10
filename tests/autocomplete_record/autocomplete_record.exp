@@ -48,8 +48,8 @@ records.js:10:13
 Flags: --pretty --lsp
 {
   "label":"Person",
-  "kind":7,
-  "detail":"class Person",
+  "kind":22,
+  "detail":"record Person",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -75,8 +75,8 @@ Flags: --pretty --lsp
 }
 {
   "label":"Person",
-  "kind":7,
-  "detail":"class Person",
+  "kind":22,
+  "detail":"record Person",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -105,8 +105,8 @@ records.js:20:13
 Flags: --pretty --lsp
 {
   "label":"User",
-  "kind":7,
-  "detail":"class User",
+  "kind":22,
+  "detail":"record User",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -132,8 +132,8 @@ Flags: --pretty --lsp
 }
 {
   "label":"User",
-  "kind":7,
-  "detail":"class User",
+  "kind":22,
+  "detail":"record User",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -162,8 +162,8 @@ records.js:31:13
 Flags: --pretty --lsp
 {
   "label":"Data",
-  "kind":7,
-  "detail":"class Data",
+  "kind":22,
+  "detail":"record Data",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -189,8 +189,8 @@ Flags: --pretty --lsp
 }
 {
   "label":"Data",
-  "kind":7,
-  "detail":"class Data",
+  "kind":22,
+  "detail":"record Data",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -219,8 +219,8 @@ records.js:40:14
 Flags: --pretty --lsp
 {
   "label":"Container",
-  "kind":7,
-  "detail":"class Container<T>",
+  "kind":22,
+  "detail":"record Container<T>",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -249,8 +249,8 @@ records.js:49:16
 Flags: --pretty --lsp
 {
   "label":"Optional",
-  "kind":7,
-  "detail":"class Optional",
+  "kind":22,
+  "detail":"record Optional",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -276,8 +276,8 @@ Flags: --pretty --lsp
 }
 {
   "label":"Optional",
-  "kind":7,
-  "detail":"class Optional",
+  "kind":22,
+  "detail":"record Optional",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -334,8 +334,8 @@ records.js:58:18
 Flags: --pretty --lsp
 {
   "label":"WithMethods",
-  "kind":7,
-  "detail":"class WithMethods",
+  "kind":22,
+  "detail":"record WithMethods",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -361,8 +361,8 @@ Flags: --pretty --lsp
 }
 {
   "label":"WithMethods",
-  "kind":7,
-  "detail":"class WithMethods",
+  "kind":22,
+  "detail":"record WithMethods",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -391,8 +391,8 @@ records.js:68:18
 Flags: --pretty --lsp
 {
   "label":"WithStatics",
-  "kind":7,
-  "detail":"class WithStatics",
+  "kind":22,
+  "detail":"record WithStatics",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{
@@ -418,8 +418,8 @@ Flags: --pretty --lsp
 }
 {
   "label":"WithStatics",
-  "kind":7,
-  "detail":"class WithStatics",
+  "kind":22,
+  "detail":"record WithStatics",
   "sortText":"00000000000000000000",
   "insertTextFormat":1,
   "textEdit":{

@@ -50,6 +50,7 @@ let string_of_ctor_decl = function
   | TypeAliasDecl _ -> "TypeAlias"
   | ClassDecl _ -> "ClassDecl"
   | InterfaceDecl _ -> "InterfaceDecl"
+  | RecordDecl _ -> "RecordDecl"
   | ModuleDecl _ -> "Module"
   | NamespaceDecl _ -> "NamespaceDecl"
   | VariableDecl _ -> "VariableDecl"
@@ -450,6 +451,7 @@ struct
     | ClassDecl (s, ps) -> spf "ClassDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
     | InterfaceDecl (s, ps) ->
       spf "InterfaceDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
+    | RecordDecl (s, ps) -> spf "RecordDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
     | EnumDecl name -> spf "Enum(%s)" (dump_symbol name)
     | NominalComponentDecl { name; tparams; targs = _; props = _; renders = _; is_type } ->
       spf
@@ -828,6 +830,9 @@ struct
     let json_of_interface_decl (name, tparams) =
       [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
     in
+    let json_of_record_decl (name, tparams) =
+      [("name", json_of_symbol name); ("typeParams", json_of_type_params tparams)]
+    in
     let json_of_nominal_component_decl (name, tparams, props, renders, is_type) =
       [
         ("name", json_of_symbol name);
@@ -855,6 +860,7 @@ struct
         ]
       | ClassDecl (s, ps) -> json_of_class_decl (s, ps)
       | InterfaceDecl (s, ps) -> json_of_interface_decl (s, ps)
+      | RecordDecl (s, ps) -> json_of_record_decl (s, ps)
       | EnumDecl name -> [("name", json_of_symbol name)]
       | NominalComponentDecl { name; tparams; targs = _; props; renders; is_type } ->
         json_of_nominal_component_decl (name, tparams, props, renders, is_type)

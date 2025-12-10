@@ -1451,7 +1451,7 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
-      "unqualified type: class or enum",
+      "unqualified type: class, record, enum",
       {
         "token":null,
         "index":5,
@@ -1532,7 +1532,7 @@ Flags: --lsp
     "command":"log:<PLACEHOLDER_PROJECT_URL>",
     "arguments":[
       "textDocument/completion",
-      "unqualified type: class or enum",
+      "unqualified type: class, record, enum",
       {
         "token":null,
         "index":8,
