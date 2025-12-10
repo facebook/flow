@@ -4311,18 +4311,13 @@ let record_def opts scope tbls decl =
         match element with
         | Body.Property
             ( _,
-              {
-                Property.key = (id_loc, { Ast.Identifier.name; _ });
-                annot = (_, t);
-                default_value = _;
-                comments = _;
-                invalid_syntax = _;
-              }
+              { Property.key; annot = (_, t); default_value = _; comments = _; invalid_syntax = _ }
             ) ->
-          let id_loc = push_loc tbls id_loc in
+          let (key_loc, name) = Record_utils.loc_and_string_of_property_key key in
+          let key_loc = push_loc tbls key_loc in
           let t = annot opts scope tbls xs t in
           (* Records have covariant fields *)
-          Acc.add_field ~static:false name id_loc Polarity.Positive t acc
+          Acc.add_field ~static:false name key_loc Polarity.Positive t acc
         | Body.Method
             (fn_loc, { Ast.Class.Method.key; value = (_, fn); static; kind; comments = _; _ }) ->
           let module P = Ast.Expression.Object.Property in
@@ -4335,18 +4330,12 @@ let record_def opts scope tbls decl =
             Acc.add_method ~static name id_loc fn_loc ~async ~generator def acc
           | _ -> acc)
         | Body.StaticProperty
-            ( _,
-              {
-                StaticProperty.key = (id_loc, { Ast.Identifier.name; _ });
-                annot = (_, t);
-                value = _;
-                comments = _;
-                invalid_syntax = _;
-              }
-            ) ->
-          let id_loc = push_loc tbls id_loc in
+            (_, { StaticProperty.key; annot = (_, t); value = _; comments = _; invalid_syntax = _ })
+          ->
+          let (key_loc, name) = Record_utils.loc_and_string_of_property_key key in
+          let key_loc = push_loc tbls key_loc in
           let t = annot opts scope tbls xs t in
-          Acc.add_field ~static:true name id_loc Polarity.Positive t acc)
+          Acc.add_field ~static:true name key_loc Polarity.Positive t acc)
       acc
       elements
   in
@@ -4356,7 +4345,7 @@ let record_decl opts scope tbls decl =
   let open Ast.Statement.RecordDeclaration in
   let { id = (id_loc, { Ast.Identifier.name; comments = _ }); _ } = decl in
   let id_loc = push_loc tbls id_loc in
-  let defaulted_props = Flow_ast_utils.defaulted_props_of_record decl in
+  let defaulted_props = Record_utils.defaulted_props_of_record decl in
   let def =
     if opts.enable_records then
       Some (lazy (splice tbls id_loc (fun tbls -> record_def opts scope tbls decl)))

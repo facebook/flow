@@ -689,6 +689,36 @@ References:
             ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ imported.js:36:21
+
+Cannot create record `RKeyNames` because in property `foo`: boolean [1] is incompatible with string [2].
+[incompatible-type]
+
+   imported.js:36:21
+   36|   RKeyNames {'foo': false, 42: false}; // ERROR
+                           ^^^^^ [1]
+
+References:
+   exported.js:13:10
+   13|   'foo': string,
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------------ imported.js:36:32
+
+Cannot create record `RKeyNames` because in property `42`: boolean [1] is incompatible with number [2].
+[incompatible-type]
+
+   imported.js:36:32
+   36|   RKeyNames {'foo': false, 42: false}; // ERROR
+                                      ^^^^^ [1]
+
+References:
+   exported.js:14:7
+   14|   42: number,
+             ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------- invalid-declaration-syntax.js:4:14
 
 Record declarations use commas `,` to separate properties. To fix, replace the `;` with `,`. [record-invalid-syntax]
@@ -923,4 +953,4 @@ References:
 
 
 
-Found 61 errors
+Found 63 errors

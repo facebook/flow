@@ -356,13 +356,13 @@ function custom_ast_types(fork) {
 
   def('RecordDeclarationProperty')
     .build('key', 'typeAnnotation', 'defaultValue')
-    .field('key', def('Identifier'))
+    .field('key', or(def('Identifier'), def('Literal')))
     .field('typeAnnotation', def('TypeAnnotation'))
     .field('defaultValue', or(def('Expression'), null));
 
   def('RecordDeclarationStaticProperty')
     .build('key', 'typeAnnotation', 'value')
-    .field('key', def('Identifier'))
+    .field('key', or(def('Identifier'), def('Literal')))
     .field('typeAnnotation', def('TypeAnnotation'))
     .field('value', def('Expression'));
 

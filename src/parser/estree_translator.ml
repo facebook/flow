@@ -183,7 +183,8 @@ with type t = Impl.t = struct
             ( loc,
               { RecordDeclaration.Property.key; annot; default_value; comments; invalid_syntax = _ }
             ) =
-          let key = identifier key in
+          let (key, computed, comments) = property_key ~comments key in
+          if computed then failwith "Records cannot have computed keys";
           node
             ?comments
             "RecordDeclarationProperty"
@@ -198,7 +199,8 @@ with type t = Impl.t = struct
             ( loc,
               { RecordDeclaration.StaticProperty.key; annot; value; comments; invalid_syntax = _ }
             ) =
-          let key = identifier key in
+          let (key, computed, comments) = property_key ~comments key in
+          if computed then failwith "Records cannot have computed keys";
           node
             ?comments
             "RecordDeclarationStaticProperty"

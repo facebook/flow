@@ -495,3 +495,29 @@ interface Equatable<T> {
     a: number = true, // ERROR
   }
 }
+
+// Key names
+{
+  record R {
+    42: number,
+    'foo': string,
+    class: boolean,
+  }
+
+  declare const x: R;
+  x[42] as number; // OK
+  x['foo'] as string; // OK
+  x.foo as string; // OK
+  x.class as boolean; // OK
+}
+{
+  record R {
+    static 42: number = 0,
+    static 'foo': string = '',
+    static class: boolean = false,
+  }
+  R[42] as number; // OK
+  R['foo'] as string; // OK
+  R.foo as string; // OK
+  R.class as boolean; // OK
+}

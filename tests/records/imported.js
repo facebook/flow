@@ -29,3 +29,9 @@ import RDefault from './exported-default';
   RDefault {a: 1, b: 's', xxx: true}; // ERROR
   RDefault {a: false}; // ERROR
 }
+
+import {RKeyNames} from './exported';
+{
+  RKeyNames {'foo': 's', 42: 0}; // OK
+  RKeyNames {'foo': false, 42: false}; // ERROR
+}

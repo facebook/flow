@@ -2720,7 +2720,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.RecordDeclaration.Property.t' =
       let open Ast.Statement.RecordDeclaration.Property in
       let { key; annot; default_value; invalid_syntax; comments } = prop in
-      let key' = this#t_identifier key in
+      let key' = this#object_key key in
       let annot' = this#type_annotation annot in
       let default_value' = Base.Option.map ~f:this#expression default_value in
       let invalid_syntax' = Base.Option.map ~f:this#record_invalid_property_syntax invalid_syntax in
@@ -2738,7 +2738,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.RecordDeclaration.StaticProperty.t' =
       let open Ast.Statement.RecordDeclaration.StaticProperty in
       let { key; annot; value; invalid_syntax; comments } = prop in
-      let key' = this#t_identifier key in
+      let key' = this#object_key key in
       let annot' = this#type_annotation annot in
       let value' = this#expression value in
       let invalid_syntax' = Base.Option.map ~f:this#record_invalid_property_syntax invalid_syntax in

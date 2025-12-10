@@ -8499,8 +8499,7 @@ module Make
                 match elem with
                 | Ast.Statement.RecordDeclaration.Body.Property (_, prop) ->
                   let {
-                    Ast.Statement.RecordDeclaration.Property.key =
-                      (prop_id_loc, { Ast.Identifier.name; _ });
+                    Ast.Statement.RecordDeclaration.Property.key;
                     annot;
                     default_value = _;
                     comments = _;
@@ -8511,14 +8510,13 @@ module Make
                   let (annot_t, _) =
                     Anno.mk_type_available_annotation cx tparams_map_with_this annot
                   in
+                  let (key_loc, name) = Record_utils.loc_and_string_of_property_key key in
                   let prop_t =
                     if SSet.mem name defaulted_props then
-                      let field_reason =
-                        mk_reason (RProperty (Some (OrdinaryName name))) prop_id_loc
-                      in
+                      let field_reason = mk_reason (RProperty (Some (OrdinaryName name))) key_loc in
                       Type.OptionalT
                         {
-                          reason = mk_reason (ROptional (desc_of_reason field_reason)) prop_id_loc;
+                          reason = mk_reason (ROptional (desc_of_reason field_reason)) key_loc;
                           type_ = annot_t;
                           use_desc = false;
                         }
@@ -8529,7 +8527,7 @@ module Make
                     Field
                       {
                         preferred_def_locs = None;
-                        key_loc = Some prop_id_loc;
+                        key_loc = Some key_loc;
                         type_ = prop_t;
                         polarity = Polarity.Positive;
                       }
@@ -8705,8 +8703,7 @@ module Make
                 (add ~func_sig:method_sig c, get_element :: rev_elements, public_seen_names')
               | Ast.Statement.RecordDeclaration.Body.Property (prop_loc, prop) ->
                 let {
-                  Ast.Statement.RecordDeclaration.Property.key =
-                    (prop_id_loc, ({ Ast.Identifier.name; comments = _ } as prop_id));
+                  Ast.Statement.RecordDeclaration.Property.key;
                   annot;
                   default_value;
                   comments = prop_comments;
@@ -8714,6 +8711,7 @@ module Make
                 } =
                   prop
                 in
+                let (key_loc, name) = Record_utils.loc_and_string_of_property_key key in
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
                 let (field, annot_t, annot_ast, get_value) =
                   mk_record_field cx tparams_map_with_this reason annot default_value
@@ -8723,7 +8721,7 @@ module Make
                     ( (prop_loc, annot_t),
                       {
                         Ast.Statement.RecordDeclaration.Property.key =
-                          ((prop_id_loc, annot_t), prop_id);
+                          translate_identifer_or_literal_key annot_t key;
                         annot = annot_ast;
                         default_value = get_value ();
                         comments = prop_comments;
@@ -8734,20 +8732,19 @@ module Make
                 let public_seen_names' =
                   check_duplicate_name
                     public_seen_names
-                    prop_id_loc
+                    key_loc
                     name
                     ~static:false
                     ~private_:false
                     Class_Member_Field
                 in
-                ( Class_stmt_sig.add_field ~static:false name prop_id_loc Polarity.Positive field c,
+                ( Class_stmt_sig.add_field ~static:false name key_loc Polarity.Positive field c,
                   get_element :: rev_elements,
                   public_seen_names'
                 )
               | Ast.Statement.RecordDeclaration.Body.StaticProperty (prop_loc, static_prop) ->
                 let {
-                  Ast.Statement.RecordDeclaration.StaticProperty.key =
-                    (prop_id_loc, ({ Ast.Identifier.name; comments = _ } as prop_id));
+                  Ast.Statement.RecordDeclaration.StaticProperty.key;
                   annot;
                   value = value_expr;
                   comments = prop_comments;
@@ -8755,6 +8752,7 @@ module Make
                 } =
                   static_prop
                 in
+                let (key_loc, name) = Record_utils.loc_and_string_of_property_key key in
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) prop_loc in
                 let (field, annot_t, annot_ast, get_value) =
                   mk_record_static_field cx tparams_map_with_this reason annot value_expr
@@ -8764,7 +8762,7 @@ module Make
                     ( (prop_loc, annot_t),
                       {
                         Ast.Statement.RecordDeclaration.StaticProperty.key =
-                          ((prop_id_loc, annot_t), prop_id);
+                          translate_identifer_or_literal_key annot_t key;
                         annot = annot_ast;
                         value = get_value ();
                         comments = prop_comments;
@@ -8775,13 +8773,13 @@ module Make
                 let public_seen_names' =
                   check_duplicate_name
                     public_seen_names
-                    prop_id_loc
+                    key_loc
                     name
                     ~static:true
                     ~private_:false
                     Class_Member_Field
                 in
-                ( Class_stmt_sig.add_field ~static:true name prop_id_loc Polarity.Positive field c,
+                ( Class_stmt_sig.add_field ~static:true name key_loc Polarity.Positive field c,
                   get_element :: rev_elements,
                   public_seen_names'
                 )
@@ -8859,7 +8857,7 @@ module Make
 
   and mk_record cx record_loc ~name_loc ?tast_record_type reason record =
     let def_reason = repos_reason record_loc reason in
-    let defaulted_props = Flow_ast_utils.defaulted_props_of_record record in
+    let defaulted_props = Record_utils.defaulted_props_of_record record in
     let (t, _, class_sig, record_ast_f) =
       mk_record_sig cx ~name_loc ~record_loc ~defaulted_props reason record
     in
