@@ -308,9 +308,9 @@ function custom_ast_types(fork) {
 
   def('MatchInstancePattern')
     .bases('MatchPattern')
-    .build('constructor', 'fields')
+    .build('targetConstructor', 'fields')
     .field(
-      'constructor',
+      'targetConstructor',
       or(def('MatchIdentifierPattern'), def('MatchMemberPattern')),
     )
     .field('properties', def('MatchInstanceObjectPattern'));

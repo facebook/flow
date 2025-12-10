@@ -855,7 +855,7 @@ with type t = Impl.t = struct
           "MatchInstancePattern"
           loc
           [
-            ("constructor", constructor);
+            ("targetConstructor", constructor);
             ("properties", match_object_pattern "MatchInstanceObjectPattern" properties);
           ]
       | OrPattern { OrPattern.patterns; comments } ->
