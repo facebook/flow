@@ -113,3 +113,16 @@ Converts:
 - `React.ElementConfig<React.AbstractComponent<Props, Instance>>` to `Props`
 - `React.ElementRef<React.AbstractComponent<Props, Instance>>` to `Instance`
 - `React.ElementRef<React.AbstractComponent<Props>` to `mixed`
+
+### Convert legacy Flow utility types to modern equivalents
+Converts legacy Flow utility types to TypeScript-compatible equivalents:
+- `$NonMaybeType<T>` to `NonNullable<T>`
+- `$ReadOnly<T>` to `Readonly<T>`
+- `$ReadOnlyArray<T>` to `ReadonlyArray<T>`
+- `$ReadOnlyMap<K, V>` to `ReadonlyMap<K, V>`
+- `$ReadOnlySet<T>` to `ReadonlySet<T>`
+- `$Keys<T>` to `keyof T`
+- `$Values<T>` to `Values<T>`
+- `mixed` to `unknown`
+
+Run with `yarn run flow-codemod convertLegacyUtilityTypes`.
