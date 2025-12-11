@@ -1095,7 +1095,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- loc-reference.js:41:3
 
-Cannot cast `x` to number because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
    loc-reference.js:41:3
    41|   x as number; // T ~> number. Ref should point to `x: T`.

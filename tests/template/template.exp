@@ -173,7 +173,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:28:10
 
-Cannot coerce `x` to string because mixed [1] should not be coerced. [incompatible-type]
+Cannot coerce `x` to string because `unknown` [1] should not be coerced. [incompatible-type]
 
    template.js:28:10
    28|   `foo ${x}`; // ERROR
@@ -187,7 +187,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- template.js:29:6
 
-Cannot coerce `x` to string because mixed [1] should not be coerced. [incompatible-type]
+Cannot coerce `x` to string because `unknown` [1] should not be coerced. [incompatible-type]
 
    template.js:29:6
    29|   `${x} bar`; // ERROR
@@ -201,7 +201,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ template.js:30:19
 
-Cannot coerce `x` to string because mixed [1] should not be coerced. [incompatible-type]
+Cannot coerce `x` to string because `unknown` [1] should not be coerced. [incompatible-type]
 
    template.js:30:19
    30|   `foo ${'bar'} ${x}`; // ERROR

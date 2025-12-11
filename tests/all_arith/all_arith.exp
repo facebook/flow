@@ -119,7 +119,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:31:2
 
-Cannot use operator `+` with operands number [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands number [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:31:2
    31| (aNumber + aMixed); // error
@@ -272,7 +272,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:45:2
 
-Cannot use operator `*` with operands number [1] and mixed [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands number [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:45:2
    45| (aNumber * aMixed); // error
@@ -408,7 +408,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:58:2
 
-Cannot use operator `+` with operands string [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands string [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:58:2
    58| (aString + aMixed); // error
@@ -558,7 +558,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:71:2
 
-Cannot use operator `*` with operands string [1] and mixed [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands string [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:71:2
    71| (aString * aMixed); // error
@@ -677,7 +677,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:83:2
 
-Cannot use operator `+` with operands bigint [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands bigint [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:83:2
    83| (aBigint + aMixed); // error
@@ -796,7 +796,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:95:2
 
-Cannot use operator `*` with operands bigint [1] and mixed [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands bigint [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:95:2
    95| (aBigint * aMixed); // error
@@ -912,7 +912,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:106:2
 
-Cannot use operator `+` with operands `Date` [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands `Date` [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:106:2
    106| (aDate + aMixed); // error
@@ -1028,7 +1028,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:117:2
 
-Cannot use operator `*` with operands `Date` [1] and mixed [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `Date` [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:117:2
    117| (aDate * aMixed); // error
@@ -1127,7 +1127,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:127:2
 
-Cannot use operator `+` with operands boolean [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands boolean [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:127:2
    127| (aBoolean + aMixed); // error
@@ -1226,7 +1226,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:137:2
 
-Cannot use operator `*` with operands boolean [1] and mixed [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands boolean [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:137:2
    137| (aBoolean * aMixed); // error
@@ -1308,7 +1308,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:146:2
 
-Cannot use operator `+` with operands `T` [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands `T` [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:146:2
    146| (aT + aMixed); // error
@@ -1390,7 +1390,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:155:2
 
-Cannot use operator `*` with operands `T` [1] and mixed [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands `T` [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:155:2
    155| (aT * aMixed); // error
@@ -1458,7 +1458,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:163:2
 
-Cannot use operator `+` with operands null [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands null [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:163:2
    163| (null + aMixed); // error
@@ -1526,7 +1526,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:171:2
 
-Cannot use operator `*` with operands null [1] and mixed [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands null [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:171:2
    171| (null * aMixed); // error
@@ -1574,7 +1574,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:178:2
 
-Cannot use operator `+` with operands array type [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands array type [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:178:2
    178| (anArray + aMixed); // error
@@ -1622,7 +1622,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:185:2
 
-Cannot use operator `*` with operands array type [1] and mixed [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands array type [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:185:2
    185| (anArray * aMixed); // error
@@ -1653,7 +1653,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:191:2
 
-Cannot use operator `+` with operands object type [1] and mixed [2] [unsafe-addition]
+Cannot use operator `+` with operands object type [1] and `unknown` [2] [unsafe-addition]
 
    all_arith.js:191:2
    191| (anObject + aMixed); // error
@@ -1684,7 +1684,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:197:2
 
-Cannot use operator `*` with operands object type [1] and mixed [2] [unsafe-arithmetic]
+Cannot use operator `*` with operands object type [1] and `unknown` [2] [unsafe-arithmetic]
 
    all_arith.js:197:2
    197| (anObject * aMixed); // error
@@ -1701,7 +1701,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:202:2
 
-Cannot use operator `+` with operands mixed [1] and mixed [1] [unsafe-addition]
+Cannot use operator `+` with operands `unknown` [1] and `unknown` [1] [unsafe-addition]
 
    all_arith.js:202:2
    202| (aMixed + aMixed); // error
@@ -1715,7 +1715,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:207:2
 
-Cannot use operator `*` with operands mixed [1] and mixed [1] [unsafe-arithmetic]
+Cannot use operator `*` with operands `unknown` [1] and `unknown` [1] [unsafe-arithmetic]
 
    all_arith.js:207:2
    207| (aMixed * aMixed); // error

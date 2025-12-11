@@ -384,7 +384,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- internal_slot.js:23:1
 
-Cannot call `mixed_callable` because mixed [1] is not a function. [not-a-function]
+Cannot call `mixed_callable` because `unknown` [1] is not a function. [not-a-function]
 
    internal_slot.js:23:1
    23| mixed_callable();

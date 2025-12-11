@@ -187,8 +187,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:46:23
 
-Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: mixed [2] is incompatible with number [3].
-[incompatible-type]
+Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: `unknown` [2] is incompatible with
+number [3]. [incompatible-type]
 
    classes.js:46:23
    46|     m(x: mixed): x is mixed { // error extends
@@ -205,7 +205,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- classes.js:52:14
 
-Cannot return `true` because mixed [1] is incompatible with number [2]. [incompatible-type-guard]
+Cannot return `true` because `unknown` [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
@@ -319,8 +319,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ classes.js:113:23
 
-Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: mixed [2] is incompatible with number [3].
-[incompatible-type]
+Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: `unknown` [2] is incompatible with
+number [3]. [incompatible-type]
 
    classes.js:113:23
    113|     m(x: mixed): x is mixed { // error mixed ~> number
@@ -337,7 +337,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ classes.js:119:14
 
-Cannot return `true` because mixed [1] is incompatible with number [2]. [incompatible-type-guard]
+Cannot return `true` because `unknown` [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
@@ -392,7 +392,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- consistency.js:10:12
 
-Cannot return `true` because mixed [1] is incompatible with number [2]. [incompatible-type-guard]
+Cannot return `true` because `unknown` [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
@@ -415,7 +415,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- consistency.js:15:12
 
-Cannot return `true` because mixed [1] is incompatible with number [2]. [incompatible-type-guard]
+Cannot return `true` because `unknown` [1] is incompatible with number [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `true` [4] needs to be compatible with the guard type number [2]. See 1. in
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
@@ -678,7 +678,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- consistency.js:125:10
 
-Cannot return `Array.isArray(...)` because in array element: array element of refined mixed [1] is incompatible with
+Cannot return `Array.isArray(...)` because in array element: array element of refined `unknown` [1] is incompatible with
 `A` [2]. [incompatible-type-guard]
 
 The type of `x` [3] at the return expression `Array.isArray(...)` [4] needs to be compatible with the guard type
@@ -884,7 +884,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- consistency.js:226:12
 
-Cannot return `remote.#prop(...)` because mixed [1] is incompatible with string [2]. [incompatible-type-guard]
+Cannot return `remote.#prop(...)` because `unknown` [1] is incompatible with string [2]. [incompatible-type-guard]
 
 The type of `value` [3] at the return expression `remote.#prop(...)` [4] needs to be compatible with the guard type
 string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
@@ -1516,7 +1516,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- invalid.js:25:4
 
-Cannot cast `x` to number because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to number because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
    invalid.js:25:4
    25|   (x: number); // error no refining effect
@@ -1877,7 +1877,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `arr.filter` because: [incompatible-type]
  - Either in array element: number [1] is incompatible with string [2].
- - Or in array element: mixed [3] is incompatible with string [2].
+ - Or in array element: `unknown` [3] is incompatible with string [2].
 
    refinement.js:47:35
    47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
@@ -1898,7 +1898,7 @@ References:
 Error ---------------------------------------------------------------------------------------------- refinement.js:48:35
 
 Cannot call `arr.filter` because: [incompatible-type]
- - Either in array element: mixed [1] is incompatible with string [2].
+ - Either in array element: `unknown` [1] is incompatible with string [2].
  - Or function [3] is incompatible with class `Boolean` [4].
 
    refinement.js:48:35
@@ -2548,7 +2548,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `arr.filter` because: [incompatible-type]
  - Either in the type predicate: number [1] is incompatible with string [2].
- - Or in array element: mixed [3] is incompatible with string [2].
+ - Or in array element: `unknown` [3] is incompatible with string [2].
 
    refinement.js:249:7
    249|   arr.filter(fn) as Array<string>; // error number ~> string
@@ -2570,7 +2570,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `ro_arr.filter` because: [incompatible-type]
  - Either in the type predicate: number [1] is incompatible with string [2].
- - Or in array element: mixed [3] is incompatible with string [2].
+ - Or in array element: `unknown` [3] is incompatible with string [2].
 
    refinement.js:253:10
    253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
@@ -2592,7 +2592,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `rw_arr.filter` because: [incompatible-type]
  - Either in the type predicate: number [1] is incompatible with string [2].
- - Or in array element: mixed [3] is incompatible with string [2].
+ - Or in array element: `unknown` [3] is incompatible with string [2].
 
    refinement.js:257:10
    257|   rw_arr.filter(fn) as Array<string>; // error number ~> string

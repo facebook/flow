@@ -793,7 +793,7 @@ Missing an annotation on `x`. [missing-local-annot]
 
 Error --------------------------------------------------------------------------------------------------- tparams.js:4:3
 
-Cannot cast `a` to empty because mixed [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a` to empty because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
    tparams.js:4:3
    4|   a as empty;
@@ -858,7 +858,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- tparams.js:13:3
 
-Cannot cast `a` to empty because mixed [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `a` to empty because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
    tparams.js:13:3
    13|   a as empty;
@@ -941,7 +941,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- tparams.js:23:14
 
-Cannot return array literal because in index `1`: mixed [1] is incompatible with `B` [2]. [incompatible-type]
+Cannot return array literal because in index `1`: `unknown` [1] is incompatible with `B` [2]. [incompatible-type]
 
    tparams.js:23:14
    23|   return [o, p];

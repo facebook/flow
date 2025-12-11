@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------------------- catch-param.js:18:4
 
-Cannot cast `e` to empty because mixed [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `e` to empty because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
    catch-param.js:18:4
    18|   (e: empty); // ERROR - is `mixed`

@@ -567,7 +567,7 @@ let rec string_of_desc = function
   | RBigInt -> "bigint"
   | RString -> "string"
   | RBoolean -> "boolean"
-  | RMixed -> "mixed"
+  | RMixed -> "`unknown`"
   | REmpty -> "empty"
   | REmptyArrayElement -> "unknown element of empty array"
   | RAnyImplicit -> "implicit 'any'"

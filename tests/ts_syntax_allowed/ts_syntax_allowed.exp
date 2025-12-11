@@ -14,7 +14,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- basic_types.js:6:7
 
-Cannot cast `''` to empty because mixed [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `''` to empty because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
    basic_types.js:6:7
    6| '' as unknown as never; // error
@@ -162,7 +162,7 @@ Cannot assign `'foo'` to `covariant.prop` because property `prop` is not writabl
 Error ------------------------------------------------------------------------------------------------- polarity.js:21:1
 
 Cannot cast `contravariant` to `Contravariant` because in type argument `T` [1]: string [2] is incompatible with
-mixed [3]. [incompatible-type]
+`unknown` [3]. [incompatible-type]
 
    polarity.js:21:1
    21| contravariant as Contravariant<mixed>; // error
@@ -249,7 +249,7 @@ Cannot assign `'foo'` to `imported_covariant.prop` because property `prop` is no
 Error ------------------------------------------------------------------------------------------------- polarity.js:42:1
 
 Cannot cast `imported_contravariant` to `exported.Contravariant` because in type argument `T` [1]: string [2] is
-incompatible with mixed [3]. [incompatible-type]
+incompatible with `unknown` [3]. [incompatible-type]
 
    polarity.js:42:1
    42| imported_contravariant as exported.Contravariant<mixed>; // error

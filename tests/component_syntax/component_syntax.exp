@@ -1294,8 +1294,8 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- errors.js:51:20
 
-Cannot use mixed [1] as a component rest param. Component rest params must use an object type and cannot be optional.
-[incompatible-type]
+Cannot use `unknown` [1] as a component rest param. Component rest params must use an object type and cannot be
+optional. [incompatible-type]
 
    51| (Baz: component(...mixed));
                           ^^^^^ [1]

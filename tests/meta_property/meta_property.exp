@@ -23,7 +23,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- import_meta.js:6:2
 
-Cannot cast `import.meta.XXX` to number literal `1` because mixed [1] is incompatible with number literal `1` [2].
+Cannot cast `import.meta.XXX` to number literal `1` because `unknown` [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    import_meta.js:6:2
@@ -41,7 +41,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ new_target.js:3:4
 
-Cannot cast `new.target` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `new.target` to boolean because `unknown` [1] is incompatible with boolean [2]. [incompatible-type]
 
    new_target.js:3:4
    3|   (new.target: boolean); // Error
@@ -55,7 +55,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- new_target.js:11:6
 
-Cannot cast `new.target` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `new.target` to boolean because `unknown` [1] is incompatible with boolean [2]. [incompatible-type]
 
    new_target.js:11:6
    11|     (new.target: boolean); // Error

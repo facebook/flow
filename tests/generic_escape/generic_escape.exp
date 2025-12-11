@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- class.js:9:9
 
-Cannot assign `this.s` to `x` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `this.s` to `x` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
 type is desired.
@@ -23,7 +23,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:10:9
 
-Cannot assign `this.s` to `y` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `this.s` to `y` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
    class.js:10:9
    10|     y = this.s;
@@ -40,7 +40,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:20:11
 
-Cannot assign `this.s` to `y` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `this.s` to `y` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
 All writes to `y` must be compatible with the type of its initializer [3]. Add an annotation to `y` [3] if a different
 type is desired.
@@ -80,7 +80,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:39:11
 
-Cannot assign `z` to `a` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `z` to `a` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
 All writes to `a` must be compatible with the type of its initializer [3]. Add an annotation to `a` [3] if a different
 type is desired.
@@ -103,7 +103,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- class.js:43:11
 
-Cannot assign `w` to `a` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `w` to `a` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
 All writes to `a` must be compatible with the type of its initializer [3]. Add an annotation to `a` [3] if a different
 type is desired.
@@ -126,7 +126,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:45:9
 
-Cannot assign `this.s` to `z` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `this.s` to `z` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
 All writes to `z` must be compatible with the type of its initializer [3]. Add an annotation to `z` [3] if a different
 type is desired.
@@ -149,7 +149,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- class.js:45:9
 
-Cannot assign `this.s` to `z` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `this.s` to `z` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
 All writes to `z` must be compatible with the type of its initializer [3]. Add an annotation to `z` [3] if a different
 type is desired.
@@ -172,7 +172,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------ func.js:6:7
 
-Cannot assign `a` to `x` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `a` to `x` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
 type is desired.
@@ -195,7 +195,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- func.js:13:12
 
-Cannot return `ng(...)` because mixed [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot return `ng(...)` because `unknown` [1] is incompatible with `T` [2]. [incompatible-type]
 
    func.js:13:12
    13|     return ng(value); // no escape errors
@@ -248,7 +248,7 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error ---------------------------------------------------------------------------------------------------- func.js:46:13
 
-Cannot assign `a` to `xa[0]` because mixed [1] is incompatible with unknown element of empty array [2].
+Cannot assign `a` to `xa[0]` because `unknown` [1] is incompatible with unknown element of empty array [2].
 [incompatible-type]
 
    func.js:46:13
@@ -274,7 +274,7 @@ Cannot resolve name `nonexistantGlobal`. [cannot-resolve-name]
 
 Error ---------------------------------------------------------------------------------------------------- import.js:9:9
 
-Cannot assign `id(...)` to `x` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `id(...)` to `x` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
 type is desired.
@@ -297,7 +297,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- import.js:10:9
 
-Cannot assign `id<...>(...)` to `x` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `id<...>(...)` to `x` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
 All writes to `x` must be compatible with the type of its initializer [3]. Add an annotation to `x` [3] if a different
 type is desired.
@@ -499,7 +499,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:25:11
 
-Cannot assign `x` to `a.x` because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot assign `x` to `a.x` because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
    misc.js:25:11
    25|     a.x = x;
@@ -516,7 +516,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:34:13
 
-Cannot assign `x` to `a2[n]` because mixed [1] is incompatible with string literal `x` [2]. [incompatible-type]
+Cannot assign `x` to `a2[n]` because `unknown` [1] is incompatible with string literal `x` [2]. [incompatible-type]
 
    misc.js:34:13
    34|     a2[n] = x;
@@ -648,7 +648,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:75:10
 
-Cannot assign `y` to `x0` because mixed [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign `y` to `x0` because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
 All writes to `x0` must be compatible with the type of its initializer [2]. Add an annotation to `x0` [2] if a different
 type is desired.
@@ -668,7 +668,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:81:10
 
-Cannot assign `y` to `x1` because mixed [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign `y` to `x1` because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
 All writes to `x1` must be compatible with the type of its initializer [2]. Add an annotation to `x1` [2] if a different
 type is desired.
@@ -688,7 +688,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:87:10
 
-Cannot assign `y` to `x2` because mixed [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign `y` to `x2` because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
 All writes to `x2` must be compatible with the type of its initializer [2]. Add an annotation to `x2` [2] if a different
 type is desired.
@@ -708,7 +708,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- misc.js:93:10
 
-Cannot assign `y` to `x3` because mixed [1] is incompatible with empty [2]. [incompatible-type]
+Cannot assign `y` to `x3` because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
 
 All writes to `x3` must be compatible with the type of its initializer [2]. Add an annotation to `x3` [2] if a different
 type is desired.
@@ -759,7 +759,7 @@ Cannot determine type of empty array literal. Please provide an annotation. [mis
 
 Error --------------------------------------------------------------------------------------------------- misc.js:125:11
 
-Cannot assign `t` to `x4[0]` because mixed [1] is incompatible with unknown element of empty array [2].
+Cannot assign `t` to `x4[0]` because `unknown` [1] is incompatible with unknown element of empty array [2].
 [incompatible-type]
 
    misc.js:125:11

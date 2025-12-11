@@ -1286,7 +1286,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------------- top.js:3:2
 
-Cannot cast `x` to interface type because mixed [1] is incompatible with interface type [2]. [incompatible-type]
+Cannot cast `x` to interface type because `unknown` [1] is incompatible with interface type [2]. [incompatible-type]
 
    top.js:3:2
    3| (x: interface {}); // ERROR

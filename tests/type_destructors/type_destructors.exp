@@ -70,7 +70,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:17:1
 
-Cannot cast `null` to `$NonMaybeType` because null [1] is incompatible with mixed [2]. [incompatible-type]
+Cannot cast `null` to `$NonMaybeType` because null [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    non_maybe_type.js:17:1
    17| null as $NonMaybeType<mixed>;
@@ -84,7 +84,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:18:1
 
-Cannot cast `undefined` to `$NonMaybeType` because undefined [1] is incompatible with mixed [2]. [incompatible-type]
+Cannot cast `undefined` to `$NonMaybeType` because undefined [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    non_maybe_type.js:18:1
    18| undefined as $NonMaybeType<mixed>;

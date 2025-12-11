@@ -339,7 +339,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:56:22
 
-Cannot implement `GenericVsNonGeneric` [1] with `GenericVsNonGeneric` because in property `foo`: mixed [2] is
+Cannot implement `GenericVsNonGeneric` [1] with `GenericVsNonGeneric` because in property `foo`: `unknown` [2] is
 incompatible with number [3]. [incompatible-type]
 
    classes.ios.js:56:22
@@ -384,7 +384,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
 
-Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `bar`: mixed [2] is
+Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `bar`: `unknown` [2] is
 incompatible with `T1` [3]. [incompatible-type]
 
    classes.ios.js:60:22
@@ -405,7 +405,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
 
-Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `bar`: mixed [2] is
+Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `bar`: `unknown` [2] is
 incompatible with `T2` [3]. [incompatible-type]
 
 This property is invariantly typed. See
@@ -429,7 +429,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
 
-Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `foo`: mixed [2] is
+Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `foo`: `unknown` [2] is
 incompatible with `T2` [3]. [incompatible-type]
 
    classes.ios.js:60:22
@@ -450,7 +450,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- classes.ios.js:60:22
 
-Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `foo`: mixed [2] is
+Cannot implement `GenericSwitchedTparams` [1] with `GenericSwitchedTparams` because in property `foo`: `unknown` [2] is
 incompatible with `T1` [3]. [incompatible-type]
 
 This property is invariantly typed. See

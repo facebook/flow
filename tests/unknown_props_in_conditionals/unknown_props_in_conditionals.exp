@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:16:11
 
-Cannot get `mixed.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in mixed [1].
+Cannot get `mixed.thisPropDoesNotExist` because property `thisPropDoesNotExist` is missing in `unknown` [1].
 [incompatible-type]
 
    test.js:16:11

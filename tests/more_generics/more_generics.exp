@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- poly.js:3:36
 
-Cannot return `x` because mixed [1] is incompatible with `S` [2]. [incompatible-type]
+Cannot return `x` because `unknown` [1] is incompatible with `S` [2]. [incompatible-type]
 
    poly.js:3:36
    3| function foo2<T,S>(x:T):S { return x; }
@@ -67,7 +67,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- poly.js:24:3
 
-Cannot call `y` because mixed [1] is not a function. [not-a-function]
+Cannot call `y` because `unknown` [1] is not a function. [not-a-function]
 
    poly.js:24:3
    24|   y();

@@ -1,6 +1,7 @@
 Error ------------------------------------------------------------------------------------------------- soundness.js:8:5
 
-Cannot cast `x` to `Bak` because in type argument `T` [1]: mixed [2] is incompatible with empty [3]. [incompatible-type]
+Cannot cast `x` to `Bak` because in type argument `T` [1]: `unknown` [2] is incompatible with empty [3].
+[incompatible-type]
 
    soundness.js:8:5
    8|     x as Bak<empty>; // error mixed <~> empty

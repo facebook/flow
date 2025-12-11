@@ -37,7 +37,7 @@ References:
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:52:2
 
 Cannot cast `cft` to `I_Function_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
-incompatible with mixed [2]. [incompatible-type]
+incompatible with `unknown` [2]. [incompatible-type]
 
    class_interface_subtyping.js:52:2
    52| (cft : I_Function_mixed); // error, contravariant
@@ -55,7 +55,7 @@ References:
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:53:2
 
 Cannot cast `cft` to `I_Method_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
-incompatible with mixed [2]. [incompatible-type]
+incompatible with `unknown` [2]. [incompatible-type]
 
    class_interface_subtyping.js:53:2
    53| (cft : I_Method_mixed); // error, contravariant
@@ -217,7 +217,7 @@ References:
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:76:2
 
 Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
-mixed [2]. [incompatible-type]
+`unknown` [2]. [incompatible-type]
 
    class_interface_subtyping.js:76:2
    76| (cfe : I_Function_mixed); // error, contravariant
@@ -235,7 +235,7 @@ References:
 Error -------------------------------------------------------------------------------- class_interface_subtyping.js:77:2
 
 Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
-mixed [2]. [incompatible-type]
+`unknown` [2]. [incompatible-type]
 
    class_interface_subtyping.js:77:2
    77| (cfe : I_Method_mixed); // error, contravariant
@@ -567,7 +567,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:28:5
 
-Cannot define method `foo` [1] on `B` because in type argument `T` [2]: mixed [2] is incompatible with `T` [2].
+Cannot define method `foo` [1] on `B` because in type argument `T` [2]: `unknown` [2] is incompatible with `T` [2].
 [incompatible-type]
 
    class_poly_method.js:28:5
@@ -582,7 +582,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------- class_poly_method.js:28:5
 
-Cannot define method `foo` [1] on `B` because in type argument `T` [2]: mixed [2] is incompatible with `X` [2].
+Cannot define method `foo` [1] on `B` because in type argument `T` [2]: `unknown` [2] is incompatible with `X` [2].
 [incompatible-type]
 
    class_poly_method.js:28:5
@@ -634,7 +634,7 @@ References:
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:56:2
 
 Cannot cast `cft` to `I_Function_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
-incompatible with mixed [2]. [incompatible-type]
+incompatible with `unknown` [2]. [incompatible-type]
 
    declare_class_interface_subtyping.js:56:2
    56| (cft : I_Function_mixed); // error, contravariant
@@ -652,7 +652,7 @@ References:
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:57:2
 
 Cannot cast `cft` to `I_Method_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
-incompatible with mixed [2]. [incompatible-type]
+incompatible with `unknown` [2]. [incompatible-type]
 
    declare_class_interface_subtyping.js:57:2
    57| (cft : I_Method_mixed); // error, contravariant
@@ -814,7 +814,7 @@ References:
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:80:2
 
 Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
-mixed [2]. [incompatible-type]
+`unknown` [2]. [incompatible-type]
 
    declare_class_interface_subtyping.js:80:2
    80| (cfe : I_Function_mixed); // error, contravariant
@@ -832,7 +832,7 @@ References:
 Error ------------------------------------------------------------------------ declare_class_interface_subtyping.js:81:2
 
 Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
-mixed [2]. [incompatible-type]
+`unknown` [2]. [incompatible-type]
 
    declare_class_interface_subtyping.js:81:2
    81| (cfe : I_Method_mixed); // error, contravariant
@@ -1302,7 +1302,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------- function_type.js:30:2
 
-Cannot cast `x` to `BotFn` because in the `this` parameter: number [1] is incompatible with mixed [2].
+Cannot cast `x` to `BotFn` because in the `this` parameter: number [1] is incompatible with `unknown` [2].
 [incompatible-type]
 
    function_type.js:30:2
@@ -1745,7 +1745,7 @@ References:
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:57:2
 
 Cannot cast `cft` to `I_Function_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
-incompatible with mixed [2]. [incompatible-type]
+incompatible with `unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:57:2
    57| (cft : I_Function_mixed); // error, contravariant
@@ -1763,7 +1763,7 @@ References:
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:58:2
 
 Cannot cast `cft` to `I_Method_mixed` because in property `x` > the `this` parameter: `C_Function_this` [1] is
-incompatible with mixed [2]. [incompatible-type]
+incompatible with `unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:58:2
    58| (cft : I_Method_mixed); // error, contravariant
@@ -1842,7 +1842,7 @@ References:
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:63:2
 
 Cannot cast `cmt` to `I_Function_mixed` because in property `x` > the `this` parameter: `C_Method_this` [1] is
-incompatible with mixed [2]. [incompatible-type]
+incompatible with `unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:63:2
    63| (cmt : I_Function_mixed);  // error, contravariant
@@ -1860,7 +1860,7 @@ References:
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:64:2
 
 Cannot cast `cmt` to `I_Method_mixed` because in property `x` > the `this` parameter: `C_Method_this` [1] is
-incompatible with mixed [2]. [incompatible-type]
+incompatible with `unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:64:2
    64| (cmt : I_Method_mixed);  // error, contravariant
@@ -1914,7 +1914,7 @@ References:
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:81:2
 
 Cannot cast `cfe` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
-mixed [2]. [incompatible-type]
+`unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:81:2
    81| (cfe : I_Function_mixed); // error, contravariant
@@ -1932,7 +1932,7 @@ References:
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:82:2
 
 Cannot cast `cfe` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
-mixed [2]. [incompatible-type]
+`unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:82:2
    82| (cfe : I_Method_mixed); // error, contravariant
@@ -1986,7 +1986,7 @@ References:
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:87:2
 
 Cannot cast `cme` to `I_Function_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
-mixed [2]. [incompatible-type]
+`unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:87:2
    87| (cme : I_Function_mixed); // error, contravariant
@@ -2004,7 +2004,7 @@ References:
 Error ------------------------------------------------------------------------------- object_interface_subtyping.js:88:2
 
 Cannot cast `cme` to `I_Method_mixed` because in property `x` > the `this` parameter: empty [1] is incompatible with
-mixed [2]. [incompatible-type]
+`unknown` [2]. [incompatible-type]
 
    object_interface_subtyping.js:88:2
    88| (cme : I_Method_mixed); // error, contravariant
@@ -2021,7 +2021,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:6:17
 
-Cannot get `this.x` because property `x` is missing in mixed [1]. [incompatible-use]
+Cannot get `this.x` because property `x` is missing in `unknown` [1]. [incompatible-use]
 
    test.js:6:17
    6|     return this.x; // error: this is mixed

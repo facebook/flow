@@ -1065,7 +1065,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ lhs_types.js:13:8
 
-Cannot get `mixed?.foo` because property `foo` is missing in mixed [1]. [incompatible-use]
+Cannot get `mixed?.foo` because property `foo` is missing in `unknown` [1]. [incompatible-use]
 
    lhs_types.js:13:8
    13| mixed?.foo as ?number; // error, no lint

@@ -1200,7 +1200,7 @@ Unexpected token <. Remember, adjacent JSX elements must be wrapped in an enclos
 
 Error ------------------------------------------------------------------------- react_util_types_monomorphization.js:7:4
 
-Cannot cast `config.foo` to string because mixed (inferred from type parameter's bound) [1] is incompatible with
+Cannot cast `config.foo` to string because `unknown` (inferred from type parameter's bound) [1] is incompatible with
 string [2]. [incompatible-type]
 
    react_util_types_monomorphization.js:7:4
@@ -1232,7 +1232,7 @@ References:
 
 Error ------------------------------------------------------------------------ react_util_types_monomorphization.js:12:4
 
-Cannot cast `ref.props.foo` to string because mixed (inferred from type parameter's bound) [1] is incompatible with
+Cannot cast `ref.props.foo` to string because `unknown` (inferred from type parameter's bound) [1] is incompatible with
 string [2]. [incompatible-type]
 
    react_util_types_monomorphization.js:12:4

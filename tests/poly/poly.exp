@@ -225,7 +225,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ subtyping.js:8:40
 
-Cannot return `o` because in the return value: mixed [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot return `o` because in the return value: `unknown` [1] is incompatible with `T` [2]. [incompatible-type]
 
    subtyping.js:8:40
    8|   (o: <T>() => mixed): (<S>() => S) => o; // should error
@@ -242,7 +242,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:11:48
 
-Cannot return `o` because in the return value: mixed [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot return `o` because in the return value: `unknown` [1] is incompatible with `T` [2]. [incompatible-type]
 
    subtyping.js:11:48
    11|     const g = (o: <T>() => A): (<S>() => S) => o; // should error
@@ -259,7 +259,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:21:46
 
-Cannot return `f` because in the first parameter: `T` [1] is incompatible with mixed [2]. [incompatible-type]
+Cannot return `f` because in the first parameter: `T` [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    subtyping.js:21:46
    21|   (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
@@ -276,7 +276,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:21:46
 
-Cannot return `f` because in the return value: mixed [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot return `f` because in the return value: `unknown` [1] is incompatible with `T` [2]. [incompatible-type]
 
    subtyping.js:21:46
    21|   (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
@@ -293,7 +293,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:24:58
 
-Cannot return `f` because in the first parameter: `T` [1] is incompatible with mixed [2]. [incompatible-type]
+Cannot return `f` because in the first parameter: `T` [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    subtyping.js:24:58
    24|     const g = (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
@@ -310,7 +310,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:24:58
 
-Cannot return `f` because in the return value: mixed [1] is incompatible with `T` [2]. [incompatible-type]
+Cannot return `f` because in the return value: `unknown` [1] is incompatible with `T` [2]. [incompatible-type]
 
    subtyping.js:24:58
    24|     const g = (f: <T>(T) => mixed): (<S>(mixed) => S) => f; // should error
@@ -327,7 +327,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:37:55
 
-Cannot return `f` because mixed [1] is incompatible with `S` [2]. [incompatible-type]
+Cannot return `f` because `unknown` [1] is incompatible with `S` [2]. [incompatible-type]
 
    subtyping.js:37:55
    37|   const g = (f: <S, T: S>(T) => T): <S, T>(T) => S => f; // should error
@@ -361,7 +361,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:49:48
 
-Cannot return `f` because in the return value: mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot return `f` because in the return value: `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
    subtyping.js:49:48
    49|   (f: <T>(T) => T): (<S>(number) => number) => f; // should be ok, currently isn't
@@ -395,7 +395,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:57:42
 
-Cannot return `f` because in the return value: mixed [1] is incompatible with array type [2]. [incompatible-type]
+Cannot return `f` because in the return value: `unknown` [1] is incompatible with array type [2]. [incompatible-type]
 
    subtyping.js:57:42
    57|   (f: <T>(T) => T): (<S>(S[]) => S[]) => f; // should be ok, currently isn't
@@ -412,7 +412,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:64:51
 
-Cannot return `f` because in the second parameter: boolean [1] is incompatible with mixed [2]. [incompatible-type]
+Cannot return `f` because in the second parameter: boolean [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    subtyping.js:64:51
    64| (f: <R, S>(R, S) => S): (<T>(T, T) => boolean) => f; // error
@@ -429,7 +429,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:66:49
 
-Cannot return `f` because in the first parameter: `T` [1] is incompatible with mixed [2]. [incompatible-type]
+Cannot return `f` because in the first parameter: `T` [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    subtyping.js:66:49
    66| (f: <R>(R, mixed) => R): (<S, T>(S, T) => T) => f; // error
@@ -503,7 +503,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:78:54
 
-Cannot return `f` because in the first parameter: number [1] is incompatible with mixed [2]. [incompatible-type]
+Cannot return `f` because in the first parameter: number [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    subtyping.js:78:54
    78| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
@@ -520,7 +520,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:78:54
 
-Cannot return `f` because in the second parameter: number [1] is incompatible with mixed [2]. [incompatible-type]
+Cannot return `f` because in the second parameter: number [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    subtyping.js:78:54
    78| (f: (number, number) => number): (<T>(T, T) => T) => f; // error
@@ -572,7 +572,7 @@ References:
 Error ----------------------------------------------------------------------------------------------------- test.js:8:10
 
 Cannot extend `C` [1] with `D` because in property `foo` > the first parameter: number [2] is incompatible with
-mixed [3]. [incompatible-type]
+`unknown` [3]. [incompatible-type]
 
    test.js:8:10
    8|   foo(x: number): number { return x; } // error (specialization, see below)

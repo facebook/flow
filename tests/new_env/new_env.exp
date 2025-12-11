@@ -663,7 +663,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:41:10
 
-Cannot return `y.foo` because mixed [1] is incompatible with string [2]. [incompatible-type]
+Cannot return `y.foo` because `unknown` [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:41:10
    41|   return y.foo;

@@ -1,6 +1,6 @@
 Error ------------------------------------------------------------------------------------------------------ any.js:8:16
 
-Cannot assign `bar(...)` to `y` because mixed [1] is incompatible with string [2]. [incompatible-type]
+Cannot assign `bar(...)` to `y` because `unknown` [1] is incompatible with string [2]. [incompatible-type]
 
    any.js:8:16
    8| var y:string = bar(0);
@@ -69,7 +69,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ propagate.js:16:5
 
-Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x` to boolean because `unknown` [1] is incompatible with boolean [2]. [incompatible-type]
 
    propagate.js:16:5
    16|     x as boolean;
@@ -86,7 +86,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ propagate.js:23:5
 
-Cannot cast `x` to boolean because mixed [1] is incompatible with boolean [2]. [incompatible-type]
+Cannot cast `x` to boolean because `unknown` [1] is incompatible with boolean [2]. [incompatible-type]
 
    propagate.js:23:5
    23|     x as boolean;

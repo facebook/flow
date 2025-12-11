@@ -1,6 +1,6 @@
 Error ---------------------------------------------------------------------------------- reason_of_inferred_targs.js:2:2
 
-Cannot cast `p` to `Promise` because in type argument `R` [1]: mixed (inferred from type parameter's default) [2] is
+Cannot cast `p` to `Promise` because in type argument `R` [1]: `unknown` (inferred from type parameter's default) [2] is
 incompatible with string [3]. [incompatible-type]
 
    reason_of_inferred_targs.js:2:2
@@ -21,7 +21,7 @@ References:
 
 Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:7:18
 
-Cannot cast `s` to string because mixed (inferred from type parameter's bound) [1] is incompatible with string [2].
+Cannot cast `s` to string because `unknown` (inferred from type parameter's bound) [1] is incompatible with string [2].
 [incompatible-type]
 
    reason_of_inferred_targs.js:7:18
@@ -57,7 +57,7 @@ References:
 
 Error --------------------------------------------------------------------------------- reason_of_inferred_targs.js:9:19
 
-Cannot get `s.abcd` because property `abcd` is missing in mixed (inferred from type parameter's bound) [1].
+Cannot get `s.abcd` because property `abcd` is missing in `unknown` (inferred from type parameter's bound) [1].
 [incompatible-type]
 
    reason_of_inferred_targs.js:9:19

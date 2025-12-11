@@ -1,6 +1,6 @@
 Error ----------------------------------------------------------------------------------------------------- test.js:1:12
 
-Cannot call `globalThis.alert` because property `alert` is missing in mixed [1]. [incompatible-use]
+Cannot call `globalThis.alert` because property `alert` is missing in `unknown` [1]. [incompatible-use]
 
    test.js:1:12
    1| globalThis.alert(); // error: globalThis is defined to be mixed

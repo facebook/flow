@@ -220,7 +220,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:21:24
 
-Cannot create `Profile` element because in property `user`: mixed [1] is incompatible with `Profile_userRef` [2].
+Cannot create `Profile` element because in property `user`: `unknown` [1] is incompatible with `Profile_userRef` [2].
 [incompatible-type]
 
    main.js:21:24
@@ -235,7 +235,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- main.js:21:44
 
-Cannot create `Profile` element because in property `foo`: mixed [1] is incompatible with number [2].
+Cannot create `Profile` element because in property `foo`: `unknown` [1] is incompatible with number [2].
 [incompatible-type]
 
    main.js:21:44

@@ -156,7 +156,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:54:1
 
-Cannot cast `r4` to function type because in the return value: mixed [1] is incompatible with empty [2].
+Cannot cast `r4` to function type because in the return value: `unknown` [1] is incompatible with empty [2].
 [incompatible-type]
 
    function_typeof.js:54:1
@@ -221,7 +221,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ function_typeof.js:63:1
 
-Cannot cast `r7` to function type because in the return value: mixed [1] is incompatible with empty [2].
+Cannot cast `r7` to function type because in the return value: `unknown` [1] is incompatible with empty [2].
 [incompatible-type]
 
    function_typeof.js:63:1
@@ -470,7 +470,7 @@ References:
 
 Error ----------------------------------------------------------------------------------- function_typeof_import.js:55:1
 
-Cannot cast `r7` to function type because in the return value: mixed [1] is incompatible with empty [2].
+Cannot cast `r7` to function type because in the return value: `unknown` [1] is incompatible with empty [2].
 [incompatible-type]
 
    function_typeof_import.js:55:1

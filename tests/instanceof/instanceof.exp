@@ -138,7 +138,7 @@ The right-hand side of an `instanceof` expression must be an object, but got str
 
 Error --------------------------------------------------------------------------------------------- instanceof.js:112:30
 
-The right-hand side of an `instanceof` expression must be an object, but got mixed [1]. [invalid-in-rhs]
+The right-hand side of an `instanceof` expression must be an object, but got `unknown` [1]. [invalid-in-rhs]
 
    112|   if (x instanceof ('bad' as mixed)) {
                                      ^^^^^ [1]

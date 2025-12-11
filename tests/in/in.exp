@@ -482,7 +482,7 @@ Cannot use `in` because on the left-hand side, boolean literal `false` [1] must 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:50:15
 
-Cannot use `in` because on the right-hand side, mixed [1] must be an object or array. [invalid-in-rhs]
+Cannot use `in` because on the right-hand side, `unknown` [1] must be an object or array. [invalid-in-rhs]
 
    test.js:50:15
    50|     ('foo' in y); // error

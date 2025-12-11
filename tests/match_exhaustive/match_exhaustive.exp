@@ -482,8 +482,8 @@ of the input type. To fix, either remove this pattern or restructure previous pa
 
 Error --------------------------------------------------------------------------------------------------- basic.js:333:5
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match mixed [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match
+`unknown` [1]. [match-not-exhaustive]
 
    basic.js:333:5
    333|     match (x) {} // ERROR: missing wildcard `_`
@@ -1378,8 +1378,8 @@ of the input type. To fix, either remove this pattern or restructure previous pa
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:114:3
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match mixed [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match
+`unknown` [1]. [match-not-exhaustive]
 
    inexhaustible.js:114:3
    114|   match (x) {} // ERROR
@@ -1447,8 +1447,8 @@ of the input type. To fix, either remove this pattern or restructure previous pa
 
 Error ------------------------------------------------------------------------------------------- inexhaustible.js:178:3
 
-`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match mixed [1].
-[match-not-exhaustive]
+`match` hasn't checked all possible cases of the input type. To fix, add the missing pattern: `_` to match
+`unknown` [1]. [match-not-exhaustive]
 
    inexhaustible.js:178:3
    178|   match (x) { // ERROR: missing `_`
@@ -1462,7 +1462,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ inexhaustible.js:179:23
 
-An index signature declaring the expected key / value type is missing in mixed [1]. [incompatible-use]
+An index signature declaring the expected key / value type is missing in `unknown` [1]. [incompatible-use]
 
    inexhaustible.js:179:23
    179|     {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR
@@ -1476,7 +1476,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ inexhaustible.js:179:30
 
-An index signature declaring the expected key / value type is missing in mixed [1]. [incompatible-use]
+An index signature declaring the expected key / value type is missing in `unknown` [1]. [incompatible-use]
 
    inexhaustible.js:179:30
    179|     {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR
@@ -1490,7 +1490,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ inexhaustible.js:183:23
 
-An index signature declaring the expected key / value type is missing in mixed [1]. [incompatible-use]
+An index signature declaring the expected key / value type is missing in `unknown` [1]. [incompatible-use]
 
    inexhaustible.js:183:23
    183|     {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR
@@ -1504,7 +1504,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ inexhaustible.js:183:30
 
-An index signature declaring the expected key / value type is missing in mixed [1]. [incompatible-use]
+An index signature declaring the expected key / value type is missing in `unknown` [1]. [incompatible-use]
 
    inexhaustible.js:183:30
    183|     {foo: true, bar: ['bar', {value: _, ...}, ...], ...} => {} // ERROR

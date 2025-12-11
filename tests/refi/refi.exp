@@ -398,7 +398,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- heap.js:192:18
 
-Cannot get `x.bar` because property `bar` is missing in mixed [1]. [incompatible-type]
+Cannot get `x.bar` because property `bar` is missing in `unknown` [1]. [incompatible-type]
 
    heap.js:192:18
    192|     if (typeof x.bar === 'string') {} // error, so `x.bar` refinement is empty
@@ -412,7 +412,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:193:6
 
-Cannot cast `x` to intersection type because mixed [1] is incompatible with string [2]. [incompatible-type]
+Cannot cast `x` to intersection type because `unknown` [1] is incompatible with string [2]. [incompatible-type]
 
    heap.js:193:6
    193|     (x: string & number);
@@ -429,7 +429,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- heap.js:193:6
 
-Cannot cast `x` to intersection type because mixed [1] is incompatible with number [2]. [incompatible-type]
+Cannot cast `x` to intersection type because `unknown` [1] is incompatible with number [2]. [incompatible-type]
 
    heap.js:193:6
    193|     (x: string & number);

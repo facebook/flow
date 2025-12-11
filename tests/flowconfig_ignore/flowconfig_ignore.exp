@@ -42,7 +42,7 @@ References:
 
 Error ---------------------------------------------------------------------- my_declarations/typecheck_if_in_root.js:4:1
 
-Cannot call `x` because mixed [1] is not a function. [not-a-function]
+Cannot call `x` because `unknown` [1] is not a function. [not-a-function]
 
    my_declarations/typecheck_if_in_root.js:4:1
    4| x();
@@ -84,7 +84,7 @@ References:
 
 Error --------------------------------------------------------------------------- my_ignores/typecheck_if_in_root.js:4:1
 
-Cannot call `x` because mixed [1] is not a function. [not-a-function]
+Cannot call `x` because `unknown` [1] is not a function. [not-a-function]
 
    my_ignores/typecheck_if_in_root.js:4:1
    4| x();
@@ -126,7 +126,7 @@ References:
 
 Error --------------------------------------------------------------------------- my_untyped/typecheck_if_in_root.js:4:1
 
-Cannot call `x` because mixed [1] is not a function. [not-a-function]
+Cannot call `x` because `unknown` [1] is not a function. [not-a-function]
 
    my_untyped/typecheck_if_in_root.js:4:1
    4| x();
