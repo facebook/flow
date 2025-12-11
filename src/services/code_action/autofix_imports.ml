@@ -213,7 +213,7 @@ let update_import ~bindings stmt =
   let open Statement.ImportDeclaration in
   let loc = loc_with_comments stmt in
   match stmt with
-  | (_, ImportDeclaration { import_kind; source; default; specifiers; comments }) ->
+  | (_, ImportDeclaration { import_kind; source; default; specifiers; attributes = _; comments }) ->
     let (_, { StringLiteral.value = from; _ }) = source in
     let edit =
       match (bindings, default, specifiers) with
@@ -277,7 +277,10 @@ let update_import ~bindings stmt =
         in
         let specifiers = Some (ImportNamedSpecifiers new_specifiers) in
         let stmt =
-          (loc, ImportDeclaration { import_kind; source; default; specifiers; comments })
+          ( loc,
+            ImportDeclaration
+              { import_kind; source; default; specifiers; attributes = None; comments }
+          )
         in
         (Replace, stmt)
       | (Named _, Some _, _)
@@ -323,6 +326,7 @@ let compare_kind_of_import a b =
             source = _;
             default = a_default;
             specifiers = a_specifiers;
+            attributes = _;
             comments = _;
           }
       ),
@@ -333,6 +337,7 @@ let compare_kind_of_import a b =
             source = _;
             default = b_default;
             specifiers = b_specifiers;
+            attributes = _;
             comments = _;
           }
       )
@@ -688,6 +693,7 @@ let merge_imports =
               source = (_, { StringLiteral.value = a_from; _ }) as source;
               default = a_default;
               specifiers = a_specifiers;
+              attributes = _;
               comments = a_comments;
             }
         ),
@@ -698,6 +704,7 @@ let merge_imports =
               source = (_, { StringLiteral.value = b_from; _ });
               default = b_default;
               specifiers = b_specifiers;
+              attributes = _;
               comments = b_comments;
             }
         )
@@ -709,7 +716,9 @@ let merge_imports =
       let default = merge_defaults a_default b_default in
       let specifiers = merge_specifiers a_specifiers b_specifiers in
       let comments = merge_comments a_comments b_comments in
-      (Loc.none, ImportDeclaration { import_kind; source; default; specifiers; comments })
+      ( Loc.none,
+        ImportDeclaration { import_kind; source; default; specifiers; attributes = None; comments }
+      )
     | (_, _) -> failwith "Can only merge 2 ImportDeclarations"
 
 let merge_changes (a_loc, (a_placement, a_stmt)) (_, (_, b_stmt)) =

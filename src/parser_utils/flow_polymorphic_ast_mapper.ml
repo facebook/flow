@@ -1795,7 +1795,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method import_declaration _loc (decl : ('M, 'T) Ast.Statement.ImportDeclaration.t)
         : ('N, 'U) Ast.Statement.ImportDeclaration.t =
       let open Ast.Statement.ImportDeclaration in
-      let { import_kind; source; specifiers; default; comments } = decl in
+      let { import_kind; source; specifiers; default; attributes; comments } = decl in
       let source' =
         let (annot, lit) = source in
         (this#on_type_annot annot, this#import_source annot lit)
@@ -1811,16 +1811,46 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             })
           default
       in
+      let attributes' =
+        Option.map
+          ~f:(fun (annot, attrs) ->
+            let annot' = this#on_loc_annot annot in
+            let attrs' = List.map ~f:this#import_attribute attrs in
+            (annot', attrs'))
+          attributes
+      in
       let comments' = this#syntax_opt comments in
       {
         import_kind;
         source = source';
         specifiers = specifiers';
         default = default';
+        attributes = attributes';
         comments = comments';
       }
 
     method import_source _loc source = this#string_literal source
+
+    method import_attribute_key
+        (key : ('M, 'T) Ast.Statement.ImportDeclaration.import_attribute_key)
+        : ('N, 'U) Ast.Statement.ImportDeclaration.import_attribute_key =
+      let open Ast.Statement.ImportDeclaration in
+      match key with
+      | Identifier id -> Identifier (this#t_identifier id)
+      | StringLiteral (annot, lit) ->
+        StringLiteral (this#on_loc_annot annot, this#string_literal lit)
+
+    method import_attribute (attr : ('M, 'T) Ast.Statement.ImportDeclaration.import_attribute)
+        : ('N, 'U) Ast.Statement.ImportDeclaration.import_attribute =
+      let open Ast.Statement.ImportDeclaration in
+      let { loc; key; value } = attr in
+      let loc' = this#on_loc_annot loc in
+      let key' = this#import_attribute_key key in
+      let value' =
+        let (annot, lit) = value in
+        (this#on_type_annot annot, this#string_literal lit)
+      in
+      { loc = loc'; key = key'; value = value' }
 
     method import_specifier
         ~import_kind (specifier : ('M, 'T) Ast.Statement.ImportDeclaration.specifier)

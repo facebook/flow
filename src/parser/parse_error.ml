@@ -72,6 +72,7 @@ type t =
   | IllegalContinue
   | IllegalReturn
   | IllegalUnicodeEscape
+  | ImportAttributeMissingComma
   | ImportSpecifierMissingComma
   | ImportTypeShorthandOnlyInPureImport
   | InexactInsideExact
@@ -344,6 +345,7 @@ module PP = struct
     | IllegalContinue -> "Illegal continue statement"
     | IllegalReturn -> "Illegal return statement"
     | IllegalUnicodeEscape -> "Illegal Unicode escape"
+    | ImportAttributeMissingComma -> "Missing comma between import attributes"
     | ImportSpecifierMissingComma -> "Missing comma between import specifiers"
     | ImportTypeShorthandOnlyInPureImport ->
       "The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. "

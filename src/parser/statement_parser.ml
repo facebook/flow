@@ -2112,18 +2112,81 @@ module Statement
         let loc = Peek.loc_skip_lookahead env in
         (loc, { StringLiteral.value = ""; raw = ""; comments = None })
       in
+      let import_attributes env =
+        match Peek.token env with
+        | T_WITH ->
+          with_loc_opt
+            (fun env ->
+              Eat.token env;
+              Expect.token env T_LCURLY;
+
+              let rec parse_attributes acc =
+                match Peek.token env with
+                | T_RCURLY -> List.rev acc
+                | T_EOF ->
+                  error_unexpected ~expected:"'}'" env;
+                  List.rev acc
+                | _ ->
+                  if acc <> [] then
+                    if not (Eat.maybe env T_COMMA) then
+                      error env Parse_error.ImportAttributeMissingComma;
+
+                  (* Allow trailing comma *)
+                  (match Peek.token env with
+                  | T_RCURLY -> List.rev acc
+                  | _ ->
+                    let start_loc = Peek.loc env in
+                    let attribute = parse_attribute env start_loc in
+                    parse_attributes (attribute :: acc))
+              and parse_attribute env start_loc =
+                let key =
+                  match Peek.token env with
+                  | T_STRING str ->
+                    let (loc, lit) = string_literal env str in
+                    Statement.ImportDeclaration.StringLiteral (loc, lit)
+                  | _ ->
+                    let id = identifier_name env in
+                    Statement.ImportDeclaration.Identifier id
+                in
+
+                Expect.token env T_COLON;
+
+                let value =
+                  match Peek.token env with
+                  | T_STRING str -> string_literal env str
+                  | _ ->
+                    error_unexpected ~expected:"string literal" env;
+                    let loc = Peek.loc_skip_lookahead env in
+                    (loc, { StringLiteral.value = ""; raw = ""; comments = None })
+                in
+                let end_loc = Peek.loc_skip_lookahead env in
+                let loc = Loc.btwn start_loc end_loc in
+
+                { Statement.ImportDeclaration.loc; key; value }
+              in
+
+              let attributes = parse_attributes [] in
+              Expect.token env T_RCURLY;
+              Some attributes)
+            env
+        | _ -> None
+      in
       let source env =
         match Peek.token env with
         | T_IDENTIFIER { raw = "from"; _ } ->
           Eat.token env;
-          (match Peek.token env with
-          | T_STRING str -> string_literal env str
-          | _ ->
-            error_unexpected ~expected:"a string" env;
-            missing_source env)
+          let source =
+            match Peek.token env with
+            | T_STRING str -> string_literal env str
+            | _ ->
+              error_unexpected ~expected:"a string" env;
+              missing_source env
+          in
+          let attributes = import_attributes env in
+          (source, attributes)
         | _ ->
           error_unexpected ~expected:"the keyword `from`" env;
-          missing_source env
+          (missing_source env, None)
       in
       let is_type_import = function
         | T_TYPE
@@ -2322,7 +2385,7 @@ module Statement
       in
       let with_specifiers import_kind env leading =
         let specifiers = named_or_namespace_specifier env import_kind in
-        let source = source env in
+        let (source, attributes) = source env in
         let (trailing, source) = semicolon_and_trailing env source in
         Statement.ImportDeclaration
           {
@@ -2330,6 +2393,7 @@ module Statement
             source;
             specifiers;
             default = None;
+            attributes;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
       in
@@ -2356,7 +2420,7 @@ module Statement
             named_or_namespace_specifier env import_kind
           | _ -> None
         in
-        let source = source env in
+        let (source, attributes) = source env in
         let (trailing, source) = semicolon_and_trailing env source in
         Statement.ImportDeclaration
           {
@@ -2364,6 +2428,7 @@ module Statement
             source;
             specifiers = additional_specifiers;
             default = Some default_specifier;
+            attributes;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
       in
@@ -2380,6 +2445,7 @@ module Statement
           (* `import "ModuleName";` *)
           | T_STRING str ->
             let source = string_literal env str in
+            let attributes = import_attributes env in
             let (trailing, source) = semicolon_and_trailing env source in
             Statement.ImportDeclaration
               {
@@ -2387,6 +2453,7 @@ module Statement
                 source;
                 specifiers = None;
                 default = None;
+                attributes;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
               }
           (* `import type [...] from "ModuleName";`

@@ -4475,6 +4475,7 @@ let import_decl _opts scope tbls decl =
     default;
     specifiers;
     import_kind = kind;
+    attributes = _;
     comments = _;
   } =
     decl

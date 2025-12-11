@@ -27,7 +27,7 @@ class mapper ~target_loc =
       match stmt with
       | (loc, Ast.Statement.ImportDeclaration decl) ->
         let open Ast.Statement.ImportDeclaration in
-        let { import_kind; source; specifiers; default; comments = _ } = decl in
+        let { import_kind; source; specifiers; default; attributes = _; comments = _ } = decl in
         if not @@ Loc.contains loc target_loc then
           [stmt]
         else if import_kind = ImportType then
@@ -79,6 +79,7 @@ class mapper ~target_loc =
                         (ImportNamedSpecifiers
                            [{ kind = None; local; remote; remote_name_def_loc = None }]
                         );
+                    attributes = None;
                     comments = None;
                   }
               )
@@ -104,6 +105,7 @@ class mapper ~target_loc =
                         (ImportNamedSpecifiers
                            [{ kind = None; local; remote; remote_name_def_loc = None }]
                         );
+                    attributes = None;
                     comments = None;
                   }
               );

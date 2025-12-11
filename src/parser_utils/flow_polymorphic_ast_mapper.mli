@@ -444,6 +444,14 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method import_source : 'T -> 'M Ast.StringLiteral.t -> 'N Ast.StringLiteral.t
 
+    method import_attribute_key :
+      ('M, 'T) Ast.Statement.ImportDeclaration.import_attribute_key ->
+      ('N, 'U) Ast.Statement.ImportDeclaration.import_attribute_key
+
+    method import_attribute :
+      ('M, 'T) Ast.Statement.ImportDeclaration.import_attribute ->
+      ('N, 'U) Ast.Statement.ImportDeclaration.import_attribute
+
     method import_specifier :
       import_kind:Ast.Statement.ImportDeclaration.import_kind ->
       ('M, 'T) Ast.Statement.ImportDeclaration.specifier ->

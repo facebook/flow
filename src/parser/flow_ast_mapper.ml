@@ -2213,7 +2213,7 @@ class ['loc] mapper =
 
     method import_declaration _loc (decl : ('loc, 'loc) Ast.Statement.ImportDeclaration.t) =
       let open Ast.Statement.ImportDeclaration in
-      let { import_kind; source; specifiers; default; comments } = decl in
+      let { import_kind; source; specifiers; default; attributes; comments } = decl in
       let source' = map_loc this#import_source source in
       let specifiers' = map_opt (this#import_specifier ~import_kind) specifiers in
       let default' =
@@ -2226,11 +2226,13 @@ class ['loc] mapper =
               { identifier = identifier'; remote_default_name_def_loc })
           default
       in
+      let attributes' = map_opt (map_loc this#import_attributes) attributes in
       let comments' = this#syntax_opt comments in
       if
         source == source'
         && specifiers == specifiers'
         && default == default'
+        && attributes == attributes'
         && comments == comments'
       then
         decl
@@ -2240,6 +2242,7 @@ class ['loc] mapper =
           source = source';
           specifiers = specifiers';
           default = default';
+          attributes = attributes';
           comments = comments';
         }
 
@@ -2251,6 +2254,28 @@ class ['loc] mapper =
         source
       else
         { value; raw; comments = comments' }
+
+    method import_attributes
+        _loc (attrs : ('loc, 'loc) Ast.Statement.ImportDeclaration.import_attribute list) =
+      map_list this#import_attribute attrs
+
+    method import_attribute (attr : ('loc, 'loc) Ast.Statement.ImportDeclaration.import_attribute) =
+      let open Ast.Statement.ImportDeclaration in
+      let { loc; key; value } = attr in
+      let key' = this#import_attribute_key key in
+      let value' = map_loc this#string_literal value in
+      if key == key' && value == value' then
+        attr
+      else
+        { loc; key = key'; value = value' }
+
+    method import_attribute_key
+        (key : ('loc, 'loc) Ast.Statement.ImportDeclaration.import_attribute_key) =
+      let open Ast.Statement.ImportDeclaration in
+      match key with
+      | Identifier ident -> id this#identifier ident key (fun ident' -> Identifier ident')
+      | StringLiteral (loc, lit) ->
+        id_loc this#string_literal loc lit key (fun lit' -> StringLiteral (loc, lit'))
 
     method import_specifier
         ~import_kind (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.specifier) =

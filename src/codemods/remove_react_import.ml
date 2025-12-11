@@ -53,6 +53,7 @@ let react_import_def_loc_opt_of_stmt = function
                 _;
               };
           specifiers = None;
+          attributes = _;
           comments = _;
         }
     )
@@ -67,6 +68,7 @@ let react_import_def_loc_opt_of_stmt = function
               (Ast.Statement.ImportDeclaration.ImportNamespaceSpecifier
                 (_, (loc, { Ast.Identifier.name = "React"; _ }))
                 );
+          attributes = _;
           comments = _;
         }
     ) ->

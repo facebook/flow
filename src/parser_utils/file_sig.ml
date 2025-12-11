@@ -385,7 +385,7 @@ class requires_calculator ~file_key ~ast ~opts =
     method! import_declaration import_loc (decl : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t)
         =
       let open Ast.Statement.ImportDeclaration in
-      let { import_kind; source; specifiers; default; comments = _ } = decl in
+      let { import_kind; source; specifiers; default; attributes = _; comments = _ } = decl in
       let source =
         match source with
         | (loc, { Ast.StringLiteral.value = name; _ }) -> (loc, name)

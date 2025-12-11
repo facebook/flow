@@ -440,6 +440,7 @@ class insert_import_mapper =
                          };
                        ]
                     );
+                attributes = None;
                 comments = None;
               }
           )
@@ -477,6 +478,7 @@ class insert_second_import_mapper =
                          };
                        ]
                     );
+                attributes = None;
                 comments = None;
               }
           )
@@ -807,6 +809,7 @@ class insert_import_and_annot_mapper =
                         };
                       ]
                   );
+              attributes = None;
               comments = None;
             }
         )

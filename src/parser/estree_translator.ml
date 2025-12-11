@@ -437,7 +437,8 @@ with type t = Impl.t = struct
             ("exportKind", string (string_of_export_kind Statement.ExportValue));
           ]
       | ( loc,
-          ImportDeclaration { ImportDeclaration.specifiers; default; import_kind; source; comments }
+          ImportDeclaration
+            { ImportDeclaration.specifiers; default; import_kind; source; attributes; comments }
         ) ->
         let specifiers =
           match specifiers with
@@ -460,15 +461,22 @@ with type t = Impl.t = struct
           | ImportDeclaration.ImportTypeof -> "typeof"
           | ImportDeclaration.ImportValue -> "value"
         in
+        let attributes_json =
+          match attributes with
+          | None -> []
+          | Some (_, attrs) -> [("attributes", array (List.map import_attribute attrs))]
+        in
         node
           ?comments
           "ImportDeclaration"
           loc
-          [
-            ("specifiers", array specifiers);
-            ("source", string_literal source);
-            ("importKind", string import_kind);
-          ]
+          ([
+             ("specifiers", array specifiers);
+             ("source", string_literal source);
+             ("importKind", string import_kind);
+           ]
+          @ attributes_json
+          )
     and expression =
       let open Expression in
       function
@@ -2558,6 +2566,14 @@ with type t = Impl.t = struct
               null
           );
         ]
+    and import_attribute { Statement.ImportDeclaration.loc; key; value } =
+      let key_json =
+        match key with
+        | Statement.ImportDeclaration.Identifier id -> identifier id
+        | Statement.ImportDeclaration.StringLiteral (loc, lit) -> string_literal (loc, lit)
+      in
+      let value_json = string_literal value in
+      node "ImportAttribute" loc [("key", key_json); ("value", value_json)]
     and comment_list comments = array_of_list comment comments
     and comment (loc, c) =
       Comment.(

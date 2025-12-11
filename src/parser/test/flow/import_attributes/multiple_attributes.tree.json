@@ -1,0 +1,221 @@
+{
+  "type": "Program",
+  "loc": {
+    "source": null,
+    "start": {
+      "line": 1,
+      "column": 0
+    },
+    "end": {
+      "line": 1,
+      "column": 63
+    }
+  },
+  "range": [
+    0,
+    63
+  ],
+  "body": [
+    {
+      "type": "ImportDeclaration",
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 63
+        }
+      },
+      "range": [
+        0,
+        63
+      ],
+      "specifiers": [
+        {
+          "type": "ImportDefaultSpecifier",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 7
+            },
+            "end": {
+              "line": 1,
+              "column": 10
+            }
+          },
+          "range": [
+            7,
+            10
+          ],
+          "local": {
+            "type": "Identifier",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 1,
+                "column": 7
+              },
+              "end": {
+                "line": 1,
+                "column": 10
+              }
+            },
+            "range": [
+              7,
+              10
+            ],
+            "name": "foo",
+            "typeAnnotation": null,
+            "optional": false
+          }
+        }
+      ],
+      "source": {
+        "type": "Literal",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 16
+          },
+          "end": {
+            "line": 1,
+            "column": 24
+          }
+        },
+        "range": [
+          16,
+          24
+        ],
+        "value": "module",
+        "raw": "\"module\""
+      },
+      "importKind": "value",
+      "attributes": [
+        {
+          "type": "ImportAttribute",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 32
+            },
+            "end": {
+              "line": 1,
+              "column": 44
+            }
+          },
+          "range": [
+            32,
+            44
+          ],
+          "key": {
+            "type": "Identifier",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 1,
+                "column": 32
+              },
+              "end": {
+                "line": 1,
+                "column": 36
+              }
+            },
+            "range": [
+              32,
+              36
+            ],
+            "name": "type",
+            "typeAnnotation": null,
+            "optional": false
+          },
+          "value": {
+            "type": "Literal",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 1,
+                "column": 38
+              },
+              "end": {
+                "line": 1,
+                "column": 44
+              }
+            },
+            "range": [
+              38,
+              44
+            ],
+            "value": "json",
+            "raw": "\"json\""
+          }
+        },
+        {
+          "type": "ImportAttribute",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 46
+            },
+            "end": {
+              "line": 1,
+              "column": 60
+            }
+          },
+          "range": [
+            46,
+            60
+          ],
+          "key": {
+            "type": "Identifier",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 1,
+                "column": 46
+              },
+              "end": {
+                "line": 1,
+                "column": 52
+              }
+            },
+            "range": [
+              46,
+              52
+            ],
+            "name": "format",
+            "typeAnnotation": null,
+            "optional": false
+          },
+          "value": {
+            "type": "Literal",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 1,
+                "column": 54
+              },
+              "end": {
+                "line": 1,
+                "column": 60
+              }
+            },
+            "range": [
+              54,
+              60
+            ],
+            "value": "text",
+            "raw": "\"text\""
+          }
+        }
+      ]
+    }
+  ],
+  "comments": []
+}

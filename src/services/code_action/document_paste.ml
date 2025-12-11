@@ -52,7 +52,7 @@ class import_information_extractor ~cx ~loc_of_aloc ~relevant_imported_defs =
 
     method! import_declaration _loc decl =
       let open Ast.Statement.ImportDeclaration in
-      let { import_kind; source; specifiers; default; comments = _ } = decl in
+      let { import_kind; source; specifiers; default; attributes = _; comments = _ } = decl in
       let lazy_import_source_info =
         lazy
           (let ((source_loc, _), { Ast.StringLiteral.value; _ }) = source in

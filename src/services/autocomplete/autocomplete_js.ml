@@ -828,7 +828,7 @@ class process_request_searcher cx file_sig ~from_trigger_character ~cursor =
 
     method! import_declaration decl_loc decl =
       let open Flow_ast.Statement.ImportDeclaration in
-      let { import_kind; source; specifiers; default = _; comments = _ } = decl in
+      let { import_kind; source; specifiers; default = _; attributes = _; comments = _ } = decl in
       let (source_loc, Flow_ast.StringLiteral.{ raw = from; _ }) = source in
       if this#covers_target source_loc then
         this#find source_loc from Ac_module

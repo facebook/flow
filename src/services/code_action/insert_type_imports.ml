@@ -677,6 +677,7 @@ end = struct
                           }
                       );
                     specifiers;
+                    attributes = None;
                     comments = None;
                   }
               ))
@@ -696,6 +697,7 @@ end = struct
                       source;
                       default = None;
                       specifiers;
+                      attributes = None;
                       comments = None;
                     }
                 )

@@ -836,6 +836,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       source = src1;
       default = dflt1;
       specifiers = spec1;
+      attributes = _;
       comments = comments1;
     } =
       import1
@@ -845,6 +846,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       source = src2;
       default = dflt2;
       specifiers = spec2;
+      attributes = _;
       comments = comments2;
     } =
       import2

@@ -1318,11 +1318,22 @@ and Statement : sig
       remote_default_name_def_loc: 'M option;
     }
 
+    and ('M, 'T) import_attribute = {
+      loc: 'M;
+      key: ('M, 'T) import_attribute_key;
+      value: 'T * 'M StringLiteral.t;
+    }
+
+    and ('M, 'T) import_attribute_key =
+      | Identifier of ('M, 'T) Identifier.t
+      | StringLiteral of 'M * 'M StringLiteral.t
+
     and ('M, 'T) t = {
       import_kind: import_kind;
       source: 'T * 'M StringLiteral.t;
       default: ('M, 'T) default_identifier option;
       specifiers: ('M, 'T) specifier option;
+      attributes: ('M * ('M, 'T) import_attribute list) option;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

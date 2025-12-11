@@ -85,6 +85,7 @@ module HardCodedImportMap = struct
                  source;
                  default = None;
                  specifiers = Some (Ast.Statement.ImportDeclaration.ImportNamedSpecifiers nspecs);
+                 attributes = None;
                  comments = None;
                }
            )

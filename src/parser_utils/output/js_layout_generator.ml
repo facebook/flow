@@ -3343,10 +3343,53 @@ and import_named_specifiers ~opts named_specifiers =
     ]
 
 and import_declaration
-    ~opts loc { Ast.Statement.ImportDeclaration.import_kind; source; specifiers; default; comments }
-    =
+    ~opts
+    loc
+    {
+      Ast.Statement.ImportDeclaration.import_kind;
+      source;
+      specifiers;
+      default;
+      attributes;
+      comments;
+    } =
   let s_from = fuse [Atom "from"; pretty_space] in
   let module I = Ast.Statement.ImportDeclaration in
+  let attributes_layout =
+    match attributes with
+    | None -> Empty
+    | Some (_, attrs) ->
+      fuse
+        [
+          pretty_space;
+          Atom "with";
+          pretty_space;
+          group
+            [
+              new_list
+                ~wrap:(Atom "{", Atom "}")
+                ~sep:(Atom ",")
+                ~wrap_spaces:opts.bracket_spacing
+                (List.map
+                   (fun { I.loc = _; key; value } ->
+                     let key_layout =
+                       match key with
+                       | I.Identifier (loc, { Ast.Identifier.name; _ }) ->
+                         identifier (loc, { Ast.Identifier.name; comments = None })
+                       | I.StringLiteral (loc, lit) -> string_literal ~opts loc lit
+                     in
+                     fuse
+                       [
+                         key_layout;
+                         Atom ":";
+                         pretty_space;
+                         string_literal ~opts (fst value) (snd value);
+                       ])
+                   attrs
+                );
+            ];
+        ]
+  in
   layout_node_with_comments_opt loc comments
   @@ with_semicolon
        (fuse
@@ -3376,6 +3419,7 @@ and import_declaration
                 fuse [space; fuse_list ~sep:(Atom ",") (special @ [named]); pretty_space; s_from]
             end;
             string_literal ~opts (fst source) (snd source);
+            attributes_layout;
           ]
        )
 

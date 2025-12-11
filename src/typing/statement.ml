@@ -2004,7 +2004,9 @@ module Make
       let default = (default, t) in
       (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments })
     | (import_loc, ImportDeclaration import_decl) ->
-      let { ImportDeclaration.source; specifiers; default; import_kind; comments } = import_decl in
+      let { ImportDeclaration.source; specifiers; default; import_kind; attributes = _; comments } =
+        import_decl
+      in
       let (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) = source in
       let (perform_platform_validation, import_kind_for_untyped_import_validation) =
         match import_kind with
@@ -2138,6 +2140,7 @@ module Make
             specifiers = specifiers_ast;
             default = default_ast;
             import_kind;
+            attributes = None;
             comments;
           }
       )

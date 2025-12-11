@@ -2510,6 +2510,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         source = (source_loc, { Ast.StringLiteral.value = source; _ });
         specifiers;
         default;
+        attributes = _;
         comments = _;
       } =
         decl
