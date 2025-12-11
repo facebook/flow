@@ -64,7 +64,7 @@ References:
 Error ------------------------------------------------------------------------------------------------- classes.js:23:15
 
 Cannot extend `React.Component` [1] with `Foo` because in property `setState` > the first parameter: object type [2] is
-incompatible with nullable `$ReadOnly` [3]. [incompatible-type]
+incompatible with nullable `Readonly` [3]. [incompatible-type]
 
    classes.js:23:15
     23|   setState(o: { y_: string }): void { }
@@ -350,7 +350,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `this.setState` with function bound to `partialState` because: [incompatible-type]
  - Either in the return value > property `bar`: string [1] is incompatible with number [2].
- - Or function [3] is incompatible with nullable `$ReadOnly` [4].
+ - Or function [3] is incompatible with nullable `Readonly` [4].
 
    state6.js:27:19
                           v-------------------------------------------
@@ -403,7 +403,7 @@ Error --------------------------------------------------------------------------
 
 Cannot call `this.setState` with `any` bound to `partialState` because: [incompatible-type]
  - Either in the first parameter: number [1] is incompatible with `State` [2].
- - Or `StateUpdater3` [3] is incompatible with nullable `$ReadOnly` [4].
+ - Or `StateUpdater3` [3] is incompatible with nullable `Readonly` [4].
 
    state6.js:39:25
     39|     this.setState((any: StateUpdater3)); // Error: It has the wrong signature

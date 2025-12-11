@@ -204,7 +204,7 @@ Cannot assign `42` to `writeOnlyObj.p` because property `p` is not writable. [ca
 
 Error ---------------------------------------------------------------------------------------------------- test.js:97:30
 
-Cannot instantiate `$ReadOnly` because number [1] is not an object. [not-an-object]
+Cannot instantiate `Readonly` because number [1] is not an object. [not-an-object]
 
    97| type readOnlyNum = $ReadOnly<number>;
                                     ^^^^^^ [1]

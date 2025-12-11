@@ -70,7 +70,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:13:4
 
-Cannot cast `arr` to `$ReadOnly` because const array literal [1] has 3 elements but tuple type [2] has 2 elements.
+Cannot cast `arr` to `Readonly` because const array literal [1] has 3 elements but tuple type [2] has 2 elements.
 [invalid-tuple-arity]
 
    array.js:13:4
@@ -88,7 +88,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:14:4
 
-Cannot cast `arr` to `$ReadOnly` because const array literal [1] has 3 elements but tuple type [2] has 4 elements.
+Cannot cast `arr` to `Readonly` because const array literal [1] has 3 elements but tuple type [2] has 4 elements.
 [invalid-tuple-arity]
 
    array.js:14:4
@@ -2153,7 +2153,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value-spread.js:6:4
 
-Cannot cast `y` to `$ReadOnly` because const array literal [1] has 4 elements but tuple type [2] has 3 elements.
+Cannot cast `y` to `Readonly` because const array literal [1] has 4 elements but tuple type [2] has 3 elements.
 [invalid-tuple-arity]
 
    value-spread.js:6:4
@@ -2171,7 +2171,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value-spread.js:7:4
 
-Cannot cast `y` to `$ReadOnly` because const array literal [1] has 4 elements but tuple type [2] has 5 elements.
+Cannot cast `y` to `Readonly` because const array literal [1] has 4 elements but tuple type [2] has 5 elements.
 [invalid-tuple-arity]
 
    value-spread.js:7:4
@@ -2189,7 +2189,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------- value-spread.js:8:4
 
-Cannot cast `y` to `$ReadOnly` because in index `3`: number literal `3` [1] is incompatible with number literal
+Cannot cast `y` to `Readonly` because in index `3`: number literal `3` [1] is incompatible with number literal
 `999` [2]. [incompatible-type]
 
    value-spread.js:8:4
@@ -2225,8 +2225,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- value-spread.js:17:4
 
-Cannot cast `z` to `$ReadOnly` because array literal [1] has an unknown number of elements, so is incompatible with
-tuple type [2]. [invalid-tuple-arity]
+Cannot cast `z` to `Readonly` because array literal [1] has an unknown number of elements, so is incompatible with tuple
+type [2]. [invalid-tuple-arity]
 
    value-spread.js:17:4
    17|   (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR
@@ -2243,7 +2243,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- value-spread.js:24:4
 
-Cannot cast `z` to `$ReadOnly` because const array literal [1] is incompatible with tuple type [2]. [incompatible-type]
+Cannot cast `z` to `Readonly` because const array literal [1] is incompatible with tuple type [2]. [incompatible-type]
 
    value-spread.js:24:4
    24|   (z: $ReadOnly<[0, 1, 2, 3]>); // ERROR

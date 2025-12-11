@@ -217,7 +217,7 @@ Cannot implement `R` because it is not an interface. [cannot-implement]
 
 Error -------------------------------------------------------------------------------------------- declaration.js:411:29
 
-Operation `$ReadOnly` [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
+Operation `Readonly` [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
 `{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
 
    declaration.js:411:29
@@ -438,7 +438,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------- exported.js:5:34
 
-Operation `$ReadOnly` [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
+Operation `Readonly` [1] is not allowed on record `R` [2]. To fix, turn the record type into an object type first using
 `{...MyRecord}`, for example: `TypeUtil<{...MyRecord}>`. [record-banned-type-util]
 
    exported.js:5:34

@@ -131,7 +131,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:44:3
 
-Cannot cast `arr4` to `$ReadOnly` because in index `0`: number [1] is incompatible with number literal `1` [2].
+Cannot cast `arr4` to `Readonly` because in index `0`: number [1] is incompatible with number literal `1` [2].
 [incompatible-type]
 
    array.js:44:3
@@ -149,7 +149,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:44:3
 
-Cannot cast `arr4` to `$ReadOnly` because in index `1`: number [1] is incompatible with number literal `2` [2].
+Cannot cast `arr4` to `Readonly` because in index `1`: number [1] is incompatible with number literal `2` [2].
 [incompatible-type]
 
    array.js:44:3
@@ -167,7 +167,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- array.js:44:3
 
-Cannot cast `arr4` to `$ReadOnly` because in index `2`: number [1] is incompatible with number literal `3` [2].
+Cannot cast `arr4` to `Readonly` because in index `2`: number [1] is incompatible with number literal `3` [2].
 [incompatible-type]
 
    array.js:44:3
@@ -434,7 +434,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------- import-array.js:27:3
 
-Cannot cast `arr6` to `$ReadOnly` because in index `0`: property `f` is read-only in const object literal [1] but
+Cannot cast `arr6` to `Readonly` because in index `0`: property `f` is read-only in const object literal [1] but
 writable in object type [2]. [incompatible-variance]
 
    import-array.js:27:3

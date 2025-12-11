@@ -577,7 +577,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- union.js:18:4
 
-Cannot cast `x` to `$ReadOnly` because: [incompatible-type]
+Cannot cast `x` to `Readonly` because: [incompatible-type]
  - Either in index `0`: number literal `3` [1] is incompatible with number literal `1` [2].
  - Or in index `0`: number literal `3` [1] is incompatible with number literal `2` [3].
 

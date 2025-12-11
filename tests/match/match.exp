@@ -1647,7 +1647,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ smart_filtering.js:26:9
 
-Cannot cast `entireTuple` to `$ReadOnly` because in index `0`: null [1] is incompatible with string [2].
+Cannot cast `entireTuple` to `Readonly` because in index `0`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    smart_filtering.js:26:9
@@ -1665,7 +1665,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------ smart_filtering.js:26:9
 
-Cannot cast `entireTuple` to `$ReadOnly` because in index `1`: null [1] is incompatible with string [2].
+Cannot cast `entireTuple` to `Readonly` because in index `1`: null [1] is incompatible with string [2].
 [incompatible-type]
 
    smart_filtering.js:26:9

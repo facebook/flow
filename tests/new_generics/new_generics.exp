@@ -1428,7 +1428,7 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ synthetic.js:6:10
 
-Cannot return `x` because `$ReadOnly` [1] is incompatible with `$ReadOnly<T>` [2]. [incompatible-type]
+Cannot return `x` because `Readonly` [1] is incompatible with `$ReadOnly<T>` [2]. [incompatible-type]
 
    synthetic.js:6:10
    6|   return x; // error S incompatible with T

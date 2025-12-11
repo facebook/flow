@@ -761,7 +761,7 @@ let rec string_of_desc = function
   | RPolyType (RClass d) -> string_of_desc d
   | RPolyType d -> string_of_desc d
   | RExactType d -> string_of_desc d
-  | RReadOnlyType -> "`$ReadOnly`"
+  | RReadOnlyType -> "`Readonly`"
   | ROptional d -> spf "optional %s" (string_of_desc d)
   | RMaybe d ->
     let rec loop = function

@@ -21,7 +21,7 @@ Union could not be optimized internally. There are no common keys among the memb
 
 Error ---------------------------------------------------------------------------------------------------- file.js:31:15
 
-Union could not be optimized internally. The form of `$ReadOnly` [1] is not supported for optimization. Try replacing
+Union could not be optimized internally. The form of `Readonly` [1] is not supported for optimization. Try replacing
 this type with a simpler alternative. [union-unoptimizable]
 
    file.js:31:15

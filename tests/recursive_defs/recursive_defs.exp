@@ -1,6 +1,6 @@
 Error --------------------------------------------------------------------------------------------------- fileA1.js:16:2
 
-Cannot cast `data.propA` to empty because `$ReadOnly` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `data.propA` to empty because `Readonly` [1] is incompatible with empty [2]. [incompatible-type]
 
    fileA1.js:16:2
    16| (data.propA: empty); // error obj ~> empty
@@ -34,7 +34,7 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- fileB1.js:16:2
 
-Cannot cast `data.propA` to empty because `$ReadOnly` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `data.propA` to empty because `Readonly` [1] is incompatible with empty [2]. [incompatible-type]
 
    fileB1.js:16:2
    16| (data.propA: empty); // error obj ~> empty

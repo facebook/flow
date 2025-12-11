@@ -2588,7 +2588,7 @@ References:
 
 Error -------------------------------------------------------------------------------------------------- local.js:484:16
 
-Cannot cast object literal to `$ReadOnly` because in property `a`: string literal `a` [1] is incompatible with string
+Cannot cast object literal to `Readonly` because in property `a`: string literal `a` [1] is incompatible with string
 literal `b` [2]. [incompatible-type]
 
    local.js:484:16
