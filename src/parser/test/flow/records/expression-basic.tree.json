@@ -24,7 +24,7 @@
             "type":"RecordExpression",
             "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":14}},
             "range":[10,14],
-            "constructor":{
+            "recordConstructor":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":11}},
               "range":[10,11],
@@ -65,7 +65,7 @@
             "type":"RecordExpression",
             "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":24}},
             "range":[27,41],
-            "constructor":{
+            "recordConstructor":{
               "type":"Identifier",
               "loc":{"source":null,"start":{"line":3,"column":10},"end":{"line":3,"column":11}},
               "range":[27,28],

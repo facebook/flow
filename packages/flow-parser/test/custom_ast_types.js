@@ -368,8 +368,8 @@ function custom_ast_types(fork) {
 
   def('RecordExpression')
     .bases('Expression')
-    .build('constructor', 'typeArguments', 'properties')
-    .field('constructor', def('Expression'))
+    .build('recordConstructor', 'typeArguments', 'properties')
+    .field('recordConstructor', def('Expression'))
     .field('typeArguments', or(def('TypeParameterInstantiation'), null))
     .field('properties', def('RecordExpressionProperties'));
 

@@ -29,7 +29,7 @@
               "type":"RecordExpression",
               "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":23}},
               "range":[27,41],
-              "constructor":{
+              "recordConstructor":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":10}},
                 "range":[27,28],
@@ -139,7 +139,7 @@
                 "type":"RecordExpression",
                 "loc":{"source":null,"start":{"line":5,"column":14},"end":{"line":5,"column":22}},
                 "range":[60,68],
-                "constructor":{
+                "recordConstructor":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":5,"column":14},"end":{"line":5,"column":15}},
                   "range":[60,61],
@@ -212,7 +212,7 @@
                 "type":"RecordExpression",
                 "loc":{"source":null,"start":{"line":7,"column":11},"end":{"line":7,"column":19}},
                 "range":[83,91],
-                "constructor":{
+                "recordConstructor":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":7,"column":11},"end":{"line":7,"column":12}},
                   "range":[83,84],
@@ -257,7 +257,7 @@
                 "type":"RecordExpression",
                 "loc":{"source":null,"start":{"line":7,"column":21},"end":{"line":7,"column":29}},
                 "range":[93,101],
-                "constructor":{
+                "recordConstructor":{
                   "type":"Identifier",
                   "loc":{"source":null,"start":{"line":7,"column":21},"end":{"line":7,"column":22}},
                   "range":[93,94],
@@ -342,7 +342,7 @@
                   "type":"RecordExpression",
                   "loc":{"source":null,"start":{"line":9,"column":19},"end":{"line":9,"column":27}},
                   "range":[124,132],
-                  "constructor":{
+                  "recordConstructor":{
                     "type":"Identifier",
                     "loc":{"source":null,"start":{"line":9,"column":19},"end":{"line":9,"column":20}},
                     "range":[124,125],

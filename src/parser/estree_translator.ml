@@ -784,7 +784,7 @@ with type t = Impl.t = struct
           "RecordExpression"
           loc
           [
-            ("constructor", expression constructor);
+            ("recordConstructor", expression constructor);
             ("typeArguments", option call_type_args targs);
             ("properties", properties);
           ]
