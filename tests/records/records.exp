@@ -406,17 +406,33 @@ Error --------------------------------------------------------------------------
             ^
 
 
-Error -------------------------------------------------------------------------------------------- declaration.js:495:17
+Error --------------------------------------------------------------------------------------------- declaration.js:494:5
+
+`10` has already been declared in this record. Record property names must be unique. [duplicate-class-member]
+
+   494|     10: number, // ERROR
+            ^^
+
+
+Error --------------------------------------------------------------------------------------------- declaration.js:495:5
+
+`10` has already been declared in this record. Record property names must be unique. [duplicate-class-member]
+
+   495|     10n: number, // ERROR
+            ^^^
+
+
+Error -------------------------------------------------------------------------------------------- declaration.js:502:17
 
 Cannot initialize property `a` with `true` because boolean [1] is incompatible with number [2]. [incompatible-type]
 
-   declaration.js:495:17
-   495|     a: number = true, // ERROR
+   declaration.js:502:17
+   502|     a: number = true, // ERROR
                         ^^^^ [1]
 
 References:
-   declaration.js:495:8
-   495|     a: number = true, // ERROR
+   declaration.js:502:8
+   502|     a: number = true, // ERROR
                ^^^^^^ [2]
 
 
@@ -953,4 +969,4 @@ References:
 
 
 
-Found 63 errors
+Found 65 errors

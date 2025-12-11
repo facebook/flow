@@ -16,7 +16,7 @@ let loc_and_string_of_property_key key =
   | Property.StringLiteral (loc, { StringLiteral.value; _ }) -> (loc, value)
   | Property.NumberLiteral (loc, { NumberLiteral.value; _ }) ->
     (loc, Dtoa.ecma_string_of_float value)
-  | Property.BigIntLiteral (loc, { BigIntLiteral.raw; _ }) -> (loc, raw)
+  | Property.BigIntLiteral (loc, bigint) -> (loc, Flow_ast_utils.string_of_bigint bigint)
 
 (* The set of record properties that have a default value supplied, e.g. `foo: number = 0,` *)
 let defaulted_props_of_record record =

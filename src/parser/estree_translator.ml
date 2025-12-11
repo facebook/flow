@@ -1810,17 +1810,8 @@ with type t = Impl.t = struct
       | Spread spread -> spread_element spread
     and number_literal (loc, { NumberLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", number value); ("raw", string raw)]
-    and bigint_literal (loc, { BigIntLiteral.value; raw; comments }) =
-      (* https://github.com/estree/estree/blob/master/es2020.md#bigintliteral
-       * `bigint` property is the string representation of the `BigInt` value.
-       * It must contain only decimal digits and not include numeric separators `_` or the suffix `n`.
-       *)
-      let bigint =
-        match value with
-        | Some value -> Int64.to_string value
-        | None ->
-          String.sub raw 0 (String.length raw - 1) |> String.split_on_char '_' |> String.concat ""
-      in
+    and bigint_literal (loc, ({ BigIntLiteral.raw; value = _; comments } as bigint)) =
+      let bigint = Flow_ast_utils.string_of_bigint bigint in
       node ?comments "Literal" loc [("value", null); ("bigint", string bigint); ("raw", string raw)]
     and string_literal (loc, { StringLiteral.value; raw; comments }) =
       node ?comments "Literal" loc [("value", string value); ("raw", string raw)]

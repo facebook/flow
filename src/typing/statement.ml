@@ -331,7 +331,7 @@ module Make
     | P.Identifier (loc, name) -> P.Identifier ((loc, t), name)
     | P.StringLiteral (loc, lit) -> P.StringLiteral ((loc, t), lit)
     | P.NumberLiteral (loc, lit) -> P.NumberLiteral ((loc, t), lit)
-    | P.BigIntLiteral _
+    | P.BigIntLiteral (loc, lit) -> P.BigIntLiteral ((loc, t), lit)
     | P.PrivateName _
     | P.Computed _ ->
       assert_false "precondition not met"

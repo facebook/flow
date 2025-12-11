@@ -488,6 +488,13 @@ interface Equatable<T> {
     a: number, // ERROR
   }
 }
+{
+  record R {
+    '10': number,
+    10: number, // ERROR
+    10n: number, // ERROR
+  }
+}
 
 // Invalid default values
 {

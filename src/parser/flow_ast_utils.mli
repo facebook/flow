@@ -207,3 +207,5 @@ val unwrap_nonnull_lhs_expr :
 
 val unwrap_nonnull_lhs :
   'loc 'tloc. ('loc, 'tloc) Flow_ast.Pattern.t -> ('loc, 'tloc) Flow_ast.Pattern.t * bool
+
+val string_of_bigint : 'm Flow_ast.BigIntLiteral.t -> string

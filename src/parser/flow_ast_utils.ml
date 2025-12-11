@@ -812,3 +812,14 @@ let unwrap_nonnull_lhs : 'loc 'tloc. ('loc, 'tloc) Pattern.t -> ('loc, 'tloc) Pa
       | _ -> ((loc, Pattern.Expression expr), optional)
     end
   | _ -> (pat, false)
+
+let string_of_bigint { BigIntLiteral.value; raw; comments = _ } =
+  (* https://github.com/estree/estree/blob/master/es2020.md#bigintliteral
+   * `bigint` property is the string representation of the `BigInt` value.
+   * It must contain only decimal digits and not include numeric separators `_` or the suffix `n`.
+   *)
+  match value with
+  | Some value -> Int64.to_string value
+  | None ->
+    (* Remove the 'n' suffix and the underscores. *)
+    String.sub raw 0 (String.length raw - 1) |> String.split_on_char '_' |> String.concat ""
