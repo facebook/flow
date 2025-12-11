@@ -20,6 +20,17 @@ export default async function runCodemods(
 ): Promise<void> {
   const results = await Promise.allSettled(
     filePaths.map(async filePath => {
+      // WORKAROUND: Clear hermes-transform and prettier from require cache
+      // to avoid state persistence bug where transformation results are cached
+      // and reused across multiple files. This is a known issue in hermes-transform.
+      if (typeof require !== 'undefined' && require.cache) {
+        Object.keys(require.cache).forEach(key => {
+          if (key.includes('hermes-transform') || key.includes('prettier')) {
+            delete require.cache[key];
+          }
+        });
+      }
+
       const originalContents = await fs.readFile(filePath, 'utf8');
       let contents: string = originalContents;
       for (const codemod of codemods) {

@@ -117,6 +117,20 @@ export function testCodemod<TConfig: ?AnyObject, TCliArgs: ?AnyObject>(
           '',
         ].join('\n'),
         async () => {
+          // WORKAROUND: Reset modules to avoid hermes-transform/prettier caching bug
+          // where transformation results are reused across tests in the same file.
+          if (typeof jest !== 'undefined') {
+            jest.resetModules();
+            const {transform: freshTransform} = require('hermes-transform');
+            const result = await freshTransform(
+              code,
+              (ctx: TransformContext) => codemodModule.transform(ctx),
+              prettierConfig,
+            );
+            expect(result.trim()).toEqual(test.output.trim());
+            return;
+          }
+
           const transform = (() => {
             return (ctx: TransformContext) =>
               // $FlowFixMe[incompatible-call]
