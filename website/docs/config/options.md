@@ -431,20 +431,24 @@ Enables traces on all error output (showing additional details about the flow of
 types through the system), to the depth specified. This can be very expensive,
 so is disabled by default.
 
-### use_mixed_in_catch_variables <SinceVersion version="0.201" /> {#toc-use-mixed-in-catch-variables}
+### use_unknown_in_catch_variables <SinceVersion version="0.293" /> {#toc-use-unknown-in-catch-variables}
+
+This config was first introduced as `use_mixed_in_catch_variables`
+<SinceVersion version="0.201" /> and renamed after
+<UntilVersion version="0.292" />.
 
 Type: `boolean`
 
 Changes the default type of `catch` variables from [`any`](../../types/any) to
-[`mixed`](../../types/mixed). E.g.
+[`unknown`](../../types/mixed). E.g.
 
 ```js flow-check
 try {
 } catch (e) {}
 ```
 
-in the above example, if the option is `true`, `catch` will be typed as `mixed`
-as it lacks an explicit type annotation.
+in the above example, if the option is `true`, `catch` will be typed as
+`unknown` as it lacks an explicit type annotation.
 
 ## Deprecated options
 
