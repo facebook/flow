@@ -14,8 +14,8 @@ keyA=valueA
 keyB=valueB
 ```
 
-Any options that are omitted will use their default values. Some options
-can be overridden with command line flags.
+Any options that are omitted will use their default values. Some options can be
+overridden with command line flags.
 
 ## Available options {#toc-available-options}
 
@@ -31,7 +31,9 @@ The default value for `all` is `false`.
 
 Type: `boolean`
 
-When enabled, IDE autocomplete suggests the exports of other files, and the necessary `import` statements are automatically inserted. A "quick fix" code action is also provided on undefined variables that suggests matching imports.
+When enabled, IDE autocomplete suggests the exports of other files, and the
+necessary `import` statements are automatically inserted. A "quick fix" code
+action is also provided on undefined variables that suggests matching imports.
 
 The default value for `autoimports` is `true` as of Flow v0.155.0.
 
@@ -39,7 +41,11 @@ The default value for `autoimports` is `true` as of Flow v0.155.0.
 
 Type: `boolean`
 
-Set this to `true` to check that array spread syntax is only used with arrays, not arbitrary iterables (such as `Map` or `Set`). This is useful if you transform your code with Babel in [loose mode](https://babeljs.io/docs/en/babel-plugin-transform-spread#loose) which makes this non-spec-compliant assumption at runtime.
+Set this to `true` to check that array spread syntax is only used with arrays,
+not arbitrary iterables (such as `Map` or `Set`). This is useful if you
+transform your code with Babel in
+[loose mode](https://babeljs.io/docs/en/babel-plugin-transform-spread#loose)
+which makes this non-spec-compliant assumption at runtime.
 
 For example:
 
@@ -54,8 +60,8 @@ The default value for `babel_loose_array_spread` is `false`.
 
 Type: `boolean`
 
-Set this to `true` to add emoji to the status messages that Flow
-outputs when it's busy checking your project.
+Set this to `true` to add emoji to the status messages that Flow outputs when
+it's busy checking your project.
 
 The default value for `emoji` is `false`.
 
@@ -64,7 +70,8 @@ The default value for `emoji` is `false`.
 Type: `boolean`
 
 Set this to `true` to enable [Flow Enums](../../enums).
-[Additional steps](../../enums/enabling-enums/) are required beyond just enabling the `.flowconfig` option.
+[Additional steps](../../enums/enabling-enums/) are required beyond just
+enabling the `.flowconfig` option.
 
 The default value for `enums` is `false`.
 
@@ -72,27 +79,31 @@ The default value for `enums` is `false`.
 
 Type: `boolean`
 
-When set to `true` (the default as of version 0.202), Flow interprets object types as exact by default:
+When set to `true` (the default as of version 0.202), Flow interprets object
+types as exact by default:
 
 ```js flow-check
-type O1 = {foo: number} // exact
-type O2 = {| foo: number |} // exact
-type O3 = {foo: number, ...} // inexact
+type O1 = {foo: number}; // exact
+type O2 = {|foo: number|}; // exact
+type O3 = {foo: number, ...}; // inexact
 ```
 
 When this flag is `false`, Flow has the following behavior:
 
 ```js flow-check
-type O1 = {foo: number} // inexact
-type O2 = {| foo: number |} // exact
-type O3 = {foo: number, ...} // inexact
+type O1 = {foo: number}; // inexact
+type O2 = {|foo: number|}; // exact
+type O3 = {foo: number, ...}; // inexact
 ```
 
-- From inception to Flow version 0.199, the default value of the flag was `false`.
-- In versions 0.200 and 0.201, the flag was required to be explicitly set to either `true` or `false`.
+- From inception to Flow version 0.199, the default value of the flag was
+  `false`.
+- In versions 0.200 and 0.201, the flag was required to be explicitly set to
+  either `true` or `false`.
 - From version 0.202, the default value is `true`.
 
-You can read more about this change in our blog post about making [exact by object types by default, by default](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69).
+You can read more about this change in our blog post about making
+[exact by object types by default, by default](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69).
 
 ### experimental.const_params {#toc-experimental-const-params}
 
@@ -121,8 +132,8 @@ Type: `boolean`
 For more on lazy modes, see the [lazy modes docs](../../lang/lazy-modes/).
 
 Setting `lazy_mode` in the `.flowconfig` will cause new Flow servers for that
-root to use lazy mode (or no lazy mode if set to `false`). This option can
-be overridden from the CLI using the `--lazy-mode` flag.
+root to use lazy mode (or no lazy mode if set to `false`). This option can be
+overridden from the CLI using the `--lazy-mode` flag.
 
 The default value is `false`.
 
@@ -130,14 +141,17 @@ The default value is `false`.
 
 Type: `integer`
 
-Flow tries to avoid parsing non-flow files. This means Flow needs to
-start lexing a file to see if it has `@flow` or `@noflow` in it. This option
-lets you configure how much of the file Flow lexes before it decides there is
-no relevant docblock.
+Flow tries to avoid parsing non-flow files. This means Flow needs to start
+lexing a file to see if it has `@flow` or `@noflow` in it. This option lets you
+configure how much of the file Flow lexes before it decides there is no relevant
+docblock.
 
-- Neither `@flow` nor `@noflow` - Parse this file with Flow syntax disallowed and do not typecheck it.
+- Neither `@flow` nor `@noflow` - Parse this file with Flow syntax disallowed
+  and do not typecheck it.
 - `@flow` - Parse this file with Flow syntax allowed and typecheck it.
-- `@noflow` - Parse this file with Flow syntax allowed and do not typecheck it. This is meant as an escape hatch to suppress Flow in a file without having to delete all the Flow-specific syntax.
+- `@noflow` - Parse this file with Flow syntax allowed and do not typecheck it.
+  This is meant as an escape hatch to suppress Flow in a file without having to
+  delete all the Flow-specific syntax.
 
 The default value of `max_header_tokens` is 10.
 
@@ -183,9 +197,10 @@ module.name_mapper='^image![a-zA-Z0-9$_]+$' -> 'ImageStub'
 This makes Flow treat `require('image!foo.jpg')` as if it were
 `require('ImageStub')`.
 
-These are [OCaml regular expressions](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp).
-Use `\(` and `\)` (slashes required!) to create a capturing group, which you
-can refer to in the replacement pattern as `\1` (up to `\9`).
+These are
+[OCaml regular expressions](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp).
+Use `\(` and `\)` (slashes required!) to create a capturing group, which you can
+refer to in the replacement pattern as `\1` (up to `\9`).
 
 > **Note:** you can specify `module.name_mapper` multiple times
 
@@ -193,8 +208,8 @@ can refer to in the replacement pattern as `\1` (up to `\9`).
 
 Type: `string -> string`
 
-Specify a file extension to match, and a replacement module name, separated by
-a `->`.
+Specify a file extension to match, and a replacement module name, separated by a
+`->`.
 
 > **Note:** This is just shorthand for
 > `module.name_mapper='^\(.*\)\.EXTENSION$' -> 'TEMPLATE'`)
@@ -215,8 +230,8 @@ Makes Flow treat `require('foo.css')` as if it were
 
 Type: `node | haste`
 
-The module system to use to resolve `import` and `require`.
-Haste mode is used by Meta.
+The module system to use to resolve `import` and `require`. Haste mode is used
+by Meta.
 
 The default is `node`.
 
@@ -225,8 +240,7 @@ The default is `node`.
 Type: `string`
 
 Flow reads `package.json` files for the `"name"` and `"main"` fields to figure
-out the name of the module and which file should be used to provide that
-module.
+out the name of the module and which file should be used to provide that module.
 
 So if Flow sees this in the `.flowconfig`:
 
@@ -252,14 +266,15 @@ Flow will use `bar.js` to provide the `"kittens"` module.
 
 If this option is unspecified, Flow will always use the `"main"` field.
 
-See [this GitHub issue for the original motivation](https://github.com/facebook/flow/issues/5725)
+See
+[this GitHub issue for the original motivation](https://github.com/facebook/flow/issues/5725)
 
 ### module.system.node.resolve_dirname {#toc-module-system-node-resolve-dirname}
 
 Type: `string`
 
-By default, Flow will look in directories named `node_modules` for node
-modules. You can configure this behavior with this option.
+By default, Flow will look in directories named `node_modules` for node modules.
+You can configure this behavior with this option.
 
 For example, if you do:
 
@@ -288,8 +303,8 @@ The default value is `false`.
 Type: `boolean`
 
 Set this to `true` to have Flow treat underscore-prefixed class properties and
-methods as private. This should be used in conjunction with [`jstransform`'s
-ES6 class transform](https://github.com/facebook/jstransform/blob/master/visitors/es6-class-visitors.js),
+methods as private. This should be used in conjunction with
+[`jstransform`'s ES6 class transform](https://github.com/facebook/jstransform/blob/master/visitors/es6-class-visitors.js),
 which enforces the same privacy at runtime.
 
 The default value is `false`.
@@ -307,8 +322,9 @@ The default value is `false`.
 
 Type: `automatic | classic`
 
-Set this to `automatic` if you are using React's automatic runtime in `@babel/plugin-transform-react-jsx`.
-Otherwise, use `classic`. [See the babel documentation](https://babeljs.io/docs/en/babel-plugin-transform-react-jsx)
+Set this to `automatic` if you are using React's automatic runtime in
+`@babel/plugin-transform-react-jsx`. Otherwise, use `classic`.
+[See the babel documentation](https://babeljs.io/docs/en/babel-plugin-transform-react-jsx)
 for details about the transform.
 
 The default value is `classic`.
@@ -328,8 +344,8 @@ The 3 largest parts of the shared memory are a dependency table, a hash table,
 and a heap. While the heap grows and shrinks, the two tables are allocated in
 full. This option lets you change the size of the hash table.
 
-Setting this option to X means the table will support up to 2^X elements,
-which is 16*2^X bytes.
+Setting this option to X means the table will support up to 2^X elements, which
+is 16\*2^X bytes.
 
 By default, this is set to 19 (Table size is 2^19, which is 8 megabytes)
 
@@ -338,13 +354,13 @@ By default, this is set to 19 (Table size is 2^19, which is 8 megabytes)
 Type: `unsigned integer`
 
 This option configures the maximum possible size for the shared heap. You should
-most likely not need to configure this, as it doesn't really affect how much
-RSS Flow uses. However, if you are working on a massive codebase you might see
-the following error after init: "Heap init size is too close to max heap size;
-GC will never get triggered!" In this case, you may need to increase the size
-of the heap.
+most likely not need to configure this, as it doesn't really affect how much RSS
+Flow uses. However, if you are working on a massive codebase you might see the
+following error after init: "Heap init size is too close to max heap size; GC
+will never get triggered!" In this case, you may need to increase the size of
+the heap.
 
-By default, this is set to 26843545600 (25 * 2^30 bytes, which is 25GiB)
+By default, this is set to 26843545600 (25 \* 2^30 bytes, which is 25GiB)
 
 ### relay_integration {#toc-relay-integration}
 
@@ -374,9 +390,9 @@ relay_integration.excludes=<PROJECT_ROOT>/dirB
 Type: `string`
 
 This option lets you alias `any` with a given string. This is useful for
-explaining why you're using `any`. For example, let's say you sometimes want
-to sometimes use `any` to suppress an error and sometimes to mark a TODO.
-Your code might look like
+explaining why you're using `any`. For example, let's say you sometimes want to
+sometimes use `any` to suppress an error and sometimes to mark a TODO. Your code
+might look like
 
 ```
 const myString: any = 1 + 1;
@@ -400,7 +416,8 @@ const myBoolean: $FlowTODO = 1 + 1;
 
 > **Note:** You can specify `suppress_type` multiple times.
 
-You can achieve the same effect by adding the following to your global library definition:
+You can achieve the same effect by adding the following to your global library
+definition:
 
 ```
 type $FlowTODO = any;
@@ -410,23 +427,24 @@ type $FlowTODO = any;
 
 Type: `integer`
 
-Enables traces on all error output (showing additional details about the flow
-of types through the system), to the depth specified. This can be very
-expensive, so is disabled by default.
+Enables traces on all error output (showing additional details about the flow of
+types through the system), to the depth specified. This can be very expensive,
+so is disabled by default.
 
 ### use_mixed_in_catch_variables <SinceVersion version="0.201" /> {#toc-use-mixed-in-catch-variables}
 
 Type: `boolean`
 
-Changes the default type of `catch` variables from [`any`](../../types/any) to [`mixed`](../../types/mixed). E.g.
+Changes the default type of `catch` variables from [`any`](../../types/any) to
+[`mixed`](../../types/mixed). E.g.
 
 ```js flow-check
 try {
-} catch (e) {
-}
+} catch (e) {}
 ```
 
-in the above example, if the option is `true`, `catch` will be typed as `mixed` as it lacks an explicit type annotation.
+in the above example, if the option is `true`, `catch` will be typed as `mixed`
+as it lacks an explicit type annotation.
 
 ## Deprecated options
 
@@ -440,8 +458,8 @@ Set this to `warn` to indicate that Flow should give a warning on use of
 instance [class fields](https://github.com/tc39/proposal-class-public-fields)
 per the pending spec.
 
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax (i.e. Flow will not use this syntax to indicate the presence of a
+You may also set this to `ignore` to indicate that Flow should simply ignore the
+syntax (i.e. Flow will not use this syntax to indicate the presence of a
 property on instances of the class).
 
 The default value of this option is `enable`, which allows use of this proposed
@@ -452,12 +470,12 @@ syntax.
 Type: `enable | ignore | warn`
 
 Set this to `warn` to indicate that Flow should give a warning on use of static
-[class fields](https://github.com/tc39/proposal-class-public-fields)
-per the pending spec.
+[class fields](https://github.com/tc39/proposal-class-public-fields) per the
+pending spec.
 
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax (i.e. Flow will not use this syntax to indicate the presence of a
-static property on the class).
+You may also set this to `ignore` to indicate that Flow should simply ignore the
+syntax (i.e. Flow will not use this syntax to indicate the presence of a static
+property on the class).
 
 The default value of this option is `enable`, which allows use of this proposed
 syntax.
@@ -476,45 +494,47 @@ this proposal is still very early-stage.
 Type: `enable | ignore | warn`
 
 Set this to `enable` to indicate that Flow should support the `export * as`
-syntax from [leebyron's proposal](https://github.com/leebyron/ecmascript-more-export-from).
+syntax from
+[leebyron's proposal](https://github.com/leebyron/ecmascript-more-export-from).
 
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax. The default value of this option is `warn`, which gives a warning
-on use since this proposal is still very early-stage.
+You may also set this to `ignore` to indicate that Flow should simply ignore the
+syntax. The default value of this option is `warn`, which gives a warning on use
+since this proposal is still very early-stage.
 
 ### esproposal.optional_chaining <UntilVersion version="0.148" /> {#toc-esproposal-optional-chaining}
 
 Type: `enable | ignore | warn`
 
 Set this to `enable` to indicate that Flow should support the use of
-[optional chaining](https://github.com/tc39/proposal-optional-chaining)
-per the pending spec.
+[optional chaining](https://github.com/tc39/proposal-optional-chaining) per the
+pending spec.
 
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax.
+You may also set this to `ignore` to indicate that Flow should simply ignore the
+syntax.
 
-The default value of this option is `warn`, which gives a warning on
-use since this proposal is still very early-stage.
+The default value of this option is `warn`, which gives a warning on use since
+this proposal is still very early-stage.
 
 ### esproposal.nullish_coalescing <UntilVersion version="0.148" /> {#toc-esproposal-nullish-coalescing}
 
 Type: `enable | ignore | warn`
 
 Set this to `enable` to indicate that Flow should support the use of
-[nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing)
-per the pending spec.
+[nullish coalescing](https://github.com/tc39/proposal-nullish-coalescing) per
+the pending spec.
 
-You may also set this to `ignore` to indicate that Flow should simply ignore
-the syntax.
+You may also set this to `ignore` to indicate that Flow should simply ignore the
+syntax.
 
-The default value of this option is `warn`, which gives a warning on
-use since this proposal is still very early-stage.
+The default value of this option is `warn`, which gives a warning on use since
+this proposal is still very early-stage.
 
 ### inference_mode <SinceVersion version="0.184.0" /> <UntilVersion version="0.202.0" /> {#toc-inference-mode}
 
 Type: `classic | constrain-writes`
 
-Setting this to `constrain-writes` will enable the constrained-writes inference mode.
+Setting this to `constrain-writes` will enable the constrained-writes inference
+mode.
 
 For more info, see the [variable declaration docs](../../lang/variables).
 
@@ -548,13 +568,13 @@ Type: `unsigned integer`
 
 This affects Linux only.
 
-As explained in the [`sharedmemory.dirs`](#toc-sharedmemory-dirs-string) option's description, Flow needs to
-create a file on a filesystem for older kernels. `sharedmemory.dirs` specifies
-a list of locations where the shared memory file can be created. For each
-location, Flow will check to make sure the filesystem has enough space for the
-shared memory file. If Flow will likely run out of space, it skips that location
-and tries the next. This option lets you configure the minimum amount of space
-needed on a filesystem for shared memory.
+As explained in the [`sharedmemory.dirs`](#toc-sharedmemory-dirs-string)
+option's description, Flow needs to create a file on a filesystem for older
+kernels. `sharedmemory.dirs` specifies a list of locations where the shared
+memory file can be created. For each location, Flow will check to make sure the
+filesystem has enough space for the shared memory file. If Flow will likely run
+out of space, it skips that location and tries the next. This option lets you
+configure the minimum amount of space needed on a filesystem for shared memory.
 
 By default it is 536870912 (2^29 bytes, which is half a gigabyte).
 
@@ -563,8 +583,8 @@ By default it is 536870912 (2^29 bytes, which is half a gigabyte).
 Type: `boolean`
 
 Obsolete. Set this to `true` to always strip the root directory from file paths
-in error messages when using `--json`, `--from emacs`, and `--from vim`.
-Do not use this option. Instead, pass the command line flag `--strip-root`.
+in error messages when using `--json`, `--from emacs`, and `--from vim`. Do not
+use this option. Instead, pass the command line flag `--strip-root`.
 
 By default this is `false`.
 
@@ -572,8 +592,8 @@ By default this is `false`.
 
 Type: `regex`
 
-Defines a magical comment that suppresses any Flow errors on the following
-line. For example:
+Defines a magical comment that suppresses any Flow errors on the following line.
+For example:
 
 ```
 suppress_comment= \\(.\\|\n\\)*\\$FlowFixMe
@@ -594,13 +614,13 @@ default: `// $FlowFixMe`.
 
 > **Note:** You can specify `suppress_comment` multiple times. If you do define
 > any `suppress_comment`s, the built-in `$FlowFixMe` suppression will be erased
-> in favor of the regexps you specify. If you wish to use `$FlowFixMe` with
-> some additional custom suppression comments, you must manually specify
+> in favor of the regexps you specify. If you wish to use `$FlowFixMe` with some
+> additional custom suppression comments, you must manually specify
 > `\\(.\\|\n\\)*\\$FlowFixMe` in your custom list of suppressions.
 
 > **Note:** In version v0.127.0, the option to specify the suppression comment
-> syntax was removed. `$FlowFixMe`, `$FlowIssue`, `$FlowExpectedError`,
-> and `$FlowIgnore` became the only standard suppressions.
+> syntax was removed. `$FlowFixMe`, `$FlowIssue`, `$FlowExpectedError`, and
+> `$FlowIgnore` became the only standard suppressions.
 
 ### temp_dir {#toc-temp-dir}
 
@@ -615,12 +635,13 @@ The default value is `/tmp/flow`.
 
 Type: `boolean`
 
-For more on types-first mode, see the [types-first docs](../../lang/types-first/).
+For more on types-first mode, see the
+[types-first docs](../../lang/types-first/).
 
-Flow builds intermediate artifacts to represent signatures of modules as they are
-checked. If this option is set to `false`, then these artifacts are built using
-inferred type information. If this option is set to `true`, then they are built
-using type annotations at module boundaries.
+Flow builds intermediate artifacts to represent signatures of modules as they
+are checked. If this option is set to `false`, then these artifacts are built
+using inferred type information. If this option is set to `true`, then they are
+built using type annotations at module boundaries.
 
 The default value for `types_first` is `true` (as of version 0.134).
 
@@ -629,16 +650,18 @@ The default value for `types_first` is `true` (as of version 0.134).
 Type: `boolean`
 
 Enforce the following restrictions on file exports:
-* Statements manipulating `module.exports` and the `exports` alias may only appear
-  as top-level statements.
-* Parts of the source that are visible from a file's exports need to be annotated
-  unless their type can be trivially inferred (e.g. the exported expression is a
-  numeric literal). This is a requirement for types-first mode to function properly.
-  Failure to properly annotate exports raise `signature-verification-failure`s.
 
-This option is set to `true` by default, since it is implied by [`types_first`](#toc-types-first-boolean),
-but the option is useful on its own when upgrading a project from classic mode to
-types-first mode.
+- Statements manipulating `module.exports` and the `exports` alias may only
+  appear as top-level statements.
+- Parts of the source that are visible from a file's exports need to be
+  annotated unless their type can be trivially inferred (e.g. the exported
+  expression is a numeric literal). This is a requirement for types-first mode
+  to function properly. Failure to properly annotate exports raise
+  `signature-verification-failure`s.
+
+This option is set to `true` by default, since it is implied by
+[`types_first`](#toc-types-first-boolean), but the option is useful on its own
+when upgrading a project from classic mode to types-first mode.
 
 ### well_formed_exports.includes <SinceVersion version="0.128.0" /> <UntilVersion version="0.142" /> {#toc-well-formed-exports-includes}
 
@@ -646,14 +669,18 @@ Type: `string`
 
 Limit the scope of the `well_formed_exports` requirement to a specific directory
 of this project. For example
+
 ```
 well_formed_exports=true
 well_formed_exports.includes=<PROJECT_ROOT>/dirA
 well_formed_exports.includes=<PROJECT_ROOT>/dirB
 ```
-will only report export related errors in files under `dirA` and `dirB`. This option
-requires `well_formed_exports` to be set to `true`.
 
-The purpose of this option is to help prepare a codebase for Flow types-first mode.
+will only report export related errors in files under `dirA` and `dirB`. This
+option requires `well_formed_exports` to be set to `true`.
 
-Between versions v0.125.0 and v0.127.0, this option was named `well_formed_exports.whitelist`.
+The purpose of this option is to help prepare a codebase for Flow types-first
+mode.
+
+Between versions v0.125.0 and v0.127.0, this option was named
+`well_formed_exports.whitelist`.
