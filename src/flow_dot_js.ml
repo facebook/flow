@@ -1001,7 +1001,7 @@ let () =
     "desc": "Selecting 'automatic' enables auto-importing of React functions required for JSX."
   },
   {
-    "key": "use_mixed_in_catch_variables",
+    "key": "use_unknown_in_catch_variables",
     "kind": "option",
     "type": "bool",
     "default": false,
