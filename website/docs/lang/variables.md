@@ -203,12 +203,12 @@ function findIDValue<T>(dict: {[key: string]: T}): T {
 If a `catch` variable does not have an annotation, its default type is
 [`any`](../../types/any).
 
-You can optionally annotate it with exactly [`mixed`](../../types/mixed) or
+You can optionally annotate it with exactly [`unknown`](../../types/mixed) or
 `any`. E.g.
 
 ```js flow-check
 try {
-} catch (e: mixed) {
+} catch (e: unknown) {
   if (e instanceof TypeError) {
     e as TypeError; // OK
   } else if (e instanceof Error) {
@@ -219,10 +219,10 @@ try {
 }
 ```
 
-By using `mixed`, you can improve your safety and Flow
+By using `unknown`, you can improve your safety and Flow
 [coverage](../../cli/coverage/), at the trade-off of increased runtime checks.
 
 You can change the default type of `catch` variables when there is no annotation
 by setting the
-[`use_mixed_in_catch_variables`](../../config/options/#toc-use-mixed-in-catch-variables)
+[`use_unknown_in_catch_variables`](../../config/options/#toc-use-unknown-in-catch-variables)
 option to true.
