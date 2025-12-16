@@ -8281,6 +8281,44 @@ module Make
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
                 )
+              (* well-known symbol computed methods like [Symbol.iterator] *)
+              | Body.Method
+                  ( method_loc,
+                    {
+                      Method.key =
+                        Ast.Expression.Object.Property.Computed
+                          ( computed_loc,
+                            { Ast.ComputedKey.expression = expr; comments = computed_comments }
+                          );
+                      value = (func_loc, func);
+                      kind;
+                      static;
+                      decorators;
+                      comments;
+                    }
+                  )
+                when Flow_ast_utils.well_known_symbol_name expr <> None ->
+                let name = Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr) in
+                let id_loc = fst expr in
+                add_method_sig_and_element
+                  ~method_loc
+                  ~name
+                  ~id_loc
+                  ~func_loc
+                  ~func
+                  ~kind
+                  ~private_:false
+                  ~static
+                  ~decorators
+                  ~comments
+                  ~get_typed_method_key:(fun _func_t ->
+                    (* Map the expression to a typed expression *)
+                    let typed_expr = Tast_utils.error_mapper#expression expr in
+                    Ast.Expression.Object.Property.Computed
+                      ( computed_loc,
+                        { Ast.ComputedKey.expression = typed_expr; comments = computed_comments }
+                      )
+                )
               (* computed LHS *)
               | ( Body.Method (loc, { Method.key = Ast.Expression.Object.Property.Computed _; _ })
                 | Body.Property

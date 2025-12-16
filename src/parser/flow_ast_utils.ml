@@ -304,6 +304,26 @@ let is_module_dot_exports callee =
     true
   | _ -> false
 
+(** Checks if an expression is a well-known Symbol like Symbol.iterator.
+    Returns Some "@@iterator" etc. if it is, None otherwise. *)
+let well_known_symbol_name expr =
+  match expr with
+  | ( _,
+      E.Member
+        {
+          E.Member._object = (_, E.Identifier (_, { I.name = "Symbol"; comments = _ }));
+          property = E.Member.PropertyIdentifier (_, { I.name; comments = _ });
+          comments = _;
+        }
+    ) ->
+    (match name with
+    | "iterator" -> Some "@@iterator"
+    | "asyncIterator" -> Some "@@asyncIterator"
+    | "dispose" -> Some "@@dispose"
+    | "asyncDispose" -> Some "@@asyncDispose"
+    | _ -> None)
+  | _ -> None
+
 let get_call_to_jest_module_mocking_fn callee arguments =
   match (callee, arguments) with
   | ( ( _,

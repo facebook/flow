@@ -51,6 +51,8 @@ val is_call_to_object_static_method : ('a, 'b) Flow_ast.Expression.t -> bool
 
 val is_module_dot_exports : ('a, 'b) Flow_ast.Expression.t -> bool
 
+val well_known_symbol_name : ('a, 'b) Flow_ast.Expression.t -> string option
+
 val get_call_to_jest_module_mocking_fn :
   ('loc, 'annot) Flow_ast.Expression.t ->
   ('loc, 'annot) Flow_ast.Expression.ArgList.t ->

@@ -1,3 +1,24 @@
+Error ------------------------------------------------------------------------------------------ class_iterator.js:39:31
+
+Cannot assign `new BadIterable()` to `bad` because in property `@@iterator` > the return value > type argument
+`Yield` [1]: string [2] is incompatible with number [3]. [incompatible-type]
+
+   class_iterator.js:39:31
+     39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
+                                       ^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:1879:30
+   1879| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [1]
+   class_iterator.js:35:34
+     35|   *[Symbol.iterator](): Iterator<string> {
+                                          ^^^^^^ [2]
+   class_iterator.js:39:21
+     39| const bad: Iterable<number> = new BadIterable(); // Error: string vs number
+                             ^^^^^^ [3]
+
+
 Error -------------------------------------------------------------------------------------------------- iterator.js:6:2
 
 Cannot cast `foo[Symbol.iterator]` to boolean because `Iterator` [1] is incompatible with boolean [2].
@@ -155,4 +176,4 @@ References:
 
 
 
-Found 9 errors
+Found 10 errors

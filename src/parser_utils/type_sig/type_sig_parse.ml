@@ -3872,6 +3872,34 @@ and class_def =
             (_, { C.Property.key = P.StringLiteral _ | P.NumberLiteral _ | P.BigIntLiteral _; _ })
           ->
           acc (* unsupported literal method/field *)
+        (* well-known symbol computed methods like [Symbol.iterator] *)
+        | C.Body.Method
+            ( fn_loc,
+              {
+                C.Method.key = P.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ });
+                value = (_, fn);
+                kind;
+                static;
+                decorators = _;
+                comments = _;
+              }
+            )
+          when Flow_ast_utils.well_known_symbol_name expr <> None ->
+          let name = Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr) in
+          if opts.munge && Signature_utils.is_munged_property_string name then
+            acc
+          else begin
+            match kind with
+            | C.Method.Method ->
+              let { Ast.Function.async; generator; _ } = fn in
+              let fn_loc = push_loc tbls fn_loc in
+              let id_loc = push_loc tbls (fst expr) in
+              let def = function_def opts scope tbls xs fn_loc fn in
+              Acc.add_method ~static name id_loc fn_loc ~async ~generator def acc
+            | C.Method.Constructor -> acc (* constructor can't have well-known symbol name *)
+            | C.Method.Get -> acc (* getters with well-known symbols - out of scope for now *)
+            | C.Method.Set -> acc (* setters with well-known symbols - out of scope for now *)
+          end
         | C.Body.Method (_, { C.Method.key = P.Computed _; _ })
         | C.Body.Property (_, { C.Property.key = P.Computed _; _ }) ->
           acc (* unsupported computed method/field *)
