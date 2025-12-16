@@ -474,7 +474,7 @@ module SuperCallInDerivedCtorChecker : sig
 end = struct
   class checker ~enable_enums ~add_output this_def_loc super_def_loc =
     object (this)
-      inherit Ssa_builder.ssa_builder ~flowmin_compatibility:false ~enable_enums as super
+      inherit Ssa_builder.ssa_builder ~enable_enums as super
 
       val mutable this_read_loc_list = []
 
@@ -1078,8 +1078,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
     let enable_enums = Context.enable_enums cx in
     object (this)
-      inherit
-        Scope_builder.scope_builder ~flowmin_compatibility:false ~enable_enums ~with_types:true as super
+      inherit Scope_builder.scope_builder ~enable_enums ~with_types:true as super
 
       method private debug_val = Val.debug_to_string this#refinement_of_id
 
@@ -3021,7 +3020,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             case
           in
           let env0 = this#env_snapshot in
-          let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
+          let lexical_hoist = new lexical_hoister ~enable_enums in
           let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
           let completion_state =
             this#with_bindings ~lexical:true case_loc bindings (fun _ ->
@@ -3971,7 +3970,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let incoming_env = this#env_snapshot in
         let { discriminant; cases; comments = _; exhaustive_out } = switch in
         let _ = this#expression discriminant in
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
+        let lexical_hoist = new lexical_hoister ~enable_enums in
         let cases_with_lexical_bindings =
           Base.List.map cases ~f:(fun ((_, { Case.consequent; _ }) as case) ->
               let bindings = lexical_hoist#acc |> Bindings.to_map in
@@ -6560,9 +6559,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method! declare_module _loc ({ Ast.Statement.DeclareModule.id = _; body; _ } as m) =
         let (block_loc, { Ast.Statement.Block.body = statements; comments = _ }) = body in
         let bindings =
-          let hoist =
-            new Hoister.hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true
-          in
+          let hoist = new Hoister.hoister ~enable_enums ~with_types:true in
           hoist#eval hoist#statement_list statements
         in
         let saved_exclude_syms = env_state.exclude_syms in
@@ -6583,9 +6580,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id);
         let (block_loc, { Ast.Statement.Block.body = statements; comments = _ }) = body in
         let bindings =
-          let hoist =
-            new Hoister.hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true
-          in
+          let hoist = new Hoister.hoister ~enable_enums ~with_types:true in
           hoist#eval hoist#statement_list statements
         in
         let saved_exclude_syms = env_state.exclude_syms in
@@ -6597,7 +6592,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method visit_program program =
         let (loc, { Flow_ast.Program.statements; _ }) = program in
         let bindings =
-          let hoist = new hoister ~flowmin_compatibility:false ~enable_enums ~with_types:true in
+          let hoist = new hoister ~enable_enums ~with_types:true in
           hoist#eval hoist#program program
         in
         this#statements_with_bindings loc bindings statements
@@ -6614,10 +6609,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
   class dead_code_marker cx jsx_base_name env_values write_entries =
     object (this)
       inherit
-        Scope_builder.scope_builder
-          ~flowmin_compatibility:false
-          ~enable_enums:(Context.enable_enums cx)
-          ~with_types:true as super
+        Scope_builder.scope_builder ~enable_enums:(Context.enable_enums cx) ~with_types:true as super
 
       val mutable values = env_values
 
@@ -6841,11 +6833,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
     in
     let enable_enums = Context.enable_enums cx in
     let (_ssa_completion_state, ((scopes, _, _) as prepass)) =
-      Ssa_builder.program_with_scope_and_jsx_pragma
-        ~flowmin_compatibility:false
-        ~enable_enums
-        ~jsx_ast
-        program
+      Ssa_builder.program_with_scope_and_jsx_pragma ~enable_enums ~jsx_ast program
     in
     let providers =
       try Provider_api.find_providers program with

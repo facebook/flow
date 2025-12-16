@@ -25,7 +25,7 @@ open Flow_ast_visitor
    are known to introduce bindings. The logic here is sufficiently tricky that
    we probably should not change it without extensive testing. *)
 
-class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
+class ['loc] lexical_hoister ~(enable_enums : bool) =
   object (this)
     inherit ['loc Bindings.t, 'loc] visitor ~init:Bindings.empty as super
 
@@ -85,7 +85,7 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       | (_, ComponentDeclaration _)
       | (_, DeclareFunction _)
       | (_, DeclareComponent _) ->
-        this#flowmin_compatibility_statement stmt
+        super#statement stmt
       | (_, Block _)
       | (_, Break _)
       | (_, Continue _)
@@ -114,14 +114,6 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       | (_, While _)
       | (_, With _) ->
         this#nonlexical_statement stmt
-
-    method flowmin_compatibility_statement stmt =
-      (* Flowmin treats function declarations as vars, even though
-         they're actually lets *)
-      if flowmin_compatibility then
-        this#nonlexical_statement stmt
-      else
-        super#statement stmt
 
     method nonlexical_statement stmt = stmt
 
@@ -295,9 +287,9 @@ class ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums =
       record
   end
 
-class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
+class ['loc] hoister ~(enable_enums : bool) ~(with_types : bool) =
   object (this)
-    inherit ['loc] lexical_hoister ~flowmin_compatibility ~enable_enums as super
+    inherit ['loc] lexical_hoister ~enable_enums as super
 
     val mutable lexical = true
 
@@ -317,13 +309,9 @@ class ['loc] hoister ~flowmin_compatibility ~enable_enums ~with_types =
     method! private add_declared_const_binding entry =
       if lexical then super#add_declared_const_binding entry
 
-    method! private add_function_binding entry =
-      if lexical || flowmin_compatibility then super#add_function_binding entry
+    method! private add_function_binding entry = if lexical then super#add_function_binding entry
 
-    method! private add_component_binding entry =
-      if lexical || flowmin_compatibility then super#add_component_binding entry
-
-    method! flowmin_compatibility_statement = this#base_statement
+    method! private add_component_binding entry = if lexical then super#add_component_binding entry
 
     method! nonlexical_statement stmt =
       let cur_lex = lexical in

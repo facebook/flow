@@ -14,38 +14,6 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
   module Api = Api
   open Api
 
-  class with_or_eval_visitor =
-    object (this)
-      inherit [bool, L.t] visitor ~init:false as super
-
-      method! expression (expr : (L.t, L.t) Ast.Expression.t) =
-        let open Ast.Expression in
-        if this#acc = true then
-          expr
-        else
-          match expr with
-          | ( _,
-              Call
-                {
-                  Call.callee = (_, Identifier (_, { Ast.Identifier.name = "eval"; comments = _ }));
-                  _;
-                }
-            ) ->
-            this#set_acc true;
-            expr
-          | _ -> super#expression expr
-
-      method! statement (stmt : (L.t, L.t) Ast.Statement.t) =
-        if this#acc = true then
-          stmt
-        else
-          super#statement stmt
-
-      method! with_ _loc (stuff : (L.t, L.t) Ast.Statement.With.t) =
-        this#set_acc true;
-        stuff
-    end
-
   (* Visitor class that prepares use-def info, hoisting bindings one scope at a
      time. This info can be used for various purposes, e.g. variable renaming.
 
@@ -156,7 +124,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         (loc, { name; local = local'; default = None; shorthand })
     end
 
-  class scope_builder ~flowmin_compatibility ~enable_enums ~with_types =
+  class scope_builder ~enable_enums ~with_types =
     object (this)
       inherit [Acc.t, L.t] visitor ~init:Acc.init as super
 
@@ -364,7 +332,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         spec
 
       method! block loc (stmt : (L.t, L.t) Ast.Statement.Block.t) =
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
+        let lexical_hoist = new lexical_hoister ~enable_enums in
         let lexical_bindings = lexical_hoist#eval (lexical_hoist#block loc) stmt in
         this#with_bindings ~lexical:true loc lexical_bindings (fun () -> super#block loc stmt)
 
@@ -390,7 +358,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
             ) =
           case
         in
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility:false ~enable_enums in
+        let lexical_hoist = new lexical_hoister ~enable_enums in
         let bindings = lexical_hoist#eval lexical_hoist#match_pattern pattern in
         this#with_bindings ~lexical:true loc bindings (fun () -> super#match_case ~on_case_body case)
 
@@ -398,7 +366,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let open Ast.Statement.Switch in
         let { discriminant; cases; comments = _; exhaustive_out = _ } = switch in
         let _ = this#expression discriminant in
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
+        let lexical_hoist = new lexical_hoister ~enable_enums in
         let lexical_bindings =
           lexical_hoist#eval
             (Base.List.map ~f:(fun ((_, { Case.consequent; _ }) as case) ->
@@ -421,7 +389,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! for_in_statement loc (stmt : (L.t, L.t) Ast.Statement.ForIn.t) =
         let open Ast.Statement.ForIn in
         let { left; right = _; body = _; each = _; comments = _ } = stmt in
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
+        let lexical_hoist = new lexical_hoister ~enable_enums in
         let lexical_bindings =
           match left with
           | LeftDeclaration (loc, decl) ->
@@ -438,7 +406,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! for_of_statement loc (stmt : (L.t, L.t) Ast.Statement.ForOf.t) =
         let open Ast.Statement.ForOf in
         let { left; right = _; body = _; await = _; comments = _ } = stmt in
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
+        let lexical_hoist = new lexical_hoister ~enable_enums in
         let lexical_bindings =
           match left with
           | LeftDeclaration (loc, decl) ->
@@ -455,7 +423,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       method! for_statement loc (stmt : (L.t, L.t) Ast.Statement.For.t) =
         let open Ast.Statement.For in
         let { init; test = _; update = _; body = _; comments = _ } = stmt in
-        let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
+        let lexical_hoist = new lexical_hoister ~enable_enums in
         let lexical_bindings =
           match init with
           | Some (InitDeclaration (loc, decl)) ->
@@ -473,7 +441,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let lexical_bindings =
           match param with
           | Some p ->
-            let lexical_hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
+            let lexical_hoist = new lexical_hoister ~enable_enums in
             lexical_hoist#eval lexical_hoist#catch_clause_pattern p
           | None -> Bindings.empty
         in
@@ -497,7 +465,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
              See https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Functions/Default_parameters#scope_effects
           *)
           let param_bindings =
-            let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+            let hoist = new hoister ~enable_enums ~with_types in
             run hoist#function_params params;
             hoist#acc
           in
@@ -523,7 +491,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           )
         in
 
-        let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+        let hoist = new hoister ~enable_enums ~with_types in
         (* Parameter list *)
         let params_list_rev =
           Base.List.fold_left params_list ~init:[] ~f:(fun prev_params param ->
@@ -597,7 +565,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let { id = _; body; comments = _ } = m in
         let (loc, body) = body in
         let bindings =
-          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+          let hoist = new hoister ~enable_enums ~with_types in
           run (hoist#block loc) body;
           hoist#acc
         in
@@ -612,7 +580,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         | Local id -> ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id);
         let (loc, body) = body in
         let bindings =
-          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+          let hoist = new hoister ~enable_enums ~with_types in
           run (hoist#block loc) body;
           hoist#acc
         in
@@ -730,7 +698,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           params
         in
         let bindings =
-          let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
+          let hoist = new hoister ~enable_enums ~with_types in
           run hoist#component_params params;
           run hoist#component_body body;
           hoist#acc
@@ -742,97 +710,62 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         )
 
       method! component_declaration loc (expr : (L.t, L.t) Ast.Statement.ComponentDeclaration.t) =
-        let skip_scope =
-          flowmin_compatibility
-          &&
-          let visit = new with_or_eval_visitor in
-          visit#eval (visit#component_declaration loc) expr
-        in
-        if not skip_scope then (
-          let open Ast.Statement.ComponentDeclaration in
-          let { id; params; body; renders; tparams; sig_loc = _; comments = _ } = expr in
-          ignore @@ this#component_identifier id;
-          this#scoped_type_params
-            ~hoist_op:this#hoist_annotations
-            tparams
-            ~in_tparam_scope:(fun () ->
-              this#component_body_with_params ~component_loc:loc body params;
-              if with_types then
-                this#hoist_annotations (fun () ->
-                    ignore @@ this#component_renders_annotation renders
-                )
-          )
+        let open Ast.Statement.ComponentDeclaration in
+        let { id; params; body; renders; tparams; sig_loc = _; comments = _ } = expr in
+        ignore @@ this#component_identifier id;
+        this#scoped_type_params ~hoist_op:this#hoist_annotations tparams ~in_tparam_scope:(fun () ->
+            this#component_body_with_params ~component_loc:loc body params;
+            if with_types then
+              this#hoist_annotations (fun () -> ignore @@ this#component_renders_annotation renders)
         );
         expr
 
-      method! declare_component loc (expr : (L.t, L.t) Ast.Statement.DeclareComponent.t) =
-        let skip_scope =
-          flowmin_compatibility
-          &&
-          let visit = new with_or_eval_visitor in
-          visit#eval (visit#declare_component loc) expr
-        in
-        if not skip_scope then (
-          let open Ast.Statement.DeclareComponent in
-          let { id = ident; tparams; params; renders; comments = _ } = expr in
-          ignore @@ this#component_identifier ident;
-          this#scoped_type_params
-            ~hoist_op:this#hoist_annotations
-            tparams
-            ~in_tparam_scope:(fun () ->
-              let _ = this#component_type_params params in
-              this#hoist_annotations (fun () -> ignore @@ this#component_renders_annotation renders)
-          )
+      method! declare_component _loc (expr : (L.t, L.t) Ast.Statement.DeclareComponent.t) =
+        let open Ast.Statement.DeclareComponent in
+        let { id = ident; tparams; params; renders; comments = _ } = expr in
+        ignore @@ this#component_identifier ident;
+        this#scoped_type_params ~hoist_op:this#hoist_annotations tparams ~in_tparam_scope:(fun () ->
+            let _ = this#component_type_params params in
+            this#hoist_annotations (fun () -> ignore @@ this#component_renders_annotation renders)
         );
         expr
 
       method! function_declaration loc (expr : (L.t, L.t) Ast.Function.t) =
-        let skip_scope =
-          flowmin_compatibility
-          &&
-          let visit = new with_or_eval_visitor in
-          visit#eval (visit#function_declaration loc) expr
+        let open Ast.Function in
+        let {
+          id;
+          params = (_, { Ast.Function.Params.this_; _ }) as params;
+          body;
+          return;
+          tparams;
+          async = _;
+          generator;
+          effect_ = _;
+          predicate;
+          sig_loc = _;
+          comments = _;
+        } =
+          expr
         in
-        if not skip_scope then (
-          let open Ast.Function in
-          let {
-            id;
-            params = (_, { Ast.Function.Params.this_; _ }) as params;
-            body;
-            return;
-            tparams;
-            async = _;
-            generator;
-            effect_ = _;
-            predicate;
-            sig_loc = _;
-            comments = _;
-          } =
-            expr
-          in
-          this#this_binding_function_id_opt
-            ~fun_loc:loc
-            ~has_this_annot:(Base.Option.is_some this_)
-            id;
-          let generator_return_loc =
-            let open Ast.Function.ReturnAnnot in
-            match (generator, return) with
-            | (false, _) -> None
-            | (true, (Available (loc, _) | Missing loc | TypeGuard (loc, _))) -> Some loc
-          in
-          this#scoped_type_params
-            ~hoist_op:this#hoist_annotations
-            tparams
-            ~in_tparam_scope:(fun () ->
-              this#lambda
-                ~is_arrow:false
-                ~fun_loc:loc
-                ~generator_return_loc
-                params
-                return
-                predicate
-                body
-          )
+        this#this_binding_function_id_opt
+          ~fun_loc:loc
+          ~has_this_annot:(Base.Option.is_some this_)
+          id;
+        let generator_return_loc =
+          let open Ast.Function.ReturnAnnot in
+          match (generator, return) with
+          | (false, _) -> None
+          | (true, (Available (loc, _) | Missing loc | TypeGuard (loc, _))) -> Some loc
+        in
+        this#scoped_type_params ~hoist_op:this#hoist_annotations tparams ~in_tparam_scope:(fun () ->
+            this#lambda
+              ~is_arrow:false
+              ~fun_loc:loc
+              ~generator_return_loc
+              params
+              return
+              predicate
+              body
         );
 
         expr
@@ -840,60 +773,52 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
       (* Almost the same as function_declaration, except that the name of the
          function expression is locally in scope. *)
       method private function_expression_without_name ~is_arrow loc expr =
-        let skip_scope =
-          flowmin_compatibility
-          &&
-          let visit = new with_or_eval_visitor in
-          visit#eval (visit#function_ loc) expr
+        let open Ast.Function in
+        let {
+          id;
+          params = (_, { Ast.Function.Params.this_; _ }) as params;
+          body;
+          return;
+          tparams;
+          async = _;
+          generator;
+          effect_ = _;
+          predicate;
+          sig_loc = _;
+          comments = _;
+        } =
+          expr
         in
-        ( if not skip_scope then
-          let open Ast.Function in
-          let {
-            id;
-            params = (_, { Ast.Function.Params.this_; _ }) as params;
-            body;
-            return;
-            tparams;
-            async = _;
-            generator;
-            effect_ = _;
-            predicate;
-            sig_loc = _;
-            comments = _;
-          } =
-            expr
-          in
-          let bindings =
-            match id with
-            | Some name -> Bindings.(singleton (name, Bindings.Function))
-            | None -> Bindings.empty
-          in
-          let generator_return_loc =
-            let open Ast.Function.ReturnAnnot in
-            match (generator, return) with
-            | (false, _) -> None
-            | (true, (Available (loc, _) | Missing loc | TypeGuard (loc, _))) -> Some loc
-          in
-          this#with_bindings loc ~lexical:true bindings (fun () ->
-              if is_arrow then
-                run_opt this#function_identifier id
-              else
-                this#this_binding_function_id_opt
+        let bindings =
+          match id with
+          | Some name -> Bindings.(singleton (name, Bindings.Function))
+          | None -> Bindings.empty
+        in
+        let generator_return_loc =
+          let open Ast.Function.ReturnAnnot in
+          match (generator, return) with
+          | (false, _) -> None
+          | (true, (Available (loc, _) | Missing loc | TypeGuard (loc, _))) -> Some loc
+        in
+        this#with_bindings loc ~lexical:true bindings (fun () ->
+            if is_arrow then
+              run_opt this#function_identifier id
+            else
+              this#this_binding_function_id_opt
+                ~fun_loc:loc
+                ~has_this_annot:(Base.Option.is_some this_)
+                id;
+            (* This function is not hoisted, so we just traverse the signature *)
+            this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
+                this#lambda
+                  ~is_arrow
                   ~fun_loc:loc
-                  ~has_this_annot:(Base.Option.is_some this_)
-                  id;
-              (* This function is not hoisted, so we just traverse the signature *)
-              this#scoped_type_params tparams ~in_tparam_scope:(fun () ->
-                  this#lambda
-                    ~is_arrow
-                    ~fun_loc:loc
-                    ~generator_return_loc
-                    params
-                    return
-                    predicate
-                    body
-              )
-          )
+                  ~generator_return_loc
+                  params
+                  return
+                  predicate
+                  body
+            )
         );
         expr
 
@@ -1081,16 +1006,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         record
     end
 
-  let program ?(flowmin_compatibility = false) ~enable_enums ~with_types program =
+  let program ~enable_enums ~with_types program =
     let (loc, _) = program in
-    let walk = new scope_builder ~flowmin_compatibility ~enable_enums ~with_types in
+    let walk = new scope_builder ~enable_enums ~with_types in
     let bindings =
-      if flowmin_compatibility then
-        let hoist = new lexical_hoister ~flowmin_compatibility ~enable_enums in
-        hoist#eval hoist#program program
-      else
-        let hoist = new hoister ~flowmin_compatibility ~enable_enums ~with_types in
-        hoist#eval hoist#program program
+      let hoist = new hoister ~enable_enums ~with_types in
+      hoist#eval hoist#program program
     in
     walk#eval
       (fun program -> walk#with_bindings loc bindings (fun () -> walk#program program))

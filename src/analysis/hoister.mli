@@ -8,15 +8,11 @@
 module Ast = Flow_ast
 
 class ['loc] lexical_hoister :
-  flowmin_compatibility:bool
-  -> enable_enums:bool
+  enable_enums:bool
   -> object
        inherit ['loc Bindings.t, 'loc] Flow_ast_visitor.visitor
 
        method nonlexical_statement : ('loc, 'loc) Ast.Statement.t -> ('loc, 'loc) Ast.Statement.t
-
-       method flowmin_compatibility_statement :
-         ('loc, 'loc) Ast.Statement.t -> ('loc, 'loc) Ast.Statement.t
 
        method base_statement : ('loc, 'loc) Ast.Statement.t -> ('loc, 'loc) Ast.Statement.t
 
@@ -25,8 +21,7 @@ class ['loc] lexical_hoister :
      end
 
 class ['loc] hoister :
-  flowmin_compatibility:bool
-  -> enable_enums:bool
+  enable_enums:bool
   -> with_types:bool
   -> object
        inherit ['loc] lexical_hoister
