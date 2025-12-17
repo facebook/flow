@@ -711,6 +711,9 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
     (* Track parameter binding def_locs currently being processed, so that we can
        error when these appear in the corresponding annotation. *)
     current_bindings: string L.LMap.t;
+    (* Track when we're visiting a parameter default expression, so we can
+       produce the appropriate error message for self-references. *)
+    in_param_default: bool;
   }
 
   type pattern_write_kind =
@@ -1110,6 +1113,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           jsx_base_name;
           pred_func_map = L.LMap.empty;
           current_bindings = L.LMap.empty;
+          in_param_default = false;
         }
 
       method jsx_base_name = env_state.jsx_base_name
@@ -2259,6 +2263,31 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | _ -> ());
         env_state <- { env_state with write_entries }
 
+      (* Override pattern_object_property to detect SELF-references in pattern-inline defaults.
+         For {a = a}, check if a's default references a itself (self-reference) - ERROR.
+         For {a, b = a}, b's default references a, not b - OK (not a self-reference).
+         For {a = b, b}, a's default references b - handled by reference-before-declaration.
+         We only check for self-references here; forward references are caught elsewhere. *)
+      method! pattern_object_property ?kind prop =
+        let open Ast.Pattern.Object.Property in
+        let (loc, { key; pattern; default; shorthand }) = prop in
+        ignore @@ this#pattern_object_property_key ?kind key;
+        ignore @@ this#pattern_object_property_pattern ?kind pattern;
+        Base.Option.iter default ~f:(fun default_expr ->
+            this#visit_default_with_pattern_bindings pattern default_expr
+        );
+        (loc, { key; pattern; default; shorthand })
+
+      method! function_param param =
+        let open Ast.Function.Param in
+        let (loc, { argument; default }) = param in
+        this#visit_function_or_component_param_pattern ~is_rest:false argument;
+        ignore @@ super#function_param_pattern argument;
+        Base.Option.iter default ~f:(fun default_expr ->
+            this#visit_default_with_pattern_bindings argument default_expr
+        );
+        (loc, { argument; default })
+
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
        * this read
@@ -2308,6 +2337,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             env_state <- { env_state with current_bindings = old_val }
         )
 
+      method private with_in_param_default ~f =
+        let old_in_param_default = env_state.in_param_default in
+        env_state <- { env_state with in_param_default = true };
+        Exception.protect ~f ~finally:(fun () ->
+            env_state <- { env_state with in_param_default = old_in_param_default }
+        )
+
+      method private visit_default_with_pattern_bindings pattern default_expr =
+        this#with_current_pattern_bindings pattern ~f:(fun () ->
+            this#with_in_param_default ~f:(fun () -> ignore @@ this#expression default_expr)
+        )
+
       (* Override the object type constuctor to disable the EReferenceInAnnotation check
        * since this is a common and safe way to encode recursive object types. *)
       method! object_type loc ot =
@@ -2334,6 +2375,20 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
               add_output (Error_message.EReferenceInAnnotation (def_loc, name, loc))
         )
 
+      method private error_on_reference_to_currently_declared_id_in_default id =
+        let (loc, { Ast.Identifier.name; _ }) = id in
+        let { val_ref = _; def_loc; _ } = this#env_read name in
+        Base.Option.iter def_loc ~f:(fun def_loc ->
+            match L.LMap.find_opt def_loc env_state.current_bindings with
+            | None -> ()
+            | Some binding_name ->
+              (* Only add the error - do NOT modify binding state (val_ref, write_entries).
+                 For forward references (e.g., `b` in `{a = b, b}`), modifying the binding
+                 state would corrupt it and cause spurious "name-already-bound" errors
+                 when the actual binding is later processed. *)
+              add_output (Error_message.EReferenceInDefault (def_loc, binding_name, loc))
+        )
+
       method! type_identifier_reference id =
         this#error_on_reference_to_currently_declared_id id;
         super#type_identifier_reference id
@@ -2352,6 +2407,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! identifier (ident : (ALoc.t, ALoc.t) Ast.Identifier.t) =
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
+        if env_state.in_param_default then
+          this#error_on_reference_to_currently_declared_id_in_default ident;
         this#any_identifier loc x;
         super#identifier ident
 
@@ -6513,17 +6570,27 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | _ -> ()
 
       method! component_param param =
-        let (_, { Ast.Statement.ComponentDeclaration.Param.name; _ }) = param in
+        let (loc, { Ast.Statement.ComponentDeclaration.Param.name; local; default; shorthand }) =
+          param
+        in
         begin
           match name with
           | Ast.Statement.ComponentDeclaration.Param.Identifier
-              (loc, { Ast.Identifier.name = "ref"; _ })
+              (ref_loc, { Ast.Identifier.name = "ref"; _ })
           | Ast.Statement.ComponentDeclaration.Param.StringLiteral
-              (loc, { Ast.StringLiteral.value = "ref"; _ }) ->
-            this#any_identifier loc "React"
+              (ref_loc, { Ast.StringLiteral.value = "ref"; _ }) ->
+            this#any_identifier ref_loc "React"
           | _ -> ()
         end;
-        super#component_param param
+        ignore @@ this#component_param_name name;
+        this#visit_function_or_component_param_pattern ~is_rest:false local;
+        this#with_current_pattern_bindings local ~f:(fun () ->
+            ignore @@ super#component_param_pattern local;
+            Base.Option.iter default ~f:(fun default_expr ->
+                this#with_in_param_default ~f:(fun () -> ignore @@ this#expression default_expr)
+            )
+        );
+        (loc, { Ast.Statement.ComponentDeclaration.Param.name; local; default; shorthand })
 
       method! jsx_element loc expr =
         let open Ast.JSX in

@@ -935,6 +935,11 @@ type 'loc message =
       name: string;
       loc: 'loc;
     }
+  | MessageInvalidSelfReferencingDefault of {
+      name: string;
+      def_loc: 'loc;
+      ref_loc: 'loc;
+    }
   | MessageInvalidTrivialRecursiveDefinition of 'loc virtual_reason_desc
   | MessageInvalidTupleRequiredAfterOptional of {
       reason_tuple: 'loc virtual_reason;

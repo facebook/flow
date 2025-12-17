@@ -1953,6 +1953,7 @@ let dump_error_message =
     | EDuplicateClassMember { loc; name; _ } ->
       spf "EDuplicateClassMember (%s) (%s)" (string_of_aloc loc) name
     | EReferenceInAnnotation _ -> "EReferenceInAnnotation"
+    | EReferenceInDefault _ -> "EReferenceInDefault"
     | EEmptyArrayNoProvider { loc } -> spf "EEmptyArrayNoProvider (%s)" (string_of_aloc loc)
     | EUnusedPromise { loc; _ } -> spf "EUnusedPromise (%s)" (string_of_aloc loc)
     | EReactIntrinsicOverlap _ -> "EReactIntrinsicOverlap (_, _, _)"

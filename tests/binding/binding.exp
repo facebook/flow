@@ -1416,6 +1416,171 @@ References:
                   ^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:31:26
+
+Invalid default expression for parameter x [1]. It contains a reference [2] to the binding being declared.
+[recursive-definition]
+
+   rec_decls.js:31:26
+   31|   function f(x: number = x) {} // error: x references the param being declared
+                                ^ [2]
+
+References:
+   rec_decls.js:31:14
+   31|   function f(x: number = x) {} // error: x references the param being declared
+                    ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:32:33
+
+Cannot assign `a` to object type because number [1] is incompatible with object type [2]. [incompatible-type]
+
+   rec_decls.js:32:33
+   32|   function g({a}: {a: number} = a) {} // error: a references the param being declared
+                                       ^
+
+References:
+   rec_decls.js:32:23
+   32|   function g({a}: {a: number} = a) {} // error: a references the param being declared
+                             ^^^^^^ [1]
+   rec_decls.js:32:19
+   32|   function g({a}: {a: number} = a) {} // error: a references the param being declared
+                         ^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:32:33
+
+Invalid default expression for parameter a [1]. It contains a reference [2] to the binding being declared.
+[recursive-definition]
+
+   rec_decls.js:32:33
+   32|   function g({a}: {a: number} = a) {} // error: a references the param being declared
+                                       ^ [2]
+
+References:
+   rec_decls.js:32:15
+   32|   function g({a}: {a: number} = a) {} // error: a references the param being declared
+                     ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:33:26
+
+Invalid default expression for parameter y [1]. It contains a reference [2] to the binding being declared.
+[recursive-definition]
+
+   rec_decls.js:33:26
+   33|   function h(y: number = y + 1) {} // error: y references the param being declared
+                                ^ [2]
+
+References:
+   rec_decls.js:33:14
+   33|   function h(y: number = y + 1) {} // error: y references the param being declared
+                    ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:34:26
+
+Invalid default expression for parameter x [1]. It contains a reference [2] to the binding being declared.
+[recursive-definition]
+
+   rec_decls.js:34:26
+   34|   function i(x: number = x + x) {} // error: x references the param being declared (twice)
+                                ^ [2]
+
+References:
+   rec_decls.js:34:14
+   34|   function i(x: number = x + x) {} // error: x references the param being declared (twice)
+                    ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:34:30
+
+Invalid default expression for parameter x [1]. It contains a reference [2] to the binding being declared.
+[recursive-definition]
+
+   rec_decls.js:34:30
+   34|   function i(x: number = x + x) {} // error: x references the param being declared (twice)
+                                    ^ [2]
+
+References:
+   rec_decls.js:34:14
+   34|   function i(x: number = x + x) {} // error: x references the param being declared (twice)
+                    ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:40:40
+
+Cannot use variable `b` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   rec_decls.js:40:40
+   40|   function default_expr_scope_err({a = b, b}: {a?: string, b: string}) {} // error: a's default references b, which comes after
+                                              ^
+
+References:
+   rec_decls.js:40:43
+   40|   function default_expr_scope_err({a = b, b}: {a?: string, b: string}) {} // error: a's default references b, which comes after
+                                                 ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:44:20
+
+Invalid default expression for parameter c [1]. It contains a reference [2] to the binding being declared.
+[recursive-definition]
+
+   rec_decls.js:44:20
+   44|     {a, b = a, c = c}: {a: string, b?: string, c?: string}, // b = a OK (earlier), c = c ERROR (self)
+                          ^ [2]
+
+References:
+   rec_decls.js:44:16
+   44|     {a, b = a, c = c}: {a: string, b?: string, c?: string}, // b = a OK (earlier), c = c ERROR (self)
+                      ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:45:24
+
+Cannot use variable `g` [1] because the declaration either comes later or was skipped. [reference-before-declaration]
+
+   rec_decls.js:45:24
+   45|     {d = a, e = d, f = g, g}: {d?: string, e?: string, f?: string, g: string}, // d = a OK (earlier param), e = d OK (earlier in same pattern), f = g ERROR (forward)
+                              ^
+
+References:
+   rec_decls.js:45:27
+   45|     {d = a, e = d, f = g, g}: {d?: string, e?: string, f?: string, g: string}, // d = a OK (earlier param), e = d OK (earlier in same pattern), f = g ERROR (forward)
+                                 ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:58:19
+
+Invalid default expression for parameter z [1]. It contains a reference [2] to the binding being declared.
+[recursive-definition]
+
+   rec_decls.js:58:19
+   58| function Foo({z = z ?? null}: O) { // error: z references the param being declared
+                         ^ [2]
+
+References:
+   rec_decls.js:58:15
+   58| function Foo({z = z ?? null}: O) { // error: z references the param being declared
+                     ^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------- rec_decls.js:62:28
+
+Invalid default expression for parameter scope [1]. It contains a reference [2] to the binding being declared.
+[recursive-definition]
+
+   rec_decls.js:62:28
+   62| component Comp(...{scope = scope ?? null}: {scope?: ?string}) { // error: scope references the param being declared
+                                  ^^^^^ [2]
+
+References:
+   rec_decls.js:62:20
+   62| component Comp(...{scope = scope ?? null}: {scope?: ?string}) { // error: scope references the param being declared
+                          ^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------------------- rec_params.js:7:26
 
 Cannot resolve name `x`. [cannot-resolve-name]
@@ -2161,4 +2326,4 @@ Cannot resolve name `unboundFunction2`. [cannot-resolve-name]
 
 
 
-Found 164 errors
+Found 175 errors

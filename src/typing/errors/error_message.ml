@@ -621,6 +621,7 @@ and 'loc t' =
       annot_locs: 'loc Env_api.annot_loc list;
     }
   | EReferenceInAnnotation of ('loc * string * 'loc)
+  | EReferenceInDefault of ('loc * string * 'loc)
   | EDuplicateClassMember of {
       loc: 'loc;
       name: string;
@@ -1761,6 +1762,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         recursion = Base.List.map ~f recursion;
       }
   | EReferenceInAnnotation (bind_loc, name, loc) -> EReferenceInAnnotation (f bind_loc, name, f loc)
+  | EReferenceInDefault (bind_loc, name, loc) -> EReferenceInDefault (f bind_loc, name, f loc)
   | EDuplicateClassMember { loc; name; static; class_kind } ->
     EDuplicateClassMember { loc = f loc; name; static; class_kind }
   | EEmptyArrayNoProvider { loc } -> EEmptyArrayNoProvider { loc = f loc }
@@ -2243,6 +2245,7 @@ let util_use_op_of_msg nope util = function
   | EDefinitionCycle _
   | ERecursiveDefinition _
   | EReferenceInAnnotation _
+  | EReferenceInDefault _
   | EAnnotationInference _
   | ETrivialRecursiveDefinition _
   | EDuplicateClassMember _
@@ -2473,6 +2476,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidMappedType { loc; _ }
   | ETSSyntax { loc; _ }
   | EReferenceInAnnotation (loc, _, _)
+  | EReferenceInDefault (_, _, loc)
   | EDuplicateComponentProp { spread = loc; _ }
   | ERefComponentProp { spread = loc; _ }
   | EKeySpreadProp { spread = loc; _ }
@@ -3661,6 +3665,8 @@ let friendly_message_of_msg = function
   | EDefinitionCycle dependencies -> Normal (MessageDefinitionCycle dependencies)
   | EReferenceInAnnotation (_, name, loc) ->
     Normal (MessageInvalidSelfReferencingTypeAnnotation { name; loc })
+  | EReferenceInDefault (def_loc, name, ref_loc) ->
+    Normal (MessageInvalidSelfReferencingDefault { name; def_loc; ref_loc })
   | EUnusedPromise { async = true; _ } -> Normal MessageUnusedPromiseInAsyncScope
   | EUnusedPromise { async = false; _ } -> Normal MessageUnusedPromiseInSyncScope
   | EReactIntrinsicOverlap { use; def; type_; mixed } ->
@@ -4111,6 +4117,7 @@ let error_code_of_message err : error_code option =
   | EDefinitionCycle _ -> Some DefinitionCycle
   | ERecursiveDefinition _ -> Some RecursiveDefinition
   | EReferenceInAnnotation _ -> Some RecursiveDefinition
+  | EReferenceInDefault _ -> Some RecursiveDefinition
   | EDuplicateClassMember _ -> Some DuplicateClassMember
   | EEmptyArrayNoProvider _ -> Some EmptyArrayNoAnnot
   | EBigIntRShift3 _ -> Some BigIntRShift3
