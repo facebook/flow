@@ -1884,9 +1884,15 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     let kind =
       match kind with
       | InvalidRecordDeclarationSyntaxMultiple
-          { invalid_variance_locs; invalid_optional_locs; invalid_suffix_semicolon_locs } ->
+          {
+            invalid_infix_equals_loc;
+            invalid_variance_locs;
+            invalid_optional_locs;
+            invalid_suffix_semicolon_locs;
+          } ->
         InvalidRecordDeclarationSyntaxMultiple
           {
+            invalid_infix_equals_loc = Base.Option.map ~f invalid_infix_equals_loc;
             invalid_variance_locs = List.map f invalid_variance_locs;
             invalid_optional_locs = List.map f invalid_optional_locs;
             invalid_suffix_semicolon_locs = List.map f invalid_suffix_semicolon_locs;
@@ -1895,6 +1901,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | InvalidRecordDeclarationSyntaxOptional -> InvalidRecordDeclarationSyntaxOptional
       | InvalidRecordDeclarationSyntaxSuffixSemicolon ->
         InvalidRecordDeclarationSyntaxSuffixSemicolon
+      | InvalidRecordDeclarationSyntaxInfixEquals -> InvalidRecordDeclarationSyntaxInfixEquals
     in
     ERecordDeclarationInvalidSyntax { loc = f loc; kind }
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }

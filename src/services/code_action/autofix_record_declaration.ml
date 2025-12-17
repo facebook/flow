@@ -77,8 +77,10 @@ class mapper target_loc =
 
     method! record_declaration loc decl =
       let open Flow_ast.Statement.RecordDeclaration in
-      let { id = (id_loc, _) as id; tparams; implements; body; comments } = decl in
-      if this#is_target id_loc then
+      let { id = (id_loc, _) as id; tparams; implements; body; comments; invalid_syntax } = decl in
+      if
+        this#is_target id_loc || (this#target_contained_by loc && Base.Option.is_some invalid_syntax)
+      then
         let (body_loc, { Body.body = elements; comments = body_comments }) = body in
         let elements =
           Base.List.map elements ~f:(fun element ->
@@ -93,7 +95,7 @@ class mapper target_loc =
           )
         in
         let body = (body_loc, { Body.body = elements; comments = body_comments }) in
-        { id; tparams; implements; body; comments }
+        { id; tparams; implements; body; comments; invalid_syntax = None }
       else
         super#record_declaration loc decl
 

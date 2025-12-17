@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Fix invalid record syntax",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/record-invalid-equals.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 0
+                },
+                "end": {
+                  "line": 5,
+                  "character": 1
+                }
+              },
+              "newText": "record R {\n  //       ^\n  //       ^\n  a: number,\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "fix_record_invalid_syntax",
+          "Fix invalid record syntax"
+        ]
+      }
+    }
+  ]
+}

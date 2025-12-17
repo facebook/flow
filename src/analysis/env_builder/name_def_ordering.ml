@@ -929,7 +929,14 @@ struct
           EnvMap.empty
       in
       let depends_of_record
-          { Ast.Statement.RecordDeclaration.id = _; tparams; implements; body; comments = _ } =
+          {
+            Ast.Statement.RecordDeclaration.id = _;
+            tparams;
+            implements;
+            body;
+            comments = _;
+            invalid_syntax = _;
+          } =
         depends_of_node
           (fun visitor ->
             run visitor#record_body_annotated body;

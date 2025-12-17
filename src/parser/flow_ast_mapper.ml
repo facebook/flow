@@ -3333,7 +3333,7 @@ class ['loc] mapper =
 
     method record_declaration _loc (record : ('loc, 'loc) Ast.Statement.RecordDeclaration.t) =
       let open Ast.Statement.RecordDeclaration in
-      let { id; tparams; implements; body; comments } = record in
+      let { id; tparams; implements; body; comments; invalid_syntax } = record in
       let id' = this#pattern_identifier ~kind:Ast.Variable.Const id in
       let tparams' = map_opt (this#type_params ~kind:RecordTP) tparams in
       let implements' = map_opt this#class_implements implements in
@@ -3354,6 +3354,7 @@ class ['loc] mapper =
           implements = implements';
           body = body';
           comments = comments';
+          invalid_syntax;
         }
 
     method record_body (record_body : ('loc, 'loc) Ast.Statement.RecordDeclaration.Body.t) =

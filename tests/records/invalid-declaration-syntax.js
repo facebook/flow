@@ -48,10 +48,17 @@
   }
 }
 
+// Infix equals
+{
+  record R = {
+    a: number,
+  }
+}
+
 // Multiple different errors
 {
-  record R {
-    +a?: number; // ERROR
-    +b?: string; // ERROR
+  record R = { // ERROR
+    +a?: number;
+    +b?: string;
   }
 }

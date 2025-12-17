@@ -178,7 +178,10 @@ with type t = Impl.t = struct
           "SwitchStatement"
           loc
           [("discriminant", expression discriminant); ("cases", array_of_list case cases)]
-      | (loc, RecordDeclaration { RecordDeclaration.id; tparams; implements; body; comments }) ->
+      | ( loc,
+          RecordDeclaration
+            { RecordDeclaration.id; tparams; implements; body; comments; invalid_syntax = _ }
+        ) ->
         let record_property
             ( loc,
               { RecordDeclaration.Property.key; annot; default_value; comments; invalid_syntax = _ }

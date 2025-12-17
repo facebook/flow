@@ -1127,12 +1127,17 @@ and Statement : sig
       [@@deriving show]
     end
 
+    module InvalidSyntax : sig
+      type 'M t = { invalid_infix_equals: 'M option } [@@deriving show]
+    end
+
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
       tparams: ('M, 'T) Type.TypeParams.t option;
       implements: ('M, 'T) Class.Implements.t option;
       body: ('M, 'T) Body.t;
       comments: ('M, unit) Syntax.t option;
+      invalid_syntax: 'M InvalidSyntax.t option;
     }
     [@@deriving show]
   end

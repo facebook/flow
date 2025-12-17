@@ -1,0 +1,6 @@
+// @flow
+
+record R = {
+//       ^
+  a: number,
+}
