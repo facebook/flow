@@ -32,8 +32,3 @@
  (wrapped false)
  (modules annotate_exports_hardcoded_expr_fixes hardcoded_module_fixes)
  (libraries flow_parser))
-
-(library
- (name flow_remote_execution_stubs)
- (wrapped false)
- (modules remote_execution))

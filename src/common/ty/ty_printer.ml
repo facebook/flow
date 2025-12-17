@@ -706,7 +706,7 @@ let layout_of_type_at_pos_types
     in
     fuse [layout_unevaluated; hardline; Atom "="; space; layout_evaluated]
 
-(* Same as Compact_printer with the exception of locations *)
+(* Compact printer that does not output locations *)
 let print_single_line ~source_maps node =
   let rec print_node src = function
     (* this printer does not output locations *)

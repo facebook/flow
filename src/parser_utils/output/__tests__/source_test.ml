@@ -21,19 +21,6 @@ let assert_contents_equal =
   fun ~ctxt (expected : string) (source : Source.t) ->
     assert_equal ~ctxt ~printer expected (Source.contents source)
 
-let assert_sourcemaps_equal =
-  let printer = function
-    | Some map -> map |> Json_sourcemap.json_of_sourcemap |> Hh_json.json_to_string ~pretty:true
-    | None -> "None"
-  in
-  fun ~ctxt (expected : string option) (source : Source.t) ->
-    let expected =
-      match expected with
-      | Some expected -> Some (Json_sourcemap.sourcemap_of_string expected)
-      | None -> None
-    in
-    assert_equal ~ctxt ~printer expected (Source.sourcemap source)
-
 let tests =
   "source"
   >::: [
@@ -44,18 +31,7 @@ let tests =
              |> Source.add_string "foo;"
              |> Source.pop_loc
            in
-           assert_contents_equal ~ctxt "foo;" s;
-           assert_sourcemaps_equal
-             ~ctxt
-             (Some
-                {|{
-        "version": 3,
-        "sources": ["<stdin>"],
-        "names": [],
-        "mappings": "AAAA"
-      }|}
-             )
-             s
+           assert_contents_equal ~ctxt "foo;" s
          );
          ( "two_strings" >:: fun ctxt ->
            let s =
@@ -67,17 +43,6 @@ let tests =
              |> Source.add_string "bar;"
              |> Source.pop_loc
            in
-           assert_contents_equal ~ctxt "foo;bar;" s;
-           assert_sourcemaps_equal
-             ~ctxt
-             (Some
-                {|{
-        "version": 3,
-        "sources": ["<stdin>"],
-        "names": [],
-        "mappings": "AAAA,IAAI"
-      }|}
-             )
-             s
+           assert_contents_equal ~ctxt "foo;bar;" s
          );
        ]
