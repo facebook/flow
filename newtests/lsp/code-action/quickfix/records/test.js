@@ -121,5 +121,20 @@ module.exports = (suite(
         'quickfix-object-literal-to-record-expression',
       ),
     ),
+    test(
+      'provide quickfix to convert new to record expression',
+      generateSimpleTests(
+        'quickfix',
+        {
+          addFile,
+          lspIgnoreStatusAndCancellation,
+          lspStartAndConnect,
+          lspRequestAndWaitUntilResponse,
+        },
+        __dirname,
+        'new-to-record-expression.js',
+        'quickfix-new-to-record-expression',
+      ),
+    ),
   ],
 ): SuiteType);

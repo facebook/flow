@@ -1493,6 +1493,19 @@ let ast_transforms_of_error
       ]
     else
       []
+  | Error_message.ERecordInvalidNew { record_name; loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = Printf.sprintf "Convert to record `%s {...}`" record_name;
+          diagnostic_title = "convert_new_to_record_expression";
+          transform = untyped_ast_transform Autofix_new_to_record.convert_new_to_record_expression;
+          target_loc = error_loc;
+          confidence = BestEffort;
+        };
+      ]
+    else
+      []
   | Error_message.EInvariantSubtypingWithUseOp
       {
         explanation =

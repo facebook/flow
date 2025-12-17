@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Convert to record `RGeneric {...}`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/new-to-record-expression.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 13,
+                  "character": 0
+                },
+                "end": {
+                  "line": 13,
+                  "character": 28
+                }
+              },
+              "newText": "RGeneric<number> { a: 1 }"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_new_to_record_expression",
+          "Convert to record `RGeneric {...}`"
+        ]
+      }
+    }
+  ]
+}
