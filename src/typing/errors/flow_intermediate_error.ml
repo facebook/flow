@@ -5449,6 +5449,14 @@ let to_printable_error :
         code "TypeUtil<{...MyRecord}>";
         text ".";
       ]
+    | MessageRecordInvalidNew { record_name } ->
+      [
+        text "Use a record expression directly instead of ";
+        code "new";
+        text " with an object literal. For example: ";
+        code (spf "%s {...}" record_name);
+        text ".";
+      ]
     | MessageRecordDeclarationInvalidSyntax kind ->
       let msg_invalid_infix_equals =
         [text "Record declarations don't need the "; code "="; text ", remove it."]
