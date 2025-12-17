@@ -15,17 +15,12 @@ type t = {
   names: Source_map_config.names option;
 }
 
-let create ~source_maps () =
-  let (sourcemap, names) =
-    Base.Option.value_map source_maps ~default:(None, None) ~f:(fun { Source_map_config.names } ->
-        (Some (Sourcemap.create ()), Some names)
-    )
-  in
+let create () =
   {
     buffer = Buffer.create 127;
     (* no idea the best value for this *)
-    sourcemap;
-    names;
+    sourcemap = None;
+    names = None;
     pos = { Sourcemap.line = 1; col = 0 };
     loc_stack = [];
   }
@@ -108,5 +103,3 @@ let add_newline source =
 let add_space num b = add_string (String.make num ' ') b
 
 let contents b = Buffer.contents b.buffer
-
-let sourcemap b = b.sourcemap

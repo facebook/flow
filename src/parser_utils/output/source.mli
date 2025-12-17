@@ -13,7 +13,7 @@ type t = {
   names: Source_map_config.names option;
 }
 
-val create : source_maps:Source_map_config.t option -> unit -> t
+val create : unit -> t
 
 val push_loc : Loc.t -> t -> t
 
@@ -28,5 +28,3 @@ val add_newline : t -> t
 val add_space : int -> t -> t
 
 val contents : t -> string
-
-val sourcemap : t -> Sourcemap.t option

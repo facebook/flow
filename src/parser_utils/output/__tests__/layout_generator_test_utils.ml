@@ -21,9 +21,9 @@ let no_bracket_spacing opts = Js_layout_generator.{ opts with bracket_spacing = 
 let assert_output ~ctxt ?msg ?(pretty = false) expected_str layout =
   let print =
     if pretty then
-      Pretty_printer.print ~source_maps:None ~skip_endline:false
+      Pretty_printer.print ~skip_endline:false
     else
-      Compact_printer.print ~source_maps:None
+      Compact_printer.print
   in
   let out = print layout |> Source.contents in
   let out =

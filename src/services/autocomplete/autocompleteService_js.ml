@@ -214,7 +214,7 @@ let autocomplete_create_result_method
     (* Print the node to a string and replace the AUTO332 expression with an LSP snippet placeholder *)
     method_
     |> Js_layout_generator.class_method ~opts:layout_options
-    |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+    |> Pretty_printer.print ~skip_endline:true
     |> Source.contents
     |> Base.String.substr_replace_first ~pattern:"AUTO332;" ~with_:"$0"
   in
@@ -223,7 +223,7 @@ let autocomplete_create_result_method
     method_
     |> (fun (_, { Flow_ast.Class.Method.value; _ }) -> value)
     |> Js_layout_generator.function_params_and_return ~opts:layout_options
-    |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+    |> Pretty_printer.print ~skip_endline:true
     |> Source.contents
     |> fun params_and_return -> params_and_return ^ "{ … }"
   in
@@ -1643,7 +1643,7 @@ let gen_layout_options opts token =
 let print_expression ~layout_options ~token expression =
   expression
   |> Js_layout_generator.expression ~opts:(gen_layout_options layout_options token)
-  |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+  |> Pretty_printer.print ~skip_endline:true
   |> Source.contents
 
 let print_name_as_indexer ~layout_options ~token name =

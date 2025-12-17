@@ -86,7 +86,7 @@ let text_of_layout layout =
   let layout = Layout.Group [layout] in
   (* TODO if we are reprinting the entire program we probably want this to be
    * false. Add some tests and make sure we get it right. *)
-  Pretty_printer.print ~source_maps:None ~skip_endline:true layout |> Source.contents
+  Pretty_printer.print ~skip_endline:true layout |> Source.contents
 
 let text_of_node ~opts = layout_of_node ~opts %> text_of_layout
 

@@ -435,7 +435,7 @@ let synth_type
 
 let type_to_string t =
   Js_layout_generator.type_ ~opts:Js_layout_generator.default_opts t
-  |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+  |> Pretty_printer.print ~skip_endline:true
   |> Source.contents
 
 let unexpected_error_to_string = function

@@ -11,7 +11,7 @@ open Refactor_extract_utils
 open Loc_collections
 
 let pretty_print layout =
-  let source = Pretty_printer.print ~source_maps:None ~skip_endline:true layout in
+  let source = Pretty_printer.print ~skip_endline:true layout in
   Source.contents source
 
 let file_options = Files.default_options

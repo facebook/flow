@@ -707,7 +707,7 @@ let layout_of_type_at_pos_types
     fuse [layout_unevaluated; hardline; Atom "="; space; layout_evaluated]
 
 (* Compact printer that does not output locations *)
-let print_single_line ~source_maps node =
+let print_single_line node =
   let rec print_node src = function
     (* this printer does not output locations *)
     | SourceLocation _ -> src
@@ -723,9 +723,9 @@ let print_single_line ~source_maps node =
     | IfBreak (_, no_break) -> print_node src no_break
     | Empty -> src
   in
-  print_node (Source.create ~source_maps ()) node
+  print_node (Source.create ()) node
 
-let print_pretty ~source_maps node = Pretty_printer.print ~source_maps ~skip_endline:true node
+let print_pretty node = Pretty_printer.print ~skip_endline:true node
 
 let string_of_elt
     ?(prefer_single_quotes = false)
@@ -734,7 +734,7 @@ let string_of_elt
     ~ts_syntax
     (elt : Ty.elt) : string =
   layout_of_elt ~prefer_single_quotes ~with_comments ~exact_by_default ~ts_syntax elt
-  |> print_pretty ~source_maps:None
+  |> print_pretty
   |> Source.contents
 
 let string_of_elt_single_line
@@ -744,7 +744,7 @@ let string_of_elt_single_line
     ~ts_syntax
     (elt : Ty.elt) =
   layout_of_elt ~prefer_single_quotes ~with_comments ~exact_by_default ~ts_syntax elt
-  |> print_single_line ~source_maps:None
+  |> print_single_line
   |> Source.contents
 
 let string_of_t
@@ -803,7 +803,7 @@ let string_of_type_at_pos_result
   let type_str =
     (unevaluated, evaluated)
     |> layout_of_type_at_pos_types ~prefer_single_quotes ~with_comments ~exact_by_default ~ts_syntax
-    |> print_pretty ~source_maps:None
+    |> print_pretty
     |> Source.contents
   in
   let refs = Base.Option.map ~f:string_of_symbol_set refs in

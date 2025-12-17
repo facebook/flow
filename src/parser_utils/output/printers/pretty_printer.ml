@@ -143,8 +143,8 @@ let print =
       print_node indent w rest (mode, node)
     | Empty -> w
   in
-  fun ~source_maps ?(skip_endline = false) node ->
-    let w = { src = Source.create ~source_maps (); pos = 0 } in
+  fun ?(skip_endline = false) node ->
+    let w = { src = Source.create (); pos = 0 } in
     let { src; _ } = print_node 0 w [] (Break, node) in
     if skip_endline then
       src

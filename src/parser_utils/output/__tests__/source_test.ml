@@ -7,7 +7,7 @@
 
 open OUnit2
 
-let mk_source ?(source_maps = Some Source_map_config.default) () = Source.create ~source_maps ()
+let mk_source () = Source.create ()
 
 let mk_loc (start_line, start_col) (end_line, end_col) =
   {

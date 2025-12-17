@@ -7,7 +7,7 @@
 
 open Layout
 
-let print ~source_maps node =
+let print node =
   let rec print_node src = function
     | SourceLocation (loc, node) ->
       let src = Source.push_loc loc src in
@@ -26,5 +26,5 @@ let print ~source_maps node =
     | IfBreak (_, otherwise) -> print_node src otherwise
     | Empty -> src
   in
-  let src = print_node (Source.create ~source_maps ()) node in
+  let src = print_node (Source.create ()) node in
   Source.add_newline src

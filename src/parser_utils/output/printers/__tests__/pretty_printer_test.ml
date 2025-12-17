@@ -13,7 +13,7 @@ let space_regex = Str.regexp_string " "
 let flat_pretty_space = IfBreak (Empty, pretty_space)
 
 let assert_pretty_print ~ctxt ?msg expected_str layout =
-  let out = layout |> Pretty_printer.print ~source_maps:None |> Source.contents |> String.trim in
+  let out = layout |> Pretty_printer.print |> Source.contents |> String.trim in
   let printer x = Str.global_replace space_regex "\xE2\x90\xA3" x (* open box *) in
   assert_equal ~ctxt ?msg ~printer expected_str out
 

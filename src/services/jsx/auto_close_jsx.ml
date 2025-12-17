@@ -38,7 +38,7 @@ let get_snippet ast target_pos =
       let text =
         Ast_builder.JSXs.closing name
         |> Js_layout_generator.jsx_closing
-        |> Pretty_printer.print ~source_maps:None ~skip_endline:true
+        |> Pretty_printer.print ~skip_endline:true
         |> Source.contents
       in
       Some ("$0" ^ text)

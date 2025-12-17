@@ -174,7 +174,7 @@ let mk_import ~bindings ~from =
 
 let string_of_statement ~options stmt : string =
   let layout = Js_layout_generator.statement ~opts:options stmt in
-  let src = Pretty_printer.print ~source_maps:None ~skip_endline:true layout in
+  let src = Pretty_printer.print ~skip_endline:true layout in
   Source.contents src
 
 (** [sorted_insert ~cmp item items], where [items] must be sorted, inserts [item]

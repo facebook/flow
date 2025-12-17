@@ -211,7 +211,7 @@ let pp_diff =
       )
     in
     let layout = Js_layout_generator.program ~preserve_docblock:false ~checksum:None prog in
-    layout |> Pretty_printer.print ~source_maps:None |> Source.contents
+    layout |> Pretty_printer.print |> Source.contents
   in
   fun fmt (stmts1, stmts2) ->
     let ast_diff = system_diff ~f:string_of_ast "ast" stmts1 stmts2 in
