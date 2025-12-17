@@ -1,0 +1,15 @@
+// @flow
+
+record R {
+  a: number,
+}
+
+new R({a: 1});
+//    ^
+
+record RGeneric<T> {
+  a: T,
+}
+
+new RGeneric<number>({a: 1});
+//                   ^
