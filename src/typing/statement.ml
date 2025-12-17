@@ -3555,6 +3555,21 @@ module Make
       in
       let (t, ctor_t) = new_call cx loc reason ~use_op class_ targts argts in
       Context.set_ctor_callee cx loc ctor_t;
+      (* Check if using new Record({...}) and emit error suggesting record expression syntax *)
+      (match arguments with
+      | Some (_, { Ast.Expression.ArgList.arguments = [Expression (_, Object _)]; _ }) ->
+        let record_name_opt =
+          match Flow.singleton_concrete_type_for_inspection cx (reason_of_t t) t with
+          | DefT (_, InstanceT { inst = { inst_kind = RecordKind _; class_name = Some name; _ }; _ })
+          | ThisInstanceT
+              (_, { inst = { inst_kind = RecordKind _; class_name = Some name; _ }; _ }, _, _) ->
+            Some name
+          | _ -> None
+        in
+        Base.Option.iter record_name_opt ~f:(fun record_name ->
+            Flow.add_output cx (Error_message.ERecordInvalidNew { loc; record_name })
+        )
+      | _ -> ());
       ( (loc, t),
         New { New.callee = callee_ast; targs = targs_ast; arguments = arguments_ast; comments }
       )
