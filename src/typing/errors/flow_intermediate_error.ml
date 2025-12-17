@@ -5441,6 +5441,9 @@ let to_printable_error :
         text ".";
       ]
     | MessageRecordDeclarationInvalidSyntax kind ->
+      let msg_invalid_infix_equals =
+        [text "Record declarations don't need the "; code "="; text ", remove it."]
+      in
       let msg_invalid_variance =
         [
           text "Record declaration properties are read-only by default, ";
@@ -5477,7 +5480,12 @@ let to_printable_error :
       in
       (match kind with
       | InvalidRecordDeclarationSyntaxMultiple
-          { invalid_variance_locs; invalid_optional_locs; invalid_suffix_semicolon_locs } ->
+          {
+            invalid_infix_equals_loc;
+            invalid_variance_locs;
+            invalid_optional_locs;
+            invalid_suffix_semicolon_locs;
+          } ->
         let msg_with_locs msg locs =
           if Base.List.is_empty locs then
             None
@@ -5485,9 +5493,15 @@ let to_printable_error :
             let refs = Base.List.map locs ~f:(fun loc -> no_desc_ref loc) in
             Some (msg @ [text " At"] @ refs @ [text "."])
         in
+        let msg_with_loc_opt msg loc_opt =
+          match loc_opt with
+          | None -> None
+          | Some loc -> Some (msg @ [text " At "; no_desc_ref loc; text "."])
+        in
         let errors =
           Base.List.filter_opt
             [
+              msg_with_loc_opt msg_invalid_infix_equals invalid_infix_equals_loc;
               msg_with_locs msg_invalid_variance invalid_variance_locs;
               msg_with_locs msg_invalid_optional invalid_optional_locs;
               msg_with_locs msg_invalid_suffix_semicolon invalid_suffix_semicolon_locs;
@@ -5500,7 +5514,8 @@ let to_printable_error :
           :: Base.List.concat_map multiple ~f:(fun x -> text "\n- " :: x))
       | InvalidRecordDeclarationSyntaxVariance -> msg_invalid_variance
       | InvalidRecordDeclarationSyntaxOptional -> msg_invalid_optional
-      | InvalidRecordDeclarationSyntaxSuffixSemicolon -> msg_invalid_suffix_semicolon)
+      | InvalidRecordDeclarationSyntaxSuffixSemicolon -> msg_invalid_suffix_semicolon
+      | InvalidRecordDeclarationSyntaxInfixEquals -> msg_invalid_infix_equals)
     | MessageIncompatiblETypeParamConstIncompatibility { lower; upper } ->
       [
         text "type parameters ";

@@ -2035,6 +2035,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         implements;
         body;
         comments = _;
+        invalid_syntax = _;
       } =
         record
       in

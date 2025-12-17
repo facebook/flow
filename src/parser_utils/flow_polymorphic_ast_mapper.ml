@@ -2699,18 +2699,27 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method record_declaration (record : ('M, 'T) Ast.Statement.RecordDeclaration.t)
         : ('N, 'U) Ast.Statement.RecordDeclaration.t =
       let open Ast.Statement.RecordDeclaration in
-      let { id; tparams; implements; body; comments } = record in
+      let { id; tparams; implements; body; comments; invalid_syntax } = record in
       let id' = this#pattern_identifier ~kind:Ast.Variable.Const id in
       let comments' = this#syntax_opt comments in
       this#type_params_opt tparams (fun tparams' ->
           let implements' = Base.Option.map ~f:this#class_implements implements in
           let body' = this#record_body body in
+          let invalid_syntax' =
+            Base.Option.map invalid_syntax ~f:(fun { InvalidSyntax.invalid_infix_equals } ->
+                {
+                  InvalidSyntax.invalid_infix_equals =
+                    Base.Option.map ~f:this#on_loc_annot invalid_infix_equals;
+                }
+            )
+          in
           {
             id = id';
             tparams = tparams';
             implements = implements';
             body = body';
             comments = comments';
+            invalid_syntax = invalid_syntax';
           }
       )
 

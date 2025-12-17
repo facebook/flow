@@ -829,41 +829,53 @@ References:
             ^ [2]
 
 
-Error ------------------------------------------------------------------------------ invalid-declaration-syntax.js:53:10
+Error ------------------------------------------------------------------------------ invalid-declaration-syntax.js:53:12
+
+Record declarations don't need the `=`, remove it. [record-invalid-syntax]
+
+   53|   record R = {
+                  ^
+
+
+Error ------------------------------------------------------------------------------ invalid-declaration-syntax.js:60:10
 
 Invalid record declaration syntax:
+- Record declarations don't need the `=`, remove it. At  [1].
 - Record declaration properties are read-only by default, so don't allow variance annotations. Remove to fix.
-At [1] [2].
+At [2] [3].
 - Record declaration properties can't be optional. Instead, you can specify a default value for the property using
 `= <expression>,` after the type annotation. This default value will be used if the property is omitted when creating
 the record. To closely mimic the existing behavior of an optional property, you can change `foo?: T,` to
-`foo: T | void = undefined,`, though there is likely a better default value you could use instead. At [3] [4].
-- Record declarations use commas `,` to separate properties. To fix, replace the `;` with `,`. At [5] [6].
+`foo: T | void = undefined,`, though there is likely a better default value you could use instead. At [4] [5].
+- Record declarations use commas `,` to separate properties. To fix, replace the `;` with `,`. At [6] [7].
 [record-invalid-syntax]
 
-   invalid-declaration-syntax.js:53:10
-   53|   record R {
+   invalid-declaration-syntax.js:60:10
+   60|   record R = { // ERROR
                 ^
 
 References:
-   invalid-declaration-syntax.js:55:5
-   55|     +b?: string; // ERROR
-           ^ [1]
-   invalid-declaration-syntax.js:54:5
-   54|     +a?: number; // ERROR
+   invalid-declaration-syntax.js:60:12
+   60|   record R = { // ERROR
+                  ^ [1]
+   invalid-declaration-syntax.js:62:5
+   62|     +b?: string;
            ^ [2]
-   invalid-declaration-syntax.js:55:7
-   55|     +b?: string; // ERROR
-             ^ [3]
-   invalid-declaration-syntax.js:54:7
-   54|     +a?: number; // ERROR
+   invalid-declaration-syntax.js:61:5
+   61|     +a?: number;
+           ^ [3]
+   invalid-declaration-syntax.js:62:7
+   62|     +b?: string;
              ^ [4]
-   invalid-declaration-syntax.js:55:16
-   55|     +b?: string; // ERROR
-                      ^ [5]
-   invalid-declaration-syntax.js:54:16
-   54|     +a?: number; // ERROR
+   invalid-declaration-syntax.js:61:7
+   61|     +a?: number;
+             ^ [5]
+   invalid-declaration-syntax.js:62:16
+   62|     +b?: string;
                       ^ [6]
+   invalid-declaration-syntax.js:61:16
+   61|     +a?: number;
+                      ^ [7]
 
 
 Error --------------------------------------------------------------------------------------- static-async-names.js:10:3
@@ -969,4 +981,4 @@ References:
 
 
 
-Found 65 errors
+Found 66 errors

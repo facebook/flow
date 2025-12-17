@@ -1383,6 +1383,19 @@ module Object
                )
               )
         in
+        let invalid_syntax =
+          if Peek.token env = T_ASSIGN then (
+            let invalid_syntax =
+              {
+                Ast.Statement.RecordDeclaration.InvalidSyntax.invalid_infix_equals =
+                  Some (Peek.loc env);
+              }
+            in
+            Eat.token env;
+            Some invalid_syntax
+          ) else
+            None
+        in
         if Peek.token env = T_EXTENDS then (
           error_at env (Peek.loc env, Parse_error.RecordExtendsUnsupported);
           let leading = Peek.comments env in
@@ -1398,6 +1411,13 @@ module Object
         let body = record_body env in
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in
         Ast.Statement.RecordDeclaration
-          { Ast.Statement.RecordDeclaration.id; tparams; implements; body; comments }
+          {
+            Ast.Statement.RecordDeclaration.id;
+            tparams;
+            implements;
+            body;
+            comments;
+            invalid_syntax;
+          }
     )
 end

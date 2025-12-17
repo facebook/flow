@@ -983,7 +983,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! record_declaration _loc (record : ('loc, 'loc) Ast.Statement.RecordDeclaration.t) =
         let open Ast.Statement.RecordDeclaration in
-        let { id; tparams; implements; body; comments = _ } = record in
+        let { id; tparams; implements; body; comments = _; invalid_syntax = _ } = record in
         ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id;
         let implements_targs =
           Base.Option.value_map

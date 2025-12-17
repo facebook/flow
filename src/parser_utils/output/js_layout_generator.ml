@@ -2667,7 +2667,10 @@ and record_body ~opts (loc, { Ast.Statement.RecordDeclaration.Body.body; comment
     source_location_with_comments ?comments (loc, Atom "{}")
 
 and record_declaration
-    ~opts loc { Ast.Statement.RecordDeclaration.id; tparams; implements; body; comments } =
+    ~opts
+    loc
+    { Ast.Statement.RecordDeclaration.id; tparams; implements; body; comments; invalid_syntax = _ }
+    =
   let implements =
     class_implements ~opts implements
     |> Base.Option.map ~f:(fun implements -> fuse [pretty_space; implements])

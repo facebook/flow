@@ -91,5 +91,20 @@ module.exports = (suite(
         'quickfix-record-invalid-semicolon',
       ),
     ),
+    test(
+      'provide quickfix for record declaration with infix equals',
+      generateSimpleTests(
+        'quickfix',
+        {
+          addFile,
+          lspIgnoreStatusAndCancellation,
+          lspStartAndConnect,
+          lspRequestAndWaitUntilResponse,
+        },
+        __dirname,
+        'record-invalid-equals.js',
+        'quickfix-record-invalid-equals',
+      ),
+    ),
   ],
 ): SuiteType);
