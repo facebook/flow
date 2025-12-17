@@ -522,9 +522,12 @@ let members_of_type
 (* Internal type to track whether a local value is a record type or not *)
 type ac_id_type =
   | Ac_id_type_normal
-  | Ac_id_type_record of Type.t
+  | Ac_id_type_record of {
+      record_type: Type.t;
+      defaulted_props: SSet.t;
+    }
 
-let extract_record_fields ~typing record_type =
+let extract_record_fields ~typing ~defaulted_props record_type =
   match members_of_type ~typing ~exclude_proto_members:true ~force_instance:true record_type with
   | Error err -> Error err
   | Ok (mems, _errors_to_log) ->
@@ -532,12 +535,14 @@ let extract_record_fields ~typing record_type =
       Base.List.filter_map mems ~f:(fun (name, _, Ty_members.{ ty; _ }) ->
           match ty with
           | Ty.Fun _ -> None
+          | _ when SSet.mem name defaulted_props -> None
           | _ -> Some name
       )
     in
     Ok fields
 
-let autocomplete_record ~typing ~edit_locs ~documentation_and_tags record_name record_type =
+let autocomplete_record
+    ~typing ~edit_locs ~documentation_and_tags record_name record_type defaulted_props =
   let { cx; norm_genv = genv; _ } = typing in
   let exact_by_default = Context.exact_by_default cx in
   match Ty_normalizer_flow.from_type genv record_type with
@@ -545,7 +550,7 @@ let autocomplete_record ~typing ~edit_locs ~documentation_and_tags record_name r
   | Ok ty ->
     (match ty with
     | Ty.Decl (Ty.RecordDecl (_, _) as record_decl) ->
-      (match extract_record_fields ~typing record_type with
+      (match extract_record_fields ~typing ~defaulted_props record_type with
       | Error _ -> None
       | Ok fields ->
         let field_list =
@@ -553,7 +558,7 @@ let autocomplete_record ~typing ~edit_locs ~documentation_and_tags record_name r
           |> Base.List.map ~f:(fun name -> Printf.sprintf "%s: null" name)
           |> String.concat ", "
         in
-        let insert_text = Printf.sprintf "%s { %s }" record_name field_list in
+        let insert_text = Printf.sprintf "%s {%s}" record_name field_list in
         let item =
           autocomplete_create_result_decl
             ~insert_text
@@ -616,10 +621,20 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
       | _ -> t
     in
     match t with
-    | DefT (_, ClassT (ThisInstanceT (_, { inst = { inst_kind = RecordKind _; _ }; _ }, _, _)))
-    | DefT (_, ClassT (DefT (_, InstanceT { inst = { inst_kind = RecordKind _; _ }; _ }))) ->
-      true
-    | _ -> false
+    | DefT
+        ( _,
+          ClassT
+            (ThisInstanceT
+              (_, { inst = { inst_kind = RecordKind { defaulted_props }; _ }; _ }, _, _)
+              )
+        )
+    | DefT
+        ( _,
+          ClassT
+            (DefT (_, InstanceT { inst = { inst_kind = RecordKind { defaulted_props }; _ }; _ }))
+        ) ->
+      Some defaulted_props
+    | _ -> None
   in
   names_and_locs
   |> SMap.bindings
@@ -639,10 +654,9 @@ let local_value_identifiers ~typing ~genv ~ac_loc =
              loc
          in
          let ac_id_type =
-           if is_record_type type_ then
-             Ac_id_type_record type_
-           else
-             Ac_id_type_normal
+           match is_record_type type_ with
+           | Some defaulted_props -> Ac_id_type_record { record_type = type_; defaulted_props }
+           | None -> Ac_id_type_normal
          in
          ((name, documentation_and_tags, ac_id_type), type_)
      )
@@ -971,9 +985,15 @@ let autocomplete_id
            | Ok elt ->
              let items_rev =
                match ac_id_type with
-               | Ac_id_type_record record_type ->
+               | Ac_id_type_record { record_type; defaulted_props } ->
                  (match
-                    autocomplete_record ~typing ~edit_locs ~documentation_and_tags name record_type
+                    autocomplete_record
+                      ~typing
+                      ~edit_locs
+                      ~documentation_and_tags
+                      name
+                      record_type
+                      defaulted_props
                   with
                  | Some item -> item :: items_rev
                  | None -> items_rev)

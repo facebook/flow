@@ -54,7 +54,7 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":9,"character":10},"end":{"line":9,"character":12}},
-    "newText":"Person { active: null, age: null, name: null }"
+    "newText":"Person {active: null, age: null, name: null}"
   },
   "command":{
     "title":"",
@@ -111,7 +111,7 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":19,"character":10},"end":{"line":19,"character":12}},
-    "newText":"User { email: null, id: null, verified: null }"
+    "newText":"User {id: null, verified: null}"
   },
   "command":{
     "title":"",
@@ -168,7 +168,7 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":30,"character":10},"end":{"line":30,"character":12}},
-    "newText":"Data { ref: null, value: null }"
+    "newText":"Data {ref: null, value: null}"
   },
   "command":{
     "title":"",
@@ -255,7 +255,7 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":48,"character":12},"end":{"line":48,"character":15}},
-    "newText":"Optional { a: null, b: null }"
+    "newText":"Optional {}"
   },
   "command":{
     "title":"",
@@ -340,7 +340,7 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":57,"character":11},"end":{"line":57,"character":17}},
-    "newText":"WithMethods { field: null }"
+    "newText":"WithMethods {field: null}"
   },
   "command":{
     "title":"",
@@ -397,7 +397,7 @@ Flags: --pretty --lsp
   "insertTextFormat":1,
   "textEdit":{
     "range":{"start":{"line":67,"character":11},"end":{"line":67,"character":17}},
-    "newText":"WithStatics { field: null }"
+    "newText":"WithStatics {field: null}"
   },
   "command":{
     "title":"",
