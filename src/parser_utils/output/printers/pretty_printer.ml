@@ -77,11 +77,7 @@ let print =
   in
   let rec print_node (indent : int) (w : writer) (rest : item list) ((mode, node) : item) : writer =
     match node with
-    | SourceLocation (loc, node) ->
-      let src = Source.push_loc loc w.src in
-      let w = print_node indent { w with src } rest (mode, node) in
-      let src = Source.pop_loc w.src in
-      { w with src }
+    | SourceLocation (_loc, node) -> print_node indent w rest (mode, node)
     | Concat nodes ->
       let items = Base.List.map ~f:(fun node -> (mode, node)) nodes in
       fold ~f:(print_node indent) w items
@@ -130,8 +126,8 @@ let print =
     | Atom s ->
       let src = Source.add_string s w.src in
       { src; pos = w.pos + String.length s }
-    | Identifier (loc, s) ->
-      let src = Source.add_identifier loc s w.src in
+    | Identifier (_loc, s) ->
+      let src = Source.add_identifier s w.src in
       { src; pos = w.pos + String.length s }
     | IfPretty (node, _) -> print_node indent w rest (mode, node)
     | IfBreak (on_break, otherwise) ->

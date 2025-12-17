@@ -25,24 +25,11 @@ let tests =
   "source"
   >::: [
          ( "simple_string" >:: fun ctxt ->
-           let s =
-             mk_source ()
-             |> Source.push_loc (mk_loc (1, 0) (1, 3))
-             |> Source.add_string "foo;"
-             |> Source.pop_loc
-           in
+           let s = mk_source () |> Source.add_string "foo;" in
            assert_contents_equal ~ctxt "foo;" s
          );
          ( "two_strings" >:: fun ctxt ->
-           let s =
-             mk_source ()
-             |> Source.push_loc (mk_loc (1, 0) (1, 3))
-             |> Source.add_string "foo;"
-             |> Source.pop_loc
-             |> Source.push_loc (mk_loc (1, 4) (1, 7))
-             |> Source.add_string "bar;"
-             |> Source.pop_loc
-           in
+           let s = mk_source () |> Source.add_string "foo;" |> Source.add_string "bar;" in
            assert_contents_equal ~ctxt "foo;bar;" s
          );
        ]

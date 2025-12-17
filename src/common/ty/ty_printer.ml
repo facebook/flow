@@ -719,7 +719,7 @@ let print_single_line node =
     | Sequence (_, nodes) ->
       List.fold_left print_node src nodes
     | Atom s -> Source.add_string s src
-    | Identifier (loc, s) -> Source.add_identifier loc s src
+    | Identifier (_loc, s) -> Source.add_identifier s src
     | IfBreak (_, no_break) -> print_node src no_break
     | Empty -> src
   in

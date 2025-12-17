@@ -9,11 +9,7 @@ open Layout
 
 let print node =
   let rec print_node src = function
-    | SourceLocation (loc, node) ->
-      let src = Source.push_loc loc src in
-      let src = print_node src node in
-      let src = Source.pop_loc src in
-      src
+    | SourceLocation (_loc, node) -> print_node src node
     | Concat nodes
     | Group nodes
     | Sequence (_, nodes) ->
@@ -21,7 +17,7 @@ let print node =
     | Indent node -> print_node src node
     | Newline -> Source.add_newline src
     | Atom s -> Source.add_string s src
-    | Identifier (loc, s) -> Source.add_identifier loc s src
+    | Identifier (_loc, s) -> Source.add_identifier s src
     | IfPretty (_, node) -> print_node src node
     | IfBreak (_, otherwise) -> print_node src otherwise
     | Empty -> src

@@ -5,23 +5,13 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type t = {
-  buffer: Buffer.t;
-  sourcemap: Sourcemap.t option;
-  pos: Sourcemap.line_col;
-  loc_stack: Loc.t list;
-  names: Source_map_config.names option;
-}
+type t = { buffer: Buffer.t }
 
 val create : unit -> t
 
-val push_loc : Loc.t -> t -> t
+val add_string : string -> t -> t
 
-val pop_loc : t -> t
-
-val add_string : ?name:string -> string -> t -> t
-
-val add_identifier : Loc.t -> string -> t -> t
+val add_identifier : string -> t -> t
 
 val add_newline : t -> t
 
