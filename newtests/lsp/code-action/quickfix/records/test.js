@@ -106,5 +106,20 @@ module.exports = (suite(
         'quickfix-record-invalid-equals',
       ),
     ),
+    test(
+      'provide quickfix to convert object literal to record expression',
+      generateSimpleTests(
+        'quickfix',
+        {
+          addFile,
+          lspIgnoreStatusAndCancellation,
+          lspStartAndConnect,
+          lspRequestAndWaitUntilResponse,
+        },
+        __dirname,
+        'object-literal-to-record-expression.js',
+        'quickfix-object-literal-to-record-expression',
+      ),
+    ),
   ],
 ): SuiteType);

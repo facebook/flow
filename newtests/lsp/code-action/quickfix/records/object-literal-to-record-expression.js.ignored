@@ -1,0 +1,13 @@
+// @flow
+
+record R {
+  a: number,
+}
+
+const x: R = {a: 1};
+//           ^
+
+
+function func(x: R) {}
+func({a: 1});
+//   ^^^^^^

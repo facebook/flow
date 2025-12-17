@@ -1469,6 +1469,30 @@ let ast_transforms_of_error
       ]
     else
       []
+  | Error_message.EIncompatibleWithUseOp
+      {
+        explanation =
+          Some
+            (Flow_intermediate_error_types.ExplanationObjectLiteralNeedsRecordSyntax
+              { record_name; obj_reason }
+              );
+        _;
+      } ->
+    let error_loc = Reason.loc_of_reason obj_reason in
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = Printf.sprintf "Convert to record `%s {...}`" record_name;
+          diagnostic_title = "convert_object_literal_to_record_expression";
+          transform =
+            untyped_ast_transform
+              (Autofix_object_to_record.convert_object_to_record_expression ~record_name);
+          target_loc = error_loc;
+          confidence = BestEffort;
+        };
+      ]
+    else
+      []
   | Error_message.EInvariantSubtypingWithUseOp
       {
         explanation =
