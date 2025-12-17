@@ -394,6 +394,10 @@ type 'loc explanation =
       members: string list;
       extra_number: int;
     }
+  | ExplanationObjectLiteralNeedsRecordSyntax of {
+      record_name: string;
+      obj_reason: 'loc virtual_reason;
+    }
 
 type access_chain_segment =
   | PropSegment of name

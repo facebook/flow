@@ -735,6 +735,25 @@ References:
              ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------- imported.js:42:3
+
+Cannot cast `o` to `RNamed` because object literal [1] is incompatible with `RNamed` [2]. [incompatible-type]
+
+Fix by adding the record name `RNamed` before the object literal [1], e.g. `RNamed {...}`.
+
+   imported.js:42:3
+   42|   o as RNamed; // ERROR
+         ^
+
+References:
+   imported.js:41:13
+   41|   const o = {a: 1};
+                   ^^^^^^ [1]
+   imported.js:42:8
+   42|   o as RNamed; // ERROR
+              ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------- invalid-declaration-syntax.js:4:14
 
 Record declarations use commas `,` to separate properties. To fix, replace the `;` with `,`. [record-invalid-syntax]
@@ -878,6 +897,41 @@ References:
                       ^ [7]
 
 
+Error -------------------------------------------------------------------------------------------- invalid-usage.js:7:16
+
+Cannot assign object literal to `x` because object literal [1] is incompatible with `R` [2]. [incompatible-type]
+
+Fix by adding the record name `R` before the object literal [1], e.g. `R {...}`.
+
+   invalid-usage.js:7:16
+   7|   const x: R = {a: 1}; // ERROR: should suggest `R {...}`
+                     ^^^^^^ [1]
+
+References:
+   invalid-usage.js:7:12
+   7|   const x: R = {a: 1}; // ERROR: should suggest `R {...}`
+                 ^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- invalid-usage.js:9:3
+
+Cannot cast `o` to `R` because object literal [1] is incompatible with `R` [2]. [incompatible-type]
+
+Fix by adding the record name `R` before the object literal [1], e.g. `R {...}`.
+
+   invalid-usage.js:9:3
+   9|   o as R; // ERROR: should suggest `R {...}`
+        ^
+
+References:
+   invalid-usage.js:8:13
+   8|   const o = {a: 1};
+                  ^^^^^^ [1]
+   invalid-usage.js:9:8
+   9|   o as R; // ERROR: should suggest `R {...}`
+             ^ [2]
+
+
 Error --------------------------------------------------------------------------------------- static-async-names.js:10:3
 
 Cannot cast `x.static` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
@@ -981,4 +1035,4 @@ References:
 
 
 
-Found 66 errors
+Found 69 errors

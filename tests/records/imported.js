@@ -35,3 +35,9 @@ import {RKeyNames} from './exported';
   RKeyNames {'foo': 's', 42: 0}; // OK
   RKeyNames {'foo': false, 42: false}; // ERROR
 }
+
+// Object where record expected
+{
+  const o = {a: 1};
+  o as RNamed; // ERROR
+}
