@@ -1079,6 +1079,8 @@ let map_loc_of_explanation (f : 'a -> 'b) =
   | ExplanationAdditionalUnionMembers { left; right; members; extra_number } ->
     ExplanationAdditionalUnionMembers
       { left = map_reason left; right = map_reason right; members; extra_number }
+  | ExplanationObjectLiteralNeedsRecordSyntax { record_name; obj_reason } ->
+    ExplanationObjectLiteralNeedsRecordSyntax { record_name; obj_reason = map_reason obj_reason }
 
 let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   let map_use_op = TypeUtil.mod_loc_of_virtual_use_op f in

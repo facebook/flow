@@ -2226,6 +2226,31 @@ module Make (Flow : INPUT) : OUTPUT = struct
       in
       add_output_prop_polarity_mismatch cx use_op (lreason, ureason) errs;
       rec_flow cx trace (l, UseT (use_op, uproto))
+    (* If passing in an object literal where a record is expected, provide an additional explanation. *)
+    | ( DefT (lreason, ObjT _),
+        DefT
+          (_, InstanceT { inst = { inst_kind = RecordKind _; class_name = Some record_name; _ }; _ })
+      )
+      when match desc_of_reason lreason with
+           | RObjectLit
+           | RObjectLit_UNSOUND ->
+             true
+           | _ -> false ->
+      let (reason_lower, reason_upper) = FlowError.ordered_reasons (reason_of_t l, reason_of_t u) in
+      add_output
+        cx
+        (Error_message.EIncompatibleWithUseOp
+           {
+             reason_lower;
+             reason_upper;
+             use_op;
+             explanation =
+               Some
+                 (Flow_intermediate_error_types.ExplanationObjectLiteralNeedsRecordSyntax
+                    { record_name; obj_reason = lreason }
+                 );
+           }
+        )
     (* For some object `x` and constructor `C`, if `x instanceof C`, then the
      * object is a subtype. We use `ExtendsUseT` to walk the proto chain of the
      * object, in case it includes a nominal type. *)

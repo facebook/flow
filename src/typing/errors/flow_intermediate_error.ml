@@ -2012,6 +2012,15 @@ let to_printable_error :
           []
         )
       @ [text " that are not included in type "; ref right]
+    | ExplanationObjectLiteralNeedsRecordSyntax { record_name; obj_reason } ->
+      [
+        text "Fix by adding the record name ";
+        code record_name;
+        text " before the ";
+        ref obj_reason;
+        text ", e.g. ";
+        code (spf "%s {...}" record_name);
+      ]
   in
   let frame_to_friendly_msgs ~include_incompatibility_pair =
     let map =
