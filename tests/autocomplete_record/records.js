@@ -40,7 +40,7 @@ record Container<T> {
 const c = Con
 //           ^
 
-// Test 5: Record with all optional fields (should not generate snippet)
+// Test 5: Record with all optional fields (generates `Optional {}`)
 record Optional {
   a: number = 1,
   b: string = "",
