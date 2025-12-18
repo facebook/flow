@@ -1,3 +1,18 @@
+### 0.295.0
+
+New Features:
+* Support 4 well-known symbols (`Symbol.iterator`, `Symbol.asyncIterator`, `Symbol.dispose`, `Symbol.asyncDispose`) in class methods. For now, the computed method name needs to be exactly in the form of `Symbol.iterator` (or other 3 names) to be recognized.
+
+Notable bug fixes:
+* Flow will now error when a function parameter appears in the default expression for the same binding. (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfBE4eWw2fDgofDBMsAALfAA3KjgsXGxxZC4eAw0G-GhcWn9aY3wWZldu-g1mbGqJUoBaCRHEzrcDEgBrbAk62kXhXFxJ923d-cPRHEpTgyEoMDaqZdW7vKgoOfaSKgOKpqmDA+d4gB5fMA-P6LCCMLLQbiLOoYCqgh6-GDYRYIXYLSgkRZkCR4jpddwPfJLZjpOBkUEKTwJEJ+DAkMiUFSwkyZCC3dbdAC+-EgGiSMAeyjg0AABDAABTyZDS4QiG7SgC80vkAEppcABdKAPSG6UAdzgx2lJkovKV8mlLExLEe7WlElq2GljhoImlOAqCGlGieVFKAB1YBL4VBpQg5cAMAKlcDaBrpRhdfqjSbzZbrbb0w7NCZBJCSG6PV6nL7-VBA8HcKG2BHpbkQA0TCQpVAkg0AAxWABMAE4ACxWPsgAVAA))
+
+Misc:
+* Introduced a codemod for migrating legacy utility types to modern equivalents (`yarn run flow-codemod convertLegacyUtilityTypes`)
+
+Parser:
+* Flow now parses import attributes. For now, we don't do any semantic validation yet
+
+
 ### 0.294.0
 
 Parser:
