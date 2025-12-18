@@ -4076,6 +4076,14 @@ let to_printable_error :
         hardcoded_string_desc_ref "reference" loc;
         text " to the binding being declared.";
       ]
+    | MessageInvalidSelfReferencingDefault { name; def_loc; ref_loc } ->
+      [
+        text "Invalid default expression for parameter ";
+        hardcoded_string_desc_ref name def_loc;
+        text ". It contains a ";
+        hardcoded_string_desc_ref "reference" ref_loc;
+        text " to the binding being declared.";
+      ]
     | MessageInvalidTrivialRecursiveDefinition description ->
       [text "Invalid trivially recursive definition of "; desc description; text ". "]
     | MessageInvalidTupleRequiredAfterOptional { reason_tuple; reason_required; reason_optional } ->
