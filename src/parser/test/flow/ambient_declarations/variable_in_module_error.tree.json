@@ -1,0 +1,237 @@
+{
+  "errors": [
+    {
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 3,
+          "column": 8
+        },
+        "end": {
+          "line": 3,
+          "column": 20
+        }
+      },
+      "message": "Const must be initialized"
+    }
+  ],
+  "type": "Program",
+  "loc": {
+    "source": null,
+    "start": {
+      "line": 2,
+      "column": 0
+    },
+    "end": {
+      "line": 4,
+      "column": 1
+    }
+  },
+  "range": [
+    74,
+    170
+  ],
+  "body": [
+    {
+      "type": "DeclareModule",
+      "leadingComments": [
+        {
+          "type": "Line",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 1,
+              "column": 73
+            }
+          },
+          "range": [
+            0,
+            73
+          ],
+          "value": " Test that const without annotation errors in flow-typed declare module"
+        }
+      ],
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 2,
+          "column": 0
+        },
+        "end": {
+          "line": 4,
+          "column": 1
+        }
+      },
+      "range": [
+        74,
+        170
+      ],
+      "id": {
+        "type": "Literal",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 2,
+            "column": 15
+          },
+          "end": {
+            "line": 2,
+            "column": 34
+          }
+        },
+        "range": [
+          89,
+          108
+        ],
+        "value": "test-module-error",
+        "raw": "'test-module-error'"
+      },
+      "body": {
+        "type": "BlockStatement",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 2,
+            "column": 35
+          },
+          "end": {
+            "line": 4,
+            "column": 1
+          }
+        },
+        "range": [
+          109,
+          170
+        ],
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "trailingComments": [
+              {
+                "type": "Line",
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 3,
+                    "column": 22
+                  },
+                  "end": {
+                    "line": 3,
+                    "column": 57
+                  }
+                },
+                "range": [
+                  133,
+                  168
+                ],
+                "value": " Error: Const must be initialized"
+              }
+            ],
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 3,
+                "column": 2
+              },
+              "end": {
+                "line": 3,
+                "column": 21
+              }
+            },
+            "range": [
+              113,
+              132
+            ],
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 3,
+                    "column": 8
+                  },
+                  "end": {
+                    "line": 3,
+                    "column": 20
+                  }
+                },
+                "range": [
+                  119,
+                  131
+                ],
+                "id": {
+                  "type": "Identifier",
+                  "loc": {
+                    "source": null,
+                    "start": {
+                      "line": 3,
+                      "column": 8
+                    },
+                    "end": {
+                      "line": 3,
+                      "column": 20
+                    }
+                  },
+                  "range": [
+                    119,
+                    131
+                  ],
+                  "name": "noAnnotation",
+                  "typeAnnotation": null,
+                  "optional": false
+                },
+                "init": null
+              }
+            ],
+            "kind": "const"
+          }
+        ]
+      }
+    }
+  ],
+  "comments": [
+    {
+      "type": "Line",
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 73
+        }
+      },
+      "range": [
+        0,
+        73
+      ],
+      "value": " Test that const without annotation errors in flow-typed declare module"
+    },
+    {
+      "type": "Line",
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 3,
+          "column": 22
+        },
+        "end": {
+          "line": 3,
+          "column": 57
+        }
+      },
+      "range": [
+        133,
+        168
+      ],
+      "value": " Error: Const must be initialized"
+    }
+  ]
+}

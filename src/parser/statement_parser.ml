@@ -1427,6 +1427,7 @@ module Statement
       (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_LCURLY;
+        let env = with_ambient_context true env in
         let body =
           Parse.module_body
             ~term_fn:(function

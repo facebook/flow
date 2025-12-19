@@ -94,6 +94,10 @@ val allow_directive : env -> bool
 
 val allow_super : env -> allowed_super
 
+val in_ambient_context : env -> bool
+
+val implicit_ambient : env -> bool
+
 val has_simple_parameters : env -> bool
 
 val no_in : env -> bool
@@ -164,6 +168,8 @@ val with_allow_await : bool -> env -> env
 val with_allow_directive : bool -> env -> env
 
 val with_allow_super : allowed_super -> env -> env
+
+val with_ambient_context : bool -> env -> env
 
 val with_no_let : bool -> env -> env
 

@@ -505,7 +505,17 @@ class lib_def_loc_mapper_and_validator cx =
       | Switch _ -> Some (error "switch")
       | Throw _ -> Some (error "throw")
       | Try _ -> Some (error "try")
-      | VariableDeclaration _ -> Some (error "variable declaration")
+      | VariableDeclaration { VariableDeclaration.declarations; _ } ->
+        (* Allow variable declarations if all have type annotations and no initializers (ambient) *)
+        let is_ambient_declarator = function
+          | (_, { VariableDeclaration.Declarator.id; init = None }) ->
+            Flow_ast_utils.pattern_has_type_annotation id
+          | _ -> false
+        in
+        if List.for_all is_ambient_declarator declarations then
+          None
+        else
+          Some (error "variable declaration")
       | While _ -> Some (error "while")
       | With _ -> Some (error "with")
     in

@@ -119,6 +119,14 @@ let rec match_pattern_has_binding =
   | (_, OrPattern { OrPattern.patterns; _ }) -> List.exists match_pattern_has_binding patterns
   | (_, AsPattern _) -> true
 
+let pattern_has_type_annotation =
+  let open Pattern in
+  function
+  | (_, Identifier { Identifier.annot = Type.Available _; _ }) -> true
+  | (_, Object { Object.annot = Type.Available _; _ }) -> true
+  | (_, Array { Array.annot = Type.Available _; _ }) -> true
+  | _ -> false
+
 let string_of_variable_kind = function
   | Variable.Var -> "var"
   | Variable.Let -> "let"
@@ -403,7 +411,16 @@ let acceptable_statement_in_declaration_context ~in_declare_namespace =
   | Switch _ -> Error "switch"
   | Throw _ -> Error "throw"
   | Try _ -> Error "try"
-  | VariableDeclaration _ -> Error "variable declaration"
+  | VariableDeclaration { VariableDeclaration.declarations; _ } ->
+    (* Allow variable declarations if all have type annotations and no initializers (ambient) *)
+    let is_ambient_declarator = function
+      | (_, { VariableDeclaration.Declarator.id; init = None }) -> pattern_has_type_annotation id
+      | _ -> false
+    in
+    if List.for_all is_ambient_declarator declarations then
+      Ok ()
+    else
+      Error "variable declaration"
   | While _ -> Error "while"
   | With _ -> Error "with"
   | ImportDeclaration _ ->

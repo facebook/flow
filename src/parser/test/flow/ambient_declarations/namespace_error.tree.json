@@ -1,0 +1,238 @@
+{
+  "errors": [
+    {
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 3,
+          "column": 8
+        },
+        "end": {
+          "line": 3,
+          "column": 20
+        }
+      },
+      "message": "Const must be initialized"
+    }
+  ],
+  "type": "Program",
+  "loc": {
+    "source": null,
+    "start": {
+      "line": 2,
+      "column": 0
+    },
+    "end": {
+      "line": 4,
+      "column": 1
+    }
+  },
+  "range": [
+    66,
+    160
+  ],
+  "body": [
+    {
+      "type": "DeclareNamespace",
+      "leadingComments": [
+        {
+          "type": "Line",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 0
+            },
+            "end": {
+              "line": 1,
+              "column": 65
+            }
+          },
+          "range": [
+            0,
+            65
+          ],
+          "value": " Test that const without annotation errors in declare namespace"
+        }
+      ],
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 2,
+          "column": 0
+        },
+        "end": {
+          "line": 4,
+          "column": 1
+        }
+      },
+      "range": [
+        66,
+        160
+      ],
+      "id": {
+        "type": "Identifier",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 2,
+            "column": 18
+          },
+          "end": {
+            "line": 2,
+            "column": 32
+          }
+        },
+        "range": [
+          84,
+          98
+        ],
+        "name": "ErrorNamespace",
+        "typeAnnotation": null,
+        "optional": false
+      },
+      "body": {
+        "type": "BlockStatement",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 2,
+            "column": 33
+          },
+          "end": {
+            "line": 4,
+            "column": 1
+          }
+        },
+        "range": [
+          99,
+          160
+        ],
+        "body": [
+          {
+            "type": "VariableDeclaration",
+            "trailingComments": [
+              {
+                "type": "Line",
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 3,
+                    "column": 22
+                  },
+                  "end": {
+                    "line": 3,
+                    "column": 57
+                  }
+                },
+                "range": [
+                  123,
+                  158
+                ],
+                "value": " Error: Const must be initialized"
+              }
+            ],
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 3,
+                "column": 2
+              },
+              "end": {
+                "line": 3,
+                "column": 21
+              }
+            },
+            "range": [
+              103,
+              122
+            ],
+            "declarations": [
+              {
+                "type": "VariableDeclarator",
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 3,
+                    "column": 8
+                  },
+                  "end": {
+                    "line": 3,
+                    "column": 20
+                  }
+                },
+                "range": [
+                  109,
+                  121
+                ],
+                "id": {
+                  "type": "Identifier",
+                  "loc": {
+                    "source": null,
+                    "start": {
+                      "line": 3,
+                      "column": 8
+                    },
+                    "end": {
+                      "line": 3,
+                      "column": 20
+                    }
+                  },
+                  "range": [
+                    109,
+                    121
+                  ],
+                  "name": "noAnnotation",
+                  "typeAnnotation": null,
+                  "optional": false
+                },
+                "init": null
+              }
+            ],
+            "kind": "const"
+          }
+        ]
+      }
+    }
+  ],
+  "comments": [
+    {
+      "type": "Line",
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 65
+        }
+      },
+      "range": [
+        0,
+        65
+      ],
+      "value": " Test that const without annotation errors in declare namespace"
+    },
+    {
+      "type": "Line",
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 3,
+          "column": 22
+        },
+        "end": {
+          "line": 3,
+          "column": 57
+        }
+      },
+      "range": [
+        123,
+        158
+      ],
+      "value": " Error: Const must be initialized"
+    }
+  ]
+}

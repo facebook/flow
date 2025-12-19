@@ -451,13 +451,18 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
   let const env =
     let env = env |> with_no_let true in
     let (declarations, leading_comments, errs) = declarations T_CONST env in
-    (* Make sure all consts defined are initialized *)
+    (* Make sure all consts defined are initialized, unless we're in an ambient context with type annotation *)
     let errs =
       List.fold_left
         (fun errs decl ->
           match decl with
-          | (loc, { Statement.VariableDeclaration.Declarator.init = None; _ }) ->
-            (loc, Parse_error.NoUninitializedConst) :: errs
+          | (loc, { Statement.VariableDeclaration.Declarator.init = None; id }) ->
+            (* In ambient context, allow uninitialized const only if there's a type annotation *)
+            if Parser_env.in_ambient_context env && Flow_ast_utils.pattern_has_type_annotation id
+            then
+              errs
+            else
+              (loc, Parse_error.NoUninitializedConst) :: errs
           | _ -> errs)
         errs
         declarations
