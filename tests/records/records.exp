@@ -273,9 +273,9 @@ Operation `Omit` [1] is not allowed on record `R` [2]. To fix, turn the record t
                              ^ [2]
 
 References:
-   <BUILTINS>/core.js:3187:46
-   3187| type Omit<O: interface {}, Keys: $Keys<O>> = $Omit<O, Keys>;
-                                                      ^^^^^^^^^^^^^^ [1]
+   <BUILTINS>/core.js:3187:36
+   3187| type Omit<O: interface {}, Keys> = $Omit<O, Keys>;
+                                            ^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- declaration.js:418:24

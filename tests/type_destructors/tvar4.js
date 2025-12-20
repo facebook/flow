@@ -32,10 +32,7 @@ function fn3<T: {p: any}>(a: T => void): (Omit<T, 'p'>) => void {
 // number, but we expect a string.
 fn3((x: {foo: string, p: number}) => {})({foo: 42});
 
-// We error here because $Rest requires us to specify a p property in our object
-// type. But if we look at the implementation of fn3 this is a fine program
-// to accept.
-fn3((x: {foo: number}) => {})({foo: 42});
+fn3((x: {foo: number}) => {})({foo: 42}); // OK
 
 function fn4<T: {|p: any|}>(a: T => void): (T['p']) => void {
   // We error here because the implementation of {p: empty} ~> empty currently

@@ -122,20 +122,6 @@ References:
               ^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- omit.js:65:43
-
-Cannot instantiate `Omit` because in type argument `Keys`: property `xxx` is missing in object type [1]. [prop-missing]
-
-   omit.js:65:43
-   65|   declare const x: Omit<{foo: 1, bar: 2}, 'xxx'>; // ERROR
-                                                 ^^^^^
-
-References:
-   omit.js:65:25
-   65|   declare const x: Omit<{foo: 1, bar: 2}, 'xxx'>; // ERROR
-                               ^^^^^^^^^^^^^^^^ [1]
-
-
 Error ----------------------------------------------------------------------------------------------------- pick.js:8:10
 
 Cannot assign `3` to `pickedO1.foo` because property `foo` is not writable. [cannot-write]
@@ -243,4 +229,4 @@ References:
 
 
 
-Found 16 errors
+Found 15 errors

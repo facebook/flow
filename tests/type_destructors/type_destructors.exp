@@ -390,27 +390,13 @@ References:
                      ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar4.js:38:1
-
-Cannot call `fn3` because in type argument `Keys`: property `p` is missing in object type [1]. [prop-missing]
-
-   tvar4.js:38:1
-   38| fn3((x: {foo: number}) => {})({foo: 42});
-       ^^^
-
-References:
-   tvar4.js:38:9
-   38| fn3((x: {foo: number}) => {})({foo: 42});
-               ^^^^^^^^^^^^^ [1]
-
-
-Error ---------------------------------------------------------------------------------------------------- tvar4.js:38:9
+Error ---------------------------------------------------------------------------------------------------- tvar4.js:35:9
 
 Cannot call `fn3` because in type argument `T`: property `p` is missing in object type [1] but exists in object
 type [2]. [incompatible-type]
 
-   tvar4.js:38:9
-   38| fn3((x: {foo: number}) => {})({foo: 42});
+   tvar4.js:35:9
+   35| fn3((x: {foo: number}) => {})({foo: 42}); // OK
                ^^^^^^^^^^^^^ [1]
 
 References:
@@ -419,62 +405,62 @@ References:
                        ^^^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tvar4.js:43:17
+Error --------------------------------------------------------------------------------------------------- tvar4.js:40:17
 
 Cannot call `a` with object literal bound to the first parameter because object literal [1] is incompatible with
 `T` [2]. [incompatible-type]
 
-   tvar4.js:43:17
-   43|   return p => a({p});
+   tvar4.js:40:17
+   40|   return p => a({p});
                        ^^^ [1]
 
 References:
-   tvar4.js:40:32
-   40| function fn4<T: {|p: any|}>(a: T => void): (T['p']) => void {
+   tvar4.js:37:32
+   37| function fn4<T: {|p: any|}>(a: T => void): (T['p']) => void {
                                       ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- tvar4.js:47:31
+Error --------------------------------------------------------------------------------------------------- tvar4.js:44:31
 
 Cannot call `fn4(...)` with `42` bound to the first parameter because number [1] is incompatible with string [2].
 [incompatible-type]
 
-   tvar4.js:47:31
-   47| fn4((x: {|p: string|}) => {})(42);
+   tvar4.js:44:31
+   44| fn4((x: {|p: string|}) => {})(42);
                                      ^^ [1]
 
 References:
-   tvar4.js:47:14
-   47| fn4((x: {|p: string|}) => {})(42);
+   tvar4.js:44:14
+   44| fn4((x: {|p: string|}) => {})(42);
                     ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar4.js:51:1
+Error ---------------------------------------------------------------------------------------------------- tvar4.js:48:1
 
 Cannot call `fn4` because property `p` is missing in object type [1]. [prop-missing]
 
-   tvar4.js:51:1
-   51| fn4((x: {||}) => {})(42);
+   tvar4.js:48:1
+   48| fn4((x: {||}) => {})(42);
        ^^^
 
 References:
-   tvar4.js:51:9
-   51| fn4((x: {||}) => {})(42);
+   tvar4.js:48:9
+   48| fn4((x: {||}) => {})(42);
                ^^^^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- tvar4.js:51:9
+Error ---------------------------------------------------------------------------------------------------- tvar4.js:48:9
 
 Cannot call `fn4` because in type argument `T`: property `p` is missing in object type [1] but exists in object
 type [2]. [incompatible-type]
 
-   tvar4.js:51:9
-   51| fn4((x: {||}) => {})(42);
+   tvar4.js:48:9
+   48| fn4((x: {||}) => {})(42);
                ^^^^ [1]
 
 References:
-   tvar4.js:40:17
-   40| function fn4<T: {|p: any|}>(a: T => void): (T['p']) => void {
+   tvar4.js:37:17
+   37| function fn4<T: {|p: any|}>(a: T => void): (T['p']) => void {
                        ^^^^^^^^^^ [2]
 
 
@@ -598,4 +584,4 @@ References:
 
 
 
-Found 38 errors
+Found 37 errors

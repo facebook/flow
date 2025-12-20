@@ -62,5 +62,5 @@ type OmitInstance = Omit<C, 'foo'>;
 
 // Omitting non-existent property
 {
-  declare const x: Omit<{foo: 1, bar: 2}, 'xxx'>; // ERROR
+  declare const x: Omit<{foo: 1, bar: 2}, 'xxx'>; // OK
 }
