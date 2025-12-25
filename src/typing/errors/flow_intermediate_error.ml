@@ -5465,6 +5465,12 @@ let to_printable_error :
         code (spf "%s {...}" record_name);
         text ".";
       ]
+    | MessageRecordInvalidName { name } ->
+      [
+        text "Invalid record name ";
+        code name;
+        text ". Record names cannot start with lowercase 'a' through 'z'.";
+      ]
     | MessageRecordDeclarationInvalidSyntax kind ->
       let msg_invalid_infix_equals =
         [text "Record declarations don't need the "; code "="; text ", remove it."]

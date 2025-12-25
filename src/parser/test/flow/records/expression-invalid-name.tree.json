@@ -1,0 +1,41 @@
+{
+  "errors":[
+    {
+      "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":6}},
+      "message":"Unexpected token `{`, expected the end of an expression statement (`;`)"
+    }
+  ],
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":7}},
+  "range":[28,35],
+  "body":[
+    {
+      "type":"ExpressionStatement",
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":4}},
+      "range":[28,32],
+      "expression":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":4}},
+        "range":[28,32],
+        "name":"clas",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "directive":null
+    },
+    {
+      "type":"BlockStatement",
+      "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":7}},
+      "range":[33,35],
+      "body":[]
+    }
+  ],
+  "comments":[
+    {
+      "type":"Line",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":27}},
+      "range":[0,27],
+      "value":" Not a `RecordExpression`"
+    }
+  ]
+}

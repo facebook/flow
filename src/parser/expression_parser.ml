@@ -837,15 +837,17 @@ module Expression
       let in_optional_chain = Option.is_some optional in
       call_cover ~allow_optional_chain ~in_optional_chain env start_loc (Cover_expr (loc, call))
     in
+    let is_a_to_z c = c >= 'a' && c <= 'z' in
     let should_parse_record env constructor =
       (parse_options env).records
       && (not (Peek.ith_is_line_terminator ~i:1 env))
       && (not (no_record env))
       &&
       match constructor with
-      | (_, Expression.Identifier _)
-      | (_, Expression.Member _) ->
+      | (_, Expression.Identifier (_, { Identifier.name; _ }))
+        when name != "" && not (is_a_to_z name.[0]) ->
         true
+      | (_, Expression.Member _) -> true
       | _ -> false
     in
     let parse_record env ~constructor ~targs =

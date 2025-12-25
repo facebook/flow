@@ -1198,6 +1198,7 @@ type 'loc message =
       reason_record: 'loc virtual_reason;
     }
   | MessageRecordInvalidNew of { record_name: string }
+  | MessageRecordInvalidName of { name: string }
   | MessageRecordDeclarationInvalidSyntax of 'loc record_declaration_invalid_syntax
   | MessageConstantCondition of {
       is_truthy: bool;

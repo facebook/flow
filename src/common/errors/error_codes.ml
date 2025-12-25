@@ -136,6 +136,7 @@ type error_code =
   | ReassignEnum
   | ReassignImport
   | RecordBannedTypeUtil
+  | RecordInvalidName
   | RecordInvalidNew
   | RecordInvalidSyntax
   | ReferenceBeforeDeclaration
@@ -355,6 +356,7 @@ let string_of_code : error_code -> string = function
   | ReassignEnum -> "reassign-enum"
   | ReassignImport -> "reassign-import"
   | RecordBannedTypeUtil -> "record-banned-type-util"
+  | RecordInvalidName -> "record-invalid-name"
   | RecordInvalidNew -> "record-invalid-new"
   | RecordInvalidSyntax -> "record-invalid-syntax"
   | ReferenceBeforeDeclaration -> "reference-before-declaration"

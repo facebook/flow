@@ -1816,6 +1816,9 @@ module Make
           ~multiple_error_loc:name_loc
           invalid_syntax
           invalid_properties_syntax;
+        let is_a_to_z c = c >= 'a' && c <= 'z' in
+        if name != "" && is_a_to_z name.[0] then
+          Flow_js_utils.add_output cx (Error_message.ERecordInvalidName { loc = name_loc; name });
         let name = OrdinaryName name in
         let reason = DescFormat.instance_reason name name_loc in
         let tast_record_type = Type_env.read_declared_type cx reason name_loc in

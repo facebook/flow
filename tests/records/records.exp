@@ -1,3 +1,19 @@
+Error ---------------------------------------------------------------------------------- declaration-invalid-name.js:1:8
+
+Invalid record name `clas`. Record names cannot start with lowercase 'a' through 'z'. [record-invalid-name]
+
+   1| record clas {} // ERROR
+             ^^^^
+
+
+Error ---------------------------------------------------------------------------------- declaration-invalid-name.js:3:8
+
+Invalid record name `struct`. Record names cannot start with lowercase 'a' through 'z'. [record-invalid-name]
+
+   3| record struct {} // ERROR
+             ^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------- declaration.js:8:5
 
 Cannot get `x.xxx` because property `xxx` is missing in `R` [1]. [prop-missing]
@@ -1051,4 +1067,4 @@ References:
 
 
 
-Found 71 errors
+Found 73 errors
