@@ -839,6 +839,7 @@ module Expression
     in
     let should_parse_record env constructor =
       (parse_options env).records
+      && (not (Peek.ith_is_line_terminator ~i:1 env))
       && (not (no_record env))
       &&
       match constructor with
