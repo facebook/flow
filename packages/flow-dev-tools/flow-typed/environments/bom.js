@@ -1,6 +1,5 @@
 // @generated
-// flow-typed signature: 09630545c584c3b212588a2390c257d0
-// flow-typed version: baae4b8bcc/bom/flow_>=v0.261.x
+// flow-typed signature: abf85c0489fb37ac31fa509e7eecd4df5cb756dc
 
 /* BOM */
 
@@ -827,6 +826,7 @@ declare class SharedWorker extends EventTarget {
 declare function importScripts(...urls: Array<string | TrustedScriptURL>): void;
 
 declare class WorkerGlobalScope extends EventTarget {
+    // $FlowExpectedError[incompatible-variance]
     self: this;
     location: WorkerLocation;
     navigator: WorkerNavigator;

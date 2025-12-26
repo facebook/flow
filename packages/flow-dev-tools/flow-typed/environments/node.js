@@ -1,6 +1,5 @@
 // @generated
-// flow-typed signature: 44d8f5b0b708cdf7288ec50b7c08e1bf
-// flow-typed version: 832153ff79/node/flow_>=v0.261.x
+// flow-typed signature: abf85c0489fb37ac31fa509e7eecd4df5cb756dc
 
 interface ErrnoError extends Error {
   address?: string;
@@ -1567,6 +1566,7 @@ type http$agentOptions = {
 declare class http$Agent<+SocketT = net$Socket> {
   constructor(options: http$agentOptions): void;
   destroy(): void;
+  // $FlowExpectedError[incompatible-variance]
   freeSockets: { [name: string]: $ReadOnlyArray<SocketT>, ... };
   getName(options: {
     host: string,
@@ -1576,7 +1576,9 @@ declare class http$Agent<+SocketT = net$Socket> {
   }): string;
   maxFreeSockets: number;
   maxSockets: number;
+  // $FlowExpectedError[incompatible-variance]
   requests: { [name: string]: $ReadOnlyArray<http$ClientRequest<SocketT>>, ... };
+  // $FlowExpectedError[incompatible-variance]
   sockets: { [name: string]: $ReadOnlyArray<SocketT>, ... };
 }
 
@@ -2632,28 +2634,28 @@ type util$InspectOptions = {
 
 declare type util$ParseArgsOption =
 | {|
-    type: 'boolean',
-    multiple?: false,
-    short?: string,
-    default?: boolean,
+    +type: 'boolean',
+    +multiple?: false,
+    +short?: string,
+    +default?: boolean,
   |}
 | {|
-    type: 'boolean',
-    multiple: true,
-    short?: string,
-    default?: Array<boolean>,
+    +type: 'boolean',
+    +multiple: true,
+    +short?: string,
+    +default?: Array<boolean>,
   |}
 | {|
-    type: 'string',
-    multiple?: false,
-    short?: string,
-    default?: string,
+    +type: 'string',
+    +multiple?: false,
+    +short?: string,
+    +default?: string,
   |}
 | {|
-    type: 'string',
-    multiple: true,
-    short?: string,
-    default?: Array<string>,
+    +type: 'string',
+    +multiple: true,
+    +short?: string,
+    +default?: Array<string>,
   |};
 
 type util$ParseArgsOptionToValue<TOption> =
@@ -2706,7 +2708,7 @@ declare module "util" {
   declare function stripVTControlCharacters(str: string): string;
 
   declare function parseArgs<
-    TOptions: {[string]: util$ParseArgsOption} = {||},
+    TOptions: {+[string]: util$ParseArgsOption} = {||},
   >(config: {|
     args?: Array<string>,
     options?: TOptions,
@@ -2719,7 +2721,7 @@ declare module "util" {
   |};
 
   declare function parseArgs<
-    TOptions: {[string]: util$ParseArgsOption} = {||},
+    TOptions: {+[string]: util$ParseArgsOption} = {||},
   >(config: {|
     args?: Array<string>,
     options?: TOptions,
@@ -3523,6 +3525,10 @@ declare module 'node:assert/strict' {
   declare module.exports: $Exports<'assert'>['strict'];
 }
 
+declare module 'node:crypto' {
+  declare module.exports: $Exports<'crypto'>;
+}
+
 declare module 'node:events' {
   declare module.exports: $Exports<'events'>;
 }
@@ -3553,6 +3559,10 @@ declare module 'process' {
 
 declare module 'node:process' {
   declare module.exports: $Exports<'process'>;
+}
+
+declare module 'node:readline' {
+  declare module.exports: $Exports<'readline'>;
 }
 
 declare module 'node:util' {

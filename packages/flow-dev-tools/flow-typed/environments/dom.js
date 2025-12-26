@@ -1,6 +1,5 @@
 // @generated
-// flow-typed signature: eb17fb14985b54ff09accf603eec19cb
-// flow-typed version: 7420480b26/dom/flow_>=v0.261.x
+// flow-typed signature: abf85c0489fb37ac31fa509e7eecd4df5cb756dc
 
 /* Files */
 
@@ -831,11 +830,11 @@ declare class TaskSignal extends AbortSignal {
   +priority: number;
 }
 
-type SchedulerPostTaskOptions = {
+type SchedulerPostTaskOptions = {|
   priority?: "user-blocking" | "user-visible" | "background",
   signal?: TaskSignal | AbortSignal,
   delay?: number,
-};
+|};
 
 declare class Scheduler {
   postTask<T>(
@@ -967,6 +966,7 @@ declare class HTMLCollection<+Elem: Element> {
   length: number;
   item(nameOrIndex?: any, optionalIndex?: any): Elem | null;
   namedItem(name: string): Elem | null;
+  // $FlowExpectedError[incompatible-variance]
   [index: number | string]: Elem;
 }
 
