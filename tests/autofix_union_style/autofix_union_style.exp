@@ -18,7 +18,7 @@ module.exports = {
     (cond ? b : true),
   b6: (b: boolean): boolean =>
     (cond ? false : b),
-  b7: (t: mixed): mixed =>
+  b7: (t: mixed): unknown =>
     (cond ? false: t),
   b8: (e: empty): boolean =>
     (cond ? false : e),

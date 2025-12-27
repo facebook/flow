@@ -61,7 +61,7 @@ let type_ options =
     | Bound (_, name) -> builtin_from_string name
     | Generic (x, _, ts) -> generic_type x ts
     | Any _ -> just (T.Any None)
-    | Top -> just (T.Mixed None)
+    | Top -> just (T.Unknown None)
     | Bot _ -> just (T.Empty None)
     | Void -> just (T.Void None)
     | Null -> just (T.Null None)

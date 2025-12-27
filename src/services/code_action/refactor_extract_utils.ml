@@ -727,7 +727,9 @@ module TypeSynthesizer = struct
     let type_param_synthesizer { Type.name; bound; polarity; default; _ } =
       let%bind bound =
         match%map bound |> synth_type Loc.none with
-        | (_, (_, Flow_ast.Type.Mixed _)) -> Flow_ast.Type.Missing Loc.none
+        | (_, (_, Flow_ast.Type.Mixed _))
+        | (_, (_, Flow_ast.Type.Unknown _)) ->
+          Flow_ast.Type.Missing Loc.none
         | bound -> Flow_ast.Type.Available bound
       in
       let variance =
