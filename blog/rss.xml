@@ -1,0 +1,175 @@
+<?xml version="1.0" encoding="utf-8"?>
+<rss version="2.0" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:content="http://purl.org/rss/1.0/modules/content/">
+    <channel>
+        <title>Flow Blog</title>
+        <link>https://flow.org/blog/</link>
+        <description>Flow Blog</description>
+        <lastBuildDate>Wed, 03 Apr 2024 00:00:00 GMT</lastBuildDate>
+        <docs>https://validator.w3.org/feed/docs/rss2.html</docs>
+        <generator>https://github.com/jpmonette/feed</generator>
+        <language>en</language>
+        <item>
+            <title><![CDATA[New Flow Language Features for React]]></title>
+            <link>https://flow.org/blog/2024/04/03/New-Flow-Language-Features-for-React/</link>
+            <guid>https://flow.org/blog/2024/04/03/New-Flow-Language-Features-for-React/</guid>
+            <pubDate>Wed, 03 Apr 2024 00:00:00 GMT</pubDate>
+            <description><![CDATA[Flow is excited to announce Component Syntax, adding first-class support for React primitives such as components and hooks to the Flow language. These features bring improved ergonomics, expressiveness, and static enforcement for many of the Rules of React.]]></description>
+            <content:encoded><![CDATA[<p>Flow is excited to announce Component Syntax, adding first-class support for React primitives such as components and hooks to the Flow language. These features bring improved ergonomics, expressiveness, and static enforcement for many of the Rules of React.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Announcing Conditional Types]]></title>
+            <link>https://flow.org/blog/2024/03/05/Announcing-Conditional-Types/</link>
+            <guid>https://flow.org/blog/2024/03/05/Announcing-Conditional-Types/</guid>
+            <pubDate>Tue, 05 Mar 2024 00:00:00 GMT</pubDate>
+            <description><![CDATA[Conditional types allow you to choose between two different output types by inspecting an input type.]]></description>
+            <content:encoded><![CDATA[<p>Conditional types allow you to choose between two different output types by inspecting an input type.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Announcing User Defined Type Guards in Flow]]></title>
+            <link>https://flow.org/blog/2024/03/05/Announcing-User-Defined-Type-Guards-in-Flow/</link>
+            <guid>https://flow.org/blog/2024/03/05/Announcing-User-Defined-Type-Guards-in-Flow/</guid>
+            <pubDate>Tue, 05 Mar 2024 00:00:00 GMT</pubDate>
+            <description><![CDATA[Flow now lets you define a function that encodes a type predicate over its parameter.]]></description>
+            <content:encoded><![CDATA[<p>Flow now lets you define a function that encodes a type predicate over its parameter.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[New type casting syntax for Flow: 'as']]></title>
+            <link>https://flow.org/blog/2024/02/06/New-type-casting-syntax-for-Flow-as/</link>
+            <guid>https://flow.org/blog/2024/02/06/New-type-casting-syntax-for-Flow-as/</guid>
+            <pubDate>Tue, 06 Feb 2024 00:00:00 GMT</pubDate>
+            <description><![CDATA[To make it easier for new users to get started with Flow, we’re updating our type casting syntax to use 'as'.]]></description>
+            <content:encoded><![CDATA[<p>To make it easier for new users to get started with Flow, we’re updating our type casting syntax to use 'as'.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Improved Flow Docs and Try Flow]]></title>
+            <link>https://flow.org/blog/2023/09/19/Improved-Flow-Docs-and-Try-Flow/</link>
+            <guid>https://flow.org/blog/2023/09/19/Improved-Flow-Docs-and-Try-Flow/</guid>
+            <pubDate>Tue, 19 Sep 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[We’ve refreshed our documentation, and added the ability to configure options and lints in Try Flow!]]></description>
+            <content:encoded><![CDATA[<p>We’ve refreshed our documentation, and added the ability to configure options and lints in Try Flow!</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Announcing 5 new Flow tuple type features]]></title>
+            <link>https://flow.org/blog/2023/08/17/Announcing-5-new-Flow-tuple-type-features/</link>
+            <guid>https://flow.org/blog/2023/08/17/Announcing-5-new-Flow-tuple-type-features/</guid>
+            <pubDate>Thu, 17 Aug 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[Labeled tuple elements, read-only tuples, optional tuple elements, tuple spread, and more.]]></description>
+            <content:encoded><![CDATA[<p>Labeled tuple elements, read-only tuples, optional tuple elements, tuple spread, and more.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Flow can now detect unused Promises]]></title>
+            <link>https://flow.org/blog/2023/04/10/Unused-Promise/</link>
+            <guid>https://flow.org/blog/2023/04/10/Unused-Promise/</guid>
+            <pubDate>Mon, 10 Apr 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[As of v0.201.0, Flow can now lint against unused/floating Promises. Unused promises can be dangerous,]]></description>
+            <content:encoded><![CDATA[<p>As of v0.201.0, Flow can now lint against unused/floating Promises. Unused promises can be dangerous,
+because errors are potentially unhandled, and the code may not execute in the intended order. They are
+usually mistakes that Flow is perfectly positioned to warn you about.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Announcing Partial & Required Flow utility types + catch annotations]]></title>
+            <link>https://flow.org/blog/2023/03/15/Announcing-Partial-and-Required-Flow-utility-types-and-catch-annotations/</link>
+            <guid>https://flow.org/blog/2023/03/15/Announcing-Partial-and-Required-Flow-utility-types-and-catch-annotations/</guid>
+            <pubDate>Wed, 15 Mar 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[Starting in Flow version 0.201, make an object type’s fields all optional using Partial (use instead of the unsafe $Shape),]]></description>
+            <content:encoded><![CDATA[<p>Starting in Flow version 0.201, make an object type’s fields all optional using <code>Partial&lt;ObjType&gt;</code> (use instead of the unsafe <code>$Shape</code>),
+and make an object type’s optional fields required with <code>Required&lt;ObjType&gt;</code>.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Exact object types by default, by default]]></title>
+            <link>https://flow.org/blog/2023/02/16/Exact-object-types-by-default-by-default/</link>
+            <guid>https://flow.org/blog/2023/02/16/Exact-object-types-by-default-by-default/</guid>
+            <pubDate>Thu, 16 Feb 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[We announced 5 years ago a plan to eventually make exact object types the default. We are now proceeding with this plan.]]></description>
+            <content:encoded><![CDATA[<p>We announced 5 years ago a plan to eventually make exact object types the default. We are now proceeding with this plan.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Local Type Inference for Flow]]></title>
+            <link>https://flow.org/blog/2023/01/17/Local-Type-Inference/</link>
+            <guid>https://flow.org/blog/2023/01/17/Local-Type-Inference/</guid>
+            <pubDate>Tue, 17 Jan 2023 00:00:00 GMT</pubDate>
+            <description><![CDATA[Local Type Inference makes Flow’s inference behavior more reliable and predictable, by modestly increasing Flow’s annotation requirement, bringing it closer to industry standard and capitalizing on increasingly strongly and explicitly typed codebases.]]></description>
+            <content:encoded><![CDATA[<p>Local Type Inference makes Flow’s inference behavior more reliable and predictable, by modestly increasing Flow’s annotation requirement, bringing it closer to industry standard and capitalizing on increasingly strongly and explicitly typed codebases.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Improved handling of the empty object in Flow]]></title>
+            <link>https://flow.org/blog/2022/10/20/Improved-handling-of-the-empty-object-in-Flow/</link>
+            <guid>https://flow.org/blog/2022/10/20/Improved-handling-of-the-empty-object-in-Flow/</guid>
+            <pubDate>Thu, 20 Oct 2022 00:00:00 GMT</pubDate>
+            <description><![CDATA[Flow handled the empty object literal {} in a permissive but unsafe way. The fix described in this post increases safety and predictability, but requires using different patterns and behavior.]]></description>
+            <content:encoded><![CDATA[<p>Flow handled the empty object literal <!-- --> in a permissive but unsafe way. The fix described in this post increases safety and predictability, but requires using different patterns and behavior.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Requiring More Annotations to Functions and Classes in Flow]]></title>
+            <link>https://flow.org/blog/2022/09/30/Requiring-More-Annotations-on-Functions-and-Classes/</link>
+            <guid>https://flow.org/blog/2022/09/30/Requiring-More-Annotations-on-Functions-and-Classes/</guid>
+            <pubDate>Fri, 30 Sep 2022 00:00:00 GMT</pubDate>
+            <description><![CDATA[Flow will now require more annotations to functions and classes.]]></description>
+            <content:encoded><![CDATA[<p>Flow will now require more annotations to functions and classes.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[New Flow Language Rule: Constrained Writes]]></title>
+            <link>https://flow.org/blog/2022/08/05/New-Flow-Language-Rule-Constrained-Writes/</link>
+            <guid>https://flow.org/blog/2022/08/05/New-Flow-Language-Rule-Constrained-Writes/</guid>
+            <pubDate>Fri, 05 Aug 2022 00:00:00 GMT</pubDate>
+            <description><![CDATA[Flow is releasing a new language rule that determines the type of an unannotated variable at its initialization. Along with these new rules come several fixes to soundness bugs that were causing refinements to not be invalidated.]]></description>
+            <content:encoded><![CDATA[<p>Flow is releasing a new language rule that determines the type of an unannotated variable at its initialization. Along with these new rules come several fixes to soundness bugs that were causing refinements to not be invalidated.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Introducing: Local Type Inference for Flow]]></title>
+            <link>https://flow.org/blog/2021/09/27/Introducing-Local-Type-Inference-for-Flow/</link>
+            <guid>https://flow.org/blog/2021/09/27/Introducing-Local-Type-Inference-for-Flow/</guid>
+            <pubDate>Mon, 27 Sep 2021 00:00:00 GMT</pubDate>
+            <description><![CDATA[We're replacing Flow’s current inference engine with a system that behaves more predictably and can be reasoned about more locally.]]></description>
+            <content:encoded><![CDATA[<p>We're replacing Flow’s current inference engine with a system that behaves more predictably and can be reasoned about more locally.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Introducing Flow Enums]]></title>
+            <link>https://flow.org/blog/2021/09/13/Introducing-Flow-Enums/</link>
+            <guid>https://flow.org/blog/2021/09/13/Introducing-Flow-Enums/</guid>
+            <pubDate>Mon, 13 Sep 2021 00:00:00 GMT</pubDate>
+            <description><![CDATA[Flow Enums are an opt-in feature which allow you to define a fixed set of constants which create their own type.]]></description>
+            <content:encoded><![CDATA[<p>Flow Enums are an opt-in feature which allow you to define a fixed set of constants which create their own type.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[TypeScript Enums vs. Flow Enums]]></title>
+            <link>https://flow.org/blog/2021/09/13/TypeScript-Enums-vs-Flow-Enums/</link>
+            <guid>https://flow.org/blog/2021/09/13/TypeScript-Enums-vs-Flow-Enums/</guid>
+            <pubDate>Mon, 13 Sep 2021 00:00:00 GMT</pubDate>
+            <description><![CDATA[A comparison of the enums features of TypeScript and Flow.]]></description>
+            <content:encoded><![CDATA[<p>A comparison of the enums features of TypeScript and Flow.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Introducing Flow Indexed Access Types]]></title>
+            <link>https://flow.org/blog/2021/07/21/Introducing-Flow-Indexed-Access-Types/</link>
+            <guid>https://flow.org/blog/2021/07/21/Introducing-Flow-Indexed-Access-Types/</guid>
+            <pubDate>Wed, 21 Jul 2021 00:00:00 GMT</pubDate>
+            <description><![CDATA[Flow’s Indexed Access Types are a new type annotation syntax that allows you to get the type of a property from an object, array, or tuple type.]]></description>
+            <content:encoded><![CDATA[<p>Flow’s Indexed Access Types are a new type annotation syntax that allows you to get the type of a property from an object, array, or tuple type.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Sound Typing for 'this' in Flow]]></title>
+            <link>https://flow.org/blog/2021/06/02/Sound-Typing-for-this-in-Flow/</link>
+            <guid>https://flow.org/blog/2021/06/02/Sound-Typing-for-this-in-Flow/</guid>
+            <pubDate>Wed, 02 Jun 2021 00:00:00 GMT</pubDate>
+            <description><![CDATA[Improvements in soundness for this-typing in Flow, including the ability to annotate this on functions and methods.]]></description>
+            <content:encoded><![CDATA[<p>Improvements in soundness for <code>this</code>-typing in Flow, including the ability to annotate <code>this</code> on functions and methods.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Clarity on Flow's Direction and Open Source Engagement]]></title>
+            <link>https://flow.org/blog/2021/05/25/Clarity-on-Flows-Direction-and-Open-Source-Engagement/</link>
+            <guid>https://flow.org/blog/2021/05/25/Clarity-on-Flows-Direction-and-Open-Source-Engagement/</guid>
+            <pubDate>Tue, 25 May 2021 00:00:00 GMT</pubDate>
+            <description><![CDATA[An update on Flow's direction and open source engagement.]]></description>
+            <content:encoded><![CDATA[<p>An update on Flow's direction and open source engagement.</p>]]></content:encoded>
+        </item>
+        <item>
+            <title><![CDATA[Types-First the only supported mode in Flow (Jan 2021)]]></title>
+            <link>https://flow.org/blog/2020/12/01/Types-first-the-only-supported-mode-in-flow/</link>
+            <guid>https://flow.org/blog/2020/12/01/Types-first-the-only-supported-mode-in-flow/</guid>
+            <pubDate>Tue, 01 Dec 2020 00:00:00 GMT</pubDate>
+            <description><![CDATA[Types-First will become the only mode in Flow in v0.143 (mid Jan 2021).]]></description>
+            <content:encoded><![CDATA[<p>Types-First will become the only mode in Flow in v0.143 (mid Jan 2021).</p>]]></content:encoded>
+        </item>
+    </channel>
+</rss>
