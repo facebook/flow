@@ -455,7 +455,7 @@ let type_ options =
   and arr { arr_readonly; arr_elt_t; arr_literal = _; _ } =
     let t = type_ arr_elt_t in
     if arr_readonly then
-      builtin_from_string "$ReadOnlyArray" ~targs:(mk_targs [t])
+      builtin_from_string "ReadonlyArray" ~targs:(mk_targs [t])
     else
       builtin_from_string "Array" ~targs:(mk_targs [t])
   and type_params ts =
