@@ -203,7 +203,7 @@ function findIDValue<T>(dict: {[key: string]: T}): T {
 If a `catch` variable does not have an annotation, its default type is
 [`any`](../../types/any).
 
-You can optionally annotate it with exactly [`unknown`](../../types/mixed) or
+You can optionally annotate it with exactly [`unknown`](../../types/unknown) or
 `any`. E.g.
 
 ```js flow-check

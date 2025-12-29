@@ -440,7 +440,7 @@ This config was first introduced as `use_mixed_in_catch_variables`
 Type: `boolean`
 
 Changes the default type of `catch` variables from [`any`](../../types/any) to
-[`unknown`](../../types/mixed). E.g.
+[`unknown`](../../types/unknown). E.g.
 
 ```js flow-check
 try {

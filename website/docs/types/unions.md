@@ -63,7 +63,7 @@ maybeString(null); // Works!
 maybeString(undefined); // Works!
 ```
 
-The union of every single type that exists is the [`mixed`](../mixed) type:
+The union of every single type that exists is the [`unknown`](../unknown) type:
 
 ```js flow-check
 function everything(x: mixed) { /* ... */ }
