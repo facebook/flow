@@ -33,7 +33,6 @@ module.exports = {
         'types/index',
         'types/primitives',
         'types/literals',
-        'types/mixed',
         'types/unknown',
         'types/empty',
         'types/any',
