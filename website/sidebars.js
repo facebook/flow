@@ -34,6 +34,7 @@ module.exports = {
         'types/primitives',
         'types/literals',
         'types/mixed',
+        'types/unknown',
         'types/empty',
         'types/any',
         'types/maybe',
