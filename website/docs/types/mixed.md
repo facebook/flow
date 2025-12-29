@@ -5,7 +5,7 @@ slug: /types/mixed
 
 import {SinceVersion} from '../../components/VersionTags';
 
-`mixed` <SinceVersion version="0.290" /> (alias `unknown`) is the [supertype of all types](../../lang/type-hierarchy). All values are `mixed`.
+`mixed` (replaced by [`unknown`](unknown.md) since <SinceVersion version="0.290" />) is the [supertype of all types](../../lang/type-hierarchy). All values are `mixed`.
 However, this means that very few operations are permitted on it, without refining to some more specific type.
 That's because the valid operations on `mixed` must be valid for all types.
 

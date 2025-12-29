@@ -5,7 +5,7 @@ slug: /types/unknown
 
 import {SinceVersion} from '../../components/VersionTags';
 
-`unknown` (replacing `mixed` since <SinceVersion version="0.290" />) is the [supertype of all types](../../lang/type-hierarchy). All values are `unknown`.
+`unknown` (replacing [`mixed`](mixed.md) since <SinceVersion version="0.290" />) is the [supertype of all types](../../lang/type-hierarchy). All values are `unknown`.
 However, this means that very few operations are permitted on it, without refining to some more specific type.
 That's because the valid operations on `unknown` must be valid for all types.
 
