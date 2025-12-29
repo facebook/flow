@@ -8,32 +8,32 @@ Types in Flow form a hierarchy based on [subtyping](../subtypes):
 ```mermaid
 graph BT
 
-mixed -.- any
+unknown -.- any
 
-symbol --> mixed
-null --> mixed
+symbol --> unknown
+null --> unknown
 maybe["Maybe:
   ?string"]
-maybe --> mixed
+maybe --> unknown
 null --> maybe
 void --> maybe
-void --> mixed
+void --> unknown
 string --> maybe
-string --> mixed
+string --> unknown
 
 union["Union:
   number | bigint"]
 number --> union
-number --> mixed
-union --> mixed
-bigint --> mixed
+number --> unknown
+union --> unknown
+bigint --> unknown
 bigint --> union
 
-boolean --> mixed
+boolean --> unknown
 true --> boolean
 false --> boolean
 
-empty-interface["interface {}"] --> mixed
+empty-interface["interface {}"] --> unknown
 some-interface["interface {prop: string}"] --> empty-interface
 someclass["class A {prop: string}"] --> some-interface
 inexact-empty-obj["Inexact empty object:
@@ -47,17 +47,17 @@ exact-some-obj["Exact object:
 exact-empty-obj["Exact empty object:
   {}"]
 exact-empty-obj --> inexact-empty-obj
-roarray-mixed["$ReadOnlyArray&lt;mixed>"] --> empty-interface
+roarray-unknown["ReadonlyArray&lt;unknown>"] --> empty-interface
 inexact-empty-tuple["Inexact empty tuple:
   [...]"]
 some-tuple["Tuple:
   [string, number]"]
-inexact-empty-tuple --> roarray-mixed
+inexact-empty-tuple --> roarray-unknown
 some-tuple --> inexact-empty-tuple
-some-array["Array&lt;string>"] --> roarray-mixed
+some-array["Array&lt;string>"] --> roarray-unknown
 
 any-func["Function:
-  (...$ReadOnlyArray&lt;empty>) => mixed"]
+  (...ReadonlyArray&lt;empty>) => unknown"]
 any-func --> empty-interface
 some-func["(number) => boolean"] --> any-func
 some-func2["(string) => string"] --> any-func
@@ -83,7 +83,7 @@ empty --> someclass
 empty --> symbol
 any-bottom["any"] -.- empty
 
-click mixed "../../types/mixed"
+click unknown "../../types/unknown"
 click any "../../types/any"
 click any-bottom "../../types/any"
 click empty "../../types/empty"
@@ -100,7 +100,7 @@ click union "../../types/unions"
 click inter "../../types/intersections"
 click maybe "../../types/maybe"
 click some-array "../../types/arrays"
-click roarray-mixed "../../types/arrays/#toc-readonlyarray"
+click roarray-unknown "../../types/arrays/#toc-readonlyarray"
 click inexact-empty-tuple "../../types/tuples/#inexact-tuples"
 click some-tuple "../../types/tuples"
 click someclass "../../types/classes"
