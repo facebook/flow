@@ -118,7 +118,7 @@ annotation reflecting this more general type to their declarations:
 
 ```js
 let product: number | string = ...
-let Component: mixed = ... // No good type to represent this! Consider restructuring
+let Component: unknown = ... // No good type to represent this! Consider restructuring
 let element: React.Node = ...
 ```
 
