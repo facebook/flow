@@ -2676,16 +2676,6 @@ let mk_prop_message =
     | Some prop -> [text "property "; code prop]
   )
 
-let mk_tuple_element_error_message loc_of_aloc ~reason ~index ~name kind =
-  let open Flow_errors_utils.Friendly in
-  let index_ref =
-    Reference ([Code (string_of_int index)], loc_of_aloc (def_loc_of_reason reason))
-  in
-  let label =
-    Base.Option.value_map name ~default:[] ~f:(fun name -> [text " labeled "; code name])
-  in
-  [text "tuple element at index "; index_ref] @ label @ [text " is not "; text kind]
-
 let enum_name_of_reason reason =
   match desc_of_reason reason with
   | REnum { name = Some name }

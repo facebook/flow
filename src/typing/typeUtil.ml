@@ -815,48 +815,6 @@ let push_type_alias_reason r t =
     mod_reason_of_t (update_desc_reason (fun desc -> RTypeAlias (n, None, desc))) t
   | _ -> t
 
-let rec eq_predicate (p1, p2) =
-  match (p1, p2) with
-  (* trivial *)
-  | (TruthyP, TruthyP)
-  | (NullP, NullP)
-  | (MaybeP, MaybeP)
-  | (BoolP _, BoolP _)
-  | (FunP, FunP)
-  | (NumP _, NumP _)
-  | (ObjP, ObjP)
-  | (StrP _, StrP _)
-  | (SymbolP _, SymbolP _)
-  | (VoidP, VoidP)
-  | (ArrP, ArrP)
-  | (ImpossibleP, ImpossibleP) ->
-    true
-  (* Recursive *)
-  | (AndP (p1a, p1b), AndP (p2a, p2b)) -> eq_predicate (p1a, p2a) && eq_predicate (p1b, p2b)
-  | (OrP (p1a, p1b), OrP (p2a, p2b)) -> eq_predicate (p1a, p2a) && eq_predicate (p1b, p2b)
-  | (NotP p1, NotP p2) -> eq_predicate (p1, p2)
-  | (SingletonBoolP (_, s1), SingletonBoolP (_, s2)) -> s1 = s2
-  | (SingletonStrP (_, s1, v1), SingletonStrP (_, s2, v2)) -> s1 = s2 && v1 = v2
-  | (SingletonNumP (_, s1, v1), SingletonNumP (_, s2, v2)) -> s1 = s2 && v1 = v2
-  | (LatentP (c1, i1), LatentP (c2, i2)) -> c1 == c2 && i1 = i2
-  | (LatentThisP c1, LatentThisP c2) -> c1 == c2
-  | (PropExistsP { propname = s1; _ }, PropExistsP { propname = s2; _ }) -> s1 = s2
-  | (PropTruthyP (s1, _), PropTruthyP (s2, _)) -> s1 = s2
-  | (PropNonMaybeP (s1, _), PropNonMaybeP (s2, _)) -> s1 = s2
-  | (ArrLenP { op = op1; n = n1 }, ArrLenP { op = op2; n = n2 }) -> op1 = op2 && n1 = n2
-  (* Complex *)
-  | (BinaryP (b1, OpenT (_, id1)), BinaryP (b2, OpenT (_, id2))) -> b1 = b2 && id1 = id2
-  | (BinaryP _, BinaryP _) -> p1 = p2
-  | _ -> false
-
-let pred_map_implies p1 p2 =
-  Key_map.for_all
-    (fun k2 v2 ->
-      match Key_map.find_opt k2 p1 with
-      | None -> false
-      | Some v1 -> eq_predicate (v1, v2))
-    p2
-
 let type_t_of_annotated_or_inferred (x : Type.annotated_or_inferred) =
   match x with
   | Inferred t
