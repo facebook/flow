@@ -66,7 +66,7 @@ maybeString(undefined); // Works!
 The union of every single type that exists is the [`unknown`](../unknown) type:
 
 ```js flow-check
-function everything(x: mixed) { /* ... */ }
+function everything(x: unknown) { /* ... */ }
 everything(1); // Works!
 everything(true); // Works!
 everything(null); // Works!
