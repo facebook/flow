@@ -502,8 +502,8 @@ However, you can't access any properties off of `{...}`.
 You can also try using a [dictionary](#toc-objects-as-maps) with [`unknown`](../unknown) values, which would allow you to access any property (with a resulting `unknown` type):
 
 ```js flow-check
-function func(obj: {+[string]: mixed}) {
-  const x: mixed = obj['bar'];
+function func(obj: {+[string]: unknown}) {
+  const x: unknown = obj['bar'];
 }
 
 func({}); // Works!
