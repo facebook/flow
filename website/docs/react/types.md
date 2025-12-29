@@ -89,7 +89,7 @@ All `react-dom` JSX intrinsics have `React.Node` as their children type.
 
 ## `React.MixedElement` {#toc-react-mixedelement}
 
-The most general type of all React elements (similar to `mixed` for all values).
+The most general type of all React elements (similar to `unknown` for all values).
 
 A common use case of this type is when we want to annotate an element with a type that hides the element details. For example
 ```js
@@ -174,7 +174,7 @@ The definition for `React.RefSetter<T>` is roughly:
 ```js
 type Ref<-T> =
   | { -current: T | null, ... }
-  | ((T | null) => mixed)
+  | ((T | null) => unknown)
   | null
   | void;
 ```
@@ -388,5 +388,5 @@ The definition for `React.Ref<typeof Component>` is roughly:
 ```js
 type Ref<C> =
   | string
-  | (instance: React.ElementRef<C> | null) => mixed;
+  | (instance: React.ElementRef<C> | null) => unknown;
   | { -current: React.ElementRef<ElementType> | null, ... }
