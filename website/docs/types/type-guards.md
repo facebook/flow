@@ -146,9 +146,9 @@ declare class InvalidStatic {
   static m(): this is D;
 }
 
-type InvalidTypeAlias = (x: mixed): this is A;
+type InvalidTypeAlias = (x: unknown): this is A;
 
-function invalidFunction(this: mixed): this is A;
+function invalidFunction(this: unknown): this is A;
 
 class InvalidNonDeclareClass {
   m(): this is B { return this instanceof B; }
@@ -214,19 +214,19 @@ To ensure that refinement with type guard functions is sound, Flow runs a number
 
 In a type guard annotation of the form `parameter is Type`, `parameter` needs to belong to the current function's parameter list.
 ```js flow-check
-function missing(param: mixed): prop is number {
+function missing(param: unknown): prop is number {
   return typeof param === "number";
 }
 ```
 
 It cannot be a parameter bound in a destructuring pattern, or a rest parameter:
 ```js flow-check
-function destructuring({prop}: {prop: mixed}): prop is number {
+function destructuring({prop}: {prop: unknown}): prop is number {
   return typeof prop === "number";
 }
 ```
 ```js flow-check
-function rest(...value: Array<mixed>): value is Array<mixed> {
+function rest(...value: Array<unknown>): value is Array<unknown> {
   return Array.isArray(value);
 }
 ```
@@ -269,11 +269,11 @@ In addition to the above checks, Flow also ensures that the declared type guard 
 
 1. The type of the refined parameter at the return location *after* the predicate of the return expression has been applied is a subtype of the guard type. For example, the following definitions are correct:
 ```js flow-check
-function numOrStr(x: mixed): x is number | string {
+function numOrStr(x: unknown): x is number | string {
   return (typeof x === "number" || typeof x === "string");
 }
 
-function numOrStrWithException(x: mixed): x is number | string {
+function numOrStrWithException(x: unknown): x is number | string {
   if (typeof x === "number") {
     return true;
   } else {
@@ -287,14 +287,14 @@ function numOrStrWithException(x: mixed): x is number | string {
 ```
 But in the following Flow will raise errors:
 ```js flow-check
-function numOrStrError(x: mixed): x is number | string {
+function numOrStrError(x: unknown): x is number | string {
   return (typeof x === "number" || typeof x === "boolean");
 }
 ```
 
 2. Type guard functions can be used to refine the else-branch of conditionals. For example,
 ```js flow-check
-function isNumber(x: mixed): x is number {
+function isNumber(x: unknown): x is number {
   return typeof x === "number";
 }
 
@@ -307,7 +307,7 @@ if (isNumber(value)) {
 ```
 Therefore, the inverse form of the first requirement also needs to hold. Specifically, if we negate the predicate encoded in the function, and use it to refine the input, then the result must not overlap with the type guard at all. This condition is equivalent to checking that the type guard refined with the negation of the function predicate is a subtype of `empty`. For example the following raises an error:
 ```js flow-check
-function isPosNum(x: mixed): x is number {
+function isPosNum(x: unknown): x is number {
     return typeof x === 'number' && x > 0;
 }
 ```
@@ -319,13 +319,13 @@ If you're seeing errors related to this check, consider using a one-sided type g
 
 3. The parameter that is refined cannot be reassigned in the body of the type guard function. Therefore the following are errors:
 ```js flow-check
-function isNumberError1(x: mixed): x is number {
+function isNumberError1(x: unknown): x is number {
   x = 1;
   return typeof x === "number";
 }
 ```
 ```js flow-check
-function isNumberError2(x: mixed): x is number {
+function isNumberError2(x: unknown): x is number {
   function foo() {
     x = 1;
   }
