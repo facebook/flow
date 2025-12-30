@@ -1,4 +1,4 @@
-declare function foo<TArguments: $ReadOnlyArray<{foo: 'a'}>, TReturn>(
+declare function foo<TArguments: ReadonlyArray<{foo: 'a'}>, TReturn>(
     implementation?: (...args: TArguments) => TReturn,
   ): (...args: TArguments) => TReturn
 

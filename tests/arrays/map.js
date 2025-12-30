@@ -1,5 +1,5 @@
 declare var x: ?{
-  a: $ReadOnlyArray<number>,
+  a: ReadonlyArray<number>,
 };
 
 (x ? x.a : []).map(n => {
