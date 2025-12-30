@@ -122,7 +122,7 @@ const Status = Object.freeze({
   Paused: 'Paused',
   Off: 'Off',
 });
-type StatusType = $Keys<typeof Status>;
+type StatusType = keyof typeof Status;
 const x: StatusType = Status.Active;
 ```
 
