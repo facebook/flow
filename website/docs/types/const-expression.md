@@ -25,7 +25,7 @@ Containers become read-only and the modifier is applied deeply
 ```js
 { f: 42 } as const; // {+f: 42}
 
-[42, "hello"] as const; // $ReadOnly<[42, "hello"]>
+[42, "hello"] as const; // Readonly<[42, "hello"]>
 
 { f: { g: 42 } } as const; // {+f: {+g: 42}}
 ```
@@ -138,7 +138,7 @@ calling `foo` with `as const` on its argument:
 const x1 = foo({ f: 42 } as const);
 const x2 = foo([42, "hello"] as const);
 ```
-The variables `x1` and `x2` will have the type `{+f: 42}` and `$ReadOnly<[42, "hello"]>`,
+The variables `x1` and `x2` will have the type `{+f: 42}` and `Readonly<[42, "hello"]>`,
 respectively.
 
 To avoid repeating and potentially forgetting to pass `as const`, you can use the
