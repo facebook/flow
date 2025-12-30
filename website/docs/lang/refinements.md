@@ -46,14 +46,14 @@ The `typeof` operator can output `"undefined"`,`"boolean"`, `"number"`, `"bigint
 Keep in mind that the `typeof` operator will return `"object"` for objects, but also `null` and arrays as well.
 
 ```js flow-check
-function func(value: mixed) {
+function func(value: unknown) {
   if (typeof value === "string") {
     value as string;
   } else if (typeof value === "boolean") {
     value as boolean;
   } else if (typeof value === "object") {
     // `value` could be null, an array, or an object
-    value as null | interface {} | $ReadOnlyArray<mixed>;
+    value as null | interface {} | ReadonlyArray<unknown>;
   }
 }
 ```
@@ -61,7 +61,7 @@ function func(value: mixed) {
 To check for `null`, use a `value === null` [equality](#equality-checks) check.
 
 ```js flow-check
-function func(value: mixed) {
+function func(value: unknown) {
   if (value === null) {
     value as null; // `value` is null
   }
@@ -71,9 +71,9 @@ function func(value: mixed) {
 To check for [arrays](../../types/arrays), use `Array.isArray`:
 
 ```js flow-check
-function func(value: mixed) {
+function func(value: unknown) {
   if (Array.isArray(value)) {
-    value as $ReadOnlyArray<mixed>; // `value` is an array
+    value as ReadonlyArray<unknown>; // `value` is an array
   }
 }
 ```
@@ -201,7 +201,7 @@ class B extends A {
   build(): void {}
 }
 
-function func(value: mixed) {
+function func(value: unknown) {
   if (value instanceof B) {
     value.amaze(); // Works
     value.build(); // Works

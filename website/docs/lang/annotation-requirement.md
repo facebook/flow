@@ -97,7 +97,7 @@ const arrPlusOne = arr.find(x => x % 2 === 1);
 ```
 Flow infers that the type of `arr` is `Array<number>`. Combining this with the builtin
 information for `Array.find`, Flow can determine that the type of `x => x % 2 + 1`
-needs to be `number => mixed`. This type acts as a *hint* for Flow and provides enough
+needs to be `number => unknown`. This type acts as a *hint* for Flow and provides enough
 information to determine the type of `x` as `number`.
 
 Any attendant annotation can potentially act as a hint to a function parameter, for example
@@ -107,9 +107,9 @@ const fn1: (x: number) => number = x => x + 1;
 However, it is also possible that an annotation cannot be used as a function
 parameter hint:
 ```js flow-check
-const fn2: mixed = x => x + 1;
+const fn2: unknown = x => x + 1;
 ```
-In this example the `mixed` type simply does not include enough information to
+In this example the `unknown` type simply does not include enough information to
 extract a candidate type for `x`.
 
 Flow can infer the types for unannotated parameters even when they are nested within
@@ -168,7 +168,7 @@ Consider for example the definition
 ```js
 declare function map<T, U>(
   f: (T) => U,
-  array: $ReadOnlyArray<T>,
+  array: ReadonlyArray<T>,
 ): Array<U>;
 ```
 and a potential call with arguments `x => x + 1` and `[1, 2, 3]`:
@@ -203,7 +203,7 @@ to ensure that other parts of the program will be successfully checked.
 
 Let's see how these two goals come into play in the `map` example from above.
 
-Flow detects that `$ReadOnlyArray<T>` needs to be compatible with the type of `[1, 2, 3]`.
+Flow detects that `ReadonlyArray<T>` needs to be compatible with the type of `[1, 2, 3]`.
 It can therefore infer that `T` is `number`.
 
 With the knowledge of `T` it can now successfully check `x => x + 1`. The parameter `x`
@@ -213,7 +213,7 @@ This final constraint allows us to compute `U` as a `number` too.
 The new signature of `map` after replacing the generic parts with the above solution
 is
 ```js
-(f: (number) => number, array: $ReadOnlyArray<number>) => Array<number>
+(f: (number) => number, array: ReadonlyArray<number>) => Array<number>
 ```
 It is easy to see that the call would be successfully checked.
 
@@ -262,7 +262,7 @@ The way to fix this error is by adding a type annotation. There a few potential 
 
 - Add a default type on the type parameter `T` at the definition of the class:
     ```js
-    declare class SetWithDefault<T = string> extends $ReadOnlySet<T> {
+    declare class SetWithDefault<T = string> extends ReadonlySet<T> {
       constructor(iterable?: ?Iterable<T>): void;
       // more methods ...
     }
@@ -281,7 +281,7 @@ code later on.
 
 For example, if we had the following call to `map`:
 ```js flow-check
-declare function map<T, U>(f: (T) => U, array: $ReadOnlyArray<T>): Array<U>;
+declare function map<T, U>(f: (T) => U, array: ReadonlyArray<T>): Array<U>;
 map(x => x + 1, [{}]);
 ```
 Flow will infer `T` as `{}`, and therefore type `x` as `{}`. This will cause an error when checking the arrow function
