@@ -112,7 +112,7 @@ The `as` operator also allows you to destructure your parameters:
 import * as React from 'react';
 
 component Destructuring(
-  config as {color, height}: $ReadOnly<{color: number, height: number}>,
+  config as {color, height}: Readonly<{color: number, height: number}>,
 ) { return <div /> }
 ```
 
@@ -121,7 +121,7 @@ Rest parameters can be destructured without using as:
 ```js flow-check
 import * as React from 'react';
 
-type Props = $ReadOnly<{ color: string, height: number }>;
+type Props = Readonly<{ color: string, height: number }>;
 
 component DestructuredRest(...{color, height}: Props) { return <div /> }
 ```
