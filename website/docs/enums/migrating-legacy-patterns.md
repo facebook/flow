@@ -25,7 +25,7 @@ const Status = Object.freeze({
   Off: 3,
 });
 
-export type StatusType = $Values<typeof Status>;
+export type StatusType = Values<typeof Status>;
 
 export default Status;
 ```
@@ -40,7 +40,7 @@ export default enum Status {
 ```
 
 - Check to ensure that the key names do not start with lowercase ‘a’-‘z’ (disallowed in enums). If they do, you’ll need to rename the member names.
-- Remove any usage of `$Keys<...>` or `$Values<...>` on the enum type, these are no longer needed as a Flow Enum defines a type itself (its name).
+- Remove any usage of `keyof ...` or `Values<...>` on the enum type, these are no longer needed as a Flow Enum defines a type itself (its name).
 - Delete any type exports based on the enum, as you just need to export the Flow Enum. A Flow Enum acts as both a type and a value (like a class).
 
 Then, take a look at [how to update files that import and use the enum](#toc-updating-usage).
@@ -60,7 +60,7 @@ const Status = keyMirror({
   Off: null,
 });
 
-export type StatusType = $Keys<typeof Status>;
+export type StatusType = keyof typeof Status;
 
 export default Status;
 ```
@@ -76,7 +76,7 @@ export default enum Status {
 ```
 
 - Check to ensure that the key names do not start with lowercase ‘a’-‘z’ (disallowed in enums). If they do, you’ll need to rename the member names.
-- Remove any usage of `$Keys<...>` on the enum type, it's no longer needed as a Flow Enum defines a type itself (its name).
+- Remove any usage of `keyof ...` on the enum type, it's no longer needed as a Flow Enum defines a type itself (its name).
 - Delete any type exports based on the enum, you just need to export the Flow Enum. A Flow Enum acts as both a type and a value (like a class).
 
 Then, take a look at [how to update files that import and use the enum](#toc-updating-usage).
@@ -96,7 +96,7 @@ const Status = Object.freeze({
   Paused: 2,
   Off: 3,
 });
-export type StatusType = $Values<typeof Status>;
+export type StatusType = Values<typeof Status>;
 export default Status;
 ```
 
