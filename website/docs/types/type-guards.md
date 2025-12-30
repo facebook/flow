@@ -162,8 +162,8 @@ It will use this to produce an output array of type `Array<S>`. Note that `S` ne
 
 For example
 ```js flow-check
-type Success = $ReadOnly<{type: 'success', value: 23}>;
-type Error = $ReadOnly<{type: 'error', error: string}>;
+type Success = Readonly<{type: 'success', value: 23}>;
+type Error = Readonly<{type: 'error', error: string}>;
 
 type Response =
   | Success
