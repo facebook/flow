@@ -339,7 +339,7 @@ that is written to the `current` field of a ref object passed into the `ref` pro
 `Renders` is a [Component Syntax](../component-syntax) feature that allows you to specify what your
 component renders via [Render Types](../render-types)
 
-Config is required, but Instance is optional and defaults to mixed and Renders is optional and defaults to React.Node.
+`Config` is required, but `Instance` is optional and defaults to `unknown` and `Renders` is optional and defaults to `React.Node`.
 
 A class or function component with config `Config` may be used in places that expect
 `React.AbstractComponent<Config>`.
@@ -354,8 +354,8 @@ This type was removed in 0.257.0. This type is usually only useful for legacy cl
 You can create your own equivalent type with
 
 ```flow
-type ReactConfigShim<Props, DefaultProps> = $ReadOnly<{
-  ...Omit<Props, $Keys<DefaultProps>>, ...Partial<DefaultProps>
+type ReactConfigShim<Props, DefaultProps> = Readonly<{
+  ...Omit<Props, keyof DefaultProps>, ...Partial<DefaultProps>
 }>;
 :::
 
