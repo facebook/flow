@@ -150,7 +150,7 @@ func(1, 2, 3); // Works.
 ```
 
 > Note: If you add a type annotation to a rest parameter, it must always
-> explicitly be an `Array` of `$ReadOnlyArray` type.
+> explicitly be an `Array` of `ReadonlyArray` type.
 
 ### `this` parameter
 
@@ -173,7 +173,7 @@ have an annotation. Additionally, [arrow functions](./#toc-arrow-functions) may 
 these functions bind their `this` parameter at the definition site, rather than the call site.
 
 If an explicit `this` parameter is not provided, Flow will attempt to infer one based on usage. If `this` is not mentioned
-in the body of the function, Flow will infer `mixed` for its `this` parameter.
+in the body of the function, Flow will infer `unknown` for its `this` parameter.
 
 
 ## Function Returns
@@ -263,19 +263,19 @@ But it's possible to call other predicate functions inside a predicate function.
 For example:
 
 ```js flow-check
-function isString(y: mixed): %checks {
+function isString(y: unknown): %checks {
   return typeof y === "string";
 }
 
-function isNumber(y: mixed): %checks {
+function isNumber(y: unknown): %checks {
   return typeof y === "number";
 }
 
-function isNumberOrString(y: mixed): %checks {
+function isNumberOrString(y: unknown): %checks {
   return isString(y) || isNumber(y);
 }
 
-function foo(x: string | number | Array<mixed>): string | number {
+function foo(x: string | number | Array<unknown>): string | number {
   if (isNumberOrString(x)) {
     return x + x;
   } else {
@@ -364,9 +364,9 @@ const n: number = fn('number');
 If you want to specify you want to allow any function, and do not care what it is, you can use this pattern:
 
 ```js flow-check
-function useCallback<T: (...$ReadOnlyArray<empty>) => mixed>(
+function useCallback<T: (...ReadonlyArray<empty>) => unknown>(
   callback: T,
-  inputs: ?$ReadOnlyArray<mixed>,
+  inputs: ?ReadonlyArray<unknown>,
 ): T {
   return callback;
 }
@@ -377,7 +377,7 @@ useCallback((x: number) => [1]); // OK
 You could use type arguments to capture the arguments and return type, to do more complicated transformations:
 
 ```js flow-check
-function func<TArgs: $ReadOnlyArray<mixed>, TReturn>(
+function func<TArgs: ReadonlyArray<unknown>, TReturn>(
   callback: (...TArgs) => TReturn,
 ): (boolean, ...TArgs) => Array<TReturn> {
   return (b, ...args): Array<TReturn> => {

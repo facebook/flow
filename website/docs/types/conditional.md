@@ -32,7 +32,7 @@ type TypeOf<T> =
   T extends string ? 'string' :
   T extends number ? 'number' :
   T extends boolean ? 'boolean' :
-  T extends (...$ReadOnlyArray<empty>)=>mixed ? 'function' : 'object'
+  T extends (...ReadonlyArray<empty>)=>unknown ? 'function' : 'object'
 
 type T1 = TypeOf<null>; // evaluates to 'null'
 type T2 = TypeOf<void>; // evaluates to 'undefined'
@@ -62,7 +62,7 @@ The above example can also be written with function overload:
 ```js flow-check
 declare function wrap(value: string): { type: 'string', value: string }
 declare function wrap(value: number): { type: 'number', value: number }
-declare function wrap(value: mixed): { type: 'unsupported' }
+declare function wrap(value: unknown): { type: 'unsupported' }
 
 const v1 = wrap(3);   // has type { type: 'number', value: number }
 const v2 = wrap('4'); // has type { type: 'string', value: string }
@@ -74,7 +74,7 @@ const v3 = wrap({});  // has type { type: 'unsupported' }
 You can use the power of conditional types to extract parts of a type using `infer` types. For example, the builtin `ReturnType` is powered by conditional types:
 
 ```js flow-check
-type ReturnType<T> = T extends (...args: $ReadOnlyArray<empty>) => infer Return ? Return : empty;
+type ReturnType<T> = T extends (...args: ReadonlyArray<empty>) => infer Return ? Return : empty;
 
 type N = ReturnType<(string) => number>; // evaluates to `number`
 type S = ReturnType<(number) => string>; // evaluates to `string`
@@ -82,13 +82,13 @@ type S = ReturnType<(number) => string>; // evaluates to `string`
 
 We used the infer type here to introduce a new generic type variable named `Return`, which can be used in the type branch of the conditional type. Infer types can only appear on the right hand side of the `extends` clause in conditional types. Flow will perform a subtyping check between the check type and the extends type to automatically figure out its type based on the input type `T`.
 
-In the example of `type N = ReturnType<(string) => number>`, Flow checks if `(string) => number` is a subtype of `(...args: $ReadOnlyArray<empty>) => infer Return`, and during this process `Return` is constrained to `number`.
+In the example of `type N = ReturnType<(string) => number>`, Flow checks if `(string) => number` is a subtype of `(...args: ReadonlyArray<empty>) => infer Return`, and during this process `Return` is constrained to `number`.
 
 When doing extractions like the above example, you usually want the conditional type to always choose the true branch where the type is successfully extracted. For example, silently choosing the false branch is not great:
 
 ```js flow-check
 type ExtractReturnTypeNoValidation<T> =
-  T extends (...args: $ReadOnlyArray<empty>) => infer Return ? Return : any;
+  T extends (...args: ReadonlyArray<empty>) => infer Return ? Return : any;
 
 1 as ExtractReturnTypeNoValidation<string>; // no error :(
 ```
@@ -96,8 +96,8 @@ type ExtractReturnTypeNoValidation<T> =
 Instead, you might want Flow to error when the input is not a function type. This can be accomplished by adding constraints to the type parameter:
 
 ```js flow-check
-type ReturnType<T: (...args: $ReadOnlyArray<empty>) => mixed> =
-  T extends (...args: $ReadOnlyArray<empty>) => infer Return ? Return : any;
+type ReturnType<T: (...args: ReadonlyArray<empty>) => unknown> =
+  T extends (...args: ReadonlyArray<empty>) => infer Return ? Return : any;
 
 1 as ReturnType<(string) => number>;
 1 as ReturnType<string>;
