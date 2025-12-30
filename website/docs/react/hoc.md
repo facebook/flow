@@ -158,7 +158,7 @@ function trivialHOC<Config: {...}>(
   return Component;
 }
 
-type Props = $ReadOnly<{bar: number, foo?: number}>;
+type Props = Readonly<{bar: number, foo?: number}>;
 
 function MyComponent({bar, foo = 3}: Props): React.Node {}
 
@@ -176,7 +176,7 @@ function trivialHOC<Config: {...}>(
   return Component;
 }
 
-type Props = $ReadOnly<{bar: number, foo?: number}>;
+type Props = Readonly<{bar: number, foo?: number}>;
 
 function MyComponent({bar, foo = 3}: Props): React.Node {}
 
