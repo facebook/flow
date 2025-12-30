@@ -78,7 +78,7 @@ to the variable will be constrained by that type.
 ```js flow-check
 import * as React from 'react';
 
-type Props = $ReadOnly<{prop: string}>;
+type Props = Readonly<{prop: string}>;
 
 declare var x: number;
 declare var y: number;
@@ -97,7 +97,7 @@ let element = <Component {...props} />;
 
 /* Let's define a new component */
 
-type OtherProps = $ReadOnly<{...Props, extra_prop: number}>;
+type OtherProps = Readonly<{...Props, extra_prop: number}>;
 declare var OtherComponent: OtherProps => React.Node;
 declare var other_props: OtherProps;
 
