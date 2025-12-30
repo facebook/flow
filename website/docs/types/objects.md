@@ -101,14 +101,14 @@ function func(o: Obj) {
 }
 ```
 
-To make all object properties in an object type read-only, you can use the [`$ReadOnly`](../utilities/#toc-readonly) utility type:
+To make all object properties in an object type read-only, you can use the [`Readonly`](../utilities/#toc-readonly) utility type:
 
 ```js flow-check
 type Obj = {
   foo: string,
 };
 
-type ReadOnlyObj = $ReadOnly<Obj>; // Same as `{+foo: string}`
+type ReadOnlyObj = Readonly<Obj>; // Same as `{+foo: string}`
 ```
 
 You can also mark your properties as write-only with `-`:
@@ -421,7 +421,7 @@ type WriteOnly = {-[string]: number};
 
 ## Keys, values, and indexed access
 
-You can extract the keys of an object type using the [`$Keys`](../utilities/#toc-keys) utility type:
+You can extract the keys of an object type using the [`keyof`](../utilities/#toc-keys) utility type:
 
 ```js flow-check
 type Obj = {
@@ -429,7 +429,7 @@ type Obj = {
   bar: number,
 };
 
-type T = $Keys<Obj>;
+type T = keyof Obj;
 
 function acceptsKeys(k: T) { /* ... */ }
 
@@ -438,7 +438,7 @@ acceptsKeys('bar'); // Works!
 acceptsKeys('hi'); // Error!
 ```
 
-You can extract the values of an object type using the [`$Values`](../utilities/#toc-values) utility type:
+You can extract the values of an object type using the [`Values`](../utilities/#toc-values) utility type:
 
 ```js flow-check
 type Obj = {
@@ -446,7 +446,7 @@ type Obj = {
   bar: number,
 };
 
-type T = $Values<Obj>;
+type T = Values<Obj>;
 
 function acceptsValues(v: T) { /* ... */ }
 
