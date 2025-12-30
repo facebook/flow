@@ -51,7 +51,7 @@ For example:
 
 ```js
 const set = new Set();
-const values = [...set]; // Valid ES2015, but Set is not compatible with $ReadOnlyArray in Babel loose mode
+const values = [...set]; // Valid ES2015, but Set is not compatible with ReadonlyArray in Babel loose mode
 ```
 
 The default value for `babel_loose_array_spread` is `false`.
