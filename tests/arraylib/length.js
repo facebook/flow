@@ -3,7 +3,7 @@
 declare var a: Array<number>;
 a.length = 5;
 
-declare var r: $ReadOnlyArray<number>;
+declare var r: ReadonlyArray<number>;
 r.length = 6; //ng
 
 declare var t: [number];

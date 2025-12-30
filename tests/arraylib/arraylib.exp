@@ -331,22 +331,22 @@ References:
                          ^^^^^^^^^^^^^ [4]
 
 
-Error ----------------------------------------------------------------------------------------------------- flat.js:5:43
+Error ----------------------------------------------------------------------------------------------------- flat.js:5:42
 
 Cannot assign `arr1.flat()` to `result1_3` because in array element: number [1] is incompatible with string [2].
 [incompatible-type]
 
-   flat.js:5:43
-   5| const result1_3: $ReadOnlyArray<string> = arr1.flat(); // Error
-                                                ^^^^^^^^^^^
+   flat.js:5:42
+   5| const result1_3: ReadonlyArray<string> = arr1.flat(); // Error
+                                               ^^^^^^^^^^^
 
 References:
    flat.js:1:15
    1| const arr1 = [1];
                     ^ [1]
-   flat.js:5:33
-   5| const result1_3: $ReadOnlyArray<string> = arr1.flat(); // Error
-                                      ^^^^^^ [2]
+   flat.js:5:32
+   5| const result1_3: ReadonlyArray<string> = arr1.flat(); // Error
+                                     ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- flat.js:9:34

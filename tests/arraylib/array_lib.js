@@ -121,15 +121,15 @@ function flatMap_test() {
       n < 0 ? [1, 2, 3] : 'ok',
     );
 
-    let arr3: $ReadOnlyArray<number> = [5, 2, 3, 4];
+    let arr3: ReadonlyArray<number> = [5, 2, 3, 4];
     let arr4: Array<number | string> = arr3.flatMap(n =>
       n < 0 ? [1, 2, 3] : 'ok',
     );
   }
   function case5() {
-    let arr1: $ReadOnlyArray<number> = [5, 2, 3, 4];
+    let arr1: ReadonlyArray<number> = [5, 2, 3, 4];
     let arr2: Array<number> = arr1.flatMap(n => {
-      const r: $ReadOnlyArray<number> = [1, 2, 3];
+      const r: ReadonlyArray<number> = [1, 2, 3];
       return r;
     });
   }
