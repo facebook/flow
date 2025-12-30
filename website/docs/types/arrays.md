@@ -29,7 +29,7 @@ You can put any type within `Array<T>`:
 ```js flow-check
 const arr1: Array<boolean> = [true, false, true];
 const arr2: Array<string> = ["A", "B", "C"];
-const arr3: Array<mixed> = [1, true, "three"];
+const arr3: Array<unknown> = [1, true, "three"];
 ```
 
 ## `ReadonlyArray<T>` <SinceVersion version="0.290" /> (alias `$ReadOnlyArray`) Type {#toc-readonlyarray}

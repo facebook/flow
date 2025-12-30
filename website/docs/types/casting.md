@@ -143,7 +143,7 @@ For example, the following function for cloning an object.
 
 ```js flow-check
 function cloneObject(obj: any) {
-  const clone: {[string]: mixed} = {};
+  const clone: {[string]: unknown} = {};
 
   Object.keys(obj).forEach(key => {
     clone[key] = obj[key];
@@ -159,8 +159,8 @@ based on another object.
 If we cast through any, we can return a type which is more useful.
 
 ```js flow-check
-function cloneObject<T: {+[key: string]: mixed }>(obj: T): T {
-  const clone: {[string]: mixed} = {};
+function cloneObject<T: {+[key: string]: unknown }>(obj: T): T {
+  const clone: {[string]: unknown} = {};
 
   Object.keys(obj).forEach(key => {
     clone[key] = obj[key];
