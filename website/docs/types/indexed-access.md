@@ -41,7 +41,7 @@ const age: Pair[1] = 6; // OK - `Pair[1]` is an alias for `number`
 const wrong: Pair[2] = true; // Error - `Pair` only has two elements
 ```
 
-The index can be a union, including the result of calling [`$Keys<...>`](../utilities/#toc-keys):
+The index can be a union, including the result of calling [`keyof`](../utilities/#toc-keys):
 ```js flow-check
 type Cat = {
   name: string,
@@ -49,12 +49,12 @@ type Cat = {
   hungry: boolean,
 };
 
-type Values = Cat[$Keys<Cat>]; // type Values = string | number | boolean
+type CatValues = Cat[keyof Cat]; // type CatValues = string | number | boolean
 ```
 
 The index can also be a generic:
 ```js flow-check
-function getProp<O: {+[string]: unknown}, K: $Keys<O>>(o: O, k: K): O[K] {
+function getProp<O: {+[string]: unknown}, K: keyof O>(o: O, k: K): O[K] {
   return o[k];
 }
 
@@ -86,7 +86,7 @@ Optional Indexed Access Types work like optional chaining. They allow you to acc
 If before you did:
 
 ```js
-type T = $ElementType<$NonMaybeType<Obj>, 'prop'> | void;
+type T = $ElementType<NonNullable<Obj>, 'prop'> | void;
 ```
 
 You can now do:
@@ -96,7 +96,7 @@ type T = Obj?.['prop'];
 ```
 
 Like optional chaining, the resulting types of Optional Indexed Access Types include `void`.
-If you have a long chain of nested optional accesses, you can wrap the entire thing with a `$NonMaybeType<...>` if you don’t want `void` in your resulting type.
+If you have a long chain of nested optional accesses, you can wrap the entire thing with a `NonNullable<...>` if you don't want `void` in your resulting type.
 
 Example:
 
