@@ -111,9 +111,9 @@ const status: Status = Status.cast(data) ?? Status.Off;
 
 The type of the argument of `cast` depends on the type of enum. If it is a [string enum](../defining-enums/#toc-string-enums), the type of the argument will be `string`.
 If it is a [number enum](../defining-enums/#toc-number-enums), the type of the argument will be `number`, and so on.
-If you wish to cast a `mixed` value, first use a `typeof` refinement:
+If you wish to cast a `unknown` value, first use a `typeof` refinement:
 ```js
-const data: mixed = ...;
+const data: unknown = ...;
 if (typeof data === 'string') {
   const maybeStatus: Status | void = Status.cast(data);
 }

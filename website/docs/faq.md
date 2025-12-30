@@ -117,7 +117,7 @@ Flow doesn't track [refinements](.././lang/refinements/) made in separate functi
 ```js flow-check
 const add = (first: number, second: number) => first + second;
 const val: string | number = 1;
-const isNumber = (x: mixed): boolean => typeof x === 'number';
+const isNumber = (x: unknown): boolean => typeof x === 'number';
 if (isNumber(val)) {
   add(val, 2);
 }
@@ -129,7 +129,7 @@ However, you can annotate your function with a [type guard](../types/type-guards
 const add = (first: number, second: number) => first + second;
 const val: string | number = 1;
 // Return annotation updated:
-const isNumber = (x: mixed): x is number => typeof x === 'number';
+const isNumber = (x: unknown): x is number => typeof x === 'number';
 if (isNumber(val)) {
   add(val, 2);
 }
@@ -140,7 +140,7 @@ if (isNumber(val)) {
 The function's argument allows `string` values in its array, but in this case Flow prevents the original array from receiving a `number`.
 Inside the function, you would be able to push a `number` to the argument array, causing the type of the original array to no longer be accurate.
 
-You can fix this error by changing the type of the argument to `$ReadOnlyArray<string | number>`, making it [covariant](../lang/variance/#toc-covariance).
+You can fix this error by changing the type of the argument to `ReadonlyArray<string | number>`, making it [covariant](../lang/variance/#toc-covariance).
 This prevents the function body from pushing anything to the array, allowing it to accept narrower types.
 
 As an example, this would not work:
@@ -156,11 +156,11 @@ const arr: Array<string> = ['abc'];
 fn(arr); // Error!
 ```
 
-but with `$ReadOnlyArray` you can achieve what you were looking for:
+but with `ReadonlyArray` you can achieve what you were looking for:
 
 ```js flow-check
-const fn = (arr: $ReadOnlyArray<string | number>) => {
-  // arr.push(321); NOTE! Since you are using $ReadOnlyArray<...> you cannot push anything to it
+const fn = (arr: ReadonlyArray<string | number>) => {
+  // arr.push(321); NOTE! Since you are using ReadonlyArray<...> you cannot push anything to it
   return arr;
 };
 
