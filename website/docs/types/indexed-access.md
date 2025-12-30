@@ -54,7 +54,7 @@ type Values = Cat[$Keys<Cat>]; // type Values = string | number | boolean
 
 The index can also be a generic:
 ```js flow-check
-function getProp<O: {+[string]: mixed}, K: $Keys<O>>(o: O, k: K): O[K] {
+function getProp<O: {+[string]: unknown}, K: $Keys<O>>(o: O, k: K): O[K] {
   return o[k];
 }
 

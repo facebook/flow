@@ -130,14 +130,14 @@ An equivalent way to declare the same function `fn` would be by using consecutiv
 ```js flow-check
 declare function fn(x: "string"): string;
 declare function fn(x: "number"): number;
-declare function fn(x: string): mixed;
+declare function fn(x: string): unknown;
 ```
 
 A limitation in Flow is that it can't *check* the body of a function against
 an intersection type. In other words, if we provided the following implementation
 for `fn` right after the above declarations
 ```js flow-check
-function fn(x: mixed) {
+function fn(x: unknown) {
   if (x === "string") { return ""; }
   else if (x === "number") { return 0; }
   else { return null; }
