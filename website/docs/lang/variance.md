@@ -62,11 +62,11 @@ values of type `Noun` are expected.
 Combining these two, it will always be safe to use `CovariantOf<City>` whenever a
 `CovariantOf<Noun>` is expected.
 
-A commonly used example where covariance is used is [`$ReadOnlyArray<T>`](../../types/arrays/#toc-readonlyarray).
-Just like with the `prop` property, one cannot use a `$ReadOnlyArray` reference to write data
+A commonly used example where covariance is used is [`ReadonlyArray<T>`](../../types/arrays/#toc-readonlyarray).
+Just like with the `prop` property, one cannot use a `ReadonlyArray` reference to write data
 to an array. This allows more flexible subtyping rules: Flow only needs to prove that
-`S` is a subtype of `T` to determine that `$ReadOnlyArray<S>` is also a subtype
-of `$ReadOnlyArray<T>`.
+`S` is a subtype of `T` to determine that `ReadonlyArray<S>` is also a subtype
+of `ReadonlyArray<T>`.
 
 
 ## Invariance {#toc-invariance}
