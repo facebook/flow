@@ -191,7 +191,7 @@ function noPerson(o: Partial<Person>) {
 }
 noPerson(person); // Error!
 
-function okPerson(o: $ReadOnly<Partial<Person>>) {
+function okPerson(o: Readonly<Partial<Person>>) {
   // Can't mutate - it's read-only!
 }
 okPerson(person); // Works
@@ -682,8 +682,8 @@ NOTE: Please use [Mapped Types](../mapped-types) instead.
 Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) as input:
 
 ```js
-function run<O: {[key: string]: (...$ReadOnlyArray<mixed>) => mixed}>(o: O): $FlowFixMe {
-  return Object.keys(o).reduce<{[string]: (...$ReadOnlyArray<mixed>) => mixed}>(
+function run<O: {[key: string]: (...ReadonlyArray<unknown>) => unknown}>(o: O): $FlowFixMe {
+  return Object.keys(o).reduce<{[string]: (...ReadonlyArray<unknown>) => unknown}>(
     (acc, k) => ({...acc, [(k: string)]: o[k]()}),
     {},
   );
@@ -702,7 +702,7 @@ This is where `ObjMap<T, F>` comes in handy
 // let's write a function type that takes a `() => V` and returns a `V` (its return type)
 type ExtractReturnType = <V>(() => V) => V;
 
-declare function run<O: {[key: string]: (...$ReadOnlyArray<mixed>) => mixed}>(o: O): $ObjMap<O, ExtractReturnType>;
+declare function run<O: {[key: string]: (...ReadonlyArray<unknown>) => unknown}>(o: O): $ObjMap<O, ExtractReturnType>;
 
 const o = {
   a: () => true,

@@ -114,7 +114,7 @@ You can [refine](../../lang/refinements/) a value to `boolean` using a `typeof` 
 ```js flow-check
 function acceptsBoolean(value: boolean) { /* ... */ }
 
-function func(value: mixed) {
+function func(value: unknown) {
   if (typeof value === 'boolean') {
     acceptsBoolean(value); // Works: `value` is `boolean`
   }
@@ -151,7 +151,7 @@ You can [refine](../../lang/refinements/) a value to `number` using a `typeof` c
 ```js flow-check
 function acceptsNumber(value: number) { /* ... */ }
 
-function func(value: mixed) {
+function func(value: unknown) {
   if (typeof value === 'number') {
     acceptsNumber(value); // Works: `value` is `number`
   }
@@ -211,7 +211,7 @@ You can [refine](../../lang/refinements/) a value to `string` using a `typeof` c
 ```js flow-check
 function acceptsString(value: string) { /* ... */ }
 
-function func(value: mixed) {
+function func(value: unknown) {
   if (typeof value === 'string') {
     acceptsString(value); // Works: `value` is `string`
   }
@@ -246,7 +246,7 @@ You can [refine](../../lang/refinements/) a value to `null` or `void` using equa
 ```js flow-check
 function acceptsNull(value: null) { /* ... */ }
 
-function func(value: mixed) {
+function func(value: unknown) {
   if (value === null) {
     acceptsNull(value); // Works: `value` is `null`
   }
@@ -256,7 +256,7 @@ function func(value: mixed) {
 ```js flow-check
 function acceptsUndefined(value: void) { /* ... */ }
 
-function func(value: mixed) {
+function func(value: unknown) {
   if (value === undefined) {
     acceptsUndefined(value); // Works: `value` is `void`
   }
@@ -368,7 +368,7 @@ You can [refine](../../lang/refinements/) a value to `symbol` using a `typeof` c
 ```js flow-check
 function acceptsSymbol(value: symbol) { /* ... */ }
 
-function func(value: mixed) {
+function func(value: unknown) {
   if (typeof value === 'symbol') {
     acceptsSymbol(value); // Works: `value` is `symbol`
   }
@@ -396,7 +396,7 @@ You can [refine](../../lang/refinements/) a value to `bigint` using a `typeof` c
 ```js flow-check
 function acceptsBigInt(value: bigint) { /* ... */ }
 
-function func(value: mixed) {
+function func(value: unknown) {
   if (typeof value === 'bigint') {
     acceptsBigInt(value); // Works: `value` is `bigint`
   }
