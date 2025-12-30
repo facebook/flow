@@ -112,12 +112,12 @@ const tuple: [number, number] = [1, 2];
 const array: Array<number> = tuple; // Error!
 ```
 
-However, you can pass it to a [`$ReadOnlyArray`](../arrays/#toc-readonlyarray) type, since mutation is disallowed:
+However, you can pass it to a [`ReadonlyArray`](../arrays/#toc-readonlyarray) type, since mutation is disallowed:
 
 ```js flow-check
 const tuple: [number, number] = [1, 2];
 
-const array: $ReadOnlyArray<number> = tuple; // Works!
+const array: ReadonlyArray<number> = tuple; // Works!
 ```
 
 ## Cannot use mutating array methods on tuples {#toc-cannot-use-mutating-array-methods-on-tuples}
@@ -179,10 +179,10 @@ function f(readOnlyTuple: [+foo: number, +bar: string]) {
 }
 ```
 
-You can also use the [`$ReadOnly`](../utilities/#toc-readonly)  on tuple types as a shorthand for marking each property as read-only:
+You can also use the [`Readonly`](../utilities/#toc-readonly)  on tuple types as a shorthand for marking each property as read-only:
 
 ```js flow-check
-type T = $ReadOnly<[number, string]>; // Same as `[+a: number, +b: string]`
+type T = Readonly<[number, string]>; // Same as `[+a: number, +b: string]`
 ```
 
 ## Optional tuple elements
