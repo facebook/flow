@@ -4,7 +4,7 @@
  */
 
 const O = {a: 1, b: 2};
-type K = $Keys<typeof O>;
+type K = keyof typeof O;
 declare var k: K;
 k as 'c';
 'c' as K;

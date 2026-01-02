@@ -15,12 +15,12 @@ interface WithBoth {
 
 declare var xy: 'x' | 'y';
 
-(xy: $Keys<WithDict>); // OK
-('xxx': $Keys<WithDict>); // ERROR
+(xy: keyof WithDict); // OK
+('xxx': keyof WithDict); // ERROR
 
-('a': $Keys<WithProps>); // OK
-('xxx': $Keys<WithProps>); // ERROR
+('a': keyof WithProps); // OK
+('xxx': keyof WithProps); // ERROR
 
-('a': $Keys<WithBoth>); // OK
-(xy: $Keys<WithBoth>); // OK
-('xxx': $Keys<WithBoth>); // ERROR
+('a': keyof WithBoth); // OK
+(xy: keyof WithBoth); // OK
+('xxx': keyof WithBoth); // ERROR

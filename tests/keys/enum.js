@@ -1,4 +1,4 @@
-function foo(r: $Keys<typeof R>): boolean {
+function foo(r: keyof typeof R): boolean {
   switch (r) {
     case R.A:
       return false;

@@ -91,7 +91,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with union type [2]. [incompatible-type]
 
    interface.js:19:2
-   19| ('xxx': $Keys<WithDict>); // ERROR
+   19| ('xxx': keyof WithDict); // ERROR
         ^^^^^ [1]
 
 References:
@@ -105,12 +105,12 @@ Error --------------------------------------------------------------------------
 Cannot cast `'xxx'` to key set because property `xxx` is missing in `WithProps` [1]. [prop-missing]
 
    interface.js:22:2
-   22| ('xxx': $Keys<WithProps>); // ERROR
+   22| ('xxx': keyof WithProps); // ERROR
         ^^^^^
 
 References:
    interface.js:22:15
-   22| ('xxx': $Keys<WithProps>); // ERROR
+   22| ('xxx': keyof WithProps); // ERROR
                      ^^^^^^^^^ [1]
 
 
@@ -119,7 +119,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `'xxx'` to key set because property `xxx` [1] is incompatible with union type [2]. [incompatible-type]
 
    interface.js:26:2
-   26| ('xxx': $Keys<WithBoth>); // ERROR
+   26| ('xxx': keyof WithBoth); // ERROR
         ^^^^^ [1]
 
 References:
@@ -133,13 +133,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-type]
 
    keys.js:10:3
-   10|   123 as $Keys<Object>; // Error: number -> keys of Object
+   10|   123 as keyof Object; // Error: number -> keys of Object
          ^^^ [1]
 
 References:
    keys.js:10:10
-   10|   123 as $Keys<Object>; // Error: number -> keys of Object
-                ^^^^^^^^^^^^^ [2]
+   10|   123 as keyof Object; // Error: number -> keys of Object
+                ^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:21:3
@@ -147,13 +147,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-type]
 
    keys.js:21:3
-   21|   123 as $Keys<StrDict>; // Error: number -> keys of StrDict
+   21|   123 as keyof StrDict; // Error: number -> keys of StrDict
          ^^^ [1]
 
 References:
    keys.js:21:10
-   21|   123 as $Keys<StrDict>; // Error: number -> keys of StrDict
-                ^^^^^^^^^^^^^^ [2]
+   21|   123 as keyof StrDict; // Error: number -> keys of StrDict
+                ^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:26:3
@@ -162,7 +162,7 @@ Cannot cast `str` to key set because some string with unknown value [1] is incom
 [incompatible-type]
 
    keys.js:26:3
-   26|   str as $Keys<StrLitDict>; // Error: Not all strings are allowed
+   26|   str as keyof StrLitDict; // Error: Not all strings are allowed
          ^^^ [1]
 
 References:
@@ -177,7 +177,7 @@ Cannot cast `str` to key set because some string with unknown value [1] is incom
 [incompatible-type]
 
    keys.js:28:5
-   28|     str as $Keys<StrLitDict>; // Error: Not all truthy strings are allowed
+   28|     str as keyof StrLitDict; // Error: Not all truthy strings are allowed
            ^^^ [1]
 
 References:
@@ -192,7 +192,7 @@ Cannot cast `'bye'` to key set because property `bye` [1] is incompatible with s
 [incompatible-type]
 
    keys.js:31:3
-   31|   'bye' as $Keys<StrLitDict>; // Error: The wrong string literal is not allowed
+   31|   'bye' as keyof StrLitDict; // Error: The wrong string literal is not allowed
          ^^^^^ [1]
 
 References:
@@ -206,13 +206,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-type]
 
    keys.js:33:3
-   33|   123 as $Keys<StrLitDict>; // Error: number -> keys of StrLitDict
+   33|   123 as keyof StrLitDict; // Error: number -> keys of StrLitDict
          ^^^ [1]
 
 References:
    keys.js:33:10
-   33|   123 as $Keys<StrLitDict>; // Error: number -> keys of StrLitDict
-                ^^^^^^^^^^^^^^^^^ [2]
+   33|   123 as keyof StrLitDict; // Error: number -> keys of StrLitDict
+                ^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- keys.js:38:3
@@ -221,12 +221,12 @@ Cannot cast `str` to key set because an index signature declaring the expected k
 `ObjLit` [1]. [prop-missing]
 
    keys.js:38:3
-   38|   str as $Keys<ObjLit>; // Error: string -> keys of ObjLit
+   38|   str as keyof ObjLit; // Error: string -> keys of ObjLit
          ^^^
 
 References:
    keys.js:38:16
-   38|   str as $Keys<ObjLit>; // Error: string -> keys of ObjLit
+   38|   str as keyof ObjLit; // Error: string -> keys of ObjLit
                       ^^^^^^ [1]
 
 
@@ -236,12 +236,12 @@ Cannot cast `str` to key set because an index signature declaring the expected k
 `ObjLit` [1]. [prop-missing]
 
    keys.js:40:5
-   40|     str as $Keys<ObjLit>; // Error: truthy string -> keys of ObjLit
+   40|     str as keyof ObjLit; // Error: truthy string -> keys of ObjLit
            ^^^
 
 References:
    keys.js:40:18
-   40|     str as $Keys<ObjLit>; // Error: truthy string -> keys of ObjLit
+   40|     str as keyof ObjLit; // Error: truthy string -> keys of ObjLit
                         ^^^^^^ [1]
 
 
@@ -250,13 +250,13 @@ Error --------------------------------------------------------------------------
 Cannot cast `123` to key set because number [1] is incompatible with key set [2]. [incompatible-type]
 
    keys.js:44:3
-   44|   123 as $Keys<ObjLit>; // Error: number -> keys of ObjLit
+   44|   123 as keyof ObjLit; // Error: number -> keys of ObjLit
          ^^^ [1]
 
 References:
    keys.js:44:10
-   44|   123 as $Keys<ObjLit>; // Error: number -> keys of ObjLit
-                ^^^^^^^^^^^^^ [2]
+   44|   123 as keyof ObjLit; // Error: number -> keys of ObjLit
+                ^^^^^^^^^^^^ [2]
 
 
 

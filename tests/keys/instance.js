@@ -13,7 +13,7 @@ class B extends A {
   }
 }
 
-type T = $Keys<B>;
+type T = keyof B;
 
 ('bOne': T); // OK
 ('bTwo': T); // OK
