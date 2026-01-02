@@ -16,7 +16,7 @@
  *
  * This file intentionally uses interfaces and `+` for readonly.
  *
- * - `$ReadOnly` is an "evaluated" utility type in flow; meaning that flow does
+ * - `Readonly` is an "evaluated" utility type in flow; meaning that flow does
  *    not actually calculate the resulting type until it is used. This creates
  *    a copy of the type at each usage site - ballooning memory and processing
  *    times.
@@ -24,10 +24,10 @@
  *    - but in this giant circular-referencing graph that is the AST types, this
  *    causes check times for consumers to be awful.
  *
- *    Thus instead we manually annotate properties with `+` to avoid the `$ReadOnly` type.
+ *    Thus instead we manually annotate properties with `+` to avoid the `Readonly` type.
  *
  * - `...Type` spreads do not preserve the readonly-ness of the properties. If
- *   we used object literal types then we would have to `$ReadOnly` all spreads
+ *   we used object literal types then we would have to `Readonly` all spreads
  *   (see point 1). On the other hand extending an interface does preserve
  *   readonlyness of properties.
  *
@@ -114,16 +114,16 @@ export interface InterpreterDirective extends BaseNode {
   value: string;
 }
 
-export type DocblockDirectives = $ReadOnly<{
+export type DocblockDirectives = Readonly<{
   // some well-known tags
-  flow?: $ReadOnlyArray<string> | void,
-  format?: $ReadOnlyArray<string> | void,
-  noflow?: $ReadOnlyArray<string> | void,
-  noformat?: $ReadOnlyArray<string> | void,
-  [string]: $ReadOnlyArray<string> | void,
+  flow?: ReadonlyArray<string> | void,
+  format?: ReadonlyArray<string> | void,
+  noflow?: ReadonlyArray<string> | void,
+  noformat?: ReadonlyArray<string> | void,
+  [string]: ReadonlyArray<string> | void,
 }>;
 
-export type DocblockMetadata = $ReadOnly<{
+export type DocblockMetadata = Readonly<{
   directives: DocblockDirectives,
   comment: BlockComment,
 }>;
@@ -131,9 +131,9 @@ export type DocblockMetadata = $ReadOnly<{
 export interface Program extends BaseNode {
   +type: 'Program';
   +sourceType: 'script' | 'module';
-  +body: $ReadOnlyArray<Statement | ModuleDeclaration>;
-  +tokens: $ReadOnlyArray<Token>;
-  +comments: $ReadOnlyArray<Comment>;
+  +body: ReadonlyArray<Statement | ModuleDeclaration>;
+  +tokens: ReadonlyArray<Token>;
+  +comments: ReadonlyArray<Comment>;
   +loc: SourceLocation;
   +interpreter: null | InterpreterDirective;
   +docblock: null | DocblockMetadata;
@@ -223,7 +223,7 @@ export type DestructuringPattern =
   | RestElement;
 
 interface BaseFunction extends BaseNode {
-  +params: $ReadOnlyArray<FunctionParameter>;
+  +params: ReadonlyArray<FunctionParameter>;
   +async: boolean;
 
   +predicate: null | InferredPredicate;
@@ -302,12 +302,12 @@ export interface EmptyStatement extends BaseNode {
 
 export interface BlockStatement extends BaseNode {
   +type: 'BlockStatement';
-  +body: $ReadOnlyArray<Statement>;
+  +body: ReadonlyArray<Statement>;
 }
 
 export interface StaticBlock extends BaseNode {
   +type: 'StaticBlock';
-  +body: $ReadOnlyArray<Statement>;
+  +body: ReadonlyArray<Statement>;
 }
 
 export interface ExpressionStatement extends BaseNode {
@@ -348,7 +348,7 @@ export interface WithStatement extends BaseNode {
 export interface SwitchStatement extends BaseNode {
   +type: 'SwitchStatement';
   +discriminant: Expression;
-  +cases: $ReadOnlyArray<SwitchCase>;
+  +cases: ReadonlyArray<SwitchCase>;
 }
 
 export interface ReturnStatement extends BaseNode {
@@ -420,7 +420,7 @@ export interface ComponentDeclaration extends BaseNode {
   +type: 'ComponentDeclaration';
   +body: BlockStatement;
   +id: Identifier;
-  +params: $ReadOnlyArray<ComponentParameterAndRestElement>;
+  +params: ReadonlyArray<ComponentParameterAndRestElement>;
   +rendersType: null | RendersType;
   +typeParameters: null | TypeParameterDeclaration;
 }
@@ -429,7 +429,7 @@ export interface HookDeclaration extends BaseNode {
   +type: 'HookDeclaration';
   +id: Identifier;
   +body: BlockStatement;
-  +params: $ReadOnlyArray<FunctionParameter>;
+  +params: ReadonlyArray<FunctionParameter>;
   +returnType: null | TypeAnnotation;
   +typeParameters: null | TypeParameterDeclaration;
 }
@@ -444,7 +444,7 @@ export interface FunctionDeclaration extends BaseFunction {
 
 export interface VariableDeclaration extends BaseNode {
   +type: 'VariableDeclaration';
-  +declarations: $ReadOnlyArray<VariableDeclarator>;
+  +declarations: ReadonlyArray<VariableDeclarator>;
   +kind: 'var' | 'let' | 'const';
 }
 
@@ -495,14 +495,14 @@ export interface ThisExpression extends BaseNode {
 
 export interface ArrayExpression extends BaseNode {
   +type: 'ArrayExpression';
-  +elements: $ReadOnlyArray<Expression | SpreadElement>;
+  +elements: ReadonlyArray<Expression | SpreadElement>;
   // this is not part of the ESTree spec, but hermes emits it
   +trailingComma: boolean;
 }
 
 export interface ObjectExpression extends BaseNode {
   +type: 'ObjectExpression';
-  +properties: $ReadOnlyArray<ObjectProperty | SpreadElement>;
+  +properties: ReadonlyArray<ObjectProperty | SpreadElement>;
 }
 
 // This is the complete type of a "Property"
@@ -604,7 +604,7 @@ export interface FunctionExpression extends BaseFunction {
 
 export interface SequenceExpression extends BaseNode {
   +type: 'SequenceExpression';
-  +expressions: $ReadOnlyArray<Expression>;
+  +expressions: ReadonlyArray<Expression>;
 }
 
 export interface UnaryExpression extends BaseNode {
@@ -662,7 +662,7 @@ export interface ConditionalExpression extends BaseNode {
 
 interface BaseCallExpression extends BaseNode {
   +callee: Expression | Super;
-  +arguments: $ReadOnlyArray<Expression | SpreadElement>;
+  +arguments: ReadonlyArray<Expression | SpreadElement>;
   +typeArguments: null | TypeParameterInstantiation;
 }
 export interface CallExpression extends BaseCallExpression {
@@ -702,7 +702,7 @@ export interface ChainExpression extends BaseNode {
 export interface SwitchCase extends BaseNode {
   +type: 'SwitchCase';
   +test?: Expression | null;
-  +consequent: $ReadOnlyArray<Statement>;
+  +consequent: ReadonlyArray<Statement>;
 }
 
 export interface CatchClause extends BaseNode {
@@ -863,8 +863,8 @@ export interface YieldExpression extends BaseNode {
 
 export interface TemplateLiteral extends BaseNode {
   +type: 'TemplateLiteral';
-  +quasis: $ReadOnlyArray<TemplateElement>;
-  +expressions: $ReadOnlyArray<Expression>;
+  +quasis: ReadonlyArray<TemplateElement>;
+  +expressions: ReadonlyArray<Expression>;
 }
 
 export interface TaggedTemplateExpression extends BaseNode {
@@ -884,7 +884,7 @@ export interface TemplateElement extends BaseNode {
 
 export interface ObjectPattern extends BaseNode {
   +type: 'ObjectPattern';
-  +properties: $ReadOnlyArray<DestructuringObjectProperty | RestElement>;
+  +properties: ReadonlyArray<DestructuringObjectProperty | RestElement>;
   // if used as a VariableDeclarator.id
   +typeAnnotation: TypeAnnotation | null;
 }
@@ -892,7 +892,7 @@ export interface ObjectPattern extends BaseNode {
 export interface ArrayPattern extends BaseNode {
   +type: 'ArrayPattern';
   // an element will be null if the pattern contains a hole: `[a,,b]`
-  +elements: $ReadOnlyArray<?DestructuringPattern>;
+  +elements: ReadonlyArray<?DestructuringPattern>;
   +typeAnnotation: TypeAnnotation | null;
 }
 
@@ -915,8 +915,8 @@ interface BaseClass extends BaseNode {
 
   +typeParameters: null | TypeParameterDeclaration;
   +superTypeParameters: null | TypeParameterInstantiation;
-  +implements: $ReadOnlyArray<ClassImplements>;
-  +decorators: $ReadOnlyArray<Decorator>;
+  +implements: ReadonlyArray<ClassImplements>;
+  +decorators: ReadonlyArray<Decorator>;
 }
 
 export type PropertyName =
@@ -935,7 +935,7 @@ export type ClassMemberWithNonComputedName =
   | MethodDefinitionWithNonComputedName;
 export interface ClassBody extends BaseNode {
   +type: 'ClassBody';
-  +body: $ReadOnlyArray<ClassMember>;
+  +body: ReadonlyArray<ClassMember>;
 
   +parent: AClass;
 }
@@ -1034,11 +1034,11 @@ export type ModuleSpecifier =
 
 export interface ImportDeclaration extends BaseNode {
   +type: 'ImportDeclaration';
-  +specifiers: $ReadOnlyArray<
+  +specifiers: ReadonlyArray<
     ImportSpecifier | ImportDefaultSpecifier | ImportNamespaceSpecifier,
   >;
   +source: StringLiteral;
-  +assertions: $ReadOnlyArray<ImportAttribute>;
+  +assertions: ReadonlyArray<ImportAttribute>;
 
   +importKind: 'value' | 'type' | 'typeof';
 }
@@ -1062,7 +1062,7 @@ export interface ImportSpecifier extends BaseNode {
 export interface ImportExpression extends BaseNode {
   +type: 'ImportExpression';
   +source: Expression;
-  +attributes: $ReadOnlyArray<ImportAttribute> | null;
+  +attributes: ReadonlyArray<ImportAttribute> | null;
 }
 
 export interface ImportDefaultSpecifier extends BaseNode {
@@ -1095,7 +1095,7 @@ export type NamedDeclaration =
 interface ExportNamedDeclarationBase extends BaseNode {
   +type: 'ExportNamedDeclaration';
   +declaration?: NamedDeclaration | null;
-  +specifiers: $ReadOnlyArray<ExportSpecifier>;
+  +specifiers: ReadonlyArray<ExportSpecifier>;
   +source?: StringLiteral | null;
   +exportKind: 'value' | 'type';
 }
@@ -1104,7 +1104,7 @@ export interface ExportNamedDeclarationWithSpecifiers
   +type: 'ExportNamedDeclaration';
   +declaration: null;
   +source?: StringLiteral | null;
-  +specifiers: $ReadOnlyArray<ExportSpecifier>;
+  +specifiers: ReadonlyArray<ExportSpecifier>;
 }
 export interface ExportNamedDeclarationWithDeclaration
   extends ExportNamedDeclarationBase {
@@ -1306,7 +1306,7 @@ export interface KeyofTypeAnnotation extends BaseNode {
 }
 export interface TupleTypeAnnotation extends BaseNode {
   +type: 'TupleTypeAnnotation';
-  +types: $ReadOnlyArray<TypeAnnotationType>;
+  +types: ReadonlyArray<TypeAnnotationType>;
   +inexact: boolean;
 }
 export interface TupleTypeSpreadElement extends BaseNode {
@@ -1345,11 +1345,11 @@ export interface InterfaceTypeAnnotation extends BaseInterfaceNode {
 
 export interface UnionTypeAnnotation extends BaseNode {
   +type: 'UnionTypeAnnotation';
-  +types: $ReadOnlyArray<TypeAnnotationType>;
+  +types: ReadonlyArray<TypeAnnotationType>;
 }
 export interface IntersectionTypeAnnotation extends BaseNode {
   +type: 'IntersectionTypeAnnotation';
-  +types: $ReadOnlyArray<TypeAnnotationType>;
+  +types: ReadonlyArray<TypeAnnotationType>;
 }
 
 export interface ConditionalTypeAnnotation extends BaseNode {
@@ -1396,7 +1396,7 @@ export interface TypePredicate extends BaseNode {
 
 export interface FunctionTypeAnnotation extends BaseNode {
   +type: 'FunctionTypeAnnotation';
-  +params: $ReadOnlyArray<FunctionTypeParam>;
+  +params: ReadonlyArray<FunctionTypeParam>;
   +returnType: TypeAnnotationType;
   +rest: null | FunctionTypeParam;
   +typeParameters: null | TypeParameterDeclaration;
@@ -1412,7 +1412,7 @@ export interface FunctionTypeParam extends BaseNode {
 }
 export interface HookTypeAnnotation extends BaseNode {
   +type: 'HookTypeAnnotation';
-  +params: $ReadOnlyArray<FunctionTypeParam>;
+  +params: ReadonlyArray<FunctionTypeParam>;
   +returnType: TypeAnnotationType;
   +rest: null | FunctionTypeParam;
   +typeParameters: null | TypeParameterDeclaration;
@@ -1420,7 +1420,7 @@ export interface HookTypeAnnotation extends BaseNode {
 
 export interface ComponentTypeAnnotation extends BaseNode {
   +type: 'ComponentTypeAnnotation';
-  +params: $ReadOnlyArray<ComponentTypeParameter>;
+  +params: ReadonlyArray<ComponentTypeParameter>;
   +rest: null | ComponentTypeParameter;
   +typeParameters: null | TypeParameterDeclaration;
   +rendersType: null | RendersType;
@@ -1444,14 +1444,14 @@ export interface ObjectTypeAnnotation extends BaseNode {
   +type: 'ObjectTypeAnnotation';
   +inexact: boolean;
   +exact: boolean;
-  +properties: $ReadOnlyArray<
+  +properties: ReadonlyArray<
     | ObjectTypeProperty
     | ObjectTypeSpreadProperty
     | ObjectTypeMappedTypeProperty,
   >;
-  +indexers: $ReadOnlyArray<ObjectTypeIndexer>;
-  +callProperties: $ReadOnlyArray<ObjectTypeCallProperty>;
-  +internalSlots: $ReadOnlyArray<ObjectTypeInternalSlot>;
+  +indexers: ReadonlyArray<ObjectTypeIndexer>;
+  +callProperties: ReadonlyArray<ObjectTypeCallProperty>;
+  +internalSlots: ReadonlyArray<ObjectTypeInternalSlot>;
 }
 interface ObjectTypePropertyBase extends BaseNode {
   +type: 'ObjectTypeProperty';
@@ -1565,7 +1565,7 @@ export interface AsConstExpression extends BaseNode {
 
 interface BaseInterfaceNode extends BaseNode {
   +body: ObjectTypeAnnotation;
-  +extends: $ReadOnlyArray<InterfaceExtends>;
+  +extends: ReadonlyArray<InterfaceExtends>;
 }
 interface BaseInterfaceDeclaration extends BaseInterfaceNode {
   +id: Identifier;
@@ -1601,7 +1601,7 @@ export interface Decorator extends BaseNode {
 
 export interface TypeParameterDeclaration extends BaseNode {
   +type: 'TypeParameterDeclaration';
-  +params: $ReadOnlyArray<TypeParameter>;
+  +params: ReadonlyArray<TypeParameter>;
 }
 export interface TypeParameter extends BaseNode {
   +type: 'TypeParameter';
@@ -1615,7 +1615,7 @@ export interface TypeParameter extends BaseNode {
 }
 export interface TypeParameterInstantiation extends BaseNode {
   +type: 'TypeParameterInstantiation';
-  +params: $ReadOnlyArray<TypeAnnotationType>;
+  +params: ReadonlyArray<TypeAnnotationType>;
 
   +parent: GenericTypeAnnotation | CallExpression | NewExpression;
 }
@@ -1641,7 +1641,7 @@ interface BaseInferrableEnumBody extends BaseEnumBody {
 export interface EnumNumberBody extends BaseInferrableEnumBody {
   +type: 'EnumNumberBody';
   // enum number members cannot be defaulted
-  +members: $ReadOnlyArray<EnumNumberMember>;
+  +members: ReadonlyArray<EnumNumberMember>;
   +explicitType: boolean;
 
   +parent: EnumDeclaration;
@@ -1658,7 +1658,7 @@ export interface EnumNumberMember extends BaseNode {
 export interface EnumBigIntBody extends BaseInferrableEnumBody {
   +type: 'EnumBigIntBody';
   // enum bigint members cannot be defaulted
-  +members: $ReadOnlyArray<EnumBigIntMember>;
+  +members: ReadonlyArray<EnumBigIntMember>;
   +explicitType: boolean;
 
   +parent: EnumDeclaration;
@@ -1674,7 +1674,7 @@ export interface EnumBigIntMember extends BaseNode {
 
 export interface EnumStringBody extends BaseInferrableEnumBody {
   +type: 'EnumStringBody';
-  +members: $ReadOnlyArray<EnumStringMember | EnumDefaultedMember>;
+  +members: ReadonlyArray<EnumStringMember | EnumDefaultedMember>;
 
   +parent: EnumDeclaration;
 }
@@ -1690,7 +1690,7 @@ export interface EnumStringMember extends BaseNode {
 export interface EnumBooleanBody extends BaseInferrableEnumBody {
   +type: 'EnumBooleanBody';
   // enum boolean members cannot be defaulted
-  +members: $ReadOnlyArray<EnumBooleanMember>;
+  +members: ReadonlyArray<EnumBooleanMember>;
 
   +parent: EnumDeclaration;
 }
@@ -1706,7 +1706,7 @@ export interface EnumBooleanMember extends BaseNode {
 export interface EnumSymbolBody extends BaseEnumBody {
   +type: 'EnumSymbolBody';
   // enum symbol members can only be defaulted
-  +members: $ReadOnlyArray<EnumDefaultedMember>;
+  +members: ReadonlyArray<EnumDefaultedMember>;
 
   +parent: EnumDeclaration;
 }
@@ -1742,10 +1742,10 @@ export interface DeclareClass extends BaseNode {
   +type: 'DeclareClass';
   +id: Identifier;
   +typeParameters: null | TypeParameterDeclaration;
-  +extends: $ReadOnlyArray<InterfaceExtends>;
-  +implements: $ReadOnlyArray<ClassImplements>;
+  +extends: ReadonlyArray<InterfaceExtends>;
+  +implements: ReadonlyArray<ClassImplements>;
   +body: ObjectTypeAnnotation;
-  +mixins: $ReadOnlyArray<InterfaceExtends>;
+  +mixins: ReadonlyArray<InterfaceExtends>;
 }
 
 export interface DeclareComponent extends BaseNode {
@@ -1822,7 +1822,7 @@ export interface DeclareExportAllDeclaration extends BaseNode {
 
 interface DeclareExportDeclarationBase extends BaseNode {
   +type: 'DeclareExportDeclaration';
-  +specifiers: $ReadOnlyArray<ExportSpecifier>;
+  +specifiers: ReadonlyArray<ExportSpecifier>;
   +source: StringLiteral | null;
   +default: boolean;
 }
@@ -1866,7 +1866,7 @@ export interface DeclareExportDeclarationNamedWithSpecifiers
   +declaration: null;
   +default: false;
   +source: StringLiteral;
-  +specifiers: $ReadOnlyArray<ExportSpecifier>;
+  +specifiers: ReadonlyArray<ExportSpecifier>;
 }
 export type DeclareExportDeclaration =
   | DeclareExportDefaultDeclaration
@@ -1941,7 +1941,7 @@ export interface JSXElement extends BaseNode {
   +type: 'JSXElement';
   +openingElement: JSXOpeningElement;
   +closingElement: JSXClosingElement | null;
-  +children: $ReadOnlyArray<JSXChild>;
+  +children: ReadonlyArray<JSXChild>;
 }
 
 export interface JSXEmptyExpression extends BaseNode {
@@ -1957,7 +1957,7 @@ export interface JSXFragment extends BaseNode {
   +type: 'JSXFragment';
   +openingFragment: JSXOpeningFragment;
   +closingFragment: JSXClosingFragment;
-  +children: $ReadOnlyArray<JSXChild>;
+  +children: ReadonlyArray<JSXChild>;
 }
 
 export interface JSXIdentifier extends BaseNode {
@@ -1981,7 +1981,7 @@ export interface JSXOpeningElement extends BaseNode {
   +type: 'JSXOpeningElement';
   +selfClosing: boolean;
   +name: JSXTagNameExpression;
-  +attributes: $ReadOnlyArray<JSXAttribute | JSXSpreadAttribute>;
+  +attributes: ReadonlyArray<JSXAttribute | JSXSpreadAttribute>;
   +typeArguments?: TypeParameterInstantiation | null;
 
   +parent: JSXElement;
@@ -2018,7 +2018,7 @@ export interface JSXSpreadChild extends BaseNode {
 export interface MatchExpression extends BaseNode {
   +type: 'MatchExpression';
   +argument: Expression;
-  +cases: $ReadOnlyArray<MatchExpressionCase>;
+  +cases: ReadonlyArray<MatchExpressionCase>;
 }
 export interface MatchExpressionCase extends BaseNode {
   +type: 'MatchExpressionCase';
@@ -2030,7 +2030,7 @@ export interface MatchExpressionCase extends BaseNode {
 export interface MatchStatement extends BaseNode {
   +type: 'MatchStatement';
   +argument: Expression;
-  +cases: $ReadOnlyArray<MatchStatementCase>;
+  +cases: ReadonlyArray<MatchStatementCase>;
 }
 export interface MatchStatementCase extends BaseNode {
   +type: 'MatchStatementCase';
@@ -2057,7 +2057,7 @@ export type MatchPattern =
 
 export interface MatchOrPattern extends BaseNode {
   +type: 'MatchOrPattern';
-  +patterns: $ReadOnlyArray<MatchPattern>;
+  +patterns: ReadonlyArray<MatchPattern>;
 }
 export interface MatchAsPattern extends BaseNode {
   +type: 'MatchAsPattern';
@@ -2092,7 +2092,7 @@ export interface MatchBindingPattern extends BaseNode {
 }
 export interface MatchObjectPattern extends BaseNode {
   +type: 'MatchObjectPattern';
-  +properties: $ReadOnlyArray<MatchObjectPatternProperty>;
+  +properties: ReadonlyArray<MatchObjectPatternProperty>;
   +rest: MatchRestPattern | null;
 }
 export interface MatchObjectPatternProperty extends BaseNode {
@@ -2103,7 +2103,7 @@ export interface MatchObjectPatternProperty extends BaseNode {
 }
 export interface MatchArrayPattern extends BaseNode {
   +type: 'MatchArrayPattern';
-  +elements: $ReadOnlyArray<MatchPattern>;
+  +elements: ReadonlyArray<MatchPattern>;
   +rest: MatchRestPattern | null;
 }
 export interface MatchRestPattern extends BaseNode {
