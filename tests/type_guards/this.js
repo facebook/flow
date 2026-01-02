@@ -95,11 +95,11 @@ function test1() {
 function test2() {
   class C {}
 
-  type T1 = (x: mixed) => this is C; // error only on declare classes/interfaces
+  type T1 = (x: unknown) => this is C; // error only on declare classes/interfaces
 
-  type T2 = (cb: (x: mixed) => this is C) => void; // error only on declare classes/interfaces
+  type T2 = (cb: (x: unknown) => this is C) => void; // error only on declare classes/interfaces
 
-  type T3 = (x: mixed) => this is Unresolved; // error only on declare classes/interfaces, Unresolved
+  type T3 = (x: unknown) => this is Unresolved; // error only on declare classes/interfaces, Unresolved
 
   type T4 = {
     m(): this is C; // error only on declare classes/interfaces
@@ -112,8 +112,8 @@ function test2() {
   }
 
   declare class D {
-    m(cb: (x: mixed) => this is C): void; // error only on declare classes/interfaces method return
-    n(): (x: mixed) => this is C; // error only on declare classes/interfaces method return
+    m(cb: (x: unknown) => this is C): void; // error only on declare classes/interfaces method return
+    n(): (x: unknown) => this is C; // error only on declare classes/interfaces method return
   }
 
   function foo1(this: C): this is C {  // error 'this' type guard only on declare classes
@@ -263,7 +263,7 @@ function test6() {
   // name_resolver.
 
   declare class A {
-    f(x: mixed): this is B;
+    f(x: unknown): this is B;
   }
   declare class B extends A {}
 
@@ -275,7 +275,7 @@ function test6() {
   }
 
   declare class C {
-    f(x: mixed): x is B;
+    f(x: unknown): x is B;
   }
 
   declare var y: C;

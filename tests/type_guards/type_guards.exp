@@ -1767,9 +1767,9 @@ Cannot cast `y` to string because number [1] is incompatible with string [2]. [i
            ^
 
 References:
-   refinement.js:2:26
-   2|   fn: (x: mixed) => x is number,
-                               ^^^^^^ [1]
+   refinement.js:2:28
+   2|   fn: (x: unknown) => x is number,
+                                 ^^^^^^ [1]
    refinement.js:7:9
    7|     (y: string); // error number ~> string
               ^^^^^^ [2]
@@ -1849,7 +1849,7 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
 [incompatible-variance]
 
    refinement.js:40:21
-   40|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => value is S, thisArg?: This): Array<S>;
+   40|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: ReadonlyArray<T>) => value is S, thisArg?: This): Array<S>;
                            ^
 
 References:
@@ -1858,14 +1858,14 @@ References:
                                        ^ [1]
 
 
-Error --------------------------------------------------------------------------------------------- refinement.js:41:128
+Error --------------------------------------------------------------------------------------------- refinement.js:41:127
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   refinement.js:41:128
-   41|     filter<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg : This): Array<T>;
-                                                                                                                                      ^
+   refinement.js:41:127
+   41|     filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg : This): Array<T>;
+                                                                                                                                     ^
 
 References:
    refinement.js:38:33
@@ -1880,15 +1880,15 @@ Cannot call `arr.filter` because: [incompatible-type]
  - Or in array element: `unknown` [3] is incompatible with string [2].
 
    refinement.js:47:35
-   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
+   47|   const arr2: Array<string> = arr.filter((x: unknown): x is number => { return typeof x === "number"; }); // error
                                          ^^^^^^
 
 References:
-   refinement.js:47:59
-   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
-                                                                 ^^^^^^ [1]
+   refinement.js:47:61
+   47|   const arr2: Array<string> = arr.filter((x: unknown): x is number => { return typeof x === "number"; }); // error
+                                                                   ^^^^^^ [1]
    refinement.js:47:21
-   47|   const arr2: Array<string> = arr.filter((x: mixed): x is number => { return typeof x === "number"; }); // error
+   47|   const arr2: Array<string> = arr.filter((x: unknown): x is number => { return typeof x === "number"; }); // error
                            ^^^^^^ [2]
    refinement.js:44:35
    44|   declare var arr: ReadOnlyArray_<mixed>;
@@ -1902,7 +1902,7 @@ Cannot call `arr.filter` because: [incompatible-type]
  - Or function [3] is incompatible with class `Boolean` [4].
 
    refinement.js:48:35
-   48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
+   48|   const arr3: Array<string> = arr.filter((x: unknown) => { return typeof x === "number"; }); // error no refinement
                                          ^^^^^^
 
 References:
@@ -1910,13 +1910,13 @@ References:
    44|   declare var arr: ReadOnlyArray_<mixed>;
                                          ^^^^^ [1]
    refinement.js:48:21
-   48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
+   48|   const arr3: Array<string> = arr.filter((x: unknown) => { return typeof x === "number"; }); // error no refinement
                            ^^^^^^ [2]
    refinement.js:48:42
-   48|   const arr3: Array<string> = arr.filter((x: mixed) => { return typeof x === "number"; }); // error no refinement
-                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   48|   const arr3: Array<string> = arr.filter((x: unknown) => { return typeof x === "number"; }); // error no refinement
+                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
    refinement.js:39:24
-   39|     filter(callbackfn: typeof Boolean): Array<$NonMaybeType<T>>;
+   39|     filter(callbackfn: typeof Boolean): Array<NonNullable<T>>;
                               ^^^^^^^^^^^^^^ [4]
 
 
@@ -1964,9 +1964,9 @@ References:
    refinement.js:53:29
    53|   type A = { tag: 'A', foo: number };
                                    ^^^^^^ [2]
-   refinement.js:70:57
-   70|   declare function invalid_sentinel_key(x: mixed): x is {tag_: 'A', ...};
-                                                               ^^^^^^^^^^^^^^^^ [3]
+   refinement.js:70:59
+   70|   declare function invalid_sentinel_key(x: unknown): x is {tag_: 'A', ...};
+                                                                 ^^^^^^^^^^^^^^^^ [3]
    refinement.js:72:11
    72|       (x: A); // error B & {tag_: 'A',...} ~> A
                  ^ [4]
@@ -1989,9 +1989,9 @@ References:
    refinement.js:54:29
    54|   type B = { tag: 'B', foo: string };
                                    ^^^^^^ [2]
-   refinement.js:70:57
-   70|   declare function invalid_sentinel_key(x: mixed): x is {tag_: 'A', ...};
-                                                               ^^^^^^^^^^^^^^^^ [3]
+   refinement.js:70:59
+   70|   declare function invalid_sentinel_key(x: unknown): x is {tag_: 'A', ...};
+                                                                 ^^^^^^^^^^^^^^^^ [3]
    refinement.js:73:11
    73|       (x: B); // error A & {tag_: 'A',...} ~> B
                  ^ [4]
@@ -2006,12 +2006,12 @@ Cannot cast `x` to `B` because in property `foo`: number [1] is incompatible wit
               ^
 
 References:
-   refinement.js:78:39
-   78|   type A = $ReadOnly<{ tag: 'A', foo: number }>;
-                                             ^^^^^^ [1]
-   refinement.js:79:39
-   79|   type B = $ReadOnly<{ tag: 'B', foo: string }>;
-                                             ^^^^^^ [2]
+   refinement.js:78:38
+   78|   type A = Readonly<{ tag: 'A', foo: number }>;
+                                            ^^^^^^ [1]
+   refinement.js:79:38
+   79|   type B = Readonly<{ tag: 'B', foo: string }>;
+                                            ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:86:8
@@ -2024,12 +2024,12 @@ Cannot cast `x` to `B` because in property `tag`: string literal `A` [1] is inco
               ^
 
 References:
-   refinement.js:78:29
-   78|   type A = $ReadOnly<{ tag: 'A', foo: number }>;
-                                   ^^^ [1]
-   refinement.js:79:29
-   79|   type B = $ReadOnly<{ tag: 'B', foo: string }>;
-                                   ^^^ [2]
+   refinement.js:78:28
+   78|   type A = Readonly<{ tag: 'A', foo: number }>;
+                                  ^^^ [1]
+   refinement.js:79:28
+   79|   type B = Readonly<{ tag: 'B', foo: string }>;
+                                  ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- refinement.js:97:8
@@ -2043,15 +2043,15 @@ Cannot cast `x` to `A` because: [incompatible-type]
               ^
 
 References:
-   refinement.js:79:39
-   79|   type B = $ReadOnly<{ tag: 'B', foo: string }>;
-                                             ^^^^^^ [1]
-   refinement.js:78:39
-   78|   type A = $ReadOnly<{ tag: 'A', foo: number }>;
-                                             ^^^^^^ [2]
-   refinement.js:95:67
-   95|   declare function invalid_sentinel_key(x: mixed): x is $ReadOnly<{tag_: 'A', ...}>;
-                                                                         ^^^^^^^^^^^^^^^^ [3]
+   refinement.js:79:38
+   79|   type B = Readonly<{ tag: 'B', foo: string }>;
+                                            ^^^^^^ [1]
+   refinement.js:78:38
+   78|   type A = Readonly<{ tag: 'A', foo: number }>;
+                                            ^^^^^^ [2]
+   refinement.js:95:68
+   95|   declare function invalid_sentinel_key(x: unknown): x is Readonly<{tag_: 'A', ...}>;
+                                                                          ^^^^^^^^^^^^^^^^ [3]
    refinement.js:97:11
    97|       (x: A); // error B & {+tag_: 'A',...} ~> A
                  ^ [4]
@@ -2068,15 +2068,15 @@ Cannot cast `x` to `B` because: [incompatible-type]
               ^
 
 References:
-   refinement.js:78:39
-   78|   type A = $ReadOnly<{ tag: 'A', foo: number }>;
-                                             ^^^^^^ [1]
-   refinement.js:79:39
-   79|   type B = $ReadOnly<{ tag: 'B', foo: string }>;
-                                             ^^^^^^ [2]
-   refinement.js:95:67
-   95|   declare function invalid_sentinel_key(x: mixed): x is $ReadOnly<{tag_: 'A', ...}>;
-                                                                         ^^^^^^^^^^^^^^^^ [3]
+   refinement.js:78:38
+   78|   type A = Readonly<{ tag: 'A', foo: number }>;
+                                            ^^^^^^ [1]
+   refinement.js:79:38
+   79|   type B = Readonly<{ tag: 'B', foo: string }>;
+                                            ^^^^^^ [2]
+   refinement.js:95:68
+   95|   declare function invalid_sentinel_key(x: unknown): x is Readonly<{tag_: 'A', ...}>;
+                                                                          ^^^^^^^^^^^^^^^^ [3]
    refinement.js:98:11
    98|       (x: B); // error A & {+tag_: 'A',...} ~> B
                  ^ [4]
@@ -2093,15 +2093,15 @@ Cannot cast `x` to `A` because: [incompatible-type]
                ^
 
 References:
-   refinement.js:104:49
-   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
-                                                        ^^^^^^ [1]
-   refinement.js:103:49
-   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
-                                                        ^^^^^^ [2]
-   refinement.js:108:63
-   108|   declare function unknown_sentinel(x: mixed): x is $ReadOnly<{tag: 'C', ...}>;
-                                                                      ^^^^^^^^^^^^^^^ [3]
+   refinement.js:104:48
+   104|   type B = Readonly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                                       ^^^^^^ [1]
+   refinement.js:103:48
+   103|   type A = Readonly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                                       ^^^^^^ [2]
+   refinement.js:108:64
+   108|   declare function unknown_sentinel(x: unknown): x is Readonly<{tag: 'C', ...}>;
+                                                                       ^^^^^^^^^^^^^^^ [3]
    refinement.js:110:11
    110|       (x: A); // error B & {+tag: 'C', ...} ~> A
                   ^ [4]
@@ -2118,15 +2118,15 @@ Cannot cast `x` to `B` because: [incompatible-type]
                ^
 
 References:
-   refinement.js:103:49
-   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
-                                                        ^^^^^^ [1]
-   refinement.js:104:49
-   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
-                                                        ^^^^^^ [2]
-   refinement.js:108:63
-   108|   declare function unknown_sentinel(x: mixed): x is $ReadOnly<{tag: 'C', ...}>;
-                                                                      ^^^^^^^^^^^^^^^ [3]
+   refinement.js:103:48
+   103|   type A = Readonly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                                       ^^^^^^ [1]
+   refinement.js:104:48
+   104|   type B = Readonly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                                       ^^^^^^ [2]
+   refinement.js:108:64
+   108|   declare function unknown_sentinel(x: unknown): x is Readonly<{tag: 'C', ...}>;
+                                                                       ^^^^^^^^^^^^^^^ [3]
    refinement.js:111:11
    111|       (x: B); // error A & {+tag: 'C', ...} ~> B
                   ^ [4]
@@ -2141,12 +2141,12 @@ Cannot cast `x` to `B` because in property `foo`: number [1] is incompatible wit
                ^
 
 References:
-   refinement.js:103:49
-   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
-                                                        ^^^^^^ [1]
-   refinement.js:104:49
-   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
-                                                        ^^^^^^ [2]
+   refinement.js:103:48
+   103|   type A = Readonly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                                       ^^^^^^ [1]
+   refinement.js:104:48
+   104|   type B = Readonly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                                       ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:117:8
@@ -2159,12 +2159,12 @@ Cannot cast `x` to `B` because in property `tag1`: string literal `A` [1] is inc
                ^
 
 References:
-   refinement.js:103:30
-   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
-                                     ^^^ [1]
-   refinement.js:104:30
-   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
-                                     ^^^ [2]
+   refinement.js:103:29
+   103|   type A = Readonly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                    ^^^ [1]
+   refinement.js:104:29
+   104|   type B = Readonly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                    ^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:122:8
@@ -2176,12 +2176,12 @@ Cannot cast `x` to `A` because in property `foo`: string [1] is incompatible wit
                ^
 
 References:
-   refinement.js:104:49
-   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
-                                                        ^^^^^^ [1]
-   refinement.js:103:49
-   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
-                                                        ^^^^^^ [2]
+   refinement.js:104:48
+   104|   type B = Readonly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                                       ^^^^^^ [1]
+   refinement.js:103:48
+   103|   type A = Readonly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                                       ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:122:8
@@ -2194,12 +2194,12 @@ Cannot cast `x` to `A` because in property `tag1`: string literal `B` [1] is inc
                ^
 
 References:
-   refinement.js:104:30
-   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
-                                     ^^^ [1]
-   refinement.js:103:30
-   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
-                                     ^^^ [2]
+   refinement.js:104:29
+   104|   type B = Readonly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                    ^^^ [1]
+   refinement.js:103:29
+   103|   type A = Readonly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                    ^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:123:8
@@ -2211,12 +2211,12 @@ Cannot cast `x` to `B` because in property `foo`: number [1] is incompatible wit
                ^
 
 References:
-   refinement.js:103:49
-   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
-                                                        ^^^^^^ [1]
-   refinement.js:104:49
-   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
-                                                        ^^^^^^ [2]
+   refinement.js:103:48
+   103|   type A = Readonly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                                       ^^^^^^ [1]
+   refinement.js:104:48
+   104|   type B = Readonly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                                       ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:123:8
@@ -2229,12 +2229,12 @@ Cannot cast `x` to `B` because in property `tag1`: string literal `A` [1] is inc
                ^
 
 References:
-   refinement.js:103:30
-   103|   type A = $ReadOnly<{ tag1: 'A', tag2: 1, foo: number }>;
-                                     ^^^ [1]
-   refinement.js:104:30
-   104|   type B = $ReadOnly<{ tag1: 'B', tag2: 1, foo: string }>;
-                                     ^^^ [2]
+   refinement.js:103:29
+   103|   type A = Readonly<{ tag1: 'A', tag2: 1, foo: number }>;
+                                    ^^^ [1]
+   refinement.js:104:29
+   104|   type B = Readonly<{ tag1: 'B', tag2: 1, foo: string }>;
+                                    ^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:136:6
@@ -2365,9 +2365,9 @@ Cannot cast `anyVal` to empty because number [1] is incompatible with empty [2].
              ^^^^^^
 
 References:
-   refinement.js:180:53
-   180|   declare function isNumber(value: mixed): value is number;
-                                                            ^^^^^^ [1]
+   refinement.js:180:55
+   180|   declare function isNumber(value: unknown): value is number;
+                                                              ^^^^^^ [1]
    refinement.js:185:14
    185|     (anyVal: empty); // error number ~> empty
                      ^^^^^ [2]
@@ -2520,7 +2520,7 @@ Cannot use `T` [1] in an input/output position because `T` [1] is expected to oc
 [incompatible-variance]
 
    refinement.js:243:21
-   243|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: $ReadOnlyArray<T>) => implies value is S, thisArg?: This): Array<S>;
+   243|     filter<This, S: T>(predicate: (this: This, value: T, index: number, array: ReadonlyArray<T>) => implies value is S, thisArg?: This): Array<S>;
                             ^
 
 References:
@@ -2529,14 +2529,14 @@ References:
                                         ^ [1]
 
 
-Error -------------------------------------------------------------------------------------------- refinement.js:244:128
+Error -------------------------------------------------------------------------------------------- refinement.js:244:127
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   refinement.js:244:128
-   244|     filter<This>(callbackfn: (this : This, value: T, index: number, array: $ReadOnlyArray<T>) => mixed, thisArg : This): Array<T>;
-                                                                                                                                       ^
+   refinement.js:244:127
+   244|     filter<This>(callbackfn: (this : This, value: T, index: number, array: ReadonlyArray<T>) => mixed, thisArg : This): Array<T>;
+                                                                                                                                      ^
 
 References:
    refinement.js:241:33
@@ -2555,9 +2555,9 @@ Cannot call `arr.filter` because: [incompatible-type]
               ^^^^^^
 
 References:
-   refinement.js:231:34
-   231|   fn: (x: mixed) => implies x is number,
-                                         ^^^^^^ [1]
+   refinement.js:231:36
+   231|   fn: (x: unknown) => implies x is number,
+                                           ^^^^^^ [1]
    refinement.js:249:27
    249|   arr.filter(fn) as Array<string>; // error number ~> string
                                   ^^^^^^ [2]
@@ -2577,15 +2577,15 @@ Cannot call `ro_arr.filter` because: [incompatible-type]
                  ^^^^^^
 
 References:
-   refinement.js:231:34
-   231|   fn: (x: mixed) => implies x is number,
-                                         ^^^^^^ [1]
+   refinement.js:231:36
+   231|   fn: (x: unknown) => implies x is number,
+                                           ^^^^^^ [1]
    refinement.js:253:30
    253|   ro_arr.filter(fn) as Array<string>; // error number ~> string
                                      ^^^^^^ [2]
-   refinement.js:251:38
-   251|   declare var ro_arr: $ReadOnlyArray<mixed>;
-                                             ^^^^^ [3]
+   refinement.js:251:37
+   251|   declare var ro_arr: ReadonlyArray<mixed>;
+                                            ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- refinement.js:257:10
@@ -2599,15 +2599,15 @@ Cannot call `rw_arr.filter` because: [incompatible-type]
                  ^^^^^^
 
 References:
-   refinement.js:231:34
-   231|   fn: (x: mixed) => implies x is number,
-                                         ^^^^^^ [1]
+   refinement.js:231:36
+   231|   fn: (x: unknown) => implies x is number,
+                                           ^^^^^^ [1]
    refinement.js:257:30
    257|   rw_arr.filter(fn) as Array<string>; // error number ~> string
                                      ^^^^^^ [2]
-   refinement.js:255:38
-   255|   declare var rw_arr: $ReadOnlyArray<mixed>;
-                                             ^^^^^ [3]
+   refinement.js:255:37
+   255|   declare var rw_arr: ReadonlyArray<mixed>;
+                                            ^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:275:7
@@ -2620,12 +2620,12 @@ Cannot cast `item` to `TypeA` because in property `type`: string literal `TypeB`
               ^^^^
 
 References:
-   refinement.js:262:34
-   262|   type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
-                                         ^^^^^^^ [1]
-   refinement.js:261:34
-   261|   type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
-                                         ^^^^^^^ [2]
+   refinement.js:262:33
+   262|   type TypeB = Readonly<{ type: 'TypeB', id: string }>;
+                                        ^^^^^^^ [1]
+   refinement.js:261:33
+   261|   type TypeA = Readonly<{ type: 'TypeA', id: string }>;
+                                        ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:276:7
@@ -2638,12 +2638,12 @@ Cannot cast `item` to `TypeB` because in property `type`: string literal `TypeA`
               ^^^^
 
 References:
-   refinement.js:261:34
-   261|   type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
-                                         ^^^^^^^ [1]
-   refinement.js:262:34
-   262|   type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
-                                         ^^^^^^^ [2]
+   refinement.js:261:33
+   261|   type TypeA = Readonly<{ type: 'TypeA', id: string }>;
+                                        ^^^^^^^ [1]
+   refinement.js:262:33
+   262|   type TypeB = Readonly<{ type: 'TypeB', id: string }>;
+                                        ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:277:7
@@ -2656,12 +2656,12 @@ Cannot cast `item` to `TypeC` because in property `type`: string literal `TypeA`
               ^^^^
 
 References:
-   refinement.js:261:34
-   261|   type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
-                                         ^^^^^^^ [1]
-   refinement.js:263:34
-   263|   type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
-                                         ^^^^^^^ [2]
+   refinement.js:261:33
+   261|   type TypeA = Readonly<{ type: 'TypeA', id: string }>;
+                                        ^^^^^^^ [1]
+   refinement.js:263:33
+   263|   type TypeC = Readonly<{ type: 'TypeC', id: string }>;
+                                        ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:277:7
@@ -2674,12 +2674,12 @@ Cannot cast `item` to `TypeC` because in property `type`: string literal `TypeB`
               ^^^^
 
 References:
-   refinement.js:262:34
-   262|   type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
-                                         ^^^^^^^ [1]
-   refinement.js:263:34
-   263|   type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
-                                         ^^^^^^^ [2]
+   refinement.js:262:33
+   262|   type TypeB = Readonly<{ type: 'TypeB', id: string }>;
+                                        ^^^^^^^ [1]
+   refinement.js:263:33
+   263|   type TypeC = Readonly<{ type: 'TypeC', id: string }>;
+                                        ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:280:7
@@ -2693,15 +2693,15 @@ Cannot cast `item` to `SpecialTypes` because: [incompatible-type]
               ^^^^
 
 References:
-   refinement.js:263:34
-   263|   type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
-                                         ^^^^^^^ [1]
-   refinement.js:261:34
-   261|   type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
-                                         ^^^^^^^ [2]
-   refinement.js:262:34
-   262|   type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
-                                         ^^^^^^^ [3]
+   refinement.js:263:33
+   263|   type TypeC = Readonly<{ type: 'TypeC', id: string }>;
+                                        ^^^^^^^ [1]
+   refinement.js:261:33
+   261|   type TypeA = Readonly<{ type: 'TypeA', id: string }>;
+                                        ^^^^^^^ [2]
+   refinement.js:262:33
+   262|   type TypeB = Readonly<{ type: 'TypeB', id: string }>;
+                                        ^^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:282:7
@@ -2714,12 +2714,12 @@ Cannot cast `item` to `TypeA` because in property `type`: string literal `TypeC`
               ^^^^
 
 References:
-   refinement.js:263:34
-   263|   type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
-                                         ^^^^^^^ [1]
-   refinement.js:261:34
-   261|   type TypeA = $ReadOnly<{ type: 'TypeA', id: string }>;
-                                         ^^^^^^^ [2]
+   refinement.js:263:33
+   263|   type TypeC = Readonly<{ type: 'TypeC', id: string }>;
+                                        ^^^^^^^ [1]
+   refinement.js:261:33
+   261|   type TypeA = Readonly<{ type: 'TypeA', id: string }>;
+                                        ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- refinement.js:283:7
@@ -2732,12 +2732,12 @@ Cannot cast `item` to `TypeB` because in property `type`: string literal `TypeC`
               ^^^^
 
 References:
-   refinement.js:263:34
-   263|   type TypeC = $ReadOnly<{ type: 'TypeC', id: string }>;
-                                         ^^^^^^^ [1]
-   refinement.js:262:34
-   262|   type TypeB = $ReadOnly<{ type: 'TypeB', id: string }>;
-                                         ^^^^^^^ [2]
+   refinement.js:263:33
+   263|   type TypeC = Readonly<{ type: 'TypeC', id: string }>;
+                                        ^^^^^^^ [1]
+   refinement.js:262:33
+   262|   type TypeB = Readonly<{ type: 'TypeB', id: string }>;
+                                        ^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- subst.js:10:15
@@ -2749,9 +2749,9 @@ Cannot assign `funA(...)` to `x2` because `A` [1] is incompatible with `B` [2]. 
                      ^^^^^^^^^
 
 References:
-   subst.js:4:38
-    4| declare function isA(x: mixed): x is A;
-                                            ^ [1]
+   subst.js:4:40
+    4| declare function isA(x: unknown): x is A;
+                                              ^ [1]
    subst.js:10:11
    10| const x2: B = funA(isA); // error A ~> B
                  ^ [2]
@@ -2766,9 +2766,9 @@ Cannot cast `input` to `B` because `A` [1] is incompatible with `B` [2]. [incomp
           ^^^^^
 
 References:
-   subst.js:4:38
-    4| declare function isA(x: mixed): x is A;
-                                            ^ [1]
+   subst.js:4:40
+    4| declare function isA(x: unknown): x is A;
+                                              ^ [1]
    subst.js:15:11
    15|   (input: B); // error A ~> B
                  ^ [2]
@@ -2784,12 +2784,12 @@ type guard parameter `x` [2]. [function-predicate]
                ^
 
 References:
-   subtyping.js:5:56
-   5| function non_matching_prams(f: (x: mixed, y: mixed) => x is number): (y: mixed, x: mixed) => x is number {
-                                                             ^ [1]
-   subtyping.js:5:94
-   5| function non_matching_prams(f: (x: mixed, y: mixed) => x is number): (y: mixed, x: mixed) => x is number {
-                                                                                                   ^ [2]
+   subtyping.js:5:60
+   5| function non_matching_prams(f: (x: unknown, y: unknown) => x is number): (y: unknown, x: unknown) => x is number {
+                                                                 ^ [1]
+   subtyping.js:5:102
+   5| function non_matching_prams(f: (x: unknown, y: unknown) => x is number): (y: unknown, x: unknown) => x is number {
+                                                                                                           ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:10:10
@@ -2803,11 +2803,11 @@ a type-guard function. [function-predicate]
 
 References:
    subtyping.js:9:42
-    9| function non_type_guard_to_type_guard(f: (x: mixed) => boolean): (x: mixed) => x is number {
-                                                ^^^^^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:9:66
-    9| function non_type_guard_to_type_guard(f: (x: mixed) => boolean): (x: mixed) => x is number {
-                                                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+    9| function non_type_guard_to_type_guard(f: (x: unknown) => boolean): (x: unknown) => x is number {
+                                                ^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:9:68
+    9| function non_type_guard_to_type_guard(f: (x: unknown) => boolean): (x: unknown) => x is number {
+                                                                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:20:10
@@ -2819,12 +2819,12 @@ Cannot return `f` because in the type predicate: `A` [1] is incompatible with `B
                 ^
 
 References:
-   subtyping.js:19:61
-   19| function type_guard_subtyping_error_1(f: (x: mixed) => x is A): (x: mixed) => x is B {
-                                                                   ^ [1]
-   subtyping.js:19:84
-   19| function type_guard_subtyping_error_1(f: (x: mixed) => x is A): (x: mixed) => x is B {
-                                                                                          ^ [2]
+   subtyping.js:19:63
+   19| function type_guard_subtyping_error_1(f: (x: unknown) => x is A): (x: unknown) => x is B {
+                                                                     ^ [1]
+   subtyping.js:19:88
+   19| function type_guard_subtyping_error_1(f: (x: unknown) => x is A): (x: unknown) => x is B {
+                                                                                              ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:24:10
@@ -2836,12 +2836,12 @@ Cannot return `f` because in the type predicate: `A` [1] is incompatible with `C
                 ^
 
 References:
-   subtyping.js:23:61
-   23| function type_guard_subtyping_error_2(f: (x: mixed) => x is A): (x: mixed) => x is C {
-                                                                   ^ [1]
-   subtyping.js:23:84
-   23| function type_guard_subtyping_error_2(f: (x: mixed) => x is A): (x: mixed) => x is C {
-                                                                                          ^ [2]
+   subtyping.js:23:63
+   23| function type_guard_subtyping_error_2(f: (x: unknown) => x is A): (x: unknown) => x is C {
+                                                                     ^ [1]
+   subtyping.js:23:88
+   23| function type_guard_subtyping_error_2(f: (x: unknown) => x is A): (x: unknown) => x is C {
+                                                                                              ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:28:10
@@ -2854,12 +2854,12 @@ Cannot return `f` because in the type predicate: read-only array type [1] is inc
                 ^
 
 References:
-   subtyping.js:27:64
-   27| function type_guard_subtyping_error_3(f: <A>(x: mixed) => x is $ReadOnlyArray<A>): <B>(x: mixed) => x is Array<B> {
-                                                                      ^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:27:106
-   27| function type_guard_subtyping_error_3(f: <A>(x: mixed) => x is $ReadOnlyArray<A>): <B>(x: mixed) => x is Array<B> {
-                                                                                                                ^^^^^^^^ [2]
+   subtyping.js:27:66
+   27| function type_guard_subtyping_error_3(f: <A>(x: unknown) => x is ReadonlyArray<A>): <B>(x: unknown) => x is Array<B> {
+                                                                        ^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:27:109
+   27| function type_guard_subtyping_error_3(f: <A>(x: unknown) => x is ReadonlyArray<A>): <B>(x: unknown) => x is Array<B> {
+                                                                                                                   ^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:32:10
@@ -2871,12 +2871,12 @@ Cannot return `f` because in the type predicate: `A` [1] is incompatible with `C
                 ^
 
 References:
-   subtyping.js:31:84
-   31| function type_guard_subtyping_error_4(f: (x: mixed) => x is C): (x: mixed) => x is A {
-                                                                                          ^ [1]
-   subtyping.js:31:61
-   31| function type_guard_subtyping_error_4(f: (x: mixed) => x is C): (x: mixed) => x is A {
-                                                                   ^ [2]
+   subtyping.js:31:88
+   31| function type_guard_subtyping_error_4(f: (x: unknown) => x is C): (x: unknown) => x is A {
+                                                                                              ^ [1]
+   subtyping.js:31:63
+   31| function type_guard_subtyping_error_4(f: (x: unknown) => x is C): (x: unknown) => x is A {
+                                                                     ^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:36:10
@@ -2885,16 +2885,16 @@ Cannot return `f` because in the type predicate: read-only array type [1] is inc
 [incompatible-type]
 
    subtyping.js:36:10
-   36|   return f; // error Array<A> <~> $ReadOnlyArray<B>
+   36|   return f; // error Array<A> <~> ReadonlyArray<B>
                 ^
 
 References:
-   subtyping.js:35:97
-   35| function type_guard_subtyping_error_5(f: <A>(x: mixed) => x is Array<A>): <B>(x: mixed) => x is $ReadOnlyArray<B> {
-                                                                                                       ^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:35:64
-   35| function type_guard_subtyping_error_5(f: <A>(x: mixed) => x is Array<A>): <B>(x: mixed) => x is $ReadOnlyArray<B> {
-                                                                      ^^^^^^^^ [2]
+   subtyping.js:35:101
+   35| function type_guard_subtyping_error_5(f: <A>(x: unknown) => x is Array<A>): <B>(x: unknown) => x is ReadonlyArray<B> {
+                                                                                                           ^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:35:66
+   35| function type_guard_subtyping_error_5(f: <A>(x: unknown) => x is Array<A>): <B>(x: unknown) => x is ReadonlyArray<B> {
+                                                                        ^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:56:10
@@ -2906,12 +2906,12 @@ Cannot return `f` because one-sided type guard [1] is incompatible with default 
                 ^
 
 References:
-   subtyping.js:55:64
-   55| function type_guard_subtyping_one_sided_error(f: (x: mixed) => implies x is A): (x: mixed) => x is A {
-                                                                      ^^^^^^^^^^^^^^ [1]
-   subtyping.js:55:95
-   55| function type_guard_subtyping_one_sided_error(f: (x: mixed) => implies x is A): (x: mixed) => x is A {
-                                                                                                     ^^^^^^ [2]
+   subtyping.js:55:66
+   55| function type_guard_subtyping_one_sided_error(f: (x: unknown) => implies x is A): (x: unknown) => x is A {
+                                                                        ^^^^^^^^^^^^^^ [1]
+   subtyping.js:55:99
+   55| function type_guard_subtyping_one_sided_error(f: (x: unknown) => implies x is A): (x: unknown) => x is A {
+                                                                                                         ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:66:10
@@ -2930,17 +2930,17 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    subtyping.js:65:43
-   65| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
-                                                 ^^^^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:65:73
-   65| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
-                                                                               ^^^^^^^^^^^^^^^^^^^^ [2]
+   65| function type_guard_unif_error_1(f: Array<(x: unknown) => x is C>): Array<(x: unknown) => x is A> {
+                                                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:65:75
+   65| function type_guard_unif_error_1(f: Array<(x: unknown) => x is C>): Array<(x: unknown) => x is A> {
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
    subtyping.js:65:37
-   65| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   subtyping.js:65:67
-   65| function type_guard_unif_error_1(f: Array<(x: mixed) => x is C>): Array<(x: mixed) => x is A> {
-                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   65| function type_guard_unif_error_1(f: Array<(x: unknown) => x is C>): Array<(x: unknown) => x is A> {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   subtyping.js:65:69
+   65| function type_guard_unif_error_1(f: Array<(x: unknown) => x is C>): Array<(x: unknown) => x is A> {
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:70:10
@@ -2959,17 +2959,17 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    subtyping.js:69:43
-   69| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
-                                                 ^^^^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:69:73
-   69| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
-                                                                               ^^^^^^^^^^^^^^^^^^^^ [2]
+   69| function type_guard_unif_error_2(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => x is B> {
+                                                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:69:75
+   69| function type_guard_unif_error_2(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => x is B> {
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
    subtyping.js:69:37
-   69| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   subtyping.js:69:67
-   69| function type_guard_unif_error_2(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is B> {
-                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   69| function type_guard_unif_error_2(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => x is B> {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   subtyping.js:69:69
+   69| function type_guard_unif_error_2(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => x is B> {
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:74:10
@@ -2988,17 +2988,17 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    subtyping.js:73:43
-   73| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
-                                                 ^^^^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:73:73
-   73| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
-                                                                               ^^^^^^^^^^^^^^^^^^^^ [2]
+   73| function type_guard_unif_error_3(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => x is C> {
+                                                 ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:73:75
+   73| function type_guard_unif_error_3(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => x is C> {
+                                                                                 ^^^^^^^^^^^^^^^^^^^^^^ [2]
    subtyping.js:73:37
-   73| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   subtyping.js:73:67
-   73| function type_guard_unif_error_3(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => x is C> {
-                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   73| function type_guard_unif_error_3(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => x is C> {
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   subtyping.js:73:69
+   73| function type_guard_unif_error_3(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => x is C> {
+                                                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ----------------------------------------------------------------------------------------------- subtyping.js:82:10
@@ -3017,17 +3017,17 @@ See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-t
 
 References:
    subtyping.js:81:51
-   81| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
-                                                         ^^^^^^^^^^^^^^^^^^^^ [1]
-   subtyping.js:81:81
-   81| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
-                                                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   81| function type_guard_unif_one_sided_error(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => implies x is A> {
+                                                         ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   subtyping.js:81:83
+   81| function type_guard_unif_one_sided_error(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => implies x is A> {
+                                                                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    subtyping.js:81:45
-   81| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
-                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   subtyping.js:81:75
-   81| function type_guard_unif_one_sided_error(f: Array<(x: mixed) => x is A>): Array<(x: mixed) => implies x is A> {
-                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
+   81| function type_guard_unif_one_sided_error(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => implies x is A> {
+                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   subtyping.js:81:77
+   81| function type_guard_unif_one_sided_error(f: Array<(x: unknown) => x is A>): Array<(x: unknown) => implies x is A> {
+                                                                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [4]
 
 
 Error ---------------------------------------------------------------------------------------------------- this.js:19:39
@@ -3169,39 +3169,39 @@ References:
            ^^^^^^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- this.js:98:27
+Error ---------------------------------------------------------------------------------------------------- this.js:98:29
 
 Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
 declare class or interface methods. [function-predicate]
 
-   98|   type T1 = (x: mixed) => this is C; // error only on declare classes/interfaces
-                                 ^^^^ [1]
+   98|   type T1 = (x: unknown) => this is C; // error only on declare classes/interfaces
+                                   ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- this.js:100:32
-
-Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
-declare class or interface methods. [function-predicate]
-
-   100|   type T2 = (cb: (x: mixed) => this is C) => void; // error only on declare classes/interfaces
-                                       ^^^^ [1]
-
-
-Error --------------------------------------------------------------------------------------------------- this.js:102:27
+Error --------------------------------------------------------------------------------------------------- this.js:100:34
 
 Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
 declare class or interface methods. [function-predicate]
 
-   102|   type T3 = (x: mixed) => this is Unresolved; // error only on declare classes/interfaces, Unresolved
-                                  ^^^^ [1]
+   100|   type T2 = (cb: (x: unknown) => this is C) => void; // error only on declare classes/interfaces
+                                         ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- this.js:102:35
+Error --------------------------------------------------------------------------------------------------- this.js:102:29
+
+Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
+declare class or interface methods. [function-predicate]
+
+   102|   type T3 = (x: unknown) => this is Unresolved; // error only on declare classes/interfaces, Unresolved
+                                    ^^^^ [1]
+
+
+Error --------------------------------------------------------------------------------------------------- this.js:102:37
 
 Cannot resolve name `Unresolved`. [cannot-resolve-name]
 
-   102|   type T3 = (x: mixed) => this is Unresolved; // error only on declare classes/interfaces, Unresolved
-                                          ^^^^^^^^^^
+   102|   type T3 = (x: unknown) => this is Unresolved; // error only on declare classes/interfaces, Unresolved
+                                            ^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- this.js:105:10
@@ -3239,22 +3239,22 @@ References:
                  ^ [2]
 
 
-Error --------------------------------------------------------------------------------------------------- this.js:115:25
+Error --------------------------------------------------------------------------------------------------- this.js:115:27
 
 Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
 declare class or interface methods. [function-predicate]
 
-   115|     m(cb: (x: mixed) => this is C): void; // error only on declare classes/interfaces method return
-                                ^^^^ [1]
+   115|     m(cb: (x: unknown) => this is C): void; // error only on declare classes/interfaces method return
+                                  ^^^^ [1]
 
 
-Error --------------------------------------------------------------------------------------------------- this.js:116:24
+Error --------------------------------------------------------------------------------------------------- this.js:116:26
 
 Cannot use this [1] as a type guard variable in this context. `this` type guards are only supported in non-static
 declare class or interface methods. [function-predicate]
 
-   116|     n(): (x: mixed) => this is C; // error only on declare classes/interfaces method return
-                               ^^^^ [1]
+   116|     n(): (x: unknown) => this is C; // error only on declare classes/interfaces method return
+                                 ^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------------- this.js:119:27
@@ -3594,12 +3594,12 @@ Cannot cast `x` to `ROB` because in index `0`: string literal `A` [1] is incompa
              ^
 
 References:
-   tuple_refinement.js:22:23
-   22| type ROA = $ReadOnly<['A', number]>;
-                             ^^^ [1]
-   tuple_refinement.js:23:23
-   23| type ROB = $ReadOnly<['B', string]>;
-                             ^^^ [2]
+   tuple_refinement.js:22:22
+   22| type ROA = Readonly<['A', number]>;
+                            ^^^ [1]
+   tuple_refinement.js:23:22
+   23| type ROB = Readonly<['B', string]>;
+                            ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:31:7
@@ -3611,12 +3611,12 @@ Cannot cast `x` to `ROB` because in index `1`: number [1] is incompatible with s
              ^
 
 References:
-   tuple_refinement.js:22:28
-   22| type ROA = $ReadOnly<['A', number]>;
-                                  ^^^^^^ [1]
-   tuple_refinement.js:23:28
-   23| type ROB = $ReadOnly<['B', string]>;
-                                  ^^^^^^ [2]
+   tuple_refinement.js:22:27
+   22| type ROA = Readonly<['A', number]>;
+                                 ^^^^^^ [1]
+   tuple_refinement.js:23:27
+   23| type ROB = Readonly<['B', string]>;
+                                 ^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:51:7
@@ -3629,12 +3629,12 @@ Cannot cast `x` to `MTB` because in index `0`: string literal `A` [1] is incompa
              ^
 
 References:
-   tuple_refinement.js:42:23
-   42| type MTA = $ReadOnly<['A', 1, number]>;
-                             ^^^ [1]
-   tuple_refinement.js:43:23
-   43| type MTB = $ReadOnly<['B', 1, string]>;
-                             ^^^ [2]
+   tuple_refinement.js:42:22
+   42| type MTA = Readonly<['A', 1, number]>;
+                            ^^^ [1]
+   tuple_refinement.js:43:22
+   43| type MTB = Readonly<['B', 1, string]>;
+                            ^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- tuple_refinement.js:51:7
@@ -3646,12 +3646,12 @@ Cannot cast `x` to `MTB` because in index `2`: number [1] is incompatible with s
              ^
 
 References:
-   tuple_refinement.js:42:31
-   42| type MTA = $ReadOnly<['A', 1, number]>;
-                                     ^^^^^^ [1]
-   tuple_refinement.js:43:31
-   43| type MTB = $ReadOnly<['B', 1, string]>;
-                                     ^^^^^^ [2]
+   tuple_refinement.js:42:30
+   42| type MTA = Readonly<['A', 1, number]>;
+                                    ^^^^^^ [1]
+   tuple_refinement.js:43:30
+   43| type MTB = Readonly<['B', 1, string]>;
+                                    ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------- type_guard_compatibility.js:15:30
