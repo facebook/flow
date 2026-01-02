@@ -1,6 +1,6 @@
 type O = {| foo: number |}
 type Arr = Array<number>;
-type ROArr = $ReadOnlyArray<number>;
+type ROArr = ReadonlyArray<number>;
 type Tuple = [a: number, +b?: string];
 type Box<T> = {contents: T};
 
@@ -10,7 +10,7 @@ type WithIndexer = {
 };
 
 
-type Mapped<O: {...} | $ReadOnlyArray<mixed>> = {
+type Mapped<O: {...} | ReadonlyArray<mixed>> = {
   [key in keyof O]: Box<O[key]>,
 };
 
@@ -26,7 +26,7 @@ type Mapped<O: {...} | $ReadOnlyArray<mixed>> = {
   declare const b: Mapped<ROArr>;
   declare const c: Mapped<Tuple>;
   (a: Array<{contents: number}>); // OK
-  (b: $ReadOnlyArray<{contents: number}>); // OK
+  (b: ReadonlyArray<{contents: number}>); // OK
   (c: [a: {contents: number}, +b?: {contents: string | void}]); // OK
   (a: empty); // ERROR
   (b: empty); // ERROR
@@ -48,10 +48,10 @@ type Mapped<O: {...} | $ReadOnlyArray<mixed>> = {
 // array & tuple ~> MappedType
 {
   declare const a: Array<{contents: number}>;
-  declare const b: $ReadOnlyArray<{contents: number}>;
+  declare const b: ReadonlyArray<{contents: number}>;
   declare const c: [a: {contents: number}, +b?: {contents: string | void}];
   declare const badA: Array<{contents: string}>;
-  declare const badB: $ReadOnlyArray<{contents: string}>;
+  declare const badB: ReadonlyArray<{contents: string}>;
   declare const badC: [a: {contents: number}, +b: {contents: string}];
   (a: Mapped<Arr>); // OK
   (b: Mapped<ROArr>); // OK
@@ -106,7 +106,7 @@ type Mapped<O: {...} | $ReadOnlyArray<mixed>> = {
 
 // Optionality
 {
-  type Partial<T: {...} | $ReadOnlyArray<mixed>> = {[key in keyof T]?: T[key]};
+  type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
   declare const partial: Partial<O>;
   (partial.foo: number); // ERROR
   (partial.foo: number | void); // OK

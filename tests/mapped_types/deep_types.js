@@ -2,7 +2,7 @@ type DeepPartialState<T> =
   // Leave primitives alone
   T extends ?(number | string | boolean)
     ? T
-    : $ReadOnly<{
+    : Readonly<{
       [K in keyof T]: DeepPartialState<Partial<T>[K]>,
     }>
 
@@ -19,7 +19,7 @@ type DeepPartialState<T> =
 }
 
 type DeepReadOnly<T> =
-  T extends $ReadOnlyArray<infer V> ? $ReadOnlyArray<DeepReadOnly<V>> :
+  T extends ReadonlyArray<infer V> ? ReadonlyArray<DeepReadOnly<V>> :
   T extends {...} ? {+[K in keyof T]: DeepReadOnly<T[K]>} : T;
 
 {

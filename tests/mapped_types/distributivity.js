@@ -9,7 +9,7 @@
 }
 
 {
-  type SemiHomomorphic<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+  type SemiHomomorphic<O: {...}, Keys: keyof O> = {[key in Keys]: O[key]};
   declare const o: SemiHomomorphic<{foo: number, bar: number} | {foo: string, baz: number}, 'foo'>;
   (o: {foo: number} | {foo: string}); // OK
   (o: {}); // ERROR

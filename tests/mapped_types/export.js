@@ -10,4 +10,4 @@ export type ParameterizedReadonly<O: {...}> = {+[key in keyof O]: O[key]};
 
 export type MappedNonHomomorphic = {[key in 'foo' | 'bar']: number};
 
-export type SemiHomomorphic<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+export type SemiHomomorphic<O: {...}, Keys: keyof O> = {[key in Keys]: O[key]};

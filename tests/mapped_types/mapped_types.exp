@@ -549,9 +549,9 @@ Cannot get `obj.notAProp` because property `notAProp` is missing in `DeepRequire
                               ^^^^^^^^
 
 References:
-   idx_replacement.js:23:34
-   23|   accessor: (prop: $NonMaybeType<DeepRequired<T1>>) => T2,
-                                        ^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:23:32
+   23|   accessor: (prop: NonNullable<DeepRequired<T1>>) => T2,
+                                      ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:37:24
@@ -744,9 +744,9 @@ Cannot get `_.c` because property `c` is missing in `DeepRequired` [1]. [prop-mi
                          ^
 
 References:
-   idx_replacement.js:23:34
-   23|   accessor: (prop: $NonMaybeType<DeepRequired<T1>>) => T2,
-                                        ^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:23:32
+   23|   accessor: (prop: NonNullable<DeepRequired<T1>>) => T2,
+                                      ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:59:4
@@ -817,9 +817,9 @@ Cannot get `n.nope` because property `nope` is missing in `DeepRequired` [1]. [p
                         ^^^^
 
 References:
-   idx_replacement.js:23:34
-   23|   accessor: (prop: $NonMaybeType<DeepRequired<T1>>) => T2,
-                                        ^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:23:32
+   23|   accessor: (prop: NonNullable<DeepRequired<T1>>) => T2,
+                                      ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------- idx_replacement.js:80:18
@@ -832,9 +832,9 @@ Cannot call `obj` because a call signature declaring the expected parameter / re
                         ^^^
 
 References:
-   idx_replacement.js:23:34
-   23|   accessor: (prop: $NonMaybeType<DeepRequired<T1>>) => T2,
-                                        ^^^^^^^^^^^^^^^^ [1]
+   idx_replacement.js:23:32
+   23|   accessor: (prop: NonNullable<DeepRequired<T1>>) => T2,
+                                      ^^^^^^^^^^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------ idx_replacement.js:89:4
@@ -1569,9 +1569,9 @@ References:
    non_homomorphic.js:40:23
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   non_homomorphic.js:35:62
-   35|   declare function keyMirror<const T>(...$ReadOnlyArray<T>): {[key in T]: key};
-                                                                    ^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:35:61
+   35|   declare function keyMirror<const T>(...ReadonlyArray<T>): {[key in T]: key};
+                                                                   ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
@@ -1584,9 +1584,9 @@ type [2]. [incompatible-type]
           ^^^^^^^^^
 
 References:
-   non_homomorphic.js:45:89
-   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
-                                                                                               ^^^^^^^^^^^^^^^^^^^^ [1]
+   non_homomorphic.js:45:88
+   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...ReadonlyArray<T>): {[key in T]: number};
+                                                                                              ^^^^^^^^^^^^^^^^^^^^ [1]
    non_homomorphic.js:48:15
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -1611,9 +1611,9 @@ References:
    non_homomorphic.js:48:15
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   non_homomorphic.js:45:89
-   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...$ReadOnlyArray<T>): {[key in T]: number};
-                                                                                               ^^^^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:45:88
+   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...ReadonlyArray<T>): {[key in T]: number};
+                                                                                              ^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:10:4
@@ -1749,12 +1749,12 @@ Cannot instantiate `Omit` because in type argument `Keys`: an index signature de
 missing in `O` [1]. [prop-missing]
 
    pick_and_omit.js:23:36
-   23|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of $Keys<O>
+   23|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of keyof O
                                           ^^^^^^
 
 References:
    pick_and_omit.js:23:33
-   23|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of $Keys<O>
+   23|   declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of keyof O
                                        ^ [1]
 
 
@@ -1955,8 +1955,8 @@ Cannot instantiate `Semi` because in type argument `Keys`: number [1] is incompa
 
 References:
    semi_homomorphic.js:1:27
-    1| type Semi<O: {...}, Keys: $Keys<O>> = {
-                                 ^^^^^^^^ [2]
+    1| type Semi<O: {...}, Keys: keyof O> = {
+                                 ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------- semi_homomorphic.js:44:32
@@ -1970,8 +1970,8 @@ Cannot instantiate `Semi` because in type argument `Keys`: number [1] is incompa
 
 References:
    semi_homomorphic.js:1:27
-    1| type Semi<O: {...}, Keys: $Keys<O>> = {
-                                 ^^^^^^^^ [2]
+    1| type Semi<O: {...}, Keys: keyof O> = {
+                                 ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:31:4
@@ -2085,9 +2085,9 @@ References:
    test.js:44:25
    44|   declare const badVal: {foo: {contents: string}};
                                ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test.js:13:49
-                                                       v
-   13| type Mapped<O: {...} | $ReadOnlyArray<mixed>> = {
+   test.js:13:48
+                                                      v
+   13| type Mapped<O: {...} | ReadonlyArray<mixed>> = {
    14|   [key in keyof O]: Box<O[key]>,
    15| };
        ^ [4]
@@ -2120,9 +2120,9 @@ References:
    test.js:53:23
    53|   declare const badA: Array<{contents: string}>;
                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   test.js:13:49
-                                                       v
-   13| type Mapped<O: {...} | $ReadOnlyArray<mixed>> = {
+   test.js:13:48
+                                                      v
+   13| type Mapped<O: {...} | ReadonlyArray<mixed>> = {
    14|   [key in keyof O]: Box<O[key]>,
    15| };
        ^ [4]
@@ -2146,15 +2146,15 @@ https://flow.org/en/docs/faq/#why-cant-i-pass-a-string-to-a-function-that-takes-
           ^^^^
 
 References:
-   test.js:54:49
-   54|   declare const badB: $ReadOnlyArray<{contents: string}>;
-                                                       ^^^^^^ [1]
+   test.js:54:48
+   54|   declare const badB: ReadonlyArray<{contents: string}>;
+                                                      ^^^^^^ [1]
    test.js:14:25
    14|   [key in keyof O]: Box<O[key]>,
                                ^^^^^^ [2]
-   test.js:54:38
-   54|   declare const badB: $ReadOnlyArray<{contents: string}>;
-                                            ^^^^^^^^^^^^^^^^^^ [3]
+   test.js:54:37
+   54|   declare const badB: ReadonlyArray<{contents: string}>;
+                                           ^^^^^^^^^^^^^^^^^^ [3]
    test.js:5:15
     5| type Box<T> = {contents: T};
                      ^^^^^^^^^^^^^ [4]
@@ -2286,9 +2286,9 @@ Cannot cast `partial.foo` to number because undefined [1] is incompatible with n
            ^^^^^^^^^^^
 
 References:
-   test.js:109:72
-   109|   type Partial<T: {...} | $ReadOnlyArray<mixed>> = {[key in keyof T]?: T[key]};
-                                                                               ^^^^^^ [1]
+   test.js:109:71
+   109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
+                                                                              ^^^^^^ [1]
    test.js:111:17
    111|   (partial.foo: number); // ERROR
                         ^^^^^^ [2]
@@ -2303,9 +2303,9 @@ Cannot cast `partialIndexer.qux` to string because undefined [1] is incompatible
            ^^^^^^^^^^^^^^^^^^
 
 References:
-   test.js:109:72
-   109|   type Partial<T: {...} | $ReadOnlyArray<mixed>> = {[key in keyof T]?: T[key]};
-                                                                               ^^^^^^ [1]
+   test.js:109:71
+   109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
+                                                                              ^^^^^^ [1]
    test.js:115:24
    115|   (partialIndexer.qux: string); // ERROR
                                ^^^^^^ [2]
@@ -2320,9 +2320,9 @@ Cannot cast `partialArr[0]` to number because undefined [1] is incompatible with
            ^^^^^^^^^^^^^
 
 References:
-   test.js:109:72
-   109|   type Partial<T: {...} | $ReadOnlyArray<mixed>> = {[key in keyof T]?: T[key]};
-                                                                               ^^^^^^ [1]
+   test.js:109:71
+   109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
+                                                                              ^^^^^^ [1]
    test.js:119:19
    119|   (partialArr[0]: number); // ERROR;
                           ^^^^^^ [2]
@@ -2337,9 +2337,9 @@ Cannot cast `partialTuple[0]` to number because undefined [1] is incompatible wi
            ^^^^^^^^^^^^^^^
 
 References:
-   test.js:109:72
-   109|   type Partial<T: {...} | $ReadOnlyArray<mixed>> = {[key in keyof T]?: T[key]};
-                                                                               ^^^^^^ [1]
+   test.js:109:71
+   109|   type Partial<T: {...} | ReadonlyArray<mixed>> = {[key in keyof T]?: T[key]};
+                                                                              ^^^^^^ [1]
    test.js:121:21
    121|   (partialTuple[0]: number); // ERROR;
                             ^^^^^^ [2]

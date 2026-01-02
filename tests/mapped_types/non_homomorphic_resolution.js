@@ -12,7 +12,7 @@ type Mapped<T> = {[key in T]: number};
 }
 
 {
-  type Keys = $Keys<{foo: number}>;
+  type Keys = keyof {foo: number};
   type MappedKeys = Mapped<Keys>;
   declare const mappedKeys: MappedKeys;
   (mappedKeys: empty); // ERROR

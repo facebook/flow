@@ -1,16 +1,16 @@
-declare opaque type DeepRequiredArray<+T>: $ReadOnlyArray<
-  DeepRequired<$NonMaybeType<T>>,
+declare opaque type DeepRequiredArray<+T>: ReadonlyArray<
+  DeepRequired<NonNullable<T>>,
 >;
 
 declare opaque type DeepRequiredObject<+T: interface {}>: Required<{
   +[K in keyof T]: DeepRequired<T[K]>,
 }>;
 
-declare opaque type IdxNonMaybeType<T>: $NonMaybeType<T>;
+declare opaque type IdxNonMaybeType<T>: NonNullable<T>;
 
 declare opaque type DeepRequired<T>: T extends empty
   ? $FlowFixMe // If something can pass empty, it's already unsafe
-  : T extends $ReadOnlyArray<infer V>
+  : T extends ReadonlyArray<infer V>
   ? DeepRequiredArray<V>
   : T extends interface {}
   ? DeepRequiredObject<T>
@@ -20,7 +20,7 @@ type UnboxDeepRequired<T> = T extends DeepRequired<infer V> ? V : T;
 
 declare function idx<T1, T2>(
   prop: T1,
-  accessor: (prop: $NonMaybeType<DeepRequired<T1>>) => T2,
+  accessor: (prop: NonNullable<DeepRequired<T1>>) => T2,
 ): ?UnboxDeepRequired<T2>;
 
 // Migrated from original idx test

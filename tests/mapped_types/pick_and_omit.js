@@ -3,8 +3,8 @@
   // Omit Tests
   type Exclude<T, U> = T extends U ? empty : T;
 
-  type Omit<O: {...}, Keys: $Keys<O>> = {
-    [key in Exclude<$Keys<O>, Keys>]: O[key],
+  type Omit<O: {...}, Keys: keyof O> = {
+    [key in Exclude<keyof O, Keys>]: O[key],
   };
 
   type O = {
@@ -20,15 +20,15 @@
   declare const noFooOrBar: Omit<O, 'foo' | 'bar'>;
   noFooOrBar as {baz: number}; // OK!
 
-  declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of $Keys<O>
+  declare const noKeysBad: Omit<O, string>; // ERROR! string is not a subtype of keyof O
   noKeysBad as {};
 
   declare const noKeysGood: Omit<O, 'foo' | 'bar' | 'baz'>;
   noKeysGood as {}; // OK!
 
-  declare function omit<O: {...}, Keys: $Keys<O>>(
+  declare function omit<O: {...}, Keys: keyof O>(
     o: O,
-    ...$ReadOnlyArray<Keys>
+    ...ReadonlyArray<Keys>
   ): Omit<O, Keys>;
   // KP: We need proper natural inference to make this work with no annotations
   const noBarOrBaz = omit(
@@ -40,10 +40,10 @@
   noBarOrBaz.foo as number; // OK!
   noBarOrBaz.foo = 3; // OK!
 
-  declare function omitInput<O: {...}, Keys: $Keys<O>>(
+  declare function omitInput<O: {...}, Keys: keyof O>(
     o: O,
     x: Omit<O, Keys>,
-    ...$ReadOnlyArray<Keys>
+    ...ReadonlyArray<Keys>
   ): void;
   const noIssues = omitInput({foo: 3, bar: 3}, {bar: 3}, 'foo' as 'foo');
   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, 'foo' as 'foo'); // ERROR 2x
@@ -51,7 +51,7 @@
 
 {
   // Pick Tests
-  type Pick<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+  type Pick<O: {...}, Keys: keyof O> = {[key in Keys]: O[key]};
 
   type P = {
     foo: number,
@@ -66,17 +66,17 @@
   declare const fooAndBaz: Pick<P, 'foo' | 'baz'>;
   fooAndBaz as {foo: number, baz: number}; // OK!
 
-  declare function pick<O: {...}, Keys: $Keys<O>>(
+  declare function pick<O: {...}, Keys: keyof O>(
     o: O,
-    ...$ReadOnlyArray<Keys>
+    ...ReadonlyArray<Keys>
   ): Pick<O, Keys>;
   const picked = pick({foo: 3, bar: 3}, 'foo');
   picked as {foo: number};
 
-  declare function pickInput<O: {...}, Keys: $Keys<O>>(
+  declare function pickInput<O: {...}, Keys: keyof O>(
     o: O,
     x: Pick<O, Keys>,
-    ...$ReadOnlyArray<Keys>
+    ...ReadonlyArray<Keys>
   ): void;
 
   const noIssues = pickInput({foo: 3, bar: 3}, {foo: 3}, 'foo');

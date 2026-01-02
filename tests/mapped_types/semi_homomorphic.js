@@ -1,4 +1,4 @@
-type Semi<O: {...}, Keys: $Keys<O>> = {
+type Semi<O: {...}, Keys: keyof O> = {
   [key in Keys]: O[key],
 }
 {

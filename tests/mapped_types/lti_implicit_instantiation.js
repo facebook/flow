@@ -1,4 +1,4 @@
-type F<T> = $ReadOnly<{
+type F<T> = Readonly<{
     log: (() => T) => void,
     ...
   }>;
