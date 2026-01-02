@@ -689,7 +689,7 @@ Error --------------------------------------------------------------------------
 Cannot get `a.q` because property `q` is missing in object literal [1]. [prop-missing]
 
    cond_expr.js:3:4
-   3| (a.q: mixed); // An error here
+   3| (a.q: unknown); // An error here
          ^
 
 References:
@@ -717,7 +717,7 @@ Error --------------------------------------------------------------------------
 Cannot get `b.q` because property `q` is missing in object literal [1]. [prop-missing]
 
    cond_expr.js:7:4
-   7| (b.q: mixed); // is an error here
+   7| (b.q: unknown); // is an error here
          ^
 
 References:
@@ -1162,8 +1162,8 @@ Cannot call `takesBotFunction` with `x` bound to `x` because the parameter types
 
 References:
    fn.js:12:17
-   12| function fun(x: mixed) {
-                       ^^^^^ [1]
+   12| function fun(x: unknown) {
+                       ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:14:22
@@ -1191,8 +1191,8 @@ Cannot call `takesTopFunction` with `x` bound to `x` because the parameter types
 
 References:
    fn.js:18:18
-   18| function fun2(x: mixed) {
-                        ^^^^^ [1]
+   18| function fun2(x: unknown) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:20:22
@@ -1220,8 +1220,8 @@ Cannot call `takesMidFunction` with `x` bound to `x` because the parameter types
 
 References:
    fn.js:24:18
-   24| function fun3(x: mixed) {
-                        ^^^^^ [1]
+   24| function fun3(x: unknown) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:26:22
@@ -1249,8 +1249,8 @@ unknown. [incompatible-use]
 
 References:
    fn.js:30:18
-   30| function fun4(x: mixed) {
-                        ^^^^^ [1]
+   30| function fun4(x: unknown) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:32:23
@@ -1278,8 +1278,8 @@ unknown. [incompatible-use]
 
 References:
    fn.js:36:18
-   36| function fun5(x: mixed) {
-                        ^^^^^ [1]
+   36| function fun5(x: unknown) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:38:24
@@ -1307,8 +1307,8 @@ unknown. [incompatible-use]
 
 References:
    fn.js:42:18
-   42| function fun6(x: mixed) {
-                        ^^^^^ [1]
+   42| function fun6(x: unknown) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:44:25
@@ -1336,8 +1336,8 @@ Cannot call `takesMultiArgFn` with `x` bound to `x` because the parameter types 
 
 References:
    fn.js:48:18
-   48| function fun7(x: mixed) {
-                        ^^^^^ [1]
+   48| function fun7(x: unknown) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:50:21
@@ -1365,8 +1365,8 @@ Cannot call `takesMultiArgFn2` with `x` bound to `x` because the parameter types
 
 References:
    fn.js:54:18
-   54| function fun8(x: mixed) {
-                        ^^^^^ [1]
+   54| function fun8(x: unknown) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:56:22
@@ -1407,8 +1407,8 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
 References:
    fn.js:60:18
-   60| function fun9(x: mixed, y : mixed, z : empty) {
-                        ^^^^^ [1]
+   60| function fun9(x: unknown, y : unknown, z : empty) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:63:5
@@ -1435,8 +1435,8 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
 References:
    fn.js:60:18
-   60| function fun9(x: mixed, y : mixed, z : empty) {
-                        ^^^^^ [1]
+   60| function fun9(x: unknown, y : unknown, z : empty) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:64:5
@@ -1463,8 +1463,8 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
 References:
    fn.js:60:18
-   60| function fun9(x: mixed, y : mixed, z : empty) {
-                        ^^^^^ [1]
+   60| function fun9(x: unknown, y : unknown, z : empty) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:64:7
@@ -1505,8 +1505,8 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
 References:
    fn.js:60:18
-   60| function fun9(x: mixed, y : mixed, z : empty) {
-                        ^^^^^ [1]
+   60| function fun9(x: unknown, y : unknown, z : empty) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:66:5
@@ -1533,8 +1533,8 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
 References:
    fn.js:60:18
-   60| function fun9(x: mixed, y : mixed, z : empty) {
-                        ^^^^^ [1]
+   60| function fun9(x: unknown, y : unknown, z : empty) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------- fn.js:67:5
@@ -1561,8 +1561,8 @@ Cannot call `x` because the parameter types of an unknown function [1] are unkno
 
 References:
    fn.js:60:18
-   60| function fun9(x: mixed, y : mixed, z : empty) {
-                        ^^^^^ [1]
+   60| function fun9(x: unknown, y : unknown, z : empty) {
+                        ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------------ fn.js:73:13
@@ -2681,8 +2681,8 @@ Cannot call `v.f` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: mixed } = {};
-                      ^^^^^ [1]
+    6| const v: { f?: unknown } = {};
+                      ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:13:12
@@ -2695,8 +2695,8 @@ Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: mixed } = {};
-                      ^^^^^ [1]
+    6| const v: { f?: unknown } = {};
+                      ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:19:10
@@ -2723,8 +2723,8 @@ Cannot call `v.f` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: mixed } = {};
-                      ^^^^^ [1]
+    6| const v: { f?: unknown } = {};
+                      ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:19:12
@@ -2737,8 +2737,8 @@ Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: mixed } = {};
-                      ^^^^^ [1]
+    6| const v: { f?: unknown } = {};
+                      ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:25:10
@@ -2765,8 +2765,8 @@ Cannot call `v.f` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: mixed } = {};
-                      ^^^^^ [1]
+    6| const v: { f?: unknown } = {};
+                      ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:25:12
@@ -2779,8 +2779,8 @@ Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: mixed } = {};
-                      ^^^^^ [1]
+    6| const v: { f?: unknown } = {};
+                      ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:31:10
@@ -2807,8 +2807,8 @@ Cannot call `v.f` because `unknown` [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: mixed } = {};
-                      ^^^^^ [1]
+    6| const v: { f?: unknown } = {};
+                      ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:31:12
@@ -2821,8 +2821,8 @@ Cannot call `v.f` because undefined [1] is not a function. [not-a-function]
 
 References:
    invalidation.js:6:16
-    6| const v: { f?: mixed } = {};
-                      ^^^^^ [1]
+    6| const v: { f?: unknown } = {};
+                      ^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- invalidation.js:44:51
@@ -8568,8 +8568,8 @@ Cannot get `o.bar` because property `bar` is missing in `unknown` [1]. [incompat
 
 References:
    missing-property-cond.js:25:18
-   25| function foo6(o: mixed) {
-                        ^^^^^ [1]
+   25| function foo6(o: unknown) {
+                        ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:30:16
@@ -8582,8 +8582,8 @@ Cannot get `o.bar` because property `bar` is missing in `unknown` [1]. [incompat
 
 References:
    missing-property-cond.js:29:18
-   29| function foo7(o: mixed) {
-                        ^^^^^ [1]
+   29| function foo7(o: unknown) {
+                        ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------- missing-property-cond.js:31:19
@@ -9196,8 +9196,8 @@ Cannot call `takesString` with `x` bound to `x` because unknown function [1] is 
 
 References:
    mixed.js:45:17
-   45| function fun(x: mixed) {
-                       ^^^^^ [1]
+   45| function fun(x: unknown) {
+                       ^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -9227,8 +9227,8 @@ Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible
 
 References:
    mixed.js:51:18
-   51| function obj0(x: mixed) {
-                        ^^^^^ [1]
+   51| function obj0(x: unknown) {
+                        ^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -9244,8 +9244,8 @@ Cannot call `takesString` with `x` bound to `x` because object [1] is incompatib
 
 References:
    mixed.js:51:18
-   51| function obj0(x: mixed) {
-                        ^^^^^ [1]
+   51| function obj0(x: unknown) {
+                        ^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -9276,8 +9276,8 @@ Cannot call `takesString` with `x` bound to `x` because read-only array type [1]
 
 References:
    mixed.js:57:18
-   57| function obj1(x: mixed) {
-                        ^^^^^ [1]
+   57| function obj1(x: unknown) {
+                        ^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -9308,8 +9308,8 @@ Cannot call `takesString` with `x` bound to `x` because undefined [1] is incompa
 
 References:
    mixed.js:63:19
-   63| function undef(x: mixed) {
-                         ^^^^^ [1]
+   63| function undef(x: unknown) {
+                         ^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -9339,8 +9339,8 @@ Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible
 
 References:
    mixed.js:69:19
-   69| function null_(x: mixed) {
-                         ^^^^^ [1]
+   69| function null_(x: unknown) {
+                         ^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -9370,8 +9370,8 @@ Cannot call `takesString` with `x` bound to `x` because null [1] is incompatible
 
 References:
    mixed.js:75:19
-   75| function maybe(x: mixed) {
-                         ^^^^^ [1]
+   75| function maybe(x: unknown) {
+                         ^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -9388,8 +9388,8 @@ Cannot call `takesString` with `x` bound to `x` because undefined [1] is incompa
 
 References:
    mixed.js:75:19
-   75| function maybe(x: mixed) {
-                         ^^^^^ [1]
+   75| function maybe(x: unknown) {
+                         ^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -9419,8 +9419,8 @@ Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompati
 
 References:
    mixed.js:81:19
-   81| function true_(x: mixed) {
-                         ^^^^^ [1]
+   81| function true_(x: unknown) {
+                         ^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -9450,8 +9450,8 @@ Cannot call `takesString` with `x` bound to `x` because boolean [1] is incompati
 
 References:
    mixed.js:87:20
-   87| function false_(x: mixed) {
-                          ^^^^^ [1]
+   87| function false_(x: unknown) {
+                          ^^^^^^^ [1]
    mixed.js:4:25
     4| function takesString(x: string) {}
                                ^^^^^^ [2]
@@ -9476,7 +9476,7 @@ Error --------------------------------------------------------------------------
 Refined at [1] [InferError]
 
    mixed.js:95:5
-   95|     x as {+[key: string]: mixed} | null;
+   95|     x as {+[key: string]: unknown} | null;
            ^
 
 References:
@@ -9526,8 +9526,8 @@ Cannot cast `x['foo']` to string because `unknown` [1] is incompatible with stri
 
 References:
    mixed.js:93:18
-   93| function obj2(x: mixed) {
-                        ^^^^^ [1]
+   93| function obj2(x: unknown) {
+                        ^^^^^^^ [1]
    mixed.js:97:19
    97|       x['foo'] as string; // error, mixed
                          ^^^^^^ [2]
@@ -9682,8 +9682,8 @@ string [2]. [incompatible-type]
 
 References:
    mixed.js:117:18
-   117| function arr0(x: mixed) {
-                         ^^^^^ [1]
+   117| function arr0(x: unknown) {
+                         ^^^^^^^ [1]
    mixed.js:4:25
      4| function takesString(x: string) {}
                                 ^^^^^^ [2]

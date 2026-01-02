@@ -3,7 +3,7 @@ type U = {
   a: U;
 } | {
   type: "b";
-  b: mixed;
+  b: unknown;
 };
 
 declare var x: U;

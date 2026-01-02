@@ -1,4 +1,4 @@
-function bad (x : mixed) {
+function bad (x : unknown) {
   if (typeof x === "object" && x !== null) {
     x.a = 3;
   }

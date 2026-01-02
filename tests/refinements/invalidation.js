@@ -3,9 +3,9 @@
 
 // First, write `coerce`, to demonstrate each issue in turn.
 
-const v: { f?: mixed } = {};
+const v: { f?: unknown } = {};
 const vv = v;
-const store = (x: mixed) => { v.f = () => x; };
+const store = (x: unknown) => { v.f = () => x; };
 
 function coerce8251<A, B>(x: A): B {
   v.f = () => { throw null };  // Refine v.f.
@@ -292,11 +292,11 @@ declare var x: { b?: { ... } };
   // continue, break, return, and labelled break and continue.
 }
 
-declare var f: mixed => boolean;
+declare var f: unknown => boolean;
 declare var p: boolean;
 
 declare var y: { ... } & Iterator<mixed>;
-declare var ff: mixed => { ... } & Iterator<mixed>;
+declare var ff: unknown => { ... } & Iterator<mixed>;
 
 () => {
   declare function f(mixed): boolean;

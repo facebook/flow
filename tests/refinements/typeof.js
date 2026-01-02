@@ -43,7 +43,7 @@ function anyobj(x: number | Object): number {
   return x; // OK, x refined to `number`
 }
 
-function testInvalidValue(x: mixed) {
+function testInvalidValue(x: unknown) {
   if (typeof x === 'foo') {
     // error
     return 0;
@@ -78,7 +78,7 @@ function testInstanceIsObject() {
   }
 }
 
-function testSymbol(x: mixed) {
+function testSymbol(x: unknown) {
   if (typeof x === 'symbol') {
     // ok
     x as string; // error
@@ -91,7 +91,7 @@ function testAnyWithNumber(x: any) {
   }
 }
 
-function testMixedWithNumber(x: mixed) {
+function testMixedWithNumber(x: unknown) {
   if (typeof x === 'number') {
     x as number; // OK
     x as empty; // error number ~> empty
@@ -116,7 +116,7 @@ function testAnyWithBoolean(x: any) {
   }
 }
 
-function testMixedWithBoolean(x: mixed) {
+function testMixedWithBoolean(x: unknown) {
   if (typeof x === 'boolean') {
     x as true;
     x as empty; // error boolean ~> empty

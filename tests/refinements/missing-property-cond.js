@@ -22,18 +22,18 @@ function foo4(o: $Exact<{ x: number }>) {
   }
 }
 
-function foo6(o: mixed) {
+function foo6(o: unknown) {
   if (o.bar) {} // error, any lookup on mixed is unsafe
 }
 
-function foo7(o: mixed) {
+function foo7(o: unknown) {
   if (typeof o.bar === 'string') {} // error
   if (o && typeof o.bar === 'string') {} // ok
   if (o != null && typeof o.bar === 'string') {} // ok
   if (o !== null && o !== undefined && typeof o.bar === 'string') {} // ok
 }
 
-function foo8(o: { p: mixed }) {
+function foo8(o: { p: unknown }) {
   if (o.p && o.p.q) {} // this is ok because o.p is truthy, so o.p.q is safe
   if (o.p && o.p.q && o.p.q.r) {}
 }
@@ -47,20 +47,20 @@ function foo10() {
 }
 
 function foo11() {
-  declare function invariant(a: mixed): void;
-  declare var b: mixed;
+  declare function invariant(a: unknown): void;
+  declare var b: unknown;
   invariant(b != null && b.foo != null); // ok
 }
 
 function foo12() {
-  declare var a: mixed;
+  declare var a: unknown;
   if (a != null && a.foo instanceof Set) {
     (a.foo: Set<mixed>);
   }
 }
 
 function foo13() {
-  declare var a: mixed;
+  declare var a: unknown;
   if (a != null && Array.isArray(a.foo)) {
     (a.foo: $ReadOnlyArray<mixed>);
   }
