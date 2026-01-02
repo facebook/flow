@@ -1,11 +1,11 @@
-Error ---------------------------------------------------------------------------------------------------- test.js:10:36
+Error ---------------------------------------------------------------------------------------------------- test.js:10:35
 
 Cannot use `K` [1] in an input/output position because `K` [1] is expected to occur only in output positions.
 [incompatible-variance]
 
-   test.js:10:36
-   10|     bad (x: number) : $ReadOnlyMap<K, V> { // Error: K in invariant position
-                                          ^
+   test.js:10:35
+   10|     bad (x: number) : ReadonlyMap<K, V> { // Error: K in invariant position
+                                         ^
 
 References:
    test.js:9:13
@@ -13,14 +13,14 @@ References:
                    ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:22:36
+Error ---------------------------------------------------------------------------------------------------- test.js:22:35
 
 Cannot use `K` [1] in an input/output position because `K` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
-   test.js:22:36
-   22|     bad (x: number) : $ReadOnlyMap<K, V> {// Error: K in invariant position
-                                          ^
+   test.js:22:35
+   22|     bad (x: number) : ReadonlyMap<K, V> {// Error: K in invariant position
+                                         ^
 
 References:
    test.js:21:13
@@ -28,14 +28,14 @@ References:
                    ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------------------- test.js:28:39
+Error ---------------------------------------------------------------------------------------------------- test.js:28:38
 
 Cannot use `V` [1] in an output position because `V` [1] is expected to occur only in input positions.
 [incompatible-variance]
 
-   test.js:28:39
-   28|     bad (x: number) : $ReadOnlyMap<K, V> {// Error: V in invariant position
-                                             ^
+   test.js:28:38
+   28|     bad (x: number) : ReadonlyMap<K, V> {// Error: V in invariant position
+                                            ^
 
 References:
    test.js:27:16
