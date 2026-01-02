@@ -1,8 +1,8 @@
 //@flow
 
 function f<X: {}, Y: {}>(x: {...X}, y: {...Y}, both: {...X, ...Y}) {
-  x as Omit<{...X, ...Y}, $Keys<Y>>; // nope
-  y as Omit<{...X, ...Y}, $Keys<Y>>; // nope
+  x as Omit<{...X, ...Y}, keyof Y>; // nope
+  y as Omit<{...X, ...Y}, keyof Y>; // nope
 }
 
 function g<X: {}, Y: {x: number}>(o: {...X, ...Y}) {

@@ -22,7 +22,7 @@ function b<X: number, Y: string>(x: X, y: Y) {
   (x < y: boolean); // nope
 }
 
-function c<S: string, X: {[string]: mixed}, Y: Array<number>>(
+function c<S: string, X: {[string]: unknown}, Y: Array<number>>(
   s: S,
   x: X,
   y: Y,
@@ -54,7 +54,7 @@ function h<X: [number]>(x: X): {[_K in keyof X]: string} {
 
 // ToStringT
 function gn<TType>(jsEnum: {[TType]: string, ...}) {
-  (Object.keys(jsEnum): $ReadOnlyArray<TType>);
+  (Object.keys(jsEnum): ReadonlyArray<TType>);
 }
 
 // KeysT
@@ -66,7 +66,7 @@ function gv<
   validators: TValidators,
 ): {[K in keyof TFormData]: ?string} {
   return Object.keys(data).reduce( // error: cannot satisfy generic mapped type
-    <K: $Keys<TFormData>>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
+    <K: keyof TFormData>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
       // $FlowExpectedError[unsafe-object-assign]
       Object.assign(acc, {[k]: validators[k](k, data)}),
     {},
@@ -74,7 +74,7 @@ function gv<
 }
 
 // More KeysT
-function kt<TKey: $Keys<{a: 42}>>(fieldName: TKey): void {
+function kt<TKey: keyof {a: 42}>(fieldName: TKey): void {
   if (fieldName) {
     return;
   }
@@ -82,16 +82,16 @@ function kt<TKey: $Keys<{a: 42}>>(fieldName: TKey): void {
 
 // OptionalChain.run
 function oc<
-  T: $ReadOnly<{id: ?string, ...}>,
-  L: ?$ReadOnly<{
+  T: Readonly<{id: ?string, ...}>,
+  L: ?Readonly<{
     id: ?string,
     nextOneOne: ?{...},
     ...
   }>,
 >(
-  conversations: $ReadOnlyArray<T>,
+  conversations: ReadonlyArray<T>,
   lookup: {[string]: L, ...},
-): $ReadOnlyArray<T> {
+): ReadonlyArray<T> {
   return conversations.filter(conversation => {
     const {id} = conversation;
     if (id == null) {
@@ -102,7 +102,7 @@ function oc<
 }
 
 // generic of key of generic
-const cc = () => <D: {...}, K: $Keys<D>>(key: K, data: D) => {
+const cc = () => <D: {...}, K: keyof D>(key: K, data: D) => {
   const [click, view] = data[key];
 };
 
@@ -130,21 +130,21 @@ type LLETR = LLETT['response'];
 const elementType = <T: LLETR>(data: T): T['account'] =>
   data.account;
 
-const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+const directAccount = <T: LLETR>(data: T, otherData: LLETR): Readonly<T> =>
   otherData;
 
 type t = {a: number} | {v: string};
 
 class C<TConfig: t> {
   _config: TConfig;
-  __updateConfig(updater: (config: $ReadOnly<TConfig>) => TConfig) {
+  __updateConfig(updater: (config: Readonly<TConfig>) => TConfig) {
     const config = updater(this._config);
   }
 }
 
 // Keys
 function gejses<TMapKey: string>(
-  key: $Keys<{[TMapKey]: $FlowFixMe, ...}>,
+  key: keyof {[TMapKey]: $FlowFixMe, ...},
 ): null {
   if (key) {
   }

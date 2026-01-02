@@ -28,7 +28,7 @@ export type T = {|
   ...S,
 |};
 
-function c<X: T>(x: $Keys<X>) {
+function c<X: T>(x: keyof X) {
   switch (x) {
     case 'p':
       break;

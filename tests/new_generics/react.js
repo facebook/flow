@@ -2,7 +2,7 @@
 
 const React = require('react');
 
-type Props = $ReadOnly<{
+type Props = Readonly<{
   a: number,
   ...
 }>;
@@ -60,7 +60,7 @@ export type PCCP = {
 
 export function withCommentsConfig<TProps: PCCP>(
   Component: component(...TProps),
-): component(...Omit<TProps, $Keys<PCCP>>) {
+): component(...Omit<TProps, keyof PCCP>) {
   return function (props) {
     return <Component {...props} commentsConfig={42} />;
   };

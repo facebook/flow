@@ -88,7 +88,7 @@ function f<X: number, Y: ?number, Z: ?X>(
   b.x as Y | void; //nope
 
   //FilterMaybeT
-  declare var c: $NonMaybeType<X>;
+  declare var c: NonNullable<X>;
   c as X;
   c as number;
   c as null | void; // nope

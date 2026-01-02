@@ -2,11 +2,11 @@ function test1<S, T>(x: { [K in keyof S]: S[K] }): { [K in keyof T]: T[K] } {
   return x; // error S incompatible with T
 }
 
-function test2<S, T>(x: $ReadOnly<S>): $ReadOnly<T> {
+function test2<S, T>(x: Readonly<S>): Readonly<T> {
   return x; // error S incompatible with T
 }
 
-function test3<S: { a: mixed }, T: { a: mixed }>(x: Pick<S, "a">): Pick<T, "a"> {
+function test3<S: { a: unknown }, T: { a: unknown }>(x: Pick<S, "a">): Pick<T, "a"> {
   return x; // error S incompatible with T
 }
 

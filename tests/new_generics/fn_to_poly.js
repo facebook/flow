@@ -11,7 +11,7 @@ type Foo = {
 
 foo as Foo;
 
-function f(x: mixed): empty {
+function f(x: unknown): empty {
   return f(x);
 }
 

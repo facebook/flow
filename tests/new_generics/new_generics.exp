@@ -209,9 +209,9 @@ Cannot return array literal because array literal [1] is incompatible with `X` [
                 ^^^^^^^^^^^^ [1]
 
 References:
-   arr_spread.js:60:46
-   60| function b<X: $ReadOnlyArray<number>>(x: X): X {
-                                                    ^ [2]
+   arr_spread.js:60:45
+   60| function b<X: ReadonlyArray<number>>(x: X): X {
+                                                   ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- arr_spread.js:65:10
@@ -223,9 +223,9 @@ Cannot return array literal because array literal [1] is incompatible with `X` [
                 ^^^^^^^^^^ [1]
 
 References:
-   arr_spread.js:64:46
-   64| function c<X: $ReadOnlyArray<number>>(x: X): X {
-                                                    ^ [2]
+   arr_spread.js:64:45
+   64| function c<X: ReadonlyArray<number>>(x: X): X {
+                                                   ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- arr_spread.js:69:10
@@ -490,7 +490,7 @@ subtyping relationship. If that happens, you can cast one side to the union of b
 
 References:
    detect_literal_subtypes.js:31:18
-   31| function c<X: T>(x: $Keys<X>) {
+   31| function c<X: T>(x: keyof X) {
                         ^ [1]
    detect_literal_subtypes.js:37:10
    37|     case 'r': // error
@@ -871,9 +871,9 @@ Cannot cast `c` to union type because: [incompatible-type]
          ^
 
 References:
-   maybe.js:91:32
-   91|   declare var c: $NonMaybeType<X>;
-                                      ^ [1]
+   maybe.js:91:30
+   91|   declare var c: NonNullable<X>;
+                                    ^ [1]
    maybe.js:94:8
    94|   c as null | void; // nope
               ^^^^ [2]
@@ -1016,9 +1016,9 @@ References:
    misc.js:72:5
      72|     {},
              ^^ [1]
-   misc.js:69:32
-     69|     <K: $Keys<TFormData>>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
-                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   misc.js:69:31
+     69|     <K: keyof TFormData>(acc: {[K in keyof TFormData]: ?string}, k: K): {[K in keyof TFormData]: ?string} =>
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1144:5
              v------
    1144|     reduce(
@@ -1037,11 +1037,11 @@ Cannot return `otherData` because object type [1] is incompatible with `$ReadOnl
 
 References:
    misc.js:133:54
-   133| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
+   133| const directAccount = <T: LLETR>(data: T, otherData: LLETR): Readonly<T> =>
                                                              ^^^^^ [1]
-   misc.js:133:72
-   133| const directAccount = <T: LLETR>(data: T, otherData: LLETR): $ReadOnly<T> =>
-                                                                               ^ [2]
+   misc.js:133:71
+   133| const directAccount = <T: LLETR>(data: T, otherData: LLETR): Readonly<T> =>
+                                                                              ^ [2]
 
 
 Error --------------------------------------------------------------------------------------------------- misc.js:156:10
@@ -1216,7 +1216,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `x` to `Omit` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-type]
 
    rest.js:4:3
-   4|   x as Omit<{...X, ...Y}, $Keys<Y>>; // nope
+   4|   x as Omit<{...X, ...Y}, keyof Y>; // nope
         ^
 
 References:
@@ -1224,8 +1224,8 @@ References:
    3| function f<X: {}, Y: {}>(x: {...X}, y: {...Y}, both: {...X, ...Y}) {
                                   ^^^^^^ [1]
    rest.js:4:8
-   4|   x as Omit<{...X, ...Y}, $Keys<Y>>; // nope
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   4|   x as Omit<{...X, ...Y}, keyof Y>; // nope
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ rest.js:5:3
@@ -1233,7 +1233,7 @@ Error --------------------------------------------------------------------------
 Cannot cast `y` to `Omit` because object type [1] is incompatible with `{ ...X, ...Y }` [2]. [incompatible-type]
 
    rest.js:5:3
-   5|   y as Omit<{...X, ...Y}, $Keys<Y>>; // nope
+   5|   y as Omit<{...X, ...Y}, keyof Y>; // nope
         ^
 
 References:
@@ -1241,8 +1241,8 @@ References:
    3| function f<X: {}, Y: {}>(x: {...X}, y: {...Y}, both: {...X, ...Y}) {
                                              ^^^^^^ [1]
    rest.js:5:8
-   5|   y as Omit<{...X, ...Y}, $Keys<Y>>; // nope
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   5|   y as Omit<{...X, ...Y}, keyof Y>; // nope
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------------- rest.js:10:3
@@ -1436,11 +1436,11 @@ Cannot return `x` because `Readonly` [1] is incompatible with `$ReadOnly<T>` [2]
 
 References:
    synthetic.js:5:25
-   5| function test2<S, T>(x: $ReadOnly<S>): $ReadOnly<T> {
-                              ^^^^^^^^^^^^ [1]
-   synthetic.js:5:40
-   5| function test2<S, T>(x: $ReadOnly<S>): $ReadOnly<T> {
-                                             ^^^^^^^^^^^^ [2]
+   5| function test2<S, T>(x: Readonly<S>): Readonly<T> {
+                              ^^^^^^^^^^^ [1]
+   synthetic.js:5:39
+   5| function test2<S, T>(x: Readonly<S>): Readonly<T> {
+                                            ^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:10:10
@@ -1452,12 +1452,12 @@ Cannot return `x` because `Pick` [1] is incompatible with `Pick` [2]. [incompati
                 ^
 
 References:
-   synthetic.js:9:53
-    9| function test3<S: { a: mixed }, T: { a: mixed }>(x: Pick<S, "a">): Pick<T, "a"> {
-                                                           ^^^^^^^^^^^^ [1]
-   synthetic.js:9:68
-    9| function test3<S: { a: mixed }, T: { a: mixed }>(x: Pick<S, "a">): Pick<T, "a"> {
-                                                                          ^^^^^^^^^^^^ [2]
+   synthetic.js:9:57
+    9| function test3<S: { a: unknown }, T: { a: unknown }>(x: Pick<S, "a">): Pick<T, "a"> {
+                                                               ^^^^^^^^^^^^ [1]
+   synthetic.js:9:72
+    9| function test3<S: { a: unknown }, T: { a: unknown }>(x: Pick<S, "a">): Pick<T, "a"> {
+                                                                              ^^^^^^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- synthetic.js:14:10

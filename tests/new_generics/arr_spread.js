@@ -43,7 +43,7 @@ function w3<A: Array<number>>(x: A, f: A => void) {
   f([...x, ...x]);
 }
 
-function l<X: $ReadOnlyArray<number>, Y: X>(x: X, y: Y) {
+function l<X: ReadonlyArray<number>, Y: X>(x: X, y: Y) {
   [...x, ...y] as Y; // should be nope
   [...x, ...y] as X; // should be nope
 }
@@ -53,15 +53,15 @@ function l2<X: Array<number>, Y: X>(x: X, y: Y) {
   [...x, ...y] as X; // ok
 }
 
-function a<X: $ReadOnlyArray<number>>(x: X): X {
+function a<X: ReadonlyArray<number>>(x: X): X {
   return [...x];
 }
 
-function b<X: $ReadOnlyArray<number>>(x: X): X {
+function b<X: ReadonlyArray<number>>(x: X): X {
   return [...x, ...x]; // nope, because X could be a tuple
 }
 
-function c<X: $ReadOnlyArray<number>>(x: X): X {
+function c<X: ReadonlyArray<number>>(x: X): X {
   return [42, ...x]; // error
 }
 
