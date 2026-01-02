@@ -4,15 +4,15 @@ class A {}
 class B extends A {}
 class M {}
 
-function no_return(x: mixed): x is number {} // error no return
+function no_return(x: unknown): x is number {} // error no return
 
-function return_true(x: mixed): x is number {
-    return true; // error x: mixed ~> number
+function return_true(x: unknown): x is number {
+    return true; // error x: unknown ~> number
 }
 
-function return_true_in_branch(x: mixed): x is number {
+function return_true_in_branch(x: unknown): x is number {
   if (0 < 1) {
-    return true; // error in this branch x: mixed ~> number
+    return true; // error in this branch x: unknown ~> number
   } else {
     return typeof x === 'number';
   }
@@ -22,7 +22,7 @@ function negation_on_union(x: number | string | boolean): x is boolean {
   return (typeof x !== 'number' && typeof x !== 'string'); // okay
 }
 
-function always_false_error(x: mixed): x is A {
+function always_false_error(x: unknown): x is A {
   return false; // error (negation) A ~> empty
 }
 
@@ -36,17 +36,17 @@ function return_false_under_condition(x: number | string | boolean): x is boolea
   }
 }
 
-const arrow_okay = (x: mixed): x is number => (
+const arrow_okay = (x: unknown): x is number => (
   typeof x === 'number' // okay
 );
 
-const arrow_error = (x: mixed): x is number => (
+const arrow_error = (x: unknown): x is number => (
   typeof x === 'number' ||
   typeof x === 'string' // error x: string ~> number
 );
 
 class C {
-  m(x: mixed): x is number {
+  m(x: unknown): x is number {
     return typeof x === 'string'; // error x: string ~> number and (negation) number ~> empty
   }
 }
@@ -91,25 +91,25 @@ function contextual() {
 }
 
 
-function instanceof_error_1(x: mixed): x is A {
+function instanceof_error_1(x: unknown): x is A {
   return x instanceof B; // error (negation) A ~> empty
 }
 
-function instanceof_error_2(x: mixed): x is B {
+function instanceof_error_2(x: unknown): x is B {
   return x instanceof A; // error A ~> B
 }
 
 function nested_functions() {
-  function outer(x: mixed): x is A {
-    function inner(x: mixed): x is C {
+  function outer(x: unknown): x is A {
+    function inner(x: unknown): x is C {
       return x instanceof C; // okay
     };
     return x instanceof A; // okay
   }
 }
 
-// This is okay because $NonMaybeType<X> is considered a subtype of X
-function non_maybe_poly_1<X>(x: X): x is $NonMaybeType<X> {
+// This is okay because NonNullable<X> is considered a subtype of X
+function non_maybe_poly_1<X>(x: X): x is NonNullable<X> {
   return x != null;
 }
 
@@ -117,24 +117,24 @@ function non_maybe_poly_2<X: {...}>(x: ?X): x is X { // okay
   return x != null;
 }
 
-function is_array(x: mixed): x is $ReadOnlyArray<mixed> { // okay
+function is_array(x: unknown): x is ReadonlyArray<mixed> { // okay
   return Array.isArray(x);
 }
 
-function is_array_poly_error<A>(x: mixed): x is $ReadOnlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
+function is_array_poly_error<A>(x: unknown): x is ReadonlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
   return Array.isArray(x);
 }
 
 function pipe_result() {
-  declare function isNumberOrString(x: mixed): x is (number | string);
+  declare function isNumberOrString(x: unknown): x is (number | string);
   declare function isString(x: number | string): x is string;
-  declare function isBoolean(x: mixed): x is boolean;
+  declare function isBoolean(x: unknown): x is boolean;
 
-  function okay(x: mixed): x is string {
+  function okay(x: unknown): x is string {
     return isNumberOrString(x) && isString(x); // okay
   }
 
-  function error(x: mixed): x is string {
+  function error(x: unknown): x is string {
     return isNumberOrString(x) && isBoolean(x); // error (negation) string ~> empty
   }
 }
@@ -144,17 +144,17 @@ function pipe_result() {
 // Writes
 //
 
-function error_write_to_type_guard_param_1(x: mixed): x is A {
+function error_write_to_type_guard_param_1(x: unknown): x is A {
   x = 1;
   return x instanceof A; // error 'x' is written to
 }
 
-function error_write_to_type_guard_param_2(x: mixed): x is B {
+function error_write_to_type_guard_param_2(x: unknown): x is B {
   x = new B();
   return x instanceof B; // error 'x' is written to
 }
 
-function error_write_to_type_guard_param_multi(x: mixed): x is B {
+function error_write_to_type_guard_param_multi(x: unknown): x is B {
   if (0 < 1) {
     x = new B();
     return x instanceof B; // error 'x' is written to (1st loc)
@@ -164,14 +164,14 @@ function error_write_to_type_guard_param_multi(x: mixed): x is B {
   }
 }
 
-function multi_return_ok(x: mixed): x is A {
+function multi_return_ok(x: unknown): x is A {
   if (0 < 1) {
     return x instanceof A; // okay
   }
   return x instanceof B; // error (negation) A ~> empty
 }
 
-function multi_return_one_branch_error(x: mixed): x is B {
+function multi_return_one_branch_error(x: unknown): x is B {
   if (0 < 1) {
     return x instanceof A; // error A ~> B
   }
@@ -182,7 +182,7 @@ function multi_return_one_branch_error(x: mixed): x is B {
 // Havoc
 //
 
-function havoc_error(x: mixed): x is B { // error 'x' is havoced
+function havoc_error(x: unknown): x is B { // error 'x' is havoced
   function y() {
     x = 1;
   };
@@ -190,14 +190,14 @@ function havoc_error(x: mixed): x is B { // error 'x' is havoced
   return x instanceof B;
 }
 
-function havoc_ok_no_call(x: mixed): x is B {
+function havoc_ok_no_call(x: unknown): x is B {
   function y() {
     x = 1;
   };
   return x instanceof B; // okay 'y' is not called
 }
 
-function havoc_ok_new_var(x: mixed): x is B {
+function havoc_ok_new_var(x: unknown): x is B {
   function y() {
     let x = 2;
     x = 1;
@@ -207,22 +207,22 @@ function havoc_ok_new_var(x: mixed): x is B {
 }
 
 class Private_property_1 {
-  #prop: (value: mixed) => implies value is number;
+  #prop: (value: unknown) => implies value is number;
 
-  test1(value: mixed): implies value is string { // error number ~> string on predicate
+  test1(value: unknown): implies value is string { // error number ~> string on predicate
     return this.#prop(value); // no prop-missing error
   }
 
-  test2(value: mixed): implies value is number { // okay
+  test2(value: unknown): implies value is number { // okay
     return this.#prop(value); // no prop-missing error
   }
 }
 
 class Private_property_2 {
   remote: Private_property_1;
-  #prop: (value: mixed) => implies value is number; // required to prevent parse error below
+  #prop: (value: unknown) => implies value is number; // required to prevent parse error below
 
-  test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+  test(value: unknown, remote: Private_property_1): implies value is string { // error number ~> string on predicate
     return remote.#prop(value); // error prop-missing
   }
 }

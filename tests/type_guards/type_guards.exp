@@ -7,9 +7,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
          ^
 
 References:
-   class_exports.js:2:21
-   2|   m(x: mixed): x is number {
-                          ^^^^^^ [1]
+   class_exports.js:2:23
+   2|   m(x: unknown): x is number {
+                            ^^^^^^ [1]
    class_imports.js:8:7
    8|   (x: string); // error number ~> string
             ^^^^^^ [2]
@@ -24,9 +24,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
           ^
 
 References:
-   class_exports.js:5:30
-    5|   os(x: mixed): implies x is number {
-                                    ^^^^^^ [1]
+   class_exports.js:5:32
+    5|   os(x: unknown): implies x is number {
+                                      ^^^^^^ [1]
    class_imports.js:13:7
    13|   (x: string); // error number ~> string
              ^^^^^^ [2]
@@ -41,9 +41,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
           ^
 
 References:
-   class_exports.js:11:21
-   11|   m(x: mixed): x is number;
-                           ^^^^^^ [1]
+   class_exports.js:11:23
+   11|   m(x: unknown): x is number;
+                             ^^^^^^ [1]
    class_imports.js:19:7
    19|   (x: string); // error number ~> string
              ^^^^^^ [2]
@@ -58,9 +58,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
           ^
 
 References:
-   class_exports.js:12:30
-   12|   os(x: mixed): implies x is number;
-                                    ^^^^^^ [1]
+   class_exports.js:12:32
+   12|   os(x: unknown): implies x is number;
+                                      ^^^^^^ [1]
    class_imports.js:24:7
    24|   (x: string); // error number ~> string
              ^^^^^^ [2]
@@ -75,20 +75,20 @@ Cannot use type guard parameter `x` [1] because at this return point it is writt
                     ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   classes.js:13:25
-   13|     invalid1(x: mixed): x is number {
-                               ^ [1]
+   classes.js:13:27
+   13|     invalid1(x: unknown): x is number {
+                                 ^ [1]
    classes.js:14:7
    14|       x = 1;
              ^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:18:25
+Error ------------------------------------------------------------------------------------------------- classes.js:18:27
 
 Cannot find type guard parameter `y` [1] in the parameters of this function (type). [function-predicate]
 
-   18|     invalid2(x: mixed): y is number { // error param missing
-                               ^ [1]
+   18|     invalid2(x: unknown): y is number { // error param missing
+                                 ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:23:14
@@ -103,11 +103,11 @@ string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistenc
                     ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   classes.js:22:30
-   22|     invalid3(x: mixed): x is string {
-                                    ^^^^^^ [2]
+   classes.js:22:32
+   22|     invalid3(x: unknown): x is string {
+                                      ^^^^^^ [2]
    classes.js:22:14
-   22|     invalid3(x: mixed): x is string {
+   22|     invalid3(x: unknown): x is string {
                     ^ [3]
 
 
@@ -122,9 +122,9 @@ https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard
                     ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   classes.js:22:30
-   22|     invalid3(x: mixed): x is string {
-                                    ^^^^^^ [1]
+   classes.js:22:32
+   22|     invalid3(x: unknown): x is string {
+                                      ^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------------- classes.js:30:6
@@ -136,9 +136,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
             ^
 
 References:
-   classes.js:5:23
-    5|     m(x: mixed): x is number {
-                             ^^^^^^ [1]
+   classes.js:5:25
+    5|     m(x: unknown): x is number {
+                               ^^^^^^ [1]
    classes.js:30:9
    30|     (x: string); // error number ~> string
                ^^^^^^ [2]
@@ -153,9 +153,9 @@ Cannot cast `x` to number because string [1] is incompatible with number [2]. [i
             ^
 
 References:
-   classes.js:9:30
-    9|     static s(x: mixed): x is string {
-                                    ^^^^^^ [1]
+   classes.js:9:32
+    9|     static s(x: unknown): x is string {
+                                      ^^^^^^ [1]
    classes.js:33:9
    33|     (x: number); // error string ~> number
                ^^^^^^ [2]
@@ -167,8 +167,8 @@ Cannot extend `C` [1] with `D1` because in property `m`: function [2], a non-typ
 function [3], which is a type-guard function. [function-predicate]
 
    classes.js:40:5
-           v----------------------------------------------------
-   40|     m(x: mixed): boolean { // error extends non-predicate
+           v------------------------------------------------------
+   40|     m(x: unknown): boolean { // error extends non-predicate
    41|       return true;
    42|     }
            ^ [2]
@@ -178,29 +178,29 @@ References:
    39|   class D1 extends C {
                           ^ [1]
    classes.js:5:5
-           v-------------------------
-    5|     m(x: mixed): x is number {
+           v---------------------------
+    5|     m(x: unknown): x is number {
     6|       return typeof x === 'number';
     7|     }
            ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:46:23
+Error ------------------------------------------------------------------------------------------------- classes.js:46:25
 
 Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: `unknown` [2] is incompatible with
 number [3]. [incompatible-type]
 
-   classes.js:46:23
-   46|     m(x: mixed): x is mixed { // error extends
-                             ^^^^^ [2]
+   classes.js:46:25
+   46|     m(x: unknown): x is mixed { // error extends
+                               ^^^^^ [2]
 
 References:
    classes.js:45:20
    45|   class D2 extends C {
                           ^ [1]
-   classes.js:5:23
-    5|     m(x: mixed): x is number {
-                             ^^^^^^ [3]
+   classes.js:5:25
+    5|     m(x: unknown): x is number {
+                               ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------- classes.js:52:14
@@ -216,42 +216,42 @@ https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard
 
 References:
    classes.js:51:10
-   51|     m(x: mixed): x is number {
-                ^^^^^ [1]
-   classes.js:51:23
-   51|     m(x: mixed): x is number {
-                             ^^^^^^ [2]
+   51|     m(x: unknown): x is number {
+                ^^^^^^^ [1]
+   classes.js:51:25
+   51|     m(x: unknown): x is number {
+                               ^^^^^^ [2]
    classes.js:51:7
-   51|     m(x: mixed): x is number {
+   51|     m(x: unknown): x is number {
              ^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:67:23
+Error ------------------------------------------------------------------------------------------------- classes.js:67:25
 
 Cannot implement `I` [1] with `E1` because in property `n` > the type predicate: number [2] is incompatible with
 string [3]. [incompatible-type]
 
-   classes.js:67:23
-   67|     n(x: mixed): x is number { // error number ~> string
-                             ^^^^^^ [2]
+   classes.js:67:25
+   67|     n(x: unknown): x is number { // error number ~> string
+                               ^^^^^^ [2]
 
 References:
    classes.js:63:23
    63|   class E1 implements I {
                              ^ [1]
-   classes.js:60:23
-   60|     n(x: mixed): x is string;
-                             ^^^^^^ [3]
+   classes.js:60:25
+   60|     n(x: unknown): x is string;
+                               ^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------- classes.js:81:23
+Error ------------------------------------------------------------------------------------------------- classes.js:81:25
 
 Cannot implement `IP` [1] with `E2` because in property `n` > the type predicate: string [2] is incompatible with
 number [3]. [incompatible-type]
 
-   classes.js:81:23
-   81|     n(x: mixed): x is string { // error number ~> string
-                             ^^^^^^ [2]
+   classes.js:81:25
+   81|     n(x: unknown): x is string { // error number ~> string
+                               ^^^^^^ [2]
 
 References:
    classes.js:77:23
@@ -271,9 +271,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
             ^
 
 References:
-   classes.js:91:23
-   91|     m(x: mixed): x is number;
-                             ^^^^^^ [1]
+   classes.js:91:25
+   91|     m(x: unknown): x is number;
+                               ^^^^^^ [1]
    classes.js:98:9
    98|     (x: string); // error number ~> string
                ^^^^^^ [2]
@@ -288,9 +288,9 @@ Cannot cast `x` to number because string [1] is incompatible with number [2]. [i
              ^
 
 References:
-   classes.js:92:30
-    92|     static s(x: mixed): x is string;
-                                     ^^^^^^ [1]
+   classes.js:92:32
+    92|     static s(x: unknown): x is string;
+                                       ^^^^^^ [1]
    classes.js:102:9
    102|     (x: number); // error string ~> number
                 ^^^^^^ [2]
@@ -302,8 +302,8 @@ Cannot extend `C` [1] with `D1` because in property `m`: function [2], a non-typ
 function type [3], which is a type-guard function. [function-predicate]
 
    classes.js:107:5
-            v----------------------------------------------------
-   107|     m(x: mixed): boolean { // error extends non-predicate
+            v------------------------------------------------------
+   107|     m(x: unknown): boolean { // error extends non-predicate
    108|       return true;
    109|     }
             ^ [2]
@@ -313,26 +313,26 @@ References:
    106|   class D1 extends C {
                            ^ [1]
    classes.js:91:5
-    91|     m(x: mixed): x is number;
-            ^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+    91|     m(x: unknown): x is number;
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------------------ classes.js:113:23
+Error ------------------------------------------------------------------------------------------------ classes.js:113:25
 
 Cannot extend `C` [1] with `D2` because in property `m` > the type predicate: `unknown` [2] is incompatible with
 number [3]. [incompatible-type]
 
-   classes.js:113:23
-   113|     m(x: mixed): x is mixed { // error mixed ~> number
-                              ^^^^^ [2]
+   classes.js:113:25
+   113|     m(x: unknown): x is mixed { // error mixed ~> number
+                                ^^^^^ [2]
 
 References:
    classes.js:112:20
    112|   class D2 extends C {
                            ^ [1]
-   classes.js:91:23
-    91|     m(x: mixed): x is number;
-                              ^^^^^^ [3]
+   classes.js:91:25
+    91|     m(x: unknown): x is number;
+                                ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ classes.js:119:14
@@ -348,13 +348,13 @@ https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard
 
 References:
    classes.js:118:10
-   118|     m(x: mixed): x is number {
-                 ^^^^^ [1]
-   classes.js:118:23
-   118|     m(x: mixed): x is number {
-                              ^^^^^^ [2]
+   118|     m(x: unknown): x is number {
+                 ^^^^^^^ [1]
+   classes.js:118:25
+   118|     m(x: unknown): x is number {
+                                ^^^^^^ [2]
    classes.js:118:7
-   118|     m(x: mixed): x is number {
+   118|     m(x: unknown): x is number {
               ^ [3]
 
 
@@ -375,19 +375,19 @@ References:
                 ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------- consistency.js:7:31
+Error ---------------------------------------------------------------------------------------------- consistency.js:7:33
 
 Cannot declare a type guard [1] for function [2] because boolean [1] is incompatible with implicitly-returned undefined.
 [incompatible-type]
 
-   consistency.js:7:31
-   7| function no_return(x: mixed): x is number {} // error no return
-                                    ^^^^^^^^^^^ [1]
+   consistency.js:7:33
+   7| function no_return(x: unknown): x is number {} // error no return
+                                      ^^^^^^^^^^^ [1]
 
 References:
    consistency.js:7:1
-   7| function no_return(x: mixed): x is number {} // error no return
-      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   7| function no_return(x: unknown): x is number {} // error no return
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------------------------- consistency.js:10:12
@@ -398,18 +398,18 @@ The type of `x` [3] at the return expression `true` [4] needs to be compatible w
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:10:12
-   10|     return true; // error x: mixed ~> number
+   10|     return true; // error x: unknown ~> number
                   ^^^^ [4]
 
 References:
    consistency.js:9:25
-    9| function return_true(x: mixed): x is number {
-                               ^^^^^ [1]
-   consistency.js:9:38
-    9| function return_true(x: mixed): x is number {
-                                            ^^^^^^ [2]
+    9| function return_true(x: unknown): x is number {
+                               ^^^^^^^ [1]
+   consistency.js:9:40
+    9| function return_true(x: unknown): x is number {
+                                              ^^^^^^ [2]
    consistency.js:9:22
-    9| function return_true(x: mixed): x is number {
+    9| function return_true(x: unknown): x is number {
                             ^ [3]
 
 
@@ -421,18 +421,18 @@ The type of `x` [3] at the return expression `true` [4] needs to be compatible w
 https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.
 
    consistency.js:15:12
-   15|     return true; // error in this branch x: mixed ~> number
+   15|     return true; // error in this branch x: unknown ~> number
                   ^^^^ [4]
 
 References:
    consistency.js:13:35
-   13| function return_true_in_branch(x: mixed): x is number {
-                                         ^^^^^ [1]
-   consistency.js:13:48
-   13| function return_true_in_branch(x: mixed): x is number {
-                                                      ^^^^^^ [2]
+   13| function return_true_in_branch(x: unknown): x is number {
+                                         ^^^^^^^ [1]
+   consistency.js:13:50
+   13| function return_true_in_branch(x: unknown): x is number {
+                                                        ^^^^^^ [2]
    consistency.js:13:32
-   13| function return_true_in_branch(x: mixed): x is number {
+   13| function return_true_in_branch(x: unknown): x is number {
                                       ^ [3]
 
 
@@ -447,9 +447,9 @@ https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard
                 ^^^^^
 
 References:
-   consistency.js:25:45
-   25| function always_false_error(x: mixed): x is A {
-                                                   ^ [1]
+   consistency.js:25:47
+   25| function always_false_error(x: unknown): x is A {
+                                                     ^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------- consistency.js:45:3
@@ -466,11 +466,11 @@ https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard
          ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   consistency.js:43:38
-   43| const arrow_error = (x: mixed): x is number => (
-                                            ^^^^^^ [2]
+   consistency.js:43:40
+   43| const arrow_error = (x: unknown): x is number => (
+                                              ^^^^^^ [2]
    consistency.js:43:22
-   43| const arrow_error = (x: mixed): x is number => (
+   43| const arrow_error = (x: unknown): x is number => (
                             ^ [3]
    consistency.js:44:3
          v-----------------------
@@ -491,11 +491,11 @@ number [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistenc
                   ^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   consistency.js:49:21
-   49|   m(x: mixed): x is number {
-                           ^^^^^^ [2]
+   consistency.js:49:23
+   49|   m(x: unknown): x is number {
+                             ^^^^^^ [2]
    consistency.js:49:5
-   49|   m(x: mixed): x is number {
+   49|   m(x: unknown): x is number {
            ^ [3]
 
 
@@ -510,9 +510,9 @@ https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard
                   ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   consistency.js:49:21
-   49|   m(x: mixed): x is number {
-                           ^^^^^^ [1]
+   consistency.js:49:23
+   49|   m(x: unknown): x is number {
+                             ^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- consistency.js:55:35
@@ -648,9 +648,9 @@ https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard
                 ^^^^^^^^^^^^^^
 
 References:
-   consistency.js:94:45
-   94| function instanceof_error_1(x: mixed): x is A {
-                                                   ^ [1]
+   consistency.js:94:47
+   94| function instanceof_error_1(x: unknown): x is A {
+                                                     ^ [1]
 
 
 Error --------------------------------------------------------------------------------------------- consistency.js:99:23
@@ -665,11 +665,11 @@ See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-
                              ^ [1]
 
 References:
-   consistency.js:98:45
-   98| function instanceof_error_2(x: mixed): x is B {
-                                                   ^ [2]
+   consistency.js:98:47
+   98| function instanceof_error_2(x: unknown): x is B {
+                                                     ^ [2]
    consistency.js:98:29
-   98| function instanceof_error_2(x: mixed): x is B {
+   98| function instanceof_error_2(x: unknown): x is B {
                                    ^ [3]
    consistency.js:99:10
    99|   return x instanceof A; // error A ~> B
@@ -691,17 +691,17 @@ https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard
 
 References:
    consistency.js:124:36
-   124| function is_array_poly_error<A>(x: mixed): x is $ReadOnlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
-                                           ^^^^^ [1]
-   consistency.js:124:64
-   124| function is_array_poly_error<A>(x: mixed): x is $ReadOnlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
-                                                                       ^ [2]
+   124| function is_array_poly_error<A>(x: unknown): x is ReadonlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
+                                           ^^^^^^^ [1]
+   consistency.js:124:65
+   124| function is_array_poly_error<A>(x: unknown): x is ReadonlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
+                                                                        ^ [2]
    consistency.js:124:33
-   124| function is_array_poly_error<A>(x: mixed): x is $ReadOnlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
+   124| function is_array_poly_error<A>(x: unknown): x is ReadonlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
                                         ^ [3]
-   consistency.js:124:49
-   124| function is_array_poly_error<A>(x: mixed): x is $ReadOnlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
-                                                        ^^^^^^^^^^^^^^^^^ [5]
+   consistency.js:124:51
+   124| function is_array_poly_error<A>(x: unknown): x is ReadonlyArray<A> { // error ROArray<mixed> ~> ROArray<A>
+                                                          ^^^^^^^^^^^^^^^^ [5]
 
 
 Error -------------------------------------------------------------------------------------------- consistency.js:138:12
@@ -716,9 +716,9 @@ needs to completely refine away the guard type string [1]. Consider using a one-
                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   consistency.js:137:34
-   137|   function error(x: mixed): x is string {
-                                         ^^^^^^ [1]
+   consistency.js:137:36
+   137|   function error(x: unknown): x is string {
+                                           ^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- consistency.js:149:10
@@ -730,9 +730,9 @@ Cannot use type guard parameter `x` [1] because at this return point it is writt
                  ^^^^^^^^^^^^^^
 
 References:
-   consistency.js:147:55
-   147| function error_write_to_type_guard_param_1(x: mixed): x is A {
-                                                              ^ [1]
+   consistency.js:147:57
+   147| function error_write_to_type_guard_param_1(x: unknown): x is A {
+                                                                ^ [1]
    consistency.js:148:3
    148|   x = 1;
           ^ [2]
@@ -747,9 +747,9 @@ Cannot use type guard parameter `x` [1] because at this return point it is writt
                  ^^^^^^^^^^^^^^
 
 References:
-   consistency.js:152:55
-   152| function error_write_to_type_guard_param_2(x: mixed): x is B {
-                                                              ^ [1]
+   consistency.js:152:57
+   152| function error_write_to_type_guard_param_2(x: unknown): x is B {
+                                                                ^ [1]
    consistency.js:153:3
    153|   x = new B();
           ^ [2]
@@ -764,9 +764,9 @@ Cannot use type guard parameter `x` [1] because at this return point it is writt
                    ^^^^^^^^^^^^^^
 
 References:
-   consistency.js:157:59
-   157| function error_write_to_type_guard_param_multi(x: mixed): x is B {
-                                                                  ^ [1]
+   consistency.js:157:61
+   157| function error_write_to_type_guard_param_multi(x: unknown): x is B {
+                                                                    ^ [1]
    consistency.js:159:5
    159|     x = new B();
             ^ [2]
@@ -781,9 +781,9 @@ Cannot use type guard parameter `x` [1] because at this return point it is writt
                    ^^^^^^^^^^^^^^
 
 References:
-   consistency.js:157:59
-   157| function error_write_to_type_guard_param_multi(x: mixed): x is B {
-                                                                  ^ [1]
+   consistency.js:157:61
+   157| function error_write_to_type_guard_param_multi(x: unknown): x is B {
+                                                                    ^ [1]
    consistency.js:162:5
    162|     x = new B();
             ^ [2]
@@ -800,9 +800,9 @@ https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard
                  ^^^^^^^^^^^^^^
 
 References:
-   consistency.js:167:42
-   167| function multi_return_ok(x: mixed): x is A {
-                                                 ^ [1]
+   consistency.js:167:44
+   167| function multi_return_ok(x: unknown): x is A {
+                                                   ^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- consistency.js:176:25
@@ -817,28 +817,28 @@ See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-
                                 ^ [1]
 
 References:
-   consistency.js:174:56
-   174| function multi_return_one_branch_error(x: mixed): x is B {
-                                                               ^ [2]
+   consistency.js:174:58
+   174| function multi_return_one_branch_error(x: unknown): x is B {
+                                                                 ^ [2]
    consistency.js:174:40
-   174| function multi_return_one_branch_error(x: mixed): x is B {
+   174| function multi_return_one_branch_error(x: unknown): x is B {
                                                ^ [3]
    consistency.js:176:12
    176|     return x instanceof A; // error A ~> B
                    ^^^^^^^^^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------- consistency.js:185:33
+Error -------------------------------------------------------------------------------------------- consistency.js:185:35
 
 Cannot use type guard parameter `x`, because `x` [1] is reassigned in [2]. [function-predicate]
 
-   consistency.js:185:33
-   185| function havoc_error(x: mixed): x is B { // error 'x' is havoced
-                                        ^
+   consistency.js:185:35
+   185| function havoc_error(x: unknown): x is B { // error 'x' is havoced
+                                          ^
 
 References:
    consistency.js:185:22
-   185| function havoc_error(x: mixed): x is B { // error 'x' is havoced
+   185| function havoc_error(x: unknown): x is B { // error 'x' is havoced
                              ^ [1]
    consistency.js:189:3
    189|   y();
@@ -857,14 +857,14 @@ string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistenc
                    ^^^^^^^^^^^^^^^^^ [4]
 
 References:
-   consistency.js:210:45
-   210|   #prop: (value: mixed) => implies value is number;
-                                                    ^^^^^^ [1]
-   consistency.js:212:41
-   212|   test1(value: mixed): implies value is string { // error number ~> string on predicate
-                                                ^^^^^^ [2]
+   consistency.js:210:47
+   210|   #prop: (value: unknown) => implies value is number;
+                                                      ^^^^^^ [1]
+   consistency.js:212:43
+   212|   test1(value: unknown): implies value is string { // error number ~> string on predicate
+                                                  ^^^^^^ [2]
    consistency.js:212:9
-   212|   test1(value: mixed): implies value is string { // error number ~> string on predicate
+   212|   test1(value: unknown): implies value is string { // error number ~> string on predicate
                 ^^^^^ [3]
 
 
@@ -877,9 +877,9 @@ Cannot call `remote.#prop` because property `#prop` is missing in `Private_prope
                           ^^^^^
 
 References:
-   consistency.js:225:30
-   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
-                                     ^^^^^^^^^^^^^^^^^^ [1]
+   consistency.js:225:32
+   225|   test(value: unknown, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+                                       ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error -------------------------------------------------------------------------------------------- consistency.js:226:12
@@ -895,13 +895,13 @@ string [2]. See 1. in https://flow.org/en/docs/types/type-guards/#toc-consistenc
 
 References:
    consistency.js:225:15
-   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
-                      ^^^^^ [1]
-   consistency.js:225:68
-   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
-                                                                           ^^^^^^ [2]
+   225|   test(value: unknown, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+                      ^^^^^^^ [1]
+   consistency.js:225:70
+   225|   test(value: unknown, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+                                                                             ^^^^^^ [2]
    consistency.js:225:8
-   225|   test(value: mixed, remote: Private_property_1): implies value is string { // error number ~> string on predicate
+   225|   test(value: unknown, remote: Private_property_1): implies value is string { // error number ~> string on predicate
                ^^^^^ [3]
 
 
@@ -915,24 +915,24 @@ number [2]. [incompatible-type]
                              ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   inferred.js:13:62
-   13|   declare function takesGuard(fn: (x: mixed) => implies x is number): void;
-                                                                    ^^^^^^ [2]
+   inferred.js:13:64
+   13|   declare function takesGuard(fn: (x: unknown) => implies x is number): void;
+                                                                      ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ inferred.js:19:32
+Error ------------------------------------------------------------------------------------------------ inferred.js:19:34
 
 Cannot call `takesGuard` with function bound to `fn` because in the type predicate: string [1] is incompatible with
 number [2]. [incompatible-type]
 
-   inferred.js:19:32
-   19|   takesGuard((value: mixed) => typeof value === "string"); // error wrong guard type
-                                      ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   inferred.js:19:34
+   19|   takesGuard((value: unknown) => typeof value === "string"); // error wrong guard type
+                                        ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   inferred.js:13:62
-   13|   declare function takesGuard(fn: (x: mixed) => implies x is number): void;
-                                                                    ^^^^^^ [2]
+   inferred.js:13:64
+   13|   declare function takesGuard(fn: (x: unknown) => implies x is number): void;
+                                                                      ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:29:5
@@ -943,15 +943,15 @@ incompatible with function type [2], which is a type-guard function. [function-p
    inferred.js:29:5
            v--------------------------------------------
    29|     ( // error function-predicate incompatibility
-   30|       value: mixed,
+   30|       value: unknown,
    31|       otherValue, // error missing-local-annot
    32|     ) => typeof value === "number");
            -----------------------------^ [1]
 
 References:
    inferred.js:23:44
-   23|   declare function takesGuardTwoParams(fn: (x: mixed, y: mixed) => implies x is number): void;
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   23|   declare function takesGuardTwoParams(fn: (x: unknown, y: unknown) => implies x is number): void;
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:31:7
@@ -968,13 +968,13 @@ Cannot call `takesGuardTwoParams` with function bound to `fn` because function [
 incompatible with function type [2], which is a type-guard function. [function-predicate]
 
    inferred.js:34:5
-   34|     (value: mixed, otherValue: mixed) => typeof value === "number" // error can only infer type guard
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   34|     (value: unknown, otherValue: unknown) => typeof value === "number" // error can only infer type guard
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
    inferred.js:23:44
-   23|   declare function takesGuardTwoParams(fn: (x: mixed, y: mixed) => implies x is number): void;
-                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   23|   declare function takesGuardTwoParams(fn: (x: unknown, y: unknown) => implies x is number): void;
+                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:38:32
@@ -987,24 +987,24 @@ with number [2]. [incompatible-type]
                                       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   inferred.js:23:81
-   23|   declare function takesGuardTwoParams(fn: (x: mixed, y: mixed) => implies x is number): void;
-                                                                                       ^^^^^^ [2]
+   inferred.js:23:85
+   23|   declare function takesGuardTwoParams(fn: (x: unknown, y: unknown) => implies x is number): void;
+                                                                                           ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------ inferred.js:39:41
+Error ------------------------------------------------------------------------------------------------ inferred.js:39:43
 
 Cannot call `takesGuardTwoParams` with function bound to `fn` because in the type predicate: string [1] is incompatible
 with number [2]. [incompatible-type]
 
-   inferred.js:39:41
-   39|   takesGuardTwoParams((value: mixed) => typeof value === "string"); // error wrong guard type
-                                               ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   inferred.js:39:43
+   39|   takesGuardTwoParams((value: unknown) => typeof value === "string"); // error wrong guard type
+                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   inferred.js:23:81
-   23|   declare function takesGuardTwoParams(fn: (x: mixed, y: mixed) => implies x is number): void;
-                                                                                       ^^^^^^ [2]
+   inferred.js:23:85
+   23|   declare function takesGuardTwoParams(fn: (x: unknown, y: unknown) => implies x is number): void;
+                                                                                           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:48:5
@@ -1064,16 +1064,16 @@ Cannot cast `fn` to function type because one-sided `value` [1] is incompatible 
 [function-predicate]
 
    inferred.js:54:3
-   54|   fn as (value: mixed) => value is number; // error one-sided incompatible with two-sided
+   54|   fn as (value: unknown) => value is number; // error one-sided incompatible with two-sided
          ^^
 
 References:
    inferred.js:43:15
-   43|   const fn = (value: mixed) => typeof value === "number"; // infers: (value: mixed) => implies value is number
+   43|   const fn = (value: unknown) => typeof value === "number"; // infers: (value: unknown) => implies value is number
                      ^^^^^ [1]
-   inferred.js:54:27
-   54|   fn as (value: mixed) => value is number; // error one-sided incompatible with two-sided
-                                 ^^^^^^^^^^^^^^^ [2]
+   inferred.js:54:29
+   54|   fn as (value: unknown) => value is number; // error one-sided incompatible with two-sided
+                                   ^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:60:3
@@ -1082,16 +1082,16 @@ Cannot cast `fn` to function type because function [1], a non-type-guard functio
 type [2], which is a type-guard function. [function-predicate]
 
    inferred.js:60:3
-   60|   fn as (value: mixed) => implies value is number; // error non type guard
+   60|   fn as (value: unknown) => implies value is number; // error non type guard
          ^^
 
 References:
    inferred.js:58:14
-   58|   const fn = (value: mixed): boolean => typeof value === "number"; // infers: (value: mixed) => boolean
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   58|   const fn = (value: unknown): boolean => typeof value === "number"; // infers: (value: unknown) => boolean
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    inferred.js:60:9
-   60|   fn as (value: mixed) => implies value is number; // error non type guard
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   60|   fn as (value: unknown) => implies value is number; // error non type guard
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:61:3
@@ -1100,16 +1100,16 @@ Cannot cast `fn` to function type because function [1], a non-type-guard functio
 type [2], which is a type-guard function. [function-predicate]
 
    inferred.js:61:3
-   61|   fn as (value: mixed) => value is number; // error non type guard
+   61|   fn as (value: unknown) => value is number; // error non type guard
          ^^
 
 References:
    inferred.js:58:14
-   58|   const fn = (value: mixed): boolean => typeof value === "number"; // infers: (value: mixed) => boolean
-                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   58|   const fn = (value: unknown): boolean => typeof value === "number"; // infers: (value: unknown) => boolean
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    inferred.js:61:9
-   61|   fn as (value: mixed) => value is number; // error non type guard
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   61|   fn as (value: unknown) => value is number; // error non type guard
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- inferred.js:70:3
@@ -1140,8 +1140,8 @@ Cannot cast `u2` to number literal `4` because number [1] is incompatible with n
 
 References:
    inferred.js:77:43
-   77|   const [t2, u2] = takesPolyGuard((value: mixed) => value === 4);
-                                                 ^^^^^ [1]
+   77|   const [t2, u2] = takesPolyGuard((value: unknown) => value === 4);
+                                                 ^^^^^^^ [1]
    inferred.js:80:9
    80|   u2 as 4; // TODO(T225771563) okay
                ^ [2]
@@ -1158,8 +1158,8 @@ Cannot cast `u2` to number literal `3` because number [1] is incompatible with n
 
 References:
    inferred.js:77:43
-   77|   const [t2, u2] = takesPolyGuard((value: mixed) => value === 4);
-                                                 ^^^^^ [1]
+   77|   const [t2, u2] = takesPolyGuard((value: unknown) => value === 4);
+                                                 ^^^^^^^ [1]
    inferred.js:81:9
    81|   u2 as 3; // error 4 ~> 3
                ^ [2]
@@ -1302,16 +1302,16 @@ Cannot cast `fn` to function type because function [1], a non-type-guard functio
 type [2], which is a type-guard function. [function-predicate]
 
    inferred.js:186:3
-   186|   fn as (x: mixed) => implies x is mixed; // error non-type guard function
+   186|   fn as (x: unknown) => implies x is mixed; // error non-type guard function
           ^^
 
 References:
    inferred.js:185:14
-   185|   const fn = (x: mixed) => typeof x === "object" && x?.hasOwnProperty("a");
-                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   185|   const fn = (x: unknown) => typeof x === "object" && x?.hasOwnProperty("a");
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    inferred.js:186:9
-   186|   fn as (x: mixed) => implies x is mixed; // error non-type guard function
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   186|   fn as (x: unknown) => implies x is mixed; // error non-type guard function
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ inferred.js:186:3
@@ -1320,16 +1320,16 @@ Cannot cast `fn` to function type because in the return value: undefined (result
 chain) [1] is incompatible with boolean [2]. [incompatible-type]
 
    inferred.js:186:3
-   186|   fn as (x: mixed) => implies x is mixed; // error non-type guard function
+   186|   fn as (x: unknown) => implies x is mixed; // error non-type guard function
           ^^
 
 References:
    inferred.js:185:18
-   185|   const fn = (x: mixed) => typeof x === "object" && x?.hasOwnProperty("a");
-                         ^^^^^ [1]
-   inferred.js:186:23
-   186|   fn as (x: mixed) => implies x is mixed; // error non-type guard function
-                              ^^^^^^^^^^^^^^^^^^ [2]
+   185|   const fn = (x: unknown) => typeof x === "object" && x?.hasOwnProperty("a");
+                         ^^^^^^^ [1]
+   inferred.js:186:25
+   186|   fn as (x: unknown) => implies x is mixed; // error non-type guard function
+                                ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- intersect.js:7:5
@@ -1397,7 +1397,7 @@ Cannot cast `x` to `KB` because in type argument `X` [1]: string literal `C` [2]
 
 References:
    intersect.js:37:11
-   37|   class K<X: $Keys<AllTypes>>  extends S<X> {}
+   37|   class K<X: keyof AllTypes>  extends S<X> {}
                  ^ [1]
    intersect.js:34:15
    34|   type KC = K<'C'>;

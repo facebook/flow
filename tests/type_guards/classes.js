@@ -1,25 +1,25 @@
 function class_test() {
-  declare var x: mixed;
+  declare var x: unknown;
 
   class C {
-    m(x: mixed): x is number {
+    m(x: unknown): x is number {
       return typeof x === 'number';
     }
 
-    static s(x: mixed): x is string {
+    static s(x: unknown): x is string {
       return typeof x ==='string';
     }
 
-    invalid1(x: mixed): x is number {
+    invalid1(x: unknown): x is number {
       x = 1;
       return typeof x === 'number'; // error param write reaching this return
     }
 
-    invalid2(x: mixed): y is number { // error param missing
+    invalid2(x: unknown): y is number { // error param missing
       return typeof x === 'number';
     }
 
-    invalid3(x: mixed): x is string {
+    invalid3(x: unknown): x is string {
       return typeof x === 'number'; // error number ~> string
     }
   }
@@ -37,18 +37,18 @@ function class_test() {
   // extends checks
 
   class D1 extends C {
-    m(x: mixed): boolean { // error extends non-predicate
+    m(x: unknown): boolean { // error extends non-predicate
       return true;
     }
   }
 
   class D2 extends C {
-    m(x: mixed): x is mixed { // error extends
+    m(x: unknown): x is mixed { // error extends
       return true;
     }
   }
   class D3 extends C {
-    m(x: mixed): x is number {
+    m(x: unknown): x is number {
       return true; // error mixed ~> number
     }
   }
@@ -56,40 +56,40 @@ function class_test() {
   // implements checks
 
   interface I {
-    m(x: mixed): x is number;
-    n(x: mixed): x is string;
+    m(x: unknown): x is number;
+    n(x: unknown): x is string;
   }
 
   class E1 implements I {
-    m(x: mixed): x is number {
+    m(x: unknown): x is number {
       return typeof x === 'number';
     }
-    n(x: mixed): x is number { // error number ~> string
+    n(x: unknown): x is number { // error number ~> string
       return typeof x === 'number';
     }
   }
 
   interface IP<X> {
-    m(x: mixed): x is X;
-    n(x: mixed): x is X;
+    m(x: unknown): x is X;
+    n(x: unknown): x is X;
   }
 
   class E2 implements IP<number> {
-    m(x: mixed): x is number {
+    m(x: unknown): x is number {
       return typeof x === 'number';
     }
-    n(x: mixed): x is string { // error number ~> string
+    n(x: unknown): x is string { // error number ~> string
       return typeof x === 'string';
     }
   }
 }
 
 function declare_class_test() {
-  declare var x: mixed;
+  declare var x: unknown;
 
   declare class C {
-    m(x: mixed): x is number;
-    static s(x: mixed): x is string;
+    m(x: unknown): x is number;
+    static s(x: unknown): x is string;
   }
 
   const c = new C();
@@ -104,28 +104,28 @@ function declare_class_test() {
   }
 
   class D1 extends C {
-    m(x: mixed): boolean { // error extends non-predicate
+    m(x: unknown): boolean { // error extends non-predicate
       return true;
     }
   }
 
   class D2 extends C {
-    m(x: mixed): x is mixed { // error mixed ~> number
+    m(x: unknown): x is mixed { // error mixed ~> number
       return true; // okay
     }
   }
   class D3 extends C {
-    m(x: mixed): x is number {
+    m(x: unknown): x is number {
       return true; // error mixed ~> number
     }
   }
 }
 
 function poly_class_test() {
-  declare var x: mixed;
+  declare var x: unknown;
 
   declare class P<X> {
-    m(x: mixed): x is X;
+    m(x: unknown): x is X;
   }
 
   const p = new P<number>();

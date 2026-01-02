@@ -3,44 +3,44 @@
 import * as React from 'react';
 
 function test1() {
-  declare function takesBoolReturningFunction(fn: (x: mixed) => boolean): void;
+  declare function takesBoolReturningFunction(fn: (x: unknown) => boolean): void;
 
   takesBoolReturningFunction(value => typeof value === "number"); // okay
-  takesBoolReturningFunction((value: mixed) => typeof value === "string"); // okay
+  takesBoolReturningFunction((value: unknown) => typeof value === "string"); // okay
 }
 
 function test2() {
-  declare function takesGuard(fn: (x: mixed) => implies x is number): void;
+  declare function takesGuard(fn: (x: unknown) => implies x is number): void;
 
   takesGuard(value => typeof value === "number"); // okay
-  takesGuard((value: mixed) => typeof value === "number"); // okay
+  takesGuard((value: unknown) => typeof value === "number"); // okay
 
   takesGuard(value => typeof value === "string"); // error wrong guard type
-  takesGuard((value: mixed) => typeof value === "string"); // error wrong guard type
+  takesGuard((value: unknown) => typeof value === "string"); // error wrong guard type
 }
 
 function test3() {
-  declare function takesGuardTwoParams(fn: (x: mixed, y: mixed) => implies x is number): void;
+  declare function takesGuardTwoParams(fn: (x: unknown, y: unknown) => implies x is number): void;
 
   takesGuardTwoParams(value => typeof value === "number"); // okay
-  takesGuardTwoParams((value: mixed) => typeof value === "number"); // okay
+  takesGuardTwoParams((value: unknown) => typeof value === "number"); // okay
 
   takesGuardTwoParams(
     ( // error function-predicate incompatibility
-      value: mixed,
+      value: unknown,
       otherValue, // error missing-local-annot
     ) => typeof value === "number");
   takesGuardTwoParams(
-    (value: mixed, otherValue: mixed) => typeof value === "number" // error can only infer type guard
+    (value: unknown, otherValue: unknown) => typeof value === "number" // error can only infer type guard
                                                                    // on single parameter functions
   );
 
   takesGuardTwoParams(value => typeof value === "string"); // error wrong guard type
-  takesGuardTwoParams((value: mixed) => typeof value === "string"); // error wrong guard type
+  takesGuardTwoParams((value: unknown) => typeof value === "string"); // error wrong guard type
 }
 
 function test4() {
-  const fn = (value: mixed) => typeof value === "number"; // infers: (value: mixed) => implies value is number
+  const fn = (value: unknown) => typeof value === "number"; // infers: (value: unknown) => implies value is number
   declare var x: number | string;
 
   if (fn(x)) {
@@ -50,15 +50,15 @@ function test4() {
     x as number; // error no refinement due to one-sided type guard
     x as string; // error no refinement due to one-sided type guard
   }
-  fn as (value: mixed) => implies value is number; // okay
-  fn as (value: mixed) => value is number; // error one-sided incompatible with two-sided
+  fn as (value: unknown) => implies value is number; // okay
+  fn as (value: unknown) => value is number; // error one-sided incompatible with two-sided
 }
 
 function test5() {
-  const fn = (value: mixed): boolean => typeof value === "number"; // infers: (value: mixed) => boolean
+  const fn = (value: unknown): boolean => typeof value === "number"; // infers: (value: unknown) => boolean
 
-  fn as (value: mixed) => implies value is number; // error non type guard
-  fn as (value: mixed) => value is number; // error non type guard
+  fn as (value: unknown) => implies value is number; // error non type guard
+  fn as (value: unknown) => value is number; // error non type guard
 }
 
 function test6() {
@@ -74,7 +74,7 @@ function test7() {
   declare function takesPolyGuard<T, U: T>(guard: (x: T) => implies x is U): [T, U];
 
   const [t1, u1] = takesPolyGuard<number, 4>((value) => value === 4); // okay
-  const [t2, u2] = takesPolyGuard((value: mixed) => value === 4);
+  const [t2, u2] = takesPolyGuard((value: unknown) => value === 4);
   t2 as number;
   3 as typeof t2; // okay
   u2 as 4; // TODO(T225771563) okay
@@ -106,7 +106,7 @@ function test9() {
 
   declare var value: number;
   const [t1, u1] = takesOverloadedPolyGuard(x => x === 4); // error missing-local-annot
-  const [t2, u2] = takesOverloadedPolyGuard((x: mixed) => x === 4); // okay
+  const [t2, u2] = takesOverloadedPolyGuard((x: unknown) => x === 4); // okay
 }
 
 function test10() {
@@ -163,8 +163,8 @@ function test15() {
 
 function test16() {
   declare component Foo<TValue>(
-    value: $ReadOnlyArray<TValue>,
-    onChange: ($ReadOnlyArray<TValue>) => mixed,
+    value: ReadonlyArray<TValue>,
+    onChange: (ReadonlyArray<TValue>) => mixed,
   );
 
   declare const values: Array<string>;
@@ -173,8 +173,8 @@ function test16() {
 
 function test17() {
   declare function foo<TValue>(
-    value: $ReadOnlyArray<TValue>,
-    onChange: ($ReadOnlyArray<TValue>) => mixed,
+    value: ReadonlyArray<TValue>,
+    onChange: (ReadonlyArray<TValue>) => mixed,
   ): void;
 
   declare const values: Array<string>;
@@ -182,6 +182,6 @@ function test17() {
 }
 
 function test18() {
-  const fn = (x: mixed) => typeof x === "object" && x?.hasOwnProperty("a");
-  fn as (x: mixed) => implies x is mixed; // error non-type guard function
+  const fn = (x: unknown) => typeof x === "object" && x?.hasOwnProperty("a");
+  fn as (x: unknown) => implies x is mixed; // error non-type guard function
 }

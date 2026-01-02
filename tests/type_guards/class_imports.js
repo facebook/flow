@@ -1,6 +1,6 @@
 import {C, D} from './class_exports';
 
-declare var x: mixed;
+declare var x: unknown;
 
 const c = new C();
 if (c.m(x)) {

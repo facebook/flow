@@ -11,7 +11,7 @@ function test1() {
 
 function test2() {
   declare function isBorC(
-    x: mixed
+    x: unknown
   ): implies x is Exclude<'a' | 'b' | 'c', 'a'>; // x is 'b' | 'c'
 
   declare const x: 'a' | 'c';
@@ -33,8 +33,8 @@ function test4() {
   type KB = K<'B'>;
   type KC = K<'C'>;
 
-  class S<X: $Keys<AllTypes>> {}
-  class K<X: $Keys<AllTypes>>  extends S<X> {}
+  class S<X: keyof AllTypes> {}
+  class K<X: keyof AllTypes>  extends S<X> {}
 
   declare function isBorC(x: ?AllClasses): implies x is KB | KC;
 

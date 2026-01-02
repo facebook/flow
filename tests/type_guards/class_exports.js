@@ -1,13 +1,13 @@
 export class C {
-  m(x: mixed): x is number {
+  m(x: unknown): x is number {
     return typeof x === 'number';
   }
-  os(x: mixed): implies x is number {
+  os(x: unknown): implies x is number {
     return typeof x === 'number';
   }
 }
 
 declare export class D {
-  m(x: mixed): x is number;
-  os(x: mixed): implies x is number;
+  m(x: unknown): x is number;
+  os(x: unknown): implies x is number;
 }
