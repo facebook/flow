@@ -12,10 +12,10 @@ declare function fn2<T>(x: (T) => void): T => void;
 declare function fn3<T>(x: T, y: (T) => void): T;
 declare function fn4<T>(x: T, y: (T) => void): T => void;
 
-declare function fn5<T>(x: T): $NonMaybeType<T>;
-declare function fn6<T>(x: (T) => void): ($NonMaybeType<T>) => void;
-declare function fn7<T>(x: T, y: (T) => void): $NonMaybeType<T>;
-declare function fn8<T>(x: T, y: (T) => void): ($NonMaybeType<T>) => void;
+declare function fn5<T>(x: T): NonNullable<T>;
+declare function fn6<T>(x: (T) => void): (NonNullable<T>) => void;
+declare function fn7<T>(x: T, y: (T) => void): NonNullable<T>;
+declare function fn8<T>(x: T, y: (T) => void): (NonNullable<T>) => void;
 
 fn1(a) as B; // Error
 fn2((a: A) => {}) as (B) => void; // Error

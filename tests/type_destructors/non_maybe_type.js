@@ -1,5 +1,5 @@
 // @flow
-function foo(x: ?string): $NonMaybeType<?string> {
+function foo(x: ?string): NonNullable<?string> {
   if (x != null) {
     return x;
   } else return 0; // this should be an error
@@ -7,17 +7,17 @@ function foo(x: ?string): $NonMaybeType<?string> {
 
 //(foo(): string); // should not be necessary to expose the error above
 
-0 as $NonMaybeType<null>; // error
-0 as $NonMaybeType<?number>; // ok
-0 as $NonMaybeType<number | null>; // ok
-0 as $NonMaybeType<{p?: number}['p']>; // ok
+0 as NonNullable<null>; // error
+0 as NonNullable<?number>; // ok
+0 as NonNullable<number | null>; // ok
+0 as NonNullable<{p?: number}['p']>; // ok
 
-'str' as $NonMaybeType<mixed>;
-0 as $NonMaybeType<mixed>;
-null as $NonMaybeType<mixed>;
-undefined as $NonMaybeType<mixed>;
+'str' as NonNullable<mixed>;
+0 as NonNullable<mixed>;
+null as NonNullable<mixed>;
+undefined as NonNullable<mixed>;
 
-type Foo = $NonMaybeType<Obj['foo']>;
+type Foo = NonNullable<Obj['foo']>;
 
 type Enum = 'A' | 'B' | 'C';
 
@@ -31,7 +31,7 @@ type Node = number | string;
 
 declare class A<T> {
   concat<S, Item: A<S> | S>(items: A<Item>): A<T | S>;
-  filter(callbackfn: typeof Boolean): A<$NonMaybeType<T>>;
+  filter(callbackfn: typeof Boolean): A<NonNullable<T>>;
 }
 
 declare function mkA<T>(x: T): A<T>;
@@ -46,9 +46,9 @@ function f(this: {props: typeof props}) {
   let z: A<Node> = y.filter(Boolean); // should not be an error, but unions + generics are broken
 }
 
-'hi' as $NonMaybeType<empty>; // Error
+'hi' as NonNullable<empty>; // Error
 
-type NonMaybeNumber = $NonMaybeType<$Values<{a: number, b: void}>>;
+type NonMaybeNumber = NonNullable<Values<{a: number, b: void}>>;
 1 as NonMaybeNumber; // OK
 true as NonMaybeNumber; // Error
 undefined as NonMaybeNumber; // Error

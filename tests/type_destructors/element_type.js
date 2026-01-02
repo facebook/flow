@@ -22,4 +22,4 @@ function bar(o: Obj): Obj[string] {
 
 type Z = ?{c: number};
 (1: Z['c']); // Error - access 'c' on `void`/`null`
-(1: $NonMaybeType<Z>['c']); // OK
+(1: NonNullable<Z>['c']); // OK

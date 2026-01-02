@@ -1,5 +1,5 @@
-var x0: $NonMaybeType<number|string> = 0; // ok, number ~> number|string
-var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
+var x0: NonNullable<number|string> = 0; // ok, number ~> number|string
+var x1: NonNullable<number|string> = true; // err, boolean ~> number|string
 var x2: ({p:number}|{p:string})["p"] = 0; // ok, number ~> number|string
 var x3: ({p:number}|{p:string})["p"] = true; // err, boolean ~> number|string
 
@@ -15,5 +15,5 @@ type T = {p: string} | {p: number}; // NB: T resolved here
 {
   declare const x: [3];
   (x: TupleUnion); // ERROR: 1, 2
-  (x: $ReadOnly<TupleUnion>); // ERROR: 1, 2 (same order as above)
+  (x: Readonly<TupleUnion>); // ERROR: 1, 2 (same order as above)
 }

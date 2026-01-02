@@ -49,65 +49,65 @@ Cannot return `0` because number [1] is incompatible with string [2]. [incompati
                       ^ [1]
 
 References:
-   non_maybe_type.js:2:42
-   2| function foo(x: ?string): $NonMaybeType<?string> {
-                                               ^^^^^^ [2]
+   non_maybe_type.js:2:40
+   2| function foo(x: ?string): NonNullable<?string> {
+                                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:10:1
 
-Cannot cast `0` to `$NonMaybeType` because number [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `0` to `NonNullable` because number [1] is incompatible with empty [2]. [incompatible-type]
 
    non_maybe_type.js:10:1
-   10| 0 as $NonMaybeType<null>; // error
+   10| 0 as NonNullable<null>; // error
        ^ [1]
 
 References:
    non_maybe_type.js:10:6
-   10| 0 as $NonMaybeType<null>; // error
-            ^^^^^^^^^^^^^^^^^^^ [2]
+   10| 0 as NonNullable<null>; // error
+            ^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:17:1
 
-Cannot cast `null` to `$NonMaybeType` because null [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot cast `null` to `NonNullable` because null [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    non_maybe_type.js:17:1
-   17| null as $NonMaybeType<mixed>;
+   17| null as NonNullable<mixed>;
        ^^^^ [1]
 
 References:
-   non_maybe_type.js:17:23
-   17| null as $NonMaybeType<mixed>;
-                             ^^^^^ [2]
+   non_maybe_type.js:17:21
+   17| null as NonNullable<mixed>;
+                           ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:18:1
 
-Cannot cast `undefined` to `$NonMaybeType` because undefined [1] is incompatible with `unknown` [2]. [incompatible-type]
+Cannot cast `undefined` to `NonNullable` because undefined [1] is incompatible with `unknown` [2]. [incompatible-type]
 
    non_maybe_type.js:18:1
-   18| undefined as $NonMaybeType<mixed>;
+   18| undefined as NonNullable<mixed>;
        ^^^^^^^^^ [1]
 
 References:
-   non_maybe_type.js:18:28
-   18| undefined as $NonMaybeType<mixed>;
-                                  ^^^^^ [2]
+   non_maybe_type.js:18:26
+   18| undefined as NonNullable<mixed>;
+                                ^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:49:1
 
-Cannot cast `'hi'` to `$NonMaybeType` because string [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `'hi'` to `NonNullable` because string [1] is incompatible with empty [2]. [incompatible-type]
 
    non_maybe_type.js:49:1
-   49| 'hi' as $NonMaybeType<empty>; // Error
+   49| 'hi' as NonNullable<empty>; // Error
        ^^^^ [1]
 
 References:
    non_maybe_type.js:49:9
-   49| 'hi' as $NonMaybeType<empty>; // Error
-               ^^^^^^^^^^^^^^^^^^^^ [2]
+   49| 'hi' as NonNullable<empty>; // Error
+               ^^^^^^^^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- non_maybe_type.js:53:1
@@ -474,31 +474,31 @@ Cannot call `unReadOnly` with `foo` bound to `thing` because object type [1] is 
                  ^^^
 
 References:
-   tvar5.js:4:28
-   4| declare var foo: $ReadOnly<{foo: string}>;
-                                 ^^^^^^^^^^^^^ [1]
+   tvar5.js:4:27
+   4| declare var foo: Readonly<{foo: string}>;
+                                ^^^^^^^^^^^^^ [1]
    tvar5.js:3:39
-   3| declare function unReadOnly<T>(thing: $ReadOnly<T>): T;
-                                            ^^^^^^^^^^^^ [2]
+   3| declare function unReadOnly<T>(thing: Readonly<T>): T;
+                                            ^^^^^^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------------------- union.js:2:40
+Error ---------------------------------------------------------------------------------------------------- union.js:2:38
 
 Cannot assign `true` to `x1` because: [incompatible-type]
  - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
 
-   union.js:2:40
-   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-                                             ^^^^ [1]
+   union.js:2:38
+   2| var x1: NonNullable<number|string> = true; // err, boolean ~> number|string
+                                           ^^^^ [1]
 
 References:
-   union.js:2:23
-   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-                            ^^^^^^ [2]
-   union.js:2:30
-   2| var x1: $NonMaybeType<number|string> = true; // err, boolean ~> number|string
-                                   ^^^^^^ [3]
+   union.js:2:21
+   2| var x1: NonNullable<number|string> = true; // err, boolean ~> number|string
+                          ^^^^^^ [2]
+   union.js:2:28
+   2| var x1: NonNullable<number|string> = true; // err, boolean ~> number|string
+                                 ^^^^^^ [3]
 
 
 Error ---------------------------------------------------------------------------------------------------- union.js:4:40
@@ -568,7 +568,7 @@ Cannot cast `x` to `Readonly` because: [incompatible-type]
  - Or in index `0`: number literal `3` [1] is incompatible with number literal `2` [3].
 
    union.js:18:4
-   18|   (x: $ReadOnly<TupleUnion>); // ERROR: 1, 2 (same order as above)
+   18|   (x: Readonly<TupleUnion>); // ERROR: 1, 2 (same order as above)
           ^
 
 References:
