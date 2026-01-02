@@ -1445,36 +1445,36 @@ Cannot declare a type guard on a(n) getter/setter function. [function-predicate]
                       ^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- invalid.js:17:31
+Error ------------------------------------------------------------------------------------------------- invalid.js:17:33
 
 Cannot declare a type guard [1] for function [2] because boolean [1] is incompatible with implicitly-returned undefined.
 [incompatible-type]
 
-   invalid.js:17:31
-   17| function no_return(x: mixed): x is number {}
-                                     ^^^^^^^^^^^ [1]
+   invalid.js:17:33
+   17| function no_return(x: unknown): x is number {}
+                                       ^^^^^^^^^^^ [1]
 
 References:
    invalid.js:17:1
-   17| function no_return(x: mixed): x is number {}
-       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
+   17| function no_return(x: unknown): x is number {}
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- invalid.js:19:32
+Error ------------------------------------------------------------------------------------------------- invalid.js:19:34
 
 Cannot declare a type guard on a(n) generator function. [function-predicate]
 
-   19| function *generator(x: mixed): x is number { // error
-                                      ^^^^^^^^^^^
+   19| function *generator(x: unknown): x is number { // error
+                                        ^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- invalid.js:19:32
+Error ------------------------------------------------------------------------------------------------- invalid.js:19:34
 
 `$Generator` [1] is incompatible with boolean [2]. [incompatible-type]
 
-   invalid.js:19:32
-     19| function *generator(x: mixed): x is number { // error
-                                        ^^^^^^^^^^^ [2]
+   invalid.js:19:34
+     19| function *generator(x: unknown): x is number { // error
+                                          ^^^^^^^^^^^ [2]
 
 References:
    <BUILTINS>/core.js:2020:40
@@ -1482,14 +1482,14 @@ References:
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
-Error ------------------------------------------------------------------------------------------------- invalid.js:19:32
+Error ------------------------------------------------------------------------------------------------- invalid.js:19:34
 
 boolean [1], a primitive, cannot be used as a subtype of `$Iterable` [2]. You can wrap it in `new Boolean(...))` to turn
 it into an object and attempt to use it as a subtype of an interface. [incompatible-type]
 
-   invalid.js:19:32
-     19| function *generator(x: mixed): x is number { // error
-                                        ^^^^^^^^^^^ [1]
+   invalid.js:19:34
+     19| function *generator(x: unknown): x is number { // error
+                                          ^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/core.js:2006:11
@@ -1509,9 +1509,9 @@ References:
    <BUILTINS>/core.js:2020:40
    2020| type Generator<+Yield,+Return,-Next> = $Generator<Yield,Return,Next>;
                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   invalid.js:19:32
-     19| function *generator(x: mixed): x is number { // error
-                                        ^^^^^^^^^^^ [2]
+   invalid.js:19:34
+     19| function *generator(x: unknown): x is number { // error
+                                          ^^^^^^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- invalid.js:25:4
@@ -1524,19 +1524,19 @@ Cannot cast `x` to number because `unknown` [1] is incompatible with number [2].
 
 References:
    invalid.js:23:16
-   23| declare var x: mixed;
-                      ^^^^^ [1]
+   23| declare var x: unknown;
+                      ^^^^^^^ [1]
    invalid.js:25:7
    25|   (x: number); // error no refining effect
              ^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------- invalid.js:28:33
+Error ------------------------------------------------------------------------------------------------- invalid.js:28:35
 
 Cannot declare a type guard on a(n) async function. [function-predicate]
 
-   28| async function async(x: mixed): x is number { // error
-                                       ^^^^^^^^^^^
+   28| async function async(x: unknown): x is number { // error
+                                         ^^^^^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:29:10
@@ -1551,9 +1551,9 @@ References:
    <BUILTINS>/core.js:2285:15
    2285| declare class Promise<+R = mixed> {
                        ^^^^^^^ [1]
-   invalid.js:28:33
-     28| async function async(x: mixed): x is number { // error
-                                         ^^^^^^^^^^^ [2]
+   invalid.js:28:35
+     28| async function async(x: unknown): x is number { // error
+                                           ^^^^^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------- invalid.js:33:12
@@ -1564,28 +1564,28 @@ Cannot declare a type guard on a(n) getter function. [function-predicate]
                   ^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- invalid.js:34:20
+Error ------------------------------------------------------------------------------------------------- invalid.js:34:22
 
 Cannot declare a type guard on a(n) setter function. [function-predicate]
 
-   34|   set p(x: mixed): x is number;
-                          ^^^^^^^^^^^
+   34|   set p(x: unknown): x is number;
+                            ^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- invalid.js:35:26
+Error ------------------------------------------------------------------------------------------------- invalid.js:35:28
 
 Cannot declare a type guard on a(n) constructor function. [function-predicate]
 
-   35|   constructor(x: mixed): x is number;
-                                ^^^^^^^^^^^
+   35|   constructor(x: unknown): x is number;
+                                  ^^^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------- invalid.js:38:52
+Error ------------------------------------------------------------------------------------------------- invalid.js:38:54
 
 Cannot resolve name `Missing`. [cannot-resolve-name]
 
-   38| type Error_in_type_guard_type = (x: mixed) => x is Missing; // error missing name
-                                                          ^^^^^^^
+   38| type Error_in_type_guard_type = (x: unknown) => x is Missing; // error missing name
+                                                            ^^^^^^^
 
 
 Error ------------------------------------------------------------------------------------------------- objects.js:14:14
@@ -1597,9 +1597,9 @@ Cannot use type guard parameter `x` [1] because at this return point it is writt
                     ^^^^^^^^^^^^^^^^^^^^^
 
 References:
-   objects.js:12:24
-   12|     invalid(x: mixed): x is number {
-                              ^ [1]
+   objects.js:12:26
+   12|     invalid(x: unknown): x is number {
+                                ^ [1]
    objects.js:13:7
    13|       x = 1;
              ^ [2]
@@ -1614,9 +1614,9 @@ Cannot cast `x` to string because number [1] is incompatible with string [2]. [i
             ^
 
 References:
-   objects.js:6:23
-    6|     m(x: mixed): x is number {
-                             ^^^^^^ [1]
+   objects.js:6:25
+    6|     m(x: unknown): x is number {
+                               ^^^^^^ [1]
    objects.js:20:9
    20|     (x: string); // error number ~> string
                ^^^^^^ [2]
@@ -1631,9 +1631,9 @@ Cannot cast `x` to number because string [1] is incompatible with number [2]. [i
             ^
 
 References:
-   objects.js:9:23
-    9|     f(x: mixed): x is string {
-                             ^^^^^^ [1]
+   objects.js:9:25
+    9|     f(x: unknown): x is string {
+                               ^^^^^^ [1]
    objects.js:23:9
    23|     (x: number); // error string ~> number
                ^^^^^^ [2]
@@ -1649,25 +1649,25 @@ string [2]. [incompatible-type]
           ^^^
 
 References:
-   objects.js:6:23
-    6|     m(x: mixed): x is number {
-                             ^^^^^^ [1]
-   objects.js:30:23
-   30|     m(x: mixed): x is string,
-                             ^^^^^^ [2]
+   objects.js:6:25
+    6|     m(x: unknown): x is number {
+                               ^^^^^^ [1]
+   objects.js:30:25
+   30|     m(x: unknown): x is string,
+                               ^^^^^^ [2]
 
 
-Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:1:54
+Error ---------------------------------------------------------------------------------------- patterns_and_rest.js:1:56
 
 A type guard parameter `b` [1] cannot reference pattern parameter `b` [2]. [function-predicate]
 
-   patterns_and_rest.js:1:54
-   1| function invalid_pattern_object({a: b}: {a: mixed}): b is string {
-                                                           ^ [1]
+   patterns_and_rest.js:1:56
+   1| function invalid_pattern_object({a: b}: {a: unknown}): b is string {
+                                                             ^ [1]
 
 References:
    patterns_and_rest.js:1:37
-   1| function invalid_pattern_object({a: b}: {a: mixed}): b is string {
+   1| function invalid_pattern_object({a: b}: {a: unknown}): b is string {
                                           ^ [2]
 
 
@@ -1736,26 +1736,26 @@ Cannot cast `x` to number because string [1] is incompatible with number [2]. [i
           ^
 
 References:
-   patterns_and_rest.js:21:78
-   21| function valid_pattern({a}: {a: mixed}, x: mixed, ...r: Array<number>): x is string {
-                                                                                    ^^^^^^ [1]
+   patterns_and_rest.js:21:82
+   21| function valid_pattern({a}: {a: unknown}, x: unknown, ...r: Array<number>): x is string {
+                                                                                        ^^^^^^ [1]
    patterns_and_rest.js:28:7
    28|   (x: number); // TODO error string ~> number
              ^^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------- patterns_and_rest.js:31:44
+Error --------------------------------------------------------------------------------------- patterns_and_rest.js:31:46
 
 A type guard parameter `p` [1] cannot reference rest parameter `p` [2]. [function-predicate]
 
-   patterns_and_rest.js:31:44
-   31| type F = (x: mixed, ...p: Array<mixed>) => p is number; // error p is in rest param
-                                                  ^ [1]
+   patterns_and_rest.js:31:46
+   31| type F = (x: unknown, ...p: Array<mixed>) => p is number; // error p is in rest param
+                                                    ^ [1]
 
 References:
-   patterns_and_rest.js:31:24
-   31| type F = (x: mixed, ...p: Array<mixed>) => p is number; // error p is in rest param
-                              ^ [2]
+   patterns_and_rest.js:31:26
+   31| type F = (x: unknown, ...p: Array<mixed>) => p is number; // error p is in rest param
+                                ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ refinement.js:7:6

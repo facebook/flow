@@ -14,25 +14,25 @@ class Invalid_type_guard_positions {
   }
 }
 
-function no_return(x: mixed): x is number {}
+function no_return(x: unknown): x is number {}
 
-function *generator(x: mixed): x is number { // error
+function *generator(x: unknown): x is number { // error
   return typeof x == "number";
 }
 
-declare var x: mixed;
+declare var x: unknown;
 if (generator(x)) {
   (x: number); // error no refining effect
 }
 
-async function async(x: mixed): x is number { // error
+async function async(x: unknown): x is number { // error
   return typeof x == "number"
 };
 
 declare class Invalid_type_guard_in_declare_class {
   get p(): x is number;
-  set p(x: mixed): x is number;
-  constructor(x: mixed): x is number;
+  set p(x: unknown): x is number;
+  constructor(x: unknown): x is number;
 }
 
-type Error_in_type_guard_type = (x: mixed) => x is Missing; // error missing name
+type Error_in_type_guard_type = (x: unknown) => x is Missing; // error missing name

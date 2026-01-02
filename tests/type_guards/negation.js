@@ -1,5 +1,5 @@
 function test0() {
-  declare var isFstParamNum: (value: mixed, extra_value: mixed) => value is number;
+  declare var isFstParamNum: (value: unknown, extra_value: unknown) => value is number;
 
   declare var x: number | string;
   declare var y: number | string;
@@ -11,7 +11,7 @@ function test0() {
 }
 
 function test1() {
-  declare var obj: { check: (value: mixed) => value is number };
+  declare var obj: { check: (value: unknown) => value is number };
 
   declare var x: number | string;
   if (obj.check(x)) {

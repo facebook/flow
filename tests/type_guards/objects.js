@@ -1,15 +1,15 @@
 function object_test() {
 
-  declare var x: mixed;
+  declare var x: unknown;
 
   const obj = {
-    m(x: mixed): x is number {
+    m(x: unknown): x is number {
       return typeof x === 'number';
     },
-    f(x: mixed): x is string {
+    f(x: unknown): x is string {
       return typeof x === 'string';
     },
-    invalid(x: mixed): x is number {
+    invalid(x: unknown): x is number {
       x = 1;
       return typeof x === 'number'; // error write reaches return
     },
@@ -27,7 +27,7 @@ function object_test() {
   // obj subtyping checks
 
   (obj: { // error number ~> string
-    m(x: mixed): x is string,
+    m(x: unknown): x is string,
     ...
   });
 }
