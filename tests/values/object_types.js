@@ -1,10 +1,10 @@
-type NoProps = $Values<{}>;
+type NoProps = Values<{}>;
 const noReadProps = { set a(value: number) { /* noop */ } };
-type NoReadProps = $Values<typeof noReadProps>;
+type NoReadProps = Values<typeof noReadProps>;
 (123: NoProps); // Error: There are no props.
 (345: NoReadProps); // Error: There are no props which can be read.
 
-type OneProp = $Values<{ a: string }>;
+type OneProp = Values<{ a: string }>;
 ('yo': OneProp); // OK: There is a property with the type of string.
 (123: OneProp); // Error: There is no property with the type of number.
 (true: OneProp); // Error: There is no property with the type of boolean.
@@ -12,7 +12,7 @@ type OneProp = $Values<{ a: string }>;
 (((null: any): OneProp): number); // Error: There is no string in the final
                                   // union.
 
-type ManyProps = $Values<{ a: string, b: string, c: number }>;
+type ManyProps = Values<{ a: string, b: string, c: number }>;
 ('yo': ManyProps); // OK: There is a property with the type of string.
 (123: ManyProps); // OK: There is a property with the type of number.
 (true: ManyProps); // Error: There is no property with the type of boolean.
@@ -21,7 +21,7 @@ type ManyProps = $Values<{ a: string, b: string, c: number }>;
 (((null: any): ManyProps): string | boolean); // Error: There is no number in
                                               // the final union.
 
-type DictProps = $Values<{ a: boolean, [key: string]: number }>;
+type DictProps = Values<{ a: boolean, [key: string]: number }>;
 ('yo': DictProps); // Error: There is no property with the type of string.
 (123: DictProps); // OK: There is a dictionary value with the type of number.
 (true: DictProps); // OK: There is a property with the type of boolean.
@@ -31,14 +31,14 @@ type DictProps = $Values<{ a: boolean, [key: string]: number }>;
                                               // the final union.
 
 interface CallableProp { a: string; b: number; (): boolean }
-('yo': $Values<CallableProp>); // OK: There is a property with the type of
+('yo': Values<CallableProp>); // OK: There is a property with the type of
                                // string.
-(123: $Values<CallableProp>); // OK: There is a property with the type of
+(123: Values<CallableProp>); // OK: There is a property with the type of
                               // number.
-(true: $Values<CallableProp>); // Error: There is no property with the type of
+(true: Values<CallableProp>); // Error: There is no property with the type of
                                // boolean even though the interface is callable
                                // and may return a boolean.
-((() => true): $Values<CallableProp>); // Error: There is no property with a
+((() => true): Values<CallableProp>); // Error: There is no property with a
                                        // function of this signature even though
                                        // the interface is callable with this
                                        // signature.
@@ -55,7 +55,7 @@ const Suite: {
   SPADES: 'Spades',
 };
 
-type SuiteEnum = $Values<typeof Suite>;
+type SuiteEnum = Values<typeof Suite>;
 
 const DIAMONDS: 'Diamonds' = 'Diamonds';
 
@@ -87,7 +87,7 @@ const FrozenSuite = Object.freeze({
   HEARTS: 'Hearts',
   SPADES: 'Spades',
 });
-type FrozenSuiteEnum = $Values<typeof FrozenSuite>
+type FrozenSuiteEnum = Values<typeof FrozenSuite>
 ('Diamonds': FrozenSuiteEnum); // ok
 (DIAMONDS: FrozenSuiteEnum); // ok
 ('DIAMONDS': FrozenSuiteEnum); // Error: 'DIAMONDS' is a key, but not a value.
@@ -99,7 +99,7 @@ const Numbers = Object.freeze({
   foo: -1,
   bar: 2,
 });
-type NumbersEnum = $Values<typeof Numbers>
+type NumbersEnum = Values<typeof Numbers>
 (-1: NumbersEnum); // ok
 (2: NumbersEnum); // ok
 (1: NumbersEnum); // error, NumbersEnum = -1 | 2
@@ -116,10 +116,10 @@ interface IfaceWithDictAndProps {
   method(): void;
 }
 
-(1: $Values<IfaceWithDict>); // OK
-('s': $Values<IfaceWithDict>); // ERROR
-(1: $Values<IfaceWithWriteOnlyDict>); // ERROR
-(1: $Values<IfaceWithDictAndProps>); // OK
-(2: $Values<IfaceWithDictAndProps>); // OK
-('s': $Values<IfaceWithDictAndProps>); // ERROR
-(() => {}: $Values<IfaceWithDictAndProps>); // ERROR
+(1: Values<IfaceWithDict>); // OK
+('s': Values<IfaceWithDict>); // ERROR
+(1: Values<IfaceWithWriteOnlyDict>); // ERROR
+(1: Values<IfaceWithDictAndProps>); // OK
+(2: Values<IfaceWithDictAndProps>); // OK
+('s': Values<IfaceWithDictAndProps>); // ERROR
+(() => {}: Values<IfaceWithDictAndProps>); // ERROR

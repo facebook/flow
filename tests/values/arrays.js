@@ -1,4 +1,4 @@
-type Arr = $Values<Array<number>>;
+type Arr = Values<Array<number>>;
 {
   1 as Arr; // OK
   declare const x: Arr;
@@ -6,7 +6,7 @@ type Arr = $Values<Array<number>>;
   x as empty; // ERROR
 }
 
-type ROArr = $Values<$ReadOnlyArray<number>>;
+type ROArr = Values<ReadonlyArray<number>>;
 {
   1 as ROArr; // OK
   declare const x: ROArr;
@@ -14,7 +14,7 @@ type ROArr = $Values<$ReadOnlyArray<number>>;
   x as empty; // ERROR
 }
 
-type Tup = $Values<['a', 'b']>;
+type Tup = Values<['a', 'b']>;
 {
   'a' as Tup; // OK
   'b' as Tup; // OK
