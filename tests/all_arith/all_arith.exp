@@ -130,8 +130,8 @@ References:
     3| declare const aNumber: number;
                               ^^^^^^ [1]
    all_arith.js:13:23
-   13| declare const aMixed: mixed;
-                             ^^^^^ [2]
+   13| declare const aMixed: unknown;
+                             ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:37:2
@@ -283,8 +283,8 @@ References:
     3| declare const aNumber: number;
                               ^^^^^^ [1]
    all_arith.js:13:23
-   13| declare const aMixed: mixed;
-                             ^^^^^ [2]
+   13| declare const aMixed: unknown;
+                             ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:51:2
@@ -419,8 +419,8 @@ References:
     4| declare const aString: string;
                               ^^^^^^ [1]
    all_arith.js:13:23
-   13| declare const aMixed: mixed;
-                             ^^^^^ [2]
+   13| declare const aMixed: unknown;
+                             ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:63:2
@@ -569,8 +569,8 @@ References:
     4| declare const aString: string;
                               ^^^^^^ [1]
    all_arith.js:13:23
-   13| declare const aMixed: mixed;
-                             ^^^^^ [2]
+   13| declare const aMixed: unknown;
+                             ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:77:2
@@ -688,8 +688,8 @@ References:
     5| declare const aBigint: bigint;
                               ^^^^^^ [1]
    all_arith.js:13:23
-   13| declare const aMixed: mixed;
-                             ^^^^^ [2]
+   13| declare const aMixed: unknown;
+                             ^^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ all_arith.js:89:2
@@ -807,8 +807,8 @@ References:
     5| declare const aBigint: bigint;
                               ^^^^^^ [1]
    all_arith.js:13:23
-   13| declare const aMixed: mixed;
-                             ^^^^^ [2]
+   13| declare const aMixed: unknown;
+                             ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:100:2
@@ -923,8 +923,8 @@ References:
      6| declare const aDate: Date;
                              ^^^^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:111:2
@@ -1039,8 +1039,8 @@ References:
      6| declare const aDate: Date;
                              ^^^^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:122:2
@@ -1138,8 +1138,8 @@ References:
      7| declare const aBoolean: boolean;
                                 ^^^^^^^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:132:2
@@ -1237,8 +1237,8 @@ References:
      7| declare const aBoolean: boolean;
                                 ^^^^^^^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:142:2
@@ -1319,8 +1319,8 @@ References:
      8| declare const aT: T;
                           ^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:151:2
@@ -1401,8 +1401,8 @@ References:
      8| declare const aT: T;
                           ^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:160:2
@@ -1469,8 +1469,8 @@ References:
    163| (null + aMixed); // error
          ^^^^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:168:2
@@ -1537,8 +1537,8 @@ References:
    171| (null * aMixed); // error
          ^^^^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:176:2
@@ -1585,8 +1585,8 @@ References:
     11| declare const anArray: Array<empty>
                                ^^^^^^^^^^^^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:183:2
@@ -1633,8 +1633,8 @@ References:
     11| declare const anArray: Array<empty>
                                ^^^^^^^^^^^^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:190:2
@@ -1664,8 +1664,8 @@ References:
     12| declare const anObject: {}
                                 ^^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:196:2
@@ -1695,8 +1695,8 @@ References:
     12| declare const anObject: {}
                                 ^^ [1]
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [2]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:202:2
@@ -1709,8 +1709,8 @@ Cannot use operator `+` with operands `unknown` [1] and `unknown` [1] [unsafe-ad
 
 References:
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [1]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:207:2
@@ -1723,8 +1723,8 @@ Cannot use operator `*` with operands `unknown` [1] and `unknown` [1] [unsafe-ar
 
 References:
    all_arith.js:13:23
-    13| declare const aMixed: mixed;
-                              ^^^^^ [1]
+    13| declare const aMixed: unknown;
+                              ^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------- all_arith.js:227:2

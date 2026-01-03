@@ -10,7 +10,7 @@ declare const aWeirdStringOrNumberWithIntersection: (?boolean) & (number | strin
 // null
 declare const anArray: Array<empty>
 declare const anObject: {}
-declare const aMixed: mixed;
+declare const aMixed: unknown;
 declare const anAny: any;
 declare const anEmpty: empty;
 
