@@ -15,8 +15,8 @@ class Bar extends Foo {
 }
 
 export class Bar1 {
-  _a = (p: mixed): number => 42;
+  _a = (p: unknown): number => 42;
 } // no annot on _a required
 export class Bar2 {
-  _a(p: mixed) {}
+  _a(p: unknown) {}
 }
