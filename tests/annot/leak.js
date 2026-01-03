@@ -13,7 +13,7 @@
 
 type MyObj = Object;
 
-function foo(x: {[key: string]: mixed}) {
+function foo(x: {[key: string]: unknown}) {
   bar(x);
 }
 
