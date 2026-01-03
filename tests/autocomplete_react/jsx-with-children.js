@@ -2,7 +2,7 @@
 
 var React = require('react');
 
-type Props = $ReadOnly<{x: number, children: React.Node}>;
+type Props = Readonly<{x: number, children: React.Node}>;
 
 function C(props: Props): React.Node {
   return props.children;

@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 
-type Props = $ReadOnly<{x: number, y: string}>;
+type Props = Readonly<{x: number, y: string}>;
 
 function Foo(props: Props) {}
 function Bar(props: Props) {}
