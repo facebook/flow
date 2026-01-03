@@ -25,7 +25,7 @@ type ComplexType = mixed;
 
 record Data {
   value: ComplexType,
-  ref: mixed,
+  ref: unknown,
 }
 
 const d = Da
