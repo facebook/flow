@@ -24,7 +24,7 @@ const obj3: empty = { // error obj ~> empty
   [z]: v3,
 }
 
-const obj4: mixed = { // okay
+const obj4: unknown = { // okay
   [x]: v1,
   [y]: v2, // error 2 ~> 1
 }
@@ -45,7 +45,7 @@ const obj7: () => {} = { // error obj ~> funt
 }
 
 function partial_hints() {
-  type T = $ReadOnly<{
+  type T = Readonly<{
     a?: number,
     b?: number,
     ...

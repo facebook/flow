@@ -1,4 +1,4 @@
-type Params = $ReadOnly<{
+type Params = Readonly<{
   'a': boolean,
   'b': boolean,
 }>;

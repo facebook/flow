@@ -1,17 +1,17 @@
-type Params = $ReadOnly<{
+type Params = Readonly<{
   'a': boolean,
   'b': boolean,
 }>;
 
 declare var params: Params;
 
-const test1 = <T: $Keys<typeof params>>(
+const test1 = <T: keyof typeof params>(
   key: T,
 ): Params => {
   return {...params, [key]: true}; // ok: key set is normalized to StrT. error: indexed incompatible with Params
 };
 
-const test2 = <T: $Keys<Params>>(
+const test2 = <T: keyof Params>(
   key: T,
 ): Params => {
   return {...params, [key]: true}; // ok: key set is normalized to StrT. error: indexed incompatible with Params
