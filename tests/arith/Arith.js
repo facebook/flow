@@ -58,7 +58,7 @@ str("foo" + undefined); // error
 str(undefined + "foo"); // error
 
 let tests = [
-  function(x: mixed, y: mixed) {
+  function(x: unknown, y: unknown) {
     (x + y); // error
     (x + 0); // error
     (0 + x); // error

@@ -461,11 +461,11 @@ Cannot use operator `+` with operands `unknown` [1] and `unknown` [2] [unsafe-ad
 
 References:
    Arith.js:61:15
-   61|   function(x: mixed, y: mixed) {
-                     ^^^^^ [1]
-   Arith.js:61:25
-   61|   function(x: mixed, y: mixed) {
-                               ^^^^^ [2]
+   61|   function(x: unknown, y: unknown) {
+                     ^^^^^^^ [1]
+   Arith.js:61:27
+   61|   function(x: unknown, y: unknown) {
+                                 ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:63:6
@@ -478,8 +478,8 @@ Cannot use operator `+` with operands `unknown` [1] and number [2] [unsafe-addit
 
 References:
    Arith.js:61:15
-   61|   function(x: mixed, y: mixed) {
-                     ^^^^^ [1]
+   61|   function(x: unknown, y: unknown) {
+                     ^^^^^^^ [1]
    Arith.js:63:10
    63|     (x + 0); // error
                 ^ [2]
@@ -498,8 +498,8 @@ References:
    64|     (0 + x); // error
             ^ [1]
    Arith.js:61:15
-   61|   function(x: mixed, y: mixed) {
-                     ^^^^^ [2]
+   61|   function(x: unknown, y: unknown) {
+                     ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:65:6
@@ -512,8 +512,8 @@ Cannot use operator `+` with operands `unknown` [1] and string [2] [unsafe-addit
 
 References:
    Arith.js:61:15
-   61|   function(x: mixed, y: mixed) {
-                     ^^^^^ [1]
+   61|   function(x: unknown, y: unknown) {
+                     ^^^^^^^ [1]
    Arith.js:65:10
    65|     (x + ""); // error
                 ^^ [2]
@@ -532,8 +532,8 @@ References:
    66|     ("" + x); // error
             ^^ [1]
    Arith.js:61:15
-   61|   function(x: mixed, y: mixed) {
-                     ^^^^^ [2]
+   61|   function(x: unknown, y: unknown) {
+                     ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:67:6
@@ -546,8 +546,8 @@ Cannot use operator `+` with operands `unknown` [1] and object literal [2] [unsa
 
 References:
    Arith.js:61:15
-   61|   function(x: mixed, y: mixed) {
-                     ^^^^^ [1]
+   61|   function(x: unknown, y: unknown) {
+                     ^^^^^^^ [1]
    Arith.js:67:10
    67|     (x + {}); // error
                 ^^ [2]
@@ -566,8 +566,8 @@ References:
    68|     ({} + x); // error
             ^^ [1]
    Arith.js:61:15
-   61|   function(x: mixed, y: mixed) {
-                     ^^^^^ [2]
+   61|   function(x: unknown, y: unknown) {
+                     ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- Arith.js:72:6
