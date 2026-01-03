@@ -657,7 +657,7 @@ Cannot declare `Bar5` [1] because the name is already bound. [name-already-bound
 
 References:
    duplicate.js:7:13
-    7| declare var Bar5: mixed;
+    7| declare var Bar5: unknown;
                    ^^^^ [1]
 
 

@@ -4,7 +4,7 @@ type Bar1 = {};
 import type {Node as Bar2} from 'react';
 class Bar3 {}
 function Bar4() {}
-declare var Bar5: mixed;
+declare var Bar5: unknown;
 component Bar6() { return null; }
 
 class Bar1 { // error - duplicate name

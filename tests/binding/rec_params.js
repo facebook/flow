@@ -1,7 +1,7 @@
 function referenced_in_type_annotation_of_func_param() {
   function okay_01(V: number extends infer V1 ? V1 : empty): void {} // okay
   function okay_02(outer: number, {outer: y}: { outer: typeof outer }) {} // okay
-  function okay_03(x: (x: mixed) => void) {} // okay: x as nested param
+  function okay_03(x: (x: unknown) => void) {} // okay: x as nested param
   function okay_rest(x: number, ...rest: Array<typeof x>) {} // okay
 
   function invalid_01(x: x): void {} // error on x
