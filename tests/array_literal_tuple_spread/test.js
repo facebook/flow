@@ -52,9 +52,9 @@ function test(arr: [1] | [2, 3]): [1, 10] | [2, 3, 10] {
   (nonTup: [1,2,3]); // error
 }
 
-// Spreading an $ReadOnlyArray<T> should result in a non-tuple array
+// Spreading an ReadonlyArray<T> should result in a non-tuple array
 {
-  const tup: $ReadOnlyArray<number> = [1,2,3];
+  const tup: ReadonlyArray<number> = [1,2,3];
   const nonTup = [...tup];
   (nonTup: [1,2,3]); // error
 }
