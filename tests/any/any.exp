@@ -77,8 +77,8 @@ Cannot cast `x` to boolean because `unknown` [1] is incompatible with boolean [2
 
 References:
    propagate.js:14:18
-   14| function bar1(x: mixed) {
-                        ^^^^^ [1]
+   14| function bar1(x: unknown) {
+                        ^^^^^^^ [1]
    propagate.js:16:10
    16|     x as boolean;
                 ^^^^^^^ [2]
@@ -94,8 +94,8 @@ Cannot cast `x` to boolean because `unknown` [1] is incompatible with boolean [2
 
 References:
    propagate.js:21:18
-   21| function bar2(x: mixed) {
-                        ^^^^^ [1]
+   21| function bar2(x: unknown) {
+                        ^^^^^^^ [1]
    propagate.js:23:10
    23|     x as boolean;
                 ^^^^^^^ [2]
