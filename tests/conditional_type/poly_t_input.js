@@ -1,6 +1,6 @@
 declare function f<T: string>(t: T): void;
 
-declare const v1: typeof f extends (v: mixed) => void ? true : false;
+declare const v1: typeof f extends (v: unknown) => void ? true : false;
 v1 as false; // ok
 v1 as empty; // error: false ~> empty
 

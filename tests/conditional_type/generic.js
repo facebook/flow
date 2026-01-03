@@ -42,7 +42,7 @@ function generic_conditional_type_subtyping<T, S>(
   x = z; // ok
 }
 
-function definitely_assignable_choose_true_branch<T>(x: T): Array<T> extends $ReadOnlyArray<infer X> ? X : number {
+function definitely_assignable_choose_true_branch<T>(x: T): Array<T> extends ReadonlyArray<infer X> ? X : number {
   return x; // ok
 }
 

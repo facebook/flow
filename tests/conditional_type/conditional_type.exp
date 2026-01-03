@@ -927,9 +927,9 @@ Cannot cast `v1` to empty because boolean literal `false` [1] is incompatible wi
       ^^
 
 References:
-   poly_t_input.js:3:64
-   3| declare const v1: typeof f extends (v: mixed) => void ? true : false;
-                                                                     ^^^^^ [1]
+   poly_t_input.js:3:66
+   3| declare const v1: typeof f extends (v: unknown) => void ? true : false;
+                                                                       ^^^^^ [1]
    poly_t_input.js:5:7
    5| v1 as empty; // error: false ~> empty
             ^^^^^ [2]

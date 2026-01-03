@@ -35,7 +35,7 @@ function extract_this_parameter_type() {
 
   // This param is inferred as any,
   // which comes from unsoundness of this param in function type annotation.
-  ((3: mixed): ThisParameterType<(string, number) => string>); // ok
+  ((3: unknown): ThisParameterType<(string, number) => string>); // ok
 
   ('3': OmitThisParameter<ThisParameterType<(this: number, string) => void>>); // ok: fn type with this type has an implicit any this type
 }
@@ -56,7 +56,7 @@ function recursive_awaited_type() {
 }
 
 function excluded_first_rest_params() {
-  type RestParams<T: (...args: $ReadOnlyArray<empty>) => mixed> =
+  type RestParams<T: (...args: ReadonlyArray<empty>) => mixed> =
   T extends (fst: any, ...args: infer Args) => any ? Args : null;
   declare function foobar(number, boolean, string, number): void;
   const [b1, s1, n1]: RestParams<typeof foobar> = [true, 'hello', 123]; // ok

@@ -5,7 +5,7 @@
 }
 
 {
-  declare function flat<T>(array: Array<T>): Array<T extends $ReadOnlyArray<infer E> ? E : T>
+  declare function flat<T>(array: Array<T>): Array<T extends ReadonlyArray<infer E> ? E : T>
   // Regression test for extraneous free vars detection in conditional type
-  const doubleFlat: $ReadOnlyArray<number> = flat([1].map(n => flat([n]))); // ok
+  const doubleFlat: ReadonlyArray<number> = flat([1].map(n => flat([n]))); // ok
 }
