@@ -6,7 +6,15 @@
   "foldingEndMarker": "(\\*/|\\}|\\))",
   "firstLineMatch": "^#!\\s*/.*\\b(node|js)$\\n?",
   "limitLineLength": false,
-  "fileTypes": ["js", "es6", "es", "babel", "jsx", "flow", "mjs"],
+  "fileTypes": [
+    "js",
+    "es6",
+    "es",
+    "babel",
+    "jsx",
+    "flow",
+    "mjs"
+  ],
   "patterns": [
     {
       "include": "#core"
@@ -38,6 +46,9 @@
         },
         {
           "include": "#match-construct"
+        },
+        {
+          "include": "#record-declaration"
         },
         {
           "include": "#expression"
@@ -857,7 +868,11 @@
               "name": "keyword.control.match.js"
             },
             "2": {
-              "patterns": [{"include": "#round-brackets"}]
+              "patterns": [
+                {
+                  "include": "#round-brackets"
+                }
+              ]
             },
             "3": {
               "name": "meta.brace.curly.matchStart.js"
@@ -880,7 +895,14 @@
                   "name": "storage.type.function.arrow.js"
                 }
               },
-              "patterns": [{"include": "#expression"}, {"include": "#curly-brackets"}]
+              "patterns": [
+                {
+                  "include": "#expression"
+                },
+                {
+                  "include": "#curly-brackets"
+                }
+              ]
             },
             {
               "include": "#literal-comma"
@@ -990,10 +1012,14 @@
           "begin": "\\s*+(<)(?=((?:(?>[^<>]+)|<\\g<-1>>)*)>)",
           "end": "\\s*(>)",
           "endCaptures": {
-            "1": {"name": "punctuation.flowtype"}
+            "1": {
+              "name": "punctuation.flowtype"
+            }
           },
           "beginCaptures": {
-            "1": {"name": "punctuation.flowtype"}
+            "1": {
+              "name": "punctuation.flowtype"
+            }
           },
           "patterns": [
             {
@@ -2464,13 +2490,30 @@
           "end": "(?=.)",
           "applyEndPatternLast": 1,
           "beginCaptures": {
-            "1": {"name": "keyword.operator.new.js"},
-            "2": {"name": "meta.function-call.without-arguments.js"},
-            "3": {"name": "keyword.operator.private.js"},
-            "4": {"name": "entity.name.type.instance.js"},
-            "5": {"name": "keyword.operator.existential.js"}
+            "1": {
+              "name": "keyword.operator.new.js"
+            },
+            "2": {
+              "name": "meta.function-call.without-arguments.js"
+            },
+            "3": {
+              "name": "keyword.operator.private.js"
+            },
+            "4": {
+              "name": "entity.name.type.instance.js"
+            },
+            "5": {
+              "name": "keyword.operator.existential.js"
+            }
           },
-          "patterns": [{"include": "#type-argument-brackets"}, {"include": "#round-brackets"}]
+          "patterns": [
+            {
+              "include": "#type-argument-brackets"
+            },
+            {
+              "include": "#round-brackets"
+            }
+          ]
         },
         {
           "comment": "A new expression with arguments and maybe type params, like new Foo<string>(123)",
@@ -2536,11 +2579,24 @@
           "end": "(?=.)",
           "applyEndPatternLast": 1,
           "beginCaptures": {
-            "1": {"name": "keyword.operator.private.js"},
-            "2": {"name": "entity.name.function.js"},
-            "3": {"name": "keyword.operator.existential.js"}
+            "1": {
+              "name": "keyword.operator.private.js"
+            },
+            "2": {
+              "name": "entity.name.function.js"
+            },
+            "3": {
+              "name": "keyword.operator.existential.js"
+            }
           },
-          "patterns": [{"include": "#type-argument-brackets"}, {"include": "#round-brackets"}]
+          "patterns": [
+            {
+              "include": "#type-argument-brackets"
+            },
+            {
+              "include": "#round-brackets"
+            }
+          ]
         },
         {
           "comment": "maybe in array form e.g. foo[bar]() or foo[bar]<string>()",
@@ -2882,6 +2938,119 @@
               "name": "meta.tag.mustache.js"
             }
           }
+        }
+      ]
+    },
+    "record-declaration": {
+      "patterns": [
+        {
+          "comment": "Record declarations",
+          "begin": "(?<!\\.)\\s*+\\b((record))\\s+",
+          "end": "\\s*(?<=})",
+          "beginCaptures": {
+            "1": {
+              "name": "meta.record.js"
+            },
+            "2": {
+              "name": "storage.type.record.js"
+            }
+          },
+          "patterns": [
+            {
+              "match": "\\s*+\\b((implements))\\b\\s*+",
+              "captures": {
+                "1": {
+                  "name": "meta.class.extends.js"
+                },
+                "2": {
+                  "name": "storage.type.implements.js"
+                }
+              }
+            },
+            {
+              "comment": "look for record names but dont assume uppercase start char",
+              "match": "\\s*+((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)",
+              "captures": {
+                "1": {
+                  "name": "entity.name.class.js"
+                }
+              }
+            },
+            {
+              "include": "#flowtype-polymorphs"
+            },
+            {
+              "begin": "\\s*+({)",
+              "end": "\\s*(})",
+              "contentName": "meta.record.body.js",
+              "beginCaptures": {
+                "1": {
+                  "name": "punctuation.section.record.begin.js"
+                }
+              },
+              "endCaptures": {
+                "1": {
+                  "name": "punctuation.section.record.end.js"
+                }
+              },
+              "patterns": [
+                {
+                  "include": "#record-body"
+                }
+              ]
+            },
+            {
+              "include": "#expression"
+            }
+          ]
+        }
+      ]
+    },
+    "record-body": {
+      "patterns": [
+        {
+          "include": "#flowtype-keywords"
+        },
+        {
+          "include": "#literal-method"
+        },
+        {
+          "include": "#literal-arrow-function-simple-assignments"
+        },
+        {
+          "include": "#comments"
+        },
+        {
+          "comment": "a line starts with a static, [, name(, name:, name=, } or a comma anywhere",
+          "begin": "\\s*+(?==[^=>])",
+          "end": "((?=^\\s*(\\#?)(((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)\\s*+\\??\\s*+(:|=(?!^==|=>))|\\[|((?:(\\#?)[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[(\\#?)$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)\\s*+\\(|\\b(static|async)\\b)|}))|\\s*(,)",
+          "endCaptures": {
+            "9": {
+              "name": "punctuation.terminator.statement.js"
+            }
+          },
+          "patterns": [
+            {
+              "include": "#literal-method"
+            },
+            {
+              "include": "#expression"
+            }
+          ]
+        },
+        {
+          "match": "(?<!\\.)\\s*+\\b(static)\\b(?!\\.)",
+          "captures": {
+            "1": {
+              "name": "storage.modifier.js"
+            }
+          }
+        },
+        {
+          "include": "#flowtype-variable"
+        },
+        {
+          "include": "#literal-comma"
         }
       ]
     },
@@ -3847,8 +4016,8 @@
       "patterns": [
         {
           "name": "string.regexp.js",
-          "begin": "(?<=^|\\.|\\(|,|{|}|\\[|;|,|<|>|<=|>=|==|!=|===|!==|\\+|-|\\*|%|\\+\\+|--|<<|>>|>>>|&|\\||\\^|!|~|&&|\\|\\||\\?|:|=|\\+=|-=|\\*=|%=|<<=|>>=|>>>=|&=|\\|=|\\^=|/|/=|\\Wnew|\\Wdelete|\\Wvoid|\\Wtypeof|\\Winstanceof|\\Win|\\Wdo|\\Wreturn|\\Wcase|\\Wthrow|^new|^delete|^void|^typeof|^instanceof|^in|^do|^return|^case|^throw)\\s*+(/)(?!\\*|/)(?=.*/[gimuy]*\\s*($|[,;)}\\]]|\\.[$_A-Za-z]))",
-          "end": "(/)([gimyu]*)",
+          "begin": "(?<=^|\\.|\\(|,|{|}|\\[|;|,|<|>|<=|>=|==|!=|===|!==|\\+|-|\\*|%|\\+\\+|--|<<|>>|>>>|&|\\||\\^|!|~|&&|\\|\\||\\?|:|=|\\+=|-=|\\*=|%=|<<=|>>=|>>>=|&=|\\|=|\\^=|/|/=|\\Wnew|\\Wdelete|\\Wvoid|\\Wtypeof|\\Winstanceof|\\Win|\\Wdo|\\Wreturn|\\Wcase|\\Wthrow|^new|^delete|^void|^typeof|^instanceof|^in|^do|^return|^case|^throw)\\s*+(/)(?!\\*|/)(?=.*/[dgimsuvy]*\\s*($|[,;)}\\]]|\\.[$_A-Za-z]))",
+          "end": "(/)([dgimsuvy]*)",
           "beginCaptures": {
             "1": {
               "name": "punctuation.definition.string.begin.js"
