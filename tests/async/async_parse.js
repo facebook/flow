@@ -4,7 +4,7 @@ async function ft<T>(a: T) {}
 class C {
   async m(): Promise<void> {}
   async mt<T>(a: T): Promise<void> {}
-  static async m(a: mixed): Promise<void> {}
+  static async m(a: unknown): Promise<void> {}
   static async mt<T>(a: T): Promise<void> {}
 }
 
