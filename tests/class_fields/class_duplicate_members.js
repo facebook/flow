@@ -16,38 +16,38 @@ class OkayCases extends Base {
   a = 1; // okay
   b() {} // okay
   get c() {} // okay
-  set d(a: mixed) {} // okay
+  set d(a: unknown) {} // okay
   // statics are in a separate set
   static a = 1; // okay
   static b() {} // okay
   static get c() {} // okay
-  static set d(a: mixed) {} // okay
+  static set d(a: unknown) {} // okay
 
   //
   // getters/setters
   //
   get getter() {} // okay
-  set setter(a: mixed) {} // okay
+  set setter(a: unknown) {} // okay
 }
 
 class GettersAndSetters {
   get getterFirst1(): number { return 1 } // okay
-  set getterFirst1(a: mixed) {} // okay as you can have one getter and one setter of the same name
+  set getterFirst1(a: unknown) {} // okay as you can have one getter and one setter of the same name
   get getterFirst1(): number { return 1 } // error
-  set getterFirst1(a: mixed) {} // error
+  set getterFirst1(a: unknown) {} // error
 
   get getterFirst2(): number { return 1 } // okay
   get getterFirst2(): number { return 1 } // error
-  set getterFirst2(a: mixed) {} // okay as you can have one getter and one setter of the same name
-  set getterFirst2(a: mixed) {} // error
+  set getterFirst2(a: unknown) {} // okay as you can have one getter and one setter of the same name
+  set getterFirst2(a: unknown) {} // error
 
-  set setterFirst1(a: mixed): number { return 1 } // okay
+  set setterFirst1(a: unknown): number { return 1 } // okay
   get setterFirst1() {} // okay as you can have one getter and one setter of the same name
-  set setterFirst1(a: mixed): number { return 1 } // error
+  set setterFirst1(a: unknown): number { return 1 } // error
   get setterFirst1() {} // error
 
-  set setterFirst2(a: mixed): number { return 1 } // okay
-  set setterFirst2(a: mixed): number { return 1 } // error
+  set setterFirst2(a: unknown): number { return 1 } // okay
+  set setterFirst2(a: unknown): number { return 1 } // error
   get setterFirst2() {} // okay as you can have one getter and one setter of the same name
   get setterFirst2() {} // error
 
@@ -57,7 +57,7 @@ class GettersAndSetters {
 
   methodFirst() {} // okay
   get methodFirst(): number { return 1 } // error
-  set methodFirst(a: mixed) {} // error
+  set methodFirst(a: unknown) {} // error
 }
 
 class Props {
@@ -84,7 +84,7 @@ class Methods {
   get getterFirst(): number { return 1 } // okay
   getterFirst() {} // error
 
-  set setterFirst(a: mixed) { } // okay
+  set setterFirst(a: unknown) { } // okay
   setterFirst() {}; // error
 }
 
@@ -93,7 +93,7 @@ class Statics {
   static a = () => {}; // okay
   static a = () => {}; // error
   static get a(): () => void { return () => {}; } // error
-  static set a(a: mixed) { } // error
+  static set a(a: unknown) { } // error
   static a() {} // error
 }
 

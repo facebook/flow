@@ -224,7 +224,7 @@ Error --------------------------------------------------------------------------
 
 `getterFirst1` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   37|   set getterFirst1(a: mixed) {} // error
+   37|   set getterFirst1(a: unknown) {} // error
              ^^^^^^^^^^^^
 
 
@@ -240,7 +240,7 @@ Error --------------------------------------------------------------------------
 
 `getterFirst2` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   42|   set getterFirst2(a: mixed) {} // error
+   42|   set getterFirst2(a: unknown) {} // error
              ^^^^^^^^^^^^
 
 
@@ -248,7 +248,7 @@ Error --------------------------------------------------------------------------
 
 `setterFirst1` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   46|   set setterFirst1(a: mixed): number { return 1 } // error
+   46|   set setterFirst1(a: unknown): number { return 1 } // error
              ^^^^^^^^^^^^
 
 
@@ -264,7 +264,7 @@ Error --------------------------------------------------------------------------
 
 `setterFirst2` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   50|   set setterFirst2(a: mixed): number { return 1 } // error
+   50|   set setterFirst2(a: unknown): number { return 1 } // error
              ^^^^^^^^^^^^
 
 
@@ -304,7 +304,7 @@ Error --------------------------------------------------------------------------
 
 `methodFirst` has already been declared in this class. Class member names must be unique. [duplicate-class-member]
 
-   60|   set methodFirst(a: mixed) {} // error
+   60|   set methodFirst(a: unknown) {} // error
              ^^^^^^^^^^^
 
 
@@ -392,7 +392,7 @@ Error --------------------------------------------------------------------------
 
 `a` has already been declared in this class. Static class member names must be unique. [duplicate-class-member]
 
-   96|   static set a(a: mixed) { } // error
+   96|   static set a(a: unknown) { } // error
                     ^
 
 
