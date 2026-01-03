@@ -20,6 +20,7 @@ const PARSE_OPTIONS: FlowJsParseOptions = {
   components: true,
   types: true,
   pattern_matching: true,
+  records: true,
 };
 
 export default class FlowJsServices {
