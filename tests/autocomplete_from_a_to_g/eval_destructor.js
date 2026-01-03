@@ -1,6 +1,6 @@
 //@flow
 
-type t = $ReadOnly<{a: number}>;
+type t = Readonly<{a: number}>;
 declare var x: t;
 x.
 //^
