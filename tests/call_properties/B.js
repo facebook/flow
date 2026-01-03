@@ -12,8 +12,8 @@ var d: { (): string } = function (x: number): string { return "hi"; };
 
 // ...but subtyping rules still apply
 var e: { (x: any): void } = function() { } // arity
-var f: { (): mixed } = function(): string { return "hi" } // return type
-var g: { (x: string): void } = function(x: mixed) { } // param type
+var f: { (): unknown } = function(): string { return "hi" } // return type
+var g: { (x: string): void } = function(x: unknown) { } // param type
 
 // A function can be an object
 var y : {} = function (x: number): string { return "hi"; };

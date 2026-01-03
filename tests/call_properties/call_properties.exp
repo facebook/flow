@@ -392,8 +392,8 @@ Cannot call `mixed_callable` because `unknown` [1] is not a function. [not-a-fun
 
 References:
    internal_slot.js:22:41
-   22| declare var mixed_callable: { [[call]]: mixed };
-                                               ^^^^^ [1]
+   22| declare var mixed_callable: { [[call]]: unknown };
+                                               ^^^^^^^ [1]
 
 
 Error ------------------------------------------------------------------------------------------- internal_slot.js:28:16

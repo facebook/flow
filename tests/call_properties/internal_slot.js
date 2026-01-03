@@ -19,7 +19,7 @@ declare class C1 {
 }
 (C1(): empty); // error: void ~> empty
 
-declare var mixed_callable: { [[call]]: mixed };
+declare var mixed_callable: { [[call]]: unknown };
 mixed_callable();
 
 declare var annot_callable: { [[call]]: Fn }
