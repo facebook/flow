@@ -12,7 +12,7 @@ y.a.b?.c!; // ok
 y.a.b?.c!.d; // TODO should be error
 
 declare const a1: Array<number>;
-declare const a2: $ReadOnlyArray<number>;
+declare const a2: ReadonlyArray<number>;
 declare const a3: [number];
 declare const o1: { [string]: string };
 declare const o2: { e: number };
