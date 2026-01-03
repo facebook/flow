@@ -110,7 +110,7 @@ function test12() {
 function test13() {
   type Foo1 = { x: number };
   type Foo2 = { y: number };
-  type Bar = ?$ReadOnly<{ foo?: $ReadOnly<{ ...Foo1, ...Foo2 }> }>
+  type Bar = ?Readonly<{ foo?: Readonly<{ ...Foo1, ...Foo2 }> }>
   const _: Bar = { foo: {   } };
 //                        ^
 }
