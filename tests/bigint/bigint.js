@@ -19,7 +19,7 @@ z = x; // error, bigint </: 10n
 
 BigInt(null); // error
 
-declare var foo: mixed;
+declare var foo: unknown;
 if (typeof foo === "bigint") {
     (foo : bigint);
     (foo : empty); // error
