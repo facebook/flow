@@ -52,7 +52,7 @@ function test_arr4() {
 function test_arr5() {
   arr5 as [1, 2, 3]; // error arr5 is not a tuple
   arr5 as Array<number>; // error arr5 is readonly
-  arr5 as $ReadOnlyArray<number>; // okay
+  arr5 as ReadonlyArray<number>; // okay
 
   _ as [1, 2, 3] as typeof arr5; // okay
   _ as readonly [1, 2, 3] as typeof arr5; // okay
