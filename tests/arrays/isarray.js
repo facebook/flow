@@ -18,7 +18,7 @@ function coerce<T, U>(t: T): U {
 const twelve: number = coerce("twelve");
 twelve.toFixed();
 
-function hmm2(array: mixed) {
+function hmm2(array: unknown) {
   if (Array.isArray(array)) {
     const problem: Array<mixed> = array; // error
     problem[1] = 0;

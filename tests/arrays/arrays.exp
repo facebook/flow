@@ -77,8 +77,8 @@ Cannot assign `array` to `problem` because read-only array type [1] is incompati
 
 References:
    isarray.js:21:22
-   21| function hmm2(array: mixed) {
-                            ^^^^^ [1]
+   21| function hmm2(array: unknown) {
+                            ^^^^^^^ [1]
    isarray.js:23:20
    23|     const problem: Array<mixed> = array; // error
                           ^^^^^^^^^^^^ [2]
