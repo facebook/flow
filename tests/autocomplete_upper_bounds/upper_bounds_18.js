@@ -5,7 +5,7 @@ type Foo = {
   baz: number,
 };
 
-type K = $Keys<Foo>;
+type K = keyof Foo;
 
 const k: K = ;
 //          ^
