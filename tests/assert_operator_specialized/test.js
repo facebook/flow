@@ -1,6 +1,6 @@
 declare const arr: Array<number>;
 arr[0]!; // ok
-declare const roarr: $ReadOnlyArray<number>;
+declare const roarr: ReadonlyArray<number>;
 roarr[0]!; // ok
 declare const tuple: [?number];
 tuple[0]!; // error
