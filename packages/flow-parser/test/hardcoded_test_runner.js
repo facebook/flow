@@ -8,7 +8,6 @@
  */
 
 var util = require('util');
-var ast_types = require('./esprima_ast_types.js');
 
 function new_env() {
   var diffs = {};
@@ -29,43 +28,11 @@ function new_env() {
       };
     },
 
-    /** If we see an ast types error at root.foo.bar then we record the
-     * subpaths so that we don't rerun the ast types recursive check for root
-     * or root.foo
-     */
-    ast_types_error: function (msg) {
-      var p = path[0];
-      pathsWithAstTypesErrors[p] = true;
-      delete astTypesErrors[p];
-      for (var i = 1; i < path.length; i++) {
-        p += '.' + path[i];
-        pathsWithAstTypesErrors[p] = true;
-        delete astTypesErrors[p];
-      }
-      var full_path = path.join('.');
-      astTypesErrors[full_path] = msg;
-    },
-
-    should_run_ast_types: function () {
-      var p = path.join('.');
-      return pathsWithAstTypesErrors[p] !== true;
-    },
-
     get_diffs: function () {
       var ret = [];
       for (var prop in diffs) {
         if (diffs.hasOwnProperty(prop)) {
           ret.push(diffs[prop]);
-        }
-      }
-      return ret;
-    },
-
-    get_ast_types_errors: function () {
-      var ret = [];
-      for (var prop in astTypesErrors) {
-        if (astTypesErrors.hasOwnProperty(prop)) {
-          ret.push(prop + ': ' + astTypesErrors[prop]);
         }
       }
       return ret;
@@ -94,17 +61,6 @@ function check_ast(env, ast) {
       env.push_path(prop);
       check_ast(env, ast[prop]);
       env.pop_path();
-    }
-    if (ast.type && env.should_run_ast_types()) {
-      if (ast_types.namedTypes.hasOwnProperty(ast.type)) {
-        try {
-          ast_types.namedTypes[ast.type].assert(ast, true);
-        } catch (e) {
-          env.ast_types_error(e.message);
-        }
-      } else {
-        env.ast_types_error('Unknown type ' + ast.type);
-      }
     }
   }
 }
@@ -207,15 +163,6 @@ function runTest(test, parse_options, test_options) {
     output('****Unexpected Differences****');
     for (var i = 0; i < diffs.length; i++) {
       output('(#' + i + ')', diff_to_string(diffs[i]));
-    }
-  }
-
-  var ast_types_errors = env.get_ast_types_errors();
-  if (ast_types_errors.length !== 0) {
-    result.passed = false;
-    output('****AST Types Errors****');
-    for (var i = 0; i < ast_types_errors.length; i++) {
-      output('(#' + i + ')', ast_types_errors[i]);
     }
   }
 

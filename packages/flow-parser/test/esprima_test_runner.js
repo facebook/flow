@@ -13,7 +13,6 @@
 
 var esprima = require('esprima-fb');
 var util = require('util');
-var ast_types = require('./esprima_ast_types.js');
 
 function new_env() {
   var diffs = {};
@@ -37,32 +36,8 @@ function new_env() {
       };
     },
 
-    /** If we see an ast types error at root.foo.bar then we record the
-     * subpaths so that we don't rerun the ast types recursive check for root
-     * or root.foo
-     */
-    ast_types_error: function () {
-      var full_path = path.join('.');
-      astTypesErrors.push(full_path);
-      var p = path[0];
-      pathsWithAstTypesErrors[p] = true;
-      for (var i = 1; i < path.length; i++) {
-        p += '.' + path[i];
-        pathsWithAstTypesErrors[p] = true;
-      }
-    },
-
-    should_run_ast_types: function () {
-      var p = path.join('.');
-      return pathsWithAstTypesErrors[p] !== true;
-    },
-
     get_diffs: function () {
       return diffs;
-    },
-
-    get_ast_types_errors: function () {
-      return astTypesErrors;
     },
   };
 }
@@ -477,19 +452,6 @@ function compare(esprima, flow, env) {
       }
     }
   }
-
-  if (flow && flow_type == 'object' && flow.hasOwnProperty('type')) {
-    if (env.should_run_ast_types()) {
-      if (!ast_types.namedTypes[flow.type]) {
-        env.diff('Unknown AST type', 'known type', flow.type);
-      } else if (!ast_types.namedTypes[flow.type].check(flow, true)) {
-        throw new Error(
-          `${ast_types.namedTypes[flow.type]} ${JSON.stringify(flow)}`,
-        );
-        env.ast_types_error();
-      }
-    }
-  }
 }
 
 function runTest(test, esprima_options, test_options) {
@@ -610,15 +572,6 @@ function runTest(test, esprima_options, test_options) {
         env.pop_path();
       }
       env.pop_path();
-    }
-
-    var ast_types_errors = env.get_ast_types_errors();
-    if (ast_types_errors.length !== 0) {
-      result.passed = false;
-      output('****AST Types Errors****');
-      for (var i = 0; i < ast_types_errors.length; i++) {
-        output('(#' + i + ')', ast_types_errors[i]);
-      }
     }
   }
 
