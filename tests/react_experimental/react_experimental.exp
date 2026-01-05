@@ -8,8 +8,8 @@ Cannot call `React.startTransition` because function [1] requires another argume
 
 References:
    <BUILTINS>/react.js:957:37
-   957|     declare function startTransition(() => void | Promise<void>): void;
-                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   957|     declare function startTransition(callback: () => void | Promise<void>): void;
+                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error --------------------------------------------------------------------------------------- useTransition_hook.js:5:21
