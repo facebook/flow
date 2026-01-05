@@ -638,7 +638,7 @@ class ['loc] mapper =
       let ident' = this#component_identifier ident in
       let tparams' = map_opt (this#type_params ~kind:ComponentDeclarationTP) tparams in
       let params' = this#component_params params in
-      let body' = this#component_body body in
+      let body' = map_opt this#component_body body in
       let renders' = this#component_renders_annotation renders in
       let comments' = this#syntax_opt comments in
       if

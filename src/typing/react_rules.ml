@@ -808,8 +808,11 @@ let rec whole_ast_visitor tast ~under_function_or_class_body ~initial_hook_call_
 
     method! component_declaration ({ Ast.Statement.ComponentDeclaration.body; _ } as cmp) =
       let effects =
-        (effect_visitor cx ~is_hook:false rrid tast)#component_entry
-          (Typed_ast_utils.untyped_ast_mapper#component_body body)
+        match body with
+        | None -> []
+        | Some body ->
+          (effect_visitor cx ~is_hook:false rrid tast)#component_entry
+            (Typed_ast_utils.untyped_ast_mapper#component_body body)
       in
       emit_effect_errors cx effects;
       (component_ast_visitor tast cx rrid)#visit_toplevel_component cmp

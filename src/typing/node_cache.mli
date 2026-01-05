@@ -78,7 +78,7 @@ val set_component_sig :
   ALoc.t ->
   Component_sig_types.Component_declaration_sig_types.t
   * ((ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.Params.t ->
-    ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t ->
+    (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t) option ->
     Type.t ->
     (ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.t
     ) ->
@@ -158,7 +158,7 @@ val get_component_sig :
   ALoc.t ->
   ( Component_sig_types.Component_declaration_sig_types.t
   * ((ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.Params.t ->
-    ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t ->
+    (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t) option ->
     Type.t ->
     (ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.t
     )

@@ -766,6 +766,8 @@ type 'loc message =
       n: int;
     }
   | MessageComponentMissingReturn of 'loc virtual_reason
+  | MessageComponentMissingBody
+  | MessageComponentBodyInAmbientContext
   | MessageComponentNonUpperCase
   | MessageDefinitionCycle of ('loc virtual_reason * 'loc list * 'loc Env_api.annot_loc list) Nel.t
   | MessageDefinitionInvalidRecursive of {

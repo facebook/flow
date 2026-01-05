@@ -32,7 +32,9 @@ type error_code =
   | CannotWriteEnum
   | ClassObject
   | ComponentCase
+  | ComponentMissingBody
   | ComponentMissingReturn
+  | ComponentBodyInAmbientContext
   | ComponentThisReference
   | DefaultImportAccess
   | DeprecatedType
@@ -253,7 +255,9 @@ let string_of_code : error_code -> string = function
   | ClassObject -> "class-object-subtyping"
   | ComponentThisReference -> "component-this-reference"
   | ComponentCase -> "component-case"
+  | ComponentMissingBody -> "component-missing-body"
   | ComponentMissingReturn -> "component-missing-return"
+  | ComponentBodyInAmbientContext -> "component-body-in-ambient-context"
   | DefaultImportAccess -> "default-import-access"
   | DeprecatedType -> "deprecated-type"
   | DeprecatedUtility -> "deprecated-utility"

@@ -165,7 +165,7 @@ module type S = sig
     (ALoc.t, ALoc.t) Ast.Statement.ComponentDeclaration.t ->
     Component_declaration_sig.Types.t
     * ((ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.Params.t ->
-      ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t ->
+      (ALoc.t * (ALoc.t, ALoc.t * Type.t) Ast.Statement.Block.t) option ->
       Type.t ->
       (ALoc.t, ALoc.t * Type.t) Ast.Statement.ComponentDeclaration.t
       )

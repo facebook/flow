@@ -6,6 +6,66 @@ Const must be initialized [ParseError]
             ^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------- use_component_namespace.js:13:49
+
+Cannot create `ComponentNamespace.Card` element because in property `title`: number [1] is incompatible with string [2].
+[incompatible-type]
+
+   use_component_namespace.js:13:49
+   13| const badCard = <ComponentNamespace.Card title={123} content="World" />; // Error: number is not compatible with string
+                                                       ^^^ [1]
+
+References:
+   component_namespace.js:4:25
+    4|   component Card(title: string, content: string);
+                               ^^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------- use_component_namespace.js:15:51
+
+Cannot create `ComponentNamespace.Modal` element because in property `isOpen`: string [1] is incompatible with
+boolean [2]. [incompatible-type]
+
+   use_component_namespace.js:15:51
+   15| const badModal = <ComponentNamespace.Modal isOpen="true" onClose={() => {}} />; // Error: string is not compatible with boolean
+                                                         ^^^^^^ [1]
+
+References:
+   component_namespace.js:6:27
+    6|   component Modal(isOpen: boolean, onClose: () => void);
+                                 ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ use_components.js:13:43
+
+Cannot create `Button` element because in property `props.label`: number [1] is incompatible with string [2].
+[incompatible-type]
+
+   use_components.js:13:43
+   13| const badButton = <Button props={{ label: 123 }} />; // Error: number is not compatible with string
+                                                 ^^^ [1]
+
+References:
+   components.js.flow:5:34
+    5| component Button(props: { label: string });
+                                        ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------------ use_components.js:15:52
+
+Cannot create `Input` element because in property `onChange` > the first parameter: number [1] is incompatible with
+string [2]. [incompatible-type]
+
+   use_components.js:15:52
+   15| const badInput = <Input value="test" onChange={(v: number) => console.log(v)} />; // Error: string is not compatible with number
+                                                          ^^^^^^ [1]
+
+References:
+   components.js.flow:7:43
+    7| component Input(value: string, onChange: (string) => void);
+                                                 ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------ use_flow_typed.js:12:22
 
 Cannot assign `testModule.getFoo()` to `badX` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -55,6 +115,21 @@ References:
    use_flow_typed.js:14:13
    14| const badZ: number = testModule.getBaz(); // Error: boolean is not compatible with number
                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- use_flow_typed_components.js:10:34
+
+Cannot create `Button` element because in property `label`: number [1] is incompatible with string [2].
+[incompatible-type]
+
+   use_flow_typed_components.js:10:34
+   10| const badButton = <Button label={42} />; // Error: number is not compatible with string
+                                        ^^ [1]
+
+References:
+   flow-typed/components.js:3:27
+    3|   component Button(label: string);
+                                 ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------- use_namespace.js:22:22
@@ -191,4 +266,4 @@ References:
 
 
 
-Found 11 errors
+Found 16 errors

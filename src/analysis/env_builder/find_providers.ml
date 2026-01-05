@@ -636,7 +636,7 @@ end = struct
           (fun _ _ ->
             run_opt (this#type_params ~kind:Flow_ast_mapper.ComponentDeclarationTP) tparams;
             run this#component_params params;
-            run this#component_body body;
+            run_opt this#component_body body;
             run this#component_renders_annotation renders;
             expr)
           loc
@@ -968,7 +968,7 @@ end = struct
           (fun _ _ ->
             run_opt (this#type_params ~kind:Flow_ast_mapper.ComponentDeclarationTP) tparams;
             run this#component_params params;
-            run this#component_body body;
+            run_opt this#component_body body;
             run this#component_renders_annotation renders;
             expr)
           loc

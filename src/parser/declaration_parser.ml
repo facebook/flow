@@ -627,7 +627,25 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
               (tparams, id, params, renders, leading))
             env
         in
-        let (body, contains_use_strict) = component_body env in
+        let (body, contains_use_strict, trailing) =
+          if Peek.token env <> T_LCURLY then begin
+            let trailing =
+              (* No body - consume semicolon if present *)
+              if Peek.token env = T_SEMICOLON then begin
+                Eat.token env;
+                if Peek.is_line_terminator env then
+                  Eat.comments_until_next_line env
+                else
+                  []
+              end else
+                []
+            in
+            (None, false, trailing)
+          end else begin
+            let (body, contains_use_strict) = component_body env in
+            (Some body, contains_use_strict, [])
+          end
+        in
         strict_component_post_check env ~contains_use_strict id params;
         Statement.ComponentDeclaration
           {
@@ -637,7 +655,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
             renders;
             tparams;
             sig_loc;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
     )
 end

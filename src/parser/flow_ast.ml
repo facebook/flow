@@ -1054,7 +1054,7 @@ and Statement : sig
       tparams: ('M, 'T) Type.TypeParams.t option;
       params: ('M, 'T) Params.t;
       renders: ('M, 'T) Type.component_renders_annotation;
-      body: 'M * ('M, 'T) Statement.Block.t;
+      body: ('M * ('M, 'T) Statement.Block.t) option;
       comments: ('M, unit) Syntax.t option;
       (* Location of the signature portion of a component, e.g.
        * component Foo(): void {}

@@ -299,7 +299,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#component_params params in
           let renders' = this#component_renders_annotation renders in
-          let body' = this#component_body body in
+          let body' =
+            match body with
+            | None -> None
+            | Some body -> Some (this#component_body body)
+          in
           let comments' = this#syntax_opt comments in
           let sig_loc' = this#on_loc_annot sig_loc in
           {

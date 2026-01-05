@@ -432,13 +432,14 @@ let resolve_annotated_component cx scope_kind reason tparams_map component_loc c
       Flow_js_utils.add_output cx Error_message.(ENestedComponent reason)
     end;
     let tparams_map = mk_tparams_map cx tparams_map in
-    let { Ast.Statement.ComponentDeclaration.sig_loc; _ } = component in
+    let { Ast.Statement.ComponentDeclaration.sig_loc; body; _ } = component in
     let ((component_sig, _) as sig_data) =
       Statement.mk_component_sig cx tparams_map reason component
     in
     let cache = Context.node_cache cx in
     Node_cache.set_component_sig cache sig_loc sig_data;
-    Statement.Component_declaration_sig.component_type cx ~in_annotation:false component_sig
+    let in_annotation = Option.is_none body in
+    Statement.Component_declaration_sig.component_type cx ~in_annotation component_sig
   end
 
 let rec binding_has_annot = function

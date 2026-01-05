@@ -432,7 +432,9 @@ module Make
 
   let error_on_this_uses_in_components cx { Ast.Statement.ComponentDeclaration.sig_loc; body; _ } =
     let finder = new ALoc_this_finder.finder in
-    finder#eval finder#component_body body
+    (match body with
+    | None -> Loc_collections.ALocMap.empty
+    | Some body -> finder#eval finder#component_body body)
     |> Loc_collections.ALocMap.iter (fun this_loc kind ->
            match kind with
            | This_finder.Super ->
@@ -1728,16 +1730,35 @@ module Make
       node
     | (loc, ComponentDeclaration component) when Context.component_syntax cx ->
       error_on_this_uses_in_components cx component;
-      let { ComponentDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); _ } = component in
+      let { ComponentDeclaration.id = (name_loc, { Ast.Identifier.name; _ }); body; _ } =
+        component
+      in
       if name <> String.capitalize_ascii name then
         Flow_js_utils.add_output cx Error_message.(EComponentCase name_loc);
       let reason = mk_reason (RComponent (OrdinaryName name)) loc in
+      (match (body, Context.under_declaration_context cx) with
+      | (None, false) -> Flow_js_utils.add_output cx Error_message.(EComponentMissingBody loc)
+      | (Some _, true) ->
+        Flow_js_utils.add_output cx Error_message.(EComponentBodyInAmbientContext loc)
+      | (None, true)
+      | (Some _, false) ->
+        ());
       let (component_sig, reconstruct_component) =
         mk_component_sig cx Subst_name.Map.empty reason component
       in
       let general = Type_env.read_declared_type cx reason name_loc in
-      let (params_ast, body_ast) = Component_declaration_sig.toplevels cx component_sig in
-      (loc, ComponentDeclaration (reconstruct_component params_ast body_ast general))
+      let (params_ast, body_ast_opt) =
+        match body with
+        | None ->
+          (* For ambient components, only evaluate params - skip body evaluation *)
+          let { Component_sig_types.Component_declaration_sig_types.cparams; _ } = component_sig in
+          let params_ast = Component_declaration_sig.Param.eval cx cparams in
+          (params_ast, None)
+        | Some _ ->
+          let (params_ast, body_ast) = Component_declaration_sig.toplevels cx component_sig in
+          (params_ast, Some body_ast)
+      in
+      (loc, ComponentDeclaration (reconstruct_component params_ast body_ast_opt general))
     | (loc, ComponentDeclaration comp) ->
       Flow_js_utils.add_output
         cx
@@ -9102,25 +9123,32 @@ module Make
             (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
         in
         let (id_loc, ({ Ast.Identifier.name; comments = _ } as name_ast)) = id in
-        ( {
-            Component_sig_types.Component_declaration_sig_types.reason;
-            tparams;
-            cparams;
-            body;
-            renders_t;
-            ret_annot_loc = ret_loc;
-            id_opt = Some (id_loc, name);
-          },
-          fun params body component_type ->
-            {
-              component with
-              Ast.Statement.ComponentDeclaration.id = ((id_loc, component_type), name_ast);
-              params;
-              body;
-              renders = renders_ast;
-              tparams = tparams_ast;
-            }
-        )
+        let sig_data =
+          ( {
+              Component_sig_types.Component_declaration_sig_types.reason;
+              tparams;
+              cparams;
+              body =
+                (match body with
+                | None -> (fst params, { Ast.Statement.Block.body = []; comments = None })
+                | Some body -> body);
+              renders_t;
+              ret_annot_loc = ret_loc;
+              id_opt = Some (id_loc, name);
+            },
+            fun params body component_type ->
+              {
+                component with
+                Ast.Statement.ComponentDeclaration.id = ((id_loc, component_type), name_ast);
+                params;
+                body;
+                renders = renders_ast;
+                tparams = tparams_ast;
+              }
+          )
+        in
+        Node_cache.set_component_sig cache sig_loc sig_data;
+        sig_data
 
   and mk_func_sig =
     let function_kind ~constructor ~async ~generator ~ret_loc =

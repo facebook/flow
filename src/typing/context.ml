@@ -502,6 +502,12 @@ let file cx = cx.file
 
 let is_lib_file cx = File_key.is_lib_file cx.file
 
+let under_declaration_context cx =
+  File_key.is_lib_file cx.file
+  || File_key.check_suffix cx.file ".flow"
+  || in_declare_module cx
+  || in_declare_namespace cx
+
 let in_dirlist cx dirs =
   match dirs with
   | [] -> false

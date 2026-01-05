@@ -1901,6 +1901,9 @@ let dump_error_message =
         (string_of_aloc component_loc)
     | EComponentCase loc -> spf "EComponentCase (%s)" (string_of_aloc loc)
     | EComponentMissingReturn r -> spf "EComponentMissingReturn (%s)" (dump_reason cx r)
+    | EComponentMissingBody loc -> spf "EComponentMissingBody (%s)" (string_of_aloc loc)
+    | EComponentBodyInAmbientContext loc ->
+      spf "EComponentBodyInAmbientContext (%s)" (string_of_aloc loc)
     | ENestedComponent r -> spf "ENestedComponent (%s)" (dump_reason cx r)
     | ENestedHook r -> spf "ENestedHook (%s)" (dump_reason cx r)
     | EInvalidDeclaration { declaration = r; _ } -> spf "EInvalidDeclaration %s" (dump_reason cx r)

@@ -679,7 +679,7 @@ module Statements = struct
         in
         component_params params
       in
-      component_declaration ?tparams ~params new_component_name component_body
+      component_declaration ?tparams ~params new_component_name (Some component_body)
     else
       let open Flow_ast.Pattern in
       let function_body = Flow_ast.Function.BodyBlock component_body in

@@ -714,7 +714,14 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let { id; params; body; renders; tparams; sig_loc = _; comments = _ } = expr in
         ignore @@ this#component_identifier id;
         this#scoped_type_params ~hoist_op:this#hoist_annotations tparams ~in_tparam_scope:(fun () ->
-            this#component_body_with_params ~component_loc:loc body params;
+            (match body with
+            | None ->
+              (* For ambient components, still process params but no body *)
+              this#component_body_with_params
+                ~component_loc:loc
+                (loc, { Ast.Statement.Block.body = []; comments = None })
+                params
+            | Some body -> this#component_body_with_params ~component_loc:loc body params);
             if with_types then
               this#hoist_annotations (fun () -> ignore @@ this#component_renders_annotation renders)
         );

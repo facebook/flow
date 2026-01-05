@@ -143,7 +143,7 @@ class ['loc] trailing_comments_remover ~after_pos =
     method! component_declaration _loc component =
       let open Ast.Statement.ComponentDeclaration in
       let { body; comments; _ } = component in
-      let body' = this#component_body body in
+      let body' = map_opt this#component_body body in
       let comments' = this#syntax_opt comments in
       if body == body' && comments == comments' then
         component

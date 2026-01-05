@@ -866,7 +866,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let {
       id = id1;
       params = params1;
-      body = (loc_body, body1);
+      body = body1_opt;
       renders = renders1;
       tparams = tparams1;
       sig_loc = _;
@@ -877,7 +877,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let {
       id = id2;
       params = params2;
-      body = (_, body2);
+      body = body2_opt;
       renders = renders2;
       tparams = tparams2;
       sig_loc = _;
@@ -895,7 +895,13 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       | (Ast.Type.MissingRenders _, Ast.Type.MissingRenders _) -> Some []
       | _ -> None
     in
-    let body = diff_if_changed_ret_opt (block loc_body) body1 body2 in
+    let body =
+      match (body1_opt, body2_opt) with
+      | (Some (loc_body, body1), Some (_, body2)) ->
+        diff_if_changed_ret_opt (block loc_body) body1 body2
+      | (None, None) -> Some []
+      | _ -> None
+    in
     let comments = syntax_opt loc comments1 comments2 in
     join_diff_list [id; tparams; params; returns; body; comments]
   and component_params

@@ -3303,6 +3303,12 @@ let to_printable_error :
         text
           " is not guaranteed to reach a return statement. An explicit return statement must be included for all possible branches.";
       ]
+    | MessageComponentMissingBody -> [text "Components in non-ambient contexts must have a body."]
+    | MessageComponentBodyInAmbientContext ->
+      [
+        text
+          "Components in ambient contexts (library definitions, .flow files, declare module, declare namespace) cannot have a body.";
+      ]
     | MessageComponentNonUpperCase ->
       [text "Component identifiers must begin with an upper-case character"]
     | MessageDefinitionCycle dependencies ->

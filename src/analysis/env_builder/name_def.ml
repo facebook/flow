@@ -1477,7 +1477,9 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           this#record_hint renders_loc renders_hint;
           let old_stack = return_hint_stack in
           return_hint_stack <- renders_hint :: return_hint_stack;
-          run_loc this#block body;
+          (match body with
+          | None -> ()
+          | Some body -> run_loc this#block body);
           return_hint_stack <- old_stack)
         ComponentOrHookBody
         ()

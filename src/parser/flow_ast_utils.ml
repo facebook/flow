@@ -391,6 +391,7 @@ let acceptable_statement_in_declaration_context ~in_declare_namespace =
   | Block _ -> Error "block"
   | Break _ -> Error "break"
   | ClassDeclaration _ -> Error "class declaration"
+  | ComponentDeclaration { ComponentDeclaration.body = None; _ } -> Ok ()
   | ComponentDeclaration _ -> Error "component declaration"
   | Continue _ -> Error "continue"
   | Debugger _ -> Error "debugger"

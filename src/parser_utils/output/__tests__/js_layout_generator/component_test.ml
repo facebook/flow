@@ -33,7 +33,7 @@ let tests =
   [
     ( "simple_component" >:: fun ctxt ->
       let body = (Loc.none, { Flow_ast.Statement.Block.body = []; comments = None }) in
-      let ast = S.component_declaration "Comp" body in
+      let ast = S.component_declaration "Comp" (Some body) in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "component Comp(){}" layout;
       assert_output ~ctxt ~pretty:true "component Comp() {}" layout
@@ -51,7 +51,7 @@ let tests =
       let body =
         (Loc.none, { Flow_ast.Statement.Block.body = [variable_declaration]; comments = None })
       in
-      let ast = S.component_declaration "Comp" body in
+      let ast = S.component_declaration "Comp" (Some body) in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "component Comp(){const x=\"x\"}" layout;
       assert_output ~ctxt ~pretty:true "component Comp() {\n  const x = \"x\";\n}" layout
@@ -61,14 +61,14 @@ let tests =
       let renders =
         Some (T.component_renders_annotation Flow_ast.Type.Renders.Normal (T.mixed ()))
       in
-      let ast = S.component_declaration ~tparams:type_params ?renders "Comp" body in
+      let ast = S.component_declaration ~tparams:type_params ?renders "Comp" (Some body) in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "component Comp<T>() renders mixed{}" layout;
       assert_output ~ctxt ~pretty:true "component Comp<T>() renders mixed {}" layout
     );
     ( "component_with_comments" >:: fun ctxt ->
       let body = (Loc.none, { Flow_ast.Statement.Block.body = []; comments = None }) in
-      let ast = S.component_declaration ~comments "Comp" body in
+      let ast = S.component_declaration ~comments "Comp" (Some body) in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "/*leading*/component Comp(){}//trailing\n" layout;
       assert_output ~ctxt ~pretty:true "/*leading*/ component Comp() {} //trailing\n" layout
@@ -82,7 +82,7 @@ let tests =
             S.component_string_param "p-2" (Ast_builder.Patterns.identifier "p2");
           ]
       in
-      let ast = S.component_declaration ~params "Comp" body in
+      let ast = S.component_declaration ~params "Comp" (Some body) in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "component Comp(p1,\"p-2\" as p2){}" layout;
       assert_output ~ctxt ~pretty:true "component Comp(p1, \"p-2\" as p2) {}" layout
@@ -99,7 +99,7 @@ let tests =
               (Ast_builder.Patterns.identifier "p2");
           ]
       in
-      let ast = S.component_declaration ~params "Comp" body in
+      let ast = S.component_declaration ~params "Comp" (Some body) in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "component Comp(p1=\"default_p1\",\"p-2\" as p2=\"default_p2\"){}" layout;
       assert_output
@@ -114,7 +114,7 @@ let tests =
         S.component_params
           [S.component_id_param ~local:(Ast_builder.Patterns.identifier "local_p1") "p1"]
       in
-      let ast = S.component_declaration ~params "Comp" body in
+      let ast = S.component_declaration ~params "Comp" (Some body) in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "component Comp(p1 as local_p1){}" layout;
       assert_output ~ctxt ~pretty:true "component Comp(p1 as local_p1) {}" layout
@@ -133,7 +133,7 @@ let tests =
             )
           [S.component_id_param "p1"]
       in
-      let ast = S.component_declaration ~params "Comp" body in
+      let ast = S.component_declaration ~params "Comp" (Some body) in
       let layout = Js_layout_generator.statement ~opts ast in
       assert_output ~ctxt "component Comp(p1,...rest){}" layout;
       assert_output ~ctxt ~pretty:true "component Comp(p1, ...rest) {}" layout

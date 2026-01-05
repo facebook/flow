@@ -1502,12 +1502,17 @@ with type t = Impl.t = struct
           ~outer:component_comments
           ~inner:(format_internal_comments params_comments)
       in
+      let node_type =
+        match body with
+        | None -> "DeclareComponent"
+        | Some _ -> "ComponentDeclaration"
+      in
       node
         ?comments
-        "ComponentDeclaration"
+        node_type
         loc
         [
-          ("body", block body);
+          ("body", option block body);
           ("id", identifier id);
           ("params", component_params params);
           ("rendersType", renders_annotation renders);

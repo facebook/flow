@@ -487,6 +487,7 @@ class lib_def_loc_mapper_and_validator cx =
       | Block _ -> Some (error "block")
       | Break _ -> Some (error "break")
       | ClassDeclaration _ -> Some (error "class declaration")
+      | ComponentDeclaration { ComponentDeclaration.body = None; _ } -> None
       | ComponentDeclaration _ -> Some (error "component declaration")
       | Continue _ -> Some (error "continue")
       | Debugger _ -> Some (error "debugger")

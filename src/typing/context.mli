@@ -235,6 +235,8 @@ val file : t -> File_key.t
 
 val is_lib_file : t -> bool
 
+val under_declaration_context : t -> bool
+
 val aloc_tables : t -> ALoc.table Lazy.t Utils_js.FilenameMap.t
 
 val find_props : t -> Type.Properties.id -> Type.Properties.t

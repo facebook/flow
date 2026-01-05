@@ -2223,8 +2223,9 @@ and component_base ~opts ~prefix ~params ~body ~renders ~tparams ~loc ~comments 
                (component_params ~ctxt:normal_context ~opts params);
              component_renders ~opts renders;
            ];
-         pretty_space;
-         block ~opts body;
+         (match body with
+         | None -> Empty
+         | Some body -> fuse [pretty_space; block ~opts body]);
        ]
 
 and component_params

@@ -21,12 +21,12 @@ class mapper target =
 
     method! component_declaration loc component =
       let open Ast.Statement.ComponentDeclaration in
-      let { id = (id_loc, _); body = (body_loc, _); renders; _ } = component in
+      let { id = (id_loc, _); body; renders; _ } = component in
       begin
-        match renders with
-        | Ast.Type.AvailableRenders _ -> ()
-        | Ast.Type.MissingRenders missing_renders_loc ->
+        match (body, renders) with
+        | (Some (body_loc, _), Ast.Type.MissingRenders missing_renders_loc) ->
           if Loc.contains id_loc target then raise (Found { missing_renders_loc; body_loc })
+        | _ -> ()
       end;
       super#component_declaration loc component
   end

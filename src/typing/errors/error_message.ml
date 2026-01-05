@@ -604,6 +604,8 @@ and 'loc t' =
     }
   | EComponentCase of 'loc
   | EComponentMissingReturn of 'loc virtual_reason
+  | EComponentMissingBody of 'loc
+  | EComponentBodyInAmbientContext of 'loc
   | ENestedComponent of 'loc virtual_reason
   | ENestedHook of 'loc virtual_reason
   | EInvalidDeclaration of {
@@ -1721,6 +1723,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
     EComponentThisReference { component_loc = f component_loc; this_loc = f this_loc }
   | EComponentCase loc -> EComponentCase (f loc)
   | EComponentMissingReturn r -> EComponentMissingReturn (map_reason r)
+  | EComponentMissingBody loc -> EComponentMissingBody (f loc)
+  | EComponentBodyInAmbientContext loc -> EComponentBodyInAmbientContext (f loc)
   | ENestedComponent r -> ENestedComponent (map_reason r)
   | ENestedHook r -> ENestedHook (map_reason r)
   | EInvalidDeclaration { declaration; null_write; possible_generic_escape_locs } ->
@@ -2243,6 +2247,8 @@ let util_use_op_of_msg nope util = function
   | EComponentThisReference _
   | EComponentCase _
   | EComponentMissingReturn _
+  | EComponentMissingBody _
+  | EComponentBodyInAmbientContext _
   | ENestedComponent _
   | ENestedHook _
   | EInvalidDeclaration _
@@ -2475,6 +2481,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EObjectThisSuperReference (loc, _, _)
   | EComponentThisReference { this_loc = loc; _ }
   | EComponentCase loc
+  | EComponentMissingBody loc
+  | EComponentBodyInAmbientContext loc
   | EInvalidGraphQL (loc, _)
   | EAnnotationInference (loc, _, _, _)
   | ETrivialRecursiveDefinition (loc, _)
@@ -3546,6 +3554,8 @@ let friendly_message_of_msg = function
     Normal (MessageThisInComponent component_loc)
   | EComponentCase _ -> Normal MessageComponentNonUpperCase
   | EComponentMissingReturn reason -> Normal (MessageComponentMissingReturn reason)
+  | EComponentMissingBody _ -> Normal MessageComponentMissingBody
+  | EComponentBodyInAmbientContext _ -> Normal MessageComponentBodyInAmbientContext
   | ENestedComponent _ -> Normal MessageCannotNestComponents
   | ENestedHook _ -> Normal MessageCannotNestHook
   | EDuplicateClassMember { name; static; class_kind; loc = _ } ->
@@ -4080,6 +4090,8 @@ let error_code_of_message err : error_code option =
   | EComponentThisReference _ -> Some ComponentThisReference
   | EComponentCase _ -> Some ComponentCase
   | EComponentMissingReturn _ -> Some ComponentMissingReturn
+  | EComponentMissingBody _ -> Some ComponentMissingBody
+  | EComponentBodyInAmbientContext _ -> Some ComponentBodyInAmbientContext
   | EInvalidDeclaration _ -> Some InvalidDeclaration
   | EInvalidMappedType _ -> Some InvalidMappedType
   | EDuplicateComponentProp _ -> Some InvalidComponentProp
