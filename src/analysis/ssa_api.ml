@@ -19,10 +19,6 @@ module type S = sig
   type values = write_locs L.LMap.t
 
   val uninitialized : write_loc
-
-  val write_locs_of_read_loc : values -> read_loc -> write_locs
-
-  val is_dead_write_loc : values -> L.t -> bool
 end
 
 module Make (L : Loc_sig.S) : S with module L = L = struct
@@ -39,20 +35,6 @@ module Make (L : Loc_sig.S) : S with module L = L = struct
   type values = write_locs L.LMap.t
 
   let uninitialized = Uninitialized
-
-  let write_locs_of_read_loc values read_loc = L.LMap.find read_loc values
-
-  let is_dead_write_loc values loc =
-    not
-      (L.LMap.exists
-         (fun _ write_locs ->
-           Base.List.exists
-             ~f:(function
-               | Write r -> Reason.loc_of_reason r = loc
-               | Uninitialized -> false)
-             write_locs)
-         values
-      )
 end
 
 module With_Loc = Make (Loc_sig.LocS)
