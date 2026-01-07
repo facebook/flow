@@ -62,8 +62,6 @@
         "optional":false
       },
       "params":[],
-      "rest":null,
-      "params":[],
       "rendersType":{
         "type":"TypeOperator",
         "loc":{"source":null,"start":{"line":2,"column":25},"end":{"line":2,"column":31}},

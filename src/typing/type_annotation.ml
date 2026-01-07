@@ -3085,19 +3085,235 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let { Ast.Statement.DeclareComponent.tparams; renders; params; id; comments } = component in
     let (id_loc, ({ Ast.Identifier.name; _ } as id)) = id in
     let reason = mk_reason (RComponent (OrdinaryName name)) loc in
-    let (t, tparam_asts, params_ast, renders_ast) =
-      mk_component
-        (mk_convert_env cx Subst_name.Map.empty)
-        reason
-        ~id_opt:(Some (id_loc, name))
-        tparams
-        params
-        renders
+    let env = mk_convert_env cx Subst_name.Map.empty in
+    let (tparams, env, tparam_asts) =
+      mk_type_param_declarations env ~kind:Flow_ast_mapper.DeclareComponentTP tparams
     in
+    (* Process statement params and build Component_type_params *)
+    let module C = Ast.Statement.ComponentDeclaration in
+    let module TC = Ast.Type.Component in
+    let (params_loc, { C.Params.params = param_list; rest; comments = params_comments }) = params in
+    (* Helper to convert annotation_or_hint to annotation *)
+    let convert_annot_or_hint _loc annot_or_hint =
+      match annot_or_hint with
+      | Ast.Type.Available (annot_loc, annot) ->
+        let (t, annot_ast) = mk_type_available_annotation env (annot_loc, annot) in
+        (t, Ast.Type.Available annot_ast)
+      | Ast.Type.Missing hint_loc ->
+        (* Error already emitted by type checking, use error type *)
+        let t = Type.AnyT.error (mk_reason RAnyImplicit hint_loc) in
+        (t, Ast.Type.Missing (hint_loc, t))
+    in
+    (* Process each param: convert statement param to type param for Component_type_params,
+       and build typed statement param for output *)
+    let process_param (loc, param) =
+      let { C.Param.name = param_name; local; default; shorthand } = param in
+      let (local_loc, local_pattern) = local in
+      match local_pattern with
+      | Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = local_id; annot; optional } ->
+        let (local_id_loc, local_id_name) = local_id in
+        let (t, typed_annot) = convert_annot_or_hint loc annot in
+        (* Build typed param_name for statement params *)
+        let typed_stmt_name =
+          match param_name with
+          | C.Param.StringLiteral sl -> C.Param.StringLiteral sl
+          | C.Param.Identifier (l, x) -> C.Param.Identifier ((l, t), x)
+        in
+        (* Build typed statement param *)
+        let typed_local =
+          ( (local_loc, t),
+            Ast.Pattern.Identifier
+              {
+                Ast.Pattern.Identifier.name = ((local_id_loc, t), local_id_name);
+                annot = typed_annot;
+                optional;
+              }
+          )
+        in
+        let typed_default = Base.Option.map ~f:Tast_utils.error_mapper#expression default in
+        let typed_param =
+          ( loc,
+            {
+              C.Param.name = typed_stmt_name;
+              local = typed_local;
+              default = typed_default;
+              shorthand;
+            }
+          )
+        in
+        (* Build type component param for Component_type_params *)
+        let typed_tc_name =
+          match param_name with
+          | C.Param.StringLiteral (l, n) -> C.Param.StringLiteral (l, n)
+          | C.Param.Identifier (l, x) -> C.Param.Identifier ((l, t), x)
+        in
+        let type_param_annot =
+          match typed_annot with
+          | Ast.Type.Available annot -> annot
+          | Ast.Type.Missing (hint_loc, hint_t) ->
+            (* Create a synthesized annotation for Component_type_params *)
+            (hint_loc, ((hint_loc, hint_t), Ast.Type.Any None))
+        in
+        let type_param =
+          (loc, { TC.Param.name = typed_tc_name; annot = type_param_annot; optional })
+        in
+        (t, type_param, typed_param)
+      | _ ->
+        (* Non-identifier patterns (e.g., object/array destructuring via `as`) are errors,
+           but we still need to produce something for the typed AST *)
+        let t = Type.AnyT.error (mk_reason RAnyImplicit loc) in
+        let typed_local = Tast_utils.error_mapper#pattern local in
+        let typed_default = Base.Option.map ~f:Tast_utils.error_mapper#expression default in
+        (* Build typed param_name for statement params *)
+        let typed_stmt_name =
+          match param_name with
+          | C.Param.StringLiteral sl -> C.Param.StringLiteral sl
+          | C.Param.Identifier (l, x) -> C.Param.Identifier ((l, t), x)
+        in
+        let typed_param =
+          ( loc,
+            {
+              C.Param.name = typed_stmt_name;
+              local = typed_local;
+              default = typed_default;
+              shorthand;
+            }
+          )
+        in
+        (* Build type component param for Component_type_params *)
+        let typed_tc_name =
+          match param_name with
+          | C.Param.StringLiteral (l, n) -> C.Param.StringLiteral (l, n)
+          | C.Param.Identifier (l, x) -> C.Param.Identifier ((l, t), x)
+        in
+        let type_param =
+          ( loc,
+            {
+              TC.Param.name = typed_tc_name;
+              annot = (loc, ((loc, t), Ast.Type.Any None));
+              optional = false;
+            }
+          )
+        in
+        (t, type_param, typed_param)
+    in
+    (* Process rest param *)
+    let process_rest (loc, rest_param) =
+      let { C.RestParam.argument; comments = rest_comments } = rest_param in
+      let (arg_loc, arg_pattern) = argument in
+      match arg_pattern with
+      | Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = arg_id; annot; optional } ->
+        let (arg_id_loc, arg_id_name) = arg_id in
+        let (t, typed_annot) = convert_annot_or_hint loc annot in
+        (* Build typed statement rest param *)
+        let typed_argument =
+          ( (arg_loc, t),
+            Ast.Pattern.Identifier
+              {
+                Ast.Pattern.Identifier.name = ((arg_id_loc, t), arg_id_name);
+                annot = typed_annot;
+                optional;
+              }
+          )
+        in
+        let typed_rest =
+          (loc, { C.RestParam.argument = typed_argument; comments = rest_comments })
+        in
+        (* Build type component rest param for Component_type_params *)
+        let type_rest_annot =
+          match typed_annot with
+          | Ast.Type.Available (_, annot_ast) -> annot_ast
+          | Ast.Type.Missing (hint_loc, hint_t) -> ((hint_loc, hint_t), Ast.Type.Any None)
+        in
+        let type_rest =
+          ( loc,
+            {
+              TC.RestParam.argument = Some ((arg_id_loc, t), arg_id_name);
+              annot = type_rest_annot;
+              optional;
+              comments = rest_comments;
+            }
+          )
+        in
+        (t, type_rest, typed_rest)
+      | _ ->
+        (* Non-identifier patterns are errors, produce error typed AST *)
+        let t = Type.AnyT.error (mk_reason RAnyImplicit loc) in
+        let typed_argument = Tast_utils.error_mapper#pattern argument in
+        let typed_rest =
+          (loc, { C.RestParam.argument = typed_argument; comments = rest_comments })
+        in
+        let type_rest =
+          ( loc,
+            {
+              TC.RestParam.argument = None;
+              annot = ((loc, t), Ast.Type.Any None);
+              optional = false;
+              comments = rest_comments;
+            }
+          )
+        in
+        (t, type_rest, typed_rest)
+    in
+    (* Process all params *)
+    let processed_params = Base.List.map ~f:process_param param_list in
+    let processed_rest = Base.Option.map ~f:process_rest rest in
+    (* Build Component_type_params *)
+    let cparams =
+      let type_params = Base.List.map ~f:(fun (t, tp, _) -> (t, tp)) processed_params in
+      let type_rest = Base.Option.map ~f:(fun (t, tr, _) -> (t, tr)) processed_rest in
+      let cparams =
+        Component_type_params.empty (fun ps rs ->
+            (params_loc, { TC.Params.params = ps; rest = rs; comments = params_comments })
+        )
+      in
+      let cparams =
+        Base.List.fold
+          ~f:(fun acc param -> Component_type_params.add_param param acc)
+          ~init:cparams
+          type_params
+      in
+      Base.Option.fold
+        ~f:(fun acc rest -> Component_type_params.add_rest rest acc)
+        ~init:cparams
+        type_rest
+    in
+    (* Build typed statement params *)
+    let typed_params =
+      let stmt_params = Base.List.map ~f:(fun (_, _, sp) -> sp) processed_params in
+      let stmt_rest = Base.Option.map ~f:(fun (_, _, sr) -> sr) processed_rest in
+      (params_loc, { C.Params.params = stmt_params; rest = stmt_rest; comments = params_comments })
+    in
+    (* Process renders *)
+    let (ren_loc, renders_t, renders_ast) =
+      match renders with
+      | Ast.Type.AvailableRenders (loc, annot) ->
+        let (t, renders_ast) = convert_render_type env loc annot in
+        (loc, t, Ast.Type.AvailableRenders (loc, renders_ast))
+      | Ast.Type.MissingRenders loc ->
+        let reason =
+          Reason.(mk_annot_reason (RRenderType (RType (OrdinaryName "React.Node"))) loc)
+        in
+        let renders_t = DefT (reason, RendersT DefaultRenders) in
+        (loc, renders_t, Ast.Type.MissingRenders (loc, renders_t))
+    in
+    (* Build component type *)
+    let sig_ =
+      {
+        Component_type_sig_types.reason;
+        tparams;
+        cparams;
+        body = ();
+        renders_t;
+        ret_annot_loc = ren_loc;
+        id_opt = Some (id_loc, name);
+      }
+    in
+    let t = Component_type_sig.component_type env.cx ~in_annotation:false sig_ in
     ( t,
       {
         Ast.Statement.DeclareComponent.tparams = tparam_asts;
-        params = params_ast;
+        params = typed_params;
         id = ((id_loc, t), id);
         renders = renders_ast;
         comments;

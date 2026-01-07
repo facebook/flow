@@ -1045,9 +1045,9 @@ Cannot create `OptionalRest` element because in property `foo`: string [1] is in
                                         ^^^^^ [1]
 
 References:
-   declared.js:39:15
-   39|     ...{foo?: number}
-                     ^^^^^^ [2]
+   declared.js:39:21
+   39|     ...rest: {foo?: number}
+                           ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ declared.js:45:19
@@ -1058,22 +1058,22 @@ Component identifiers must begin with an upper-case character [component-case]
                          ^^^^^^^^^
 
 
-Error ------------------------------------------------------------------------------------------------ declared.js:47:43
+Error ------------------------------------------------------------------------------------------------ declared.js:47:49
 
 Component property `x` [1] is re-declared [2] within a spread [3]. Property names may only be have one definition within
 a component. [invalid-component-prop]
 
-   declared.js:47:43
-   47| declare component Duplicate(x: number, ...{x: number}); // error
-                                                 ^^^^^^^^^^^ [3]
+   declared.js:47:49
+   47| declare component Duplicate(x: number, ...rest: {x: number}); // error
+                                                       ^^^^^^^^^^^ [3]
 
 References:
    declared.js:47:29
-   47| declare component Duplicate(x: number, ...{x: number}); // error
+   47| declare component Duplicate(x: number, ...rest: {x: number}); // error
                                    ^ [1]
-   declared.js:47:44
-   47| declare component Duplicate(x: number, ...{x: number}); // error
-                                                  ^ [2]
+   declared.js:47:50
+   47| declare component Duplicate(x: number, ...rest: {x: number}); // error
+                                                        ^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------ declared.js:50:29

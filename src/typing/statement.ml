@@ -1856,12 +1856,14 @@ module Make
         DeclareComponent
           ( {
               Ast.Statement.DeclareComponent.id = (name_loc, { Ast.Identifier.name; comments = _ });
+              params;
               _;
             } as decl
           )
       ) ->
       if name <> String.capitalize_ascii name then
         Flow_js_utils.add_output cx Error_message.(EComponentCase name_loc);
+      validate_declare_component_params cx params;
       let (t, decl_ast) = declare_component cx loc decl in
       let use_op =
         Op
@@ -2318,6 +2320,70 @@ module Make
       let (t, class_sig, decl_ast) = Anno.mk_declare_class_sig cx loc name reason decl in
       Class_type_sig.check_signature_compatibility cx (mk_reason desc loc) class_sig;
       (t, decl_ast)
+
+  and validate_declare_component_params cx params =
+    let open Ast.Statement.ComponentDeclaration in
+    let (_, { Params.params = param_list; rest; comments = _ }) = params in
+    (* Validate each param *)
+    List.iter
+      (fun (loc, param) ->
+        let { Param.name; local; default; shorthand } = param in
+        (* Check for default values - not allowed in declare component *)
+        (match default with
+        | Some _ ->
+          Flow_js_utils.add_output
+            cx
+            Error_message.(
+              EDeclareComponentInvalidParam
+                { loc; kind = Flow_intermediate_error_types.DeclareComponentParamDefaultValue }
+            )
+        | None -> ());
+        (* Check for as bindings and string literal params *)
+        (* - Identifier params with as bindings are not allowed *)
+        (* - String literal params without as bindings are required to have one *)
+        (match name with
+        | Param.Identifier _ when not shorthand ->
+          Flow_js_utils.add_output
+            cx
+            Error_message.(
+              EDeclareComponentInvalidParam
+                { loc; kind = Flow_intermediate_error_types.DeclareComponentParamAsBinding }
+            )
+        | Param.StringLiteral (name_loc, _) when shorthand ->
+          Flow_js_utils.add_output
+            cx
+            Error_message.(
+              EDeclareComponentInvalidParam
+                {
+                  loc = name_loc;
+                  kind = Flow_intermediate_error_types.DeclareComponentParamStringLiteralWithoutAs;
+                }
+            )
+        | _ -> ());
+        (* Check for missing annotation *)
+        match local with
+        | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.annot = Ast.Type.Missing _; _ }) ->
+          Flow_js_utils.add_output
+            cx
+            Error_message.(
+              EDeclareComponentInvalidParam
+                { loc; kind = Flow_intermediate_error_types.DeclareComponentParamMissingAnnotation }
+            )
+        | _ -> ())
+      param_list;
+    (* Validate rest param *)
+    match rest with
+    | Some (loc, { RestParam.argument; comments = _ }) ->
+      (match argument with
+      | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.annot = Ast.Type.Missing _; _ }) ->
+        Flow_js_utils.add_output
+          cx
+          Error_message.(
+            EDeclareComponentInvalidParam
+              { loc; kind = Flow_intermediate_error_types.DeclareComponentParamMissingAnnotation }
+          )
+      | _ -> ())
+    | None -> ()
 
   and declare_component cx loc decl =
     let node_cache = Context.node_cache cx in

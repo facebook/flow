@@ -647,7 +647,7 @@ module Statements = struct
   let declare_component
       ?(loc = Loc.none) ?tparams ?params ?comments ?(renders = Ast.Type.MissingRenders Loc.none) id
       =
-    let params' = Base.Option.value ~default:(component_type_params []) params in
+    let params' = Base.Option.value ~default:(component_params []) params in
     ( loc,
       DeclareComponent
         {

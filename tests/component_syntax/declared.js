@@ -36,7 +36,7 @@ const defaultsGood = <DefaultProps />; // OK!
 const defaultsBad = <DefaultProps foo="bad" />; // ERROR
 
 declare component OptionalRest(
-    ...{foo?: number}
+    ...rest: {foo?: number}
   );
 
 const optGood = <OptionalRest />; // OK!
@@ -44,7 +44,7 @@ const optBad = <OptionalRest foo="bad" />; // ERROR
 
 declare component lowercase(); // error
 
-declare component Duplicate(x: number, ...{x: number}); // error
+declare component Duplicate(x: number, ...rest: {x: number}); // error
 <Duplicate x={1} />;
 
 declare component InlineRef(ref: number); // error

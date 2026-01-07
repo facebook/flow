@@ -576,7 +576,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let { id = ident; params; renders; tparams; comments } = decl in
       let ident' = this#t_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
-          let params' = this#component_type_params params in
+          let params' = this#component_params params in
           let renders' = this#component_renders_annotation renders in
           let comments' = this#syntax_opt comments in
           {

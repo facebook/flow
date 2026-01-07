@@ -603,6 +603,10 @@ and 'loc t' =
       this_loc: 'loc;
     }
   | EComponentCase of 'loc
+  | EDeclareComponentInvalidParam of {
+      loc: 'loc;
+      kind: declare_component_invalid_param_kind;
+    }
   | EComponentMissingReturn of 'loc virtual_reason
   | EComponentMissingBody of 'loc
   | EComponentBodyInAmbientContext of 'loc
@@ -1722,6 +1726,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EComponentThisReference { component_loc; this_loc } ->
     EComponentThisReference { component_loc = f component_loc; this_loc = f this_loc }
   | EComponentCase loc -> EComponentCase (f loc)
+  | EDeclareComponentInvalidParam { loc; kind } ->
+    EDeclareComponentInvalidParam { loc = f loc; kind }
   | EComponentMissingReturn r -> EComponentMissingReturn (map_reason r)
   | EComponentMissingBody loc -> EComponentMissingBody (f loc)
   | EComponentBodyInAmbientContext loc -> EComponentBodyInAmbientContext (f loc)
@@ -2246,6 +2252,7 @@ let util_use_op_of_msg nope util = function
   | EObjectThisSuperReference _
   | EComponentThisReference _
   | EComponentCase _
+  | EDeclareComponentInvalidParam _
   | EComponentMissingReturn _
   | EComponentMissingBody _
   | EComponentBodyInAmbientContext _
@@ -2499,7 +2506,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EMissingPlatformSupport { loc; _ }
   | EUnionPartialOptimizationNonUniqueKey { loc; _ }
   | EUnionOptimization { loc; _ }
-  | EUnionOptimizationOnNonUnion { loc; _ } ->
+  | EUnionOptimizationOnNonUnion { loc; _ }
+  | EDeclareComponentInvalidParam { loc; _ } ->
     Some loc
   | ELintSetting (loc, _) -> Some loc
   | ETypeParamArity (loc, _) -> Some loc
@@ -3553,6 +3561,8 @@ let friendly_message_of_msg = function
   | EComponentThisReference { component_loc; this_loc = _ } ->
     Normal (MessageThisInComponent component_loc)
   | EComponentCase _ -> Normal MessageComponentNonUpperCase
+  | EDeclareComponentInvalidParam { loc = _; kind } ->
+    Normal (MessageDeclareComponentInvalidParam kind)
   | EComponentMissingReturn reason -> Normal (MessageComponentMissingReturn reason)
   | EComponentMissingBody _ -> Normal MessageComponentMissingBody
   | EComponentBodyInAmbientContext _ -> Normal MessageComponentBodyInAmbientContext
@@ -4089,6 +4099,7 @@ let error_code_of_message err : error_code option =
   | EObjectThisSuperReference _ -> Some ObjectThisReference
   | EComponentThisReference _ -> Some ComponentThisReference
   | EComponentCase _ -> Some ComponentCase
+  | EDeclareComponentInvalidParam _ -> Some InvalidComponentProp
   | EComponentMissingReturn _ -> Some ComponentMissingReturn
   | EComponentMissingBody _ -> Some ComponentMissingBody
   | EComponentBodyInAmbientContext _ -> Some ComponentBodyInAmbientContext

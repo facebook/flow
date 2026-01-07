@@ -3,4 +3,4 @@ export type Props<TValue> = $ReadOnly<{
   value: TValue,
 }>;
 
-declare export default (component<TValue>(...Props<TValue>));
+declare export default (component<TValue>(...props: Props<TValue>));

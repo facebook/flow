@@ -35,6 +35,12 @@ type exactness_error_kind =
   | UnexpectedIndexer
   | UnexpectedInexact
 
+type declare_component_invalid_param_kind =
+  | DeclareComponentParamAsBinding
+  | DeclareComponentParamDefaultValue
+  | DeclareComponentParamMissingAnnotation
+  | DeclareComponentParamStringLiteralWithoutAs
+
 type expected_module_purpose =
   | ReactModuleForJSXFragment
   | ReactModuleForReactClassComponent
@@ -769,6 +775,7 @@ type 'loc message =
   | MessageComponentMissingBody
   | MessageComponentBodyInAmbientContext
   | MessageComponentNonUpperCase
+  | MessageDeclareComponentInvalidParam of declare_component_invalid_param_kind
   | MessageDefinitionCycle of ('loc virtual_reason * 'loc list * 'loc Env_api.annot_loc list) Nel.t
   | MessageDefinitionInvalidRecursive of {
       description: 'loc virtual_reason_desc;

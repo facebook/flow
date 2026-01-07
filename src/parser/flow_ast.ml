@@ -1159,7 +1159,7 @@ and Statement : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
       tparams: ('M, 'T) Type.TypeParams.t option;
-      params: ('M, 'T) Type.Component.Params.t;
+      params: ('M, 'T) ComponentDeclaration.Params.t;
       renders: ('M, 'T) Type.component_renders_annotation;
       comments: ('M, unit) Syntax.t option;
     }

@@ -4825,7 +4825,9 @@ and declare_component
     {
       Ast.Statement.DeclareComponent.id;
       tparams;
-      params = (params_loc, { Ast.Type.Component.Params.comments = params_comments; _ }) as params;
+      params =
+        (params_loc, { Ast.Statement.ComponentDeclaration.Params.comments = params_comments; _ }) as
+        params;
       renders;
       comments;
     } =
@@ -4845,7 +4847,7 @@ and declare_component
                 layout_node_with_comments_opt
                   params_loc
                   params_comments
-                  (component_type_params ~opts params);
+                  (component_params ~ctxt:normal_context ~opts params);
                 component_renders ~opts renders;
               ];
           ]
