@@ -162,31 +162,51 @@ let tests =
     ( "declare_component_with_simple_params" >:: fun ctxt ->
       let open Flow_ast.Statement.ComponentDeclaration.Param in
       let params =
-        S.component_type_params
+        S.component_params
           [
-            S.component_type_param
-              (Identifier (Ast_builder.Identifiers.identifier "p1"))
-              (T.annotation @@ T.number ());
-            S.component_type_param
-              (StringLiteral (Loc.none, Ast_builder.string_literal "p-2"))
-              (T.annotation @@ T.void ());
+            ( Loc.none,
+              {
+                name = Identifier (Ast_builder.Identifiers.identifier "p1");
+                local =
+                  Ast_builder.Patterns.identifier
+                    ~annot:(Flow_ast.Type.Available (T.annotation @@ T.number ()))
+                    "p1";
+                default = None;
+                shorthand = true;
+              }
+            );
+            ( Loc.none,
+              {
+                name = StringLiteral (Loc.none, Ast_builder.string_literal "p-2");
+                local =
+                  Ast_builder.Patterns.identifier
+                    ~annot:(Flow_ast.Type.Available (T.annotation @@ T.void ()))
+                    "p2";
+                default = None;
+                shorthand = false;
+              }
+            );
           ]
       in
       let ast = S.declare_component ~params "Comp" in
       let layout = Js_layout_generator.statement ~opts ast in
-      assert_output ~ctxt "declare component Comp(p1:number,\"p-2\":void);" layout;
-      assert_output ~ctxt ~pretty:true "declare component Comp(p1: number, \"p-2\": void);" layout
+      assert_output ~ctxt "declare component Comp(p1:number,\"p-2\" as p2:void);" layout;
+      assert_output
+        ~ctxt
+        ~pretty:true
+        "declare component Comp(p1: number, \"p-2\" as p2: void);"
+        layout
     );
     ( "declare_component_with_rest" >:: fun ctxt ->
       let params =
-        S.component_type_params
+        S.component_params
           ~rest:
             ( Loc.none,
               {
-                Flow_ast.Type.Component.RestParam.argument =
-                  Some (Ast_builder.Identifiers.identifier "rest");
-                optional = false;
-                annot = T.mixed ();
+                Flow_ast.Statement.ComponentDeclaration.RestParam.argument =
+                  Ast_builder.Patterns.identifier
+                    ~annot:(Flow_ast.Type.Available (T.annotation @@ T.mixed ()))
+                    "rest";
                 comments = None;
               }
             )
@@ -197,49 +217,38 @@ let tests =
       assert_output ~ctxt "declare component Comp(...rest:mixed);" layout;
       assert_output ~ctxt ~pretty:true "declare component Comp(...rest: mixed);" layout
     );
-    ( "declare_component_with_optional_rest" >:: fun ctxt ->
-      let params =
-        S.component_type_params
-          ~rest:
-            ( Loc.none,
-              {
-                Flow_ast.Type.Component.RestParam.argument =
-                  Some (Ast_builder.Identifiers.identifier "rest");
-                optional = true;
-                annot = T.mixed ();
-                comments = None;
-              }
-            )
-          []
-      in
-      let ast = S.declare_component ~params "Comp" in
-      let layout = Js_layout_generator.statement ~opts ast in
-      assert_output ~ctxt "declare component Comp(...rest?:mixed);" layout;
-      assert_output ~ctxt ~pretty:true "declare component Comp(...rest?: mixed);" layout
-    );
     ( "declare_component_with_param_and_rest" >:: fun ctxt ->
       let open Flow_ast.Statement.ComponentDeclaration.Param in
       let params =
-        S.component_type_params
+        S.component_params
           ~rest:
             ( Loc.none,
               {
-                Flow_ast.Type.Component.RestParam.argument = None;
-                optional = false;
-                annot = T.mixed ();
+                Flow_ast.Statement.ComponentDeclaration.RestParam.argument =
+                  Ast_builder.Patterns.identifier
+                    ~annot:(Flow_ast.Type.Available (T.annotation @@ T.mixed ()))
+                    "rest";
                 comments = None;
               }
             )
           [
-            S.component_type_param
-              (Identifier (Ast_builder.Identifiers.identifier "p1"))
-              (T.annotation @@ T.number ());
+            ( Loc.none,
+              {
+                name = Identifier (Ast_builder.Identifiers.identifier "p1");
+                local =
+                  Ast_builder.Patterns.identifier
+                    ~annot:(Flow_ast.Type.Available (T.annotation @@ T.number ()))
+                    "p1";
+                default = None;
+                shorthand = true;
+              }
+            );
           ]
       in
       let ast = S.declare_component ~params "Comp" in
       let layout = Js_layout_generator.statement ~opts ast in
-      assert_output ~ctxt "declare component Comp(p1:number,...mixed);" layout;
-      assert_output ~ctxt ~pretty:true "declare component Comp(p1: number, ...mixed);" layout
+      assert_output ~ctxt "declare component Comp(p1:number,...rest:mixed);" layout;
+      assert_output ~ctxt ~pretty:true "declare component Comp(p1: number, ...rest: mixed);" layout
     );
     (* Tests which include parsing *)
     ( "parse_simple_component" >:: fun ctxt ->

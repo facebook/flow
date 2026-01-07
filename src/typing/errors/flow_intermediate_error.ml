@@ -3311,6 +3311,22 @@ let to_printable_error :
       ]
     | MessageComponentNonUpperCase ->
       [text "Component identifiers must begin with an upper-case character"]
+    | MessageDeclareComponentInvalidParam kind ->
+      (match kind with
+      | DeclareComponentParamAsBinding ->
+        [
+          text
+            "Cannot use `as` binding in `declare component` parameters, unless the param name is a string literal. Use the type-only syntax `paramName: Type` instead.";
+        ]
+      | DeclareComponentParamDefaultValue ->
+        [text "Cannot use default values in `declare component` parameters."]
+      | DeclareComponentParamMissingAnnotation ->
+        [text "Missing type annotation on `declare component` parameter."]
+      | DeclareComponentParamStringLiteralWithoutAs ->
+        [
+          text
+            "String literal parameter names in `declare component` require an `as` binding. Use `'param-name' as paramName: Type`.";
+        ])
     | MessageDefinitionCycle dependencies ->
       let compare a b = Loc.compare (loc_of_aloc a) (loc_of_aloc b) in
       let deps =

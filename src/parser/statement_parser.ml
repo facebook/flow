@@ -1267,7 +1267,7 @@ module Statement
     let tparams =
       type_params_remove_trailing env ~kind:Flow_ast_mapper.DeclareComponentTP (Type.type_params env)
     in
-    let params = Type.component_param_list env in
+    let params = Declaration.component_params env in
     let (params, renders) =
       if Peek.is_renders_ident env then
         let renders = Type.renders_annotation_opt env in

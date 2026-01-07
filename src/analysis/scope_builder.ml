@@ -732,7 +732,12 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
         let { id = ident; tparams; params; renders; comments = _ } = expr in
         ignore @@ this#component_identifier ident;
         this#scoped_type_params ~hoist_op:this#hoist_annotations tparams ~in_tparam_scope:(fun () ->
-            let _ = this#component_type_params params in
+            (* Visit type annotations without creating bindings, same as regular components *)
+            let visitor = new component_annot_collector_and_default_remover in
+            ignore @@ visitor#component_params params;
+            visitor#acc
+            |> Base.List.rev
+            |> Base.List.iter ~f:(fun annot -> ignore @@ this#type_ annot);
             this#hoist_annotations (fun () -> ignore @@ this#component_renders_annotation renders)
         );
         expr

@@ -446,11 +446,46 @@ struct
           run this#component_params_annotated params;
           run_opt (this#type_params ~kind:Flow_ast_mapper.ComponentDeclarationTP) tparams
 
+        (* For declare component, we only visit type annotations without pattern identifiers *)
+        method private declare_component_params
+            (params : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Params.t) =
+          let open Ast.Statement.ComponentDeclaration in
+          let (_, { Params.params = params_list; rest; comments = _ }) = params in
+          run_list this#declare_component_param params_list;
+          run_opt this#declare_component_rest_param rest;
+          params
+
+        method private declare_component_param
+            (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.Param.t) =
+          let open Ast.Statement.ComponentDeclaration.Param in
+          let (_, { local; _ }) = param in
+          let (_, patt) = local in
+          (match patt with
+          | Ast.Pattern.Identifier { Ast.Pattern.Identifier.annot; _ }
+          | Ast.Pattern.Object { Ast.Pattern.Object.annot; _ }
+          | Ast.Pattern.Array { Ast.Pattern.Array.annot; _ } ->
+            run this#type_annotation_hint annot
+          | Ast.Pattern.Expression _ -> ());
+          param
+
+        method private declare_component_rest_param
+            (param : ('loc, 'loc) Ast.Statement.ComponentDeclaration.RestParam.t) =
+          let open Ast.Statement.ComponentDeclaration.RestParam in
+          let (_, { argument; _ }) = param in
+          let (_, patt) = argument in
+          (match patt with
+          | Ast.Pattern.Identifier { Ast.Pattern.Identifier.annot; _ }
+          | Ast.Pattern.Object { Ast.Pattern.Object.annot; _ }
+          | Ast.Pattern.Array { Ast.Pattern.Array.annot; _ } ->
+            run this#type_annotation_hint annot
+          | Ast.Pattern.Expression _ -> ());
+          param
+
         method! declare_component _ (expr : ('loc, 'loc) Ast.Statement.DeclareComponent.t) =
           let { Ast.Statement.DeclareComponent.params; renders; tparams; _ } = expr in
           run this#component_renders_annotation renders;
           run_opt (this#type_params ~kind:Flow_ast_mapper.DeclareComponentTP) tparams;
-          run this#component_type_params params;
+          run this#declare_component_params params;
           expr
 
         method function_param_pattern_annotated (expr : ('loc, 'loc) Ast.Pattern.t) =

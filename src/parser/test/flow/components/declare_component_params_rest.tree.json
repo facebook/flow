@@ -15,29 +15,21 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "params":[],
-      "rest":{
-        "type":"ComponentTypeParameter",
-        "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":31}},
-        "range":[24,31],
-        "name":null,
-        "typeAnnotation":{
-          "type":"GenericTypeAnnotation",
-          "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":31}},
-          "range":[27,31],
-          "id":{
+      "params":[
+        {
+          "type":"RestElement",
+          "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":31}},
+          "range":[24,31],
+          "argument":{
             "type":"Identifier",
             "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":31}},
             "range":[27,31],
             "name":"Rest",
             "typeAnnotation":null,
             "optional":false
-          },
-          "typeParameters":null
-        },
-        "optional":false
-      },
-      "params":[],
+          }
+        }
+      ],
       "rendersType":null,
       "typeParameters":null
     },
@@ -53,36 +45,39 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "params":[],
-      "rest":{
-        "type":"ComponentTypeParameter",
-        "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":37}},
-        "range":[59,72],
-        "name":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":3,"column":27},"end":{"line":3,"column":31}},
-          "range":[62,66],
-          "name":"rest",
-          "typeAnnotation":null,
-          "optional":false
-        },
-        "typeAnnotation":{
-          "type":"GenericTypeAnnotation",
-          "loc":{"source":null,"start":{"line":3,"column":33},"end":{"line":3,"column":37}},
-          "range":[68,72],
-          "id":{
+      "params":[
+        {
+          "type":"RestElement",
+          "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":37}},
+          "range":[59,72],
+          "argument":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":3,"column":33},"end":{"line":3,"column":37}},
-            "range":[68,72],
-            "name":"Rest",
-            "typeAnnotation":null,
+            "loc":{"source":null,"start":{"line":3,"column":27},"end":{"line":3,"column":37}},
+            "range":[62,72],
+            "name":"rest",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":3,"column":31},"end":{"line":3,"column":37}},
+              "range":[66,72],
+              "typeAnnotation":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":3,"column":33},"end":{"line":3,"column":37}},
+                "range":[68,72],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":3,"column":33},"end":{"line":3,"column":37}},
+                  "range":[68,72],
+                  "name":"Rest",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
+            },
             "optional":false
-          },
-          "typeParameters":null
-        },
-        "optional":false
-      },
-      "params":[],
+          }
+        }
+      ],
       "rendersType":null,
       "typeParameters":null
     },
@@ -98,36 +93,39 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "params":[],
-      "rest":{
-        "type":"ComponentTypeParameter",
-        "loc":{"source":null,"start":{"line":5,"column":24},"end":{"line":5,"column":38}},
-        "range":[100,114],
-        "name":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":5,"column":27},"end":{"line":5,"column":31}},
-          "range":[103,107],
-          "name":"rest",
-          "typeAnnotation":null,
-          "optional":false
-        },
-        "typeAnnotation":{
-          "type":"GenericTypeAnnotation",
-          "loc":{"source":null,"start":{"line":5,"column":34},"end":{"line":5,"column":38}},
-          "range":[110,114],
-          "id":{
+      "params":[
+        {
+          "type":"RestElement",
+          "loc":{"source":null,"start":{"line":5,"column":24},"end":{"line":5,"column":38}},
+          "range":[100,114],
+          "argument":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":5,"column":34},"end":{"line":5,"column":38}},
-            "range":[110,114],
-            "name":"Rest",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "typeParameters":null
-        },
-        "optional":true
-      },
-      "params":[],
+            "loc":{"source":null,"start":{"line":5,"column":27},"end":{"line":5,"column":38}},
+            "range":[103,114],
+            "name":"rest",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":5,"column":32},"end":{"line":5,"column":38}},
+              "range":[108,114],
+              "typeAnnotation":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":5,"column":34},"end":{"line":5,"column":38}},
+                "range":[110,114],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":5,"column":34},"end":{"line":5,"column":38}},
+                  "range":[110,114],
+                  "name":"Rest",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
+            },
+            "optional":true
+          }
+        }
+      ],
       "rendersType":null,
       "typeParameters":null
     },
@@ -145,7 +143,7 @@
       },
       "params":[
         {
-          "type":"ComponentTypeParameter",
+          "type":"ComponentParameter",
           "loc":{"source":null,"start":{"line":7,"column":24},"end":{"line":7,"column":32}},
           "range":[142,150],
           "name":{
@@ -156,79 +154,64 @@
             "typeAnnotation":null,
             "optional":false
           },
-          "typeAnnotation":{
-            "type":"GenericTypeAnnotation",
-            "loc":{"source":null,"start":{"line":7,"column":27},"end":{"line":7,"column":32}},
-            "range":[145,150],
-            "id":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":7,"column":27},"end":{"line":7,"column":32}},
-              "range":[145,150],
-              "name":"Param",
-              "typeAnnotation":null,
-              "optional":false
-            },
-            "typeParameters":null
-          },
-          "optional":false
-        }
-      ],
-      "rest":{
-        "type":"ComponentTypeParameter",
-        "loc":{"source":null,"start":{"line":7,"column":34},"end":{"line":7,"column":47}},
-        "range":[152,165],
-        "name":{
-          "type":"Identifier",
-          "loc":{"source":null,"start":{"line":7,"column":37},"end":{"line":7,"column":41}},
-          "range":[155,159],
-          "name":"rest",
-          "typeAnnotation":null,
-          "optional":false
-        },
-        "typeAnnotation":{
-          "type":"GenericTypeAnnotation",
-          "loc":{"source":null,"start":{"line":7,"column":43},"end":{"line":7,"column":47}},
-          "range":[161,165],
-          "id":{
+          "local":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":7,"column":43},"end":{"line":7,"column":47}},
-            "range":[161,165],
-            "name":"Rest",
-            "typeAnnotation":null,
+            "loc":{"source":null,"start":{"line":7,"column":24},"end":{"line":7,"column":32}},
+            "range":[142,150],
+            "name":"p",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":7,"column":25},"end":{"line":7,"column":32}},
+              "range":[143,150],
+              "typeAnnotation":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":7,"column":27},"end":{"line":7,"column":32}},
+                "range":[145,150],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":7,"column":27},"end":{"line":7,"column":32}},
+                  "range":[145,150],
+                  "name":"Param",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
+            },
             "optional":false
           },
-          "typeParameters":null
+          "shorthand":true
         },
-        "optional":false
-      },
-      "params":[
         {
-          "type":"ComponentTypeParameter",
-          "loc":{"source":null,"start":{"line":7,"column":24},"end":{"line":7,"column":32}},
-          "range":[142,150],
-          "name":{
+          "type":"RestElement",
+          "loc":{"source":null,"start":{"line":7,"column":34},"end":{"line":7,"column":47}},
+          "range":[152,165],
+          "argument":{
             "type":"Identifier",
-            "loc":{"source":null,"start":{"line":7,"column":24},"end":{"line":7,"column":25}},
-            "range":[142,143],
-            "name":"p",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "typeAnnotation":{
-            "type":"GenericTypeAnnotation",
-            "loc":{"source":null,"start":{"line":7,"column":27},"end":{"line":7,"column":32}},
-            "range":[145,150],
-            "id":{
-              "type":"Identifier",
-              "loc":{"source":null,"start":{"line":7,"column":27},"end":{"line":7,"column":32}},
-              "range":[145,150],
-              "name":"Param",
-              "typeAnnotation":null,
-              "optional":false
+            "loc":{"source":null,"start":{"line":7,"column":37},"end":{"line":7,"column":47}},
+            "range":[155,165],
+            "name":"rest",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":7,"column":41},"end":{"line":7,"column":47}},
+              "range":[159,165],
+              "typeAnnotation":{
+                "type":"GenericTypeAnnotation",
+                "loc":{"source":null,"start":{"line":7,"column":43},"end":{"line":7,"column":47}},
+                "range":[161,165],
+                "id":{
+                  "type":"Identifier",
+                  "loc":{"source":null,"start":{"line":7,"column":43},"end":{"line":7,"column":47}},
+                  "range":[161,165],
+                  "name":"Rest",
+                  "typeAnnotation":null,
+                  "optional":false
+                },
+                "typeParameters":null
+              }
             },
-            "typeParameters":null
-          },
-          "optional":false
+            "optional":false
+          }
         }
       ],
       "rendersType":null,

@@ -16,8 +16,6 @@
         "optional":false
       },
       "params":[],
-      "rest":null,
-      "params":[],
       "rendersType":null,
       "typeParameters":null
     },
@@ -38,8 +36,6 @@
           "typeAnnotation":null,
           "optional":false
         },
-        "params":[],
-        "rest":null,
         "params":[],
         "rendersType":null,
         "typeParameters":null
@@ -65,8 +61,6 @@
           "optional":false
         },
         "params":[],
-        "rest":null,
-        "params":[],
         "rendersType":null,
         "typeParameters":null
       },
@@ -85,8 +79,6 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "params":[],
-      "rest":null,
       "params":[],
       "rendersType":{
         "type":"TypeOperator",
@@ -122,8 +114,6 @@
         "typeAnnotation":null,
         "optional":false
       },
-      "params":[],
-      "rest":null,
       "params":[],
       "rendersType":null,
       "typeParameters":{

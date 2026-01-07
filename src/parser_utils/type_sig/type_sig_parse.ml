@@ -3709,9 +3709,9 @@ and function_def = function_def_helper ~constructor:false
 
 and constructor_def = function_def_helper ~constructor:true
 
-and component_def =
+and component_sig_helper opts scope tbls tps ps r =
   let module C = Ast.Statement.ComponentDeclaration in
-  let param opts scope tbls xs (loc, p) =
+  let component_param opts scope tbls xs (loc, p) =
     let { C.Param.name; local = (_, patt); default; _ } = p in
     let (name, name_loc) =
       match name with
@@ -3723,13 +3723,13 @@ and component_def =
     let (_, _, t) = param opts scope tbls xs loc patt ~bind_names:false default in
     ComponentParam { name; name_loc; t }
   in
-  let rec params opts scope tbls xs acc = function
+  let rec component_params opts scope tbls xs acc = function
     | [] -> List.rev acc
     | p :: ps ->
-      let p = param opts scope tbls xs p in
-      params opts scope tbls xs (p :: acc) ps
+      let p = component_param opts scope tbls xs p in
+      component_params opts scope tbls xs (p :: acc) ps
   in
-  let renders opts scope tbls xs ret =
+  let component_renders opts scope tbls xs ret =
     match ret with
     | Ast.Type.AvailableRenders
         (loc, { Ast.Type.Renders.operator_loc = _; comments = _; variant; argument }) ->
@@ -3740,36 +3740,38 @@ and component_def =
       let loc = push_loc tbls loc in
       Annot (ComponentMissingRenders loc)
   in
-  fun opts scope tbls f ->
-    let {
-      C.id = _;
-      tparams = tps;
-      params = (loc, { C.Params.params = ps; rest = rp; comments = _ });
-      body = _;
-      renders = r;
-      sig_loc = _;
-      comments = _;
-    } =
-      f
-    in
-    let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
-    let loc = push_loc tbls loc in
-    let params = params opts scope tbls (xs, tparams) [] ps in
-    let rest_param =
-      match rp with
-      | Some (param_loc, { C.RestParam.argument = (_, p); comments = _ }) ->
-        let (rp, _scope) = rest_param opts scope tbls (xs, tparams) param_loc ~bind_names:false p in
-        Base.Option.map ~f:(fun (_, _, t) -> ComponentRestParam { t }) rp
-      | None -> None
-    in
-    let renders = renders opts scope tbls xs r in
-    ComponentSig { params_loc = loc; tparams; params; rest_param; renders }
+  let (loc, { C.Params.params = param_list; rest; comments = _ }) = ps in
+  let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+  let loc = push_loc tbls loc in
+  let params = component_params opts scope tbls (xs, tparams) [] param_list in
+  let rest_param =
+    match rest with
+    | Some (param_loc, { C.RestParam.argument = (_, p); comments = _ }) ->
+      let (rp, _scope) = rest_param opts scope tbls (xs, tparams) param_loc ~bind_names:false p in
+      Base.Option.map ~f:(fun (_, _, t) -> ComponentRestParam { t }) rp
+    | None -> None
+  in
+  let renders = component_renders opts scope tbls xs r in
+  ComponentSig { params_loc = loc; tparams; params; rest_param; renders }
 
-and declare_component_def opts scope tbls f =
-  let { Ast.Statement.DeclareComponent.id = _; tparams = tps; params; renders = r; comments = _ } =
+and component_def opts scope tbls f =
+  let module C = Ast.Statement.ComponentDeclaration in
+  let { C.id = _; tparams = tps; params = ps; body = _; renders = r; sig_loc = _; comments = _ } =
     f
   in
-  component_type opts scope tbls SSet.empty tps params r
+  component_sig_helper opts scope tbls tps ps r
+
+and declare_component_def opts scope tbls f =
+  let {
+    Ast.Statement.DeclareComponent.id = _;
+    tparams = tps;
+    params = ps;
+    renders = r;
+    comments = _;
+  } =
+    f
+  in
+  component_sig_helper opts scope tbls tps ps r
 
 and class_def =
   let module C = Ast.Class in

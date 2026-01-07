@@ -2083,6 +2083,16 @@ let dump_error_message =
       spf "ETemporaryHardcodedErrorForPrototyping (%s, _)" (dump_reason cx reason)
     | ETypeParamConstIncompatibility { lower = reason; _ } ->
       spf "ETypeParamConstIncompatibility (%s)" (dump_reason cx reason)
+    | EDeclareComponentInvalidParam { loc; kind } ->
+      let kind_str =
+        let open Flow_intermediate_error_types in
+        match kind with
+        | DeclareComponentParamAsBinding -> "AsBinding"
+        | DeclareComponentParamDefaultValue -> "DefaultValue"
+        | DeclareComponentParamMissingAnnotation -> "MissingAnnotation"
+        | DeclareComponentParamStringLiteralWithoutAs -> "StringLiteralWithoutAs"
+      in
+      spf "EDeclareComponentInvalidParam { loc=%s; kind=%s }" (string_of_aloc loc) kind_str
     | ETypeParamConstInvalidPosition reason ->
       spf "ETypeParamConstInvalidPosition (%s)" (dump_reason cx reason)
     | EConstantCondition { loc; is_truthy; show_warning; constant_condition_kind; reason } ->

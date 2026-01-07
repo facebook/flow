@@ -1155,7 +1155,8 @@ with type t = Impl.t = struct
       let {
         Statement.DeclareComponent.id;
         tparams;
-        params = (_, { Type.Component.Params.comments = params_comments; _ }) as params;
+        params =
+          (_, { Statement.ComponentDeclaration.Params.comments = params_comments; _ }) as params;
         renders;
         comments = component_comments;
       } =
@@ -1166,16 +1167,13 @@ with type t = Impl.t = struct
           ~outer:component_comments
           ~inner:(format_internal_comments params_comments)
       in
-      let (_, { Type.Component.Params.params = param_list; rest; comments = _ }) = params in
       node
         ?comments
         "DeclareComponent"
         loc
         [
           ("id", identifier id);
-          ("params", component_type_params param_list);
-          ("rest", option component_type_rest_param rest);
-          ("params", component_type_params param_list);
+          ("params", component_params params);
           ("rendersType", renders_annotation renders);
           ("typeParameters", option type_parameter_declaration tparams);
         ]

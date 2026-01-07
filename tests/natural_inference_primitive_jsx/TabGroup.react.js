@@ -8,5 +8,5 @@ export type Props<TValue> = $ReadOnly<{
   value?: ?TValue,
 }>;
 
-declare component TabGroup<TValue>(...Props<TValue>);
-declare export default (component<TValue>(...Props<TValue>));
+declare component TabGroup<TValue>(...props: Props<TValue>);
+declare export default (component<TValue>(...props: Props<TValue>));
