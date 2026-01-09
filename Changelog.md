@@ -1,3 +1,12 @@
+### 0.296.0
+
+Declarations:
+* The `declare` keyword can be omitted for `declare const/let/var variable: type` and `declare component` under a declaration context (libdef file, .js.flow file, declare module, declare namespace)
+* `declare component` now requires the rest props to be named - matching normal `component` declarations
+
+Misc:
+* The `Omit<O, K>` utility type will no longer enforce that the provided keys `K` need to be part of `O`
+
 ### 0.295.0
 
 New Features:
