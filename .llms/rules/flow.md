@@ -40,6 +40,7 @@ See tests/README.md for detailed instructions.
 ### Source Code Structure (`src/`)
 
 - **`analysis/`** - Static analysis passes (bindings, hoisting, environment building)
+  - **`env_builder`** - See [env_builder README](../../src/analysis/env_builder/README.md) for details on environment analysis.
 - **`commands/`** - CLI command implementations
 - **`common/`** - Shared utilities and data structures
 - **`heap/`** - Shared memory heap for worker processes
