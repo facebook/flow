@@ -1,4 +1,4 @@
-declare function invariant(boolean): void;
+declare function invariant(x: boolean): void;
 
 function f1(b: boolean): number {
   if (b) {

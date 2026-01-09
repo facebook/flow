@@ -8,7 +8,7 @@ let w: {...} = {a: []}; // okay
 let u: [number] = []; // err
 let v: $ReadOnlyArray<number> = [];
 
-declare function f(Array<number>): void;
+declare function f(x: Array<number>): void;
 []; //err
 f([]);
 

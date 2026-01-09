@@ -92,7 +92,7 @@ Cannot assign `getKeys2(...)` to `err2_` because `TKey` [1] is incompatible with
 
 References:
    repos_use.js:7:27
-    7| declare function getKeys2<TKey>({+[T<TKey>]: mixed}): TKey;
+    7| declare function getKeys2<TKey>(x: {+[T<TKey>]: mixed}): TKey;
                                  ^^^^ [1]
    repos_use.js:25:14
    25| const err2_: 'FOO' = getKeys2(dict); // ERR

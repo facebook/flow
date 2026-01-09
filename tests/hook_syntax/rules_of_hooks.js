@@ -3,7 +3,7 @@ import * as React from 'react';
 import {forwardRef, memo} from 'react';
 
 declare hook useState(...args: any): any;
-declare hook use(any): any;
+declare hook use(x: any): any;
 declare hook useEffect(...args: any): any;
 declare hook useLayoutEffect(...args: any): any;
 declare hook useCallback(...args: any): any;

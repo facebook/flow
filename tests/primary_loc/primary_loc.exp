@@ -8,17 +8,16 @@ Suppression is missing a code. Please update this suppression to use an error co
 
 Error ------------------------------------------------------------------------------------------------------ test.js:5:3
 
-Cannot call `f` with `"asdf"` bound to the first parameter because string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot call `f` with `"asdf"` bound to `x` because string [1] is incompatible with number [2]. [incompatible-type]
 
    test.js:5:3
    5| f("asdf");
         ^^^^^^ [1]
 
 References:
-   test.js:2:21
-   2| declare function f (number) : string;
-                          ^^^^^^ [2]
+   test.js:2:24
+   2| declare function f (x: number) : string;
+                             ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------------------------ test.js:7:1

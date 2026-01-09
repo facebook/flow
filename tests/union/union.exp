@@ -104,8 +104,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------- short_enum_error.js:11:8
 
-Cannot call `t2` with `t1` bound to the first parameter because `T1` [1] is incompatible with `T2` [2].
-[incompatible-type]
+Cannot call `t2` with `t1` bound to `x` because `T1` [1] is incompatible with `T2` [2]. [incompatible-type]
 
 Type `T1` [1] includes members `a1`, `b1`, `c1` that are not included in type `T2` [2].
 
@@ -117,9 +116,9 @@ References:
    short_enum_error.js:9:21
     9|     declare var t1: T1;
                            ^^ [1]
-   short_enum_error.js:10:25
-   10|     declare function t2(T2): void;
-                               ^^ [2]
+   short_enum_error.js:10:28
+   10|     declare function t2(x: T2): void;
+                                  ^^ [2]
 
 
 Error ----------------------------------------------------------------------------------------- short_enum_error.js:12:5

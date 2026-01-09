@@ -1,7 +1,7 @@
 //@flow
 
-declare function f<T> (x: number => T): T;
-declare function f<T>(x: T => void): T;
+declare function f<T> (x: (a: number) => T): T;
+declare function f<T>(x: (a: T) => void): T;
 
 f((x: string) => {}); // Ok: It will error under Pierce, but we also consider upper bounds here.
 

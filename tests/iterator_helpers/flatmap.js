@@ -1,6 +1,6 @@
 /* @flow */
 declare const iterator: Iterator<number>;
-declare function mapper(number): $ReadOnlyArray<string>
+declare function mapper(x: number): $ReadOnlyArray<string>
 
 // Basic usage
 (iterator.flatMap(mapper): Iterator<string>); // OK

@@ -135,7 +135,7 @@ function test12() {
 }
 
 function test13() {
-  declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, T): [T, U];
+  declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
 
   declare var x: number;
   const [t, u] = takesGuard(

@@ -1569,9 +1569,9 @@ References:
    non_homomorphic.js:40:23
    40|   (keyMirroredObject: {foo: 'bar', bar: 'baz', baz: 'foo'}); // ERROR x3
                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   non_homomorphic.js:35:61
-   35|   declare function keyMirror<const T>(...ReadonlyArray<T>): {[key in T]: key};
-                                                                   ^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:35:64
+   35|   declare function keyMirror<const T>(...x: ReadonlyArray<T>): {[key in T]: key};
+                                                                      ^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ non_homomorphic.js:48:4
@@ -1584,9 +1584,9 @@ type [2]. [incompatible-type]
           ^^^^^^^^^
 
 References:
-   non_homomorphic.js:45:88
-   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...ReadonlyArray<T>): {[key in T]: number};
-                                                                                              ^^^^^^^^^^^^^^^^^^^^ [1]
+   non_homomorphic.js:45:91
+   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...y: ReadonlyArray<T>): {[key in T]: number};
+                                                                                                 ^^^^^^^^^^^^^^^^^^^^ [1]
    non_homomorphic.js:48:15
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
@@ -1611,9 +1611,9 @@ References:
    non_homomorphic.js:48:15
    48|   (noContext: {foo: empty, bar: empty, baz: number}); // ERROR 3x
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
-   non_homomorphic.js:45:88
-   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...ReadonlyArray<T>): {[key in T]: number};
-                                                                                              ^^^^^^^^^^^^^^^^^^^^ [3]
+   non_homomorphic.js:45:91
+   45|   declare function ObjWithKeys<const T>(x: {[key in T]: number}, ...y: ReadonlyArray<T>): {[key in T]: number};
+                                                                                                 ^^^^^^^^^^^^^^^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------- non_homomorphic_resolution.js:10:4

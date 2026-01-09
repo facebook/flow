@@ -24,7 +24,7 @@ function f1() {
 
 // Throws in guards
 function f2() {
-  declare function invariant(boolean): empty;
+  declare function invariant(x: boolean): empty;
 
   match (x) {
     1 => {}

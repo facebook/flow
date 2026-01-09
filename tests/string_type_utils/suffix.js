@@ -29,7 +29,7 @@ type Percent = StringSuffix<'%'>;
 
 // Only string literal suffixes are allowed
 type Err = StringSuffix<string>; // ERROR
-declare function err<T: string>(StringSuffix<T>): void; // ERROR
+declare function err<T: string>(x: StringSuffix<T>): void; // ERROR
 
 // Refinements works
 {

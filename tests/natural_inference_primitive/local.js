@@ -376,20 +376,20 @@ function test_logical_literals() {
 }
 
 function test_synthesis_literals_1() {
-  declare function optional<P>({p: P}): P;
+  declare function optional<P>(x: {p: P}): P;
   let o = optional({p: 3});
   o = 1; // ok
 }
 
 function test_synthesis_literals_2() {
-  declare function optional<P>({p: P}): P;
+  declare function optional<P>(x: {p: P}): P;
   const o = optional({p: {bar: 3}}); // ok
   o.bar = 1; // ok
 }
 
 function test_synthesis_literals_3() {
   declare var cp: {bar: number};
-  declare function optional<P>($ReadOnly<{|cp: P, ...P|}>): P;
+  declare function optional<P>(x: $ReadOnly<{|cp: P, ...P|}>): P;
   const o = optional({cp, bar: 3}); // ok
 }
 

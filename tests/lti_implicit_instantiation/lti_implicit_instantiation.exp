@@ -221,17 +221,16 @@ Cannot resolve name `f7`. [cannot-resolve-name]
 
 Error ------------------------------------------------------------------------------------------ polyt_flow_error.js:2:7
 
-Cannot call `first` with `1` bound to the first parameter because number [1] is incompatible with array type [2].
-[incompatible-type]
+Cannot call `first` with `1` bound to `x` because number [1] is incompatible with array type [2]. [incompatible-type]
 
    polyt_flow_error.js:2:7
    2| first(1); // Incompatibility error, but no error on under-constrained T
             ^ [1]
 
 References:
-   polyt_flow_error.js:1:27
-   1| declare function first<T>(Array<T>): ?T;
-                                ^^^^^^^^ [2]
+   polyt_flow_error.js:1:30
+   1| declare function first<T>(x: Array<T>): ?T;
+                                   ^^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- speculation.js:21:9
@@ -421,7 +420,7 @@ Either add explicit type arguments or cast the expression to your expected type.
 
 References:
    upper_non_t.js:10:44
-   10| declare function ReposLowerTRegressionTest<T>({o?: T}): T;
+   10| declare function ReposLowerTRegressionTest<T>(x: {o?: T}): T;
                                                   ^ [1]
    upper_non_t.js:11:1
    11| ReposLowerTRegressionTest({}); // Error: T under constrained.
@@ -439,7 +438,7 @@ type arguments or cast the expression to your expected type. [underconstrained-i
 
 References:
    upper_non_t.js:20:33
-   20| declare function IndexedAccess1<T>(T['f']): T;
+   20| declare function IndexedAccess1<T>(x: T['f']): T;
                                        ^ [1]
    upper_non_t.js:21:1
    21| IndexedAccess1(1); // Error: T under constrained.
@@ -457,7 +456,7 @@ type arguments or cast the expression to your expected type. [underconstrained-i
 
 References:
    upper_non_t.js:22:33
-   22| declare function IndexedAccess2<T>(T[number]): T;
+   22| declare function IndexedAccess2<T>(x: T[number]): T;
                                        ^ [1]
    upper_non_t.js:23:1
    23| IndexedAccess2(1); // Error: T under constrained.
@@ -475,7 +474,7 @@ type arguments or cast the expression to your expected type. [underconstrained-i
 
 References:
    upper_non_t.js:24:34
-   24| declare function ConditionalType<T>(T extends mixed ? void : empty): T;
+   24| declare function ConditionalType<T>(x: T extends mixed ? void : empty): T;
                                         ^ [1]
    upper_non_t.js:25:1
    25| ConditionalType(undefined); // Error: T under constrained.
@@ -493,7 +492,7 @@ arguments or cast the expression to your expected type. [underconstrained-implic
 
 References:
    upper_non_t.js:26:29
-   26| declare function MappedType<T>({[K in keyof T]: void}): T;
+   26| declare function MappedType<T>(x: {[K in keyof T]: void}): T;
                                    ^ [1]
    upper_non_t.js:27:1
    27| MappedType({}); // Error: T under constrained.
@@ -511,7 +510,7 @@ cast the expression to your expected type. [underconstrained-implicit-instantiat
 
 References:
    upper_non_t.js:28:25
-   28| declare function Values<T>($Values<T>): T;
+   28| declare function Values<T>(x: $Values<T>): T;
                                ^ [1]
    upper_non_t.js:29:1
    29| Values(3); // Error: T under constrained.
@@ -529,7 +528,7 @@ arguments or cast the expression to your expected type. [underconstrained-implic
 
 References:
    upper_non_t.js:30:29
-   30| declare function ElementRef<T>(React.ElementRef<T>): T;
+   30| declare function ElementRef<T>(x: React.ElementRef<T>): T;
                                    ^ [1]
    upper_non_t.js:31:1
    31| ElementRef(1); // Error: T under constrained.

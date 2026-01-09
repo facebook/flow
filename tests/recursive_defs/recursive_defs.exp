@@ -74,13 +74,13 @@ Invalid trivially recursive definition of `Rec`.  [recursive-definition]
                         ^^^
 
 
-Error -------------------------------------------------------------------------------------- overflow_regression.js:9:34
+Error -------------------------------------------------------------------------------------- overflow_regression.js:9:37
 
 `$ReactDeepReadOnly` is a secret internal Flow type exposed for testing purposes. There will be no stability guarantees.
 [internal-type]
 
-   9| declare function useState<S>(S): $ReactDeepReadOnly<S>;
-                                       ^^^^^^^^^^^^^^^^^^^^^
+   9| declare function useState<S>(x: S): $ReactDeepReadOnly<S>;
+                                          ^^^^^^^^^^^^^^^^^^^^^
 
 
 

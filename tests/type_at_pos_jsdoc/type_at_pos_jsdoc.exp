@@ -211,13 +211,13 @@ declare.js:24:4
 Flags: --strip-root --pretty
 {
   "documentation":"\n declaration of baz",
-  "types":{"unevaluated":{"type":"(any) => any"},"evaluated":null},
+  "types":{"unevaluated":{"type":"(x: any) => any"},"evaluated":null},
   "reasons":[],
   "loc":{
     "source":"declare.js",
     "type":"SourceFile",
-    "start":{"line":24,"column":3,"offset":215},
-    "end":{"line":24,"column":5,"offset":218}
+    "start":{"line":24,"column":3,"offset":218},
+    "end":{"line":24,"column":5,"offset":221}
   },
   "path":"declare.js",
   "line":24,

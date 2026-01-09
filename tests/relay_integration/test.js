@@ -1,4 +1,4 @@
-declare function graphql(Array<string>): string;
+declare function graphql(x: Array<string>): string;
 
 graphql`query MissingFile { foo }`; // ERROR
 

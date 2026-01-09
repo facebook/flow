@@ -2437,8 +2437,8 @@ References:
 
 Error ------------------------------------------------------------------------------------------------ variance.js:43:15
 
-Cannot call `f` with `n` bound to the first parameter because in array element: `readonly [n: number]` [1] is not
-exactly the same as `[number]` [2]. [incompatible-type]
+Cannot call `f` with `n` bound to `x` because in array element: `readonly [n: number]` [1] is not exactly the same as
+`[number]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
 - Either make `Array<readonly [n: number]>` [3] and `Array<[number]>` [4] exactly the same
@@ -2453,15 +2453,15 @@ References:
    variance.js:42:22
    42| declare var n: Array<[+n: number]>;
                             ^^^^^^^^^^^^ [1]
-   variance.js:41:29
-   41| declare function f<K>(Array<[K]>): K;
-                                   ^^^ [2]
+   variance.js:41:32
+   41| declare function f<K>(x: Array<[K]>): K;
+                                      ^^^ [2]
    variance.js:42:16
    42| declare var n: Array<[+n: number]>;
                       ^^^^^^^^^^^^^^^^^^^ [3]
-   variance.js:41:23
-   41| declare function f<K>(Array<[K]>): K;
-                             ^^^^^^^^^^ [4]
+   variance.js:41:26
+   41| declare function f<K>(x: Array<[K]>): K;
+                                ^^^^^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------------- variance.js:45:2

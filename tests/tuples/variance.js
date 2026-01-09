@@ -38,7 +38,7 @@ declare var m: K<[+foo: string]>;
 (m: K<[string]>); // ERROR
 
 // We still flow each element, even if variance is invalid
-declare function f<K>(Array<[K]>): K;
+declare function f<K>(x: Array<[K]>): K;
 declare var n: Array<[+n: number]>;
 const res = f(n); // ERROR
 (res: number); // OK

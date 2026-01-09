@@ -7,6 +7,6 @@
 // TODO: When jsxRuntime is automatic, jsx pragma should be disallowed.
 // But at least it shouldn't crash!
 
-declare function foo(...any): void;
+declare function foo(...args: any): void;
 
 <hello />;

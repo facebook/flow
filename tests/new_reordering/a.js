@@ -131,7 +131,7 @@ const moremath2 = {
 export const foo = (): number => foo();
 
 {
-  declare function g(any): any;
+  declare function g(x: any): any;
   declare function f(): any;
   g(function () {
     return f();
@@ -140,7 +140,7 @@ export const foo = (): number => foo();
 
 import * as React from 'react';
 {
-  declare function F(any): any;
+  declare function F(x: any): any;
   declare function f(): any;
   <F
     attr={function () {

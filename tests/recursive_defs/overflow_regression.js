@@ -6,7 +6,7 @@ type State = {
   data: ?Rec,
 };
 
-declare function useState<S>(S): $ReactDeepReadOnly<S>;
+declare function useState<S>(x: S): $ReactDeepReadOnly<S>;
 
 function Foo(s: State) {
   const state = useState<State>(s);

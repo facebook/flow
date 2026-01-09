@@ -1,4 +1,4 @@
-declare function invariant(boolean, ?string): empty;
+declare function invariant(a: boolean, b: ?string): empty;
 declare var b: boolean;
 declare var n: number;
 

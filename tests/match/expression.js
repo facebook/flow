@@ -27,7 +27,7 @@ declare const x: 1 | 2;
   out as empty; // ERROR
 }
 
-declare function invariant(boolean): empty;
+declare function invariant(x: boolean): empty;
 
 {
   const out = match (x) {

@@ -1503,9 +1503,9 @@ References:
    test.js:218:30
    218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
                                      ^ [1]
-   test.js:217:32
-   217| declare function P({children: [1, 2]}): void;
-                                       ^ [2]
+   test.js:217:35
+   217| declare function P(x: {children: [1, 2]}): void;
+                                          ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:218:7
@@ -1521,9 +1521,9 @@ References:
    test.js:218:33
    218| React.createElement(P, null, 1, 2); // TODO(T225770118) OK
                                         ^ [1]
-   test.js:217:35
-   217| declare function P({children: [1, 2]}): void;
-                                          ^ [2]
+   test.js:217:38
+   217| declare function P(x: {children: [1, 2]}): void;
+                                             ^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:219:7
@@ -1539,9 +1539,9 @@ References:
    test.js:219:1
    219| React.createElement(P, null, 1, 2, ...(any: Array<number>)); // ERROR
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   test.js:217:31
-   217| declare function P({children: [1, 2]}): void;
-                                      ^^^^^^ [2]
+   test.js:217:34
+   217| declare function P(x: {children: [1, 2]}): void;
+                                         ^^^^^^ [2]
 
 
 

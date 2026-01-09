@@ -4,8 +4,8 @@ const Enum = Object.freeze({A:'a', B: 'b'});
 
 type A = { __type__: 'a', arr: Array<string> } | { __type__: 'b', arr: Array<number> };
 type F = { __type__: 'a', f: (v: string) => string } | { __type__: 'b', f: (v: number) => number };
-declare function CompAProp(A): React.MixedElement;
-declare function CompFProp(F): React.MixedElement;
+declare function CompAProp(x: A): React.MixedElement;
+declare function CompFProp(x: F): React.MixedElement;
 
 // OK
 

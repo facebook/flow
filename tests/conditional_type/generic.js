@@ -62,7 +62,7 @@ function union_as_upper_bound() {
     ? 'string'
     : 'other';
 
-  declare function getConditionalWithoutInfer<T>(T): ConditionalWithoutInfer<T>;
+  declare function getConditionalWithoutInfer<T>(x: T): ConditionalWithoutInfer<T>;
   <T>(t:T): 'string' | 'other' =>  getConditionalWithoutInfer(t); // ok
   <T: number>(t:T): 'string' | 'other' => getConditionalWithoutInfer(t); // ok
   <T: string>(t:T): 'string' | 'other' => getConditionalWithoutInfer(t); // ok

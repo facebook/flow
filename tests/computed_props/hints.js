@@ -52,7 +52,7 @@ function partial_hints() {
   }>;
 
   declare var key: 'a'|'b';
-  declare function updater(Partial<T>): void;
+  declare function updater(x: Partial<T>): void;
   updater({[key]: 1}); // okay
 }
 

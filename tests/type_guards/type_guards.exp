@@ -1238,7 +1238,7 @@ with function type [2], which is a type-guard function. [function-predicate]
 
 References:
    inferred.js:138:48
-   138|   declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, T): [T, U];
+   138|   declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
                                                        ^^^^^^^^^^^^^^^^^^^^^^^^ [2]
 
 
@@ -1256,7 +1256,7 @@ References:
    140|   declare var x: number;
                          ^^^^^^ [1]
    inferred.js:138:58
-   138|   declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, T): [T, U];
+   138|   declare function takesGuard<T, U: T>(guard: ?(x: T) => implies x is U, val: T): [T, U];
                                                                  ^^^^^^^^^^^^^^ [2]
 
 

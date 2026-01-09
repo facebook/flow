@@ -24,7 +24,7 @@ function test3() {
 
 function test4() {
   declare var x: mixed;
-  declare function foo<U>(() => U): U;
+  declare function foo<U>(f: () => U): U;
   foo(() => (false ? [] : [x])); // okay, [] is contextually typed
   foo(() => (false ? [x] : [])); // okay, [] is contextually typed
   foo(() => (false ? [] : ['x'])); // TODO(T225768659) okay, [] is contextually typed

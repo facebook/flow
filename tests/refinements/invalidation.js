@@ -299,7 +299,7 @@ declare var y: { ... } & Iterator<mixed>;
 declare var ff: unknown => { ... } & Iterator<mixed>;
 
 () => {
-  declare function f(mixed): boolean;
+  declare function f(x: mixed): boolean;
   declare const foo: ?{bar: string};
 
   if (

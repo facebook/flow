@@ -57,4 +57,4 @@ function sanity_check_that_we_dont_error_on_non_method_functions() {
   return 42;
 }
 
-declare function invariant(...$ReadOnlyArray<mixed>): void;
+declare function invariant(...x: $ReadOnlyArray<mixed>): void;

@@ -98,7 +98,7 @@ let z : number = 3;
 (z : string | boolean); // error + unused suppression
 
 /* two diff errors on same line */
-declare function foo (string) : void;
+declare function foo (x: string) : void;
 
 // $FlowFixMe
 foo(3, 4); // error not suppressed, missing code

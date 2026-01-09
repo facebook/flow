@@ -54,8 +54,8 @@ function test7() {
 }
 
 function test8() {
-  declare function overload(string, (string) => void): void;
-  declare function overload(number, (number) => void): void;
+  declare function overload(a: string, b: (string) => void): void;
+  declare function overload(a: number, b: (number) => void): void;
 
   declare var foo: ?string;
   overload(foo || "", (s) => {}); // okay

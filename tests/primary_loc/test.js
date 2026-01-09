@@ -1,5 +1,5 @@
 //$FlowFixMe (unused)
-declare function f (number) : string;
+declare function f (x: number) : string;
 
 
 f("asdf");

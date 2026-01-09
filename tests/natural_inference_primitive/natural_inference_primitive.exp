@@ -2844,34 +2844,34 @@ References:
                        ^^^ [3]
 
 
-Error ------------------------------------------------------------------------------------ nested_generic_calls.js:27:47
+Error ------------------------------------------------------------------------------------ nested_generic_calls.js:27:50
 
 Cannot call `f` with `42` bound to `literalValue` because number literal `42` [1] is incompatible with number literal
 `43` [2]. [incompatible-type]
 
-   nested_generic_calls.js:27:47
-   27|   const x3: {f: {f: <V>(V) => {f: 43}}} = g(f(42)); // error
-                                                     ^^ [1]
+   nested_generic_calls.js:27:50
+   27|   const x3: {f: {f: <V>(x: V) => {f: 43}}} = g(f(42)); // error
+                                                        ^^ [1]
 
 References:
-   nested_generic_calls.js:27:35
-   27|   const x3: {f: {f: <V>(V) => {f: 43}}} = g(f(42)); // error
-                                         ^^ [2]
+   nested_generic_calls.js:27:38
+   27|   const x3: {f: {f: <V>(x: V) => {f: 43}}} = g(f(42)); // error
+                                            ^^ [2]
 
 
-Error ------------------------------------------------------------------------------------ nested_generic_calls.js:33:58
+Error ------------------------------------------------------------------------------------ nested_generic_calls.js:33:61
 
 Cannot call `f` with object literal bound to `literalValue` because in index `f[0]`: number literal `42` [1] is
 incompatible with number literal `43` [2]. [incompatible-type]
 
-   nested_generic_calls.js:33:58
-   33|   const x6: {f: {f: <V>(V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error
-                                                                ^^ [1]
+   nested_generic_calls.js:33:61
+   33|   const x6: {f: {f: <V>(x: V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error
+                                                                   ^^ [1]
 
 References:
-   nested_generic_calls.js:33:40
-   33|   const x6: {f: {f: <V>(V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error
-                                              ^^ [2]
+   nested_generic_calls.js:33:43
+   33|   const x6: {f: {f: <V>(x: V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error
+                                                 ^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ nested_generic_calls.js:85:37

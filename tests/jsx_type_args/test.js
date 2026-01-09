@@ -1,15 +1,15 @@
 import * as React from 'react';
 
-declare function Component<T>({
+declare function Component<T>(props: {
   prop: T,
 }): React.Node;
 
-declare function ComponentWithChildren<T>({
+declare function ComponentWithChildren<T>(props: {
   prop: T,
   children: React.Node,
 }): React.Node;
 
-declare function ComponentMultipleArgs<R, S, T: string>({
+declare function ComponentMultipleArgs<R, S, T: string>(props: {
   r: R,
   s: S,
   t: T,

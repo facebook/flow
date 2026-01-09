@@ -19,7 +19,7 @@ new Bar();
 /**
  * declaration of baz
  */
-declare function baz(any) : any;
+declare function baz(x: any) : any;
 
   baz();
 // ^

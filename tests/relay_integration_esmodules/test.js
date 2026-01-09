@@ -1,4 +1,4 @@
-declare function graphql(Array<string>): string;
+declare function graphql(x: Array<string>): string;
 
 const fragment = graphql`
   fragment MyFragment on User {

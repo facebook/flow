@@ -1,5 +1,5 @@
 function test0() {
-    declare function outer(...Array<(x: number) => void>): void
+    declare function outer(...x: Array<(x: number) => void>): void
     declare function inner<A>(iter: Array<A>): Array<A>;
 
     outer(...[(x) => { // TODO okay no annotation required

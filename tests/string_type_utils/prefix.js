@@ -45,7 +45,7 @@ type Dict = {+[DataProp]: mixed};
 
 // Only string literal prefixes are allowed
 type Err = StringPrefix<string>; // ERROR
-declare function err<T: string>(StringPrefix<T>): void; // ERROR
+declare function err<T: string>(x: StringPrefix<T>): void; // ERROR
 
 // Refinements works
 {

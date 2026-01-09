@@ -276,12 +276,12 @@ Cannot use `StringPrefix` because the first type argument must be a string liter
                   ^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- prefix.js:48:33
+Error -------------------------------------------------------------------------------------------------- prefix.js:48:36
 
 Cannot use `StringPrefix` because the first type argument must be a string literal. [invalid-type-arg]
 
-   48| declare function err<T: string>(StringPrefix<T>): void; // ERROR
-                                       ^^^^^^^^^^^^^^^
+   48| declare function err<T: string>(x: StringPrefix<T>): void; // ERROR
+                                          ^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- prefix.js:55:5
@@ -589,12 +589,12 @@ Cannot use `StringPrefix` because the first type argument must be a string liter
                   ^^^^^^^^^^^^^^^^^^^^
 
 
-Error -------------------------------------------------------------------------------------------------- suffix.js:32:33
+Error -------------------------------------------------------------------------------------------------- suffix.js:32:36
 
 Cannot use `StringPrefix` because the first type argument must be a string literal. [invalid-type-arg]
 
-   32| declare function err<T: string>(StringSuffix<T>): void; // ERROR
-                                       ^^^^^^^^^^^^^^^
+   32| declare function err<T: string>(x: StringSuffix<T>): void; // ERROR
+                                          ^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------------------------- suffix.js:39:5

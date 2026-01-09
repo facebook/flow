@@ -1,4 +1,4 @@
-declare function invariant(...Array<mixed>): void;
+declare function invariant(...x: Array<mixed>): void;
 
 function alwaysThrows() { throw '' }
 

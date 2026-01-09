@@ -1,5 +1,5 @@
 // Regression test crash
-declare function f(string): void;
+declare function f(x: string): void;
 function test(x: 1 | 2 | 3, o: {foo: string}) {
   const a = o.foo || '';
   const b = f("foo");

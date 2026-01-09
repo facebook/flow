@@ -3,7 +3,7 @@ Error --------------------------------------------------------------------------
 Cannot declare `f` [1] because the name is already bound. [name-already-bound]
 
    err.js:4:18
-   4| declare function f(number): string // error
+   4| declare function f(x: number): string // error
                        ^
 
 References:

@@ -28,7 +28,7 @@
 
   declare function omit<O: {...}, Keys: keyof O>(
     o: O,
-    ...ReadonlyArray<Keys>
+    ...keys: ReadonlyArray<Keys>
   ): Omit<O, Keys>;
   // KP: We need proper natural inference to make this work with no annotations
   const noBarOrBaz = omit(
@@ -43,7 +43,7 @@
   declare function omitInput<O: {...}, Keys: keyof O>(
     o: O,
     x: Omit<O, Keys>,
-    ...ReadonlyArray<Keys>
+    ...keys: ReadonlyArray<Keys>
   ): void;
   const noIssues = omitInput({foo: 3, bar: 3}, {bar: 3}, 'foo' as 'foo');
   const badCall = omitInput({foo: 3, bar: 3}, {foo: 3}, 'foo' as 'foo'); // ERROR 2x
@@ -68,7 +68,7 @@
 
   declare function pick<O: {...}, Keys: keyof O>(
     o: O,
-    ...ReadonlyArray<Keys>
+    ...keys: ReadonlyArray<Keys>
   ): Pick<O, Keys>;
   const picked = pick({foo: 3, bar: 3}, 'foo');
   picked as {foo: number};
@@ -76,7 +76,7 @@
   declare function pickInput<O: {...}, Keys: keyof O>(
     o: O,
     x: Pick<O, Keys>,
-    ...ReadonlyArray<Keys>
+    ...keys: ReadonlyArray<Keys>
   ): void;
 
   const noIssues = pickInput({foo: 3, bar: 3}, {foo: 3}, 'foo');

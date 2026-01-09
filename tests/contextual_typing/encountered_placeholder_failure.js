@@ -1,7 +1,7 @@
 // This test suite asserts that we will emit missing-local-annot,
 // when there are placeholders in the final solution.
 
-declare function id<T>(T): T;
+declare function id<T>(x: T): T;
 declare var str: string;
 
 // Decomp_FuncParam
@@ -34,6 +34,6 @@ id(id((item) => 1)); // error
 //
 {
   // ResolvedAnySpreadArg
-  declare function debounce<TArgs: $ReadOnlyArray<mixed>>((...TArgs) => void): (...TArgs) => void;
+  declare function debounce<TArgs: $ReadOnlyArray<mixed>>(f: (...TArgs) => void): (...TArgs) => void;
   debounce((foo) => {}); // error
 }

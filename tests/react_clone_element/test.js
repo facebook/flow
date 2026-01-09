@@ -70,7 +70,7 @@ function SFC(props: { p: number }) { return null };
 React.cloneElement(<SFC p={0} />, { p: "bad" }); // Error: string ~> number
 
 // Exact
-declare function Exact({|foo: number|}): void;
+declare function Exact(x: {|foo: number|}): void;
 declare const exact: ExactReactElement_DEPRECATED<typeof Exact>;
 React.cloneElement(exact, {foo: 1}); // OK
 React.cloneElement(exact, {foo: 1, bar: 2}); // ERROR
@@ -81,7 +81,7 @@ type CompProps = $ReadOnly<{|
   bar: string,
 |}>;
 {
-  declare function Comp(CompProps): ExactReactElement_DEPRECATED<'div'>;
+  declare function Comp(x: CompProps): ExactReactElement_DEPRECATED<'div'>;
   declare const el: ExactReactElement_DEPRECATED<typeof Comp>;
   React.cloneElement(el, {foo: 'hi'}); // OK
 }

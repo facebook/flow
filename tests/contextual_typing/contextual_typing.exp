@@ -378,17 +378,16 @@ An annotation on `foo` is required because Flow cannot infer its type from local
 
 Error ----------------------------------------------------------------------------------- error_during_synthesis.js:4:32
 
-Cannot call `expectString` with `3` bound to the first parameter because number [1] is incompatible with string [2].
-[incompatible-type]
+Cannot call `expectString` with `3` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    error_during_synthesis.js:4:32
    4|   poly((v) => {}, expectString(3)); // Error: incompatible-type, but v can still be contextually typed
                                      ^ [1]
 
 References:
-   error_during_synthesis.js:3:33
-   3|   declare function expectString(string): string;
-                                      ^^^^^^ [2]
+   error_during_synthesis.js:3:36
+   3|   declare function expectString(x: string): string;
+                                         ^^^^^^ [2]
 
 
 Error ------------------------------------------------------------------------------------ error_during_synthesis.js:8:8
@@ -464,17 +463,16 @@ References:
 
 Error --------------------------------------------------------------------------------- implicit_instantiation.js:105:19
 
-Cannot call `f` with empty string bound to the third parameter because string [1] is incompatible with number [2].
-[incompatible-type]
+Cannot call `f` with empty string bound to `c` because string [1] is incompatible with number [2]. [incompatible-type]
 
    implicit_instantiation.js:105:19
    105|   f(3, (n) => {}, ""); // Error on third argument, but n can still be contextually typed.
                           ^^ [1]
 
 References:
-   implicit_instantiation.js:104:37
-   104|   declare function f<A>(A, A=>void, number): void;
-                                            ^^^^^^ [2]
+   implicit_instantiation.js:104:46
+   104|   declare function f<A>(a: A, b: A=>void, c: number): void;
+                                                     ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:147:4
@@ -558,17 +556,17 @@ References:
 
 Error ---------------------------------------------------------------------------------- implicit_instantiation.js:188:7
 
-Cannot call `foo` with object literal bound to the first parameter because property `bar` is extra in object literal [1]
-but missing in object type [2]. Exact objects do not accept extra props. [incompatible-type]
+Cannot call `foo` with object literal bound to `x` because property `bar` is extra in object literal [1] but missing in
+object type [2]. Exact objects do not accept extra props. [incompatible-type]
 
    implicit_instantiation.js:188:7
    188|   foo({bar: new Set([''])}); // error: there should be only one prop-missing error
               ^^^^^^^^^^^^^^^^^^^^ [1]
 
 References:
-   implicit_instantiation.js:187:24
-   187|   declare function foo({||}): void;
-                               ^^^^ [2]
+   implicit_instantiation.js:187:27
+   187|   declare function foo(x: {||}): void;
+                                  ^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------- intersections.js:7:24
@@ -704,15 +702,15 @@ References:
    intersections.js:62:19
    62|   overload(foo || 42, (s) => {}); // error because we can't resolve overload, and on 1st arg
                          ^^ [1]
-   intersections.js:57:29
-   57|   declare function overload(string, (string) => void): void;
-                                   ^^^^^^ [2]
+   intersections.js:57:32
+   57|   declare function overload(a: string, b: (string) => void): void;
+                                      ^^^^^^ [2]
    intersections.js:60:21
    60|   declare var foo: ?string;
                            ^^^^^^ [3]
-   intersections.js:58:29
-   58|   declare function overload(number, (number) => void): void;
-                                   ^^^^^^ [4]
+   intersections.js:58:32
+   58|   declare function overload(a: number, b: (number) => void): void;
+                                      ^^^^^^ [4]
 
 
 Error ------------------------------------------------------------------------------------------- intersections.js:62:24
@@ -882,9 +880,9 @@ Cannot cast `n` to empty because number [1] is incompatible with empty [2]. [inc
                               ^
 
 References:
-   react_tests.js:34:39
-   34|   declare function Parent({children: (number) => React.Node}): React.Node;
-                                             ^^^^^^ [1]
+   react_tests.js:34:42
+   34|   declare function Parent(x: {children: (number) => React.Node}): React.Node;
+                                                ^^^^^^ [1]
    react_tests.js:37:27
    37|     {n => <Child foo={(n: empty)} /> /* ERROR */}
                                  ^^^^^ [2]

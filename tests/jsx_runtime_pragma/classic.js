@@ -4,6 +4,6 @@
  * @jsx foo
  */
 
-declare function foo(...any): void;
+declare function foo(...args: any): void;
 
 <hello />;

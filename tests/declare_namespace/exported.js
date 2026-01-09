@@ -2,8 +2,8 @@ declare namespace exported_ns {
   declare export const bar1: number;
   declare const bar2: boolean;
   declare var bar3: string;
-  declare function f(string): string;
-  declare function f(number): number;
+  declare function f(a: string): string;
+  declare function f(a: number): number;
   declare type Baz = string;
   enum B { C, D }
   if (true) {} // unsupported

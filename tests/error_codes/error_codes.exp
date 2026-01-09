@@ -423,23 +423,22 @@ Cannot call `foo` because no more than 1 argument is expected by function type [
 
 References:
    test.js:101:22
-   101| declare function foo (string) : void;
-                             ^^^^^^^^^^^^^^^ [1]
+   101| declare function foo (x: string) : void;
+                             ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:104:5
 
-Cannot call `foo` with `3` bound to the first parameter because number [1] is incompatible with string [2].
-[incompatible-type]
+Cannot call `foo` with `3` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:104:5
    104| foo(3, 4); // error not suppressed, missing code
             ^ [1]
 
 References:
-   test.js:101:23
-   101| declare function foo (string) : void;
-                              ^^^^^^ [2]
+   test.js:101:26
+   101| declare function foo (x: string) : void;
+                                 ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:111:8
@@ -452,23 +451,22 @@ Cannot call `foo` because no more than 1 argument is expected by function type [
 
 References:
    test.js:101:22
-   101| declare function foo (string) : void;
-                             ^^^^^^^^^^^^^^^ [1]
+   101| declare function foo (x: string) : void;
+                             ^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:114:5
 
-Cannot call `foo` with `3` bound to the first parameter because number [1] is incompatible with string [2].
-[incompatible-type]
+Cannot call `foo` with `3` bound to `x` because number [1] is incompatible with string [2]. [incompatible-type]
 
    test.js:114:5
    114| foo(3, 4); // one error
             ^ [1]
 
 References:
-   test.js:101:23
-   101| declare function foo (string) : void;
-                              ^^^^^^ [2]
+   test.js:101:26
+   101| declare function foo (x: string) : void;
+                                 ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------------- test.js:119:2

@@ -518,9 +518,9 @@ Cannot assign array literal to destructuring because in index `0`: number [1] is
                                                           ^^^ [1]
 
 References:
-   extraction.js:61:35
-   61|   declare function foobar(number, boolean, string, number): void;
-                                         ^^^^^^^ [2]
+   extraction.js:61:41
+   61|   declare function foobar(a: number, b: boolean, c: string, d: number): void;
+                                               ^^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:63:57
@@ -533,9 +533,9 @@ Cannot assign array literal to destructuring because in index `1`: boolean [1] i
                                                                ^^^^ [1]
 
 References:
-   extraction.js:61:44
-   61|   declare function foobar(number, boolean, string, number): void;
-                                                  ^^^^^^ [2]
+   extraction.js:61:53
+   61|   declare function foobar(a: number, b: boolean, c: string, d: number): void;
+                                                           ^^^^^^ [2]
 
 
 Error ---------------------------------------------------------------------------------------------- extraction.js:63:63
@@ -548,9 +548,9 @@ Cannot assign array literal to destructuring because in index `2`: string [1] is
                                                                      ^^^^^^^ [1]
 
 References:
-   extraction.js:61:52
-   61|   declare function foobar(number, boolean, string, number): void;
-                                                          ^^^^^^ [2]
+   extraction.js:61:64
+   61|   declare function foobar(a: number, b: boolean, c: string, d: number): void;
+                                                                      ^^^^^^ [2]
 
 
 Error -------------------------------------------------------------------------------------------------- generic.js:4:12
@@ -819,7 +819,7 @@ the expression to your expected type. [underconstrained-implicit-instantiation]
 
 References:
    nested_instantiation.js:7:25
-   7|   declare function poly<T>(T extends number ? number : string): T;
+   7|   declare function poly<T>(x: T extends number ? number : string): T;
                               ^ [1]
    nested_instantiation.js:8:3
    8|   poly(3); // underconstrained

@@ -30,7 +30,7 @@ Cannot cast `s` to string because `unknown` (inferred from type parameter's boun
 
 References:
    reason_of_inferred_targs.js:4:29
-   4| declare function magicCall1<T>(T => mixed): void;
+   4| declare function magicCall1<T>(x: T => mixed): void;
                                   ^ [1]
    reason_of_inferred_targs.js:7:21
    7| magicCall1(s => (s: string)); // error
@@ -48,7 +48,7 @@ Cannot cast `s` to string because number (inferred from type parameter's default
 
 References:
    reason_of_inferred_targs.js:5:33
-   5| declare function magicCall2<T = number>(T => mixed): T;
+   5| declare function magicCall2<T = number>(x: T => mixed): T;
                                       ^^^^^^ [1]
    reason_of_inferred_targs.js:8:21
    8| magicCall2(s => (s: string)); // error
@@ -66,7 +66,7 @@ Cannot get `s.abcd` because property `abcd` is missing in `unknown` (inferred fr
 
 References:
    reason_of_inferred_targs.js:4:29
-   4| declare function magicCall1<T>(T => mixed): void;
+   4| declare function magicCall1<T>(x: T => mixed): void;
                                   ^ [1]
 
 
@@ -81,7 +81,7 @@ Cannot get `s.abcd` because property `abcd` is missing in number (inferred from 
 
 References:
    reason_of_inferred_targs.js:5:33
-    5| declare function magicCall2<T = number>(T => mixed): T;
+    5| declare function magicCall2<T = number>(x: T => mixed): T;
                                        ^^^^^^ [1]
 
 

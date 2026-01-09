@@ -17,24 +17,24 @@ function test_simple() {
 }
 
 function test_poly_types_1() {
-  declare function f<T>(literalValue: T): {f: <V>(V) => {f: T}};
+  declare function f<T>(literalValue: T): {f: <V>(x: V) => {f: T}};
   declare function g<T>(literalValue: T): {f: T};
 
   const x1 = g(f(42));
   x1.f.f('blah').f = 1;
 
-  const x2: {f: {f: <V>(V) => {f: 42}}} = g(f(42)); // okay
-  const x3: {f: {f: <V>(V) => {f: 43}}} = g(f(42)); // error
+  const x2: {f: {f: <V>(x: V) => {f: 42}}} = g(f(42)); // okay
+  const x3: {f: {f: <V>(x: V) => {f: 43}}} = g(f(42)); // error
 
   const x4 = g(f({f:[42]}));
   x4.f.f('blah').f.f[0] = 1; // okay
 
-  const x5: {f: {f: <V>(V) => {f: {f: [42]}}}} = g(f({f:[42]})); // okay
-  const x6: {f: {f: <V>(V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error
+  const x5: {f: {f: <V>(x: V) => {f: {f: [42]}}}} = g(f({f:[42]})); // okay
+  const x6: {f: {f: <V>(x: V) => {f: {f: [43]}}}} = g(f({f:[42]})); // error
 }
 
 function test_poly_types_2() {
-  declare function f<T>(literalValue: T, (T) => void): {f: <V>(V) => {f: T}};
+  declare function f<T>(literalValue: T, callback: (T) => void): {f: <V>(x: V) => {f: T}};
   declare function g<T>(literalValue: T): {f: T};
 
   const x1 = g(f(42, (x: 42) => { x as number; })); // okay

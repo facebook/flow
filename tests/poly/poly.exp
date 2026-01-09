@@ -95,9 +95,9 @@ References:
    error_position.js:9:37
     9| declare function bar<TValue>(props: Props2<TValue>): null;
                                            ^^^^^^^^^^^^^^ [1]
-   error_position.js:7:30
-    7| declare function foo<TValue>(Props<TValue>): null;
-                                    ^^^^^^^^^^^^^ [2]
+   error_position.js:7:37
+    7| declare function foo<TValue>(props: Props<TValue>): null;
+                                           ^^^^^^^^^^^^^ [2]
 
 
 Error --------------------------------------------------------------------------- implicit_bounded_instantiation.js:17:8

@@ -32,9 +32,9 @@ exact. [cannot-spread-inexact]
             ^^^
 
 References:
-   error_positions.js:7:45
-    7| declare function bar<P>(React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
-                                                   ^^^^^^^^^^^^^^^^^^ [1]
+   error_positions.js:7:48
+    7| declare function bar<P>(x: React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
+                                                      ^^^^^^^^^^^^^^^^^^ [1]
    error_positions.js:9:7
     9| class C extends React.Component<{}> {}
              ^ [2]
@@ -42,17 +42,17 @@ References:
 
 Error ------------------------------------------------------------------------------------------ error_positions.js:11:6
 
-Cannot call `foo` with `bar(...)` bound to the first parameter because `ComponentType` [1] is incompatible with class
-`C` [2]. [incompatible-type]
+Cannot call `foo` with `bar(...)` bound to `x` because `ComponentType` [1] is incompatible with class `C` [2].
+[incompatible-type]
 
    error_positions.js:11:6
    11| (foo(bar(C)): F<typeof C>); // error on call
             ^^^^^^
 
 References:
-   error_positions.js:7:67
-    7| declare function bar<P>(React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
-                                                                         ^^^^^^^^^^^^^^^^^^^^^^ [1]
+   error_positions.js:7:70
+    7| declare function bar<P>(x: React.ComponentType<{ m: number, ...P}>): React.ComponentType<P>;
+                                                                            ^^^^^^^^^^^^^^^^^^^^^^ [1]
    error_positions.js:11:17
    11| (foo(bar(C)): F<typeof C>); // error on call
                        ^^^^^^^^ [2]

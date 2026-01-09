@@ -248,9 +248,9 @@ Cannot cast `exported_ns.f(...)` to empty because number [1] is incompatible wit
        ^^^^^^^^^^^^^^^^
 
 References:
-   exported.js:6:31
-    6|   declare function f(number): number;
-                                     ^^^^^^ [1]
+   exported.js:6:34
+    6|   declare function f(a: number): number;
+                                        ^^^^^^ [1]
    exported.js:34:21
    34| exported_ns.f(3) as empty; // error: number ~> empty
                            ^^^^^ [2]
@@ -720,9 +720,9 @@ Cannot cast `exported_ns.f(...)` to empty because number [1] is incompatible wit
        ^^^^^^^^^^^^^^^^
 
 References:
-   exported.js:6:31
-    6|   declare function f(number): number;
-                                     ^^^^^^ [1]
+   exported.js:6:34
+    6|   declare function f(a: number): number;
+                                        ^^^^^^ [1]
    typing_test.js:34:21
    34| exported_ns.f(3) as empty; // error: number ~> empty
                            ^^^^^ [2]

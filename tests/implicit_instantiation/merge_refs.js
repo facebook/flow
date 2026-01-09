@@ -10,8 +10,8 @@ declare var ref1: { current: {...} | null };
 declare var ref2: TRefFor<{...}>;
 
 declare function mergeRefs<TElement>(
-  RefType<TElement>,
-  RefType<TElement>,
+  ref1: RefType<TElement>,
+  ref2: RefType<TElement>,
 ): void;
 
 const mergedRefs = mergeRefs(ref1, ref2);

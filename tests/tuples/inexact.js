@@ -51,7 +51,7 @@ type EmptyInexact = [...]; // OK
 }
 
 // Generic
-declare function f<T>([T, ...]): T;
+declare function f<T>(x: [T, ...]): T;
 {
   declare const x: [number, ...];
   const r = f(x);

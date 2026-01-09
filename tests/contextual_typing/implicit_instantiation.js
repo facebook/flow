@@ -62,7 +62,7 @@ function test4() {
 }
 
 function test5() {
-  declare function id<T>(T): T;
+  declare function id<T>(x: T): T;
   const f1: (string) => string = id(s => (s: string)); // ok
 
   declare class A<T> {
@@ -82,7 +82,7 @@ function test5() {
   const c1: C<string=>string> = new C(x => x); // OK
   const c2: C<string=>string> = new C(x => x, 1); // OK
 
-  declare function Component<T>({v: T, f: (T) => void}): void;
+  declare function Component<T>(x: {v: T, f: (T) => void}): void;
   <Component v="1" f={(v) => {(v: string)}} />; // OK
   <PolyComponent v="1" f={(v) => {(v: string)}} />; // OK
 }
@@ -101,12 +101,12 @@ function test6() {
 }
 
 function test7() {
-  declare function f<A>(A, A=>void, number): void;
+  declare function f<A>(a: A, b: A=>void, c: number): void;
   f(3, (n) => {}, ""); // Error on third argument, but n can still be contextually typed.
 }
 
 function test8() {
-  declare function f<T=string>(T => string): T;
+  declare function f<T=string>(x: T => string): T;
   f(s => (s: string)); // ok
 }
 
@@ -115,7 +115,7 @@ function test9() {
   // Correctly selecting the overload requires us to flow targ to bound, which is
   // disabled during implicit instantiation.
   type M<O> = {[K in keyof O]: O[K] extends string ? string : boolean};
-  declare function id<T>(T): T;
+  declare function id<T>(x: T): T;
   // A regression test for an earlier bug where the overload is incorrectly selected, and causes
   // an incompatibility.
   const _: M<{| num: number |}> = {num: id(true)}; // ok
@@ -178,13 +178,13 @@ function test16() {
 }
 
 function test17() {
-  declare function magic<T>(null): T;
+  declare function magic<T>(x: null): T;
   declare function magic<T>(): T;
   const _: interface {[key: string]: any} = { foo: magic() }; // ok
 }
 
 function test18() {
-  declare function foo({||}): void;
+  declare function foo(x: {||}): void;
   foo({bar: new Set([''])}); // error: there should be only one prop-missing error
 }
 

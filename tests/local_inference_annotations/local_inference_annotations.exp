@@ -378,8 +378,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- conditional.js:30:22
 
-Cannot call `foo` with function bound to the first parameter because in array element: string [1] is incompatible with
-string literal `x` [1]. [incompatible-type]
+Cannot call `foo` with function bound to `f` because in array element: string [1] is incompatible with string literal
+`x` [1]. [incompatible-type]
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
@@ -396,8 +396,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- conditional.js:31:30
 
-Cannot call `foo` with function bound to the first parameter because in array element: string [1] is incompatible with
-string literal `x` [1]. [incompatible-type]
+Cannot call `foo` with function bound to `f` because in array element: string [1] is incompatible with string literal
+`x` [1]. [incompatible-type]
 
 Arrays are invariantly typed. See
 https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.

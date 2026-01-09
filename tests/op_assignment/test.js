@@ -1,4 +1,4 @@
-declare function invariant(boolean): empty;
+declare function invariant(x: boolean): empty;
 
 ///////////
 // Valid //
@@ -38,7 +38,7 @@ declare function invariant(boolean): empty;
   // Truthy falsey refinements
   class A {}
 
-  declare function expectNullable(null): A;
+  declare function expectNullable(x: null): A;
 
   let x: A | null = null;
   x &&= (x: A);
@@ -123,7 +123,7 @@ declare function invariant(boolean): empty;
   // Nullable refinements
   class A {}
 
-  declare function expectNullable(null): A;
+  declare function expectNullable(x: null): A;
 
   let x: A | null = null;
   x ??= (x: null); // TODO: should not error `A` is not compatible with null

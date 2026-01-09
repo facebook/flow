@@ -32,7 +32,7 @@ function test3() {
 
   type ID<T> = T;
 
-  declare function wrapWithId<P1: {...}>(Opaque<P1>): Opaque<ID<P1>>;
+  declare function wrapWithId<P1: {...}>(x: Opaque<P1>): Opaque<ID<P1>>;
 
   declare function spreadIt<P2: {...}>(
     Component: Opaque<P2>,

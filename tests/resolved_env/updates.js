@@ -23,7 +23,7 @@ x as empty; // err
   // Nullable refinements
   class A {}
 
-  declare function expectNullable(null): A;
+  declare function expectNullable(x: null): A;
 
   let x: A | null = null;
   x ??= x as null;
