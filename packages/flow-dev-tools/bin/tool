@@ -8,5 +8,28 @@
 
 /* @flow */
 
-require("flow-remove-types/register");
+const path = require("path");
+const Module = require("module");
+
+const packageRoot = path.resolve(__dirname, "..");
+const srcDir = path.resolve(packageRoot, "src");
+
+// Resolve modules relative to this package, not the cwd
+const babel = require(require.resolve("@babel/core", { paths: [packageRoot] }));
+const presetFlow = require.resolve("@babel/preset-flow", { paths: [packageRoot] });
+const hermesParserPlugin = require.resolve("babel-plugin-syntax-hermes-parser", { paths: [packageRoot] });
+
+const originalCompile = Module.prototype._compile;
+Module.prototype._compile = function (code, filename) {
+  if (filename.startsWith(srcDir) && filename.endsWith(".js")) {
+    const result = babel.transformSync(code, {
+      filename,
+      presets: [presetFlow],
+      plugins: [hermesParserPlugin],
+    });
+    code = result.code;
+  }
+  return originalCompile.call(this, code, filename);
+};
+
 require("../src/main.js").run();

@@ -23,22 +23,24 @@ async function getFlowErrorsImpl(
 ) {
   const includeWarnings = withWarnings ? '--include-warnings' : '';
   const flowconfigNameFlag = '--flowconfig-name ' + flowconfigName;
-  const cmd =
-    errorCheckCommand === 'check'
-      ? format(
-          '%s check --json %s %s %s',
-          bin,
-          includeWarnings,
-          flowconfigNameFlag,
-          root,
-        )
-      : format(
-          '%s status --no-auto-start --json %s %s %s',
-          bin,
-          includeWarnings,
-          flowconfigNameFlag,
-          root,
-        );
+  const cmd = match (errorCheckCommand) {
+    'check' =>
+      format(
+        '%s check --json %s %s %s',
+        bin,
+        includeWarnings,
+        flowconfigNameFlag,
+        root,
+      ),
+    'status' =>
+      format(
+        '%s status --no-auto-start --json %s %s %s',
+        bin,
+        includeWarnings,
+        flowconfigNameFlag,
+        root,
+      ),
+  };
   const [err, stdout, stderr] = await execManual(cmd, {
     cwd: root,
     maxBuffer: Infinity,

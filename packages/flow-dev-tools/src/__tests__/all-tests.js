@@ -7,7 +7,23 @@
  * @format
  */
 
-require('flow-remove-types/register');
+const babel = require('@babel/core');
+const Module = require('module');
+
+const srcDir = require('path').resolve(__dirname, '..');
+
+const originalCompile = Module.prototype._compile;
+Module.prototype._compile = function (code, filename) {
+  if (filename.startsWith(srcDir) && filename.endsWith('.js')) {
+    const result = babel.transformSync(code, {
+      filename,
+      presets: ['@babel/preset-flow'],
+      plugins: ['babel-plugin-syntax-hermes-parser'],
+    });
+    code = result.code;
+  }
+  return originalCompile.call(this, code, filename);
+};
 
 const path = require('path');
 

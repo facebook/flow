@@ -9,3 +9,4 @@
 [options]
 emoji=true
 exact_by_default=false
+experimental.pattern_matching=true

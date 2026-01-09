@@ -295,16 +295,19 @@ class TestBuilder {
 
   async getFlowErrors(retry?: boolean = true): Promise<Object> {
     let cmd;
-    if (this.errorCheckCommand === 'check') {
-      cmd = format('%s check --strip-root --json %s', this.bin, this.dir);
-    } else {
-      // No-op if it's already running
-      await this.startFlowServer();
-      cmd = format(
-        '%s status --no-auto-start --strip-root --json %s',
-        this.bin,
-        this.dir,
-      );
+    match (this.errorCheckCommand) {
+      'check' => {
+        cmd = format('%s check --strip-root --json %s', this.bin, this.dir);
+      }
+      'status' => {
+        // No-op if it's already running
+        await this.startFlowServer();
+        cmd = format(
+          '%s status --no-auto-start --strip-root --json %s',
+          this.bin,
+          this.dir,
+        );
+      }
     }
 
     const [err, stdout, stderr] = await this.execManualAndLog(cmd, {
