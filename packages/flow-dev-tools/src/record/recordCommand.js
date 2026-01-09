@@ -9,6 +9,7 @@
  */
 
 import type {Flag} from '../command/Base';
+import type {ErrorCheckCommand} from '../errors';
 
 const {format} = require('util');
 
@@ -20,7 +21,7 @@ export type Args = {
   testsDir?: string,
   bin: string,
   parallelism: number,
-  errorCheckCommand: 'check' | 'status',
+  errorCheckCommand: ErrorCheckCommand,
   rerun: ?string,
 };
 

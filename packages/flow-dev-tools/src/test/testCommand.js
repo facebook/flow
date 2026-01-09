@@ -9,6 +9,7 @@
  */
 
 import type {Flag} from '../command/Base';
+import type {ErrorCheckCommand} from '../errors';
 
 const {resolve} = require('path');
 const {format} = require('util');
@@ -23,7 +24,7 @@ export type Args = {
   bin: string,
   fbmakeJson: boolean,
   parallelism: number,
-  errorCheckCommand: 'check' | 'status',
+  errorCheckCommand: ErrorCheckCommand,
   rerun: ?string,
   failedOnly: boolean,
   watch: boolean,

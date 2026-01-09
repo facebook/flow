@@ -9,6 +9,7 @@
  */
 
 import type {Flag} from '../command/Base';
+import type {ErrorCheckCommand} from '../errors';
 
 const {format} = require('util');
 const {resolve} = require('path');
@@ -21,7 +22,7 @@ export type Args = {
   flowconfigName: string,
   comment: ?string,
   error_code: ?string,
-  errorCheckCommand: 'check' | 'status',
+  errorCheckCommand: ErrorCheckCommand,
   root: string,
 };
 

@@ -14,9 +14,14 @@ const {execManual} = require('./utils/async');
 
 import type {FlowError, FlowLoc, FlowResult} from './flowResult';
 
+export type ErrorCheckCommand =
+  | 'full-check'
+  | 'check' // alias for full-check
+  | 'status';
+
 async function getFlowErrorsImpl(
   bin: string,
-  errorCheckCommand: 'check' | 'status',
+  errorCheckCommand: ErrorCheckCommand,
   root: string,
   withWarnings: boolean,
   flowconfigName: string,
@@ -24,9 +29,9 @@ async function getFlowErrorsImpl(
   const includeWarnings = withWarnings ? '--include-warnings' : '';
   const flowconfigNameFlag = '--flowconfig-name ' + flowconfigName;
   const cmd = match (errorCheckCommand) {
-    'check' =>
+    'full-check' | 'check' =>
       format(
-        '%s check --json %s %s %s',
+        '%s full-check --json %s %s %s',
         bin,
         includeWarnings,
         flowconfigNameFlag,
@@ -57,7 +62,7 @@ async function getFlowErrorsImpl(
 
 function getFlowErrorsWithWarnings(
   bin: string,
-  errorCheckCommand: 'check' | 'status',
+  errorCheckCommand: ErrorCheckCommand,
   root: string,
   flowconfigName: string,
 ): Promise<FlowResult> {
@@ -66,7 +71,7 @@ function getFlowErrorsWithWarnings(
 
 async function getFlowErrors(
   bin: string,
-  errorCheckCommand: 'check' | 'status',
+  errorCheckCommand: ErrorCheckCommand,
   root: string,
   flowconfigName: string,
 ): Promise<FlowResult> {
@@ -83,7 +88,7 @@ function isUnusedSuppression(error: FlowError): boolean {
 
 async function getUnusedSuppressionErrors(
   bin: string,
-  errorCheckCommand: 'check' | 'status',
+  errorCheckCommand: ErrorCheckCommand,
   root: string,
   flowconfigName: string,
 ): Promise<Array<FlowError>> {

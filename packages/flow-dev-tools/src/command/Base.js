@@ -64,7 +64,7 @@ const commonFlags = {
     name: 'check',
     argName: 'COMMAND',
     description: 'The flow command to check flow errors',
-    validValues: ['check', 'status'],
+    validValues: ['check', 'full-check', 'status'],
     aliases: ['c'],
     default: 'status',
   } as Flag,

@@ -32,6 +32,7 @@ const {
 
 import type {Args, RootName, RootPath} from './update-suppressionsCommand';
 import type {FlowLoc, FlowResult, FlowError, FlowMessage} from '../flowResult';
+import type {ErrorCheckCommand} from '../errors';
 const getContext = require('../comment/getContext').default;
 const getPathToLoc = require('../comment/getPathToLoc').default;
 
@@ -71,7 +72,7 @@ async function getErrorsForAllRootsForBinary(
   bin: string,
   roots: Array<RootPath>,
   rootNames: Array<RootName>,
-  errorCheckCommand: 'check' | 'status',
+  errorCheckCommand: ErrorCheckCommand,
   flowconfigName: string,
   only: ?('add' | 'remove'),
   errorsByFile: Map<string, Map<number, ErrorsForLine>>,

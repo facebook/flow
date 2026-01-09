@@ -8,6 +8,8 @@
  * @format
  */
 
+import type {ErrorCheckCommand} from '../errors';
+
 const {execSync, spawn} = require('child_process');
 const {randomBytes} = require('crypto');
 const {createWriteStream, realpathSync, lstatSync} = require('fs');
@@ -36,12 +38,10 @@ type CancellationToken = {
   onCancellationRequested(callback: () => any): void,
 };
 
-type CheckCommand = 'check' | 'status';
-
 class TestBuilder {
   bin: string;
   dir: string;
-  errorCheckCommand: CheckCommand;
+  errorCheckCommand: ErrorCheckCommand;
   flowConfigFilename: string;
   lazyMode: 'ide' | 'fs' | null;
   server: null | child_process$ChildProcess = null;
@@ -71,7 +71,7 @@ class TestBuilder {
 
   constructor(
     bin: string,
-    errorCheckCommand: CheckCommand,
+    errorCheckCommand: ErrorCheckCommand,
     baseDir: string,
     providedTestsDir: ?string,
     suiteName: string,
@@ -296,8 +296,12 @@ class TestBuilder {
   async getFlowErrors(retry?: boolean = true): Promise<Object> {
     let cmd;
     match (this.errorCheckCommand) {
-      'check' => {
-        cmd = format('%s check --strip-root --json %s', this.bin, this.dir);
+      'full-check' | 'check' => {
+        cmd = format(
+          '%s full-check --strip-root --json %s',
+          this.bin,
+          this.dir,
+        );
       }
       'status' => {
         // No-op if it's already running
@@ -973,7 +977,7 @@ class Builder {
   runID: string;
   dir: string;
   providedTestsDir: ?string;
-  errorCheckCommand: CheckCommand;
+  errorCheckCommand: ErrorCheckCommand;
 
   static builders: Array<TestBuilder> = [];
 
@@ -1031,7 +1035,7 @@ class Builder {
     return true;
   }
 
-  constructor(errorCheckCommand: CheckCommand, providedTestsDir: ?string) {
+  constructor(errorCheckCommand: ErrorCheckCommand, providedTestsDir: ?string) {
     this.errorCheckCommand = errorCheckCommand;
     this.providedTestsDir = providedTestsDir;
     this.runID = randomBytes(5).toString('hex');

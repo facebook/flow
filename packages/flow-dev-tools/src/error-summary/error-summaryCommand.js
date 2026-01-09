@@ -9,6 +9,7 @@
  */
 
 import type {Flag} from '../command/Base';
+import type {ErrorCheckCommand} from '../errors';
 
 const {format} = require('util');
 const {resolve} = require('path');
@@ -19,7 +20,7 @@ const findFlowBin = require('../command/findFlowBin').default;
 export type Args = {
   bin: string,
   flowconfigName: string,
-  errorCheckCommand: 'check' | 'status',
+  errorCheckCommand: ErrorCheckCommand,
   root: string,
   messageFilter: ?string,
   codeFilter: ?string,

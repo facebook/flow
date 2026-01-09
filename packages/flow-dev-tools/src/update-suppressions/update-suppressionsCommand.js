@@ -9,6 +9,7 @@
  */
 
 import type {Flag} from '../command/Base';
+import type {ErrorCheckCommand} from '../errors';
 
 const {realpathSync} = require('fs');
 const {format} = require('util');
@@ -24,7 +25,7 @@ export type Args = {
   bin: string,
   diffBin: ?string,
   flowconfigName: string,
-  errorCheckCommand: 'check' | 'status',
+  errorCheckCommand: ErrorCheckCommand,
   comment: string,
   roots: Array<RootPath>,
   rootNames: Array<RootName>,
