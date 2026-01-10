@@ -1,3 +1,8 @@
+### 0.296.1
+
+Parser:
+* Fix parsing of experimental record expressions that are multiline
+
 ### 0.296.0
 
 Declarations:
