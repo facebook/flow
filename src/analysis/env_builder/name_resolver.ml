@@ -58,6 +58,65 @@ module Scope_api = Scope_api.With_ALoc
 module Ssa_api = Ssa_api.With_ALoc
 module Env_api = Env_api.With_ALoc
 module Provider_api = Env_api.Provider_api
+
+let pattern_with_toplevel_annot_removed =
+  Scope_builder.pattern_with_toplevel_annot_removed ~none:ALoc.none
+
+let make_component_annot_collector_and_default_remover () =
+  Scope_builder.make_component_annot_collector_and_default_remover ~none:ALoc.none
+
+let for_statement = Scope_builder.for_statement
+
+let for_in_statement = Scope_builder.for_in_statement
+
+let for_of_statement = Scope_builder.for_of_statement
+
+let catch_clause = Scope_builder.catch_clause
+
+let scoped_type_params = Scope_builder.scoped_type_params
+
+let function_expression_without_name = Scope_builder.function_expression_without_name
+
+let match_case = Scope_builder.match_case
+
+let function_declaration = Scope_builder.function_declaration
+
+let type_alias = Scope_builder.type_alias
+
+let opaque_type = Scope_builder.opaque_type
+
+let interface = Scope_builder.interface
+
+let function_type = Scope_builder.function_type
+
+let component_declaration = Scope_builder.component_declaration
+
+let declare_component = Scope_builder.declare_component
+
+let component_type = Scope_builder.component_type
+
+let object_mapped_type_property = Scope_builder.object_mapped_type_property
+
+let import_named_specifier = Scope_builder.import_named_specifier
+
+let scoped_infer_type_params = Scope_builder.scoped_infer_type_params
+
+let conditional_type = Scope_builder.conditional_type
+
+let class_expression = Scope_builder.class_expression
+
+let declare_class = Scope_builder.declare_class
+
+let declare_function = Scope_builder.declare_function
+
+let lambda = Scope_builder.lambda
+
+let class_ = Scope_builder.class_
+
+let record_declaration = Scope_builder.record_declaration
+
+let component_body_with_params = Scope_builder.component_body_with_params
+
 module Scope_builder = Scope_builder.With_ALoc
 module Ssa_builder = Ssa_builder.With_ALoc
 module Invalidation_api = Invalidation_api.With_ALoc
@@ -1081,7 +1140,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
     let enable_enums = Context.enable_enums cx in
     object (this)
-      inherit Scope_builder.scope_builder ~enable_enums ~with_types:true as super
+      inherit [ALoc.t] Flow_ast_mapper.mapper as super
 
       method private debug_val = Val.debug_to_string this#refinement_of_id
 
@@ -1827,12 +1886,12 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             (unit -> 'a) ->
             'a =
         fun ?lexical ~this_super_binding_env loc bindings visit ->
+          ignore lexical;
+          ignore loc;
           let saved_state = this#push_env ~this_super_binding_env bindings in
-          this#run
-            (fun () -> super#with_bindings ?lexical loc bindings visit)
-            ~finally:(fun () -> this#pop_env saved_state)
+          this#run (fun () -> visit ()) ~finally:(fun () -> this#pop_env saved_state)
 
-      method! with_bindings : 'a. ?lexical:bool -> ALoc.t -> ALoc.t Bindings.t -> (unit -> 'a) -> 'a
+      method with_bindings : 'a. ?lexical:bool -> ALoc.t -> ALoc.t Bindings.t -> (unit -> 'a) -> 'a
           =
         this#with_scoped_bindings ~this_super_binding_env:FunctionEnv
 
@@ -1932,7 +1991,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             raise (AbruptCompletion.Exn abrupt_completion)
           | _ -> ()
 
-      method! extends_in_infer_type t =
+      method private extends_in_infer_type t =
         let saved_in_conditional_type_extends = env_state.in_conditional_type_extends in
         env_state <- { env_state with in_conditional_type_extends = true };
         let t' = this#type_ t in
@@ -1940,7 +1999,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           { env_state with in_conditional_type_extends = saved_in_conditional_type_extends };
         t'
 
-      method! binding_infer_type_identifier ident =
+      method private binding_infer_type_identifier ident =
         let (loc, { Flow_ast.Identifier.name; comments = _ }) = ident in
         (* Infer types can have duplicate names.
            e.g. type X = [string,string] extends [infer T, infer T] ? T : empty;
@@ -3903,7 +3962,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ~continues;
         stmt
 
-      method! scoped_for_statement _loc stmt =
+      method private scoped_for_statement _loc stmt =
         let open Flow_ast.Statement.For in
         let { init; test; update; body; comments = _ } = stmt in
         let continues = AbruptCompletion.continue None :: env_state.possible_labeled_continues in
@@ -3941,6 +4000,30 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ~auto_handle_continues:false
           ~continues;
         stmt
+
+      method! for_statement loc stmt =
+        for_statement
+          ~enable_enums
+          ~with_bindings:this#with_bindings
+          ~scoped:this#scoped_for_statement
+          loc
+          stmt
+
+      method! for_in_statement loc stmt =
+        for_in_statement
+          ~enable_enums
+          ~with_bindings:this#with_bindings
+          ~scoped:this#scoped_for_in_statement
+          loc
+          stmt
+
+      method! for_of_statement loc stmt =
+        for_of_statement
+          ~enable_enums
+          ~with_bindings:this#with_bindings
+          ~scoped:this#scoped_for_of_statement
+          loc
+          stmt
 
       method for_in_or_of_left_declaration left =
         let (loc, decl) = left in
@@ -3998,7 +4081,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ~auto_handle_continues:true
           ~continues
 
-      method! scoped_for_in_statement _loc stmt =
+      method private scoped_for_in_statement _loc stmt =
         let open Flow_ast.Statement.ForIn in
         let { left; right; body; each = _; comments = _ } = stmt in
         let traverse_left () = ignore (this#for_in_statement_lhs left) in
@@ -4008,7 +4091,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#pop_refinement_scope ();
         stmt
 
-      method! scoped_for_of_statement _loc stmt =
+      method private scoped_for_of_statement _loc stmt =
         let open Flow_ast.Statement.ForOf in
         let { left; right; body; await = _; comments = _ } = stmt in
         (* This is only evaluated once and so does not need to be scouted *)
@@ -4016,6 +4099,38 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let traverse_left () = ignore (this#for_of_statement_lhs left) in
         this#scoped_for_in_or_of_statement traverse_left body;
         stmt
+
+      (* Block hoisting for lexical declarations *)
+      method! block loc (stmt : (ALoc.t, ALoc.t) Ast.Statement.Block.t) =
+        let lexical_hoist = new lexical_hoister ~enable_enums in
+        let lexical_bindings = lexical_hoist#eval (lexical_hoist#block loc) stmt in
+        this#with_bindings ~lexical:true loc lexical_bindings (fun () -> super#block loc stmt)
+
+      (* Function and component bodies bypass the block's lexical hoisting since
+         they have their own scoping handled in lambda/component methods *)
+      method! function_body (body : ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Block.t) =
+        let (loc, block) = body in
+        (loc, super#block loc block)
+
+      method! component_body (body : ALoc.t * (ALoc.t, ALoc.t) Ast.Statement.Block.t) =
+        let (loc, block) = body in
+        (loc, super#block loc block)
+
+      method! catch_clause loc clause =
+        catch_clause
+          ~enable_enums
+          ~with_bindings:this#with_bindings
+          ~scoped:(fun loc clause -> super#catch_clause loc clause)
+          loc
+          clause
+
+      method! match_case ~on_case_body case =
+        match_case
+          ~enable_enums
+          ~with_bindings:this#with_bindings
+          ~on_super_match_case:super#match_case
+          ~on_case_body
+          case
 
       method private switch_completeness loc =
         let reason = Reason.(mk_reason (RCustom "switch") loc) in
@@ -4320,8 +4435,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         );
         stmt
 
-      method! this_binding_function_id_opt ~fun_loc ~has_this_annot id =
-        super#this_binding_function_id_opt ~fun_loc ~has_this_annot id;
+      method private this_binding_function_id_opt ~fun_loc ~has_this_annot id =
+        run_opt this#function_identifier id;
         let function_write_loc =
           match id with
           | Some (loc, _) -> loc
@@ -4392,7 +4507,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         env_state <- { env_state with write_entries }
 
-      method! component_body_with_params ~component_loc body params =
+      method component_body_with_params ~component_loc body params =
         let f () =
           let env = this#env_snapshot in
           this#run
@@ -4417,7 +4532,14 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     this#with_bindings component_loc bindings (fun () ->
                         Context.add_exhaustive_check cx loc ([], false);
 
-                        super#component_body_with_params ~component_loc body params;
+                        component_body_with_params
+                          ~enable_enums
+                          ~with_types:true
+                          (this :> ALoc.t Flow_ast_mapper.mapper)
+                          ~make_component_annot_collector_and_default_remover
+                          ~with_bindings:(fun loc bindings f -> this#with_bindings loc bindings f)
+                          body
+                          params;
 
                         let { val_ref; _ } = this#env_read maybe_exhaustively_checked_var_name in
                         let { Env_api.write_locs; _ } =
@@ -4452,8 +4574,212 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         this#under_uninitialized_env ~f:(fun () -> this#expecting_abrupt_completions f)
 
+      (* Type parameter scoping - adapted from scope_builder *)
+      method private scoped_type_params ?hoist_op ~in_tparam_scope tparams =
+        scoped_type_params
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ?hoist_op
+          ~in_tparam_scope
+          tparams
+
+      (* Helper for function expressions - adapted from scope_builder *)
+      method private function_expression_without_name ~is_arrow loc expr =
+        function_expression_without_name
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ~this_binding_function_id_opt:this#this_binding_function_id_opt
+          ~lambda:this#lambda
+          ~is_arrow
+          loc
+          expr
+
+      method! function_declaration loc (expr : (ALoc.t, ALoc.t) Ast.Function.t) =
+        function_declaration
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ~this_binding_function_id_opt:this#this_binding_function_id_opt
+          ~hoist_annotations:this#hoist_annotations
+          ~lambda:this#lambda
+          loc
+          expr
+
+      method! function_ loc (expr : (ALoc.t, ALoc.t) Ast.Function.t) =
+        this#function_expression_without_name ~is_arrow:false loc expr
+
+      method! arrow_function loc (expr : (ALoc.t, ALoc.t) Ast.Function.t) =
+        this#function_expression_without_name ~is_arrow:true loc expr
+
+      method! type_alias _loc alias =
+        type_alias
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          alias
+
+      method! opaque_type _loc alias =
+        opaque_type
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          alias
+
+      method! interface _loc iface =
+        interface
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          iface
+
+      method! function_type _loc ft =
+        function_type
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ft
+
+      method! component_declaration loc expr =
+        component_declaration
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ~hoist_annotations:this#hoist_annotations
+          ~component_body_with_params:this#component_body_with_params
+          loc
+          expr
+
+      method! declare_component _loc expr =
+        declare_component
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ~make_component_annot_collector_and_default_remover
+          ~hoist_annotations:this#hoist_annotations
+          expr
+
+      method! component_type _loc t =
+        component_type
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          t
+
+      method! object_mapped_type_property mt =
+        object_mapped_type_property
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          mt
+
+      (* Stopper methods - prevent certain identifiers from being visited as regular identifiers *)
+      method! member_property_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
+
+      method! typeof_member_identifier ident = ident
+
+      method! member_type_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
+
+      method! pattern_object_property_identifier_key ?kind id =
+        ignore kind;
+        id
+
+      method! match_object_pattern_property_key key = key
+
+      method! match_object_pattern_property prop =
+        let open Ast.MatchPattern.ObjectPattern.Property in
+        match prop with
+        | (_, Valid _) -> super#match_object_pattern_property prop
+        | (_, InvalidShorthand _) -> prop
+
+      method! enum_member_identifier id = id
+
+      method! enum_declaration loc (enum : (ALoc.t, ALoc.t) Ast.Statement.EnumDeclaration.t) =
+        if not enable_enums then
+          enum
+        else
+          super#enum_declaration loc enum
+
+      method! object_key_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
+
+      method! component_param_name param_name = param_name
+
+      (* Import/export handling - avoid visiting aliased names that aren't variables *)
+      method! import_named_specifier ~import_kind specifier =
+        import_named_specifier
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~import_kind
+          specifier
+
+      (* don't rename the `bar` in `export {foo as bar}` *)
+      method! export_named_declaration_specifier
+          (spec : (ALoc.t, ALoc.t) Flow_ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
+        let open Flow_ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+        let (_, { local; exported = _; from_remote = _; imported_name_def_loc = _ }) = spec in
+        ignore (this#identifier local);
+        spec
+
+      method! conditional_type t =
+        conditional_type
+          (this :> Api.L.t Flow_ast_mapper.mapper)
+          ~extends_in_infer_type:this#extends_in_infer_type
+          ~scoped_infer_type_params:(fun ~in_tparam_scope loc tps ->
+            scoped_infer_type_params
+              ~with_types:true
+              (this :> Api.L.t Flow_ast_mapper.mapper)
+              ~with_bindings:(fun loc bindings f -> this#with_bindings loc bindings f)
+              ~binding_infer_type_identifier:this#binding_infer_type_identifier
+              ~in_tparam_scope
+              loc
+              tps)
+          t
+
+      (* Visits of infer type are skipped, because they are handled in conditional type above *)
+      method! infer_type t = t
+
+      method! class_expression loc cls =
+        let open Ast.Class in
+        let { body; _ } = cls in
+        class_expression
+          ~with_bindings:(fun loc ~lexical bindings f -> this#with_bindings ~lexical loc bindings f)
+          ~on_cls:(fun loc cls ->
+            (* Give class body the location of the entire class,
+               so class body visitor can use it as the def loc of super. *)
+            ignore
+              ( this#class_impl loc { cls with body = (loc, snd body) }
+                : (ALoc.t, ALoc.t) Ast.Class.t
+                ))
+          loc
+          cls
+
+      method private class_impl loc (cls : (ALoc.t, ALoc.t) Ast.Class.t) =
+        class_
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ~class_identifier_opt:this#class_identifier_opt
+          loc
+          cls
+
+      method! declare_class _loc (decl : (ALoc.t, ALoc.t) Ast.Statement.DeclareClass.t) =
+        declare_class
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          decl
+
+      method! declare_function loc expr =
+        declare_function
+          (this :> Api.L.t Flow_ast_mapper.mapper)
+          ~super_declare_function:super#declare_function
+          ~hoist_annotations:this#hoist_annotations
+          loc
+          expr
+
       (* We also havoc state when entering functions and exiting calls. *)
-      method! lambda ~is_arrow ~fun_loc ~generator_return_loc params return_ predicate body =
+      method private lambda ~is_arrow ~fun_loc ~generator_return_loc params return_ predicate body =
         let f () =
           let env = this#env_snapshot in
           this#run
@@ -4531,10 +4857,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                     this#with_bindings fun_loc bindings (fun () ->
                         Context.add_exhaustive_check cx loc ([], false);
 
-                        super#lambda
-                          ~is_arrow
-                          ~fun_loc
-                          ~generator_return_loc
+                        lambda
+                          ~enable_enums
+                          ~with_types:true
+                          (this :> ALoc.t Flow_ast_mapper.mapper)
+                          ~with_bindings:(fun ~lexical loc bindings f ->
+                            this#with_bindings ~lexical loc bindings f)
+                          ~pattern_with_toplevel_annot_removed
                           params
                           return_
                           predicate
@@ -4612,7 +4941,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         class_stack <- loc :: class_stack;
         (* Give class body the location of the entire class,
            so class body visitor can use it as the def loc of super. *)
-        ignore @@ super#class_ loc { cls with body = (loc, snd cls.body) };
+        ignore @@ this#class_impl loc { cls with body = (loc, snd cls.body) };
         class_stack <- class_stack_old;
         cls
 
@@ -4631,7 +4960,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#check_class_name name_loc name;
         super#class_identifier id
 
-      method! class_identifier_opt ~class_loc:loc id =
+      method private class_identifier_opt ~class_loc:loc id =
         let (class_write_loc, class_self_reason) =
           match id with
           | Some ((name_loc, { Ast.Identifier.name; comments = _ }) as id) ->
@@ -4762,7 +5091,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#check_class_name name_loc name;
         (* Give record body the location of the entire record,
            so record body visitor can use it as the def loc of super. *)
-        let record' = super#record_declaration loc { record with body = (loc, snd record.body) } in
+        let record' =
+          record_declaration
+            ~with_types:true
+            (this :> ALoc.t Flow_ast_mapper.mapper)
+            ~with_bindings:this#with_bindings
+            { record with body = (loc, snd record.body) }
+        in
         let record_self_reason = mk_reason (RType (OrdinaryName name)) name_loc in
         ( if this#is_assigning_write (Env_api.OrdinaryNameLoc, name_loc) then
           let self_write = Env_api.AssigningWrite record_self_reason in
@@ -6554,7 +6889,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           res
         | _ -> super#expression expr
 
-      method! private hoist_annotations f =
+      method private hoist_annotations f =
         let visiting_hoisted_type = env_state.visiting_hoisted_type in
         env_state <- { env_state with visiting_hoisted_type = true };
         f ();
@@ -6867,7 +7202,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#mark_dead_write (Env_api.FunctionThisLoc, loc);
         super#component_declaration loc expr
 
-      method! lambda ~is_arrow ~fun_loc ~generator_return_loc params return predicate body =
+      method! private lambda ~is_arrow ~fun_loc ~generator_return_loc params return predicate body =
         let loc =
           let open Ast.Function in
           match body with
