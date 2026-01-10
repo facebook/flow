@@ -840,7 +840,7 @@ module Expression
     let is_a_to_z c = c >= 'a' && c <= 'z' in
     let should_parse_record env constructor =
       (parse_options env).records
-      && (not (Peek.ith_is_line_terminator ~i:1 env))
+      && (not (Peek.ith_is_line_terminator ~i:0 env))
       && (not (no_record env))
       &&
       match constructor with
