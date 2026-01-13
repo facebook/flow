@@ -44,7 +44,7 @@
     "es6"
   ],
   "dependencies": {
-    "hermes-parser": "0.32.0",
+    "hermes-parser": "0.33.3",
     "pirates": "^3.0.2",
     "vlq": "^0.2.1"
   },

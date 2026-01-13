@@ -2004,12 +2004,12 @@ babel-plugin-polyfill-regenerator@^0.2.2:
   dependencies:
     "@babel/helper-define-polyfill-provider" "^0.2.2"
 
-babel-plugin-syntax-hermes-parser@0.32.0:
-  version "0.32.0"
-  resolved "https://registry.yarnpkg.com/babel-plugin-syntax-hermes-parser/-/babel-plugin-syntax-hermes-parser-0.32.0.tgz#06f7452bf91adf6cafd7c98e7467404d4eb65cec"
-  integrity sha512-m5HthL++AbyeEA2FcdwOLfVFvWYECOBObLHNqdR8ceY4TsEdn4LdX2oTvbB2QJSSElE2AWA/b2MXZ/PF/CqLZg==
+babel-plugin-syntax-hermes-parser@0.33.3:
+  version "0.33.3"
+  resolved "https://registry.yarnpkg.com/babel-plugin-syntax-hermes-parser/-/babel-plugin-syntax-hermes-parser-0.33.3.tgz#07602f8163cc7e63c4ec17d47467f2a3c5db70e9"
+  integrity sha512-/Z9xYdaJ1lC0pT9do6TqCqhOSLfZ5Ot8D5za1p+feEfWYupCOfGbhhEXN9r2ZgJtDNUNRw/Z+T2CvAGKBqtqWA==
   dependencies:
-    hermes-parser "0.32.0"
+    hermes-parser "0.33.3"
 
 babel-preset-current-node-syntax@^1.0.0:
   version "1.0.1"
@@ -3067,24 +3067,24 @@ hasown@^2.0.2:
   dependencies:
     function-bind "^1.1.2"
 
-hermes-eslint@0.32.0:
-  version "0.32.0"
-  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.32.0.tgz#a23bcaece522f356cb1b8e990e57117dca13852d"
-  integrity sha512-f/gnFD3Nl7QNrclG6otkHnHsUbwYrJGO76AMtoDeIYs2+i7fFgqJgSg7DKwejTtAKBoXQg51hAQuo9cgcp1R1w==
+hermes-eslint@0.33.3:
+  version "0.33.3"
+  resolved "https://registry.yarnpkg.com/hermes-eslint/-/hermes-eslint-0.33.3.tgz#d9d6b4e9bcf9184f99ad86e087343eb05ab8a0c0"
+  integrity sha512-eGY0l6T5U9LDdC+uN88NrSOrvPPtXGPxN7EaD38hytWuBEVXypq0eQ1SNVsnQPBZLWi+b1jkF4F5aVtTCQC6wg==
   dependencies:
     esrecurse "^4.3.0"
-    hermes-estree "0.32.0"
-    hermes-parser "0.32.0"
+    hermes-estree "0.33.3"
+    hermes-parser "0.33.3"
 
 hermes-estree@0.29.1:
   version "0.29.1"
   resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.29.1.tgz#043c7db076e0e8ef8c5f6ed23828d1ba463ebcc5"
   integrity sha512-jl+x31n4/w+wEqm0I2r4CMimukLbLQEYpisys5oCre611CI5fc9TxhqkBBCJ1edDG4Kza0f7CgNz8xVMLZQOmQ==
 
-hermes-estree@0.32.0:
-  version "0.32.0"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.32.0.tgz#bb7da6613ab8e67e334a1854ea1e209f487d307b"
-  integrity sha512-KWn3BqnlDOl97Xe1Yviur6NbgIZ+IP+UVSpshlZWkq+EtoHg6/cwiDj/osP9PCEgFE15KBm1O55JRwbMEm5ejQ==
+hermes-estree@0.33.3:
+  version "0.33.3"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.33.3.tgz#6d6b593d4b471119772c82bdb0212dfadabb6f17"
+  integrity sha512-6kzYZHCk8Fy1Uc+t3HGYyJn3OL4aeqKLTyina4UFtWl8I0kSL7OmKThaiX+Uh2f8nGw3mo4Ifxg0M5Zk3/Oeqg==
 
 hermes-parser@0.29.1:
   version "0.29.1"
@@ -3093,24 +3093,24 @@ hermes-parser@0.29.1:
   dependencies:
     hermes-estree "0.29.1"
 
-hermes-parser@0.32.0:
-  version "0.32.0"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.32.0.tgz#7916984ef6fdce62e7415d354cf35392061cd303"
-  integrity sha512-g4nBOWFpuiTqjR3LZdRxKUkij9iyveWeuks7INEsMX741f3r9xxrOe8TeQfUxtda0eXmiIFiMQzoeSQEno33Hw==
+hermes-parser@0.33.3:
+  version "0.33.3"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.33.3.tgz#da50ababb7a5ab636d339e7b2f6e3848e217e09d"
+  integrity sha512-Yg3HgaG4CqgyowtYjX/FsnPAuZdHOqSMtnbpylbptsQ9nwwSKsy6uRWcGO5RK0EqiX12q8HvDWKgeAVajRO5DA==
   dependencies:
-    hermes-estree "0.32.0"
+    hermes-estree "0.33.3"
 
-hermes-transform@0.32.0:
-  version "0.32.0"
-  resolved "https://registry.yarnpkg.com/hermes-transform/-/hermes-transform-0.32.0.tgz#c484df51282a3677352dfae84bee413973ddb637"
-  integrity sha512-IOCAdS3XMv21UkwWmDw3jsx6uZOFuKORqUdpeyyD0motG9q88URiozNSe0dv8EHS7nrZxAbmRGVqxyPvIRexGA==
+hermes-transform@0.33.3:
+  version "0.33.3"
+  resolved "https://registry.yarnpkg.com/hermes-transform/-/hermes-transform-0.33.3.tgz#a92e3f4f74a8a0f228dd37c7b5b94d8fd75cec04"
+  integrity sha512-OI9uMoCjzM6RHxyBKsVRtoJ2B/BqpyJXWqByW48qXkMNDTYADly2vjAz/74Z0MdhrB/xPs6s4o8yo+vpguTe6w==
   dependencies:
     "@babel/code-frame" "^7.16.0"
     esquery "^1.4.0"
     flow-enums-runtime "^0.0.6"
-    hermes-eslint "0.32.0"
-    hermes-estree "0.32.0"
-    hermes-parser "0.32.0"
+    hermes-eslint "0.33.3"
+    hermes-estree "0.33.3"
+    hermes-parser "0.33.3"
     string-width "4.2.3"
 
 html-encoding-sniffer@^2.0.1:

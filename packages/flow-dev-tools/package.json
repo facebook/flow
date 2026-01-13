@@ -10,7 +10,7 @@
     "chalk": "^4.1.2",
     "diff": "^3.5.0",
     "glob": "^7.0.3",
-    "hermes-parser": "0.32.0",
+    "hermes-parser": "0.33.3",
     "minimist": "~1.2.6",
     "mkdirp": "^0.5.1",
     "rimraf": "^2.5.2",
