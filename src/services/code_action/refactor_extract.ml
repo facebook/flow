@@ -486,7 +486,10 @@ let extract_from_statements_refactors
         | None -> insert_new_function_call_loc
         | Some loc -> Loc.btwn insert_new_function_call_loc loc
       in
-      let (_ssa_abnormal_completion_state, (scope_info, ssa_values, _possible_globals)) =
+      let scope_info =
+        Scope_builder.With_Loc.program ~enable_enums:(Context.enable_enums cx) ~with_types:true ast
+      in
+      let (_ssa_abnormal_completion_state, (ssa_values, _possible_globals)) =
         Ssa_builder.program_with_scope ~enable_enums:(Context.enable_enums cx) ast
       in
       let {
@@ -725,7 +728,10 @@ let extract_from_expression_refactors
     InformationCollectors.collect_expression_information expression
   in
   let extracted_expression_loc = fst expression in
-  let (_abnormal_completion_state, (scope_info, ssa_values, _possible_globals)) =
+  let scope_info =
+    Scope_builder.With_Loc.program ~enable_enums:(Context.enable_enums cx) ~with_types:true ast
+  in
+  let (_abnormal_completion_state, (ssa_values, _possible_globals)) =
     Ssa_builder.program_with_scope ~enable_enums:(Context.enable_enums cx) ast
   in
   let { VariableAnalysis.defs_with_scopes_of_local_uses; _ } =

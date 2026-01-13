@@ -7234,9 +7234,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       | Options.Jsx_pragma (_, ast) -> Some ast
     in
     let enable_enums = Context.enable_enums cx in
-    let (_ssa_completion_state, ((scopes, _, _) as prepass)) =
+    let scopes = Scope_builder.program ~enable_enums ~with_types:true program in
+    let (_ssa_completion_state, (ssa_values, unbound_names)) =
       Ssa_builder.program_with_scope_and_jsx_pragma ~enable_enums ~jsx_ast program
     in
+    let prepass = (scopes, ssa_values, unbound_names) in
     let providers =
       try Provider_api.find_providers program with
       | Find_providers.ImpossibleState s -> raise Env_api.(Env_invariant (None, Impossible s))

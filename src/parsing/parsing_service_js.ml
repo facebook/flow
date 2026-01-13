@@ -186,7 +186,7 @@ let do_parse ~options ~docblock ?(locs_to_dirtify = []) content file =
           File_sig.require_set file_sig |> Flow_import_specifier.Set.elements |> Array.of_list
         in
         (*If you want efficiency, can compute globals along with file_sig in the above function since scope is computed when computing file_sig*)
-        let (_, (_, _, globals)) =
+        let (_, (_, globals)) =
           let enable_enums = Options.enums options in
           Ssa_builder.program_with_scope ~enable_enums ast
         in

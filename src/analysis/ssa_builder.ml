@@ -258,7 +258,6 @@ struct
 
   class ssa_builder ~enable_enums =
     object (this)
-      (* TODO: with_types should probably be false, but this maintains previous behavior *)
       inherit scope_builder ~enable_enums ~with_types:true as super
 
       (* We maintain a map of read locations to raw Val.t terms, which are
@@ -1295,13 +1294,13 @@ struct
           ssa_walk#with_bindings loc bindings (fun () -> run ssa_walk#program program)
       )
     in
-    (completion_state, (ssa_walk#acc, ssa_walk#values, ssa_walk#unbound_names))
+    (completion_state, (ssa_walk#values, ssa_walk#unbound_names))
 
   let program_with_scope ~enable_enums program =
     program_with_scope_and_jsx_pragma ~enable_enums ~jsx_ast:None program
 
   let program ~enable_enums program =
-    let (_, (_, values, _)) = program_with_scope ~enable_enums program in
+    let (_, (values, _)) = program_with_scope ~enable_enums program in
     values
 end
 
