@@ -31,7 +31,8 @@
           }
         },
         "optional":false
-      }
+      },
+      "implicitDeclare":false
     },
     {
       "type":"DeclareExportDeclaration",
@@ -66,7 +67,8 @@
             }
           },
           "optional":false
-        }
+        },
+        "implicitDeclare":false
       },
       "specifiers":[],
       "source":null
@@ -104,7 +106,8 @@
             }
           },
           "optional":false
-        }
+        },
+        "implicitDeclare":false
       },
       "specifiers":[],
       "source":null

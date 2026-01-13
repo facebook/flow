@@ -937,7 +937,7 @@ class ['loc] mapper =
 
     method declare_function _loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       let open Ast.Statement.DeclareFunction in
-      let { id = ident; annot; predicate; comments } = decl in
+      let { id = ident; annot; predicate; comments; implicit_declare } = decl in
       let id' = this#function_identifier ident in
       let annot' = this#type_annotation annot in
       let predicate' = map_opt this#predicate predicate in
@@ -945,7 +945,7 @@ class ['loc] mapper =
       if id' == ident && annot' == annot && predicate' == predicate && comments' == comments then
         decl
       else
-        { id = id'; annot = annot'; predicate = predicate'; comments = comments' }
+        { id = id'; annot = annot'; predicate = predicate'; comments = comments'; implicit_declare }
 
     method declare_interface loc (decl : ('loc, 'loc) Ast.Statement.Interface.t) =
       this#interface loc decl

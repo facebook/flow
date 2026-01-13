@@ -47,11 +47,13 @@
               "range":[30,37]
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":{
         "type":"DeclaredPredicate",
         "loc":{"source":null,"start":{"line":1,"column":38},"end":{"line":1,"column":57}},

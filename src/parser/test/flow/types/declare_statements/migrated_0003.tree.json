@@ -27,11 +27,13 @@
               "range":[24,28]
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     }
   ],

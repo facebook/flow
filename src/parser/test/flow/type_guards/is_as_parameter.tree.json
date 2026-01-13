@@ -67,6 +67,7 @@
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     }
   ],

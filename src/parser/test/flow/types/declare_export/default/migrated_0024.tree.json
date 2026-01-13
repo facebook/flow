@@ -32,11 +32,13 @@
                 "range":[39,43]
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             }
           },
           "optional":false
         },
+        "implicitDeclare":false,
         "predicate":null
       },
       "specifiers":[],

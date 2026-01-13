@@ -31,18 +31,19 @@
             "loc":{"source":null,"start":{"line":2,"column":20},"end":{"line":2,"column":23}},
             "range":[54,57],
             "params":[],
-            "this":null,
             "returnType":{
               "type":"AnyTypeAnnotation",
               "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":0}},
               "range":[58,58]
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     }
   ],

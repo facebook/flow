@@ -4948,13 +4948,22 @@ and declare_function
     ?(s_type = Empty)
     ~opts
     loc
-    { Ast.Statement.DeclareFunction.id; annot = (annot_lot, t); predicate; comments } =
+    {
+      Ast.Statement.DeclareFunction.id;
+      annot = (annot_lot, t);
+      predicate;
+      comments;
+      implicit_declare;
+    } =
   layout_node_with_comments_opt loc comments
   @@ with_semicolon
        (fuse
           [
-            Atom "declare";
-            space;
+            ( if implicit_declare then
+              Empty
+            else
+              fuse [Atom "declare"; space]
+            );
             s_type;
             Atom "function";
             space;

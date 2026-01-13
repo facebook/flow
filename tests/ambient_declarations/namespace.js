@@ -4,8 +4,11 @@ declare namespace MyNamespace {
   const value: number;
   let mutableValue: string;
 
-  // Functions and classes still need 'declare' keyword
-  declare function helper(x: string): number;
+  // Implicit ambient functions (without 'declare' keyword)
+  function helper(x: string): number;
+
+  // Explicit 'declare' keyword still works
+  declare function explicitHelper(x: string): number;
   declare class Helper {
     method(): void;
   }

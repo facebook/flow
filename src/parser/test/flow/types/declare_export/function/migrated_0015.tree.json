@@ -65,18 +65,19 @@
                   "optional":false
                 }
               ],
-              "this":null,
               "returnType":{
                 "type":"VoidTypeAnnotation",
                 "loc":{"source":null,"start":{"line":1,"column":51},"end":{"line":1,"column":55}},
                 "range":[51,55]
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             }
           },
           "optional":false
         },
+        "implicitDeclare":false,
         "predicate":null
       },
       "specifiers":[],

@@ -41,6 +41,13 @@
                 "optional":false
               }
             ],
+            "returnType":{
+              "type":"VoidTypeAnnotation",
+              "loc":{"source":null,"start":{"line":1,"column":45},"end":{"line":1,"column":49}},
+              "range":[45,49]
+            },
+            "rest":null,
+            "typeParameters":null,
             "this":{
               "type":"FunctionTypeParam",
               "loc":{"source":null,"start":{"line":1,"column":20},"end":{"line":1,"column":31}},
@@ -58,18 +65,12 @@
                 "internalSlots":[]
               },
               "optional":false
-            },
-            "returnType":{
-              "type":"VoidTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":45},"end":{"line":1,"column":49}},
-              "range":[45,49]
-            },
-            "rest":null,
-            "typeParameters":null
+            }
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     }
   ],

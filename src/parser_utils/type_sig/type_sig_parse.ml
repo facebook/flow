@@ -4436,6 +4436,7 @@ let declare_function_decl opts scope tbls decl =
     annot = (_, (fn_loc, t));
     predicate = _;
     comments = _;
+    implicit_declare = _;
   } =
     decl
   in

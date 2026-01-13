@@ -1182,6 +1182,7 @@ and Statement : sig
       annot: ('M, 'T) Type.annotation;
       predicate: ('M, 'T) Type.Predicate.t option;
       comments: ('M, unit) Syntax.t option;
+      implicit_declare: bool;
     }
     [@@deriving show]
   end

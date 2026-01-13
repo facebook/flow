@@ -3272,12 +3272,28 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (func1 : (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t)
       (func2 : (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t) : node change list option =
     let open Ast.Statement.DeclareFunction in
-    let { id = id1; annot = annot1; predicate = predicate1; comments = comments1 } = func1 in
-    let { id = id2; annot = annot2; predicate = predicate2; comments = comments2 } = func2 in
+    let {
+      id = id1;
+      annot = annot1;
+      predicate = predicate1;
+      comments = comments1;
+      implicit_declare = implicit_declare1;
+    } =
+      func1
+    in
+    let {
+      id = id2;
+      annot = annot2;
+      predicate = predicate2;
+      comments = comments2;
+      implicit_declare = implicit_declare2;
+    } =
+      func2
+    in
     let id_diff = Some (diff_if_changed identifier id1 id2) in
     let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
-    if predicate1 != predicate2 then
+    if predicate1 != predicate2 || implicit_declare1 != implicit_declare2 then
       None
     else
       join_diff_list [id_diff; annot_diff; comments_diff]

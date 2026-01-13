@@ -54,7 +54,6 @@
               "loc":{"source":null,"start":{"line":1,"column":103},"end":{"line":1,"column":110}},
               "range":[103,110],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"AnyTypeAnnotation",
                 "trailingComments":[
@@ -69,11 +68,13 @@
                 "range":[107,110]
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             }
           },
           "optional":false
         },
+        "implicitDeclare":false,
         "predicate":null
       },
       "specifiers":[],
@@ -244,7 +245,6 @@
               "loc":{"source":null,"start":{"line":7,"column":78},"end":{"line":7,"column":85}},
               "range":[446,453],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"AnyTypeAnnotation",
                 "trailingComments":[
@@ -259,11 +259,13 @@
                 "range":[450,453]
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             }
           },
           "optional":false
         },
+        "implicitDeclare":false,
         "predicate":null
       },
       "specifiers":[],
@@ -568,6 +570,8 @@
               },
               "typeParameters":null,
               "impltype":null,
+              "lowerBound":null,
+              "upperBound":null,
               "supertype":null
             },
             "specifiers":[],

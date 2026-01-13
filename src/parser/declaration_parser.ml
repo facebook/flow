@@ -307,6 +307,80 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
     else
       (false, [])
 
+  (* Convert a Function.Param to Type.Function.Param for implicit declare function.
+     Returns Ok type_param or Error error_reason. *)
+  let convert_function_param_to_type_param (param_loc, param) =
+    let open Function.Param in
+    let { argument; default = _ } = param in
+    match argument with
+    | (_, Pattern.Identifier { Pattern.Identifier.name; annot; optional }) ->
+      (match annot with
+      | Ast.Type.Available (_, (type_loc, type_annot)) ->
+        Ok
+          ( param_loc,
+            { Ast.Type.Function.Param.name = Some name; annot = (type_loc, type_annot); optional }
+          )
+      | Ast.Type.Missing _ ->
+        let (_, { Identifier.name = param_name; _ }) = name in
+        Error (Printf.sprintf "parameter '%s' is missing a type annotation" param_name))
+    | _ -> Error "complex parameter patterns are not allowed"
+
+  (* Convert Function.Params to Type.Function.Params for implicit declare function.
+     Returns Ok type_params or Error error_reasons. *)
+  let convert_function_params_to_type_params (params_loc, params) =
+    let open Function.Params in
+    let { this_; params = param_list; rest; comments } = params in
+    let (converted, errors) =
+      List.fold_left
+        (fun (acc_params, acc_errors) param ->
+          match convert_function_param_to_type_param param with
+          | Ok p -> (p :: acc_params, acc_errors)
+          | Error e -> (acc_params, e :: acc_errors))
+        ([], [])
+        param_list
+    in
+    (* Convert this_ param *)
+    let type_this =
+      match this_ with
+      | Some (loc, { Function.ThisParam.annot; comments = this_comments }) ->
+        Some (loc, { Ast.Type.Function.ThisParam.annot; comments = this_comments })
+      | None -> None
+    in
+    (* Convert rest param - simplified, may need more robust handling *)
+    let (type_rest, rest_errors) =
+      match rest with
+      | Some (rest_loc, { Function.RestParam.argument; comments = rest_comments }) ->
+        (match
+           convert_function_param_to_type_param
+             (rest_loc, { Function.Param.argument; default = None })
+         with
+        | Ok (_, type_param) ->
+          let rest_param =
+            ( rest_loc,
+              {
+                Ast.Type.Function.RestParam.argument = (rest_loc, type_param);
+                comments = rest_comments;
+              }
+            )
+          in
+          (Some rest_param, [])
+        | Error e -> (None, [e]))
+      | None -> (None, [])
+    in
+    let all_errors = errors @ rest_errors in
+    if all_errors = [] then
+      Ok
+        ( params_loc,
+          {
+            Ast.Type.Function.Params.this_ = type_this;
+            params = List.rev converted;
+            rest = type_rest;
+            comments;
+          }
+        )
+    else
+      Error all_errors
+
   let _function =
     with_loc (fun env ->
         let (async, leading_async) = async env in
@@ -385,25 +459,101 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
               (generator, effect_, tparams, id, params, return, predicate, leading))
             env
         in
-        let simple_params = is_simple_parameter_list params in
-        let (body, contains_use_strict) =
-          function_body env ~async ~generator ~expression:false ~simple_params
+        (* Check for implicit declare function: in ambient context with semicolon instead of body.
+           We check all conversion conditions BEFORE consuming the semicolon. If conversion
+           would fail, we fall through to normal body parsing which will emit appropriate errors. *)
+        let implicit_declare_conversion =
+          if
+            in_ambient_context env
+            && Peek.token env = T_SEMICOLON
+            && (not async)
+            && (not generator)
+            && effect_ <> Function.Hook
+            && Option.is_some id
+            &&
+            match return with
+            | Function.ReturnAnnot.Missing _ -> false
+            | _ -> true
+          then
+            match convert_function_params_to_type_params params with
+            | Ok tp -> Some tp
+            | Error _ -> None
+          else
+            None
         in
-        strict_function_post_check env ~contains_use_strict id params;
-        Statement.FunctionDeclaration
-          {
-            Function.id;
-            params;
-            body;
-            generator;
-            effect_;
-            async;
-            predicate;
-            return;
-            tparams;
-            sig_loc;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ();
-          }
+        match implicit_declare_conversion with
+        | Some type_params ->
+          (* Consume the semicolon *)
+          let trailing =
+            Eat.token env;
+            if Peek.is_line_terminator env then
+              Eat.comments_until_next_line env
+            else
+              []
+          in
+          let fn_id =
+            match id with
+            | Some i -> i
+            | None -> (Loc.none, { Identifier.name = ""; comments = None })
+          in
+          (* Use params location for annot to ensure it comes after id location *)
+          let annot_loc = fst params in
+          let return_annot =
+            match return with
+            | Function.ReturnAnnot.Available (_, (ret_loc, t)) ->
+              Ast.Type.Function.TypeAnnotation (ret_loc, t)
+            | Function.ReturnAnnot.TypeGuard (_, tg) -> Ast.Type.Function.TypeGuard tg
+            | Function.ReturnAnnot.Missing _ ->
+              (* Should not happen - already checked above *)
+              Ast.Type.Function.TypeAnnotation (Loc.none, Ast.Type.Any None)
+          in
+          let fn_type =
+            Ast.Type.Function
+              {
+                Ast.Type.Function.tparams;
+                params = type_params;
+                return = return_annot;
+                comments = None;
+                effect_;
+              }
+          in
+          let annot = (annot_loc, (annot_loc, fn_type)) in
+          (* Convert predicate if present *)
+          let type_predicate =
+            match predicate with
+            | Some (loc, { Flow_ast.Type.Predicate.kind; comments = pred_comments }) ->
+              Some (loc, { Flow_ast.Type.Predicate.kind; comments = pred_comments })
+            | None -> None
+          in
+          Statement.DeclareFunction
+            {
+              Statement.DeclareFunction.id = fn_id;
+              annot;
+              predicate = type_predicate;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+              implicit_declare = true;
+            }
+        | None ->
+          (* Normal function: parse body *)
+          let simple_params = is_simple_parameter_list params in
+          let (body, contains_use_strict) =
+            function_body env ~async ~generator ~expression:false ~simple_params
+          in
+          strict_function_post_check env ~contains_use_strict id params;
+          Statement.FunctionDeclaration
+            {
+              Function.id;
+              params;
+              body;
+              generator;
+              effect_;
+              async;
+              predicate;
+              return;
+              tparams;
+              sig_loc;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
     )
 
   let variable_declaration_list =

@@ -1250,7 +1250,9 @@ module Make
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
     let declare_function cx f =
-      let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments } = f in
+      let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments; implicit_declare } =
+        f
+      in
       let effect_ =
         match annot with
         | (_, (_, Ast.Type.Function { Ast.Type.Function.effect_; _ })) -> effect_
@@ -1276,7 +1278,13 @@ module Make
             Tast_utils.error_mapper#predicate p
         )
       in
-      { DeclareFunction.id = ((id_loc, t), id_name); annot = annot_ast; predicate; comments }
+      {
+        DeclareFunction.id = ((id_loc, t), id_name);
+        annot = annot_ast;
+        predicate;
+        comments;
+        implicit_declare;
+      }
     in
     function
     | (_, Empty _) as stmt -> stmt

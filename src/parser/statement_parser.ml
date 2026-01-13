@@ -1370,6 +1370,7 @@ module Statement
       annot;
       predicate;
       comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+      implicit_declare = false;
     }
 
   and declare_function_statement env =

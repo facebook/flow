@@ -21,6 +21,13 @@
             "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":41}},
             "range":[21,41],
             "params":[],
+            "returnType":{
+              "type":"VoidTypeAnnotation",
+              "loc":{"source":null,"start":{"line":1,"column":37},"end":{"line":1,"column":41}},
+              "range":[37,41]
+            },
+            "rest":null,
+            "typeParameters":null,
             "this":{
               "type":"FunctionTypeParam",
               "loc":{"source":null,"start":{"line":1,"column":22},"end":{"line":1,"column":34}},
@@ -32,18 +39,12 @@
                 "range":[28,34]
               },
               "optional":false
-            },
-            "returnType":{
-              "type":"VoidTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":37},"end":{"line":1,"column":41}},
-              "range":[37,41]
-            },
-            "rest":null,
-            "typeParameters":null
+            }
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     },
     {
@@ -84,6 +85,13 @@
                 "optional":false
               }
             ],
+            "returnType":{
+              "type":"VoidTypeAnnotation",
+              "loc":{"source":null,"start":{"line":3,"column":50},"end":{"line":3,"column":54}},
+              "range":[93,97]
+            },
+            "rest":null,
+            "typeParameters":null,
             "this":{
               "type":"FunctionTypeParam",
               "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":34}},
@@ -95,18 +103,12 @@
                 "range":[71,77]
               },
               "optional":false
-            },
-            "returnType":{
-              "type":"VoidTypeAnnotation",
-              "loc":{"source":null,"start":{"line":3,"column":50},"end":{"line":3,"column":54}},
-              "range":[93,97]
-            },
-            "rest":null,
-            "typeParameters":null
+            }
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     },
     {
@@ -147,18 +149,6 @@
                 "optional":false
               }
             ],
-            "this":{
-              "type":"FunctionTypeParam",
-              "loc":{"source":null,"start":{"line":5,"column":22},"end":{"line":5,"column":34}},
-              "range":[121,133],
-              "name":null,
-              "typeAnnotation":{
-                "type":"StringTypeAnnotation",
-                "loc":{"source":null,"start":{"line":5,"column":28},"end":{"line":5,"column":34}},
-                "range":[127,133]
-              },
-              "optional":false
-            },
             "returnType":{
               "type":"VoidTypeAnnotation",
               "loc":{"source":null,"start":{"line":5,"column":75},"end":{"line":5,"column":79}},
@@ -203,11 +193,24 @@
               },
               "optional":false
             },
-            "typeParameters":null
+            "typeParameters":null,
+            "this":{
+              "type":"FunctionTypeParam",
+              "loc":{"source":null,"start":{"line":5,"column":22},"end":{"line":5,"column":34}},
+              "range":[121,133],
+              "name":null,
+              "typeAnnotation":{
+                "type":"StringTypeAnnotation",
+                "loc":{"source":null,"start":{"line":5,"column":28},"end":{"line":5,"column":34}},
+                "range":[127,133]
+              },
+              "optional":false
+            }
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     },
     {
@@ -228,18 +231,6 @@
             "loc":{"source":null,"start":{"line":7,"column":21},"end":{"line":7,"column":66}},
             "range":[201,246],
             "params":[],
-            "this":{
-              "type":"FunctionTypeParam",
-              "loc":{"source":null,"start":{"line":7,"column":22},"end":{"line":7,"column":34}},
-              "range":[202,214],
-              "name":null,
-              "typeAnnotation":{
-                "type":"StringTypeAnnotation",
-                "loc":{"source":null,"start":{"line":7,"column":28},"end":{"line":7,"column":34}},
-                "range":[208,214]
-              },
-              "optional":false
-            },
             "returnType":{
               "type":"VoidTypeAnnotation",
               "loc":{"source":null,"start":{"line":7,"column":62},"end":{"line":7,"column":66}},
@@ -284,11 +275,24 @@
               },
               "optional":false
             },
-            "typeParameters":null
+            "typeParameters":null,
+            "this":{
+              "type":"FunctionTypeParam",
+              "loc":{"source":null,"start":{"line":7,"column":22},"end":{"line":7,"column":34}},
+              "range":[202,214],
+              "name":null,
+              "typeAnnotation":{
+                "type":"StringTypeAnnotation",
+                "loc":{"source":null,"start":{"line":7,"column":28},"end":{"line":7,"column":34}},
+                "range":[208,214]
+              },
+              "optional":false
+            }
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     }
   ],

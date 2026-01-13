@@ -67,6 +67,7 @@
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     },
     {
@@ -155,6 +156,7 @@
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     },
     {
@@ -243,6 +245,7 @@
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     },
     {
@@ -338,6 +341,7 @@
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     },
     {
@@ -440,6 +444,7 @@
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     }
   ],

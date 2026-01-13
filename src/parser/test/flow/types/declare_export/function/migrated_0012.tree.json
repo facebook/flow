@@ -26,18 +26,19 @@
               "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":35}},
               "range":[27,35],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"VoidTypeAnnotation",
                 "loc":{"source":null,"start":{"line":1,"column":31},"end":{"line":1,"column":35}},
                 "range":[31,35]
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             }
           },
           "optional":false
         },
+        "implicitDeclare":false,
         "predicate":null
       },
       "specifiers":[],

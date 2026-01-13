@@ -49,11 +49,13 @@
               "range":[65,69]
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     },
     {
@@ -144,11 +146,13 @@
                   "default":null
                 }
               ]
-            }
+            },
+            "this":null
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     },
     {
@@ -196,11 +200,13 @@
                   "range":[285,289]
                 },
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               }
             },
             "optional":false
           },
+          "implicitDeclare":false,
           "predicate":null
         },
         {
@@ -243,11 +249,13 @@
                   "range":[351,355]
                 },
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               }
             },
             "optional":false
           },
+          "implicitDeclare":false,
           "predicate":null
         }
       ]
@@ -289,11 +297,13 @@
                   "range":[424,428]
                 },
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               }
             },
             "optional":false
           },
+          "implicitDeclare":false,
           "predicate":{
             "type":"InferredPredicate",
             "trailingComments":[
@@ -340,11 +350,13 @@
                   "range":[498,502]
                 },
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               }
             },
             "optional":false
           },
+          "implicitDeclare":false,
           "predicate":{
             "type":"InferredPredicate",
             "trailingComments":[
@@ -433,11 +445,13 @@
                   "default":null
                 }
               ]
-            }
+            },
+            "this":null
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":null
     },
     {
@@ -472,11 +486,13 @@
               "range":[671,675]
             },
             "rest":null,
-            "typeParameters":null
+            "typeParameters":null,
+            "this":null
           }
         },
         "optional":false
       },
+      "implicitDeclare":false,
       "predicate":{
         "type":"InferredPredicate",
         "leadingComments":[

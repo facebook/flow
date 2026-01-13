@@ -2139,7 +2139,13 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       let open Ast.Statement.DeclareFunction in
-      let { id = (id_loc, { Ast.Identifier.name; _ }); annot; predicate = _; comments = _ } =
+      let {
+        id = (id_loc, { Ast.Identifier.name; _ });
+        annot;
+        predicate = _;
+        comments = _;
+        implicit_declare = _;
+      } =
         decl
       in
       this#add_ordinary_binding

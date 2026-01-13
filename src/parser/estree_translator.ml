@@ -1105,7 +1105,15 @@ with type t = Impl.t = struct
           ("kind", string kind);
         ]
     and declare_function
-        (loc, { Statement.DeclareFunction.id; annot; predicate = predicate_; comments }) =
+        ( loc,
+          {
+            Statement.DeclareFunction.id;
+            annot;
+            predicate = predicate_;
+            comments;
+            implicit_declare;
+          }
+        ) =
       let id_loc = Loc.btwn (fst id) (fst annot) in
       let (name, predicate) =
         match annot with
@@ -1122,6 +1130,7 @@ with type t = Impl.t = struct
                id_loc
                { Pattern.Identifier.name = id; annot = Ast.Type.Available annot; optional = false }
            );
+           ("implicitDeclare", bool implicit_declare);
          ]
         @ predicate
         )
