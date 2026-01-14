@@ -145,6 +145,9 @@
           "include": "#literal-variable-flowtype"
         },
         {
+          "include": "#record-expression"
+        },
+        {
           "include": "#literal-variable"
         },
         {
@@ -2938,6 +2941,34 @@
               "name": "meta.tag.mustache.js"
             }
           }
+        }
+      ]
+    },
+    "record-expression": {
+      "patterns": [
+        {
+          "comment": "A record expression like `MyRecord {}`",
+          "match": "\\s*([A-Z][$_A-Za-z0-9]*)(?=\\s*\\{)",
+          "captures": {
+            "1": {
+              "name": "entity.name.class.js"
+            }
+          }
+        },
+        {
+          "comment": "A record expression with type arguments like `MyRecord<T> {}`",
+          "begin": "\\s*([A-Z][$_A-Za-z0-9]*)(?=<)",
+          "beginCaptures": {
+            "1": {
+              "name": "entity.name.class.js"
+            }
+          },
+          "end": "(?=\\s*\\{\\s*)",
+          "patterns": [
+            {
+              "include": "#type-argument-brackets"
+            }
+          ]
         }
       ]
     },
