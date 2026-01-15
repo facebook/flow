@@ -8,7 +8,7 @@
     "@babel/preset-flow": "^7.27.1",
     "babel-plugin-syntax-hermes-parser": "^0.33.1",
     "chalk": "^4.1.2",
-    "diff": "^3.5.0",
+    "diff": "^8.0.3",
     "glob": "^7.0.3",
     "hermes-parser": "0.33.3",
     "minimist": "~1.2.6",
