@@ -12,54 +12,41 @@ open CommandSpec
    a type annotation in a file at a position. *)
 module InsertType = struct
   let spec =
-    Autofix_options.(
-      let ambiguity_strategies_list =
-        String.concat ", " @@ Base.List.map ~f:fst ambiguity_strategies
-      in
-      {
-        name = "insert type";
-        doc = "[EXPERIMENTAL] Insert type information at file and position";
-        usage =
-          Printf.sprintf
-            "Usage: %s autofix insert-type [OPTION]... [FILE] LINE COLUMN [END_LINE] [END_COLUMN]\n\ne.g. %s autofix insert-type foo.js 12 3\nor   %s autofix insert-type 12 3 < foo.js\n"
-            exe_name
-            exe_name
-            exe_name;
-        args =
-          ArgSpec.(
-            empty
-            |> base_flags
-            |> connect_and_json_flags
-            |> root_flag
-            |> strip_root_flag
-            |> verbose_flags
-            |> from_flag
-            |> path_flag
-            |> wait_for_recheck_flag
-            |> flag
-                 "--strict-location"
-                 truthy
-                 ~doc:"Restrict the number of valid positions for each annotation"
-            |> flag
-                 "--strategy"
-                 (required ~default:Generalize (enum ambiguity_strategies))
-                 ~doc:
-                   ("Set how to resolve ambiguity in possible types ("
-                   ^ ambiguity_strategies_list
-                   ^ ")"
-                   )
-            |> flag
-                 "--in-place"
-                 truthy
-                 ~doc:"Overwrite the input file or file specified by the path flag"
-            |> flag
-                 "--omit-typearg-defaults"
-                 truthy
-                 ~doc:"Omit type arguments when defaults exist and match the provided type argument"
-            |> anon "args" (required (list_of string))
-          );
-      }
-    )
+    {
+      name = "insert type";
+      doc = "[EXPERIMENTAL] Insert type information at file and position";
+      usage =
+        Printf.sprintf
+          "Usage: %s autofix insert-type [OPTION]... [FILE] LINE COLUMN [END_LINE] [END_COLUMN]\n\ne.g. %s autofix insert-type foo.js 12 3\nor   %s autofix insert-type 12 3 < foo.js\n"
+          exe_name
+          exe_name
+          exe_name;
+      args =
+        ArgSpec.(
+          empty
+          |> base_flags
+          |> connect_and_json_flags
+          |> root_flag
+          |> strip_root_flag
+          |> verbose_flags
+          |> from_flag
+          |> path_flag
+          |> wait_for_recheck_flag
+          |> flag
+               "--strict-location"
+               truthy
+               ~doc:"Restrict the number of valid positions for each annotation"
+          |> flag
+               "--in-place"
+               truthy
+               ~doc:"Overwrite the input file or file specified by the path flag"
+          |> flag
+               "--omit-typearg-defaults"
+               truthy
+               ~doc:"Omit type arguments when defaults exist and match the provided type argument"
+          |> anon "args" (required (list_of string))
+        );
+    }
 
   let handle_error ?(code = Exit.Unknown_error) msg = Exit.(exit ~msg code)
 
@@ -117,7 +104,6 @@ module InsertType = struct
       path
       wait_for_recheck
       location_is_strict
-      ambiguity_strategy
       in_place
       omit_targ_defaults
       args
@@ -138,15 +124,7 @@ module InsertType = struct
       prerr_endline "NOTE: --verbose writes to the server log file";
     let request =
       ServerProt.Request.INSERT_TYPE
-        {
-          input;
-          target;
-          verbose;
-          location_is_strict;
-          ambiguity_strategy;
-          wait_for_recheck;
-          omit_targ_defaults;
-        }
+        { input; target; verbose; location_is_strict; wait_for_recheck; omit_targ_defaults }
     in
     let result = connect_and_make_request flowconfig_name option_values root request in
     match result with

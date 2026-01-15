@@ -5,7 +5,7 @@
 type Inexact = { data: string; type: string; }
 type Exact = {| data: string; type: string; |}
 
-function foo(): Array<{ data: string, type: string, ... }> {
+function foo(): Array<{| data: string, type: string |}> {
   return [
     {data: "", type: ""},
     {data: "", type: ""},
@@ -16,14 +16,14 @@ function foo(): Array<{ data: string, type: string, ... }> {
 (foo(): Array<Exact>);
 
 module.exports = foo;
-> insert-type b.js 6 15 --strategy=generalize
+> insert-type b.js 6 15
 > cat b.js
 // @flow
 
 type Inexact = { data: string; type: string; }
 type Exact = {| data: string; type: string; |}
 
-function foo(): Array<{ data: string, type: string, ... }> {
+function foo(): Array<{| data: string, type: string |}> {
   return [
     {data: "", type: ""},
     {data: "", type: ""},
@@ -40,7 +40,7 @@ module.exports = foo;
 type Inexact = { data: string; type: string; }
 type Exact = {| data: string; type: string; |}
 
-function foo(): Array<{ data: string, type: string, ... }> {
+function foo(): Array<{| data: string, type: string |}> {
   return [
     {data: "", type: ""},
     {data: "", type: ""},
@@ -51,62 +51,62 @@ function foo(): Array<{ data: string, type: string, ... }> {
 
 module.exports = foo;
 > flow status
-Error -------------------------------------------------------------------------------------------------------- a.js:14:2
+Error -------------------------------------------------------------------------------------------------------- a.js:13:2
 
-Cannot cast `foo()` to array type because in array element: `{data: string, type: string, ...}` [1] is not exactly the
-same as `Exact` [2]. [incompatible-type]
+Cannot cast `foo()` to array type because in array element: `{data: string, type: string}` [1] is not exactly the same
+as `Inexact` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{data: string, type: string, ...}>` [3] and `Array<Exact>` [4] exactly the same
+- Either make `Array<{data: string, type: string}>` [3] and `Array<Inexact>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   a.js:14:2
-   14| (foo(): Array<Exact>);
+   a.js:13:2
+   13| (foo(): Array<Inexact>);
         ^^^^^
 
 References:
    a.js:6:23
-    6| function foo(): Array<{ data: string, type: string, ... }> {
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   a.js:14:15
-   14| (foo(): Array<Exact>);
-                     ^^^^^ [2]
+    6| function foo(): Array<{| data: string, type: string |}> {
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   a.js:13:15
+   13| (foo(): Array<Inexact>);
+                     ^^^^^^^ [2]
    a.js:6:17
-    6| function foo(): Array<{ data: string, type: string, ... }> {
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   a.js:14:9
-   14| (foo(): Array<Exact>);
-               ^^^^^^^^^^^^ [4]
+    6| function foo(): Array<{| data: string, type: string |}> {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   a.js:13:9
+   13| (foo(): Array<Inexact>);
+               ^^^^^^^^^^^^^^ [4]
 
 
-Error -------------------------------------------------------------------------------------------------------- c.js:13:2
+Error -------------------------------------------------------------------------------------------------------- b.js:13:2
 
-Cannot cast `foo()` to array type because in array element: `{data: string, type: string, ...}` [1] is not exactly the
-same as `Exact` [2]. [incompatible-type]
+Cannot cast `foo()` to array type because in array element: `{data: string, type: string}` [1] is not exactly the same
+as `Inexact` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<{data: string, type: string, ...}>` [3] and `Array<Exact>` [4] exactly the same
+- Either make `Array<{data: string, type: string}>` [3] and `Array<Inexact>` [4] exactly the same
 - Or make array type [4] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
-   c.js:13:2
-   13| (foo(): Array<Exact>);
+   b.js:13:2
+   13| (foo(): Array<Inexact>);
         ^^^^^
 
 References:
-   c.js:6:23
-    6| function foo(): Array<{ data: string, type: string, ... }> {
-                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
-   c.js:13:15
-   13| (foo(): Array<Exact>);
-                     ^^^^^ [2]
-   c.js:6:17
-    6| function foo(): Array<{ data: string, type: string, ... }> {
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
-   c.js:13:9
-   13| (foo(): Array<Exact>);
-               ^^^^^^^^^^^^ [4]
+   b.js:6:23
+    6| function foo(): Array<{| data: string, type: string |}> {
+                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   b.js:13:15
+   13| (foo(): Array<Inexact>);
+                     ^^^^^^^ [2]
+   b.js:6:17
+    6| function foo(): Array<{| data: string, type: string |}> {
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [3]
+   b.js:13:9
+   13| (foo(): Array<Inexact>);
+               ^^^^^^^^^^^^^^ [4]
 
 
 

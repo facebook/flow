@@ -716,7 +716,6 @@ module TypeSynthesizer = struct
           ~file_sig
           ~typed_ast
           ~omit_targ_defaults:false
-          ~ambiguity_strategy:Autofix_options.Generalize
           ~remote_converter
           loc
           t

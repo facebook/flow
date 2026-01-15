@@ -3,7 +3,6 @@
  (wrapped false)
  (modules serverProt)
  (libraries
-  flow_autofix_options
   flow_common
   flow_coverage
   flow_index

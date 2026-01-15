@@ -143,7 +143,6 @@ module Request = struct
         target: Loc.t;
         verbose: Verbose.t option;
         location_is_strict: bool;
-        ambiguity_strategy: Autofix_options.ambiguity_strategy;
         wait_for_recheck: bool option;
         omit_targ_defaults: bool;
       }

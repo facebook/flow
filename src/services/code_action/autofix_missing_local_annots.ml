@@ -55,7 +55,6 @@ let fix_missing_param_annot_at_loc
     ?remote_converter
     ~omit_targ_defaults:false
     ~strict:false
-    ~ambiguity_strategy:Autofix_options.Generalize
 
 let fix_all_missing_param_annot_errors_in_file
     ?remote_converter
@@ -80,6 +79,5 @@ let fix_all_missing_param_annot_errors_in_file
       ?remote_converter
       ~omit_targ_defaults:false
       ~strict:false
-      ~ambiguity_strategy:Autofix_options.Generalize
   in
   LocMap.fold (fun loc t ast -> fix_one_loc ast loc t) fixable_locs
