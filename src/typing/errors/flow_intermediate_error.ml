@@ -4902,8 +4902,6 @@ let to_printable_error :
         text
           "https://flow.org/en/docs/types/type-guards/#toc-consistency-checks-of-type-guard-functions.";
       ]
-    | MessageUnexpectedTemporaryBaseType ->
-      [text "The type argument of a temporary base type must be a compatible literal type"]
     | MessageUnexpectedUseOfThisType -> [text "Unexpected use of "; code "this"; text " type."]
     | MessageUninitializedInstanceProperty Lints.MethodCallBeforeEverythingInitialized ->
       [

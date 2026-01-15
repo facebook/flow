@@ -437,7 +437,6 @@ and 'loc t' =
   | EUnnecessaryOptionalChain of 'loc * 'loc virtual_reason
   | EUnnecessaryInvariant of 'loc * 'loc virtual_reason
   | EUnnecessaryDeclareTypeOnlyExport of 'loc
-  | EUnexpectedTemporaryBaseType of 'loc
   | ECannotDelete of 'loc * 'loc virtual_reason
   | ESignatureBindingValidation of 'loc Signature_error.binding_validation_t
   | ESignatureVerification of 'loc Signature_error.t
@@ -1551,7 +1550,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EUnnecessaryOptionalChain (loc, r) -> EUnnecessaryOptionalChain (f loc, map_reason r)
   | EUnnecessaryInvariant (loc, r) -> EUnnecessaryInvariant (f loc, map_reason r)
   | EUnnecessaryDeclareTypeOnlyExport loc -> EUnnecessaryDeclareTypeOnlyExport (f loc)
-  | EUnexpectedTemporaryBaseType loc -> EUnexpectedTemporaryBaseType (f loc)
   | ECannotDelete (l1, r1) -> ECannotDelete (f l1, map_reason r1)
   | ESignatureBindingValidation sve ->
     ESignatureBindingValidation (Signature_error.map_binding_validation_t f sve)
@@ -2222,7 +2220,6 @@ let util_use_op_of_msg nope util = function
   | EUnnecessaryOptionalChain _
   | EUnnecessaryInvariant _
   | EUnnecessaryDeclareTypeOnlyExport _
-  | EUnexpectedTemporaryBaseType _
   | ECannotDelete _
   | ESignatureBindingValidation _
   | ESignatureVerification _
@@ -2457,7 +2454,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EInvalidLHSInAssignment loc
   | EInvalidTypeof (loc, _)
   | EUnreachable loc
-  | EUnexpectedTemporaryBaseType loc
   | ECannotDelete (loc, _)
   | EBadExportContext (_, loc)
   | EBadExportPosition loc
@@ -3286,7 +3282,6 @@ let friendly_message_of_msg = function
   | EUnsupportedVarianceAnnotation (_, kind) -> Normal (MessageUnsupportedVarianceAnnotation kind)
   | EExportRenamedDefault { loc = _; name; is_reexport } ->
     Normal (MessageCannotExportRenamedDefault { name; is_reexport })
-  | EUnexpectedTemporaryBaseType _ -> Normal MessageUnexpectedTemporaryBaseType
   | ECannotDelete (_, expr) -> Normal (MessageCannotDelete expr)
   | ESignatureBindingValidation (Signature_error.ModuleOverride { name; existing_binding_loc; _ })
     ->
@@ -4085,7 +4080,6 @@ let error_code_of_message err : error_code option =
     | UnexpectedInexact -> Some CannotSpreadInexact
     | UnexpectedIndexer -> Some CannotSpreadIndexer
   end
-  | EUnexpectedTemporaryBaseType _ -> Some InvalidTempType
   | EUnexpectedThisType _ -> Some IllegalThis
   | EUnionSpeculationFailed { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EUnreachable _ -> Some UnreachableCode

@@ -104,7 +104,6 @@ type error_code =
   | InvalidTypeArg
   | InvalidTypeCastSyntax
   | InvalidTypeOf
-  | InvalidTempType
   | LibdefOverride
   | LintSetting
   | MalformedPackage
@@ -326,7 +325,6 @@ let string_of_code : error_code -> string = function
   | InvalidTypeArg -> "invalid-type-arg"
   | InvalidTypeCastSyntax -> "invalid-type-cast-syntax"
   | InvalidTypeOf -> "invalid-typeof"
-  | InvalidTempType -> "invalid-temp-type"
   | LibdefOverride -> "libdef-override"
   | LintSetting -> "lint-setting"
   | MalformedPackage -> "malformed-package"
