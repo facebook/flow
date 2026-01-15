@@ -61,13 +61,12 @@ module.exports = (foo() as {
   f7: void,
   f8: void,
   f9: void,
-  ...
 });
 
 
 === Diff between codemod-ed & autofix-ed ===
 >>> ./a.js
-20c20,32
+20c20,31
 < module.exports = foo();
 ---
 > module.exports = (foo() as {
@@ -81,6 +80,5 @@ module.exports = (foo() as {
 >   f7: void,
 >   f8: void,
 >   f9: void,
->   ...
 > });
 

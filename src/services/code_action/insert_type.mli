@@ -52,7 +52,6 @@ val synth_type :
   file_sig:File_sig.t ->
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
-  ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   remote_converter:Insert_type_imports.ImportsHelper.remote_converter ->
   Loc.t ->
   Type.t ->
@@ -78,7 +77,6 @@ val insert_type :
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
   strict:bool ->
-  ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   ?remote_converter:Insert_type_imports.ImportsHelper.remote_converter ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   Loc.t ->
@@ -94,7 +92,6 @@ val insert_type_t :
   typed_ast:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t ->
   omit_targ_defaults:bool ->
   strict:bool ->
-  ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   ?remote_converter:Insert_type_imports.ImportsHelper.remote_converter ->
   (Loc.t, Loc.t) Flow_ast_mapper.Ast.Program.t ->
   Loc.t ->

@@ -1,4 +1,4 @@
-> autofix insert-type a.js 5 20 --strategy=generalize
+> autofix insert-type a.js 5 20
 > cat a.js
 // @flow
 

@@ -46,20 +46,6 @@ let expected err = FailedToInsertType (Expected err)
 
 let unexpected err = FailedToInsertType (Unexpected err)
 
-class generalize_temporary_types_mapper =
-  object
-    inherit [_] Ty.endo_ty as super
-
-    method! on_Obj () t =
-      function
-      | Ty.{ obj_kind = Ty.ExactObj; _ } as obj ->
-        let obj = Ty.{ obj with obj_kind = Ty.InexactObj } in
-        super#on_Obj () (Ty.Obj obj) obj
-      | obj -> super#on_Obj () t obj
-  end
-
-let generalize_temporary_types = (new generalize_temporary_types_mapper)#on_t ()
-
 let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
 (* Generate an equivalent Flow_ast.Type *)
@@ -83,14 +69,6 @@ let serialize
   |> simplify
   |> Ty_serializer.(type_ { exact_by_default })
   |> Utils.patch_up_type_ast
-
-let remove_ambiguous_types ~ambiguity_strategy ty =
-  let open Autofix_options in
-  match ambiguity_strategy with
-  | Fail -> Ok ty
-  | Generalize -> Ok (generalize_temporary_types ty)
-  | Fixme -> Ok ty
-  | Suppress -> Ok Utils.Builtins.flowfixme_ty_default
 
 let path_of_loc ?(error = Error "no path for location") (loc : Loc.t) : (string, string) result =
   match Loc.source loc with
@@ -283,7 +261,6 @@ let synth_type
     ~file_sig
     ~typed_ast
     ~omit_targ_defaults
-    ~ambiguity_strategy
     ~remote_converter
     type_loc
     t =
@@ -295,7 +272,7 @@ let synth_type
       let error_message = Utils.Error.serialize_validation_error error in
       let err = FailedToValidateType { error; error_message } in
       Error err
-    | (_, []) -> remove_ambiguous_types ~ambiguity_strategy ty
+    | (_, []) -> Ok ty
   in
   let t =
     Natural_inference.convert_literal_type
@@ -432,7 +409,6 @@ let insert_type_
     ~typed_ast
     ~omit_targ_defaults
     ~strict
-    ~ambiguity_strategy
     ?remote_converter
     ast
     target
@@ -445,7 +421,6 @@ let insert_type_
       ~file_sig
       ~typed_ast
       ~omit_targ_defaults
-      ~ambiguity_strategy
       ~remote_converter
       location
       (loc_to_type location)
@@ -471,7 +446,6 @@ let insert_type
     ~typed_ast
     ~omit_targ_defaults
     ~strict
-    ~ambiguity_strategy
     ?remote_converter
     ast
     target =
@@ -485,7 +459,6 @@ let insert_type
     ~typed_ast
     ~omit_targ_defaults
     ~strict
-    ~ambiguity_strategy
     ?remote_converter
     ast
     target
@@ -501,7 +474,6 @@ let insert_type_t
     ~typed_ast
     ~omit_targ_defaults
     ~strict
-    ~ambiguity_strategy
     ?remote_converter
     ast
     target
@@ -516,7 +488,6 @@ let insert_type_t
     ~typed_ast
     ~omit_targ_defaults
     ~strict
-    ~ambiguity_strategy
     ?remote_converter
     ast
     target

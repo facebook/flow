@@ -189,7 +189,7 @@ module.exports = (suite(
                           },
                         },
                         newText:
-                          ': { a: number, b: (a: any, b: string) => number, ... }',
+                          ': {| a: number, b: (a: any, b: string) => number |}',
                       },
                     ],
                   },
@@ -207,7 +207,11 @@ module.exports = (suite(
             ],
           },
         ],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+        [
+          'textDocument/publishDiagnostics',
+          'window/showStatus',
+          '$/cancelRequest',
+        ],
       ),
     ]),
     test('textDocument/codeAction #3', [

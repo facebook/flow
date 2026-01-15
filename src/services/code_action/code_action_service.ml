@@ -344,7 +344,6 @@ let insert_inferred_type_as_cast_code_actions
              ~typed_ast
              ~omit_targ_defaults:false
              ~strict:false
-             ~ambiguity_strategy:Autofix_options.Generalize
              ast
              (fst expression)
          with
@@ -2468,8 +2467,7 @@ let insert_type
     ~file_content
     ~target
     ~omit_targ_defaults
-    ~location_is_strict:strict
-    ~ambiguity_strategy =
+    ~location_is_strict:strict =
   let open Insert_type in
   let file_artifacts =
     let ((_, parse_errs) as intermediate_result) =
@@ -2505,7 +2503,6 @@ let insert_type
            ~typed_ast
            ~omit_targ_defaults
            ~strict
-           ~ambiguity_strategy
            ast
            target
        in

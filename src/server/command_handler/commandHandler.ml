@@ -1087,8 +1087,7 @@ let insert_type
     ~target
     ~verbose
     ~omit_targ_defaults
-    ~location_is_strict
-    ~ambiguity_strategy =
+    ~location_is_strict =
   let file_key = file_key_of_file_input ~options ~env file_input in
   let options = { options with Options.opt_verbose = verbose } in
   File_input.content_of_file_input file_input >>= fun file_content ->
@@ -1105,7 +1104,6 @@ let insert_type
     ~target
     ~omit_targ_defaults
     ~location_is_strict
-    ~ambiguity_strategy
 
 let autofix_exports
     ~options
@@ -1857,7 +1855,6 @@ let handle_insert_type
     ~verbose
     ~omit_targ_defaults
     ~location_is_strict
-    ~ambiguity_strategy
     ~profiling
     ~env
     ~reader =
@@ -1880,7 +1877,6 @@ let handle_insert_type
           ~verbose
           ~omit_targ_defaults
           ~location_is_strict
-          ~ambiguity_strategy
     )
   in
   Lwt.return (ServerProt.Response.INSERT_TYPE result, None)
@@ -2211,7 +2207,6 @@ let get_ephemeral_handler genv command =
         verbose;
         omit_targ_defaults;
         location_is_strict;
-        ambiguity_strategy;
       } ->
     mk_parallelizable
       ~wait_for_recheck
@@ -2223,7 +2218,6 @@ let get_ephemeral_handler genv command =
          ~verbose
          ~omit_targ_defaults
          ~location_is_strict
-         ~ambiguity_strategy
          ~reader
       )
   | ServerProt.Request.STATUS { include_warnings } ->

@@ -184,13 +184,12 @@ declare var componentType_2: React.ComponentType<React.ComponentType<number>>;
 declare var elementRef: React.ElementRef<number>;
 declare var elementConfig: React.ElementConfig<number>;
 
-module.exports = (): {
+module.exports = (): {|
   componentType_1: React.ComponentType<number>,
   componentType_2: React.ComponentType<React.ComponentType<number>>,
   elementConfig: React.ElementConfig<number>,
   elementRef: React.ElementRef<number>,
-  ...
-} => ({
+|} => ({
   componentType_1,
   componentType_2,
   elementRef,
@@ -205,12 +204,11 @@ declare var rendersFoo: renders Foo;
 declare var rendersFooMaybe: renders? Foo;
 declare var rendersFooStar: renders* Foo;
 
-export function foo(): {
+export function foo(): {|
   rendersFoo: renders Foo,
   rendersFooMaybe: renders? Foo,
   rendersFooStar: renders* Foo,
-  ...
-} {
+|} {
     return {
         rendersFoo,
         rendersFooMaybe,
@@ -220,25 +218,3 @@ export function foo(): {
 
 
 === Diff between codemod-ed & autofix-ed ===
->>> ./qualified.js
-9c9
-< module.exports = (): {|
----
-> module.exports = (): {
-14c14,15
-< |} => ({
----
->   ...
-> } => ({
-
->>> ./render-types.js
-8c8
-< export function foo(): {|
----
-> export function foo(): {
-12c12,13
-< |} {
----
->   ...
-> } {
-

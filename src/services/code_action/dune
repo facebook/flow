@@ -4,7 +4,6 @@
  (modules
   (:standard \ code_action_service))
  (libraries
-  flow_autofix_options
   flow_parser_utils_replacement_printer
   flow_service_type_info
   flow_typing

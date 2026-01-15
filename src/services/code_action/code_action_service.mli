@@ -147,7 +147,6 @@ val insert_type :
   target:Loc.t ->
   omit_targ_defaults:bool ->
   location_is_strict:bool ->
-  ambiguity_strategy:Autofix_options.ambiguity_strategy ->
   (Replacement_printer.patch, string) result
 
 val organize_imports :

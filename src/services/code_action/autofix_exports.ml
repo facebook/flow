@@ -44,7 +44,6 @@ let fix_signature_verification_error_at_loc
     ?remote_converter
     ~omit_targ_defaults:false
     ~strict:false
-    ~ambiguity_strategy:Autofix_options.Generalize
 
 let fix_signature_verification_errors
     ~file_key
