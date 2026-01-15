@@ -1848,6 +1848,49 @@ let handle_inlay_hint ~options ~reader ~profiling ~env input =
   in
   Lwt.return (ServerProt.Response.INLAY_HINT result, json_data)
 
+let handle_llm_context ~options ~reader ~profiling ~env input =
+  let { ServerProt.Llm_context_options.files; token_budget; wait_for_recheck = _ } = input in
+  let strip_root = Some (Options.root options) in
+  let typed_files =
+    Base.List.filter_map files ~f:(fun file_path ->
+        let file_key = File_key.SourceFile file_path in
+        let file_input = File_input.FileName file_path in
+        match of_file_input ~options ~env file_input with
+        | Error _ -> None
+        | Ok (_file_key, content) ->
+          let parse_result =
+            lazy (Type_contents.parse_contents ~options ~profiling content file_key)
+          in
+          let (file_artifacts_result, _did_hit_cache) =
+            type_parse_artifacts_with_cache
+              ~options
+              ~profiling
+              ~type_parse_artifacts_cache:None
+              env.master_cx
+              file_key
+              parse_result
+          in
+          (match file_artifacts_result with
+          | Error _ -> None
+          | Ok (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
+            Some LlmTypedContextProvider.{ file_key; ast; cx; typed_ast; reader })
+    )
+  in
+  let lsp_result =
+    LlmTypedContextProvider.generate_context ~strip_root ~files:typed_files ~token_budget
+  in
+  let result =
+    Ok
+      ServerProt.Response.LlmContext.
+        {
+          llm_context = lsp_result.Lsp.LLMContext.llmContext;
+          files_processed = lsp_result.Lsp.LLMContext.filesProcessed;
+          tokens_used = lsp_result.Lsp.LLMContext.tokensUsed;
+          truncated = lsp_result.Lsp.LLMContext.truncated;
+        }
+  in
+  Lwt.return (ServerProt.Response.LLM_CONTEXT result, None)
+
 let handle_insert_type
     ~options
     ~file_input
@@ -2235,6 +2278,11 @@ let get_ephemeral_handler genv command =
     (* save-state can take awhile to run. Furthermore, you probably don't want to run this with out
      * of date data. So save-state is not parallelizable *)
     Handle_nonparallelizable (handle_save_state ~options ~out ~genv)
+  | ServerProt.Request.LLM_CONTEXT input ->
+    mk_parallelizable
+      ~wait_for_recheck:input.ServerProt.Llm_context_options.wait_for_recheck
+      ~options
+      (handle_llm_context ~options ~reader input)
 
 let send_command_summary profiling name =
   MonitorRPC.send_telemetry
@@ -3652,6 +3700,46 @@ let handle_persistent_coverage ~options ~id ~params ~file_input ~metadata ~clien
       Lwt.return (LspProt.LspFromServer (Some response), metadata)
     | Error reason -> Lwt.return (mk_lsp_error_response ~id:(Some id) ~reason metadata))
 
+let handle_persistent_llm_context ~options ~reader ~id ~params ~metadata ~client ~profiling ~env =
+  let { LLMContext.editedFilePaths; tokenBudget; environmentDetails = _ } = params in
+  let type_parse_artifacts_cache = Some (Persistent_connection.type_parse_artifacts_cache client) in
+  let strip_root = Some (Options.root options) in
+  let typed_files =
+    Base.List.filter_map editedFilePaths ~f:(fun file_uri_str ->
+        let file_path = File_url.parse file_uri_str in
+        let file_key = File_key.SourceFile file_path in
+        let text_document = { TextDocumentIdentifier.uri = DocumentUri.of_string file_uri_str } in
+        let file_input = file_input_of_text_document_identifier ~client text_document in
+        match of_file_input ~options ~env file_input with
+        | Error _ -> None
+        | Ok (_file_key, content) ->
+          let parse_result =
+            lazy (Type_contents.parse_contents ~options ~profiling content file_key)
+          in
+          let (file_artifacts_result, _did_hit_cache) =
+            type_parse_artifacts_with_cache
+              ~options
+              ~profiling
+              ~type_parse_artifacts_cache
+              env.master_cx
+              file_key
+              parse_result
+          in
+          (match file_artifacts_result with
+          | Error _ -> None
+          | Ok (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; typed_ast; _ }) ->
+            Some LlmTypedContextProvider.{ file_key; ast; cx; typed_ast; reader })
+    )
+  in
+  let result =
+    LlmTypedContextProvider.generate_context
+      ~strip_root
+      ~files:typed_files
+      ~token_budget:tokenBudget
+  in
+  let response = ResponseMessage (id, LLMContextResult result) in
+  Lwt.return (LspProt.LspFromServer (Some response), metadata)
+
 let handle_persistent_rage ~reader ~genv ~id ~metadata ~client:_ ~profiling:_ ~env =
   let root = File_path.to_string genv.ServerEnv.options.Options.opt_root in
   let items =
@@ -4290,6 +4378,10 @@ let get_persistent_handler ~genv ~client_id ~request:(request, metadata) :
     mk_parallelizable_persistent
       ~options
       (handle_persistent_rename_file_imports ~reader ~options ~id ~params ~metadata)
+  | LspToServer (RequestMessage (id, LLMContextRequest params)) ->
+    mk_parallelizable_persistent
+      ~options
+      (handle_persistent_llm_context ~options ~reader ~id ~params ~metadata)
   | LspToServer (ResponseMessage (id, result)) ->
     Handle_persistent_immediately (handle_result_from_client ~id ~result ~metadata)
   | LspToServer unhandled ->

@@ -38,6 +38,7 @@ end = struct
       GleanCommand.command;
       InitCommand.command;
       InlayHintCommand.command;
+      LlmContextCommand.command;
       LspCommand.command;
       LsCommand.command;
       SaveStateCommand.command;

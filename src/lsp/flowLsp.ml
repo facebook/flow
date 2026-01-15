@@ -839,6 +839,9 @@ let do_initialize params : Initialize.result =
             autoCloseJsx = true;
             pasteProvider = true;
             renameFileImports = true;
+            (* llmContextProvider is advertised as always available. The actual
+               check for whether it's enabled happens at request time in do_llmContext. *)
+            llmContextProvider = true;
           };
       };
     server_info = { name = "Flow"; version = Flow_version.version };
