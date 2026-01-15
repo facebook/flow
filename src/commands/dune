@@ -64,4 +64,6 @@
   flow_parser
   flow_server_status
   flow_service_autocomplete
-  flow_vcs))
+  flow_vcs)
+ (preprocess
+  (pps lwt_ppx)))
