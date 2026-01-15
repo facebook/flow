@@ -627,7 +627,6 @@ class stylize_ty_mapper () =
           | (BoolLit _, { bools; _ }) -> { a with bools = t :: bools }
           | (NumLit _, { nums; _ }) -> { a with nums = t :: nums }
           | (StrLit _, { strings; _ }) -> { a with strings = t :: strings }
-          (* Note, any temporary base types get passed through with others *)
           | (t, { others; _ }) -> { a with others = t :: others }
         in
         let empty = { bools = []; nums = []; strings = []; others = [] } in

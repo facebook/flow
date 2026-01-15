@@ -1140,7 +1140,6 @@ type 'loc message =
       obj: 'loc virtual_reason;
       specialized: bool;
     }
-  | MessageUnexpectedTemporaryBaseType
   | MessageUnexpectedUseOfThisType
   | MessageUninitializedInstanceProperty of Lints.property_assignment_kind
   | MessageUnknownParameterTypes of 'loc virtual_reason

@@ -385,7 +385,7 @@ module CJS = struct
   let exports_of_annot acc = function
     | ObjAnnot { props; _ } -> SMap.fold (fun name _value acc -> Named name :: acc) props acc
     | _ ->
-      (* TODO: handle TEMPORARY_Object, ReadOnly, Exact, if they wrap objects? *)
+      (* TODO: handle Readonly, Exact, if they wrap objects? *)
       acc
 
   let add_named_exports acc type_sig packed =
