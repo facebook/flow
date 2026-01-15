@@ -51,8 +51,6 @@ type options = {
    * WARNING May be slow for large types
    *)
   optimize_types: bool;
-  (* Makes the normalizer more aggressive in preserving inferred literal types *)
-  preserve_inferred_literal_types: bool;
   (* Debug *)
   verbose_normalizer: bool;
   (* Maximum depth of recursion *)
@@ -70,7 +68,6 @@ let default_options =
     merge_bot_and_any_kinds = true;
     omit_targ_defaults_option = false;
     optimize_types = true;
-    preserve_inferred_literal_types = false;
     verbose_normalizer = false;
     max_depth = Some 40;
     toplevel_is_type_identifier_reference = false;
@@ -79,7 +76,6 @@ let default_options =
 let default_codemod_options =
   {
     expand_internal_types = false;
-    preserve_inferred_literal_types = false;
     evaluate_type_destructors = EvaluateSome;
     optimize_types = false;
     omit_targ_defaults_option = true;
@@ -145,8 +141,6 @@ let imported_names e = Lazy.force e.genv.imported_names
 let expand_internal_types e = e.genv.options.expand_internal_types
 
 let evaluate_type_destructors e = e.genv.options.evaluate_type_destructors
-
-let preserve_inferred_literal_types e = e.genv.options.preserve_inferred_literal_types
 
 let omit_targ_defaults e = e.omit_targ_defaults
 

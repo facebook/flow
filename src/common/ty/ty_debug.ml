@@ -519,14 +519,8 @@ struct
         | BigIntLit s -> [("literal", JSON_String s)]
         | Fun f -> json_of_fun_t f
         | Obj o -> json_of_obj_t o
-        | Arr { arr_readonly; arr_literal; arr_elt_t } ->
-          [
-            ("readonly", JSON_Bool arr_readonly);
-            ( "literal",
-              Base.Option.value_map arr_literal ~f:(fun t -> JSON_Bool t) ~default:JSON_Null
-            );
-            ("type", json_of_t arr_elt_t);
-          ]
+        | Arr { arr_readonly; arr_elt_t } ->
+          [("readonly", JSON_Bool arr_readonly); ("type", json_of_t arr_elt_t)]
         | Tup { elements; inexact } ->
           [
             ( "elements",
@@ -684,7 +678,7 @@ struct
         )
     and json_of_obj_t o =
       Hh_json.(
-        let { obj_def_loc; obj_kind; obj_props; obj_literal } = o in
+        let { obj_def_loc; obj_kind; obj_props } = o in
         let obj_kind =
           match obj_kind with
           | ExactObj -> JSON_String "Exact"
@@ -699,7 +693,6 @@ struct
             | Some loc -> JSON_String (string_of_aloc loc)
           );
           ("obj_kind", obj_kind);
-          ("literal", Base.Option.value_map obj_literal ~f:(fun t -> JSON_Bool t) ~default:JSON_Null);
           ("props", JSON_Array (Base.List.map ~f:json_of_prop obj_props));
         ]
       )

@@ -28,10 +28,6 @@ type expected =
       location: Loc.t;
       error_message: string;
     }
-  | MulipleTypesPossibleAtPoint of {
-      generalized: (Loc.t, Loc.t) Flow_ast.Type.t;
-      specialized: (Loc.t, Loc.t) Flow_ast.Type.t;
-    }
   | FailedToValidateType of {
       error: Utils.Error.validation_error;
       error_message: string;
@@ -50,38 +46,9 @@ let expected err = FailedToInsertType (Expected err)
 
 let unexpected err = FailedToInsertType (Unexpected err)
 
-let fail_on_ambiguity =
-  let exception FoundAmbiguousType in
-  let visitor =
-    object
-      inherit [_] Ty.endo_ty as super
-
-      method! on_Arr () t =
-        function
-        | Ty.{ arr_literal = Some true; _ } -> raise FoundAmbiguousType
-        | arr -> super#on_Arr () t arr
-
-      method! on_Obj () t =
-        function
-        | Ty.{ obj_literal = Some true; _ } -> raise FoundAmbiguousType
-        | obj -> super#on_Obj () t obj
-    end
-  in
-  fun t ->
-    match visitor#on_t () t with
-    | exception FoundAmbiguousType -> None
-    | t -> Some t
-
 class generalize_temporary_types_mapper =
   object
     inherit [_] Ty.endo_ty as super
-
-    method! on_Arr () t =
-      function
-      | Ty.{ arr_literal = Some true; _ } as arr ->
-        let arr = Ty.{ arr with arr_literal = Some false } in
-        super#on_Arr () (Ty.Arr arr) arr
-      | arr -> super#on_Arr () t arr
 
     method! on_Obj () t =
       function
@@ -92,24 +59,6 @@ class generalize_temporary_types_mapper =
   end
 
 let generalize_temporary_types = (new generalize_temporary_types_mapper)#on_t ()
-
-let fixme_ambiguous_types =
-  let visitor =
-    object
-      inherit [_] Ty.endo_ty as super
-
-      method! on_Arr () t =
-        function
-        | Ty.{ arr_literal = Some true; _ } -> Utils.Builtins.flowfixme_ty_default
-        | arr -> super#on_Arr () t arr
-
-      method! on_Obj () t =
-        function
-        | Ty.{ obj_literal = Some true; _ } -> Utils.Builtins.flowfixme_ty_default
-        | obj -> super#on_Obj () t obj
-    end
-  in
-  visitor#on_t ()
 
 let simplify = Ty_utils.simplify_type ~merge_kinds:true ~sort:true
 
@@ -135,50 +84,12 @@ let serialize
   |> Ty_serializer.(type_ { exact_by_default })
   |> Utils.patch_up_type_ast
 
-let remove_ambiguous_types
-    ~cx
-    ~loc_of_aloc
-    ~get_ast_from_shared_mem
-    ~file_sig
-    ~typed_ast
-    ~ambiguity_strategy
-    ~exact_by_default
-    ty
-    loc =
+let remove_ambiguous_types ~ambiguity_strategy ty =
   let open Autofix_options in
   match ambiguity_strategy with
-  | Fail -> begin
-    match fail_on_ambiguity ty with
-    | Some t -> Ok t
-    | None ->
-      Error
-        (MulipleTypesPossibleAtPoint
-           {
-             specialized =
-               serialize
-                 ~cx
-                 ~loc_of_aloc
-                 ~get_ast_from_shared_mem
-                 ~file_sig
-                 ~typed_ast
-                 ~exact_by_default
-                 loc
-                 ty;
-             generalized =
-               generalize_temporary_types ty
-               |> serialize
-                    ~cx
-                    ~loc_of_aloc
-                    ~get_ast_from_shared_mem
-                    ~file_sig
-                    ~typed_ast
-                    ~exact_by_default
-                    loc;
-           }
-        )
-  end
+  | Fail -> Ok ty
   | Generalize -> Ok (generalize_temporary_types ty)
-  | Fixme -> Ok (fixme_ambiguous_types ty)
+  | Fixme -> Ok ty
   | Suppress -> Ok Utils.Builtins.flowfixme_ty_default
 
 let path_of_loc ?(error = Error "no path for location") (loc : Loc.t) : (string, string) result =
@@ -384,17 +295,7 @@ let synth_type
       let error_message = Utils.Error.serialize_validation_error error in
       let err = FailedToValidateType { error; error_message } in
       Error err
-    | (_, []) ->
-      remove_ambiguous_types
-        ~cx
-        ~loc_of_aloc
-        ~get_ast_from_shared_mem
-        ~file_sig
-        ~typed_ast
-        ~ambiguity_strategy
-        ~exact_by_default
-        ty
-        type_loc
+    | (_, []) -> remove_ambiguous_types ~ambiguity_strategy ty
   in
   let t =
     Natural_inference.convert_literal_type
@@ -455,14 +356,6 @@ let expected_error_to_string = function
   | UnsupportedAnnotation { location; error_message } ->
     error_message ^ " found at " ^ Loc.to_string_no_source location ^ " is not currently supported"
   | FailedToTypeCheck _ -> "Failed to typecheck file"
-  | MulipleTypesPossibleAtPoint { generalized; specialized } ->
-    "Multiple types possible at point:\n"
-    ^ "    generalized type: "
-    ^ type_to_string generalized
-    ^ "\n"
-    ^ "    specialized type: "
-    ^ type_to_string specialized
-    ^ "\n"
   | FailedToValidateType { error = Utils.Error.TooBig { size_limit; size }; _ } ->
     "The type that would be generated (size: "
     ^ begin

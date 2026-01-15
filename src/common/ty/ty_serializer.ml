@@ -452,7 +452,7 @@ let type_ options =
         comments = None;
       }
     )
-  and arr { arr_readonly; arr_elt_t; arr_literal = _; _ } =
+  and arr { arr_readonly; arr_elt_t } =
     let t = type_ arr_elt_t in
     if arr_readonly then
       builtin_from_string "ReadonlyArray" ~targs:(mk_targs [t])

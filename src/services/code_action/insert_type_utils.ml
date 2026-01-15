@@ -891,23 +891,6 @@ class type_normalization_hardcoded_fixes_mapper
        * with literal types are usually noise.
        *)
       let ts = ty1 :: ty2 :: tys in
-      let has_type_aliases =
-        List.exists
-          (function
-            | Ty.Generic (_, Ty.TypeAliasKind, _) -> true
-            | _ -> false)
-          ts
-      in
-      let ts =
-        if has_type_aliases && from_bounds then
-          List.filter
-            (function
-              | Ty.Obj { Ty.obj_literal = Some true; _ } -> false
-              | _ -> true)
-            ts
-        else
-          ts
-      in
 
       (* At this point we can recurse on the overall union, and then destruct it again
          for further analysis. We need to do this because of other transformations that
@@ -1219,14 +1202,7 @@ module MakeHardcodedFixes (Extra : BASE_STATS) = struct
     | [_] ->
       t
     | t :: ts ->
-      let arr =
-        Arr
-          {
-            arr_elt_t = mk_union ~from_bounds:true (t, ts);
-            arr_literal = None;
-            arr_readonly = true;
-          }
-      in
+      let arr = Arr { arr_elt_t = mk_union ~from_bounds:true (t, ts); arr_readonly = true } in
       mk_union ~from_bounds:true (arr, other_members)
 
   let run

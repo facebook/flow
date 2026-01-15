@@ -24,10 +24,6 @@ type expected =
       location: Loc.t;
       error_message: string;
     }
-  | MulipleTypesPossibleAtPoint of {
-      generalized: (Loc.t, Loc.t) Flow_ast.Type.t;
-      specialized: (Loc.t, Loc.t) Flow_ast.Type.t;
-    }
   | FailedToValidateType of {
       error: Insert_type_utils.Error.validation_error;
       error_message: string;
