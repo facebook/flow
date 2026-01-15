@@ -66,7 +66,6 @@ let type_at_pos_type
     let options evaluate_type_destructors =
       {
         Ty_normalizer_env.expand_internal_types = false;
-        preserve_inferred_literal_types = false;
         evaluate_type_destructors;
         optimize_types = true;
         omit_targ_defaults_option = omit_targ_defaults;
@@ -157,8 +156,6 @@ let insert_type_normalize ~cx ~file_sig ~omit_targ_defaults ~typed_ast loc t : T
   let options =
     {
       Ty_normalizer_env.expand_internal_types = false;
-      (* We eventually want to elimitate literal types, so let's not expose them here. *)
-      preserve_inferred_literal_types = false;
       (* Utility types won't are not serialized so it may be worth evaluating them away
        * if we find them in the resulting Ty.t. The trade off is that types might get
        * larger. *)

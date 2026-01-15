@@ -163,20 +163,12 @@ and obj_kind =
 
 and obj_t = {
   obj_def_loc: aloc option;
-  (* `None` means that this field was not computed, because the normalizer config
-     option preserve_inferred_literal_types was set to false. `Some b` means that
-     it was computed and `b` is true iff this is a literal type. *)
-  obj_literal: bool option;
   obj_props: prop list;
   obj_kind: obj_kind;
 }
 
 and arr_t = {
   arr_readonly: bool;
-  (* `None` means that this field was not computed, because the normalizer config
-     option preserve_inferred_literal_types was set to false. `Some b` means that
-     it was computed and `b` is true iff this is a literal type. *)
-  arr_literal: bool option;
   arr_elt_t: t;
 }
 
@@ -827,8 +819,7 @@ let mk_exact ty =
   | Conditional _ ->
     Utility (Exact ty)
 
-let mk_array ~readonly ~literal t =
-  Arr { arr_readonly = readonly; arr_literal = literal; arr_elt_t = t }
+let mk_array ~readonly t = Arr { arr_readonly = readonly; arr_elt_t = t }
 
 let debug_string_of_generic_kind = function
   | ClassKind -> "class"

@@ -447,7 +447,7 @@ let layout_of_elt
               type_ ~depth prop;
             ]
     )
-  and type_array ~depth { arr_readonly; arr_literal = _; arr_elt_t } =
+  and type_array ~depth { arr_readonly; arr_elt_t } =
     let arr =
       if arr_readonly then
         "ReadonlyArray"
@@ -472,7 +472,7 @@ let layout_of_elt
         type_ ~depth dict_value;
       ]
   and type_object ~depth ?(sep = Atom ",") obj =
-    let { obj_kind; obj_props; obj_literal = _; _ } = obj in
+    let { obj_kind; obj_props; _ } = obj in
     let s_exact =
       if obj_kind = ExactObj && not exact_by_default then
         Atom "|"

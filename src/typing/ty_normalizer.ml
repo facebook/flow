@@ -900,10 +900,7 @@ module Make (I : INPUT) : S = struct
             Ty.(
               mk_fun
                 ~params:[(Some "thisArg", explicit_any, non_opt_param)]
-                ~rest:
-                  ( Some "argArray",
-                    Arr { arr_readonly = false; arr_literal = None; arr_elt_t = explicit_any }
-                  )
+                ~rest:(Some "argArray", Arr { arr_readonly = false; arr_elt_t = explicit_any })
                 (ReturnType explicit_any)
             )
         else
@@ -997,12 +994,6 @@ module Make (I : INPUT) : S = struct
       let obj_def_loc = Some (Reason.def_loc_of_reason reason) in
       let { T.flags; props_tmap; call_t; _ } = o in
       let { T.obj_kind; _ } = flags in
-      let obj_literal =
-        if Env.preserve_inferred_literal_types env then
-          Some (Reason.is_literal_object_reason reason)
-        else
-          None
-      in
       let%bind obj_props =
         obj_props_t ~env ~inherited ~source ?allowed_prop_names props_tmap call_t
       in
@@ -1017,7 +1008,7 @@ module Make (I : INPUT) : S = struct
           return (Ty.IndexedObj { Ty.dict_polarity; dict_name; dict_key; dict_value })
         | T.Inexact -> return Ty.InexactObj
       in
-      { Ty.obj_def_loc; obj_kind; obj_literal; obj_props }
+      { Ty.obj_def_loc; obj_kind; obj_props }
 
     and obj_prop_t =
       let def_locs ~fallback_t p =
@@ -1118,15 +1109,6 @@ module Make (I : INPUT) : S = struct
 
     and arr_ty ~env reason elt_t =
       let desc = Reason.desc_of_reason reason in
-      let arr_literal =
-        if Env.preserve_inferred_literal_types env then
-          Some
-            (match desc with
-            | RArrayLit_UNSOUND -> true
-            | _ -> false)
-        else
-          None
-      in
       match (elt_t, desc) with
       | ( T.ArrayAT
             {
@@ -1169,10 +1151,10 @@ module Make (I : INPUT) : S = struct
           t
       | (T.ArrayAT { elem_t; _ }, _) ->
         let%map arr_elt_t = type__ ~env elem_t in
-        Ty.Arr { Ty.arr_readonly = false; arr_literal; arr_elt_t }
+        Ty.Arr { Ty.arr_readonly = false; arr_elt_t }
       | (T.ROArrayAT (t, _), _) ->
         let%map t = type__ ~env t in
-        Ty.Arr { Ty.arr_readonly = true; arr_literal; arr_elt_t = t }
+        Ty.Arr { Ty.arr_readonly = true; arr_elt_t = t }
 
     and to_generic ~env kind r inst =
       let%bind symbol = Reason_utils.instance_symbol env r in
@@ -1232,17 +1214,11 @@ module Make (I : INPUT) : S = struct
         let props_flattened =
           match config with
           | Ty.Obj
-              {
-                Ty.obj_def_loc = _;
-                obj_literal = Some false | None;
-                obj_props = [Ty.SpreadProp config];
-                obj_kind = Ty.ExactObj;
-              } ->
+              { Ty.obj_def_loc = _; obj_props = [Ty.SpreadProp config]; obj_kind = Ty.ExactObj } ->
             Error config
           | Ty.Obj
               {
                 Ty.obj_def_loc = _;
-                obj_literal = Some false | None;
                 obj_props;
                 obj_kind = (Ty.ExactObj | Ty.InexactObj) as obj_kind;
               } ->
@@ -1473,13 +1449,12 @@ module Make (I : INPUT) : S = struct
             ts
         in
         let%map ty_bound = type__ ~env bound in
-        let (obj_props, obj_kind, obj_literal) =
+        let (obj_props, obj_kind) =
           match ty_bound with
-          | Ty.Obj { Ty.obj_props = bound_props; obj_kind; obj_literal; _ } ->
-            (obj_props @ bound_props, obj_kind, obj_literal)
-          | _ -> (obj_props, Ty.ExactObj, None)
+          | Ty.Obj { Ty.obj_props = bound_props; obj_kind; _ } -> (obj_props @ bound_props, obj_kind)
+          | _ -> (obj_props, Ty.ExactObj)
         in
-        Ty.Obj { Ty.obj_def_loc = None; obj_props; obj_kind; obj_literal }
+        Ty.Obj { Ty.obj_def_loc = None; obj_props; obj_kind }
       | Subst_name.Synthetic { op_kind = Some _; ts = _; name = _ } ->
         terr ~kind:SyntheticBoundT (Some t)
 
@@ -1564,11 +1539,10 @@ module Make (I : INPUT) : S = struct
           else
             Ty.InexactObj
         in
-        Ty.Obj { Ty.obj_def_loc = None; obj_props; obj_kind; obj_literal = None }
+        Ty.Obj { Ty.obj_def_loc = None; obj_props; obj_kind }
       in
       let spread_operand_slice ~env { T.Object.Spread.reason = _; prop_map; dict; _ } =
         Type.TypeTerm.(
-          let obj_literal = None in
           let props = NameUtils.Map.fold (fun k p acc -> (k, p) :: acc) prop_map [] in
           let%bind obj_props = concat_fold_m (obj_prop_t ~env) props in
           let%bind obj_kind =
@@ -1587,7 +1561,7 @@ module Make (I : INPUT) : S = struct
                 )
             | None -> return Ty.ExactObj
           in
-          return (Ty.Obj { Ty.obj_def_loc = None; obj_kind; obj_literal; obj_props })
+          return (Ty.Obj { Ty.obj_def_loc = None; obj_kind; obj_props })
         )
       in
       let spread_operand ~env = function
@@ -1653,7 +1627,7 @@ module Make (I : INPUT) : S = struct
       in
       let obj_props = spread_of_ty ty @ map_props in
       let obj_kind = Ty.ExactObj in
-      return (Ty.Obj { Ty.obj_def_loc = None; obj_props; obj_kind; obj_literal = None })
+      return (Ty.Obj { Ty.obj_def_loc = None; obj_props; obj_kind })
 
     and mapped_type ~env source property_type mapped_type_flags homomorphic =
       let%bind (key_tparam, prop) =
@@ -1685,14 +1659,7 @@ module Make (I : INPUT) : S = struct
         )
       in
       let prop = Ty.(MappedTypeProp { key_tparam; source; prop; flags; homomorphic }) in
-      let obj_t =
-        {
-          Ty.obj_def_loc = None;
-          obj_literal = None;
-          obj_props = [prop];
-          obj_kind = Ty.MappedTypeObj;
-        }
-      in
+      let obj_t = { Ty.obj_def_loc = None; obj_props = [prop]; obj_kind = Ty.MappedTypeObj } in
       return (Ty.Obj obj_t)
 
     and type_destructor_unevaluated ~env t d =
@@ -2245,8 +2212,7 @@ module Make (I : INPUT) : S = struct
       | IMStatic
       | IMInstance
 
-    let no_members =
-      Ty.(Obj { obj_def_loc = None; obj_kind = ExactObj; obj_literal = None; obj_props = [] })
+    let no_members = Ty.(Obj { obj_def_loc = None; obj_kind = ExactObj; obj_props = [] })
 
     let rec arr_t ~env ~inherited r a =
       let builtin =
@@ -2304,7 +2270,7 @@ module Make (I : INPUT) : S = struct
          the prototype chain (and interface members last), so, for example,
          overriding methods will have priority. *)
       let obj_props = interface_props @ super_props @ proto_ty_props @ own_ty_props in
-      Ty.Obj { Ty.obj_def_loc = None; obj_kind = Ty.InexactObj; obj_literal = None; obj_props }
+      Ty.Obj { Ty.obj_def_loc = None; obj_kind = Ty.InexactObj; obj_props }
 
     and enum_t ~env ~inherited reason enum_info =
       let (members, representation_t) =
@@ -2337,7 +2303,6 @@ module Make (I : INPUT) : S = struct
         {
           Ty.obj_def_loc = Some (Reason.def_loc_of_reason reason);
           obj_kind = Ty.InexactObj;
-          obj_literal = None;
           obj_props = Ty.SpreadProp proto_ty :: members_ty;
         }
 

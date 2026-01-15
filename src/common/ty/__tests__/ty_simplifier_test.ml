@@ -25,7 +25,6 @@ module UnionSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -42,7 +41,6 @@ module UnionSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -64,7 +62,6 @@ module UnionSimplification = struct
             {
               Ty.obj_kind = Ty.InexactObj;
               obj_def_loc = None;
-              obj_literal = None;
               obj_props =
                 [
                   Ty.NamedProp
@@ -93,7 +90,6 @@ module UnionSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -110,7 +106,6 @@ module UnionSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -151,7 +146,6 @@ module BotAndTopSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -170,7 +164,6 @@ module BotAndTopSimplification = struct
                 {
                   Ty.obj_kind = Ty.InexactObj;
                   obj_def_loc = None;
-                  obj_literal = None;
                   obj_props =
                     [
                       Ty.NamedProp
@@ -194,7 +187,6 @@ module BotAndTopSimplification = struct
             {
               Ty.obj_kind = Ty.InexactObj;
               obj_def_loc = None;
-              obj_literal = None;
               obj_props =
                 [
                   Ty.NamedProp

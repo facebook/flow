@@ -22,13 +22,7 @@ let tests =
                }
            in
            let obj =
-             Ty.Obj
-               {
-                 Ty.obj_kind = Ty.ExactObj;
-                 obj_def_loc = None;
-                 obj_literal = None;
-                 obj_props = [getter];
-               }
+             Ty.Obj { Ty.obj_kind = Ty.ExactObj; obj_def_loc = None; obj_props = [getter] }
            in
            let str = Ty_printer.string_of_t ~exact_by_default:true ~ts_syntax:false obj in
            assert_equal ~ctxt ~printer:(fun x -> x) "{get foo(): string}" str
@@ -45,13 +39,7 @@ let tests =
                }
            in
            let obj =
-             Ty.Obj
-               {
-                 Ty.obj_kind = Ty.ExactObj;
-                 obj_def_loc = None;
-                 obj_literal = None;
-                 obj_props = [setter];
-               }
+             Ty.Obj { Ty.obj_kind = Ty.ExactObj; obj_def_loc = None; obj_props = [setter] }
            in
            let str = Ty_printer.string_of_t ~exact_by_default:true ~ts_syntax:false obj in
            assert_equal ~ctxt ~printer:(fun x -> x) "{set foo(string): void}" str
