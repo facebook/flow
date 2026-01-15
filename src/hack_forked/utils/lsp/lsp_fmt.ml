@@ -1571,6 +1571,7 @@ let print_initialize ~key (r : Initialize.result) : json =
         strictCompletionOrder;
         autoCloseJsx;
         renameFileImports;
+        llmContextProvider;
       } =
         cap.server_experimental
       in
@@ -1587,6 +1588,7 @@ let print_initialize ~key (r : Initialize.result) : json =
         |> addCapability strictCompletionOrder "strictCompletionOrder"
         |> addCapability autoCloseJsx "autoCloseJsx"
         |> addCapability renameFileImports "renameFileImports"
+        |> addCapability llmContextProvider "llmContextProvider"
       in
       if Base.List.is_empty props then
         None
@@ -1872,6 +1874,40 @@ module RenameFileImportsFmt = struct
   let json_of_result = print_workspaceEdit
 end
 
+module LLMContextFmt = struct
+  open LLMContext
+
+  let parse_environment_details (json : json option) : environmentDetails =
+    {
+      language = Jget.string_d json "language" ~default:"javascript";
+      projectRoot = Jget.string_d json "projectRoot" ~default:"";
+      os = Jget.string_d json "os" ~default:"unknown";
+      editorVersion = Jget.string_opt json "editorVersion";
+    }
+
+  let parse_string_from_json (json : json option) : string option =
+    match json with
+    | Some (JSON_String s) -> Some s
+    | _ -> None
+
+  let params_of_json (json : json option) : params =
+    {
+      editedFilePaths =
+        Jget.array_exn json "editedFilePaths" |> Base.List.filter_map ~f:parse_string_from_json;
+      environmentDetails = Jget.obj_opt json "environmentDetails" |> parse_environment_details;
+      tokenBudget = Jget.int_d json "tokenBudget" ~default:4000;
+    }
+
+  let json_of_result (r : result) : json =
+    JSON_Object
+      [
+        ("llmContext", JSON_String r.llmContext);
+        ("filesProcessed", JSON_Array (Base.List.map r.filesProcessed ~f:string_));
+        ("tokensUsed", int_ r.tokensUsed);
+        ("truncated", JSON_Bool r.truncated);
+      ]
+end
+
 (************************************************************************)
 (* error response                                                       *)
 (************************************************************************)
@@ -1964,6 +2000,7 @@ let request_name_to_string (request : lsp_request) : string =
   | LinkedEditingRangeRequest _ -> "textDocument/linkedEditingRange"
   | WillRenameFilesRequest _ -> "workspace/willRenameFiles"
   | RenameFileImportsRequest _ -> "flow/renameFileImports"
+  | LLMContextRequest _ -> "llm/contextRequest"
   | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result : lsp_result) : string =
@@ -2006,6 +2043,7 @@ let result_name_to_string (result : lsp_result) : string =
   | ProvideDocumentPasteResult _ -> "flow/provideDocumentPasteEdits"
   | LinkedEditingRangeResult _ -> "textDocument/linkedEditingRange"
   | RenameFileImportsResult _ -> "flow/renameFileImports"
+  | LLMContextResult _ -> "llm/contextRequest"
   | ErrorResult (e, _stack) -> "ERROR/" ^ e.Error.message
 
 let notification_name_to_string (notification : lsp_notification) : string =
@@ -2085,6 +2123,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "textDocument/linkedEditingRange" ->
     LinkedEditingRangeRequest (LinkedEditingRangeFmt.params_of_json params)
   | "flow/renameFileImports" -> RenameFileImportsRequest (RenameFileImportsFmt.params_of_json params)
+  | "llm/contextRequest" -> LLMContextRequest (LLMContextFmt.params_of_json params)
   | "completionItem/resolve"
   | "window/showMessageRequest" (* server -> client, we should never receive this *)
   | "window/showStatus" (* server -> client, we should never receive this *)
@@ -2156,6 +2195,7 @@ let parse_lsp_result (request : lsp_request) (result : json) : lsp_result =
   | ProvideDocumentPasteRequest _
   | LinkedEditingRangeRequest _
   | RenameFileImportsRequest _
+  | LLMContextRequest _
   | UnknownRequest _ ->
     raise
       (Error.LspException
@@ -2230,6 +2270,7 @@ let print_lsp_request (id : lsp_id) (request : lsp_request) : json =
     | AutoCloseJsxRequest _
     | LinkedEditingRangeRequest _
     | RenameFileImportsRequest _
+    | LLMContextRequest _
     | UnknownRequest _ ->
       failwith ("Don't know how to print request " ^ method_)
   in
@@ -2279,6 +2320,7 @@ let print_lsp_response ?include_error_stack_trace ~key (id : lsp_id) (result : l
     | ProvideDocumentPasteResult r -> print_workspaceEdit r
     | LinkedEditingRangeResult r -> LinkedEditingRangeFmt.json_of_result r
     | RenameFileImportsResult r -> RenameFileImportsFmt.json_of_result r
+    | LLMContextResult r -> LLMContextFmt.json_of_result r
     | ShowMessageRequestResult _
     | ShowStatusResult _
     | CompletionItemResolveResult _

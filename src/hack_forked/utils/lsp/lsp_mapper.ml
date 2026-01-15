@@ -92,6 +92,8 @@ type t = {
   of_rename_result: t -> Rename.result -> Rename.result;
   of_rename_file_imports_params: t -> RenameFileImports.params -> RenameFileImports.params;
   of_rename_file_imports_result: t -> RenameFileImports.result -> RenameFileImports.result;
+  of_llm_context_params: t -> LLMContext.params -> LLMContext.params;
+  of_llm_context_result: t -> LLMContext.result -> LLMContext.result;
   of_selection_range: t -> SelectionRange.selection_range -> SelectionRange.selection_range;
   of_selection_range_params: t -> SelectionRange.params -> SelectionRange.params;
   of_selection_range_result: t -> SelectionRange.result -> SelectionRange.result;
@@ -553,6 +555,7 @@ let default_mapper =
           LinkedEditingRangeResult (mapper.of_linked_editing_range_result mapper result)
         | RenameFileImportsResult result ->
           RenameFileImportsResult (mapper.of_rename_file_imports_result mapper result)
+        | LLMContextResult result -> LLMContextResult (mapper.of_llm_context_result mapper result)
         | ErrorResult (err, str) -> ErrorResult (err, str));
     of_lsp_request =
       (fun mapper request ->
@@ -623,6 +626,7 @@ let default_mapper =
           LinkedEditingRangeRequest (mapper.of_linked_editing_range_params mapper params)
         | RenameFileImportsRequest params ->
           RenameFileImportsRequest (mapper.of_rename_file_imports_params mapper params)
+        | LLMContextRequest params -> LLMContextRequest (mapper.of_llm_context_params mapper params)
         | UnknownRequest (req, json) -> UnknownRequest (req, json));
     of_location =
       (fun mapper { Location.uri; range } ->
@@ -665,6 +669,8 @@ let default_mapper =
           newUri = mapper.of_document_uri mapper newUri;
         });
     of_rename_file_imports_result = (fun mapper result -> mapper.of_workspace_edit mapper result);
+    of_llm_context_params = (fun _mapper params -> params);
+    of_llm_context_result = (fun _mapper result -> result);
     of_selection_range_params =
       (fun mapper { SelectionRange.textDocument; positions } ->
         let textDocument = mapper.of_text_document_identifier mapper textDocument in

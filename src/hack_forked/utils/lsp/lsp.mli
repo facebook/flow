@@ -481,6 +481,7 @@ module Initialize : sig
     strictCompletionOrder: bool;
     autoCloseJsx: bool;
     renameFileImports: bool;
+    llmContextProvider: bool;  (** true if the server supports llm/contextRequest *)
   }
 
   and workspaceServerCapabilities = {
@@ -1274,6 +1275,30 @@ module RenameFileImports : sig
   and result = WorkspaceEdit.t
 end
 
+(** LLM Context request, method="llm/contextRequest"
+    LSP extension for providing context to AI agents. *)
+module LLMContext : sig
+  type environmentDetails = {
+    language: string;
+    projectRoot: string;
+    os: string;
+    editorVersion: string option;
+  }
+
+  type params = {
+    editedFilePaths: string list;
+    environmentDetails: environmentDetails;
+    tokenBudget: int;
+  }
+
+  type result = {
+    llmContext: string;
+    filesProcessed: string list;
+    tokensUsed: int;
+    truncated: bool;
+  }
+end
+
 type lsp_request =
   | InitializeRequest of Initialize.params
   | RegisterCapabilityRequest of RegisterCapability.params
@@ -1312,6 +1337,7 @@ type lsp_request =
   | ProvideDocumentPasteRequest of DocumentPaste.provide_params
   | LinkedEditingRangeRequest of LinkedEditingRange.params
   | RenameFileImportsRequest of RenameFileImports.params
+  | LLMContextRequest of LLMContext.params
   | UnknownRequest of string * Hh_json.json option
 
 type lsp_result =
@@ -1353,6 +1379,7 @@ type lsp_result =
   | ProvideDocumentPasteResult of WorkspaceEdit.t
   | LinkedEditingRangeResult of LinkedEditingRange.result
   | RenameFileImportsResult of RenameFileImports.result
+  | LLMContextResult of LLMContext.result
   (* the string is a stacktrace *)
   | ErrorResult of Error.t * string
 

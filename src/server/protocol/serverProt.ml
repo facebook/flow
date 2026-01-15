@@ -47,6 +47,14 @@ module Type_of_name_options = struct
   }
 end
 
+module Llm_context_options = struct
+  type t = {
+    files: string list;
+    token_budget: int;
+    wait_for_recheck: bool option;
+  }
+end
+
 module Code_action = struct
   type t =
     | Quickfix of { include_best_effort_fix: bool }
@@ -149,6 +157,7 @@ module Request = struct
     | RAGE of { files: string list }
     | SAVE_STATE of { out: [ `File of File_path.t | `Scm ] }
     | STATUS of { include_warnings: bool }
+    | LLM_CONTEXT of Llm_context_options.t
 
   let to_string = function
     | APPLY_CODE_ACTION { input; action; wait_for_recheck = _ } ->
@@ -226,6 +235,8 @@ module Request = struct
         | `File file -> File_path.to_string file
       in
       Printf.sprintf "save-state %s" out
+    | LLM_CONTEXT { Llm_context_options.files; token_budget; _ } ->
+      Printf.sprintf "llm-context [%s] (budget: %d)" (String.concat ", " files) token_budget
 end
 
 module Response = struct
@@ -366,6 +377,17 @@ module Response = struct
 
   and graph_response_subgraph = (string * string list) list
 
+  module LlmContext = struct
+    type t = {
+      llm_context: string;
+      files_processed: string list;
+      tokens_used: int;
+      truncated: bool;
+    }
+  end
+
+  type llm_context_response = (LlmContext.t, string) result
+
   type status_response =
     | ERRORS of {
         errors: Flow_errors_utils.ConcreteLocPrintableErrorSet.t;
@@ -404,6 +426,7 @@ module Response = struct
       }
     | SAVE_STATE of (string, string) result
     | SUGGEST_IMPORTS of suggest_imports_response
+    | LLM_CONTEXT of llm_context_response
 
   let to_string = function
     | APPLY_CODE_ACTION _ -> "apply-code-action response"
@@ -427,4 +450,5 @@ module Response = struct
     | STATUS _ -> "status response"
     | SAVE_STATE _ -> "save_state response"
     | SUGGEST_IMPORTS _ -> "suggest imports response"
+    | LLM_CONTEXT _ -> "llm_context response"
 end

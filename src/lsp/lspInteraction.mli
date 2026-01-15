@@ -19,6 +19,7 @@ type trigger =
   | DocumentSymbol of Lsp.lsp_id
   | FindReferences of Lsp.lsp_id
   | Hover of Lsp.lsp_id
+  | LLMContext of Lsp.lsp_id
   | PrepareRename of Lsp.lsp_id
   | PushedErrorsEndOfRecheck
   | PushedErrorsEnvChange

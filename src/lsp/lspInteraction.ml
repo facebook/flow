@@ -23,6 +23,7 @@ type trigger =
   | DocumentSymbol of Lsp.lsp_id
   | FindReferences of Lsp.lsp_id
   | Hover of Lsp.lsp_id
+  | LLMContext of Lsp.lsp_id
   | PrepareRename of Lsp.lsp_id
   | PushedErrorsEndOfRecheck
   | PushedErrorsEnvChange
@@ -97,6 +98,7 @@ let string_of_trigger = function
   | DocumentSymbol _ -> "documentSymbol"
   | FindReferences _ -> "findReferences"
   | Hover _ -> "hover"
+  | LLMContext _ -> "llmContext"
   | PrepareRename _ -> "PrepareRename"
   | PushedErrorsEndOfRecheck -> "endOfRecheck"
   | PushedErrorsRecheckStreaming -> "recheckStreaming"
@@ -126,6 +128,7 @@ let lsp_id_of_trigger = function
   | DocumentSymbol lsp_id
   | FindReferences lsp_id
   | Hover lsp_id
+  | LLMContext lsp_id
   | Rage lsp_id
   | PrepareRename lsp_id
   | Rename lsp_id
@@ -204,6 +207,7 @@ let source_of_trigger = function
   | DocumentSymbol _
   | FindReferences _
   | Hover _
+  | LLMContext _
   | Rage _
   | PrepareRename _
   | Rename _
@@ -372,6 +376,7 @@ let trigger_of_lsp_msg =
   | RequestMessage (lsp_id, DocumentSymbolRequest _) -> Some (DocumentSymbol lsp_id)
   | RequestMessage (lsp_id, FindReferencesRequest _) -> Some (FindReferences lsp_id)
   | RequestMessage (lsp_id, HoverRequest _) -> Some (Hover lsp_id)
+  | RequestMessage (lsp_id, LLMContextRequest _) -> Some (LLMContext lsp_id)
   | RequestMessage (lsp_id, RageRequest) -> Some (Rage lsp_id)
   | RequestMessage (lsp_id, PrepareRenameRequest _) -> Some (PrepareRename lsp_id)
   | RequestMessage (lsp_id, RenameRequest _) -> Some (Rename lsp_id)
@@ -447,7 +452,8 @@ let trigger_of_lsp_msg =
   | ResponseMessage (_, ProvideDocumentPasteResult _)
   | ResponseMessage (_, WillRenameFilesResult _)
   | ResponseMessage (_, LinkedEditingRangeResult _)
-  | ResponseMessage (_, RenameFileImportsResult _) ->
+  | ResponseMessage (_, RenameFileImportsResult _)
+  | ResponseMessage (_, LLMContextResult _) ->
     None
   (* Only a few notifications can trigger an interaction *)
   | NotificationMessage (DidOpenNotification _) -> Some DidOpen
