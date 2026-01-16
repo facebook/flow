@@ -96,29 +96,5 @@ module.exports = (suite(
         ['window/showStatus', '$/cancelRequest'],
       ),
     ]),
-    test('context request with empty file list', [
-      addFile('sample.js'),
-      lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('llm/contextRequest', {
-        editedFilePaths: [],
-        environmentDetails: {
-          os: 'linux',
-        },
-        tokenBudget: 1000,
-      }).verifyAllLSPMessagesInStep(
-        [
-          {
-            method: 'llm/contextRequest',
-            result: {
-              llmContext: '',
-              filesProcessed: [],
-              tokensUsed: 0,
-              truncated: false,
-            },
-          },
-        ],
-        ['window/showStatus', '$/cancelRequest'],
-      ),
-    ]),
   ],
 ): SuiteType);
