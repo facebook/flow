@@ -1,3 +1,8 @@
+### 0.297.0
+
+New Features:
+* `declare` keyword can be omitted for `declare function` under declaration context (.flow file, declare module, declare namespace)
+
 ### 0.296.1
 
 Parser:
