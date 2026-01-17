@@ -470,11 +470,6 @@ end = struct
     )
 end
 
-let smap_find x t =
-  match SMap.find_opt x t with
-  | Some r -> r
-  | None -> raise Env_api.(Env_invariant (None, Impossible (Utils_js.spf "%s missing in map" x)))
-
 let heap_map_find x t =
   match HeapRefinementMap.find_opt x t with
   | Some (Ok r) -> r
@@ -521,140 +516,6 @@ module AbruptCompletion = struct
      environment at the point where the abrupt completion is "raised." This
      environment is merged wherever the abrupt completion is "handled." *)
   type env = t * PartialEnvSnapshot.t
-end
-
-module SuperCallInDerivedCtorChecker : sig
-  val check :
-    enable_enums:bool ->
-    add_output:(Error_message.t -> unit) ->
-    L.t ->
-    (L.t, L.t) Ast.Class.t ->
-    unit
-end = struct
-  class checker ~enable_enums ~add_output this_def_loc super_def_loc =
-    object (this)
-      inherit Ssa_builder.ssa_builder ~enable_enums as super
-
-      val mutable this_read_loc_list = []
-
-      val mutable super_read_loc_list = []
-
-      val mutable super_call_loc_list = []
-
-      method private init_this_super_name name loc def_loc =
-        let reason =
-          let desc =
-            if name = "this" then
-              RThis
-            else
-              RSuper
-          in
-          mk_reason desc def_loc
-        in
-        let { Ssa_builder.val_ref; havoc } = smap_find name ssa_env in
-        this#any_identifier loc name;
-        super_call_loc_list <- loc :: super_call_loc_list;
-        val_ref := Ssa_builder.Val.one reason;
-        Ssa_builder.Havoc.(havoc.locs <- reason :: havoc.locs)
-
-      method add_errors =
-        let values = this#values in
-        let add_name_already_bound_error_opt loc =
-          let write_locs = values |> L.LMap.find_opt loc |> Base.Option.value ~default:[] in
-          if
-            Base.List.for_all write_locs ~f:(function
-                | Ssa_api.Write _ -> true
-                | Ssa_api.Uninitialized -> false
-                )
-          then (
-            add_output
-              Error_message.(
-                EBindingError (ENameAlreadyBound, loc, OrdinaryName "this", this_def_loc)
-              );
-            add_output
-              Error_message.(
-                EBindingError (ENameAlreadyBound, loc, OrdinaryName "super", super_def_loc)
-              )
-          )
-        in
-        let add_ref_before_decl_error_opt name def_loc loc =
-          let write_locs = values |> L.LMap.find_opt loc |> Base.Option.value ~default:[] in
-          if
-            Base.List.exists write_locs ~f:(function
-                | Ssa_api.Uninitialized -> true
-                | Ssa_api.Write _ -> false
-                )
-          then
-            add_output
-              Error_message.(
-                EBindingError (EReferencedThisSuperBeforeSuperCall, loc, OrdinaryName name, def_loc)
-              )
-        in
-        Base.List.iter super_call_loc_list ~f:add_name_already_bound_error_opt;
-        Base.List.iter this_read_loc_list ~f:(add_ref_before_decl_error_opt "this" this_def_loc);
-        Base.List.iter super_read_loc_list ~f:(add_ref_before_decl_error_opt "super" super_def_loc)
-
-      method private init_this_super loc =
-        this#init_this_super_name "this" loc this_def_loc;
-        this#init_this_super_name "super" loc super_def_loc
-
-      (* We don't want to havoc `this` and `super` initialization states. *)
-      method! havoc_current_ssa_env = ()
-
-      method! havoc_uninitialized_ssa_env = ()
-
-      method! this_expression loc this_ =
-        this#any_identifier loc "this";
-        this_read_loc_list <- loc :: this_read_loc_list;
-        this_
-
-      method! super_expression loc super_ =
-        this#any_identifier loc "super";
-        super_read_loc_list <- loc :: super_read_loc_list;
-        super_
-
-      (* We avoid deeper class visit, since it will be handled by name_resolver. *)
-      method! class_ _ cls = cls
-
-      method! record_declaration _ record = record
-
-      method! call loc expr =
-        let open Ast.Expression.Call in
-        let { callee; targs; arguments; _ } = expr in
-        match callee with
-        | (_, Ast.Expression.Super _) ->
-          (* Do not visit callee so that we can avoid a forward-reference error. *)
-          run_opt this#call_type_args targs;
-          ignore @@ this#arg_list arguments;
-          (* Only after the super call, `this` and `super` are defined. *)
-          this#init_this_super loc;
-          expr
-        | _ -> super#call loc expr
-    end
-
-  let check ~enable_enums ~add_output loc cls =
-    let open Flow_ast.Class in
-    let { id; extends; body = (_, { Body.body = members; _ }); _ } = cls in
-    let this_def_loc = Base.Option.value_map ~default:loc ~f:fst id in
-    match extends with
-    | None -> ()
-    | Some (super_def_loc, _) ->
-      Base.List.iter members ~f:(function
-          | Body.Method (_, { Method.kind = Method.Constructor; value = (loc, constructor); _ }) ->
-            let checker = new checker ~enable_enums ~add_output this_def_loc super_def_loc in
-            let bindings =
-              Bindings.(
-                empty
-                |> add ((this_def_loc, { Ast.Identifier.name = "this"; comments = None }), Const)
-                |> add ((super_def_loc, { Ast.Identifier.name = "super"; comments = None }), Const)
-              )
-            in
-            checker#with_bindings loc bindings (fun () ->
-                ignore @@ checker#function_ loc constructor
-            );
-            checker#add_errors
-          | _ -> ()
-          )
 end
 
 module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
@@ -4932,7 +4793,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! class_ loc cls =
         let open Ast.Class in
-        SuperCallInDerivedCtorChecker.check
+        Super_call_in_derived_ctor_checker.check
           ~enable_enums:(Context.enable_enums cx)
           ~add_output:(FlowAPIUtils.add_output cx)
           loc

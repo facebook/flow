@@ -2,7 +2,7 @@
  (name flow_env_builder)
  (wrapped false)
  (modules
-  (:standard \ dependency_sigs name_def_ordering name_resolver))
+  (:standard \ dependency_sigs name_def_ordering name_resolver super_call_in_derived_ctor_checker))
  (libraries flow_analysis)
  (preprocess
   (pps ppx_deriving.std)))
@@ -10,7 +10,7 @@
 (library
  (name flow_name_resolver)
  (wrapped false)
- (modules dependency_sigs name_def_ordering name_resolver)
+ (modules dependency_sigs name_def_ordering name_resolver super_call_in_derived_ctor_checker)
  (libraries
   flow_analysis
   flow_env_builder
