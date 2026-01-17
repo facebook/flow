@@ -18,6 +18,9 @@ open Hoister
 open Reason
 open Flow_ast_visitor
 
+(* Alias to the global Scope_builder module before it gets shadowed by the functor parameter *)
+module Global_scope_builder = Scope_builder
+
 module Make
     (L : Loc_sig.S)
     (Ssa_api : Ssa_api.S with module L = L)
@@ -258,7 +261,9 @@ struct
 
   class ssa_builder ~enable_enums =
     object (this)
-      inherit scope_builder ~enable_enums ~with_types:true as super
+      inherit [L.t] Flow_ast_mapper.mapper as super
+
+      val enable_enums = enable_enums
 
       (* We maintain a map of read locations to raw Val.t terms, which are
          simplified to lists of write locations once the analysis is done. *)
@@ -360,12 +365,10 @@ struct
         this#resolve_havocs bindings;
         ssa_env <- old_ssa_env
 
-      method! with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> (unit -> 'a) -> 'a =
-        fun ?lexical loc bindings visit ->
+      method with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> (unit -> 'a) -> 'a =
+        fun ?lexical:_ _loc bindings visit ->
           let saved_state = this#push_ssa_env bindings in
-          this#run
-            (fun () -> super#with_bindings ?lexical loc bindings visit)
-            ~finally:(fun () -> this#pop_ssa_env saved_state)
+          this#run (fun () -> visit ()) ~finally:(fun () -> this#pop_ssa_env saved_state)
 
       (* Run some computation, catching any abrupt completions; do some final work,
          and then re-raise any abrupt completions that were caught. *)
@@ -478,7 +481,7 @@ struct
             Havoc.(havoc.locs <- reason :: havoc.locs)
           | None -> unbound_names <- SSet.add x unbound_names
         end;
-        super#identifier ident
+        ident
 
       (* read *)
       method any_identifier (loc : L.t) (x : string) =
@@ -489,16 +492,53 @@ struct
       method! identifier (ident : (L.t, L.t) Ast.Identifier.t) =
         let (loc, { Ast.Identifier.name = x; comments = _ }) = ident in
         this#any_identifier loc x;
-        super#identifier ident
+        ident
 
       method! jsx_element_name_identifier (ident : (L.t, L.t) Ast.JSX.Identifier.t) =
         let (loc, { Ast.JSX.Identifier.name; comments = _ }) = ident in
         this#any_identifier loc name;
-        super#jsx_element_name_identifier ident
+        ident
 
       method! jsx_element_name_namespaced ns =
         (* TODO: what identifiers does `<foo:bar />` read? *)
-        super#jsx_element_name_namespaced ns
+        ns
+
+      (* Object property keys that are identifiers should not be tracked as reads *)
+      method! object_key_identifier (ident : (L.t, L.t) Ast.Identifier.t) = ident
+
+      (* don't rename the `foo` in `x.foo` *)
+      method! member_property_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
+
+      (* don't rename the `foo` in `typeof x.foo` *)
+      method! typeof_member_identifier ident = ident
+
+      (* don't rename the `ComponentType` in `React.ComponentType` *)
+      method! member_type_identifier (id : (L.t, L.t) Ast.Identifier.t) = id
+
+      (* don't rename the `foo` in `const {foo: bar} = x` *)
+      method! pattern_object_property_identifier_key ?kind id =
+        ignore kind;
+        id
+
+      method! match_object_pattern_property_key key = key
+
+      method! match_object_pattern_property prop =
+        let open Ast.MatchPattern.ObjectPattern.Property in
+        match prop with
+        | (_, Valid _) -> super#match_object_pattern_property prop
+        | (_, InvalidShorthand _) -> prop
+
+      (* don't rename the `Foo` in `enum E { Foo }` *)
+      method! enum_member_identifier id = id
+
+      method! enum_declaration loc (enum : (L.t, L.t) Ast.Statement.EnumDeclaration.t) =
+        if not enable_enums then
+          enum
+        else
+          super#enum_declaration loc enum
+
+      (* don't rename the `foo` in `component C(foo: number) {}` *)
+      method! component_param_name param_name = param_name
 
       (* Order of evaluation matters *)
       method! assignment _loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =
@@ -616,6 +656,22 @@ struct
           must be joined whenever a node is reachable from multiple nodes, as can
           happen after a branch or before a loop. **)
 
+      (* Block statements create a new lexical scope for let/const bindings *)
+      method! block loc (stmt : (L.t, L.t) Ast.Statement.Block.t) =
+        let lexical_hoist = new lexical_hoister ~enable_enums in
+        let lexical_bindings = lexical_hoist#eval (lexical_hoist#block loc) stmt in
+        this#with_bindings ~lexical:true loc lexical_bindings (fun () -> super#block loc stmt)
+
+      (* Function and component bodies bypass the block's lexical hoisting since
+         they have their own scoping handled in lambda/component methods *)
+      method! function_body (body : L.t * (L.t, L.t) Ast.Statement.Block.t) =
+        let (loc, block) = body in
+        (loc, super#block loc block)
+
+      method! component_body (body : L.t * (L.t, L.t) Ast.Statement.Block.t) =
+        let (loc, block) = body in
+        (loc, super#block loc block)
+
       (******************************************)
       (* [PRE] if (e) { s1 } else { s2 } [POST] *)
       (******************************************)
@@ -684,6 +740,14 @@ struct
         | first_completion_state :: rest_completion_states ->
           this#merge_completion_states (first_completion_state, rest_completion_states));
         x
+
+      method! match_case ~on_case_body case =
+        Global_scope_builder.match_case
+          ~enable_enums
+          ~with_bindings:this#with_bindings
+          ~on_super_match_case:super#match_case
+          ~on_case_body
+          case
 
       (********************************)
       (* [PRE] while (e) { s } [POST] *)
@@ -808,7 +872,15 @@ struct
       (* [ENV2] s; e2 [ENV1]                *)
       (* POST = ENV2                        *)
       (**************************************)
-      method! scoped_for_statement _loc (stmt : (L.t, L.t) Ast.Statement.For.t) =
+      method! for_statement loc stmt =
+        Global_scope_builder.for_statement
+          ~enable_enums
+          ~with_bindings:this#with_bindings
+          ~scoped:this#scoped_for_statement
+          loc
+          stmt
+
+      method private scoped_for_statement _loc (stmt : (L.t, L.t) Ast.Statement.For.t) =
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
             let open Ast.Statement.For in
@@ -866,7 +938,15 @@ struct
       (* [ENV0 | ENV1] e1; s [ENV1]        *)
       (* POST = ENV2                       *)
       (*************************************)
-      method! scoped_for_in_statement _loc (stmt : (L.t, L.t) Ast.Statement.ForIn.t) =
+      method! for_in_statement loc stmt =
+        Global_scope_builder.for_in_statement
+          ~enable_enums
+          ~with_bindings:this#with_bindings
+          ~scoped:this#scoped_for_in_statement
+          loc
+          stmt
+
+      method private scoped_for_in_statement _loc (stmt : (L.t, L.t) Ast.Statement.ForIn.t) =
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
             let open Ast.Statement.ForIn in
@@ -921,7 +1001,15 @@ struct
       (* [ENV0 | ENV1] e1; s [ENV1]        *)
       (* POST = ENV2                       *)
       (*************************************)
-      method! scoped_for_of_statement _loc (stmt : (L.t, L.t) Ast.Statement.ForOf.t) =
+      method! for_of_statement loc stmt =
+        Global_scope_builder.for_of_statement
+          ~enable_enums
+          ~with_bindings:this#with_bindings
+          ~scoped:this#scoped_for_of_statement
+          loc
+          stmt
+
+      method private scoped_for_of_statement _loc (stmt : (L.t, L.t) Ast.Statement.ForOf.t) =
         this#expecting_abrupt_completions (fun () ->
             let continues = AbruptCompletion.continue None :: possible_labeled_continues in
             let open Ast.Statement.ForOf in
@@ -1005,7 +1093,26 @@ struct
       (*   [ENVi+1 | ENVi'] si+1 [ENVi+1']                       *)
       (* POST = ENVN | ENVN'                                     *)
       (***********************************************************)
-      method! switch_cases _ _discriminant cases =
+      method! switch loc (switch : (L.t, L.t) Ast.Statement.Switch.t) =
+        let open Ast.Statement.Switch in
+        let { discriminant; cases; comments = _; exhaustive_out = _ } = switch in
+        let _ = this#expression discriminant in
+        let lexical_hoist = new lexical_hoister ~enable_enums in
+        let lexical_bindings =
+          lexical_hoist#eval
+            (Base.List.map ~f:(fun ((_, { Case.consequent; _ }) as case) ->
+                 let _ = lexical_hoist#statement_list consequent in
+                 case
+             )
+            )
+            cases
+        in
+        this#with_bindings ~lexical:true loc lexical_bindings (fun () ->
+            ignore @@ this#switch_cases loc discriminant cases
+        );
+        switch
+
+      method private switch_cases _ _discriminant cases =
         this#expecting_abrupt_completions (fun () ->
             let (env, case_completion_states) =
               List.fold_left
@@ -1076,6 +1183,14 @@ struct
       (* [HAVOC] s3 [ENV3 ]                                  *)
       (* POST = ENV3                                         *)
       (*******************************************************)
+      method! catch_clause loc clause =
+        Global_scope_builder.catch_clause
+          ~enable_enums
+          ~with_bindings:this#with_bindings
+          ~scoped:(fun loc clause -> super#catch_clause loc clause)
+          loc
+          clause
+
       method! try_catch _loc (stmt : (L.t, L.t) Ast.Statement.Try.t) =
         this#expecting_abrupt_completions (fun () ->
             let open Ast.Statement.Try in
@@ -1157,7 +1272,10 @@ struct
         expr
 
       (* We also havoc state when entering functions and exiting calls. *)
-      method! lambda ~is_arrow ~fun_loc ~generator_return_loc params return predicate body =
+      method private lambda ~is_arrow ~fun_loc ~generator_return_loc params return predicate body =
+        ignore is_arrow;
+        ignore fun_loc;
+        ignore generator_return_loc;
         this#expecting_abrupt_completions (fun () ->
             let env = this#ssa_env in
             this#run
@@ -1165,10 +1283,14 @@ struct
                 this#havoc_uninitialized_ssa_env;
                 let completion_state =
                   this#run_to_completion (fun () ->
-                      super#lambda
-                        ~is_arrow
-                        ~fun_loc
-                        ~generator_return_loc
+                      Global_scope_builder.lambda
+                        ~enable_enums
+                        ~with_types:true
+                        (this :> L.t Flow_ast_mapper.mapper)
+                        ~with_bindings:(fun ~lexical loc bindings f ->
+                          this#with_bindings ~lexical loc bindings f)
+                        ~pattern_with_toplevel_annot_removed:
+                          (Global_scope_builder.pattern_with_toplevel_annot_removed ~none:L.none)
                         params
                         return
                         predicate
@@ -1182,7 +1304,7 @@ struct
         )
 
       (* We also havoc state when entering components *)
-      method! component_body_with_params ~component_loc body params =
+      method private component_body_with_params ~component_loc:_ body params =
         this#expecting_abrupt_completions (fun () ->
             let env = this#ssa_env in
             this#run
@@ -1190,7 +1312,16 @@ struct
                 this#havoc_uninitialized_ssa_env;
                 let completion_state =
                   this#run_to_completion (fun () ->
-                      super#component_body_with_params ~component_loc body params
+                      Global_scope_builder.component_body_with_params
+                        ~enable_enums
+                        ~with_types:true
+                        (this :> L.t Flow_ast_mapper.mapper)
+                        ~make_component_annot_collector_and_default_remover:(fun () ->
+                          Global_scope_builder.make_component_annot_collector_and_default_remover
+                            ~none:L.none)
+                        ~with_bindings:(fun loc bindings f -> this#with_bindings loc bindings f)
+                        body
+                        params
                   )
                 in
                 this#commit_abrupt_completion_matching
@@ -1199,13 +1330,91 @@ struct
               ~finally:(fun () -> this#reset_ssa_env env)
         )
 
-      method! call loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
-        ignore @@ super#call loc expr;
+      (* Override function_declaration to call lambda for setting up bindings *)
+      method! function_declaration loc (expr : (L.t, L.t) Ast.Function.t) =
+        Global_scope_builder.function_declaration
+          ~with_types:true
+          (this :> L.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ~this_binding_function_id_opt:(fun ~fun_loc:_ ~has_this_annot:_ id ->
+            Base.Option.iter id ~f:(fun id -> ignore @@ this#function_identifier id))
+          ~hoist_annotations:(fun f -> f ())
+          ~lambda:this#lambda
+          loc
+          expr
+
+      method private function_expression_without_name ~is_arrow loc expr =
+        Global_scope_builder.function_expression_without_name
+          ~with_types:true
+          (this :> L.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ~this_binding_function_id_opt:(fun ~fun_loc:_ ~has_this_annot:_ id ->
+            Base.Option.iter id ~f:(fun id -> ignore @@ this#function_identifier id))
+          ~lambda:this#lambda
+          ~is_arrow
+          loc
+          expr
+
+      method! function_ loc (expr : (L.t, L.t) Ast.Function.t) =
+        this#function_expression_without_name ~is_arrow:false loc expr
+
+      method! arrow_function loc (expr : (L.t, L.t) Ast.Function.t) =
+        this#function_expression_without_name ~is_arrow:true loc expr
+
+      method! class_expression loc cls =
+        Global_scope_builder.class_expression
+          ~with_bindings:(fun loc ~lexical bindings f -> this#with_bindings ~lexical loc bindings f)
+          ~on_cls:(fun loc cls -> ignore (super#class_expression loc cls : ('a, 'b) Ast.Class.t))
+          loc
+          cls
+
+      method! class_ loc (cls : (L.t, L.t) Ast.Class.t) =
+        Global_scope_builder.class_
+          ~with_types:true
+          (this :> L.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ~class_identifier_opt:(fun ~class_loc:_ id ->
+            Base.Option.iter id ~f:(fun id -> ignore @@ this#class_identifier id))
+          loc
+          cls
+
+      method! component_declaration loc expr =
+        Global_scope_builder.component_declaration
+          ~with_types:true
+          (this :> L.t Flow_ast_mapper.mapper)
+          ~with_bindings:this#with_bindings
+          ~hoist_annotations:(fun f -> f ())
+          ~component_body_with_params:this#component_body_with_params
+          loc
+          expr
+
+      method! declare_module _loc m =
+        let open Ast.Statement.DeclareModule in
+        let { id = _; body; comments = _ } = m in
+        let (loc, body) = body in
+        let bindings =
+          let hoist = new hoister ~enable_enums ~with_types:true in
+          run (hoist#block loc) body;
+          hoist#acc
+        in
+        this#with_bindings loc bindings (fun () -> run (this#block loc) body);
+        m
+
+      method! call _loc (expr : (L.t, L.t) Ast.Expression.Call.t) =
+        let open Ast.Expression.Call in
+        let { callee; targs; arguments; comments = _ } = expr in
+        ignore @@ this#expression callee;
+        ignore @@ Base.Option.map ~f:this#call_type_args targs;
+        ignore @@ this#arg_list arguments;
         this#havoc_current_ssa_env;
         expr
 
-      method! new_ loc (expr : (L.t, L.t) Ast.Expression.New.t) =
-        ignore @@ super#new_ loc expr;
+      method! new_ _loc (expr : (L.t, L.t) Ast.Expression.New.t) =
+        let open Ast.Expression.New in
+        let { callee; targs; arguments; comments = _ } = expr in
+        ignore @@ this#expression callee;
+        ignore @@ Base.Option.map ~f:this#call_type_args targs;
+        ignore @@ Base.Option.map ~f:this#arg_list arguments;
         this#havoc_current_ssa_env;
         expr
 
@@ -1221,8 +1430,10 @@ struct
           expr
         )
 
-      method! yield loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
-        ignore @@ super#yield loc expr;
+      method! yield _loc (expr : ('loc, 'loc) Ast.Expression.Yield.t) =
+        let open Ast.Expression.Yield in
+        let { argument; delegate = _; comments = _; result_out = _ } = expr in
+        ignore @@ Base.Option.map ~f:this#expression argument;
         this#havoc_current_ssa_env;
         expr
 
