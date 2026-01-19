@@ -4863,7 +4863,8 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
             Base.List.partition_tf body ~f:(function
                 | Ast.Class.Body.Method (_, { Ast.Class.Method.static; _ })
                 | Ast.Class.Body.Property (_, { Ast.Class.Property.static; _ })
-                | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.static; _ }) ->
+                | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.static; _ })
+                | Ast.Class.Body.DeclareMethod (_, { Ast.Class.DeclareMethod.static; _ }) ->
                   static
                 | Ast.Class.Body.StaticBlock _ -> true
                 )

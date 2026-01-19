@@ -2378,6 +2378,34 @@ and class_method
         ]
     )
 
+and class_declare_method ~opts (loc, { Ast.Class.DeclareMethod.key; annot; static; comments }) =
+  let s_key =
+    match key with
+    | Ast.Expression.Object.Property.PrivateName
+        (ident_loc, { Ast.PrivateName.name; comments = key_comments }) ->
+      layout_node_with_comments_opt
+        ident_loc
+        key_comments
+        (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
+    | _ -> object_property_key ~opts key
+  in
+  source_location_with_comments
+    ?comments
+    ( loc,
+      with_semicolon
+        (fuse
+           [
+             ( if static then
+               fuse [Atom "static"; space]
+             else
+               Empty
+             );
+             s_key;
+             type_annotation ~opts annot;
+           ]
+        )
+    )
+
 and class_property_helper ~opts loc key value static annot variance_ decorators comments =
   let (declare, value) =
     match value with
@@ -2501,6 +2529,13 @@ and class_body ~opts (loc, { Ast.Class.Body.body; comments }) =
             )
           in
           (loc, comment_bounds, class_static_block ~opts block)
+        | Ast.Class.Body.DeclareMethod ((loc, _) as decl_meth) ->
+          let comment_bounds =
+            comment_bounds loc decl_meth (fun collector (loc, decl_meth) ->
+                collector#class_declare_method loc decl_meth
+            )
+          in
+          (loc, comment_bounds, class_declare_method ~opts decl_meth)
         )
       body
     |> list_with_newlines

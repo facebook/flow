@@ -311,6 +311,9 @@ module type DECLARATION = sig
   val component_params : env -> (Loc.t, Loc.t) Statement.ComponentDeclaration.Params.t
 
   val component : env -> (Loc.t, Loc.t) Statement.t
+
+  val convert_function_params_to_type_params :
+    (Loc.t, Loc.t) Function.Params.t -> ((Loc.t, Loc.t) Type.Function.Params.t, string list) result
 end
 
 module type MATCH_PATTERN = sig

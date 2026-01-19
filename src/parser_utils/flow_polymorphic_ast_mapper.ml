@@ -435,6 +435,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         PrivateField (this#on_type_annot annot, this#class_private_field field)
       | StaticBlock (annot, block) ->
         StaticBlock (this#on_loc_annot annot, this#class_static_block block)
+      | DeclareMethod (annot, decl_meth) ->
+        DeclareMethod (this#on_type_annot annot, this#class_declare_method decl_meth)
 
     method class_key key = this#object_key key
 
@@ -446,6 +448,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let decorators' = List.map ~f:this#class_decorator decorators in
       let comments' = this#syntax_opt comments in
       { kind; key = key'; value = value'; static; decorators = decorators'; comments = comments' }
+
+    method class_declare_method (decl_meth : ('M, 'T) Ast.Class.DeclareMethod.t')
+        : ('N, 'U) Ast.Class.DeclareMethod.t' =
+      let open Ast.Class.DeclareMethod in
+      let { key; annot; static; comments } = decl_meth in
+      let key' = this#class_method_key key in
+      let annot' = this#type_annotation annot in
+      let comments' = this#syntax_opt comments in
+      { key = key'; annot = annot'; static; comments = comments' }
 
     method class_method_key key = this#class_key key
 

@@ -1,3 +1,19 @@
+Error ------------------------------------------------------------------------------------------- declare_methods.js:3:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   3|   method(x: number): void;
+        ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- declare_methods.js:4:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   4|   static staticMethod(): string;
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------------------- not_ambient.js:4:7
 
 Const must be initialized [ParseError]
@@ -347,4 +363,4 @@ References:
 
 
 
-Found 21 errors
+Found 23 errors

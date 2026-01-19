@@ -515,6 +515,10 @@ class ['loc] mapper =
         id_loc this#class_private_field loc field elem (fun field -> PrivateField (loc, field))
       | StaticBlock (loc, block) ->
         id_loc this#class_static_block loc block elem (fun block -> StaticBlock (loc, block))
+      | DeclareMethod (loc, decl_meth) ->
+        id_loc this#class_declare_method loc decl_meth elem (fun decl_meth ->
+            DeclareMethod (loc, decl_meth)
+        )
 
     method class_implements (implements : ('loc, 'loc) Ast.Class.Implements.t) =
       let open Ast.Class.Implements in
@@ -547,6 +551,17 @@ class ['loc] mapper =
         meth
       else
         { meth with key = key'; value = value'; decorators = decorators'; comments = comments' }
+
+    method class_declare_method _loc (decl_meth : ('loc, 'loc) Ast.Class.DeclareMethod.t') =
+      let open Ast.Class.DeclareMethod in
+      let { key; annot; static = _; comments } = decl_meth in
+      let key' = this#object_key key in
+      let annot' = this#type_annotation annot in
+      let comments' = this#syntax_opt comments in
+      if key == key' && annot == annot' && comments == comments' then
+        decl_meth
+      else
+        { decl_meth with key = key'; annot = annot'; comments = comments' }
 
     method class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in

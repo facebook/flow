@@ -1354,6 +1354,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     | (Method (loc, m1), Method (_, m2)) -> class_method loc m1 m2
     | (Property p1, Property p2) -> class_property p1 p2 |> Base.Option.return
     | (PrivateField f1, PrivateField f2) -> class_private_field f1 f2 |> Base.Option.return
+    | (DeclareMethod (loc, m1), DeclareMethod (_, m2)) -> class_declare_method loc m1 m2
     | (Method _, _)
     | (_, Method _) ->
       None
@@ -1363,6 +1364,9 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       Some [replace (fst f1) (ClassPrivateField f1) (ClassProperty p2)]
     | (StaticBlock _, _)
     | (_, StaticBlock _) ->
+      None
+    | (DeclareMethod _, _)
+    | (_, DeclareMethod _) ->
       None
   and class_private_field field1 field2 : node change list =
     let open Ast.Class.PrivateField in
@@ -1486,6 +1490,19 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       let decorators_diff = diff_and_recurse_no_trivial class_decorator decorators1 decorators2 in
       let comments_diff = syntax_opt loc comments1 comments2 in
       join_diff_list [value_diff; decorators_diff; comments_diff]
+  and class_declare_method
+      (loc : Loc.t)
+      (m1 : (Loc.t, Loc.t) Ast.Class.DeclareMethod.t')
+      (m2 : (Loc.t, Loc.t) Ast.Class.DeclareMethod.t') : node change list option =
+    let open Ast.Class.DeclareMethod in
+    let { key = key1; annot = annot1; static = static1; comments = comments1 } = m1 in
+    let { key = key2; annot = annot2; static = static2; comments = comments2 } = m2 in
+    if key1 != key2 || static1 != static2 then
+      None
+    else
+      let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [annot_diff; comments_diff]
   and block
       (loc : Loc.t)
       (block1 : (Loc.t, Loc.t) Ast.Statement.Block.t)

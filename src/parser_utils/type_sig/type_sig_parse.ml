@@ -3902,6 +3902,23 @@ and class_def =
             | C.Method.Get -> acc (* getters with well-known symbols - out of scope for now *)
             | C.Method.Set -> acc (* setters with well-known symbols - out of scope for now *)
           end
+        | C.Body.DeclareMethod
+            ( _,
+              {
+                C.DeclareMethod.key = P.Identifier (id_loc, { Ast.Identifier.name; comments = _ });
+                annot = (_, (fn_loc, T.Function f));
+                static;
+                comments = _;
+              }
+            ) ->
+          if opts.munge && Signature_utils.is_munged_property_string name then
+            acc
+          else
+            let id_loc = push_loc tbls id_loc in
+            let fn_loc = push_loc tbls fn_loc in
+            let def = function_type opts scope tbls xs f in
+            Acc.add_method ~static name id_loc fn_loc ~async:false ~generator:false def acc
+        | C.Body.DeclareMethod _ -> acc (* unsupported DeclareMethod key types *)
         | C.Body.Method (_, { C.Method.key = P.Computed _; _ })
         | C.Body.Property (_, { C.Property.key = P.Computed _; _ }) ->
           acc (* unsupported computed method/field *)

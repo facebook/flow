@@ -2360,6 +2360,18 @@ and Class : sig
     [@@deriving show]
   end
 
+  module DeclareMethod : sig
+    type ('M, 'T) t = 'T * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      key: ('M, 'T) Expression.Object.Property.key;
+      annot: ('M, 'T) Type.annotation;
+      static: bool;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Property : sig
     type ('M, 'T) t = 'T * ('M, 'T) t'
 
@@ -2449,6 +2461,7 @@ and Class : sig
       | Property of ('M, 'T) Property.t
       | PrivateField of ('M, 'T) PrivateField.t
       | StaticBlock of ('M, 'T) StaticBlock.t
+      | DeclareMethod of ('M, 'T) DeclareMethod.t
     [@@deriving show]
   end
 

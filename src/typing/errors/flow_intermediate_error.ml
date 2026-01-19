@@ -4990,6 +4990,8 @@ let to_printable_error :
     | MessageUnsupportedSyntax ClassPropertyComputed ->
       [text "Computed property keys not supported."]
     | MessageUnsupportedSyntax ClassStaticBlock -> [text "Class static blocks are not supported."]
+    | MessageUnsupportedSyntax ClassDeclareMethod ->
+      [text "Declare methods in classes are not supported."]
     | MessageUnsupportedSyntax ComponentSyntax ->
       [
         text "Component syntax is not enabled. ";

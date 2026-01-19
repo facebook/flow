@@ -815,75 +815,136 @@ module Object
           | _ -> (Ast.Class.Method.Method, env |> with_allow_super Super_prop)
         in
         let key = object_key_remove_trailing env key in
-        let value =
+        (* Parse method signature: type params, params, return annotation *)
+        let (sig_loc, (tparams, params, return)) =
           with_loc
             (fun env ->
-              let (sig_loc, (tparams, params, return)) =
-                with_loc
-                  (fun env ->
-                    let tparams =
-                      type_params_remove_trailing
-                        env
-                        ~kind:Flow_ast_mapper.FunctionTP
-                        (Type.type_params env)
-                    in
-                    let params =
-                      let params = Declaration.function_params ~await:async ~yield:generator env in
-                      let params =
-                        if Peek.token env = T_COLON then
-                          params
-                        else
-                          function_params_remove_trailing env params
-                      in
-                      Ast.Function.Params.(
-                        match params with
-                        | (loc, ({ this_ = Some (this_loc, _); _ } as params))
-                          when kind = Ast.Class.Method.Constructor ->
-                          (* Disallow this param annotations for constructors *)
-                          error_at env (this_loc, Parse_error.ThisParamBannedInConstructor);
-                          (loc, { params with this_ = None })
-                        | params -> params
-                      )
-                    in
-                    let return =
-                      return_annotation_remove_trailing env (Type.function_return_annotation_opt env)
-                    in
-                    (tparams, params, return))
+              let tparams =
+                type_params_remove_trailing
                   env
+                  ~kind:Flow_ast_mapper.FunctionTP
+                  (Type.type_params env)
               in
-              let simple_params = is_simple_parameter_list params in
-              let (body, contains_use_strict) =
-                Declaration.function_body env ~async ~generator ~expression:false ~simple_params
+              let params =
+                let params = Declaration.function_params ~await:async ~yield:generator env in
+                let params =
+                  if Peek.token env = T_COLON then
+                    params
+                  else
+                    function_params_remove_trailing env params
+                in
+                Ast.Function.Params.(
+                  match params with
+                  | (loc, ({ this_ = Some (this_loc, _); _ } as params))
+                    when kind = Ast.Class.Method.Constructor ->
+                    (* Disallow this param annotations for constructors *)
+                    error_at env (this_loc, Parse_error.ThisParamBannedInConstructor);
+                    (loc, { params with this_ = None })
+                  | params -> params
+                )
               in
-              Declaration.strict_function_post_check env ~contains_use_strict None params;
-              {
-                Function.id = None;
-                params;
-                body;
-                generator;
-                async;
-                effect_ = Function.Arbitrary;
-                (* TODO: add support for method predicates *)
-                predicate = None;
-                return;
-                tparams;
-                sig_loc;
-                comments = None;
-              })
+              let return =
+                return_annotation_remove_trailing env (Type.function_return_annotation_opt env)
+              in
+              (tparams, params, return))
             env
         in
-        let open Ast.Class in
-        Body.Method
-          ( Loc.btwn start_loc (fst value),
-            {
-              Method.key;
-              value;
-              kind;
-              static;
-              decorators;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            }
-          )
+        (* Check for implicit declare method: semicolon instead of body.
+           Similar to implicit_declare for functions in declaration_parser.ml *)
+        let implicit_declare_conversion =
+          if
+            Peek.token env = T_SEMICOLON
+            && (not async)
+            && (not generator)
+            && kind <> Ast.Class.Method.Constructor
+            && kind <> Ast.Class.Method.Get
+            && kind <> Ast.Class.Method.Set
+            && List.length decorators = 0
+            &&
+            match return with
+            | Function.ReturnAnnot.Missing _ -> false
+            | _ -> true
+          then
+            match Declaration.convert_function_params_to_type_params params with
+            | Ok tp -> Some tp
+            | Error _ -> None
+          else
+            None
+        in
+        (match implicit_declare_conversion with
+        | Some type_params ->
+          (* Consume the semicolon *)
+          Eat.token env;
+          let return_annot =
+            match return with
+            | Function.ReturnAnnot.Available (_, (ret_loc, t)) ->
+              Ast.Type.Function.TypeAnnotation (ret_loc, t)
+            | Function.ReturnAnnot.TypeGuard (_, tg) -> Ast.Type.Function.TypeGuard tg
+            | Function.ReturnAnnot.Missing _ ->
+              (* Should not happen - already checked above *)
+              Ast.Type.Function.TypeAnnotation (Loc.none, Ast.Type.Any None)
+          in
+          let fn_type =
+            Ast.Type.Function
+              {
+                Ast.Type.Function.tparams;
+                params = type_params;
+                return = return_annot;
+                comments = None;
+                effect_ = Function.Arbitrary;
+              }
+          in
+          let annot_loc = fst params in
+          let annot = (annot_loc, (annot_loc, fn_type)) in
+          let open Ast.Class in
+          Body.DeclareMethod
+            ( Loc.btwn start_loc sig_loc,
+              {
+                DeclareMethod.key;
+                annot;
+                static;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              }
+            )
+        | None ->
+          (* Normal method with body *)
+          let value =
+            with_loc
+              ~start_loc:sig_loc
+              (fun env ->
+                let simple_params = is_simple_parameter_list params in
+                let (body, contains_use_strict) =
+                  Declaration.function_body env ~async ~generator ~expression:false ~simple_params
+                in
+                Declaration.strict_function_post_check env ~contains_use_strict None params;
+                {
+                  Function.id = None;
+                  params;
+                  body;
+                  generator;
+                  async;
+                  effect_ = Function.Arbitrary;
+                  (* TODO: add support for method predicates *)
+                  predicate = None;
+                  return;
+                  tparams;
+                  sig_loc;
+                  comments = None;
+                })
+              env
+          in
+          let open Ast.Class in
+          Body.Method
+            ( Loc.btwn start_loc (fst value),
+              {
+                Method.key;
+                value;
+                kind;
+                static;
+                decorators;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              }
+            ))
     in
     let ith_implies_identifier ~i env =
       match Peek.ith_token ~i env with
@@ -1092,6 +1153,9 @@ module Object
             let private_names = check_private_names env private_names key `Field in
             (seen_constructor, private_names)
           | Ast.Class.Body.StaticBlock _ -> (seen_constructor, private_names)
+          | Ast.Class.Body.DeclareMethod _ ->
+            (* DeclareMethod is a bodyless method signature, no private name checking needed *)
+            (seen_constructor, private_names)
         in
         elements env seen_constructor' private_names' (element :: acc)
     in

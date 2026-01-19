@@ -128,6 +128,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method class_method : ('M, 'T) Ast.Class.Method.t' -> ('N, 'U) Ast.Class.Method.t'
 
+    method class_declare_method :
+      ('M, 'T) Ast.Class.DeclareMethod.t' -> ('N, 'U) Ast.Class.DeclareMethod.t'
+
     method class_method_key :
       ('M, 'T) Ast.Expression.Object.Property.key -> ('N, 'U) Ast.Expression.Object.Property.key
 

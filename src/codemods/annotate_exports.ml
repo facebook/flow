@@ -303,6 +303,7 @@ let mapper ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
       | Ast.Class.Body.PrivateField (_loc, _field) -> elem (* TODO *)
       | Ast.Class.Body.Method (_loc, _meth) -> elem
       | Ast.Class.Body.StaticBlock _ -> elem
+      | Ast.Class.Body.DeclareMethod _ -> elem
       | Ast.Class.Body.Property (loc, prop) ->
         (match LMap.find_opt loc sig_verification_loc_tys with
         | None -> elem

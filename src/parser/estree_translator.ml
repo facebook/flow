@@ -1374,6 +1374,7 @@ with type t = Impl.t = struct
             "StaticBlock"
             loc
             [("body", statement_list body)]
+        | DeclareMethod dm -> class_declare_method dm
       )
     and class_method (loc, { Class.Method.key; value; kind; static; decorators; comments }) =
       let (key, computed, comments) =
@@ -1410,6 +1411,31 @@ with type t = Impl.t = struct
           ("static", bool static);
           ("computed", bool computed);
           ("decorators", array_of_list class_decorator decorators);
+        ]
+    and class_declare_method (loc, { Class.DeclareMethod.key; annot; static; comments }) =
+      let (key, computed, comments) =
+        let open Expression.Object.Property in
+        match key with
+        | StringLiteral lit -> (string_literal lit, false, comments)
+        | NumberLiteral lit -> (number_literal lit, false, comments)
+        | BigIntLiteral lit -> (bigint_literal lit, false, comments)
+        | Identifier id -> (identifier id, false, comments)
+        | PrivateName name -> (private_identifier name, false, comments)
+        | Computed (_, { ComputedKey.expression = expr; comments = computed_comments }) ->
+          ( expression expr,
+            true,
+            Flow_ast_utils.merge_comments ~outer:comments ~inner:computed_comments
+          )
+      in
+      node
+        ?comments
+        "DeclareMethodDefinition"
+        loc
+        [
+          ("key", key);
+          ("value", type_annotation annot);
+          ("static", bool static);
+          ("computed", bool computed);
         ]
     and class_private_field
         ( loc,
