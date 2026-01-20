@@ -79,6 +79,13 @@ let parse_options jsopts =
 let translate_tokens offset_table tokens =
   JsTranslator.array (List.rev_map (Token_translator.token offset_table) tokens)
 
+let string_opt jsopts name =
+  let opt = Js.Unsafe.get jsopts name in
+  if Js.Optdef.test opt then
+    Some (Js.to_string opt)
+  else
+    None
+
 let parse content options =
   let options =
     if options = Js.undefined then
@@ -88,6 +95,11 @@ let parse content options =
   in
   let content = Js.to_string content in
   let parse_options = Some (parse_options options) in
+  let filename =
+    match string_opt options "filename" with
+    | Some name -> Some (File_key.SourceFile name)
+    | None -> None
+  in
   let include_tokens =
     let tokens = Js.Unsafe.get options "tokens" in
     Js.Optdef.test tokens && Js.to_bool tokens
@@ -113,7 +125,9 @@ let parse content options =
     else
       None
   in
-  let (ocaml_ast, errors) = Parser_flow.program ~fail:false ~parse_options ~token_sink content in
+  let (ocaml_ast, errors) =
+    Parser_flow.program_file ~fail:false ~parse_options ~token_sink content filename
+  in
   JsTranslator.translation_errors := [];
   let offset_table = Offset_utils.make ~kind:Offset_utils.JavaScript content in
   let ocaml_ast =
