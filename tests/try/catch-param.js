@@ -25,6 +25,19 @@ try {
   }
 }
 
+// `unknown` annotation
+try {
+} catch (e: unknown) { // OK
+  (e: empty); // ERROR - is `unknown`
+  (e: mixed); // OK - is `unknown`
+
+  if (e instanceof Error) { // OK
+    (e: Error); // OK
+  } else {
+    throw e;
+  }
+}
+
 // Invalid annotation
 try {
 } catch (e: Error) { // ERROR

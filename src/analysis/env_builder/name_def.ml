@@ -1396,7 +1396,8 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             Ast.Pattern.Identifier
               {
                 Ast.Pattern.Identifier.annot =
-                  Ast.Type.Available (_, (_, (Ast.Type.Any _ | Ast.Type.Mixed _)));
+                  Ast.Type.Available
+                    (_, (_, (Ast.Type.Any _ | Ast.Type.Mixed _ | Ast.Type.Unknown _)));
                 _;
               }
           ) ->

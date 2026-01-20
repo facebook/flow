@@ -15,12 +15,29 @@ References:
              ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- catch-param.js:30:13
+Error ---------------------------------------------------------------------------------------------- catch-param.js:31:4
+
+Cannot cast `e` to empty because `unknown` [1] is incompatible with empty [2]. [incompatible-type]
+
+   catch-param.js:31:4
+   31|   (e: empty); // ERROR - is `unknown`
+          ^
+
+References:
+   catch-param.js:30:13
+   30| } catch (e: unknown) { // OK
+                   ^^^^^^^ [1]
+   catch-param.js:31:7
+   31|   (e: empty); // ERROR - is `unknown`
+             ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------- catch-param.js:43:13
 
 Invalid catch parameter type annotation. Annotation must be `any` or `unknown` if specified.
 [invalid-catch-parameter-annotation]
 
-   30| } catch (e: Error) { // ERROR
+   43| } catch (e: Error) { // ERROR
                    ^^^^^
 
 
@@ -406,4 +423,4 @@ References:
 
 
 
-Found 26 errors
+Found 27 errors
