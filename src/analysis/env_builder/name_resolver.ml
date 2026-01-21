@@ -73,8 +73,6 @@ let for_of_statement = Scope_builder.for_of_statement
 
 let catch_clause = Scope_builder.catch_clause
 
-let scoped_type_params = Scope_builder.scoped_type_params
-
 let function_expression_without_name = Scope_builder.function_expression_without_name
 
 let match_case = Scope_builder.match_case
@@ -4435,16 +4433,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         in
         this#under_uninitialized_env ~f:(fun () -> this#expecting_abrupt_completions f)
 
-      (* Type parameter scoping - adapted from scope_builder *)
-      method private scoped_type_params ?hoist_op ~in_tparam_scope tparams =
-        scoped_type_params
-          ~with_types:true
-          (this :> ALoc.t Flow_ast_mapper.mapper)
-          ~with_bindings:this#with_bindings
-          ?hoist_op
-          ~in_tparam_scope
-          tparams
-
       (* Helper for function expressions - adapted from scope_builder *)
       method private function_expression_without_name ~is_arrow loc expr =
         function_expression_without_name
@@ -5352,12 +5340,6 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           let negated = Not total in
           let (applied, changeset) = this#normalize_total_refinements negated in
           { applied; changeset; total = Some negated }
-
-      method private conjunct_all_refinements refinement_scopes =
-        match refinement_scopes with
-        | [] -> empty_refinements
-        | [x] -> x
-        | _ -> List.fold_left (this#merge ~conjunction:true) empty_refinements refinement_scopes
 
       method private negate_new_refinements () =
         let head = List.hd env_state.latest_refinements in
