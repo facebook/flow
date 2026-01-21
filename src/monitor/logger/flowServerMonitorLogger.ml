@@ -84,21 +84,17 @@ let init_logger log_fd =
   let min_level_file = Hh_logger.Level.min_level_file () |> lwt_level_of_hh_logger_level in
   let min_level_stderr = Hh_logger.Level.min_level_stderr () |> lwt_level_of_hh_logger_level in
   let min_level = Hh_logger.Level.min_level () |> lwt_level_of_hh_logger_level in
-  let template = "$(date).$(milliseconds) [$(level)] $(message)" in
   let log_fd = Base.Option.map log_fd ~f:Lwt_unix.of_unix_file_descr in
   Lwt.async (fun () -> WriteLoop.run log_fd);
 
   (* Format the messages and write the to the log and stderr *)
-  let output section level messages =
+  let output _section level messages =
     let dest = { file = level >= min_level_file; stderr = level >= min_level_stderr } in
-    let buffer = Buffer.create 42 in
+    let level_str = Lwt_log.string_of_level level in
     let formatted_messages =
       Base.List.map
         ~f:(fun message ->
-          Buffer.clear buffer;
-          Lwt_log.render ~buffer ~template ~section ~level ~message;
-          Buffer.add_char buffer '\n';
-          Buffer.contents buffer)
+          Printf.sprintf "%s [monitor][%s] %s\n" (Hh_logger.timestamp_string ()) level_str message)
         messages
     in
     push_to_msg_stream (Some (dest, formatted_messages));
