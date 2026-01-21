@@ -14,6 +14,22 @@ References:
           ^^^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------- __tests__/excluded-test.js:6:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+
+   __tests__/excluded-test.js:6:5
+   6|     IP.useBar(); // error: it's assumed to be hook
+          ^^^^^^^^^^^
+
+References:
+   __tests__/excluded-test.js:6:5
+   6|     IP.useBar(); // error: it's assumed to be hook
+          ^^^^^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------------- __tests__/excluded-test.js:7:5
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
@@ -76,6 +92,22 @@ References:
           ^^^^^^^^^ [1]
 
 
+Error --------------------------------------------------------------------------------------------------- exclude.js:6:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
+we only infer component-syntax components to be components and hook-syntax hooks to be hooks.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+
+   exclude.js:6:5
+   6|     IP.useBar(); // error: it's assumed to be hook
+          ^^^^^^^^^^^
+
+References:
+   exclude.js:6:5
+   6|     IP.useBar(); // error: it's assumed to be hook
+          ^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------------------- exclude.js:7:5
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. Under the current configuration,
@@ -123,4 +155,4 @@ References:
 
 
 
-Found 8 errors
+Found 10 errors
