@@ -20,6 +20,7 @@ type file_watcher =
   | NoFileWatcher
   | DFind
   | Watchman
+  | EdenFS
 
 type lazy_mode =
   | Lazy
@@ -69,6 +70,8 @@ module Opts = struct
     facebook_fbt: string option;
     facebook_module_interop: bool;
     file_watcher: file_watcher option;
+    file_watcher_edenfs_throttle_time_ms: int;
+    file_watcher_edenfs_timeout: int;
     file_watcher_mergebase_with: string option;
     file_watcher_mergebase_with_git: string option;
     file_watcher_mergebase_with_hg: string option;
@@ -219,6 +222,8 @@ module Opts = struct
       facebook_fbt = None;
       facebook_module_interop = false;
       file_watcher = None;
+      file_watcher_edenfs_throttle_time_ms = 50;
+      file_watcher_edenfs_timeout = 60;
       file_watcher_mergebase_with = None;
       file_watcher_mergebase_with_git = None;
       file_watcher_mergebase_with_hg = None;
@@ -668,9 +673,20 @@ module Opts = struct
     boolean (fun opts v -> Ok { opts with facebook_module_interop = v })
 
   let file_watcher_parser =
-    enum
-      [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)]
-      (fun opts v -> Ok { opts with file_watcher = Some v })
+    let base_options = [("none", NoFileWatcher); ("dfind", DFind); ("watchman", Watchman)] in
+    let options =
+      if Edenfs_watcher.is_available () then
+        base_options @ [("edenfs", EdenFS)]
+      else
+        base_options
+    in
+    enum options (fun opts v -> Ok { opts with file_watcher = Some v })
+
+  let file_watcher_edenfs_throttle_time_ms_parser =
+    uint (fun opts v -> Ok { opts with file_watcher_edenfs_throttle_time_ms = v })
+
+  let file_watcher_edenfs_timeout_parser =
+    uint (fun opts v -> Ok { opts with file_watcher_edenfs_timeout = v })
 
   let file_watcher_mergebase_with_parser =
     string (fun opts v -> Ok { opts with file_watcher_mergebase_with = Some v })
@@ -1149,6 +1165,8 @@ module Opts = struct
       ("facebook.fbs", string (fun opts v -> Ok { opts with facebook_fbs = Some v }));
       ("facebook.fbt", string (fun opts v -> Ok { opts with facebook_fbt = Some v }));
       ("file_watcher", file_watcher_parser);
+      ("file_watcher.edenfs.throttle_time_ms", file_watcher_edenfs_throttle_time_ms_parser);
+      ("file_watcher.edenfs.timeout", file_watcher_edenfs_timeout_parser);
       ("file_watcher.mergebase_with", file_watcher_mergebase_with_parser);
       ("file_watcher.mergebase_with_git", file_watcher_mergebase_with_git_parser);
       ("file_watcher.mergebase_with_hg", file_watcher_mergebase_with_hg_parser);
@@ -1915,6 +1933,10 @@ let file_watcher_mergebase_with_git c = c.options.Opts.file_watcher_mergebase_wi
 let file_watcher_mergebase_with_hg c = c.options.Opts.file_watcher_mergebase_with_hg
 
 let file_watcher_timeout c = c.options.Opts.file_watcher_timeout
+
+let file_watcher_edenfs_timeout c = c.options.Opts.file_watcher_edenfs_timeout
+
+let file_watcher_edenfs_throttle_time_ms c = c.options.Opts.file_watcher_edenfs_throttle_time_ms
 
 let files_implicitly_include_root c = c.options.Opts.files_implicitly_include_root
 

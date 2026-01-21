@@ -9,6 +9,7 @@ type file_watcher =
   | NoFileWatcher
   | DFind
   | Watchman
+  | EdenFS
 
 type lazy_mode =
   | Lazy
@@ -123,6 +124,10 @@ val file_watcher_mergebase_with_git : config -> string option
 val file_watcher_mergebase_with_hg : config -> string option
 
 val file_watcher_timeout : config -> int option
+
+val file_watcher_edenfs_timeout : config -> int
+
+val file_watcher_edenfs_throttle_time_ms : config -> int
 
 val files_implicitly_include_root : config -> bool
 

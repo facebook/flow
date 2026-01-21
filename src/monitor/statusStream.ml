@@ -90,6 +90,7 @@ let file_watcher_for_status = function
   | FlowServerMonitorOptions.NoFileWatcher -> FileWatcherStatus.NoFileWatcher
   | FlowServerMonitorOptions.DFind -> FileWatcherStatus.DFind
   | FlowServerMonitorOptions.Watchman _ -> FileWatcherStatus.Watchman
+  | FlowServerMonitorOptions.EdenFS _ -> FileWatcherStatus.EdenFS
 
 let empty file_watcher restart_reason =
   let (stream, push_to_stream) = Lwt_stream.create () in

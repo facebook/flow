@@ -18,6 +18,7 @@
   lwt.unix
   semver
   socket
+  startup_initializer_stubs
   watchman)
  (preprocess
   (pps lwt_ppx)))

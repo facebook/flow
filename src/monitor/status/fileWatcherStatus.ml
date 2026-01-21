@@ -9,6 +9,7 @@ type file_watcher =
   | NoFileWatcher
   | DFind
   | Watchman
+  | EdenFS
 
 type status' =
   | Initializing
@@ -21,6 +22,7 @@ let string_of_file_watcher = function
   | NoFileWatcher -> "Dummy"
   | DFind -> "Dfind"
   | Watchman -> "Watchman"
+  | EdenFS -> "EdenFS"
 
 let string_of_status =
   let string_of_status = function

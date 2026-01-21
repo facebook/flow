@@ -1167,18 +1167,31 @@ let default_file_watcher_mergebase_with = "master"
 
 let file_watcher_flag prev =
   let open CommandSpec.ArgSpec in
+  let base_options =
+    [
+      ("none", FlowConfig.NoFileWatcher);
+      ("dfind", FlowConfig.DFind);
+      ("watchman", FlowConfig.Watchman);
+    ]
+  in
+  let options =
+    if Edenfs_watcher.is_available () then
+      base_options @ [("edenfs", FlowConfig.EdenFS)]
+    else
+      base_options
+  in
   prev
   |> flag
        "--file-watcher"
-       (enum
-          [
-            ("none", FlowConfig.NoFileWatcher);
-            ("dfind", FlowConfig.DFind);
-            ("watchman", FlowConfig.Watchman);
-          ]
-       )
+       (enum options)
        ~doc:
-         ("Which file watcher Flow should use (none, dfind, watchman). "
+         ("Which file watcher Flow should use (none, dfind, watchman"
+         ^ ( if Edenfs_watcher.is_available () then
+             ", edenfs"
+           else
+             ""
+           )
+         ^ "). "
          ^ "Flow will ignore file system events if this is set to none. (default: dfind)"
          )
   |> flag
@@ -1956,6 +1969,13 @@ let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug
     let defer_states = FlowConfig.watchman_defer_states flowconfig in
     FlowServerMonitorOptions.Watchman
       { FlowServerMonitorOptions.debug = file_watcher_debug; defer_states; sync_timeout }
+  | FlowConfig.EdenFS ->
+    FlowServerMonitorOptions.EdenFS
+      {
+        FlowServerMonitorOptions.edenfs_debug = file_watcher_debug;
+        edenfs_timeout_secs = FlowConfig.file_watcher_edenfs_timeout flowconfig;
+        edenfs_throttle_time_ms = FlowConfig.file_watcher_edenfs_throttle_time_ms flowconfig;
+      }
 
 let choose_file_watcher_mergebase_with ~flowconfig vcs mergebase_with =
   match mergebase_with with

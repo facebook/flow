@@ -101,6 +101,11 @@ let log_monitor_options monitor_options =
 (* This is the common entry point for both daemonize and start. *)
 let internal_start ~is_daemon ?waiting_fd monitor_options =
   let { FlowServerMonitorOptions.server_options; file_watcher; log_file; _ } = monitor_options in
+  (match file_watcher with
+  | FlowServerMonitorOptions.EdenFS _ ->
+    (* Initialize Rust FFI layer for EdenFS file watcher *)
+    Startup_initializer.init ()
+  | _ -> ());
   let root = Options.root server_options in
   let () =
     let file_watcher = FlowServerMonitorOptions.string_of_file_watcher file_watcher in

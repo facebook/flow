@@ -23,3 +23,5 @@ let get_changes_async (_instance : instance) :
 
 let get_notification_fd (_instance : instance) : (Unix.file_descr, edenfs_watcher_error) result =
   failwith "not implemented"
+
+let is_available () = false

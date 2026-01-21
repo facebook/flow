@@ -15,10 +15,17 @@ type watchman_options = {
       (** How long to wait for the file watcher to synchronize, in milliseconds *)
 }
 
+type edenfs_options = {
+  edenfs_debug: bool;  (** Turn on debugging messages for the EdenFS watcher *)
+  edenfs_timeout_secs: int;  (** Timeout for EdenFS watcher initialization *)
+  edenfs_throttle_time_ms: int;  (** Throttle time for EdenFS watcher notifications *)
+}
+
 type file_watcher =
   | NoFileWatcher
   | DFind
   | Watchman of watchman_options
+  | EdenFS of edenfs_options
 
 type t = {
   (* Where the monitor logs will go by default *)
@@ -47,3 +54,4 @@ let string_of_file_watcher = function
   | NoFileWatcher -> "Dummy"
   | DFind -> "DFind"
   | Watchman _ -> "Watchman"
+  | EdenFS _ -> "EdenFS"

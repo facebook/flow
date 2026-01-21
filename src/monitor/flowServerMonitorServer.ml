@@ -388,12 +388,15 @@ end = struct
       monitor_options
     in
     let%lwt () = StatusStream.reset file_watcher restart_reason in
-    let watcher =
+    let%lwt watcher =
       match file_watcher with
-      | FlowServerMonitorOptions.NoFileWatcher -> new FileWatcher.dummy
-      | FlowServerMonitorOptions.DFind -> new FileWatcher.dfind monitor_options
+      | FlowServerMonitorOptions.NoFileWatcher -> Lwt.return (new FileWatcher.dummy)
+      | FlowServerMonitorOptions.DFind -> Lwt.return (new FileWatcher.dfind monitor_options)
       | FlowServerMonitorOptions.Watchman watchman_options ->
-        new FileWatcher.watchman ~mergebase_with server_options watchman_options
+        Lwt.return (new FileWatcher.watchman ~mergebase_with server_options watchman_options)
+      | FlowServerMonitorOptions.EdenFS _ ->
+        let msg = "EdenFS file watcher is not yet implemented" in
+        exit ~msg Exit.Commandline_usage_error
     in
     Logger.debug "Initializing file watcher (%s)" watcher#name;
     watcher#start_init;
