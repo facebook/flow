@@ -1,8 +1,8 @@
 import { useHook, useHooklikeAnnotatedFunction, useDeclaredHooklikeFunction, useAssignedHooklikeArbitraryExpression, useAssignedHooklikeFunctionExpression} from "./syntax_compatibility"
 
 useHook(); // Error
-useHooklikeAnnotatedFunction(); // Ok
-useDeclaredHooklikeFunction(); // Ok
+useHooklikeAnnotatedFunction(); // Error: it's assumed to be hook
+useDeclaredHooklikeFunction(); // Error: it's assumed to be hook
 useAssignedHooklikeArbitraryExpression(); // Ok
 useAssignedHooklikeFunctionExpression(); // Ok
 
@@ -25,8 +25,8 @@ function FunctionComponent(_props: mixed) {
 
 function notAFunctionComponent(_props: mixed) {
     useHook(); // Error
-    useHooklikeAnnotatedFunction(); // Ok
-    useDeclaredHooklikeFunction(); // Ok
+    useHooklikeAnnotatedFunction(); // Error: it's assumed to be hook
+    useDeclaredHooklikeFunction(); // Error: it's assumed to be hook
     useAssignedHooklikeArbitraryExpression(); // Ok
     useAssignedHooklikeFunctionExpression(); // Ok
 }

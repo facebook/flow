@@ -1880,7 +1880,7 @@ and convert_effect opts effect_ fun_loc_opt name_opt =
   | (Ast.Function.Arbitrary, _)
     when opts.hook_compatibility
          && Base.Option.value_map name_opt ~default:false ~f:Flow_ast_utils.hook_name ->
-    AnyEffect
+    HookAnnot
   | (Ast.Function.Arbitrary, _) -> ArbitraryEffect
 
 and function_type opts scope tbls xs f =

@@ -949,6 +949,36 @@ References:
       ^^^^^^^ [1]
 
 
+Error ------------------------------------------------------------------------------- syntax_compatibility_import.js:4:1
+
+Cannot call hook [1] because React hooks can only be called within components or hooks.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+
+   syntax_compatibility_import.js:4:1
+   4| useHooklikeAnnotatedFunction(); // Error: it's assumed to be hook
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:4:1
+   4| useHooklikeAnnotatedFunction(); // Error: it's assumed to be hook
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------- syntax_compatibility_import.js:5:1
+
+Cannot call hook [1] because React hooks can only be called within components or hooks.
+(https://react.dev/reference/rules/rules-of-hooks) [react-rule-hook]
+
+   syntax_compatibility_import.js:5:1
+   5| useDeclaredHooklikeFunction(); // Error: it's assumed to be hook
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:5:1
+   5| useDeclaredHooklikeFunction(); // Error: it's assumed to be hook
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
 Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:27:5
 
 Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
@@ -963,6 +993,38 @@ References:
    syntax_compatibility_import.js:27:5
    27|     useHook(); // Error
            ^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:28:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
+
+   syntax_compatibility_import.js:28:5
+   28|     useHooklikeAnnotatedFunction(); // Error: it's assumed to be hook
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:28:5
+   28|     useHooklikeAnnotatedFunction(); // Error: it's assumed to be hook
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------ syntax_compatibility_import.js:29:5
+
+Cannot call hook [1] because React hooks can only be called within components or hooks. This hook is definitely not
+called in a component or hook. (https://react.dev/reference/rules/rules-of-hooks)
+[react-rule-hook-definitely-not-in-component-or-hook]
+
+   syntax_compatibility_import.js:29:5
+   29|     useDeclaredHooklikeFunction(); // Error: it's assumed to be hook
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   syntax_compatibility_import.js:29:5
+   29|     useDeclaredHooklikeFunction(); // Error: it's assumed to be hook
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
 
 
 Error ----------------------------------------------------------------------------------------------------- test.js:19:5
@@ -1100,4 +1162,4 @@ References:
 
 
 
-Found 73 errors
+Found 77 errors

@@ -4,7 +4,7 @@ import * as XP from './exclude_provider';
 
 function FunctionComponent() {
     IP.useFoo(); // error
-    IP.useBar(); // ok
+    IP.useBar(); // error: it's assumed to be hook
     XP.useFoo(); // error
     XP.useBar(); // ok
 }
