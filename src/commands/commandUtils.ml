@@ -1970,11 +1970,21 @@ let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug
     FlowServerMonitorOptions.Watchman
       { FlowServerMonitorOptions.debug = file_watcher_debug; defer_states; sync_timeout }
   | FlowConfig.EdenFS ->
+    let sync_timeout =
+      match sync_timeout with
+      | Some x -> Some x
+      | None -> FlowConfig.watchman_sync_timeout flowconfig
+    in
+    let defer_states = FlowConfig.watchman_defer_states flowconfig in
+    let watchman_fallback =
+      { FlowServerMonitorOptions.debug = file_watcher_debug; defer_states; sync_timeout }
+    in
     FlowServerMonitorOptions.EdenFS
       {
         FlowServerMonitorOptions.edenfs_debug = file_watcher_debug;
         edenfs_timeout_secs = FlowConfig.file_watcher_edenfs_timeout flowconfig;
         edenfs_throttle_time_ms = FlowConfig.file_watcher_edenfs_throttle_time_ms flowconfig;
+        edenfs_watchman_fallback = watchman_fallback;
       }
 
 let choose_file_watcher_mergebase_with ~flowconfig vcs mergebase_with =

@@ -388,18 +388,53 @@ end = struct
       monitor_options
     in
     let%lwt () = StatusStream.reset file_watcher restart_reason in
-    let%lwt watcher =
+    let%lwt (watcher, already_initialized) =
       match file_watcher with
-      | FlowServerMonitorOptions.NoFileWatcher -> Lwt.return (new FileWatcher.dummy)
-      | FlowServerMonitorOptions.DFind -> Lwt.return (new FileWatcher.dfind monitor_options)
+      | FlowServerMonitorOptions.NoFileWatcher -> Lwt.return (new FileWatcher.dummy, false)
+      | FlowServerMonitorOptions.DFind -> Lwt.return (new FileWatcher.dfind monitor_options, false)
       | FlowServerMonitorOptions.Watchman watchman_options ->
-        Lwt.return (new FileWatcher.watchman ~mergebase_with server_options watchman_options)
-      | FlowServerMonitorOptions.EdenFS _ ->
-        let msg = "EdenFS file watcher is not yet implemented" in
-        exit ~msg Exit.Commandline_usage_error
+        Lwt.return (new FileWatcher.watchman ~mergebase_with server_options watchman_options, false)
+      | FlowServerMonitorOptions.EdenFS edenfs_options ->
+        (* Try to initialize EdenFS watcher, fall back to Watchman on failure *)
+        (try%lwt
+           let watcher = new FileWatcher.edenfs ~mergebase_with server_options edenfs_options in
+           watcher#start_init;
+           (* Wait briefly for initialization to begin and check for immediate errors.
+              We do a quick check here - if it fails during wait_for_init, we'll catch it
+              in the main flow and handle it there. But for NonEdenMount, it typically
+              fails immediately during start_init or shortly after. *)
+           let%lwt init_result = watcher#wait_for_init ~timeout:(Some 5.0) in
+           match init_result with
+           | Ok () ->
+             FlowEventLogger.set_file_watcher_edenfs ();
+             Logger.info "EdenFS watcher initialized successfully";
+             (* Return watcher and flag indicating it's already initialized *)
+             Lwt.return (watcher, true)
+           | Error msg ->
+             Logger.info "EdenFS watcher init failed: %s. Falling back to Watchman." msg;
+             FlowEventLogger.edenfs_watcher_fallback ~msg;
+             let watchman_options =
+               edenfs_options.FlowServerMonitorOptions.edenfs_watchman_fallback
+             in
+             (* Watchman watcher needs start_init called by the caller *)
+             Lwt.return
+               (new FileWatcher.watchman ~mergebase_with server_options watchman_options, false)
+         with
+        | exn ->
+          let exn_wrapper = Exception.wrap exn in
+          let msg = Exception.get_ctor_string exn_wrapper in
+          Logger.info "EdenFS watcher raised exception: %s. Falling back to Watchman." msg;
+          FlowEventLogger.edenfs_watcher_fallback ~msg;
+          let watchman_options = edenfs_options.FlowServerMonitorOptions.edenfs_watchman_fallback in
+          (* Watchman watcher needs start_init called by the caller *)
+          Lwt.return
+            (new FileWatcher.watchman ~mergebase_with server_options watchman_options, false))
     in
-    Logger.debug "Initializing file watcher (%s)" watcher#name;
-    watcher#start_init;
+    (* For watchers that haven't been initialized yet (non-EdenFS or EdenFS fallback), initialize now *)
+    if not already_initialized then begin
+      Logger.debug "Initializing file watcher (%s)" watcher#name;
+      watcher#start_init
+    end;
     let file_watcher_pid = watcher#getpid in
     Base.Option.iter file_watcher_pid ~f:(fun pid ->
         Logger.info "Spawned file watcher (pid=%d)" (Sys_utils.pid_of_handle pid)
@@ -449,14 +484,17 @@ end = struct
         Logger.fatal ~exn:(Exception.to_exn exn) "Uncaught exception in on_exit_thread";
         Exception.reraise exn
     in
-    (* This may block for quite awhile. No messages will be sent to the server process until the
-     * file watcher is up and running *)
     let%lwt () =
-      match%lwt watcher#wait_for_init ~timeout:file_watcher_timeout with
-      | Ok x -> Lwt.return x
-      | Error msg ->
-        Logger.fatal "%s" msg;
-        handle_file_watcher_exit ~msg watcher
+      if not already_initialized then (
+        (* This may block for quite awhile. No messages will be sent to the server process until the
+         * file watcher is up and running *)
+        match%lwt watcher#wait_for_init ~timeout:file_watcher_timeout with
+        | Ok x -> Lwt.return x
+        | Error msg ->
+          Logger.fatal "%s" msg;
+          handle_file_watcher_exit ~msg watcher
+      ) else
+        Lwt.return ()
     in
     Logger.debug "File watcher (%s) ready!" watcher#name;
     let file_watcher_exit_thread =

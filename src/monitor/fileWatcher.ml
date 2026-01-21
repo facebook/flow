@@ -718,8 +718,12 @@ end = struct
         | Some env -> env
 
       method start_init =
-        let { FlowServerMonitorOptions.edenfs_debug; edenfs_timeout_secs; edenfs_throttle_time_ms }
-            =
+        let {
+          FlowServerMonitorOptions.edenfs_debug;
+          edenfs_timeout_secs;
+          edenfs_throttle_time_ms;
+          edenfs_watchman_fallback = _;
+        } =
           edenfs_options
         in
         let settings =
