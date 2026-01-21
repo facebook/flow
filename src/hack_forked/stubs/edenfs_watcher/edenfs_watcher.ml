@@ -25,3 +25,5 @@ let get_notification_fd (_instance : instance) : (Unix.file_descr, edenfs_watche
   failwith "not implemented"
 
 let is_available () = false
+
+let watch_spec _options = failwith "not implemented"

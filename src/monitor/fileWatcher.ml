@@ -555,3 +555,273 @@ end = struct
 end
 
 class watchman = WatchmanFileWatcher.watchman
+
+module EdenFSFileWatcher : sig
+  class edenfs :
+    mergebase_with:string -> Options.t -> FlowServerMonitorOptions.edenfs_options -> watcher
+end = struct
+  exception EdenFS_failure of Edenfs_watcher.edenfs_watcher_error
+
+  type env = {
+    instance: Edenfs_watcher.instance;
+    mutable files: SSet.t;
+    mutable metadata: MonitorProt.file_watcher_metadata;
+    mutable is_initial: bool;
+    listening_thread: exit_reason Lwt.t;
+    changes_condition: unit Lwt_condition.t;
+  }
+
+  (** Convert EdenFS watcher changes to a set of file paths and metadata updates.
+      Note: The paths from EdenFS watcher are already absolute (the Rust code joins
+      them with root_absolute), so we just add them directly without concatenating
+      with root again. *)
+  let convert_changes (changes_list : Edenfs_watcher.changes list) :
+      SSet.t * MonitorProt.file_watcher_metadata =
+    let add_files files paths =
+      Base.List.fold paths ~init:files ~f:(fun acc path ->
+          (* Paths from EdenFS watcher are already absolute *)
+          SSet.add path acc
+      )
+    in
+    Base.List.fold
+      changes_list
+      ~init:(SSet.empty, MonitorProt.empty_file_watcher_metadata)
+      ~f:(fun (files, metadata) change ->
+        match change with
+        | Edenfs_watcher_types.FileChanges paths -> (add_files files paths, metadata)
+        | Edenfs_watcher_types.CommitTransition { from_commit; to_commit; file_changes } ->
+          Logger.info
+            "EdenFS watcher reports commit transition from %s to %s with %d changed files"
+            from_commit
+            to_commit
+            (List.length file_changes);
+          let files = add_files files file_changes in
+          let metadata =
+            MonitorProt.merge_file_watcher_metadata
+              metadata
+              { MonitorProt.changed_mergebase = Some true; missed_changes = false }
+          in
+          (files, metadata)
+        | Edenfs_watcher_types.StateEnter _
+        | Edenfs_watcher_types.StateLeave _ ->
+          (files, metadata)
+    )
+
+  module EdenFSListenLoop = LwtLoop.Make (struct
+    type acc = env
+
+    let should_pause = ref true
+
+    let log_state_enter name = FlowEventLogger.file_watcher_event_started ~name ~data:""
+
+    let log_state_leave name = FlowEventLogger.file_watcher_event_finished ~name ~data:""
+
+    let broadcast env =
+      if (not (SSet.is_empty env.files)) || env.metadata.MonitorProt.missed_changes then
+        Lwt_condition.broadcast env.changes_condition ()
+
+    let handle_state_changes (changes_list : Edenfs_watcher.changes list) =
+      Base.List.iter changes_list ~f:(function
+          | Edenfs_watcher_types.StateEnter name ->
+            log_state_enter name;
+            Logger.info "EdenFS reports %s just started. Filesystem notifications are paused." name;
+            StatusStream.file_watcher_deferred name
+          | Edenfs_watcher_types.StateLeave name ->
+            log_state_leave name;
+            Logger.info "EdenFS reports %s ended. Filesystem notifications resumed." name;
+            StatusStream.file_watcher_ready ()
+          | Edenfs_watcher_types.FileChanges _
+          | Edenfs_watcher_types.CommitTransition _ ->
+            ()
+          )
+
+    (** Wait for the notification fd to become readable, then get changes.
+        This uses the raw fd with Lwt_unix.wait_read to integrate with the LWT scheduler
+        without wrapping the fd in a cached Lwt_unix.file_descr (which caused shutdown issues). *)
+    let get_changes_async_lwt instance =
+      match Edenfs_watcher.get_notification_fd instance with
+      | Error err -> Lwt.return (Error err)
+      | Ok fd ->
+        let lwt_fd = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true fd in
+        (match%lwt
+           try%lwt
+             let%lwt () = Lwt_unix.wait_read lwt_fd in
+             Lwt.return (Ok ())
+           with
+           | Unix.Unix_error (Unix.EBADF, _, _) ->
+             Lwt.return (Error (Edenfs_watcher_types.EdenfsWatcherError "Notification fd closed"))
+           | exn ->
+             let msg = Exception.wrap exn |> Exception.to_string in
+             Lwt.return (Error (Edenfs_watcher_types.EdenfsWatcherError msg))
+         with
+        | Error err -> Lwt.return (Error err)
+        | Ok () -> Lwt.return (Edenfs_watcher.get_changes_async instance))
+
+    let main env =
+      match%lwt get_changes_async_lwt env.instance with
+      | Error (Edenfs_watcher_types.LostChanges msg) ->
+        Logger.error "EdenFS watcher lost changes: %s" msg;
+        env.metadata <-
+          MonitorProt.merge_file_watcher_metadata
+            env.metadata
+            { MonitorProt.changed_mergebase = None; missed_changes = true };
+        broadcast env;
+        Lwt.return env
+      | Error err -> raise (EdenFS_failure err)
+      | Ok (changes_list, _clock, _telemetry) ->
+        handle_state_changes changes_list;
+        let (new_files, new_metadata) = convert_changes changes_list in
+        env.files <- SSet.union env.files new_files;
+        env.metadata <- MonitorProt.merge_file_watcher_metadata env.metadata new_metadata;
+        broadcast env;
+        Lwt.return env
+
+    let catch _ exn =
+      match Exception.to_exn exn with
+      | EdenFS_failure _ ->
+        Logger.error "EdenFS watcher unavailable. Exiting...";
+        Exception.reraise exn
+      | _ ->
+        let msg = Exception.to_string exn in
+        FlowEventLogger.file_watcher_uncaught_failure
+          ("Uncaught exception in EdenFS listening loop: " ^ msg);
+        Logger.error ~exn:(Exception.to_exn exn) "Uncaught exception in EdenFS listening loop";
+        raise (EdenFS_failure (Edenfs_watcher_types.EdenfsWatcherError msg))
+  end)
+
+  let listen env =
+    match%lwt EdenFSListenLoop.run env with
+    | () ->
+      (* the loop was canceled (stopped intentionally) *)
+      Lwt.return Watcher_stopped
+    | exception EdenFS_failure (Edenfs_watcher_types.LostChanges _) ->
+      Lwt.return Watcher_missed_changes
+    | exception EdenFS_failure _ -> Lwt.return Watcher_died
+
+  class edenfs
+    ~(mergebase_with : string)
+    (server_options : Options.t)
+    (edenfs_options : FlowServerMonitorOptions.edenfs_options) : watcher =
+    let file_options = Options.file_options server_options in
+    let root_path = Options.root server_options in
+    let watch_paths = Files.watched_paths file_options in
+    object (self)
+      val mutable env = None
+
+      val mutable init_thread = None
+
+      method name = "edenfs"
+
+      method private get_env =
+        match env with
+        | None -> failwith "EdenFS watcher was not initialized"
+        | Some env -> env
+
+      method start_init =
+        let { FlowServerMonitorOptions.edenfs_debug; edenfs_timeout_secs; edenfs_throttle_time_ms }
+            =
+          edenfs_options
+        in
+        let settings =
+          {
+            Edenfs_watcher_types.root = root_path;
+            watch_spec = Edenfs_watcher.watch_spec server_options;
+            debug_logging = edenfs_debug;
+            timeout_secs = edenfs_timeout_secs;
+            throttle_time_ms = edenfs_throttle_time_ms;
+            report_telemetry = true;
+            state_tracking = true;
+            sync_queries_obey_deferral = false;
+          }
+        in
+        init_thread <- Some (Lwt.return (Edenfs_watcher.init settings))
+
+      method wait_for_init ~timeout =
+        let go_exn () =
+          let%lwt result = Base.Option.value_exn init_thread in
+          init_thread <- None;
+
+          match result with
+          | Ok (instance, _clock) ->
+            let (waiter, wakener) = Lwt.task () in
+            let new_env =
+              {
+                instance;
+                files = SSet.empty;
+                listening_thread =
+                  (let%lwt env = waiter in
+                   listen env
+                  );
+                is_initial = true;
+                changes_condition = Lwt_condition.create ();
+                metadata = MonitorProt.empty_file_watcher_metadata;
+              }
+            in
+            env <- Some new_env;
+            Lwt.wakeup wakener new_env;
+            (* For lazy mode, get initial files changed since mergebase.
+               Unlike Watchman which returns initial files during init, we use the
+               VCS-based approach like dfind to get files changed since mergebase. *)
+            let%lwt () =
+              if Options.lazy_mode server_options then (
+                let%lwt changes = changes_since_mergebase ~mergebase_with watch_paths in
+                new_env.files <- SSet.union new_env.files changes;
+                Lwt.return_unit
+              ) else
+                Lwt.return_unit
+            in
+            Lwt.return (Ok ())
+          | Error err ->
+            let msg = Edenfs_watcher.show_edenfs_watcher_error err in
+            Lwt.return (Error msg)
+        in
+        let go () =
+          try%lwt go_exn () with
+          | Lwt.Canceled as exn -> Exception.(reraise (wrap exn))
+          | exn ->
+            let e = Exception.wrap exn in
+            let str = Exception.get_ctor_string e in
+            let stack = Exception.get_full_backtrace_string 500 e in
+            let msg = Printf.sprintf "Failed to initialize EdenFS watcher: %s\n%s" str stack in
+            FlowEventLogger.file_watcher_uncaught_failure msg;
+            Lwt.return (Error msg)
+        in
+        match timeout with
+        | Some timeout ->
+          (try%lwt Lwt_unix.with_timeout timeout go with
+          | Lwt_unix.Timeout -> Lwt.return (Error "Failed to initialize EdenFS watcher: timed out"))
+        | None -> go ()
+
+      method get_and_clear_changed_files =
+        let env = self#get_env in
+        let ret = (env.files, Some env.metadata, env.is_initial) in
+        env.files <- SSet.empty;
+        env.metadata <- MonitorProt.empty_file_watcher_metadata;
+        env.is_initial <- false;
+        Lwt.return ret
+
+      method wait_for_changed_files =
+        let env = self#get_env in
+        Lwt_condition.wait env.changes_condition
+
+      method stop =
+        let env = self#get_env in
+        Logger.info "Canceling EdenFS listening thread";
+        Lwt.cancel env.listening_thread;
+        Lwt.return_unit
+
+      method waitpid =
+        let env = self#get_env in
+        let signal = Lwt_condition.create () in
+        Lwt.async (fun () ->
+            let%lwt result = env.listening_thread in
+            Lwt_condition.signal signal result;
+            Lwt.return_unit
+        );
+        Lwt_condition.wait signal
+
+      method getpid = None
+    end
+end
+
+class edenfs = EdenFSFileWatcher.edenfs

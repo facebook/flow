@@ -3,6 +3,7 @@
  (wrapped false)
  (libraries
   dfind_lwt
+  edenfs_watcher
   flow_common
   flow_common_lwt
   flow_exit_status
