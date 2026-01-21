@@ -446,7 +446,7 @@ let merge
         Lwt.return_unit
     in
     let time_to_merge = Unix.gettimeofday () -. merge_start_time in
-    Hh_logger.info "Done";
+    Hh_logger.info "Merging Done";
     Lwt.return (result, time_to_merge)
   in
   (* compute the largest cycle, for logging *)
@@ -585,7 +585,7 @@ end = struct
         in
         let (num_slow_files, _, slowest_file) = slow_files in
         let time_to_check_merged = Unix.gettimeofday () -. check_start_time in
-        Hh_logger.info "Done";
+        Hh_logger.info "Checking Done";
         let errors = { errors with ServerEnv.merge_errors; warnings; suppressions } in
         Lwt.return
           ( errors,
