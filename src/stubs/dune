@@ -32,3 +32,8 @@
  (wrapped false)
  (modules annotate_exports_hardcoded_expr_fixes hardcoded_module_fixes)
  (libraries flow_parser))
+
+(library
+ (name startup_initializer_stubs)
+ (wrapped false)
+ (modules startup_initializer))
