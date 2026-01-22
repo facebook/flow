@@ -183,6 +183,8 @@ let file_watcher_event_started ~name:_ ~data:_ = ()
 
 let file_watcher_event_finished ~name:_ ~data:_ = ()
 
+let file_watcher_uncaught_failure _ = ()
+
 let watchman_error ?request:_ ?response:_ _ = ()
 
 let watchman_warning _ = ()
