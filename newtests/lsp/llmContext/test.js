@@ -18,18 +18,17 @@ module.exports = (suite(
       addFile('utils.js'),
       addFile('types.js'),
       lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('llm/contextRequest', {
+      lspRequestAndWaitUntilResponse('llm/context', {
         editedFilePaths: ['<PLACEHOLDER_PROJECT_URL>/sample.js'],
         environmentDetails: {
+          workspaceFolders: [],
           os: 'linux',
-          ideVersion: '1.0.0',
-          editorVersion: '1.0.0',
         },
         tokenBudget: 1000,
       }).verifyAllLSPMessagesInStep(
         [
           {
-            method: 'llm/contextRequest',
+            method: 'llm/context',
             result: {
               llmContext:
                 "=== File: sample.js ===\n\nImports:\n  import ... from './types'\n  import ... from './utils'\n  import ... from 'react'\n\nDeclarations:\n  export default component UserProfile: component UserProfile(age: number, isActive?: boolean, name: string)\nwhere\n'UserProfile' is defined at sample.js:13:16,17:1\n\n",
@@ -47,19 +46,20 @@ module.exports = (suite(
       addFile('utils.js'),
       addFile('types.js'),
       lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('llm/contextRequest', {
+      lspRequestAndWaitUntilResponse('llm/context', {
         editedFilePaths: [
           '<PLACEHOLDER_PROJECT_URL>/sample.js',
           '<PLACEHOLDER_PROJECT_URL>/utils.js',
         ],
         environmentDetails: {
+          workspaceFolders: [],
           os: 'linux',
         },
         tokenBudget: 2000,
       }).verifyAllLSPMessagesInStep(
         [
           [
-            'llm/contextRequest',
+            'llm/context',
             '{sample.js,utils.js,filesProcessed,truncated":false}',
           ],
         ],
@@ -71,20 +71,21 @@ module.exports = (suite(
       addFile('utils.js'),
       addFile('types.js'),
       lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('llm/contextRequest', {
+      lspRequestAndWaitUntilResponse('llm/context', {
         editedFilePaths: [
           '<PLACEHOLDER_PROJECT_URL>/sample.js',
           '<PLACEHOLDER_PROJECT_URL>/utils.js',
           '<PLACEHOLDER_PROJECT_URL>/types.js',
         ],
         environmentDetails: {
+          workspaceFolders: [],
           os: 'linux',
         },
         tokenBudget: 50,
       }).verifyAllLSPMessagesInStep(
         [
           {
-            method: 'llm/contextRequest',
+            method: 'llm/context',
             result: {
               llmContext: '',
               filesProcessed: [],

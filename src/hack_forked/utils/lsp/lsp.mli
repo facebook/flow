@@ -61,6 +61,13 @@ module MarkupKind : sig
     | PlainText
 end
 
+module WorkspaceFolder : sig
+  type t = {
+    uri: DocumentUri.t;
+    name: string;
+  }
+end
+
 module MarkupContent : sig
   type t = {
     kind: MarkupKind.t;
@@ -1275,14 +1282,12 @@ module RenameFileImports : sig
   and result = WorkspaceEdit.t
 end
 
-(** LLM Context request, method="llm/contextRequest"
+(** LLM Context request, method="llm/context"
     LSP extension for providing context to AI agents. *)
 module LLMContext : sig
   type environmentDetails = {
-    language: string;
-    projectRoot: string;
+    workspaceFolders: WorkspaceFolder.t list;
     os: string;
-    editorVersion: string option;
   }
 
   type params = {

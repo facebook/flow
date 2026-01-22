@@ -1874,15 +1874,26 @@ module RenameFileImportsFmt = struct
   let json_of_result = print_workspaceEdit
 end
 
+let parse_workspace_folder (json : json option) : WorkspaceFolder.t =
+  WorkspaceFolder.
+    {
+      uri = Jget.string_d json "uri" ~default:"" |> DocumentUri.of_string;
+      name = Jget.string_d json "name" ~default:"";
+    }
+
+let parse_workspace_folders (json : json option) : WorkspaceFolder.t list =
+  match json with
+  | Some (JSON_Array items) ->
+    Base.List.filter_map items ~f:(fun item -> Some (parse_workspace_folder (Some item)))
+  | _ -> []
+
 module LLMContextFmt = struct
   open LLMContext
 
   let parse_environment_details (json : json option) : environmentDetails =
     {
-      language = Jget.string_d json "language" ~default:"javascript";
-      projectRoot = Jget.string_d json "projectRoot" ~default:"";
+      workspaceFolders = Jget.obj_opt json "workspaceFolders" |> parse_workspace_folders;
       os = Jget.string_d json "os" ~default:"unknown";
-      editorVersion = Jget.string_opt json "editorVersion";
     }
 
   let parse_string_from_json (json : json option) : string option =
@@ -2000,7 +2011,7 @@ let request_name_to_string (request : lsp_request) : string =
   | LinkedEditingRangeRequest _ -> "textDocument/linkedEditingRange"
   | WillRenameFilesRequest _ -> "workspace/willRenameFiles"
   | RenameFileImportsRequest _ -> "flow/renameFileImports"
-  | LLMContextRequest _ -> "llm/contextRequest"
+  | LLMContextRequest _ -> "llm/context"
   | UnknownRequest (method_, _params) -> method_
 
 let result_name_to_string (result : lsp_result) : string =
@@ -2043,7 +2054,7 @@ let result_name_to_string (result : lsp_result) : string =
   | ProvideDocumentPasteResult _ -> "flow/provideDocumentPasteEdits"
   | LinkedEditingRangeResult _ -> "textDocument/linkedEditingRange"
   | RenameFileImportsResult _ -> "flow/renameFileImports"
-  | LLMContextResult _ -> "llm/contextRequest"
+  | LLMContextResult _ -> "llm/context"
   | ErrorResult (e, _stack) -> "ERROR/" ^ e.Error.message
 
 let notification_name_to_string (notification : lsp_notification) : string =
@@ -2123,7 +2134,7 @@ let parse_lsp_request (method_ : string) (params : json option) : lsp_request =
   | "textDocument/linkedEditingRange" ->
     LinkedEditingRangeRequest (LinkedEditingRangeFmt.params_of_json params)
   | "flow/renameFileImports" -> RenameFileImportsRequest (RenameFileImportsFmt.params_of_json params)
-  | "llm/contextRequest" -> LLMContextRequest (LLMContextFmt.params_of_json params)
+  | "llm/context" -> LLMContextRequest (LLMContextFmt.params_of_json params)
   | "completionItem/resolve"
   | "window/showMessageRequest" (* server -> client, we should never receive this *)
   | "window/showStatus" (* server -> client, we should never receive this *)
