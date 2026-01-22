@@ -108,6 +108,13 @@ module MarkupKind = struct
     | PlainText
 end
 
+module WorkspaceFolder = struct
+  type t = {
+    uri: DocumentUri.t;
+    name: string;
+  }
+end
+
 module MarkupContent = struct
   type t = {
     kind: MarkupKind.t;
@@ -1531,14 +1538,12 @@ module RenameFileImports = struct
   and result = WorkspaceEdit.t
 end
 
-(** LLM Context request, method="llm/contextRequest"
+(** LLM Context request, method="llm/context"
     LSP extension for providing context to AI agents. *)
 module LLMContext = struct
   type environmentDetails = {
-    language: string;
-    projectRoot: string;
+    workspaceFolders: WorkspaceFolder.t list;
     os: string;
-    editorVersion: string option;
   }
 
   type params = {
