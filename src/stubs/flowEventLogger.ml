@@ -206,3 +206,11 @@ let worker_exception _ = ()
 let dfind_ready _ _ = ()
 
 let parsing_exception _ = ()
+
+let set_file_watcher_edenfs () = ()
+
+let edenfs_watcher_fallback ~msg:_ = ()
+
+let edenfs_watcher_error ~msg:_ ~backtrace:_ = ()
+
+let edenfs_watcher_lost_changes ~msg:_ ~backtrace:_ = ()
