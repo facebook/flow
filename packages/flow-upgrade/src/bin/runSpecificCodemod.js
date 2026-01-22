@@ -14,11 +14,12 @@ import type {CliOptions, CodemodModule} from '../Types';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import yargsImport from 'yargs/yargs';
-import upgrade from '../upgrade';
 import path from 'path';
 import {findFlowFilesWithSpinner} from '../findFlowFiles';
 import runCodemods from '../runCodemods';
 import Styled from '../Styled';
+
+require('../upgrade');
 
 const CODEMOD_DIR = path.resolve(__dirname, '..', 'codemods');
 async function main(args: $ReadOnlyArray<string>) {

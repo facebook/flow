@@ -1,6 +1,6 @@
 {
   "name": "flow-upgrade",
-  "version": "2.6.0",
+  "version": "2.7.1",
   "description": "A utility for upgrading your codebase to the latest version of Flow.",
   "engines": {
     "node": ">=14"
@@ -14,7 +14,7 @@
     "flow-codemod": "./dist/bin/runSpecificCodemod.js"
   },
   "scripts": {
-    "build": "rm -rf dist && babel src --out-dir dist --ignore '**/__tests__'",
+    "build": "rm -rf dist && babel src --out-dir dist --ignore '**/__tests__' --plugins=@babel/plugin-transform-modules-commonjs",
     "test": "jest",
     "flow": "flow",
     "prepublish": "yarn run build",
@@ -54,6 +54,7 @@
     "flow-bin": "^0.227.0",
     "jest": "^27.5.1",
     "memfs": "^3.4.3",
-    "prettier": "2.8.8"
+    "prettier": "2.8.8",
+    "@babel/plugin-transform-modules-commonjs": "^7.24.0"
   }
 }

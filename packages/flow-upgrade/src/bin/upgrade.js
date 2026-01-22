@@ -14,7 +14,8 @@ import type {CliOptions} from '../Types';
 import chalk from 'chalk';
 import fs from 'fs-extra';
 import yargsImport from 'yargs/yargs';
-import upgrade from '../upgrade';
+
+require('../upgrade');
 
 async function main(args: $ReadOnlyArray<string>) {
   const yargs = yargsImport(args)
