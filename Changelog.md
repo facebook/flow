@@ -1,3 +1,11 @@
+### 0.298.0
+
+Likely to cause new Flow errors:
+* Imported functions that conform to hook naming conventions will always be treated like hooks. As a result, new errors might be surfaced. e.g. conditional hook call
+
+Parser:
+* flow_parser.js now allows you to pass in `filename` in the option object
+
 ### 0.297.0
 
 New Features:
