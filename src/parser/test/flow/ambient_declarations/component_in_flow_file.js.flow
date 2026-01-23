@@ -1,0 +1,1 @@
+component Button(props: { label: string, onClick: () => void }) renders React.Node;

@@ -52,6 +52,8 @@ module Translate =
     (JsTranslator)
     (struct
       let include_locs = true
+
+      let include_filename = true
     end)
 
 let bool_opt default jsopts name =

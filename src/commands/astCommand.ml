@@ -126,6 +126,8 @@ let main
       (Json_of_estree)
       (struct
         let include_locs = include_locs
+
+        let include_filename = true
       end)
   in
   (*

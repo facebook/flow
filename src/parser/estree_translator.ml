@@ -9,6 +9,8 @@ module Ast = Flow_ast
 
 module type Config = sig
   val include_locs : bool
+
+  val include_filename : bool
 end
 
 module Translate (Impl : Translator_intf.S) (Config : Config) : sig
@@ -45,13 +47,16 @@ with type t = Impl.t = struct
 
   let loc location =
     let source =
-      match Loc.source location with
-      | Some (File_key.LibFile src)
-      | Some (File_key.SourceFile src)
-      | Some (File_key.JsonFile src)
-      | Some (File_key.ResourceFile src) ->
-        string src
-      | None -> null
+      if Config.include_filename then
+        match Loc.source location with
+        | Some (File_key.LibFile src)
+        | Some (File_key.SourceFile src)
+        | Some (File_key.JsonFile src)
+        | Some (File_key.ResourceFile src) ->
+          string src
+        | None -> null
+      else
+        null
     in
     obj
       [

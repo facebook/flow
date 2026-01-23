@@ -60,6 +60,7 @@ end = struct
 
   type case = {
     source: string option;
+    filename: File_key.t option;
     options: test_options * Parser_env.parse_options option;
     expected: case_expectation option;
     diff: case_diff;
@@ -84,6 +85,7 @@ end = struct
   let empty_case =
     {
       source = None;
+      filename = None;
       options = ({ intern_comments = false }, None);
       expected = None;
       diff = Same;
@@ -214,14 +216,30 @@ end = struct
                 let case =
                   let content = Sys_utils.cat file in
                   match eval_source content with
-                  | Some source -> { case with source = Some source }
+                  | Some source ->
+                    { case with source = Some source; filename = Some (File_key.SourceFile file) }
                   | None -> { case with skipped = file :: case.skipped }
+                in
+                SMap.add case_name case test.cases
+              | "flow" ->
+                let case_name =
+                  if Filename.check_suffix case_name "js" then
+                    Filename.chop_extension case_name
+                  else
+                    case_name
+                in
+                let case = find_case case_name test.cases in
+                let source = Sys_utils.cat file in
+                let case =
+                  { case with source = Some source; filename = Some (File_key.SourceFile file) }
                 in
                 SMap.add case_name case test.cases
               | "js" ->
                 let case = find_case case_name test.cases in
                 let source = Sys_utils.cat file in
-                let case = { case with source = Some source } in
+                let case =
+                  { case with source = Some source; filename = Some (File_key.SourceFile file) }
+                in
                 SMap.add case_name case test.cases
               | "json" ->
                 let (case_name, kind) = split_extension case_name in
@@ -593,10 +611,12 @@ end = struct
       (Json_of_estree)
       (struct
         let include_locs = true
+
+        let include_filename = false
       end)
 
-  let parse_file (test_options, parse_options) content =
-    let (ast, errors) = Parser_flow.program_file ~fail:false ~parse_options content None in
+  let parse_file (test_options, parse_options) filename content =
+    let (ast, errors) = Parser_flow.program_file ~fail:false ~parse_options content filename in
     let offset_table = Some (Offset_utils.make ~kind:Offset_utils.JavaScript content) in
     let ast =
       if test_options.intern_comments then
@@ -623,7 +643,7 @@ end = struct
       else
         Case_skipped None
     | Some content ->
-      let actual = parse_file case.options content in
+      let actual = parse_file case.options case.filename content in
       let (diff, todo) =
         match case.diff with
         | Diff str -> (Some str, None)
@@ -729,7 +749,7 @@ end = struct
     | (Some content, Some (Tree _)) ->
       let ( / ) a b = a ^ Filename.dir_sep ^ b in
       let filename = (path / test_name / case_name) ^ ".tree.json" in
-      let json = parse_file case.options content in
+      let json = parse_file case.options case.filename content in
       let oc = open_out filename in
       output_string oc (Hh_json.json_to_multiline json);
       output_char oc '\n';

@@ -146,6 +146,9 @@ function get_tests(root_dir) {
 
     if (ext === 'js') {
       case_.content = content;
+    } else if (ext === 'flow') {
+      case_.content = content;
+      case_.filename = path.join(root_dir, file);
     } else if (ext === 'json' && kind === 'tree') {
       case_.expected_ast = JSON.parse(content);
     } else if (ext === 'json' && kind === 'options') {

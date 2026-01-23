@@ -90,6 +90,11 @@ function compare(env, ast, spec, skip_comments) {
       if (skip_comments && is_comments_prop) {
         continue;
       }
+      // Skip comparing loc.source when expected is null (filename comparison)
+      // This matches the OCaml test runner behavior where include_filename = false
+      if (prop === 'source' && spec[prop] === null) {
+        continue;
+      }
       if (spec.hasOwnProperty(prop)) {
         var path = prop.split('.');
         var sub_ast = ast;
@@ -132,8 +137,12 @@ function runTest(test, parse_options, test_options) {
     }
     result.output += '\n';
   }
+  let flow_ast;
   try {
-    var flow_ast = test_options.flow.parse(test.content, parse_options);
+    flow_ast = test_options.flow.parse(test.content, {
+      ...parse_options,
+      filename: test.filename,
+    });
   } catch (e) {
     output('Flow exploded:', util.inspect(e, {depth: null}));
     result.passed = false;
