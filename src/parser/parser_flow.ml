@@ -198,7 +198,9 @@ module rec Parse : PARSER = struct
     (* Set ambient context for .flow files *)
     let env =
       match source env with
-      | Some file_key when File_key.check_suffix file_key ".flow" -> with_ambient_context true env
+      | Some file_key
+        when File_key.check_suffix file_key ".flow" || File_key.check_suffix file_key ".d.ts" ->
+        with_ambient_context true env
       | _ -> env
     in
     let interpreter =
