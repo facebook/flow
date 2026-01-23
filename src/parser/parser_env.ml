@@ -193,8 +193,6 @@ type env = {
   has_simple_parameters: bool;
   allow_super: allowed_super;
   in_ambient_context: bool;
-  (* True for lib files and .flow files that support implicit ambient declarations *)
-  implicit_ambient: bool;
   error_callback: (env -> Parse_error.t -> unit) option;
   lex_mode_stack: Lex_mode.t list ref;
   (* lex_env is the lex_env after the single lookahead has been lexed *)
@@ -227,12 +225,6 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
   in
   let enable_types_in_comments = parse_options.types in
   let lex_env = Lex_env.new_lex_env source lb ~enable_types_in_comments in
-  (* Check if this is a lib file or .flow file that supports implicit ambient *)
-  let implicit_ambient =
-    match source with
-    | Some file_key -> File_key.is_lib_file file_key || File_key.check_suffix file_key ".flow"
-    | None -> false
-  in
   {
     errors = ref errors;
     comments = ref [];
@@ -260,7 +252,6 @@ let init_env ?(token_sink = None) ?(parse_options = None) source content =
     allow_directive = false;
     allow_super = No_super;
     in_ambient_context = false;
-    implicit_ambient;
     error_callback = None;
     lex_mode_stack = ref [Lex_mode.NORMAL];
     lex_env = ref lex_env;
@@ -306,8 +297,6 @@ let allow_directive env = env.allow_directive
 let allow_super env = env.allow_super
 
 let in_ambient_context env = env.in_ambient_context
-
-let implicit_ambient env = env.implicit_ambient
 
 let has_simple_parameters env = env.has_simple_parameters
 

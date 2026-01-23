@@ -96,8 +96,6 @@ val allow_super : env -> allowed_super
 
 val in_ambient_context : env -> bool
 
-val implicit_ambient : env -> bool
-
 val has_simple_parameters : env -> bool
 
 val no_in : env -> bool
