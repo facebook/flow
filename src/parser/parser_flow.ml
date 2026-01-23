@@ -195,10 +195,9 @@ module rec Parse : PARSER = struct
     id
 
   let rec program env =
-    (* Set ambient context for .flow files and lib files *)
+    (* Set ambient context for .flow files *)
     let env =
       match source env with
-      | Some file_key when File_key.is_lib_file file_key -> with_ambient_context true env
       | Some file_key when File_key.check_suffix file_key ".flow" -> with_ambient_context true env
       | _ -> env
     in
