@@ -1,4 +1,3 @@
-// @flow
 // Test ambient component declarations in .flow files (implicit ambient context)
 
 // Ambient components without body - these should be allowed
@@ -8,3 +7,6 @@ component Input(value: string, onChange: (string) => void);
 
 // Export them
 declare export { Button, Input };
+
+export component Named(a: string);
+export default component Def(a: number);

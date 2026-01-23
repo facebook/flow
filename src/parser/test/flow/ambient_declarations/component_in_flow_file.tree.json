@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":83}},
-  "range":[0,83],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":40}},
+  "range":[0,160],
   "body":[
     {
       "type":"DeclareComponent",
@@ -147,6 +147,118 @@
         }
       },
       "typeParameters":null
+    },
+    {
+      "type":"DeclareExportDeclaration",
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":34}},
+      "range":[85,119],
+      "default":false,
+      "declaration":{
+        "type":"DeclareComponent",
+        "loc":{"source":null,"start":{"line":3,"column":7},"end":{"line":3,"column":34}},
+        "range":[92,119],
+        "id":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":3,"column":17},"end":{"line":3,"column":22}},
+          "range":[102,107],
+          "name":"Named",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "params":[
+          {
+            "type":"ComponentParameter",
+            "loc":{"source":null,"start":{"line":3,"column":23},"end":{"line":3,"column":32}},
+            "range":[108,117],
+            "name":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":3,"column":23},"end":{"line":3,"column":24}},
+              "range":[108,109],
+              "name":"a",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "local":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":3,"column":23},"end":{"line":3,"column":32}},
+              "range":[108,117],
+              "name":"a",
+              "typeAnnotation":{
+                "type":"TypeAnnotation",
+                "loc":{"source":null,"start":{"line":3,"column":24},"end":{"line":3,"column":32}},
+                "range":[109,117],
+                "typeAnnotation":{
+                  "type":"StringTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":3,"column":26},"end":{"line":3,"column":32}},
+                  "range":[111,117]
+                }
+              },
+              "optional":false
+            },
+            "shorthand":true
+          }
+        ],
+        "rendersType":null,
+        "typeParameters":null
+      },
+      "specifiers":[],
+      "source":null
+    },
+    {
+      "type":"DeclareExportDeclaration",
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":40}},
+      "range":[120,160],
+      "default":true,
+      "declaration":{
+        "type":"DeclareComponent",
+        "loc":{"source":null,"start":{"line":4,"column":15},"end":{"line":4,"column":40}},
+        "range":[135,160],
+        "id":{
+          "type":"Identifier",
+          "loc":{"source":null,"start":{"line":4,"column":25},"end":{"line":4,"column":28}},
+          "range":[145,148],
+          "name":"Def",
+          "typeAnnotation":null,
+          "optional":false
+        },
+        "params":[
+          {
+            "type":"ComponentParameter",
+            "loc":{"source":null,"start":{"line":4,"column":29},"end":{"line":4,"column":38}},
+            "range":[149,158],
+            "name":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":4,"column":29},"end":{"line":4,"column":30}},
+              "range":[149,150],
+              "name":"a",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "local":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":4,"column":29},"end":{"line":4,"column":38}},
+              "range":[149,158],
+              "name":"a",
+              "typeAnnotation":{
+                "type":"TypeAnnotation",
+                "loc":{"source":null,"start":{"line":4,"column":30},"end":{"line":4,"column":38}},
+                "range":[150,158],
+                "typeAnnotation":{
+                  "type":"NumberTypeAnnotation",
+                  "loc":{"source":null,"start":{"line":4,"column":32},"end":{"line":4,"column":38}},
+                  "range":[152,158]
+                }
+              },
+              "optional":false
+            },
+            "shorthand":true
+          }
+        ],
+        "rendersType":null,
+        "typeParameters":null
+      },
+      "specifiers":[],
+      "source":null
     }
   ],
   "comments":[]

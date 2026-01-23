@@ -1,4 +1,3 @@
-// @flow
 // Test that MyNamespace implicit ambient declarations work
 
 import {MyNamespace} from './namespace';

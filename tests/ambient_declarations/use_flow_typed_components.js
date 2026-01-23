@@ -1,4 +1,3 @@
-// @flow
 // Test using components from flow-typed
 
 import { Button, Icon } from 'component-library';

@@ -1,5 +1,5 @@
-// @flow
 // Test using ambient components from namespace
+
 import * as React from 'react';
 
 import { ComponentNamespace } from './component_namespace.js';

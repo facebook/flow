@@ -13,3 +13,11 @@ const badGreeting: number = ImplicitFunctions.greet("World"); // Error: string n
 const badAdd: string = ImplicitFunctions.add(1, 2); // Error: number not assignable to string
 ImplicitFunctions.greet(123); // Error: number not assignable to string
 ImplicitFunctions.add("a", "b"); // Error: string not assignable to number
+
+import {named} from './functions';
+named('s') as string; // OK
+named('s') as empty; // ERROR
+
+import def from './functions';
+def(0) as number; // OK
+def(0) as empty; // ERROR

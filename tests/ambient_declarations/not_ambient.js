@@ -1,4 +1,3 @@
-// @flow
 // Test that uninitialized const/var/let is NOT allowed in regular .js files
 
 const x: string; // Error - const must be initialized

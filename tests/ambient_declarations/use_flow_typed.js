@@ -1,4 +1,3 @@
-// @flow
 // Test that implicit ambient declarations in flow-typed/lib.js work correctly
 
 const testModule = require('test-module');

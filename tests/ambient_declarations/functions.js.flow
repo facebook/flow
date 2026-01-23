@@ -1,0 +1,2 @@
+export function named(a: string): string;
+export default function def(a: number): number;

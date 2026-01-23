@@ -1,1 +1,4 @@
 component Button(props: { label: string, onClick: () => void }) renders React.Node;
+
+export component Named(a: string);
+export default component Def(a: number);

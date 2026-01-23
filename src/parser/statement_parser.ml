@@ -1628,41 +1628,89 @@ module Statement
           let leading = leading @ Peek.comments env in
           let (default, ()) = with_loc (fun env -> Expect.token env T_DEFAULT) env in
           let env = with_in_export_default true env in
-          let (declaration, trailing) =
-            if Peek.is_function env || Peek.is_hook env then
-              (* export default [async] function [foo] (...) { ... } *)
-              let fn = Declaration._function env in
-              (Declaration fn, [])
-            else if Peek.is_class env then
-              (* export default class foo { ... } *)
-              let _class = Object.class_declaration env decorators in
-              (Declaration _class, [])
-            else if Peek.token env = T_ENUM then
-              (* export default enum foo { ... } *)
-              (Declaration (Declaration.enum_declaration env), [])
-            else if Peek.is_component env then
-              (* export default component foo { ... } *)
-              (Declaration (Declaration.component env), [])
-            else if Peek.is_record env then
-              (* export default record R { ... } *)
-              (Declaration (Object.record_declaration env), [])
-            else
-              (* export default [assignment expression]; *)
-              let expr = Parse.assignment env in
-              let (expr, trailing) =
-                match semicolon env with
-                | Explicit trailing -> (expr, trailing)
-                | Implicit { remove_trailing; _ } ->
-                  (remove_trailing expr (fun remover expr -> remover#expression expr), [])
+          if Peek.is_function env || Peek.is_hook env then
+            (* export default [async] function [foo] (...) { ... } *)
+            match Declaration._function env with
+            | (fn_loc, Statement.DeclareFunction decl_func) ->
+              Statement.DeclareExportDeclaration
+                {
+                  Statement.DeclareExportDeclaration.default = Some default;
+                  declaration =
+                    Some (Statement.DeclareExportDeclaration.Function (fn_loc, decl_func));
+                  specifiers = None;
+                  source = None;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
+            | fn ->
+              Statement.ExportDefaultDeclaration
+                {
+                  default;
+                  declaration = Declaration fn;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
+          else if Peek.is_component env then
+            (* export default component foo { ... } *)
+            match Declaration.component env with
+            | ( comp_loc,
+                Statement.ComponentDeclaration
+                  {
+                    Statement.ComponentDeclaration.body = None;
+                    id;
+                    tparams;
+                    params;
+                    renders;
+                    comments;
+                    sig_loc = _;
+                  }
+              ) ->
+              let decl_comp =
+                { Statement.DeclareComponent.id; tparams; params; renders; comments }
               in
-              (Expression expr, trailing)
-          in
-          Statement.ExportDefaultDeclaration
-            {
-              default;
-              declaration;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
-            })
+              Statement.DeclareExportDeclaration
+                {
+                  Statement.DeclareExportDeclaration.default = Some default;
+                  declaration =
+                    Some (Statement.DeclareExportDeclaration.Component (comp_loc, decl_comp));
+                  specifiers = None;
+                  source = None;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
+            | comp ->
+              Statement.ExportDefaultDeclaration
+                {
+                  default;
+                  declaration = Declaration comp;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
+          else
+            let (declaration, trailing) =
+              if Peek.is_class env then
+                (* export default class foo { ... } *)
+                let _class = Object.class_declaration env decorators in
+                (Declaration _class, [])
+              else if Peek.token env = T_ENUM then
+                (* export default enum foo { ... } *)
+                (Declaration (Declaration.enum_declaration env), [])
+              else if Peek.is_record env then
+                (* export default record R { ... } *)
+                (Declaration (Object.record_declaration env), [])
+              else
+                (* export default [assignment expression]; *)
+                let expr = Parse.assignment env in
+                let (expr, trailing) =
+                  match semicolon env with
+                  | Explicit trailing -> (expr, trailing)
+                  | Implicit { remove_trailing; _ } ->
+                    (remove_trailing expr (fun remover expr -> remover#expression expr), [])
+                in
+                (Expression expr, trailing)
+            in
+            Statement.ExportDefaultDeclaration
+              {
+                default;
+                declaration;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+              })
         env
     | T_TYPE when Peek.ith_token ~i:1 env <> T_LCURLY ->
       (* export type ... *)
@@ -1764,15 +1812,25 @@ module Statement
         ~start_loc
         (fun env ->
           error_on_decorators env decorators;
-          let stmt = Declaration._function env in
-          Statement.ExportNamedDeclaration
-            {
-              Statement.ExportNamedDeclaration.declaration = Some stmt;
-              specifiers = None;
-              source = None;
-              export_kind = Statement.ExportValue;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            })
+          match Declaration._function env with
+          | (fn_loc, Statement.DeclareFunction decl_func) ->
+            Statement.DeclareExportDeclaration
+              {
+                Statement.DeclareExportDeclaration.default = None;
+                declaration = Some (Statement.DeclareExportDeclaration.Function (fn_loc, decl_func));
+                specifiers = None;
+                source = None;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              }
+          | stmt ->
+            Statement.ExportNamedDeclaration
+              {
+                Statement.ExportNamedDeclaration.declaration = Some stmt;
+                specifiers = None;
+                source = None;
+                export_kind = Statement.ExportValue;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              })
         env
     | T_LET
     | T_CONST
@@ -1824,15 +1882,38 @@ module Statement
       with_loc
         ~start_loc
         (fun env ->
-          let stmt = Declaration.component env in
-          Statement.ExportNamedDeclaration
-            {
-              Statement.ExportNamedDeclaration.declaration = Some stmt;
-              specifiers = None;
-              source = None;
-              export_kind = Statement.ExportValue;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            })
+          match Declaration.component env with
+          | ( comp_loc,
+              Statement.ComponentDeclaration
+                {
+                  Statement.ComponentDeclaration.body = None;
+                  id;
+                  tparams;
+                  params;
+                  renders;
+                  comments;
+                  sig_loc = _;
+                }
+            ) ->
+            let decl_comp = { Statement.DeclareComponent.id; tparams; params; renders; comments } in
+            Statement.DeclareExportDeclaration
+              {
+                Statement.DeclareExportDeclaration.default = None;
+                declaration =
+                  Some (Statement.DeclareExportDeclaration.Component (comp_loc, decl_comp));
+                specifiers = None;
+                source = None;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              }
+          | stmt ->
+            Statement.ExportNamedDeclaration
+              {
+                Statement.ExportNamedDeclaration.declaration = Some stmt;
+                specifiers = None;
+                source = None;
+                export_kind = Statement.ExportValue;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              })
         env
     | T_MULT ->
       with_loc
