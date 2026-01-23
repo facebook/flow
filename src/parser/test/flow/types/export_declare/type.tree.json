@@ -1,0 +1,267 @@
+{
+  "type": "Program",
+  "loc": {
+    "source": null,
+    "start": {
+      "line": 1,
+      "column": 0
+    },
+    "end": {
+      "line": 3,
+      "column": 31
+    }
+  },
+  "range": [
+    0,
+    105
+  ],
+  "body": [
+    {
+      "type": "DeclareExportDeclaration",
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 1,
+          "column": 33
+        }
+      },
+      "range": [
+        0,
+        33
+      ],
+      "default": false,
+      "declaration": {
+        "type": "TypeAlias",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 15
+          },
+          "end": {
+            "line": 1,
+            "column": 33
+          }
+        },
+        "range": [
+          15,
+          33
+        ],
+        "id": {
+          "type": "Identifier",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 20
+            },
+            "end": {
+              "line": 1,
+              "column": 23
+            }
+          },
+          "range": [
+            20,
+            23
+          ],
+          "name": "Foo",
+          "typeAnnotation": null,
+          "optional": false
+        },
+        "typeParameters": null,
+        "right": {
+          "type": "NumberTypeAnnotation",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 1,
+              "column": 26
+            },
+            "end": {
+              "line": 1,
+              "column": 32
+            }
+          },
+          "range": [
+            26,
+            32
+          ]
+        }
+      },
+      "specifiers": [],
+      "source": null
+    },
+    {
+      "type": "DeclareExportDeclaration",
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 2,
+          "column": 0
+        },
+        "end": {
+          "line": 2,
+          "column": 39
+        }
+      },
+      "range": [
+        34,
+        73
+      ],
+      "default": false,
+      "declaration": {
+        "type": "DeclareOpaqueType",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 2,
+            "column": 15
+          },
+          "end": {
+            "line": 2,
+            "column": 39
+          }
+        },
+        "range": [
+          49,
+          73
+        ],
+        "id": {
+          "type": "Identifier",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 2,
+              "column": 27
+            },
+            "end": {
+              "line": 2,
+              "column": 30
+            }
+          },
+          "range": [
+            61,
+            64
+          ],
+          "name": "Bar",
+          "typeAnnotation": null,
+          "optional": false
+        },
+        "typeParameters": null,
+        "impltype": null,
+        "lowerBound": null,
+        "upperBound": null,
+        "supertype": {
+          "type": "StringTypeAnnotation",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 2,
+              "column": 32
+            },
+            "end": {
+              "line": 2,
+              "column": 38
+            }
+          },
+          "range": [
+            66,
+            72
+          ]
+        }
+      },
+      "specifiers": [],
+      "source": null
+    },
+    {
+      "type": "DeclareExportDeclaration",
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 3,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 31
+        }
+      },
+      "range": [
+        74,
+        105
+      ],
+      "default": false,
+      "declaration": {
+        "type": "InterfaceDeclaration",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 3,
+            "column": 15
+          },
+          "end": {
+            "line": 3,
+            "column": 31
+          }
+        },
+        "range": [
+          89,
+          105
+        ],
+        "id": {
+          "type": "Identifier",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 3,
+              "column": 25
+            },
+            "end": {
+              "line": 3,
+              "column": 28
+            }
+          },
+          "range": [
+            99,
+            102
+          ],
+          "name": "Baz",
+          "typeAnnotation": null,
+          "optional": false
+        },
+        "typeParameters": null,
+        "body": {
+          "type": "ObjectTypeAnnotation",
+          "loc": {
+            "source": null,
+            "start": {
+              "line": 3,
+              "column": 29
+            },
+            "end": {
+              "line": 3,
+              "column": 31
+            }
+          },
+          "range": [
+            103,
+            105
+          ],
+          "exact": false,
+          "properties": [],
+          "indexers": [],
+          "callProperties": [],
+          "internalSlots": []
+        },
+        "extends": []
+      },
+      "specifiers": [],
+      "source": null
+    }
+  ],
+  "comments": []
+}
