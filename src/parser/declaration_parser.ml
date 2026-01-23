@@ -496,8 +496,11 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
             | Some i -> i
             | None -> (Loc.none, { Identifier.name = ""; comments = None })
           in
-          (* Use params location for annot to ensure it comes after id location *)
-          let annot_loc = fst params in
+          let annot_loc =
+            match tparams with
+            | Some (tparams_loc, _) -> tparams_loc
+            | None -> fst params
+          in
           let return_annot =
             match return with
             | Function.ReturnAnnot.Available (_, (ret_loc, t)) ->

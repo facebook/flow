@@ -894,7 +894,11 @@ module Object
                 effect_ = Function.Arbitrary;
               }
           in
-          let annot_loc = fst params in
+          let annot_loc =
+            match tparams with
+            | Some (tparams_loc, _) -> tparams_loc
+            | None -> fst params
+          in
           let annot = (annot_loc, (annot_loc, fn_type)) in
           let open Ast.Class in
           Body.DeclareMethod

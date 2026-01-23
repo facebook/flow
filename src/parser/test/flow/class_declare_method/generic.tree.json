@@ -34,12 +34,12 @@
             },
             "value":{
               "type":"TypeAnnotation",
-              "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
-              "range":[23,29],
+              "loc":{"source":null,"start":{"line":2,"column":8},"end":{"line":2,"column":11}},
+              "range":[20,23],
               "typeAnnotation":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":2,"column":11},"end":{"line":2,"column":17}},
-                "range":[23,29],
+                "loc":{"source":null,"start":{"line":2,"column":8},"end":{"line":2,"column":11}},
+                "range":[20,23],
                 "params":[
                   {
                     "type":"FunctionTypeParam",
