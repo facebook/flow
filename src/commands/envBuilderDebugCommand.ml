@@ -104,10 +104,10 @@ let main path filename () =
       let print_write_kind_and_loc entry = "write: " ^ print_kind_and_loc entry in
       let print_read_loc loc = "read: " ^ ALoc.debug_to_string loc in
       graph
-      |> EnvMap.elements
+      |> EnvMap.bindings
       |> Base.List.bind ~f:(fun (w_from, deps) ->
              deps
-             |> EnvMap.elements
+             |> EnvMap.bindings
              |> Base.List.bind ~f:(fun (w_to, whys) ->
                     Base.List.bind (Nel.to_list whys) ~f:(fun why ->
                         [
