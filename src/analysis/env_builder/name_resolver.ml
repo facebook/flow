@@ -6854,8 +6854,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
    * the alternative *)
   class dead_code_marker cx jsx_base_name env_values write_entries =
     object (this)
-      inherit
-        Scope_builder.scope_builder ~enable_enums:(Context.enable_enums cx) ~with_types:true as super
+      inherit [ALoc.t] Flow_ast_mapper.mapper as super
 
       val mutable values = env_values
 
@@ -6864,6 +6863,61 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method values = values
 
       method write_entries = write_entries
+
+      (* Non-binding identifiers *)
+
+      method! member_property_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
+
+      method! typeof_member_identifier ident = ident
+
+      method! member_type_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
+
+      method! pattern_object_property_identifier_key ?kind id =
+        ignore kind;
+        id
+
+      method! match_object_pattern_property_key key = key
+
+      method! match_object_pattern_property prop =
+        let open Ast.MatchPattern.ObjectPattern.Property in
+        match prop with
+        | (_, Valid _) -> super#match_object_pattern_property prop
+        | (_, InvalidShorthand _) -> prop
+
+      method! enum_member_identifier id = id
+
+      method! object_key_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
+
+      method! component_param_name param_name = param_name
+
+      method! import_named_specifier ~import_kind specifier =
+        import_named_specifier
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~import_kind
+          specifier
+
+      method! export_named_declaration_specifier
+          (spec : (ALoc.t, ALoc.t) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
+        let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
+        let (_, { local; exported = _; from_remote = _; imported_name_def_loc = _ }) = spec in
+        ignore (this#identifier local);
+        spec
+
+      method private this_binding_function_id_opt ~fun_loc:_ ~has_this_annot:_ ident =
+        run_opt this#function_identifier ident
+
+      method private hoist_annotations f = f ()
+
+      method private component_body_with_params ~component_loc:_ body params =
+        component_body_with_params
+          ~enable_enums:true
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~make_component_annot_collector_and_default_remover
+          ~with_bindings:(fun _loc _bindings f -> f ())
+          body
+          params
 
       method any_identifier loc name =
         values <-
@@ -7019,15 +7073,37 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         this#mark_dead_write (Env_api.ClassStaticSuperLoc, loc);
         super#record_declaration loc record
 
+      method private function_expression_without_name ~is_arrow loc expr =
+        function_expression_without_name
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:(fun ?lexical:_ _loc _bindings f -> f ())
+          ~this_binding_function_id_opt:this#this_binding_function_id_opt
+          ~lambda:this#lambda
+          ~is_arrow
+          loc
+          expr
+
       method! function_ loc expr =
         let { Flow_ast.Function.id; _ } = expr in
         if Base.Option.is_none id then this#mark_dead_write (Env_api.OrdinaryNameLoc, loc);
         this#mark_dead_write (Env_api.FunctionThisLoc, loc);
-        super#function_ loc expr
+        this#function_expression_without_name ~is_arrow:false loc expr
+
+      method! arrow_function loc (expr : (ALoc.t, ALoc.t) Ast.Function.t) =
+        this#function_expression_without_name ~is_arrow:true loc expr
 
       method! function_declaration loc expr =
         this#mark_dead_write (Env_api.FunctionThisLoc, loc);
-        super#function_declaration loc expr
+        function_declaration
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:(fun ?lexical:_ _loc _bindings f -> f ())
+          ~this_binding_function_id_opt:this#this_binding_function_id_opt
+          ~hoist_annotations:this#hoist_annotations
+          ~lambda:this#lambda
+          loc
+          expr
 
       method! function_param_pattern patt =
         this#visit_function_or_component_param_pattern patt;
@@ -7044,9 +7120,36 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! component_declaration loc expr =
         this#mark_dead_write (Env_api.FunctionThisLoc, loc);
-        super#component_declaration loc expr
+        component_declaration
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:(fun ?lexical:_ _loc _bindings f -> f ())
+          ~hoist_annotations:this#hoist_annotations
+          ~component_body_with_params:this#component_body_with_params
+          loc
+          expr
 
-      method! private lambda ~is_arrow ~fun_loc ~generator_return_loc params return predicate body =
+      method! declare_component _loc expr =
+        declare_component
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:(fun ?lexical:_ _loc _bindings f -> f ())
+          ~make_component_annot_collector_and_default_remover
+          ~hoist_annotations:this#hoist_annotations
+          expr
+
+      method! declare_namespace _loc n =
+        let open Ast.Statement.DeclareNamespace in
+        let { id; body; comments = _ } = n in
+        (match id with
+        | Global _ -> ()
+        | Local id_ident -> ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id_ident);
+        let (loc, body_block) = body in
+        run (this#block loc) body_block;
+        n
+
+      method private lambda
+          ~is_arrow:_ ~fun_loc:_ ~generator_return_loc params return predicate body =
         let loc =
           let open Ast.Function in
           match body with
@@ -7067,7 +7170,16 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           try ignore (Context.exhaustive_check cx loc : _ * _) with
           | Not_found -> Context.add_exhaustive_check cx loc ([], false)
         end;
-        super#lambda ~is_arrow ~fun_loc ~generator_return_loc params return predicate body
+        lambda
+          ~enable_enums:true
+          ~with_types:true
+          (this :> ALoc.t Flow_ast_mapper.mapper)
+          ~with_bindings:(fun ~lexical:_ _loc _bindings f -> f ())
+          ~pattern_with_toplevel_annot_removed
+          params
+          return
+          predicate
+          body
     end
 
   let program_with_scope cx ?(lib = false) ?(exclude_syms = SSet.empty) program =
