@@ -1161,6 +1161,14 @@ module Make
         let declarations =
           Base.List.map
             ~f:(fun (loc, { Declarator.id; init }) ->
+              (match (kind, init) with
+              | (Ast.Variable.Const, None) when not (Context.tslib_syntax cx) ->
+                Flow.add_output
+                  cx
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.(TSLibSyntax DeclarationWithoutDeclare))
+                  )
+              | _ -> ());
               let (id, init) = variable cx kind id init in
               (loc, { Declarator.id; init }))
             declarations
@@ -1249,7 +1257,7 @@ module Make
         let (fn_type, func_ast) = mk_function_declaration cx ~tast_fun_type reason loc func in
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
-    let declare_function cx f =
+    let declare_function cx loc f =
       let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments; implicit_declare } =
         f
       in
@@ -1278,6 +1286,12 @@ module Make
             Tast_utils.error_mapper#predicate p
         )
       in
+      if implicit_declare && not (Context.tslib_syntax cx) then
+        Flow.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.(TSLibSyntax DeclarationWithoutDeclare))
+          );
       {
         DeclareFunction.id = ((id_loc, t), id_name);
         annot = annot_ast;
@@ -1748,9 +1762,14 @@ module Make
       | (None, false) -> Flow_js_utils.add_output cx Error_message.(EComponentMissingBody loc)
       | (Some _, true) ->
         Flow_js_utils.add_output cx Error_message.(EComponentBodyInAmbientContext loc)
-      | (None, true)
-      | (Some _, false) ->
-        ());
+      | (None, true) ->
+        if not (Context.tslib_syntax cx) then
+          Flow.add_output
+            cx
+            (Error_message.EUnsupportedSyntax
+               (loc, Flow_intermediate_error_types.(TSLibSyntax DeclarationWithoutDeclare))
+            )
+      | (Some _, false) -> ());
       let (component_sig, reconstruct_component) =
         mk_component_sig cx Subst_name.Map.empty reason component
       in
@@ -1779,7 +1798,7 @@ module Make
       let decl_ast = declare_variable cx decl in
       (loc, DeclareVariable decl_ast)
     | (loc, DeclareFunction decl) ->
-      let decl_ast = declare_function cx decl in
+      let decl_ast = declare_function cx loc decl in
       (loc, DeclareFunction decl_ast)
     | (loc, VariableDeclaration decl) -> (loc, VariableDeclaration (variables cx decl))
     | (_, ClassDeclaration { Ast.Class.id = None; _ }) ->
@@ -1905,7 +1924,7 @@ module Make
             let v_ast = declare_variable cx v in
             D.Variable (loc, v_ast)
           | D.Function (loc, f) ->
-            let f_ast = declare_function cx f in
+            let f_ast = declare_function cx loc f in
             D.Function (loc, f_ast)
           | D.Class (loc, c) ->
             let (_, c_ast) = declare_class cx loc c in

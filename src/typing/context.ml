@@ -81,6 +81,7 @@ type metadata = {
   strip_root: bool;
   ts_syntax: bool;
   ts_utility_syntax: bool;
+  tslib_syntax: bool;
   type_expansion_recursion_limit: int;
   use_unknown_in_catch_variables: bool;
 }
@@ -337,6 +338,7 @@ let metadata_of_options options =
     strip_root = Options.should_strip_root options;
     ts_syntax = Options.ts_syntax options;
     ts_utility_syntax = Options.ts_utility_syntax options;
+    tslib_syntax = Options.tslib_syntax options;
     deprecated_utilities = Options.deprecated_utilities options;
     assert_operator = Options.assert_operator options;
     type_expansion_recursion_limit = Options.type_expansion_recursion_limit options;
@@ -704,6 +706,8 @@ let should_strip_root cx = cx.metadata.strip_root
 let ts_syntax cx = cx.metadata.ts_syntax
 
 let ts_utility_syntax cx = cx.metadata.ts_utility_syntax
+
+let tslib_syntax cx = cx.metadata.tslib_syntax
 
 let assert_operator_enabled cx = Options.AssertOperator.usable cx.metadata.assert_operator
 

@@ -1,0 +1,4 @@
+[options]
+all=true
+component_syntax=true
+experimental.tslib_syntax=false

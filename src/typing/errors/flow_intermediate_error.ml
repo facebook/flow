@@ -5096,6 +5096,12 @@ let to_printable_error :
     | MessageUnsupportedSyntax PredicateDeclarationAnonymousParameters ->
       [text "Predicate function declarations cannot use anonymous "; text "function parameters."]
     | MessageUnsupportedSyntax Records -> [text "Records are not enabled."]
+    | MessageUnsupportedSyntax (TSLibSyntax kind) ->
+      let kind_str =
+        match kind with
+        | DeclarationWithoutDeclare -> "Declaration without `declare`"
+      in
+      [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->
       [text "The parameter passed to "; code "require"; text " must be a string literal."]
     | MessageUnsupportedSyntax SpreadArgument -> [text "A spread argument is unsupported here."]

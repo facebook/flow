@@ -131,6 +131,7 @@ type metadata = {
   strip_root: bool;
   ts_syntax: bool;
   ts_utility_syntax: bool;
+  tslib_syntax: bool;
   type_expansion_recursion_limit: int;
   use_unknown_in_catch_variables: bool;
 }
@@ -305,6 +306,8 @@ val should_strip_root : t -> bool
 val ts_syntax : t -> bool
 
 val ts_utility_syntax : t -> bool
+
+val tslib_syntax : t -> bool
 
 val is_utility_type_deprecated : t -> string -> bool
 

@@ -195,6 +195,7 @@ type t = {
   opt_temp_dir: string;
   opt_ts_syntax: bool;
   opt_ts_utility_syntax: bool;
+  opt_tslib_syntax: bool;
   opt_type_expansion_recursion_limit: int;
   opt_unsuppressable_error_codes: SSet.t;
   opt_use_unknown_in_catch_variables: bool;
@@ -415,6 +416,8 @@ let temp_dir opts = opts.opt_temp_dir
 let ts_syntax opts = opts.opt_ts_syntax
 
 let ts_utility_syntax opts = opts.opt_ts_utility_syntax
+
+let tslib_syntax opts = opts.opt_tslib_syntax
 
 let type_expansion_recursion_limit opts = opts.opt_type_expansion_recursion_limit
 

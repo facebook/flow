@@ -154,6 +154,7 @@ let stub_metadata ~root ~checked =
     strip_root = true;
     ts_syntax = true;
     ts_utility_syntax = true;
+    tslib_syntax = true;
     type_expansion_recursion_limit = 3;
     use_unknown_in_catch_variables = false;
   }

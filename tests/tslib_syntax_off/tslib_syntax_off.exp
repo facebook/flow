@@ -1,0 +1,26 @@
+Error ------------------------------------------------------------------------------------------------- test.js.flow:2:7
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   2| const foo: string; // ERROR
+            ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- test.js.flow:5:1
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   5| function named(a: string): string; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------- test.js.flow:8:1
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   8| component Button(props: { label: string }); // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 3 errors

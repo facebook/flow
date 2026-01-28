@@ -1592,6 +1592,7 @@ let make_options
     opt_temp_dir;
     opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
     opt_ts_utility_syntax = FlowConfig.ts_utility_syntax flowconfig;
+    opt_tslib_syntax = FlowConfig.tslib_syntax flowconfig;
     opt_type_expansion_recursion_limit = FlowConfig.type_expansion_recursion_limit flowconfig;
     opt_unsuppressable_error_codes = FlowConfig.unsuppressable_error_codes flowconfig;
     opt_use_unknown_in_catch_variables =

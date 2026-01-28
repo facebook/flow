@@ -1,0 +1,8 @@
+// Const without initializer
+const foo: string; // ERROR
+
+// Function without body
+function named(a: string): string; // ERROR
+
+// Component without body
+component Button(props: { label: string }); // ERROR
