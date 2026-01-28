@@ -547,19 +547,32 @@ end = struct
   let pid_of t = t.pid
 end
 
+(* Monitor state that persists across server restarts *)
+type monitor_state = {
+  options: FlowServerMonitorOptions.t;
+  edenfs_watcher_retries: int;
+}
+
+let max_edenfs_watcher_retries = 3
+
 (* A loop who's job is to start a server and then wait for it to die *)
 module KeepAliveLoop = LwtLoop.Make (struct
-  type acc = FlowServerMonitorOptions.t * ServerStatus.restart_reason option
+  type acc = monitor_state * ServerStatus.restart_reason option
 
   let should_pause = ref true
 
   (* Given that a Flow server has just exited with this exit status, should the monitor exit too?
    *
-   * Returns the tuple (should_monitor_exit_with_server, restart_reason)
+   * Returns the tuple (should_monitor_exit_with_server, restart_reason, is_edenfs_watcher_failure)
+   *
+   * Note: For EdenFS watcher failures (Edenfs_watcher_failed, Edenfs_watcher_lost_changes),
+   * this function returns (false, None, true) to allow the caller to implement retry logic.
+   * The caller is responsible for checking retry counts and deciding whether to actually
+   * restart or exit.
    *)
   let process_server_exit monitor_options exit_status =
     if monitor_options.FlowServerMonitorOptions.no_restart then
-      (true, None)
+      (true, None, false)
     else
       Exit.(
         match exit_status with
@@ -584,10 +597,6 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* We ran into an issue with Watchman *)
         | Watchman_failed
         (* We ran into an issue with Watchman *)
-        | Edenfs_watcher_failed
-        (* We ran into an issue with EdenFS watcher *)
-        | Edenfs_watcher_lost_changes
-        (* EdenFS watcher lost track of changes *)
         | File_watcher_missed_changes
         (* Watchman restarted. We probably could survive this by recrawling *)
         | Out_of_shared_memory
@@ -612,12 +621,16 @@ module KeepAliveLoop = LwtLoop.Make (struct
         | Socket_error
         (* Failed to set up socket - only monitor should use this *)
         | Dfind_died (* Any file watcher died (it's misnamed) - only monitor should use this *) ->
-          (true, None)
+          (true, None, false)
+        (**** EdenFS watcher failures - allow retry logic to handle these ****)
+        | Edenfs_watcher_failed
+        | Edenfs_watcher_lost_changes ->
+          (false, None, true)
         (**** Things the server might exit with which the monitor can survive ****)
         | Server_out_of_date (* Server needs to restart, but monitor can survive *) ->
-          (false, Some ServerStatus.Server_out_of_date)
-        | Killed_by_monitor (* The server died because we asked it to die *) -> (false, None)
-        | Restart (* The server asked to be restarted *) -> (false, Some ServerStatus.Restart)
+          (false, Some ServerStatus.Server_out_of_date, false)
+        | Killed_by_monitor (* The server died because we asked it to die *) -> (false, None, false)
+        | Restart (* The server asked to be restarted *) -> (false, Some ServerStatus.Restart, false)
         (**** Unrelated exit codes. If we see them then something is wrong ****)
         | Type_error
         | Out_of_time
@@ -632,7 +645,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
         | Missing_flowlib
         | Server_start_failed _
         | Autostop (* is used by monitor to exit, not server *) ->
-          (true, None)
+          (true, None, false)
       )
 
   (* Ephemeral commands are stateless, so they can survive a server restart. However a persistent
@@ -665,7 +678,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
      *)
     signal = Sys.sigsegv || signal = Sys.sigbus
 
-  let wait_for_server_to_die monitor_options server =
+  let wait_for_server_to_die monitor_state server =
     let pid = ServerInstance.pid_of server in
     let%lwt (_, status) = LwtSysUtils.blocking_waitpid pid in
     let%lwt () = ServerInstance.cleanup server in
@@ -698,14 +711,32 @@ module KeepAliveLoop = LwtLoop.Make (struct
             ~msg:(spf "Flow server exited with invalid exit code (%d)" exit_status)
             Exit.Unknown_error
         | Some exit_type ->
-          let (should_monitor_exit_with_server, restart_reason) =
-            process_server_exit monitor_options exit_type
+          let (should_monitor_exit_with_server, restart_reason, is_edenfs_watcher_failure) =
+            process_server_exit monitor_state.options exit_type
           in
-          if should_monitor_exit_with_server then
+          if is_edenfs_watcher_failure then begin
+            (* EdenFS watcher failed - check retry count *)
+            if monitor_state.edenfs_watcher_retries < max_edenfs_watcher_retries then begin
+              Logger.info
+                "EdenFS watcher died. Restarting Flow server (attempt: %d)"
+                (monitor_state.edenfs_watcher_retries + 1);
+              let%lwt () = killall_persistent_connections exit_type in
+              let new_state =
+                {
+                  monitor_state with
+                  edenfs_watcher_retries = monitor_state.edenfs_watcher_retries + 1;
+                }
+              in
+              Lwt.return (new_state, None)
+            end else begin
+              Logger.error "EdenFS watcher died %d times. Giving up." max_edenfs_watcher_retries;
+              exit ~msg:"EdenFS watcher failed too many times" exit_type
+            end
+          end else if should_monitor_exit_with_server then
             exit ~msg:"Dying along with server" exit_type
           else
             let%lwt () = killall_persistent_connections exit_type in
-            Lwt.return restart_reason
+            Lwt.return (monitor_state, restart_reason)
       end
     | Unix.WSIGNALED signal ->
       Logger.error
@@ -716,7 +747,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
       if should_monitor_exit_with_signaled_server signal then
         exit ~msg:"Dying along with signaled server" Exit.Interrupted
       else
-        Lwt.return_none
+        Lwt.return (monitor_state, None)
     | Unix.WSTOPPED signal ->
       (* If a Flow server has been stopped but hasn't exited then what should we do? I suppose we
          * could try to signal it to resume. Or we could wait for it to start up again. But killing
@@ -728,7 +759,7 @@ module KeepAliveLoop = LwtLoop.Make (struct
 
       (* kill is not a blocking system call, which is likely why it is missing from Lwt_unix *)
       Unix.kill pid Sys.sigkill;
-      Lwt.return_none
+      Lwt.return (monitor_state, None)
 
   (* The RequestMap will contain all the requests which have been sent to the server but never
    * received a response. If we're starting up a new server, we can resend all these requests to
@@ -740,11 +771,11 @@ module KeepAliveLoop = LwtLoop.Make (struct
         Lwt.return (push_to_command_stream (Some (Write_ephemeral_request { request; client }))))
       requests
 
-  let main (monitor_options, restart_reason) =
+  let main (monitor_state, restart_reason) =
     let%lwt () = requeue_stalled_requests () in
-    let%lwt server = ServerInstance.start monitor_options restart_reason in
-    let%lwt restart_reason = wait_for_server_to_die monitor_options server in
-    Lwt.return (monitor_options, restart_reason)
+    let%lwt server = ServerInstance.start monitor_state.options restart_reason in
+    let%lwt (new_state, restart_reason) = wait_for_server_to_die monitor_state server in
+    Lwt.return (new_state, restart_reason)
 
   let catch _ exn =
     Logger.error ~exn:(Exception.to_exn exn) "Exception in KeepAliveLoop";
@@ -775,7 +806,8 @@ let setup_signal_handlers =
 let start monitor_options =
   Lwt.async Doomsday.start_clock;
   setup_signal_handlers ();
-  KeepAliveLoop.run ~cancel_condition:ExitSignal.signal (monitor_options, None)
+  let initial_state = { options = monitor_options; edenfs_watcher_retries = 0 } in
+  KeepAliveLoop.run ~cancel_condition:ExitSignal.signal (initial_state, None)
 
 let send_request ~client ~request =
   Logger.debug
