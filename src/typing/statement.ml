@@ -9805,10 +9805,20 @@ module Make
 
   and mk_enum cx ~enum_reason name_loc enum_name body =
     let open Ast.Statement.EnumDeclaration in
+    let is_a_to_z c = c >= 'a' && c <= 'z' in
+    let check_member_name member_loc name =
+      if String.length name > 0 && is_a_to_z name.[0] then
+        Flow.add_output
+          cx
+          (Error_message.EEnumInvalidMemberName
+             { loc = member_loc; enum_reason; member_name = name }
+          )
+    in
     let defaulted_members =
       Base.List.fold
         ~init:SMap.empty
-        ~f:(fun acc (member_loc, { DefaultedMember.id = (_, { Ast.Identifier.name; _ }) }) ->
+        ~f:(fun acc (member_loc, { DefaultedMember.id = (id_loc, { Ast.Identifier.name; _ }) }) ->
+          check_member_name id_loc name;
           SMap.add name member_loc acc
       )
     in
@@ -9821,7 +9831,10 @@ module Make
           Base.List.fold_left
             ~f:
               (fun (members_map, bool_type, seen_values)
-                   (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+                   ( member_loc,
+                     { InitializedMember.id = (id_loc, { Ast.Identifier.name; _ }); init }
+                   ) ->
+              check_member_name id_loc name;
               let (init_loc, { Ast.BooleanLiteral.value = init_value; _ }) = init in
               let bool_type =
                 match bool_type with
@@ -9857,7 +9870,10 @@ module Make
           Base.List.fold_left
             ~f:
               (fun (members_map, num_type, seen_values)
-                   (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+                   ( member_loc,
+                     { InitializedMember.id = (id_loc, { Ast.Identifier.name; _ }); init }
+                   ) ->
+              check_member_name id_loc name;
               let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
               let num_type =
                 if init_value = 0.0 then
@@ -9887,7 +9903,10 @@ module Make
           Base.List.fold_left
             ~f:
               (fun (members_map, bigint_type, seen_values)
-                   (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+                   ( member_loc,
+                     { InitializedMember.id = (id_loc, { Ast.Identifier.name; _ }); init }
+                   ) ->
+              check_member_name id_loc name;
               let (init_loc, { Ast.BigIntLiteral.value = init_value; _ }) = init in
               let bigint_type =
                 if init_value = Some 0L then
@@ -9919,7 +9938,10 @@ module Make
           Base.List.fold_left
             ~f:
               (fun (members_map, str_type, seen_values)
-                   (member_loc, { InitializedMember.id = (_, { Ast.Identifier.name; _ }); init }) ->
+                   ( member_loc,
+                     { InitializedMember.id = (id_loc, { Ast.Identifier.name; _ }); init }
+                   ) ->
+              check_member_name id_loc name;
               let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
               let str_type =
                 if init_value = "" then

@@ -75,6 +75,7 @@ type error_code =
   | InvalidComputedProp
   | InvalidConstructor
   | InvalidEnumAccess
+  | InvalidEnumMemberName
   | InvalidExact
   | InvalidExhaustiveCheck
   | InvalidExport
@@ -296,6 +297,7 @@ let string_of_code : error_code -> string = function
   | InvalidComputedProp -> "invalid-computed-prop"
   | InvalidConstructor -> "invalid-constructor"
   | InvalidEnumAccess -> "invalid-enum-access"
+  | InvalidEnumMemberName -> "invalid-enum-member-name"
   | InvalidExact -> "invalid-exact"
   | InvalidExhaustiveCheck -> "invalid-exhaustive-check"
   | InvalidExport -> "invalid-export"

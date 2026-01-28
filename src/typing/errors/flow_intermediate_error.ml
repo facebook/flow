@@ -3613,6 +3613,17 @@ let to_printable_error :
         code ".flowconfig";
         text ".";
       ]
+    | MessageInvalidEnumMemberName { member_name; enum_reason } ->
+      let suggestion = String.capitalize_ascii member_name in
+      [
+        text "Enum member names cannot start with lowercase 'a' through 'z'. Instead of using ";
+        code member_name;
+        text ", consider using ";
+        code suggestion;
+        text ", in ";
+        ref enum_reason;
+        text ".";
+      ]
     | MessageExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
       let format_reason_group { first_reason; second_reason } =
         match second_reason with

@@ -50,10 +50,6 @@ type t =
       explicit_type: Enum_common.explicit_type option;
       member_name: string;
     }
-  | EnumInvalidMemberName of {
-      enum_name: string;
-      member_name: string;
-    }
   | EnumInvalidMemberSeparator
   | EnumNumberMemberNotInitialized of {
       enum_name: string;
@@ -298,14 +294,6 @@ module PP = struct
           member_name
           enum_name
     end
-    | EnumInvalidMemberName { enum_name; member_name } ->
-      (* Based on the error condition, we will only receive member names starting with [a-z] *)
-      let suggestion = String.capitalize_ascii member_name in
-      Printf.sprintf
-        "Enum member names cannot start with lowercase 'a' through 'z'. Instead of using `%s`, consider using `%s`, in enum `%s`."
-        member_name
-        suggestion
-        enum_name
     | EnumInvalidMemberSeparator -> "Enum members are separated with `,`. Replace `;` with `,`."
     | EnumNumberMemberNotInitialized { enum_name; member_name } ->
       Printf.sprintf

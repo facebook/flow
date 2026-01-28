@@ -809,6 +809,10 @@ type 'loc message =
       conflict: 'loc;
     }
   | MessageEnumsNotEnabled
+  | MessageInvalidEnumMemberName of {
+      member_name: string;
+      enum_reason: 'loc virtual_reason;
+    }
   | MessageExponentialSpread of {
       reason: 'loc virtual_reason;
       reasons_for_operand1: 'loc exponential_spread_reason_group;

@@ -1883,6 +1883,12 @@ let dump_error_message =
         (Base.Option.value ~default:"<None>" representation_type)
     | EEnumInvalidAbstractUse { reason; enum_reason } ->
       spf "EEnumInvalidAbstractUse (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
+    | EEnumInvalidMemberName { loc; enum_reason; member_name } ->
+      spf
+        "EEnumInvalidMemberName (%s) (%s) (%s)"
+        (string_of_aloc loc)
+        (dump_reason cx enum_reason)
+        member_name
     | EAssignConstLikeBinding { loc; definition; binding_kind } ->
       spf
         "EAssignConstLikeBinding (%s) (%s) (%s)"

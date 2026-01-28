@@ -548,6 +548,11 @@ and 'loc t' =
       reason: 'loc virtual_reason;
       enum_reason: 'loc virtual_reason;
     }
+  | EEnumInvalidMemberName of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+      member_name: string;
+    }
   (* end enum error messages *)
   | EAssignConstLikeBinding of {
       loc: 'loc;
@@ -1659,6 +1664,8 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       }
   | EEnumInvalidAbstractUse { reason; enum_reason } ->
     EEnumInvalidAbstractUse { reason = map_reason reason; enum_reason = map_reason enum_reason }
+  | EEnumInvalidMemberName { loc; enum_reason; member_name } ->
+    EEnumInvalidMemberName { loc = f loc; enum_reason = map_reason enum_reason; member_name }
   | EAssignConstLikeBinding { loc; definition; binding_kind } ->
     EAssignConstLikeBinding { loc = f loc; definition = map_reason definition; binding_kind }
   | EMalformedCode loc -> EMalformedCode (f loc)
@@ -2236,6 +2243,7 @@ let util_use_op_of_msg nope util = function
   | EEnumNotAllChecked _
   | EEnumUnknownNotChecked _
   | EEnumInvalidAbstractUse _
+  | EEnumInvalidMemberName _
   | EEnumInvalidCheck _
   | EEnumMemberUsedAsType _
   | EAssignConstLikeBinding _
@@ -2371,7 +2379,8 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EObjectComputedPropertyPotentialOverwrite { key_loc = loc; overwritten_locs = _ }
   | EEnumAllMembersAlreadyChecked { loc; _ }
   | EEnumMemberAlreadyChecked { case_test_loc = loc; _ }
-  | EEnumInvalidCheck { loc; _ } ->
+  | EEnumInvalidCheck { loc; _ }
+  | EEnumInvalidMemberName { loc; _ } ->
     Some loc
   | EEnumNotAllChecked { reason; _ }
   | EEnumUnknownNotChecked { reason; _ }
@@ -3549,6 +3558,8 @@ let friendly_message_of_msg = function
       (MessageCannotExhaustivelyCheckAbstractEnums
          { description = desc_of_reason reason; enum_reason }
       )
+  | EEnumInvalidMemberName { enum_reason; member_name; _ } ->
+    Normal (MessageInvalidEnumMemberName { member_name; enum_reason })
   | EAssignConstLikeBinding { definition; binding_kind; _ } ->
     Normal (MessageCannotReassignConstantLikeBinding { definition; binding_kind })
   | EMalformedCode _ -> Normal MessageSuppressionMalformedCode
@@ -3932,6 +3943,7 @@ let error_code_of_message err : error_code option =
   | EDuplicateModuleProvider _ -> Some DuplicateModule
   | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
   | EEnumInvalidAbstractUse _ -> Some InvalidExhaustiveCheck
+  | EEnumInvalidMemberName _ -> Some InvalidEnumMemberName
   | EEnumInvalidCheck { from_match; _ } ->
     if from_match then
       Some MatchInvalidPattern

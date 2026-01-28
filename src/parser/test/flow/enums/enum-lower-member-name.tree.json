@@ -1,14 +1,4 @@
 {
-  "errors":[
-    {
-      "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":5}},
-      "message":"Enum member names cannot start with lowercase 'a' through 'z'. Instead of using `foo`, consider using `Foo`, in enum `E`."
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":5}},
-      "message":"Enum member names cannot start with lowercase 'a' through 'z'. Instead of using `bar`, consider using `Bar`, in enum `E`."
-    }
-  ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":4,"column":1}},
   "range":[0,24],

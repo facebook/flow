@@ -167,8 +167,6 @@ end = struct
         (loc, Parse_error.EnumInvalidMemberInitializer { enum_name; explicit_type; member_name })
     | _ -> ()
 
-  let is_a_to_z c = c >= 'a' && c <= 'z'
-
   let enum_member ~enum_name ~explicit_type acc env =
     let { members; seen_names; _ } = acc in
     let (member_loc, (id, init)) = member_raw env in
@@ -177,8 +175,6 @@ end = struct
     if member_name = "" then
       acc
     else (
-      if is_a_to_z @@ member_name.[0] then
-        error_at env (id_loc, Parse_error.EnumInvalidMemberName { enum_name; member_name });
       if SSet.mem member_name seen_names then
         error_at env (id_loc, Parse_error.EnumDuplicateMemberName { enum_name; member_name });
       let acc = { acc with seen_names = SSet.add member_name seen_names } in
