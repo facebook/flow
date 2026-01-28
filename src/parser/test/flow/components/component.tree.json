@@ -21,6 +21,7 @@
         "typeAnnotation":null,
         "optional":false
       },
+      "implicitDeclare":false,
       "params":[],
       "rendersType":null,
       "typeParameters":null
@@ -47,6 +48,7 @@
           "typeAnnotation":null,
           "optional":false
         },
+        "implicitDeclare":false,
         "params":[],
         "rendersType":null,
         "typeParameters":null
@@ -75,6 +77,7 @@
           "typeAnnotation":null,
           "optional":false
         },
+        "implicitDeclare":false,
         "params":[],
         "rendersType":null,
         "typeParameters":null
@@ -101,6 +104,7 @@
         "typeAnnotation":null,
         "optional":false
       },
+      "implicitDeclare":false,
       "params":[],
       "rendersType":{
         "type":"TypeOperator",
@@ -142,6 +146,7 @@
         "typeAnnotation":null,
         "optional":false
       },
+      "implicitDeclare":false,
       "params":[],
       "rendersType":null,
       "typeParameters":{
