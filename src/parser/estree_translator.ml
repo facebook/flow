@@ -1540,10 +1540,10 @@ with type t = Impl.t = struct
           ~outer:component_comments
           ~inner:(format_internal_comments params_comments)
       in
-      let node_type =
+      let (node_type, implicit_declare) =
         match body with
-        | None -> "DeclareComponent"
-        | Some _ -> "ComponentDeclaration"
+        | None -> ("DeclareComponent", true)
+        | Some _ -> ("ComponentDeclaration", false)
       in
       node
         ?comments
@@ -1552,6 +1552,7 @@ with type t = Impl.t = struct
         [
           ("body", option block body);
           ("id", identifier id);
+          ("implicitDeclare", bool implicit_declare);
           ("params", component_params params);
           ("rendersType", renders_annotation renders);
           ("typeParameters", option type_parameter_declaration tparams);

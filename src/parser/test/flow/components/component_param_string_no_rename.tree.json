@@ -31,6 +31,7 @@
         "typeAnnotation":null,
         "optional":false
       },
+      "implicitDeclare":false,
       "params":[
         {
           "type":"ComponentParameter",
@@ -84,6 +85,7 @@
         "typeAnnotation":null,
         "optional":false
       },
+      "implicitDeclare":false,
       "params":[
         {
           "type":"ComponentParameter",

@@ -1,6 +1,9 @@
 {
   "errors":[
-    {"loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},"message":"Component params must be an identifier. If you'd like to destructure, you should use `name as {destructure}`"}
+    {
+      "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":15}},
+      "message":"Component params must be an identifier. If you'd like to destructure, you should use `name as {destructure}`"
+    }
   ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":36}},
@@ -24,6 +27,7 @@
         "typeAnnotation":null,
         "optional":false
       },
+      "implicitDeclare":false,
       "params":[
         {
           "type":"ComponentParameter",
