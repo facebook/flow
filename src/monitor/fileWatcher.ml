@@ -22,6 +22,8 @@ class type watcher =
   object
     method name : string
 
+    method debug : bool
+
     method start_init : unit
 
     method wait_for_init : timeout:float option -> (unit, string) result Lwt.t
@@ -41,6 +43,8 @@ class type watcher =
 class dummy : watcher =
   object
     method name = "dummy"
+
+    method debug = false
 
     method start_init = ()
 
@@ -121,6 +125,8 @@ class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
     val mutable files = SSet.empty
 
     method name = "dfind"
+
+    method debug = false
 
     method private get_dfind =
       match dfind_instance with
@@ -428,6 +434,8 @@ end = struct
 
       method name = "watchman"
 
+      method debug = watchman_options.FlowServerMonitorOptions.debug
+
       method private get_env =
         match env with
         | None -> failwith "Watchman was not initialized"
@@ -711,6 +719,8 @@ end = struct
       val mutable init_thread = None
 
       method name = "edenfs"
+
+      method debug = edenfs_options.FlowServerMonitorOptions.edenfs_debug
 
       method private get_env =
         match env with

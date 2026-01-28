@@ -196,12 +196,17 @@ end = struct
       if file_watcher_notification_is_relevant files metadata then (
         let count = SSet.cardinal files in
         Logger.info
-          "File watcher reported %d file%s changed"
+          "File watcher reported %d file%s changed%s"
           count
           ( if count = 1 then
             ""
           else
             "s"
+          )
+          ( if watcher#debug then
+            " [" ^ String.concat ", " (SSet.elements files) ^ "]"
+          else
+            ""
           );
         send_request ~msg:(MonitorProt.FileWatcherNotification { files; metadata; initial }) conn
       ) else
