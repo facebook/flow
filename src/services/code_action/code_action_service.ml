@@ -869,6 +869,22 @@ let ast_transforms_of_error
       ]
     else
       []
+  | Error_message.EEnumInvalidMemberName { loc = error_loc; member_name; _ } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      let fixed_name = String.capitalize_ascii member_name in
+      let title = Printf.sprintf "Replace `%s` with `%s`" member_name fixed_name in
+      [
+        {
+          title;
+          diagnostic_title = "capitalize_enum_member";
+          transform =
+            untyped_ast_transform (Autofix_enum_member_name.capitalize_at_target ~fixed_name);
+          target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
+        };
+      ]
+    else
+      []
   | Error_message.EClassToObject { reason_class; reason_obj; use_op = _; kind = _ } ->
     let error_loc = Reason.loc_of_reason reason_class in
     if loc_opt_intersects ~error_loc ~loc then

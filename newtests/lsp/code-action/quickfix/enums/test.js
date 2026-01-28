@@ -34,5 +34,20 @@ module.exports = (suite(
         'quickfix-invalid-enum',
       ),
     ),
+    test(
+      'provide quickfix for invalid enum member name errors',
+      generateSimpleTests(
+        'quickfix',
+        {
+          addFile,
+          lspIgnoreStatusAndCancellation,
+          lspStartAndConnect,
+          lspRequestAndWaitUntilResponse,
+        },
+        __dirname,
+        'invalid-enum-member-name.js',
+        'quickfix-invalid-enum-member-name',
+      ),
+    ),
   ],
 ): SuiteType);

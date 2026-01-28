@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Replace `bad` with `Bad`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/invalid-enum-member-name.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 3,
+                  "character": 2
+                },
+                "end": {
+                  "line": 3,
+                  "character": 5
+                }
+              },
+              "newText": "Bad"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "capitalize_enum_member",
+          "Replace `bad` with `Bad`"
+        ]
+      }
+    }
+  ]
+}
