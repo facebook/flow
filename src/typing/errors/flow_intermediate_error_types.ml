@@ -809,6 +809,7 @@ type 'loc message =
       conflict: 'loc;
     }
   | MessageEnumsNotEnabled
+  | MessageEnumConstNotSupported
   | MessageInvalidEnumMemberName of {
       member_name: string;
       enum_reason: 'loc virtual_reason;

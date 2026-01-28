@@ -626,9 +626,9 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
     let env = env |> with_no_let true in
     declarations T_LET env
 
-  let enum_declaration ?leading =
+  let enum_declaration ?leading ~const_ =
     with_loc (fun env ->
-        let enum = Enum.declaration ?leading env in
+        let enum = Enum.declaration ?leading ~const_ env in
         Statement.EnumDeclaration enum
     )
 

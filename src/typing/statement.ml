@@ -9780,8 +9780,9 @@ module Make
 
   and enum_declaration cx loc enum =
     let open Ast.Statement.EnumDeclaration in
-    let { id = (name_loc, ident); body; comments } = enum in
+    let { id = (name_loc, ident); body; const_; comments } = enum in
     let { Ast.Identifier.name; _ } = ident in
+    if const_ then Flow.add_output cx (Error_message.EEnumConstNotSupported loc);
     let reason = mk_reason (REnum { name = Some name }) name_loc in
     let t =
       if Context.enable_enums cx then (
@@ -9801,7 +9802,7 @@ module Make
       )
     in
     let id' = ((name_loc, t), ident) in
-    { id = id'; body; comments }
+    { id = id'; body; const_; comments }
 
   and mk_enum cx ~enum_reason name_loc enum_name body =
     let open Ast.Statement.EnumDeclaration in

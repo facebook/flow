@@ -12,7 +12,10 @@ open Token
 
 module Enum (Parse : Parser_common.PARSER) : sig
   val declaration :
-    ?leading:Loc.t Comment.t list -> env -> (Loc.t, Loc.t) Statement.EnumDeclaration.t
+    ?leading:Loc.t Comment.t list ->
+    const_:bool ->
+    env ->
+    (Loc.t, Loc.t) Statement.EnumDeclaration.t
 end = struct
   open Flow_ast.Statement.EnumDeclaration
 
@@ -487,12 +490,12 @@ end = struct
         body
     )
 
-  let declaration ?(leading = []) env =
+  let declaration ?(leading = []) ~const_ env =
     let leading = leading @ Peek.comments env in
     Expect.token env T_ENUM;
     let id = Parse.identifier env in
     let (name_loc, { Identifier.name = enum_name; _ }) = id in
     let body = enum_body ~enum_name ~name_loc env in
     let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-    { Statement.EnumDeclaration.id; body; comments }
+    { Statement.EnumDeclaration.id; body; const_; comments }
 end

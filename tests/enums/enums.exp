@@ -699,6 +699,45 @@ References:
                            ^ [2]
 
 
+Error ------------------------------------------------------------------------------------------------ const-enum.js:1:7
+
+`const` enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be
+part of the build system (whatever you use) rather than Flow itself. [illegal-enum]
+
+            v----------------
+   1| const enum E { // ERROR
+   2|   A,
+   3|   B,
+   4| }
+      ^
+
+
+Error ------------------------------------------------------------------------------------------------ const-enum.js:6:1
+
+`const` enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be
+part of the build system (whatever you use) rather than Flow itself. [illegal-enum]
+
+      v------------------------------
+   6| declare const enum F { // ERROR
+   7|   X,
+   8|   Y,
+   9| }
+      ^
+
+
+Error ---------------------------------------------------------------------------------------------- const-enum.js:11:22
+
+`const` enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be
+part of the build system (whatever you use) rather than Flow itself. [illegal-enum]
+
+                            v----------------
+   11| export declare const enum G { // ERROR
+   12|   P,
+   13|   Q,
+   14| }
+       ^
+
+
 Error -------------------------------------------------------------------------------------------------- declared.js:9:1
 
 Cannot cast `E.A` to empty because `E` [1] is incompatible with empty [2]. [incompatible-type]
@@ -4589,7 +4628,7 @@ References:
 
 
 
-Found 268 errors
+Found 271 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -1047,14 +1047,14 @@ class ['loc] mapper =
 
     method enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
       let open Ast.Statement.EnumDeclaration in
-      let { id = ident; body; comments } = enum in
+      let { id = ident; body; const_; comments } = enum in
       let id' = this#pattern_identifier ~kind:Ast.Variable.Const ident in
       let body' = this#enum_body body in
       let comments' = this#syntax_opt comments in
       if ident == id' && body == body' && comments == comments' then
         enum
       else
-        { id = id'; body = body'; comments = comments' }
+        { id = id'; body = body'; const_; comments = comments' }
 
     method enum_body (body : 'loc Ast.Statement.EnumDeclaration.body) =
       let open Ast.Statement.EnumDeclaration in

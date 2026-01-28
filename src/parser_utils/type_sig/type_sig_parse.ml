@@ -4667,7 +4667,7 @@ let enum_decl =
       (BigIntRep { truthy }, members, has_unknown_members)
   in
   fun opts scope tbls decl ->
-    let { E.id; body = (_, body); comments = _ } = decl in
+    let { E.id; body = (_, body); const_ = _; comments = _ } = decl in
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
     let id_loc = push_loc tbls id_loc in
     let def =

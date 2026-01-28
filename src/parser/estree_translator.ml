@@ -1248,8 +1248,15 @@ with type t = Impl.t = struct
         "ComponentTypeParameter"
         loc
         [("name", name'); ("typeAnnotation", _type annot); ("optional", bool optional)]
-    and declare_enum (loc, { Statement.EnumDeclaration.id; body; comments }) =
-      node ?comments "DeclareEnum" loc [("id", identifier id); ("body", enum_body body)]
+    and declare_enum (loc, { Statement.EnumDeclaration.id; body; const_; comments }) =
+      let props = [("id", identifier id); ("body", enum_body body)] in
+      let props =
+        if const_ then
+          ("const", bool true) :: props
+        else
+          props
+      in
+      node ?comments "DeclareEnum" loc props
     and declare_interface (loc, { Statement.Interface.id; tparams; body; extends; comments }) =
       node
         ?comments
@@ -1680,8 +1687,15 @@ with type t = Impl.t = struct
             ("explicitType", bool explicit_type);
             ("hasUnknownMembers", bool has_unknown_members);
           ]
-    and enum_declaration (loc, { Statement.EnumDeclaration.id; body; comments }) =
-      node ?comments "EnumDeclaration" loc [("id", identifier id); ("body", enum_body body)]
+    and enum_declaration (loc, { Statement.EnumDeclaration.id; body; const_; comments }) =
+      let props = [("id", identifier id); ("body", enum_body body)] in
+      let props =
+        if const_ then
+          ("const", bool true) :: props
+        else
+          props
+      in
+      node ?comments "EnumDeclaration" loc props
     and interface_declaration (loc, { Statement.Interface.id; tparams; body; extends; comments }) =
       node
         ?comments

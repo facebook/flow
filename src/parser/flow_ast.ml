@@ -995,6 +995,7 @@ and Statement : sig
     type ('M, 'T) t = {
       id: ('M, 'T) Identifier.t;
       body: 'M body;
+      const_: bool;
       comments: ('M, unit) Syntax.t option;
     }
 

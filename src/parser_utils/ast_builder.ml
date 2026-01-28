@@ -564,8 +564,8 @@ module Statements = struct
 
   let with_ ?(loc = Loc.none) ?comments _object body = (loc, With { With._object; body; comments })
 
-  let enum_declaration ?(loc = Loc.none) ?comments id body =
-    (loc, EnumDeclaration { EnumDeclaration.id; body; comments })
+  let enum_declaration ?(loc = Loc.none) ?comments ?(const_ = false) id body =
+    (loc, EnumDeclaration { EnumDeclaration.id; body; const_; comments })
 
   module EnumDeclarations = struct
     open EnumDeclaration

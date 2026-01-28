@@ -3613,6 +3613,12 @@ let to_printable_error :
         code ".flowconfig";
         text ".";
       ]
+    | MessageEnumConstNotSupported ->
+      [
+        code "const";
+        text
+          " enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be part of the build system (whatever you use) rather than Flow itself.";
+      ]
     | MessageInvalidEnumMemberName { member_name; enum_reason } ->
       let suggestion = String.capitalize_ascii member_name in
       [

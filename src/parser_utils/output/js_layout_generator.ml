@@ -2727,8 +2727,14 @@ and record_declaration
         ]
     )
 
-and enum_declaration ~def loc { Ast.Statement.EnumDeclaration.id; body; comments } =
+and enum_declaration ~def loc { Ast.Statement.EnumDeclaration.id; body; const_; comments } =
   let open Ast.Statement.EnumDeclaration in
+  let def =
+    if const_ then
+      fuse [Atom "const"; space; def]
+    else
+      def
+  in
   let representation_type name explicit =
     if explicit then
       fuse [space; Atom "of"; space; Atom name]

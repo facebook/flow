@@ -330,6 +330,7 @@ and 'loc t' =
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
   | EEnumsNotEnabled of 'loc
+  | EEnumConstNotSupported of 'loc
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
   | EBadExportContext of string * 'loc
@@ -1496,6 +1497,7 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
   | EEnumsNotEnabled loc -> EEnumsNotEnabled (f loc)
+  | EEnumConstNotSupported loc -> EEnumConstNotSupported (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
@@ -2177,6 +2179,7 @@ let util_use_op_of_msg nope util = function
   | ERecursionLimit (_, _)
   | EUninitializedInstanceProperty _
   | EEnumsNotEnabled _
+  | EEnumConstNotSupported _
   | EIndeterminateModuleType _
   | EBadExportPosition _
   | EBadExportContext _
@@ -2476,6 +2479,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
   | EEnumsNotEnabled loc
+  | EEnumConstNotSupported loc
   | EUninitializedInstanceProperty (loc, _)
   | EUseArrayLiteral loc
   | EUnsupportedSyntax (loc, _)
@@ -2668,6 +2672,7 @@ let kind_of_msg =
     | EBadExportContext _ ->
       InferWarning ExportKind
     | EEnumsNotEnabled _
+    | EEnumConstNotSupported _
     | EIndeterminateModuleType _
     | EUnreachable _
     | EInvalidTypeof _ ->
@@ -3276,6 +3281,7 @@ let friendly_message_of_msg = function
   | ERecursionLimit _ -> Normal MessageRecursionLimitExceeded
   | EUninitializedInstanceProperty (_loc, err) -> Normal (MessageUninitializedInstanceProperty err)
   | EEnumsNotEnabled _ -> Normal MessageEnumsNotEnabled
+  | EEnumConstNotSupported _ -> Normal MessageEnumConstNotSupported
   | EIndeterminateModuleType _ -> Normal MessageCannotDetermineModuleType
   | EBadExportPosition _ -> Normal MessageNonToplevelExport
   | EBadExportContext (name, _) -> Normal (MessageCannotUseExportInNonLegalToplevelContext name)
@@ -3965,6 +3971,7 @@ let error_code_of_message err : error_code option =
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedBigIntLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EEnumsNotEnabled _ -> Some IllegalEnum
+  | EEnumConstNotSupported _ -> Some IllegalEnum
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType

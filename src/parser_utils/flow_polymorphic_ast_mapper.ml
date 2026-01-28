@@ -760,10 +760,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method enum_declaration (enum : ('M, 'T) Ast.Statement.EnumDeclaration.t)
         : ('N, 'U) Ast.Statement.EnumDeclaration.t =
       let open Ast.Statement.EnumDeclaration in
-      let { id; body; comments } = enum in
+      let { id; body; const_; comments } = enum in
       let body' = this#enum_body body in
       let comments' = this#syntax_opt comments in
-      { id = this#t_identifier id; body = body'; comments = comments' }
+      { id = this#t_identifier id; body = body'; const_; comments = comments' }
 
     method enum_body (body : 'M Ast.Statement.EnumDeclaration.body)
         : 'N Ast.Statement.EnumDeclaration.body =

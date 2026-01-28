@@ -1303,13 +1303,30 @@ module Statement
         Statement.DeclareComponent component)
       env
 
-  and declare_enum env =
+  and declare_enum ~const_ env =
     with_loc
       (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_DECLARE;
-        let enum = Enum.declaration ~leading env in
+        if const_ then Expect.token env T_CONST;
+        let enum = Enum.declaration ~const_ ~leading env in
         Statement.DeclareEnum enum)
+      env
+
+  (* Handles declare const - could be `declare const enum` or `declare const var` *)
+  and declare_const_or_enum env =
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_DECLARE;
+        if (parse_options env).enums && Peek.ith_token ~i:1 env = T_ENUM then begin
+          Expect.token env T_CONST;
+          let enum = Enum.declaration ~const_:true ~leading env in
+          Statement.DeclareEnum enum
+        end else begin
+          let var = declare_var ~kind:Ast.Variable.Const env leading in
+          Statement.DeclareVariable var
+        end)
       env
 
   and declare_function ~async ?(leading = []) env =
@@ -1518,7 +1535,8 @@ module Statement
     (* eventually, just emit a wrapper AST node *)
     match Peek.ith_token ~i:1 env with
     | T_CLASS -> declare_class_statement env
-    | T_ENUM when (parse_options env).enums -> declare_enum env
+    | T_CONST -> declare_const_or_enum env
+    | T_ENUM when (parse_options env).enums -> declare_enum ~const_:false env
     | T_INTERFACE -> declare_interface env
     | T_TYPE ->
       (match Peek.token env with
@@ -1533,7 +1551,6 @@ module Statement
       declare_function_statement env
     | T_VAR -> declare_var_statement ~kind:Ast.Variable.Var env
     | T_LET -> declare_var_statement ~kind:Ast.Variable.Let env
-    | T_CONST -> declare_var_statement ~kind:Ast.Variable.Const env
     | T_EXPORT when in_module_or_namespace -> declare_export_declaration env
     | T_IDENTIFIER { raw = "module"; _ } -> declare_module env
     | T_IDENTIFIER { raw = "global"; _ } -> declare_namespace ~global:true env
@@ -1690,7 +1707,7 @@ module Statement
                 (Declaration _class, [])
               else if Peek.token env = T_ENUM then
                 (* export default enum foo { ... } *)
-                (Declaration (Declaration.enum_declaration env), [])
+                (Declaration (Declaration.enum_declaration ~const_:false env), [])
               else if Peek.is_record env then
                 (* export default record R { ... } *)
                 (Declaration (Object.record_declaration env), [])
@@ -2079,9 +2096,15 @@ module Statement
             let var = with_loc (fun env -> declare_var ~kind:Ast.Variable.Let env []) env in
             Some (Variable var)
           | T_CONST ->
-            (* declare export const foo: ... *)
-            let var = with_loc (fun env -> declare_var ~kind:Ast.Variable.Const env []) env in
-            Some (Variable var)
+            (* declare export const foo: ... or declare export const enum ... *)
+            if (parse_options env).enums && Peek.ith_token ~i:1 env = T_ENUM then begin
+              Expect.token env T_CONST;
+              let enum = with_loc (Enum.declaration ~const_:true) env in
+              Some (Enum enum)
+            end else begin
+              let var = with_loc (fun env -> declare_var ~kind:Ast.Variable.Const env []) env in
+              Some (Variable var)
+            end
           | _ -> assert false
         in
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in
@@ -2161,7 +2184,7 @@ module Statement
           }
       | T_ENUM when (parse_options env).enums ->
         (* declare export enum ... *)
-        let enum = with_loc Enum.declaration env in
+        let enum = with_loc (Enum.declaration ~const_:false) env in
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in
         Statement.DeclareExportDeclaration
           {

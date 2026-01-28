@@ -306,7 +306,8 @@ module type DECLARATION = sig
 
   val _function : env -> (Loc.t, Loc.t) Statement.t
 
-  val enum_declaration : ?leading:Loc.t Comment.t list -> env -> (Loc.t, Loc.t) Statement.t
+  val enum_declaration :
+    ?leading:Loc.t Comment.t list -> const_:bool -> env -> (Loc.t, Loc.t) Statement.t
 
   val component_params : env -> (Loc.t, Loc.t) Statement.ComponentDeclaration.Params.t
 
