@@ -413,7 +413,11 @@ end = struct
              Lwt.return (watcher, true)
            | Error msg ->
              Logger.info "EdenFS watcher init failed: %s. Falling back to Watchman." msg;
-             FlowEventLogger.edenfs_watcher_fallback ~msg;
+             (* Log specific telemetry for NonEdenMount (www not on Eden) *)
+             if Base.String.is_substring msg ~substring:"NonEdenMount" then
+               FlowEventLogger.edenfs_watcher_non_eden_www ~backtrace:msg
+             else
+               FlowEventLogger.edenfs_watcher_fallback ~msg;
              let watchman_options =
                edenfs_options.FlowServerMonitorOptions.edenfs_watchman_fallback
              in
@@ -424,8 +428,13 @@ end = struct
         | exn ->
           let exn_wrapper = Exception.wrap exn in
           let msg = Exception.get_ctor_string exn_wrapper in
+          let backtrace = Exception.get_backtrace_string exn_wrapper in
           Logger.info "EdenFS watcher raised exception: %s. Falling back to Watchman." msg;
-          FlowEventLogger.edenfs_watcher_fallback ~msg;
+          (* Log specific telemetry for NonEdenMount (www not on Eden) *)
+          if Base.String.is_substring msg ~substring:"NonEdenMount" then
+            FlowEventLogger.edenfs_watcher_non_eden_www ~backtrace
+          else
+            FlowEventLogger.edenfs_watcher_fallback ~msg;
           let watchman_options = edenfs_options.FlowServerMonitorOptions.edenfs_watchman_fallback in
           (* Watchman watcher needs start_init called by the caller *)
           Lwt.return
