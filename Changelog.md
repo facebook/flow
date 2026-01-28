@@ -1,3 +1,9 @@
+### 0.299.0
+
+Parser:
+* Support `export declare`, like `declare export`
+* For `component` in implicit declare context, the ast we produce will include `implicitDeclare: true`
+
 ### 0.298.0
 
 Likely to cause new Flow errors:
