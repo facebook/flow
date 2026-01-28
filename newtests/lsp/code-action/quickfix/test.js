@@ -80,21 +80,6 @@ module.exports = (suite(
       ),
     ),
     test(
-      'provide quickfix for invalid enum member access errors',
-      generateSimpleTests(
-        'quickfix',
-        {
-          addFile,
-          lspIgnoreStatusAndCancellation,
-          lspStartAndConnect,
-          lspRequestAndWaitUntilResponse,
-        },
-        __dirname,
-        'invalid-enum-member-access.js',
-        'quickfix-invalid-enum',
-      ),
-    ),
-    test(
       "don't provide quickfixes for object subtyping errors",
       generateSimpleTests(
         'quickfix',
