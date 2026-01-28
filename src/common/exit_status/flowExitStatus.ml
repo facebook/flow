@@ -47,6 +47,9 @@ type t =
   | Heap_full  (** Shared memory heap is full *)
   | EventLogger_restart_out_of_retries  (** EventLogger daemon ran out of restarts *)
   | Unknown_error  (** A generic something-else-went-wrong *)
+  | Edenfs_watcher_failed  (** The EdenFS watcher failed in a way we cannot recover from *)
+  | Edenfs_watcher_lost_changes
+      (** EdenFS watcher lost track of changes (e.g., due to an Eden restart) *)
 
 (* Exit codes are part of Flow's API and thus changing exit codes is a
  * breaking change to Flow's API. Tools that call Flow may be watching for
@@ -98,6 +101,8 @@ let error_code = function
   | File_watcher_missed_changes -> 105
   | EventLogger_restart_out_of_retries -> 108
   | Unknown_error -> 110
+  | Edenfs_watcher_failed -> 111
+  | Edenfs_watcher_lost_changes -> 112
 
 (** Return an error type given an error code *)
 let error_type = function
@@ -139,6 +144,8 @@ let error_type = function
   | 105 -> File_watcher_missed_changes
   | 108 -> EventLogger_restart_out_of_retries
   | 110 -> Unknown_error
+  | 111 -> Edenfs_watcher_failed
+  | 112 -> Edenfs_watcher_lost_changes
   | _ -> raise Not_found
 
 let error_type_opt i =
@@ -189,6 +196,8 @@ let to_string = function
   | Hash_table_full -> "Hash_table_full"
   | Heap_full -> "Heap_full"
   | EventLogger_restart_out_of_retries -> "EventLogger_restart_out_of_retries"
+  | Edenfs_watcher_failed -> "Edenfs_watcher_failed"
+  | Edenfs_watcher_lost_changes -> "Edenfs_watcher_lost_changes"
 
 exception Exit_with of t
 

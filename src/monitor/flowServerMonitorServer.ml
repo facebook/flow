@@ -58,6 +58,7 @@ let exit ?error ~msg exit_status =
     Lwt.protected
       (let%lwt () = Lwt_unix.sleep 1.0 in
        FlowEventLogger.exit ?error (Some msg) (Exit.to_string exit_status);
+       List.iter (fun hook -> hook ()) !Edenfs_watcher.hooks_upon_clean_exit;
        Stdlib.exit (Exit.error_code exit_status)
       )
   )
@@ -583,6 +584,10 @@ module KeepAliveLoop = LwtLoop.Make (struct
         (* We ran into an issue with Watchman *)
         | Watchman_failed
         (* We ran into an issue with Watchman *)
+        | Edenfs_watcher_failed
+        (* We ran into an issue with EdenFS watcher *)
+        | Edenfs_watcher_lost_changes
+        (* EdenFS watcher lost track of changes *)
         | File_watcher_missed_changes
         (* Watchman restarted. We probably could survive this by recrawling *)
         | Out_of_shared_memory

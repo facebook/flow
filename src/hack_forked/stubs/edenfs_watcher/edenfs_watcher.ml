@@ -27,3 +27,7 @@ let get_notification_fd (_instance : instance) : (Unix.file_descr, edenfs_watche
 let is_available () = false
 
 let watch_spec _options = failwith "not implemented"
+
+let register_close_lwt_fd_callback (_callback : unit -> unit) : unit = ()
+
+let hooks_upon_clean_exit : (unit -> unit) list ref = ref []

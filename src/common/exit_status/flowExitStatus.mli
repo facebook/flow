@@ -42,6 +42,8 @@ type t =
   | Heap_full
   | EventLogger_restart_out_of_retries
   | Unknown_error
+  | Edenfs_watcher_failed
+  | Edenfs_watcher_lost_changes
 
 exception Exit_with of t
 

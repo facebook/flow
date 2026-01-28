@@ -1,6 +1,6 @@
 (library
  (name edenfs_watcher)
  (wrapped false)
- (libraries flow_common hh_json sys_utils)
+ (libraries base flow_common flow_exit hh_json utils_core sys_utils)
  (preprocess
   (pps ppx_deriving.show ppx_deriving.eq)))
