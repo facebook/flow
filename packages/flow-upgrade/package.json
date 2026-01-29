@@ -14,7 +14,7 @@
     "flow-codemod": "./dist/bin/runSpecificCodemod.js"
   },
   "scripts": {
-    "build": "rm -rf dist && babel src --out-dir dist --ignore '**/__tests__' --plugins=@babel/plugin-transform-modules-commonjs",
+    "build": "rm -rf dist && babel src --out-dir dist --ignore '**/__tests__'",
     "test": "jest",
     "flow": "flow",
     "prepublish": "yarn run build",
@@ -54,7 +54,6 @@
     "flow-bin": "^0.227.0",
     "jest": "^27.5.1",
     "memfs": "^3.4.3",
-    "prettier": "2.8.8",
-    "@babel/plugin-transform-modules-commonjs": "^7.24.0"
+    "prettier": "2.8.8"
   }
 }
