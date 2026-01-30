@@ -22,4 +22,7 @@ npm publish ./dist/npm-flow-remove-types.tgz;
 echo "Publishing flow-node";
 npm publish ./dist/npm-flow-node.tgz;
 
+echo "Publishing flow-upgrade";
+npm publish ./dist/npm-flow-upgrade.tgz;
+
 if [ -f ~/.npmrc.bak ]; then mv ~/.npmrc.bak ~/.npmrc; fi
