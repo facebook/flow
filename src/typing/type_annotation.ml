@@ -162,14 +162,16 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
   (* AST helpers *)
 
   let qualified_name =
-    let rec loop acc =
-      let open Ast.Type.Generic.Identifier in
-      function
+    let open Ast.Type.Generic.Identifier in
+    let rec loop acc = function
       | Unqualified (_, { Ast.Identifier.name; comments = _ }) ->
         let parts = name :: acc in
         String.concat "." parts
       | Qualified (_, { qualification; id = (_, { Ast.Identifier.name; comments = _ }) }) ->
         loop (name :: acc) qualification
+      | ImportTypeAnnot (_, { argument = (_, { Ast.StringLiteral.value; _ }); _ }) ->
+        let parts = ("import(\"" ^ value ^ "\")") :: acc in
+        String.concat "." parts
     in
     loop []
 
@@ -658,6 +660,38 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     id = ((id_loc, t_unapplied), id_name);
                   }
                 );
+            targs;
+            comments;
+          }
+      )
+    (* import("module") type syntax *)
+    | ( loc,
+        Generic
+          {
+            Generic.id =
+              Generic.Identifier.ImportTypeAnnot
+                (import_loc, { Generic.Identifier.argument; comments = import_comments }) as
+              import_id;
+            targs;
+            comments;
+          }
+      ) ->
+      let cx = env.cx in
+      let (m, import_ast) = convert_qualification cx "type-annotation" import_id in
+      let (t, targs) =
+        let reason = mk_reason (RType (OrdinaryName (qualified_name import_id))) loc in
+        mk_nominal_type env reason (m, targs)
+      in
+      ( (loc, t),
+        Generic
+          {
+            Generic.id =
+              (match import_ast with
+              | Generic.Identifier.ImportTypeAnnot import_type_ast ->
+                Generic.Identifier.ImportTypeAnnot import_type_ast
+              | _ ->
+                Generic.Identifier.ImportTypeAnnot
+                  ((import_loc, m), { Generic.Identifier.argument; comments = import_comments }));
             targs;
             comments;
           }
@@ -1670,6 +1704,48 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
       let t = Type_env.get_var ~lookup_mode cx name loc in
       (t, Unqualified ((loc, t), id_name))
+    | ImportTypeAnnot (loc, { argument = (arg_loc, arg_lit); comments }) ->
+      if not (Context.tslib_syntax cx) then (
+        Flow.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.(TSLibSyntax ImportTypeAnnotation))
+          );
+        let t = AnyT.at (AnyError None) loc in
+        (t, ImportTypeAnnot ((loc, t), { argument = (arg_loc, arg_lit); comments }))
+      ) else
+        (* Resolve the module *)
+        let { Ast.StringLiteral.value = module_name; _ } = arg_lit in
+        let mref = Flow_import_specifier.userland module_name in
+        let t =
+          try
+            let source_module =
+              Flow_js_utils.ImportExportUtils.get_module_type_or_any
+                cx
+                ~import_kind_for_untyped_import_validation:(Some ImportType)
+                (arg_loc, mref)
+            in
+            let reason = mk_reason (RModule mref) loc in
+            let namespace_symbol = FlowSymbol.mk_module_symbol ~name:mref ~def_loc:loc in
+            Flow_js_utils.ImportExportUtils.get_module_namespace_type
+              cx
+              reason
+              ~namespace_symbol
+              source_module
+          with
+          | Context.Require_not_found _ ->
+            Flow.add_output
+              cx
+              (Error_message.EBuiltinModuleLookupFailed
+                 {
+                   loc;
+                   name = Flow_import_specifier.display_userland mref;
+                   potential_generator = None;
+                 }
+              );
+            Type.AnyT.at (Type.AnyError (Some Type.UnresolvedName)) loc
+        in
+        (t, ImportTypeAnnot ((loc, t), { argument = (arg_loc, arg_lit); comments }))
 
   and convert_typeof cx reason_prefix =
     let open Ast.Type.Typeof.Target in

@@ -153,6 +153,7 @@ let rec visit_packed edge dep_edge file = function
   | P.Require { loc = _; index } -> edge_require edge dep_edge file index
   | P.ImportDynamic { loc = _; index } -> edge_import_ns edge dep_edge file index
   | P.ModuleRef { loc = _; index } -> edge_require edge dep_edge file index
+  | P.ImportTypeAnnot { loc = _; index } -> edge_import_ns edge dep_edge file index
 
 and visit_eval edge dep_edge file t op =
   visit_packed edge dep_edge file t;

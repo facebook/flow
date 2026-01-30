@@ -198,7 +198,8 @@ module Eval = struct
     | Eval (_, x, op) -> eval type_sig seen x op
     | Pattern index -> pattern type_sig seen (pattern_of_index type_sig index)
     | Require _
-    | ImportDynamic _ ->
+    | ImportDynamic _
+    | ImportTypeAnnot _ ->
       (* TODO: remember these cross-module aliases. if the remote thing matches,
          we can also suggest everything that aliases to it. *)
       Nothing

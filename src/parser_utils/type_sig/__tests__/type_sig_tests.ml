@@ -2033,6 +2033,73 @@ let%expect_test "import_dynamic" =
     Module refs:
     0. foo |}]
 
+let%expect_test "import_type_annot_basic" =
+  print_sig {|
+    export type T = import("./module");
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"T"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Module refs:
+    0. ./module
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = ImportTypeAnnot {loc = [1:16-34]; index = 0}} |}]
+
+let%expect_test "import_type_annot_qualified" =
+  print_sig {|
+    export type T = import("./module").ExportedType;
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"T"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Module refs:
+    0. ./module
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body =
+         (Eval ([1:35-47], ImportTypeAnnot {loc = [1:16-34]; index = 0}, (GetProp "ExportedType")))} |}]
+
+let%expect_test "import_type_annot_nested_qualified" =
+  print_sig {|
+    export type T = import("./module").Namespace.Type;
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"T"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Module refs:
+    0. ./module
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body =
+         (Eval ([1:45-49],
+            (Eval ([1:35-44], ImportTypeAnnot {loc = [1:16-34]; index = 0}, (GetProp "Namespace"))),
+            (GetProp "Type")))} |}]
+
 let%expect_test "enable_relay_integration" =
   print_sig ~enable_relay_integration:true {|
     module.exports = graphql`query foo {}`;

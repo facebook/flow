@@ -64,7 +64,8 @@ let rec mark_parsed ~locs_to_dirtify ~visit_loc = function
     mark_op ~locs_to_dirtify ~visit_loc op
   | P.Require { loc; mref }
   | P.ImportDynamic { loc; mref }
-  | P.ModuleRef { loc; mref } ->
+  | P.ModuleRef { loc; mref }
+  | P.ImportTypeAnnot { loc; mref } ->
     mark_loc ~visit_loc loc;
     mark_mref mref
 

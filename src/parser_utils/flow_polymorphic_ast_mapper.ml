@@ -1234,6 +1234,17 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       match git with
       | Unqualified i -> Unqualified (this#type_identifier_reference i)
       | Qualified qual -> Qualified (this#generic_qualified_identifier_type qual)
+      | ImportTypeAnnot (annot, import') ->
+        ImportTypeAnnot (this#on_type_annot annot, this#generic_identifier_import_type import')
+
+    method generic_identifier_import_type (import' : 'M Ast.Type.Generic.Identifier.import_type')
+        : 'N Ast.Type.Generic.Identifier.import_type' =
+      let open Ast.Type.Generic.Identifier in
+      let { argument; comments } = import' in
+      let (arg_loc, arg_lit) = argument in
+      let argument' = (this#on_loc_annot arg_loc, this#string_literal arg_lit) in
+      let comments' = this#syntax_opt comments in
+      { argument = argument'; comments = comments' }
 
     method generic_qualified_identifier_type (qual : ('M, 'T) Ast.Type.Generic.Identifier.qualified)
         : ('N, 'U) Ast.Type.Generic.Identifier.qualified =

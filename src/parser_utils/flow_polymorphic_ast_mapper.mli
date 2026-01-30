@@ -388,6 +388,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method generic_identifier_type :
       ('M, 'T) Ast.Type.Generic.Identifier.t -> ('N, 'U) Ast.Type.Generic.Identifier.t
 
+    method generic_identifier_import_type :
+      'M Ast.Type.Generic.Identifier.import_type' -> 'N Ast.Type.Generic.Identifier.import_type'
+
     method generic_qualified_identifier_type :
       ('M, 'T) Ast.Type.Generic.Identifier.qualified ->
       ('N, 'U) Ast.Type.Generic.Identifier.qualified

@@ -1712,6 +1712,7 @@ with type t = Impl.t = struct
         match id with
         | Type.Generic.Identifier.Unqualified id -> identifier id
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
+        | Type.Generic.Identifier.ImportTypeAnnot it -> import_type it
       in
       node ?comments "InterfaceExtends" loc [("id", id); ("typeParameters", option type_args targs)]
     and pattern =
@@ -2243,11 +2244,14 @@ with type t = Impl.t = struct
         ]
     and infer_type loc { Type.Infer.tparam; comments } =
       node ?comments "InferTypeAnnotation" loc [("typeParameter", type_param tparam)]
+    and import_type (loc, { Type.Generic.Identifier.argument; comments }) =
+      node ?comments "ImportType" loc [("argument", string_literal argument)]
     and generic_type_qualified_identifier (loc, { Type.Generic.Identifier.id; qualification }) =
       let qualification =
         match qualification with
         | Type.Generic.Identifier.Unqualified id -> identifier id
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
+        | Type.Generic.Identifier.ImportTypeAnnot it -> import_type it
       in
       node "QualifiedTypeIdentifier" loc [("qualification", qualification); ("id", identifier id)]
     and generic_type (loc, { Type.Generic.id; targs; comments }) =
@@ -2255,6 +2259,7 @@ with type t = Impl.t = struct
         match id with
         | Type.Generic.Identifier.Unqualified id -> identifier id
         | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
+        | Type.Generic.Identifier.ImportTypeAnnot it -> import_type it
       in
       node
         ?comments

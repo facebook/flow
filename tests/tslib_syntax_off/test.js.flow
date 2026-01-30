@@ -6,3 +6,6 @@ function named(a: string): string; // ERROR
 
 // Component without body
 component Button(props: { label: string }); // ERROR
+
+// Import type annotation
+type T = import("react").Component; // ERROR

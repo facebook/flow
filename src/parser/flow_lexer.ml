@@ -1792,6 +1792,7 @@ let type_token env lexbuf =
     | "empty" -> Token (env, T_EMPTY_TYPE)
     | "extends" -> Token (env, T_EXTENDS)
     | "false" -> Token (env, T_FALSE)
+    | "import" -> Token (env, T_IMPORT)
     | "interface" -> Token (env, T_INTERFACE)
     | "keyof" -> Token (env, T_KEYOF)
     | "mixed" -> Token (env, T_MIXED_TYPE)

@@ -1,0 +1,68 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:4:23
+
+Cannot use `import("./exports")` as a type. A name can be used as a type only if it refers to a type, interface, class,
+or enum definition. To get the type of a non-class value, use `typeof`. [value-as-type]
+
+   4| type ImportedModule = import('./exports'); // ERROR: value-as-type
+                            ^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:9:1
+
+Cannot cast `0` to `ImportedClass` because number [1] is incompatible with `MyClass` [2]. [incompatible-type]
+
+   test.js:9:1
+   9| 0 as ImportedClass; // ERROR: number ~> MyClass
+      ^ [1]
+
+References:
+   test.js:9:6
+   9| 0 as ImportedClass; // ERROR: number ~> MyClass
+           ^^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:14:2
+
+Cannot cast object literal to `ImportedType` because property `count` is missing in object literal [1] but exists in
+`MyType` [2]. [incompatible-type]
+
+   test.js:14:2
+   14| ({name: "test"}) as ImportedType; // ERROR: missing count
+        ^^^^^^^^^^^^^^ [1]
+
+References:
+   test.js:14:21
+   14| ({name: "test"}) as ImportedType; // ERROR: missing count
+                           ^^^^^^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:19:1
+
+Cannot cast `0` to `Inner` because number [1] is incompatible with `MyClass` [2]. [incompatible-type]
+
+   test.js:19:1
+   19| 0 as Inner; // ERROR: number ~> Inner
+       ^ [1]
+
+References:
+   test.js:19:6
+   19| 0 as Inner; // ERROR: number ~> Inner
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:24:1
+
+Cannot cast `0` to `T` because number [1] is incompatible with boolean [2]. [incompatible-type]
+
+   test.js:24:1
+   24| 0 as T; // ERROR: number ~> boolean
+       ^ [1]
+
+References:
+   test.js:24:6
+   24| 0 as T; // ERROR: number ~> boolean
+            ^ [2]
+
+
+
+Found 5 errors

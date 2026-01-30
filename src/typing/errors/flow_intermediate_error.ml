@@ -5117,6 +5117,7 @@ let to_printable_error :
       let kind_str =
         match kind with
         | DeclarationWithoutDeclare -> "Declaration without `declare`"
+        | ImportTypeAnnotation -> "`import(\"module\")` type syntax"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

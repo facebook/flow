@@ -332,6 +332,13 @@ class requires_calculator ~file_key ~ast ~opts =
       this#add_require (Require { source = (loc, mref); require_loc = loc; bindings = None; prefix });
       super#module_ref_literal loc lit
 
+    method! generic_identifier_import_type (import' : Loc.t Ast.Type.Generic.Identifier.import_type')
+        =
+      let open Ast.Type.Generic.Identifier in
+      let { argument = (loc, { Ast.StringLiteral.value = name; _ }); comments = _ } = import' in
+      this#add_require (Import0 { source = (loc, name) });
+      import'
+
     method! tagged_template loc (expr : ('loc, 'loc) Ast.Expression.TaggedTemplate.t) =
       let open Ast.Expression.TaggedTemplate in
       let { tag; quasi; comments = _ } = expr in

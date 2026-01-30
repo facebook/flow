@@ -209,6 +209,7 @@ class ['loc] trailing_comments_remover ~after_pos =
           git
         else
           Qualified (loc, { qualified with id = id' })
+      | ImportTypeAnnot _ -> git
 
     method! import _loc expr =
       let open Ast.Expression.Import in

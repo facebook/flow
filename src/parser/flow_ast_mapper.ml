@@ -1587,6 +1587,23 @@ class ['loc] mapper =
       match git with
       | Unqualified i -> id this#type_identifier_reference i git (fun i -> Unqualified i)
       | Qualified i -> id this#generic_qualified_identifier_type i git (fun i -> Qualified i)
+      | ImportTypeAnnot (annot, import') ->
+        let import'' = this#generic_identifier_import_type import' in
+        if import' == import'' then
+          git
+        else
+          ImportTypeAnnot (annot, import'')
+
+    method generic_identifier_import_type (import' : 'loc Ast.Type.Generic.Identifier.import_type')
+        =
+      let open Ast.Type.Generic.Identifier in
+      let { argument; comments } = import' in
+      let argument' = map_loc this#string_literal argument in
+      let comments' = this#syntax_opt comments in
+      if argument == argument' && comments == comments' then
+        import'
+      else
+        { argument = argument'; comments = comments' }
 
     method generic_qualified_identifier_type qual =
       let open Ast.Type.Generic.Identifier in

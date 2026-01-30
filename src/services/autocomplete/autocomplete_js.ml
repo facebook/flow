@@ -86,7 +86,8 @@ let loc_of_qualification =
   let open Flow_ast.Type.Generic.Identifier in
   function
   | Unqualified (loc, _)
-  | Qualified (_, { id = (loc, _); _ }) ->
+  | Qualified (_, { id = (loc, _); _ })
+  | ImportTypeAnnot (loc, _) ->
     loc
 
 let loc_of_typeof =

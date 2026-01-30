@@ -79,7 +79,8 @@ class type_reference_searcher add_reference =
       (match git with
       | Unqualified id
       | Qualified (_, { id; _ }) ->
-        add_reference id);
+        add_reference id
+      | ImportTypeAnnot _ -> ());
       super#generic_identifier_type git
   end
 

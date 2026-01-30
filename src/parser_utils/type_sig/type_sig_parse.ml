@@ -68,6 +68,10 @@ type 'loc parsed =
       loc: 'loc loc_node;
       mref: module_ref_node;
     }
+  | ImportTypeAnnot of {
+      loc: 'loc loc_node;
+      mref: module_ref_node;
+    }
 
 and 'loc tyname =
   | Unqualified of 'loc ref
@@ -2421,6 +2425,32 @@ and nominal_type opts scope tbls xs loc name = function
     let targs = List.map (annot opts scope tbls xs) targs in
     TyRefApp { loc; name; targs }
 
+and get_import_type_base =
+  let module G = T.Generic in
+  let rec loop chain = function
+    | G.Identifier.ImportTypeAnnot (loc, import_type') -> Some (loc, import_type', chain)
+    | G.Identifier.Qualified (_, { G.Identifier.qualification; id }) ->
+      let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+      loop ((id_loc, name) :: chain) qualification
+    | G.Identifier.Unqualified _ -> None
+  in
+  loop []
+
+(* Handles import("module") type expressions by building ImportTypeAnnot with Eval chain *)
+and handle_import_type tbls import_loc import_type' chain =
+  let import_loc = push_loc tbls import_loc in
+  let { T.Generic.Identifier.argument = (_, { Ast.StringLiteral.value; _ }); _ } = import_type' in
+  let mref = Flow_import_specifier.userland value in
+  let mref = push_module_ref tbls mref in
+  let base = ImportTypeAnnot { loc = import_loc; mref } in
+  (* Build Eval chain for property access: import("mod").A.B *)
+  List.fold_left
+    (fun t (id_loc, name) ->
+      let id_loc = push_loc tbls id_loc in
+      Eval (id_loc, t, GetProp name))
+    base
+    chain
+
 and generic_id =
   let rec finish tbls tyname = function
     | [] -> Ok tyname
@@ -2446,27 +2476,55 @@ and generic_id =
       else
         let tyname = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
         finish tbls tyname chain
+    | G.Identifier.ImportTypeAnnot (loc, _) ->
+      let loc = push_loc tbls loc in
+      Error loc
 
 and generic opts scope tbls xs loc g =
   let module G = T.Generic in
   let { G.id; targs; comments = _ } = g in
-  match generic_id scope tbls xs [] id with
-  | Ok tyname -> nominal_type opts scope tbls xs loc tyname targs
-  | Error loc -> Err (loc, CheckError)
+  (* First check if the generic identifier has an ImportType base *)
+  match get_import_type_base id with
+  | Some (import_loc, import_type', chain) ->
+    let t = handle_import_type tbls import_loc import_type' chain in
+    (match targs with
+    | None -> t
+    | Some (targs_loc, _) ->
+      let targs_loc = push_loc tbls targs_loc in
+      Err (targs_loc, CheckError))
+  | None ->
+    (match generic_id scope tbls xs [] id with
+    | Ok tyname -> nominal_type opts scope tbls xs loc tyname targs
+    | Error loc -> Err (loc, CheckError))
 
 and maybe_special_generic opts scope tbls xs loc g =
   let module G = T.Generic in
   let { G.id; targs; comments = _ } = g in
-  match id with
-  | G.Identifier.Qualified (qloc, { G.Identifier.qualification; id }) ->
-    let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-    let qloc = push_loc tbls qloc in
-    (match generic_id scope tbls xs [(qloc, id_loc, name)] qualification with
-    | Ok tyname -> nominal_type opts scope tbls xs loc tyname targs
-    | Error loc -> Err (loc, CheckError))
-  | G.Identifier.Unqualified (ref_loc, { Ast.Identifier.name; comments = _ }) ->
-    let ref_loc = push_loc tbls ref_loc in
-    maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc name
+  (* First check if the generic identifier has an ImportType base *)
+  match get_import_type_base id with
+  | Some (import_loc, import_type', chain) ->
+    (* Handle import("module") or import("module").Prop type expressions *)
+    let t = handle_import_type tbls import_loc import_type' chain in
+    (match targs with
+    | None -> t
+    | Some (targs_loc, _) ->
+      let targs_loc = push_loc tbls targs_loc in
+      Err (targs_loc, CheckError))
+  | None ->
+    (* No ImportType base, proceed with normal handling *)
+    (match id with
+    | G.Identifier.Qualified (qloc, { G.Identifier.qualification; id }) ->
+      let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
+      let qloc = push_loc tbls qloc in
+      (match generic_id scope tbls xs [(qloc, id_loc, name)] qualification with
+      | Ok tyname -> nominal_type opts scope tbls xs loc tyname targs
+      | Error loc -> Err (loc, CheckError))
+    | G.Identifier.Unqualified (ref_loc, { Ast.Identifier.name; comments = _ }) ->
+      let ref_loc = push_loc tbls ref_loc in
+      maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc name
+    | G.Identifier.ImportTypeAnnot _ ->
+      (* This case is handled above by get_import_type_base, should not reach here *)
+      failwith "ImportTypeAnnot should have been handled by get_import_type_base")
 
 and maybe_special_unqualified_generic opts scope tbls xs loc targs ref_loc =
   let open Ast.Type.TypeArgs in
@@ -4082,6 +4140,13 @@ let rec member_expr_of_generic_id scope tbls chain =
       (fun t (loc, name) -> Eval (loc, t, GetProp name))
       (val_ref ~type_only:true scope ref_loc name)
       chain
+  | G.Identifier.ImportTypeAnnot (import_loc, import_type') ->
+    let import_loc = push_loc tbls import_loc in
+    let { G.Identifier.argument = (_, { Ast.StringLiteral.value; _ }); _ } = import_type' in
+    let mref = Flow_import_specifier.userland value in
+    let mref = push_module_ref tbls mref in
+    let base = ImportTypeAnnot { loc = import_loc; mref } in
+    List.fold_left (fun t (loc, name) -> Eval (loc, t, GetProp name)) base chain
 
 let declare_class_def =
   let module Acc = DeclareClassAcc in

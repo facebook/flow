@@ -268,12 +268,20 @@ and Type : sig
       type ('M, 'T) t =
         | Unqualified of ('M, 'T) Identifier.t
         | Qualified of ('M, 'T) qualified
+        | ImportTypeAnnot of ('M, 'T) import_type
 
       and ('M, 'T) qualified = 'M * ('M, 'T) qualified'
 
       and ('M, 'T) qualified' = {
         qualification: ('M, 'T) t;
         id: ('M, 'T) Identifier.t;
+      }
+
+      and ('M, 'T) import_type = 'T * 'M import_type'
+
+      and 'M import_type' = {
+        argument: 'M * 'M StringLiteral.t;
+        comments: ('M, unit) Syntax.t option;
       }
       [@@deriving show]
     end

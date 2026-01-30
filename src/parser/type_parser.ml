@@ -421,6 +421,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             { Type.Interface.extends; body; comments = Flow_ast_utils.mk_comments_opt ~leading () })
         env
     | T_TYPEOF -> typeof env
+    | T_IMPORT when Peek.ith_token ~i:1 env = T_LPAREN -> import_type_generic env
     | T_LBRACKET -> tuple env
     | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
       with_loc
@@ -1930,8 +1931,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
 
   and generic env = raw_generic_with_identifier env (type_identifier env)
 
-  and raw_generic_with_identifier =
-    let rec identifier env (q_loc, qualification) =
+  (* Shared recursive helper to build qualified chain from any starting qualification *)
+  and generic_identifier_with_qualification env start_loc initial_qualification =
+    let rec loop (q_loc, qualification) =
       if Peek.token env = T_PERIOD && Peek.ith_is_type_identifier ~i:1 env then
         let (loc, q) =
           with_loc
@@ -1943,30 +1945,70 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             env
         in
         let qualification = Type.Generic.Identifier.Qualified (loc, q) in
-        identifier env (loc, qualification)
+        loop (loc, qualification)
       else
         (q_loc, qualification)
     in
-    fun env id ->
-      with_loc
-        ~start_loc:(fst id)
-        (fun env ->
-          let id = (fst id, Type.Generic.Identifier.Unqualified id) in
-          let id =
-            let (_id_loc, id) = identifier env id in
-            if Peek.token env <> T_LESS_THAN then
-              id
-            else
-              let { remove_trailing; _ } = trailing_and_remover env in
-              remove_trailing id (fun remover id -> remover#generic_identifier_type id)
-          in
-          let targs = type_args env in
-          { Type.Generic.id; targs; comments = None })
-        env
+    let id =
+      let (_id_loc, id) = loop (start_loc, initial_qualification) in
+      if Peek.token env <> T_LESS_THAN then
+        id
+      else
+        let { remove_trailing; _ } = trailing_and_remover env in
+        remove_trailing id (fun remover id -> remover#generic_identifier_type id)
+    in
+    let targs = type_args env in
+    { Type.Generic.id; targs; comments = None }
+
+  and raw_generic_with_identifier env id =
+    with_loc
+      ~start_loc:(fst id)
+      (fun env ->
+        let initial = Type.Generic.Identifier.Unqualified id in
+        generic_identifier_with_qualification env (fst id) initial)
+      env
 
   and generic_type_with_identifier env id =
     let (loc, generic) = raw_generic_with_identifier env id in
     (loc, Type.Generic generic)
+
+  and import_type_generic env =
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        let start_loc = Peek.loc env in
+        Eat.token env;
+        (* consume 'import' *)
+        Expect.token env T_LPAREN;
+
+        (* Parse the module specifier string *)
+        let argument =
+          match Peek.token env with
+          | T_STRING (loc, value, raw, octal) ->
+            if octal then strict_error env Parse_error.StrictOctalLiteral;
+            Eat.token env;
+            (loc, { Ast.StringLiteral.value; raw; comments = None })
+          | _ ->
+            error_unexpected ~expected:"string literal" env;
+            (Peek.loc env, { Ast.StringLiteral.value = ""; raw = "\"\""; comments = None })
+        in
+        let rparen_loc = Peek.loc env in
+        Expect.token env T_RPAREN;
+
+        let import_loc = Loc.btwn start_loc rparen_loc in
+        let initial =
+          Type.Generic.Identifier.ImportTypeAnnot
+            ( import_loc,
+              {
+                Type.Generic.Identifier.argument;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              }
+            )
+        in
+
+        (* Reuse shared logic for qualified chain and type args *)
+        Type.Generic (generic_identifier_with_qualification env import_loc initial))
+      env
 
   and function_return_annotation_opt env =
     match Peek.token env with

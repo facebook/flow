@@ -2336,6 +2336,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           match git with
           | Unqualified i -> ignore @@ this#type_identifier_reference i
           | Qualified (_, { qualification; _ }) -> loop qualification
+          | ImportTypeAnnot _ -> ()
         in
         loop git;
         git

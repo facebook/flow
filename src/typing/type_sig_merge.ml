@@ -617,6 +617,10 @@ let rec merge ?(as_const = false) ?(const_decl = false) env file = function
     let reason = Reason.(mk_reason RModuleReference loc) in
     let t = Flow_js_utils.lookup_builtin_typeapp file.cx reason "$Flow$ModuleRef" [t] in
     t
+  | Pack.ImportTypeAnnot { loc; index } ->
+    let (mref, _) = Module_refs.get file.dependencies index in
+    let ns_reason = Reason.(mk_reason (RModule mref) loc) in
+    import_ns file ns_reason (Flow_import_specifier.unwrap_userland mref) loc index
 
 and merge_annot env file = function
   | Any loc -> Type.AnyT.at Type.AnnotatedAny loc

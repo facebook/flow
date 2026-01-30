@@ -4547,6 +4547,11 @@ and type_generic ~opts loc { Ast.Type.Generic.id; targs; comments } =
     | Qualified (loc, { qualification; id }) ->
       source_location_with_comments
         (loc, fuse [generic_identifier qualification; Atom "."; identifier id])
+    | ImportTypeAnnot (loc, { argument = (arg_loc, arg); comments }) ->
+      layout_node_with_comments_opt
+        loc
+        comments
+        (fuse [Atom "import"; Atom "("; string_literal ~opts arg_loc arg; Atom ")"])
   in
   layout_node_with_comments_opt loc comments
   @@ fuse [generic_identifier id; option (type_args ~opts) targs]

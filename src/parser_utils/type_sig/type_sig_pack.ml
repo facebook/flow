@@ -134,6 +134,10 @@ type 'loc packed =
       loc: 'loc;
       index: Module_refs.index;
     }
+  | ImportTypeAnnot of {
+      loc: 'loc;
+      index: Module_refs.index;
+    }
 
 and 'loc packed_value = ('loc, 'loc packed) value
 
@@ -265,6 +269,10 @@ let rec pack_parsed cx = function
     let loc = pack_loc loc in
     let index = Module_refs.index_exn mref in
     ModuleRef { loc; index }
+  | P.ImportTypeAnnot { loc; mref } ->
+    let loc = pack_loc loc in
+    let index = Module_refs.index_exn mref in
+    ImportTypeAnnot { loc; index }
 
 and pack_tyapp cx loc name targs =
   let loc = pack_loc loc in

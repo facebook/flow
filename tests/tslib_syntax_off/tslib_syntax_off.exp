@@ -22,5 +22,22 @@ Declaration without `declare` is not enabled. [unsupported-syntax]
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:11:10
 
-Found 3 errors
+`import("module")` type syntax is not enabled. [unsupported-syntax]
+
+   11| type T = import("react").Component; // ERROR
+                ^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:11:10
+
+Cannot use `Component` as a type because it is an `any`-typed value. Type `Component` properly, so it is no longer
+`any`-typed, to use it as an annotation. [value-as-type]
+
+   11| type T = import("react").Component; // ERROR
+                ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors

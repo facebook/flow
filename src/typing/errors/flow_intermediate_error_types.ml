@@ -110,7 +110,9 @@ type unsupported_syntax =
   | Records
   | TSLibSyntax of ts_lib_syntax_kind
 
-and ts_lib_syntax_kind = DeclarationWithoutDeclare
+and ts_lib_syntax_kind =
+  | DeclarationWithoutDeclare
+  | ImportTypeAnnotation
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list
