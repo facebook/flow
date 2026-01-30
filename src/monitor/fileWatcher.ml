@@ -441,6 +441,18 @@ end = struct
         | None -> failwith "Watchman was not initialized"
         | Some env -> env
 
+      method private log_watch_spec =
+        let file_options = Options.file_options server_options in
+        let extensions = File_watcher_spec.get_suffixes file_options in
+        let file_names = File_watcher_spec.get_file_names server_options in
+        let include_dirs = File_watcher_spec.get_include_dirs_absolute server_options in
+        Hh_logger.info
+          "Watchman connection established with watch_spec: extensions=[%s], file_names=[%s], include_dirs=[%s], exclude_dirs=[%s]"
+          (String.concat ", " extensions)
+          (String.concat ", " file_names)
+          (String.concat ", " include_dirs)
+          (String.concat ", " File_watcher_spec.exclude_dirs)
+
       method start_init =
         let { FlowServerMonitorOptions.debug; defer_states; sync_timeout } = watchman_options in
         let file_options = Options.file_options server_options in
@@ -471,6 +483,7 @@ end = struct
 
           match watchman with
           | Ok (watchman, files) ->
+            if watchman_options.FlowServerMonitorOptions.debug then self#log_watch_spec;
             let (waiter, wakener) = Lwt.task () in
             let new_env =
               {
@@ -727,6 +740,20 @@ end = struct
         | None -> failwith "EdenFS watcher was not initialized"
         | Some env -> env
 
+      method private log_watch_spec =
+        (* Log absolute paths for consistency with Watchman's log format.
+           Note: The actual watch_spec passed to Rust uses relative paths. *)
+        let file_options = Options.file_options server_options in
+        let extensions = File_watcher_spec.get_suffixes file_options in
+        let file_names = File_watcher_spec.get_file_names server_options in
+        let include_dirs = File_watcher_spec.get_include_dirs_absolute server_options in
+        Hh_logger.info
+          "EdenFS connection established with watch_spec: extensions=[%s], file_names=[%s], include_dirs=[%s], exclude_dirs=[%s]"
+          (String.concat ", " extensions)
+          (String.concat ", " file_names)
+          (String.concat ", " include_dirs)
+          (String.concat ", " File_watcher_spec.exclude_dirs)
+
       method start_init =
         let {
           FlowServerMonitorOptions.edenfs_debug;
@@ -757,6 +784,7 @@ end = struct
 
           match result with
           | Ok (instance, _clock) ->
+            if edenfs_options.FlowServerMonitorOptions.edenfs_debug then self#log_watch_spec;
             let (waiter, wakener) = Lwt.task () in
             let new_env =
               {
