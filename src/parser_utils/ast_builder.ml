@@ -93,7 +93,7 @@ module Types = struct
       }
     )
 
-  let return_type_annotation t = Ast.Type.Function.TypeAnnotation t
+  let return_type_annotation t = Ast.Type.Function.Available t
 
   let component_renders_annotation ?(loc = Loc.none) variant argument =
     Ast.Type.AvailableRenders
@@ -303,8 +303,9 @@ module Functions = struct
     let params = params_of_type params in
     let return =
       match return with
-      | Ast.Type.Function.TypeAnnotation t -> Ast.Function.ReturnAnnot.Available (Loc.none, t)
+      | Ast.Type.Function.Available t -> Ast.Function.ReturnAnnot.Available (Loc.none, t)
       | Ast.Type.Function.TypeGuard g -> Ast.Function.ReturnAnnot.TypeGuard (Loc.none, g)
+      | Ast.Type.Function.Missing loc -> Ast.Function.ReturnAnnot.Missing loc
     in
     Base.Option.map params ~f:(fun params ->
         let body =

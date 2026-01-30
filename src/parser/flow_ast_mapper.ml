@@ -1400,8 +1400,9 @@ class ['loc] mapper =
         (return : ('loc, 'loc) Ast.Type.Function.return_annotation) =
       let open Ast.Type.Function in
       match return with
-      | TypeAnnotation t -> id this#type_ t return (fun rt -> TypeAnnotation rt)
+      | Available t -> id this#type_ t return (fun rt -> Available rt)
       | TypeGuard g -> id this#type_guard g return (fun tg -> TypeGuard tg)
+      | Missing _ -> return
 
     method function_type _loc (ft : ('loc, 'loc) Ast.Type.Function.t) =
       let open Ast.Type.Function in

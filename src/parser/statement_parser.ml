@@ -1363,9 +1363,9 @@ module Statement
               let return = Type._type env in
               let has_predicate = Peek.token env = T_CHECKS in
               if has_predicate && effect_ <> Function.Hook then
-                Ast.Type.Function.TypeAnnotation (type_remove_trailing env return)
+                Ast.Type.Function.Available (type_remove_trailing env return)
               else
-                Ast.Type.Function.TypeAnnotation return
+                Ast.Type.Function.Available return
           in
           Eat.pop_lex_mode env;
           Ast.Type.(Function { Function.params; return; tparams; comments = None; effect_ }))

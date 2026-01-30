@@ -2329,9 +2329,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
   and convert_return_annotation ~meth_kind env params fparams return =
     let open T in
     match return with
-    | Function.TypeAnnotation t_ast ->
+    | Function.Available t_ast ->
       let (((_, t'), _) as t_ast') = convert env t_ast in
-      (t', Function.TypeAnnotation t_ast', None)
+      (t', Function.Available t_ast', None)
     | Function.TypeGuard
         ( gloc,
           {
@@ -2410,6 +2410,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         Tast_utils.error_mapper#function_type_return_annotation return,
         None
       )
+    | Function.Missing loc ->
+      Flow_js_utils.add_output
+        env.cx
+        (Error_message.EUnsupportedSyntax
+           (loc, Flow_intermediate_error_types.DeclareClassMethodMissingReturnType)
+        );
+      (AnyT.at (AnyError None) loc, Function.Missing loc, None)
 
   and mk_method_func_sig =
     let add_param env x param =

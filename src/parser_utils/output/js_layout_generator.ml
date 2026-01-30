@@ -4285,8 +4285,9 @@ and type_function_params ~opts (loc, { Ast.Type.Function.Params.this_; params; r
   @@ fuse [wrap_and_indent (Atom "(", Atom ")") params_layout]
 
 and type_function_return ~opts = function
-  | Ast.Type.Function.TypeAnnotation t -> type_ ~opts t
+  | Ast.Type.Function.Available t -> type_ ~opts t
   | Ast.Type.Function.TypeGuard guard -> type_guard ~opts ~needs_parens:false guard
+  | Ast.Type.Function.Missing _ -> Empty
 
 and type_function
     ~opts ~sep loc { Ast.Type.Function.params; return; tparams; effect_; comments = func_comments }

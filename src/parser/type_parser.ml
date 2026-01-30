@@ -1109,7 +1109,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     if is_start_of_type_guard env then
       Type.Function.TypeGuard (type_guard env)
     else
-      Type.Function.TypeAnnotation (_type env)
+      Type.Function.Available (_type env)
 
   and type_guard env =
     let parse_is_type_guard env =
@@ -1155,8 +1155,14 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         ~start_loc
         (fun env ->
           let params = function_param_list env in
-          Expect.token env T_COLON;
-          let return = function_return_type env in
+          let return =
+            if Peek.token env <> T_COLON then
+              Type.Function.Missing (Peek.loc_skip_lookahead env)
+            else (
+              Expect.token env T_COLON;
+              function_return_type env
+            )
+          in
           { Type.Function.params; return; tparams; comments = None; effect_ = Function.Arbitrary })
         env
     in

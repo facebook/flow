@@ -1,24 +1,12 @@
 {
   "errors":[
     {
-      "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":25}},
-      "message":"Unexpected token `}`, expected the token `:`"
-    },
-    {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected a type"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected the token `,`"
+      "message":"Unexpected end of input, expected the token `{`"
     },
     {
       "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
       "message":"Unexpected end of input, expected the token `}`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-      "message":"Unexpected end of input, expected the token `{`"
     }
   ],
   "type":"Program",
@@ -44,25 +32,21 @@
         "range":[26,26],
         "body":[]
       },
-      "async":false,
-      "generator":false,
-      "predicate":null,
-      "expression":false,
       "returnType":{
         "type":"TypeAnnotation",
-        "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":2,"column":0}},
-        "range":[14,26],
+        "loc":{"source":null,"start":{"line":1,"column":14},"end":{"line":1,"column":25}},
+        "range":[14,25],
         "typeAnnotation":{
           "type":"ObjectTypeAnnotation",
-          "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":2,"column":0}},
-          "range":[16,26],
+          "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":25}},
+          "range":[16,25],
           "inexact":false,
           "exact":false,
           "properties":[
             {
               "type":"ObjectTypeProperty",
-              "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":25}},
-              "range":[18,25],
+              "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":23}},
+              "range":[18,23],
               "key":{
                 "type":"Identifier",
                 "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":21}},
@@ -73,17 +57,13 @@
               },
               "value":{
                 "type":"FunctionTypeAnnotation",
-                "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":25}},
-                "range":[18,25],
+                "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":23}},
+                "range":[18,23],
                 "params":[],
-                "this":null,
-                "returnType":{
-                  "type":"AnyTypeAnnotation",
-                  "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
-                  "range":[26,26]
-                },
+                "returnType":null,
                 "rest":null,
-                "typeParameters":null
+                "typeParameters":null,
+                "this":null
               },
               "method":true,
               "optional":false,
@@ -98,7 +78,11 @@
           "internalSlots":[]
         }
       },
-      "typeParameters":null
+      "typeParameters":null,
+      "async":false,
+      "generator":false,
+      "predicate":null,
+      "expression":false
     }
   ],
   "comments":[]

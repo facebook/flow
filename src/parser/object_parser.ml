@@ -916,11 +916,11 @@ module Object
           let return_annot =
             match return with
             | Function.ReturnAnnot.Available (_, (ret_loc, t)) ->
-              Ast.Type.Function.TypeAnnotation (ret_loc, t)
+              Ast.Type.Function.Available (ret_loc, t)
             | Function.ReturnAnnot.TypeGuard (_, tg) -> Ast.Type.Function.TypeGuard tg
             | Function.ReturnAnnot.Missing _ ->
               (* Should not happen - already checked above *)
-              Ast.Type.Function.TypeAnnotation (Loc.none, Ast.Type.Any None)
+              Ast.Type.Function.Available (Loc.none, Ast.Type.Any None)
           in
           let fn_type =
             Ast.Type.Function

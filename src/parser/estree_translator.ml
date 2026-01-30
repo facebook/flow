@@ -2025,7 +2025,8 @@ with type t = Impl.t = struct
     and never_type loc comments = node ?comments "NeverTypeAnnotation" loc []
     and undefined_type loc comments = node ?comments "UndefinedTypeAnnotation" loc []
     and return_annotation = function
-      | Ast.Type.Function.TypeAnnotation t -> _type t
+      | Ast.Type.Function.Missing _ -> null
+      | Ast.Type.Function.Available t -> _type t
       | Ast.Type.Function.TypeGuard g -> type_guard g
     and type_guard (loc, { Ast.Type.TypeGuard.kind; guard = (x, t); comments }) =
       let kind =

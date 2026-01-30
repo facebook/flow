@@ -5138,6 +5138,8 @@ let to_printable_error :
     | MessageUnsupportedSyntax PredicateDeclarationAnonymousParameters ->
       [text "Predicate function declarations cannot use anonymous "; text "function parameters."]
     | MessageUnsupportedSyntax Records -> [text "Records are not enabled."]
+    | MessageUnsupportedSyntax DeclareClassMethodMissingReturnType ->
+      [text "Return type annotation is required for "; code "declare class"; text " methods."]
     | MessageUnsupportedSyntax (TSLibSyntax kind) ->
       let kind_str =
         match kind with

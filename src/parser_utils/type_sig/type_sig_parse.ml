@@ -1865,7 +1865,7 @@ and type_guard_opt opts scope tbls xs guard =
     None
 
 and return_annot opts scope tbls xs = function
-  | T.Function.TypeAnnotation r -> (annot opts scope tbls xs r, None)
+  | T.Function.Available r -> (annot opts scope tbls xs r, None)
   | T.Function.TypeGuard ((loc, _) as g) ->
     let loc = push_loc tbls loc in
     let guard =
@@ -1875,6 +1875,9 @@ and return_annot opts scope tbls xs = function
       | None -> None
     in
     (Annot (Boolean loc), guard)
+  | T.Function.Missing loc ->
+    let loc = push_loc tbls loc in
+    (Annot (Any loc), None)
 
 and convert_effect opts effect_ fun_loc_opt name_opt =
   match (effect_, fun_loc_opt) with

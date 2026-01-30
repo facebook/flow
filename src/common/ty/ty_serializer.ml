@@ -307,7 +307,7 @@ let type_ options =
   and fun_return_t = function
     | ReturnType t ->
       let t = type_ t in
-      Ast.Type.Function.TypeAnnotation t
+      Ast.Type.Function.Available t
     | TypeGuard (impl, x, t) ->
       let kind =
         if impl then

@@ -214,7 +214,8 @@ and Type : sig
     }
 
     and ('M, 'T) return_annotation =
-      | TypeAnnotation of ('M, 'T) Type.t
+      | Missing of 'M
+      | Available of ('M, 'T) Type.t
       | TypeGuard of ('M, 'T) Type.TypeGuard.t
     [@@deriving show]
   end

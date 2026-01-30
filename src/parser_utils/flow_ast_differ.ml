@@ -3046,11 +3046,16 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (ret_annot_2 : (Loc.t, Loc.t) Ast.Type.Function.return_annotation) =
     let module F = Ast.Type.Function in
     match (ret_annot_1, ret_annot_2) with
-    | (F.TypeAnnotation t1, F.TypeAnnotation t2) -> type_ t1 t2
+    | (F.Missing _, F.Missing _) -> []
+    | (F.Available (loc1, t1), F.Missing _) -> [delete loc1 (Type (loc1, t1))]
+    | (F.TypeGuard (loc1, grd1), F.Missing _) -> [delete loc1 (TypeGuard (loc1, grd1))]
+    | (F.Missing loc1, F.Available t2) -> [(loc1, insert ~sep:None [Type t2])]
+    | (F.Missing loc1, F.TypeGuard grd2) -> [(loc1, insert ~sep:None [TypeGuard grd2])]
+    | (F.Available t1, F.Available t2) -> type_ t1 t2
     | (F.TypeGuard grd1, F.TypeGuard grd2) -> type_guard grd1 grd2
-    | (F.TypeGuard (loc1, grd1), F.TypeAnnotation (loc2, t2)) ->
+    | (F.TypeGuard (loc1, grd1), F.Available (loc2, t2)) ->
       [replace loc1 (TypeGuard (loc1, grd1)) (Type (loc2, t2))]
-    | (F.TypeAnnotation (loc1, t1), F.TypeGuard (loc2, grd2)) ->
+    | (F.Available (loc1, t1), F.TypeGuard (loc2, grd2)) ->
       [replace loc1 (Type (loc1, t1)) (TypeGuard (loc2, grd2))]
   and function_type
       (loc : Loc.t)

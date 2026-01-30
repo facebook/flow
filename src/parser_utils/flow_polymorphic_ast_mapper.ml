@@ -1067,8 +1067,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Type.Function.return_annotation =
       let open Ast.Type.Function in
       match ret_annot with
-      | TypeAnnotation t -> TypeAnnotation (this#type_ t)
+      | Available t -> Available (this#type_ t)
       | TypeGuard g -> TypeGuard (this#type_guard g)
+      | Missing loc -> Missing (this#on_loc_annot loc)
 
     method function_type (ft : ('M, 'T) Ast.Type.Function.t) : ('N, 'U) Ast.Type.Function.t =
       let open Ast.Type.Function in

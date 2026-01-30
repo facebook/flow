@@ -108,6 +108,7 @@ type unsupported_syntax =
   | DeclareGlobal
   | NonnullAssertion
   | Records
+  | DeclareClassMethodMissingReturnType
   | TSLibSyntax of ts_lib_syntax_kind
 
 and ts_lib_syntax_kind =

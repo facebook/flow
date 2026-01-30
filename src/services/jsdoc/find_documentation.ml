@@ -212,8 +212,9 @@ class jsdoc_documentation_searcher find =
       let value_loc =
         match value with
         | Init (value_loc, _)
-        | Get (_, Ast.Type.Function.{ return = TypeAnnotation (value_loc, _); _ })
+        | Get (_, Ast.Type.Function.{ return = Available (value_loc, _); _ })
         | Get (_, Ast.Type.Function.{ return = TypeGuard (value_loc, _); _ })
+        | Get (_, Ast.Type.Function.{ return = Missing value_loc; _ })
         | Set (value_loc, _) ->
           value_loc
       in
