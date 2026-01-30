@@ -329,6 +329,15 @@ object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
          ^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------------- readonly_variance.js:24:11
+
+While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
+object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+
+   24| type T = [readonly foo: number]; // ERROR
+                 ^^^^^^^^
+
+
 Error ---------------------------------------------------------------------------------------------- readonlymap.js:2:14
 
 Cannot assign `3` to `x` because number [1] is incompatible with `$ReadOnlyMap` [2]. [incompatible-type]
@@ -728,4 +737,4 @@ types. [ts-syntax]
 
 
 
-Found 82 errors
+Found 83 errors

@@ -35,3 +35,9 @@ interface ValidI {
 }
 
 const readonly = 1;
+
+type Tuple1 = [readonly foo: string];
+type Tuple2 = [readonly a: string, readonly b: number];
+type Tuple3 = [+a: string, readonly b: number, -c: boolean];
+type Tuple4 = [readonly a?: string];
+type TupleRegressionTest = [readonly: string]

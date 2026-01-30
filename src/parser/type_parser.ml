@@ -713,6 +713,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 (* `-1` is a valid type but not a valid tuple label.
                    But `-foo` is only valid as a tuple label. *)
                 maybe_variance env
+              | T_READONLY when Peek.ith_is_identifier ~i:1 env ->
+                maybe_variance ~parse_readonly:true env
               | _ -> None
             in
             match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with

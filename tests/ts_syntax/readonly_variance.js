@@ -20,3 +20,5 @@ interface I {
 }
 
 const readonly = 1; // OK
+
+type T = [readonly foo: number]; // ERROR
