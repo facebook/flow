@@ -62,6 +62,8 @@ let yojson_of_standalone_get_changes_since_telemetry _ = failwith "not implement
 type watch_spec = {
   extensions: string list;
   file_names: string list;
+  include_dirs: string list;
+  exclude_dirs: string list;
 }
 
 type settings = {

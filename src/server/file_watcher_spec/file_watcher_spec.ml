@@ -15,7 +15,10 @@
     File watchers (Watchman suffix matching, Rust Path::extension()) only match
     the last extension part, so we:
     1. Extract just the last extension (e.g., ".fb.js" -> ".js")
-    2. Strip the leading dot (e.g., ".js" -> "js") *)
+    2. Strip the leading dot (e.g., ".js" -> "js")
+
+    Note: This may produce duplicate entries (e.g., ".js" and ".fb.js" both become "js")
+    which is fine for both Watchman and EdenFS as they deduplicate internally. *)
 let get_suffixes file_options =
   let exts = SSet.elements @@ Files.get_all_watched_extensions file_options in
   let exts = Files.flow_ext :: exts in
@@ -36,8 +39,10 @@ let get_file_names options =
   let flowconfig_path = Server_files_js.config_file flowconfig_name @@ Options.root options in
   ["package.json"; Filename.basename flowconfig_path]
 
-(** Get the list of directories to watch (absolute paths) *)
-let get_include_dirs options =
+(** Get the list of directories to watch as absolute paths.
+    Used by both Watchman (for its roots) and EdenFS watcher (for filtering).
+    This includes paths from .flowconfig [include] which may be outside the root. *)
+let get_include_dirs_absolute options =
   let file_options = Options.file_options options in
   List.map File_path.to_string (Files.watched_paths file_options)
 
