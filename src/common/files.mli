@@ -122,6 +122,19 @@ val absolute_path_regexp : Str.regexp
 
 val watched_paths : options -> File_path.t list
 
+(** [make_path_relative_to_root ~root path] returns [Some relative_path] if [path]
+    is under [root], or [None] if [path] is not under [root].
+    
+    This normalizes path separators and handles trailing slashes correctly.
+    Used by file watchers (Watchman and EdenFS) to compute relative paths from
+    absolute watched paths.
+    
+    Examples:
+    - [make_path_relative_to_root ~root:"/foo/bar" "/foo/bar/baz"] returns [Some "baz"]
+    - [make_path_relative_to_root ~root:"/foo/bar" "/foo/bar"] returns [Some ""]
+    - [make_path_relative_to_root ~root:"/foo/bar" "/other/path"] returns [None] *)
+val make_path_relative_to_root : root:string -> string -> string option
+
 (* given a root, make a filter for file names *)
 val wanted : options:options -> include_libdef:bool -> SSet.t -> string -> bool
 

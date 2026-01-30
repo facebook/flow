@@ -723,6 +723,24 @@ let watched_paths options =
          File_path.is_ancestor ~prefix:prev_stem stem
      )
 
+let make_path_relative_to_root ~root path =
+  (* Normalize path separators and ensure root ends with separator *)
+  let root =
+    let normalized = Sys_utils.normalize_filename_dir_sep root in
+    if String.ends_with ~suffix:"/" normalized then
+      normalized
+    else
+      normalized ^ "/"
+  in
+  let path = Sys_utils.normalize_filename_dir_sep path in
+  if String.starts_with ~prefix:root path then
+    Some (String_utils.lstrip path root)
+  else if path ^ "/" = root then
+    (* Path equals root (without trailing slash) *)
+    Some ""
+  else
+    None
+
 (**
  * Creates a "next" function (see also: `get_all`) for finding the files in a
  * given FlowConfig root. This means all the files under the root (if the implicit
