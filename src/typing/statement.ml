@@ -8078,6 +8078,15 @@ module Make
             kind
             class_kind
         in
+        let check_ts_accessibility ts_accessibility =
+          if not (Context.ts_syntax cx) then
+            match ts_accessibility with
+            | Some (loc, { Ast.Class.TSAccessibility.kind; comments = _ }) ->
+              Flow_js_utils.add_output
+                cx
+                (Error_message.ETSSyntax { kind = Error_message.TSClassAccessibility kind; loc })
+            | None -> ()
+        in
 
         (* NOTE: We used to mine field declarations from field assignments in a
            constructor as a convenience, but it was not worth it: often, all that did
@@ -8109,6 +8118,7 @@ module Make
                   ~kind
                   ~private_
                   ~static
+                  ~ts_accessibility
                   ~decorators
                   ~comments
                   ~get_typed_method_key =
@@ -8168,6 +8178,7 @@ module Make
                         value = (func_loc, func);
                         kind;
                         static;
+                        ts_accessibility;
                         decorators;
                         comments;
                       }
@@ -8244,10 +8255,12 @@ module Make
                       value = (func_loc, func);
                       kind;
                       static;
+                      ts_accessibility;
                       decorators;
                       comments;
                     }
                   ) ->
+                check_ts_accessibility ts_accessibility;
                 add_method_sig_and_element
                   ~method_loc
                   ~name
@@ -8257,6 +8270,7 @@ module Make
                   ~kind
                   ~private_:true
                   ~static
+                  ~ts_accessibility
                   ~decorators
                   ~comments
                   ~get_typed_method_key:(fun _ ->
@@ -8271,10 +8285,12 @@ module Make
                       value = (func_loc, func);
                       kind;
                       static;
+                      ts_accessibility;
                       decorators;
                       comments;
                     }
                   ) ->
+                check_ts_accessibility ts_accessibility;
                 add_method_sig_and_element
                   ~method_loc
                   ~name
@@ -8284,6 +8300,7 @@ module Make
                   ~kind
                   ~private_:false
                   ~static
+                  ~ts_accessibility
                   ~decorators
                   ~comments
                   ~get_typed_method_key:(fun func_t ->
@@ -8298,10 +8315,12 @@ module Make
                       value;
                       static;
                       variance;
+                      ts_accessibility;
                       decorators;
                       comments;
                     }
                   ) ->
+                check_ts_accessibility ts_accessibility;
                 let reason = mk_reason (RPrivateProperty name) loc in
                 let polarity = Anno.polarity cx variance in
                 let decorators =
@@ -8319,6 +8338,7 @@ module Make
                         value = get_value ();
                         static;
                         variance;
+                        ts_accessibility;
                         decorators;
                         comments;
                       }
@@ -8347,10 +8367,12 @@ module Make
                       value;
                       static;
                       variance;
+                      ts_accessibility;
                       decorators;
                       comments;
                     }
                   ) ->
+                check_ts_accessibility ts_accessibility;
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
                 let polarity = Anno.polarity cx variance in
                 let decorators =
@@ -8369,6 +8391,7 @@ module Make
                         value = get_value ();
                         static;
                         variance;
+                        ts_accessibility;
                         decorators;
                         comments;
                       }
@@ -8427,11 +8450,13 @@ module Make
                       value = (func_loc, func);
                       kind;
                       static;
+                      ts_accessibility;
                       decorators;
                       comments;
                     }
                   )
                 when Flow_ast_utils.well_known_symbol_name expr <> None ->
+                check_ts_accessibility ts_accessibility;
                 let name = Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr) in
                 let id_loc = fst expr in
                 add_method_sig_and_element
@@ -8443,6 +8468,7 @@ module Make
                   ~kind
                   ~private_:false
                   ~static
+                  ~ts_accessibility
                   ~decorators
                   ~comments
                   ~get_typed_method_key:(fun _func_t ->
@@ -8804,6 +8830,7 @@ module Make
                       value = (func_loc, func);
                       kind;
                       static;
+                      ts_accessibility = _;
                       decorators = _;
                       comments = method_comments;
                     }
@@ -8852,6 +8879,7 @@ module Make
                         value = (func_loc, func);
                         kind;
                         static;
+                        ts_accessibility = None;
                         decorators = [];
                         comments = method_comments;
                       }

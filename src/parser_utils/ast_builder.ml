@@ -339,6 +339,7 @@ module Classes = struct
           key = Ast.Expression.Object.Property.Identifier (Identifiers.identifier id);
           value = (Loc.none, function_);
           static;
+          ts_accessibility = None;
           decorators;
           comments;
         }
@@ -384,6 +385,7 @@ module Classes = struct
           annot;
           static;
           variance;
+          ts_accessibility = None;
           decorators;
           comments;
         }

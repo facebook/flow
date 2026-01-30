@@ -1374,6 +1374,14 @@ with type t = Impl.t = struct
       node "ClassImplements" loc [("id", identifier id); ("typeParameters", option type_args targs)]
     and class_body (loc, { Class.Body.body; comments }) =
       node ?comments "ClassBody" loc [("body", array_of_list class_element body)]
+    and ts_accessibility_to_string ts_accessibility =
+      match ts_accessibility with
+      | Some (_, { Class.TSAccessibility.kind = Class.TSAccessibility.Public; _ }) -> Some "public"
+      | Some (_, { Class.TSAccessibility.kind = Class.TSAccessibility.Protected; _ }) ->
+        Some "protected"
+      | Some (_, { Class.TSAccessibility.kind = Class.TSAccessibility.Private; _ }) ->
+        Some "private"
+      | None -> None
     and class_element =
       Class.Body.(
         function
@@ -1388,7 +1396,8 @@ with type t = Impl.t = struct
             [("body", statement_list body)]
         | DeclareMethod dm -> class_declare_method dm
       )
-    and class_method (loc, { Class.Method.key; value; kind; static; decorators; comments }) =
+    and class_method
+        (loc, { Class.Method.key; value; kind; static; ts_accessibility; decorators; comments }) =
       let (key, computed, comments) =
         let open Expression.Object.Property in
         match key with
@@ -1416,14 +1425,19 @@ with type t = Impl.t = struct
         ?comments
         "MethodDefinition"
         loc
-        [
-          ("key", key);
-          ("value", function_expression value);
-          ("kind", string kind);
-          ("static", bool static);
-          ("computed", bool computed);
-          ("decorators", array_of_list class_decorator decorators);
-        ]
+        ([
+           ("key", key);
+           ("value", function_expression value);
+           ("kind", string kind);
+           ("static", bool static);
+           ("computed", bool computed);
+           ("decorators", array_of_list class_decorator decorators);
+         ]
+        @
+        match ts_accessibility_to_string ts_accessibility with
+        | Some v -> [("tsAccessibility", string v)]
+        | None -> []
+        )
     and class_declare_method (loc, { Class.DeclareMethod.key; annot; static; comments }) =
       let (key, computed, comments) =
         let open Expression.Object.Property in
@@ -1457,6 +1471,7 @@ with type t = Impl.t = struct
             annot;
             static;
             variance = variance_;
+            ts_accessibility;
             decorators;
             comments;
           }
@@ -1476,6 +1491,9 @@ with type t = Impl.t = struct
           ("static", bool static);
           ("variance", option variance variance_);
         ]
+        @ (match ts_accessibility_to_string ts_accessibility with
+          | Some v -> [("tsAccessibility", string v)]
+          | None -> [])
         @ ( if decorators = [] then
             []
           else
@@ -1499,7 +1517,16 @@ with type t = Impl.t = struct
         (expression expr, true, Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments)
     and class_property
         ( loc,
-          { Class.Property.key; value; annot; static; variance = variance_; decorators; comments }
+          {
+            Class.Property.key;
+            value;
+            annot;
+            static;
+            variance = variance_;
+            ts_accessibility;
+            decorators;
+            comments;
+          }
         ) =
       let (key, computed, comments) = property_key ~comments key in
       let (value, declare) =
@@ -1517,6 +1544,9 @@ with type t = Impl.t = struct
           ("static", bool static);
           ("variance", option variance variance_);
         ]
+        @ (match ts_accessibility_to_string ts_accessibility with
+          | Some v -> [("tsAccessibility", string v)]
+          | None -> [])
         @ ( if decorators = [] then
             []
           else

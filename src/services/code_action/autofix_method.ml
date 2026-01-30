@@ -83,6 +83,7 @@ class mapper target =
                 value;
                 static;
                 variance = None;
+                ts_accessibility = None;
                 annot = Type.Missing loc;
                 decorators;
                 comments;

@@ -163,6 +163,7 @@ class rename_mapper
               annot;
               static;
               variance;
+              ts_accessibility;
               decorators;
               comments;
             }
@@ -185,6 +186,7 @@ class rename_mapper
                   annot;
                   static;
                   variance;
+                  ts_accessibility;
                   decorators;
                   comments;
                 }
@@ -202,6 +204,7 @@ class rename_mapper
                   annot;
                   static;
                   variance;
+                  ts_accessibility;
                   decorators;
                   comments;
                 }

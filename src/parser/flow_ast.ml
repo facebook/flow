@@ -2349,6 +2349,21 @@ end =
   Comment
 
 and Class : sig
+  module TSAccessibility : sig
+    type kind =
+      | Public
+      | Protected
+      | Private
+
+    and 'M t = 'M * 'M t'
+
+    and 'M t' = {
+      kind: kind;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Method : sig
     type ('M, 'T) t = 'T * ('M, 'T) t'
 
@@ -2363,6 +2378,7 @@ and Class : sig
       key: ('M, 'T) Expression.Object.Property.key;
       value: 'M * ('M, 'T) Function.t;
       static: bool;
+      ts_accessibility: 'M TSAccessibility.t option;
       decorators: ('M, 'T) Class.Decorator.t list;
       comments: ('M, unit) Syntax.t option;
     }
@@ -2390,6 +2406,7 @@ and Class : sig
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
       variance: 'M Variance.t option;
+      ts_accessibility: 'M TSAccessibility.t option;
       decorators: ('M, 'T) Class.Decorator.t list;
       comments: ('M, unit) Syntax.t option;
     }
@@ -2410,6 +2427,7 @@ and Class : sig
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
       variance: 'M Variance.t option;
+      ts_accessibility: 'M TSAccessibility.t option;
       decorators: ('M, 'T) Class.Decorator.t list;
       comments: ('M, unit) Syntax.t option;
     }

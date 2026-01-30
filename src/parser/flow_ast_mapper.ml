@@ -542,7 +542,7 @@ class ['loc] mapper =
 
     method class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
       let open Ast.Class.Method in
-      let { kind = _; key; value; static = _; decorators; comments } = meth in
+      let { kind = _; key; value; static = _; ts_accessibility = _; decorators; comments } = meth in
       let key' = this#object_key key in
       let value' = map_loc this#function_expression_or_method value in
       let decorators' = map_list this#class_decorator decorators in
@@ -565,7 +565,9 @@ class ['loc] mapper =
 
     method class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
-      let { key; value; annot; static = _; variance; decorators; comments } = prop in
+      let { key; value; annot; static = _; variance; ts_accessibility = _; decorators; comments } =
+        prop
+      in
       let key' = this#object_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
@@ -606,7 +608,9 @@ class ['loc] mapper =
 
     method class_private_field _loc (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static = _; variance; decorators; comments } = prop in
+      let { key; value; annot; static = _; variance; ts_accessibility = _; decorators; comments } =
+        prop
+      in
       let key' = this#private_name key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in

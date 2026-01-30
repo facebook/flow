@@ -442,12 +442,23 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_method (meth : ('M, 'T) Ast.Class.Method.t') : ('N, 'U) Ast.Class.Method.t' =
       let open Ast.Class.Method in
-      let { kind; key; value; static; decorators; comments } = meth in
+      let { kind; key; value; static; ts_accessibility; decorators; comments } = meth in
       let key' = this#class_method_key key in
       let value' = (this#on_loc_annot * this#function_expression) value in
       let decorators' = List.map ~f:this#class_decorator decorators in
       let comments' = this#syntax_opt comments in
-      { kind; key = key'; value = value'; static; decorators = decorators'; comments = comments' }
+      let ts_accessibility' =
+        Option.map ~f:(this#on_loc_annot * this#ts_accessibility) ts_accessibility
+      in
+      {
+        kind;
+        key = key';
+        value = value';
+        static;
+        ts_accessibility = ts_accessibility';
+        decorators = decorators';
+        comments = comments';
+      }
 
     method class_declare_method (decl_meth : ('M, 'T) Ast.Class.DeclareMethod.t')
         : ('N, 'U) Ast.Class.DeclareMethod.t' =
@@ -462,12 +473,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_property (prop : ('M, 'T) Ast.Class.Property.t') : ('N, 'U) Ast.Class.Property.t' =
       let open Ast.Class.Property in
-      let { key; value; annot; static; variance; decorators; comments } = prop in
+      let { key; value; annot; static; variance; ts_accessibility; decorators; comments } = prop in
       let key' = this#class_property_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let decorators' = List.map ~f:this#class_decorator decorators in
       let variance' = this#variance_opt variance in
+      let ts_accessibility' =
+        Option.map ~f:(this#on_loc_annot * this#ts_accessibility) ts_accessibility
+      in
       let comments' = this#syntax_opt comments in
       {
         key = key';
@@ -475,6 +489,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         annot = annot';
         static;
         variance = variance';
+        ts_accessibility = ts_accessibility';
         decorators = decorators';
         comments = comments';
       }
@@ -491,12 +506,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_private_field (prop : ('M, 'T) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static; variance; decorators; comments } = prop in
+      let { key; value; annot; static; variance; ts_accessibility; decorators; comments } = prop in
       let key' = this#private_name key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
       let decorators' = List.map ~f:this#class_decorator decorators in
       let variance' = this#variance_opt variance in
+      let ts_accessibility' =
+        Option.map ~f:(this#on_loc_annot * this#ts_accessibility) ts_accessibility
+      in
       let comments' = this#syntax_opt comments in
       {
         key = key';
@@ -504,6 +522,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         annot = annot';
         static;
         variance = variance';
+        ts_accessibility = ts_accessibility';
         decorators = decorators';
         comments = comments';
       }
@@ -2998,6 +3017,13 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method variance_opt (opt : 'M Ast.Variance.t option) : 'N Ast.Variance.t option =
       Option.map ~f:this#variance opt
+
+    method ts_accessibility (a : 'M Ast.Class.TSAccessibility.t') : 'N Ast.Class.TSAccessibility.t'
+        =
+      let open Ast.Class.TSAccessibility in
+      let { kind; comments } = a in
+      let comments' = this#syntax_opt comments in
+      { kind; comments = comments' }
 
     method tparam_const_modifier (c : 'M Ast.Type.TypeParam.ConstModifier.t)
         : 'N Ast.Type.TypeParam.ConstModifier.t =

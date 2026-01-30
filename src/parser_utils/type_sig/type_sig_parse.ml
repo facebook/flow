@@ -3857,6 +3857,7 @@ and class_def =
                 value = (_, fn);
                 kind;
                 static;
+                ts_accessibility = _;
                 decorators = _;
                 comments = _;
               }
@@ -3894,6 +3895,7 @@ and class_def =
                 value;
                 static;
                 variance;
+                ts_accessibility = _;
                 decorators = _;
                 comments = _;
               }
@@ -3940,6 +3942,7 @@ and class_def =
                 value = (_, fn);
                 kind;
                 static;
+                ts_accessibility = _;
                 decorators = _;
                 comments = _;
               }

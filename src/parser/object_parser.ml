@@ -626,7 +626,7 @@ module Object
   (* In the ES6 draft, all elements are methods. No properties (though there
    * are getter and setters allowed *)
   let class_element =
-    let get env start_loc decorators static leading =
+    let get env start_loc decorators static ts_accessibility leading =
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true true) env
       in
@@ -649,12 +649,13 @@ module Object
             value;
             kind = Method.Get;
             static;
+            ts_accessibility;
             decorators;
             comments = Flow_ast_utils.mk_comments_opt ~leading ();
           }
         )
     in
-    let set env start_loc decorators static leading =
+    let set env start_loc decorators static ts_accessibility leading =
       let (loc, (key, value)) =
         with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true false) env
       in
@@ -677,6 +678,7 @@ module Object
             value;
             kind = Method.Set;
             static;
+            ts_accessibility;
             decorators;
             comments = Flow_ast_utils.mk_comments_opt ~leading ();
           }
@@ -741,7 +743,7 @@ module Object
         in
         (key, annot, value, [])
     in
-    let property env start_loc decorators key static declare variance leading =
+    let property env start_loc decorators key static declare variance ts_accessibility leading =
       let (loc, (key, annot, value, comments)) =
         with_loc
           ~start_loc
@@ -768,9 +770,23 @@ module Object
       match key with
       | Ast.Expression.Object.Property.PrivateName key ->
         Body.PrivateField
-          (loc, { PrivateField.key; value; annot; static; variance; decorators; comments })
+          ( loc,
+            {
+              PrivateField.key;
+              value;
+              annot;
+              static;
+              variance;
+              ts_accessibility;
+              decorators;
+              comments;
+            }
+          )
       | _ ->
-        Body.Property (loc, { Property.key; value; annot; static; variance; decorators; comments })
+        Body.Property
+          ( loc,
+            { Property.key; value; annot; static; variance; ts_accessibility; decorators; comments }
+          )
     in
     let is_asi env =
       match Peek.token env with
@@ -779,22 +795,44 @@ module Object
       | _ when Peek.is_implicit_semicolon env -> true
       | _ -> false
     in
-    let rec init env start_loc decorators key ~async ~generator ~static ~declare variance leading =
+    let rec init
+        env
+        start_loc
+        decorators
+        key
+        ~async
+        ~generator
+        ~static
+        ~declare
+        variance
+        ts_accessibility
+        leading =
       match Peek.token env with
       | T_COLON
       | T_ASSIGN
       | T_SEMICOLON
       | T_RCURLY
         when (not async) && not generator ->
-        property env start_loc decorators key static declare variance leading
+        property env start_loc decorators key static declare variance ts_accessibility leading
       | T_PLING ->
         (* TODO: add support for optional class properties *)
         error_unexpected env;
         Eat.token env;
-        init env start_loc decorators key ~async ~generator ~static ~declare variance leading
+        init
+          env
+          start_loc
+          decorators
+          key
+          ~async
+          ~generator
+          ~static
+          ~declare
+          variance
+          ts_accessibility
+          leading
       | _ when is_asi env ->
         (* an uninitialized, unannotated property *)
-        property env start_loc decorators key static declare variance leading
+        property env start_loc decorators key static declare variance ts_accessibility leading
       | _ ->
         error_unsupported_declare env declare;
         error_unsupported_variance env variance;
@@ -945,6 +983,7 @@ module Object
                 value;
                 kind;
                 static;
+                ts_accessibility;
                 decorators;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               }
@@ -974,22 +1013,28 @@ module Object
           (ret, leading)
         | _ -> (None, [])
       in
-      (* Error on TS class visibility modifiers. *)
-      (match Peek.token env with
-      | (T_PUBLIC as t)
-      | (T_PRIVATE as t)
-      | (T_PROTECTED as t)
-        when Peek.ith_is_identifier ~i:1 env ->
-        let kind =
-          match t with
-          | T_PUBLIC -> `Public
-          | T_PRIVATE -> `Private
-          | T_PROTECTED -> `Protected
-          | _ -> failwith "Must be one of the above"
-        in
-        error env (Parse_error.TSClassVisibility kind);
-        Eat.token env
-      | _ -> ());
+      (* Parse TS class visibility modifiers. *)
+      let (ts_accessibility, leading_accessibility) =
+        match Peek.token env with
+        | (T_PUBLIC as t)
+        | (T_PRIVATE as t)
+        | (T_PROTECTED as t)
+          when Peek.ith_is_identifier ~i:1 env ->
+          let kind =
+            match t with
+            | T_PUBLIC -> Ast.Class.TSAccessibility.Public
+            | T_PRIVATE -> Ast.Class.TSAccessibility.Private
+            | T_PROTECTED -> Ast.Class.TSAccessibility.Protected
+            | _ -> failwith "Must be one of the above"
+          in
+          let leading = Peek.comments env in
+          let start = Peek.loc env in
+          Eat.token env;
+          let trailing = Eat.trailing_comments env in
+          let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+          (Some (start, { Ast.Class.TSAccessibility.kind; comments }), leading)
+        | _ -> (None, [])
+      in
       let static =
         Peek.token env = T_STATIC
         &&
@@ -1061,34 +1106,74 @@ module Object
           | _ -> (generator, leading_generator)
         in
         let leading =
-          List.concat [leading_declare; leading_static; leading_async; leading_generator]
+          List.concat
+            [
+              leading_declare;
+              leading_accessibility;
+              leading_static;
+              leading_async;
+              leading_generator;
+            ]
         in
         match (async, generator, Peek.token env) with
         | (false, false, T_IDENTIFIER { raw = "get"; _ }) ->
           let leading_get = Peek.comments env in
           let (_, key) = key ~class_body:true env in
           if implies_identifier env then
-            init env start_loc decorators key ~async ~generator ~static ~declare variance leading
+            init
+              env
+              start_loc
+              decorators
+              key
+              ~async
+              ~generator
+              ~static
+              ~declare
+              variance
+              ts_accessibility
+              leading
           else (
             error_unsupported_declare env declare;
             error_unsupported_variance env variance;
             ignore (object_key_remove_trailing env key);
-            get env start_loc decorators static (leading @ leading_get)
+            get env start_loc decorators static ts_accessibility (leading @ leading_get)
           )
         | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
           let leading_set = Peek.comments env in
           let (_, key) = key ~class_body:true env in
           if implies_identifier env then
-            init env start_loc decorators key ~async ~generator ~static ~declare variance leading
+            init
+              env
+              start_loc
+              decorators
+              key
+              ~async
+              ~generator
+              ~static
+              ~declare
+              variance
+              ts_accessibility
+              leading
           else (
             error_unsupported_declare env declare;
             error_unsupported_variance env variance;
             ignore (object_key_remove_trailing env key);
-            set env start_loc decorators static (leading @ leading_set)
+            set env start_loc decorators static ts_accessibility (leading @ leading_set)
           )
         | (_, _, _) ->
           let (_, key) = key ~class_body:true env in
-          init env start_loc decorators key ~async ~generator ~static ~declare variance leading
+          init
+            env
+            start_loc
+            decorators
+            key
+            ~async
+            ~generator
+            ~static
+            ~declare
+            variance
+            ts_accessibility
+            leading
 
   let class_body =
     let rec elements env seen_constructor private_names acc =
@@ -1408,6 +1493,7 @@ module Object
                   value;
                   kind = Class.Method.Method;
                   static;
+                  ts_accessibility = None;
                   decorators = [];
                   comments;
                 })

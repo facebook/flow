@@ -2302,7 +2302,17 @@ and component_renders ~opts return =
 
 and class_method
     ~opts
-    (loc, { Ast.Class.Method.kind; key; value = (func_loc, func); static; decorators; comments }) =
+    ( loc,
+      {
+        Ast.Class.Method.kind;
+        key;
+        value = (func_loc, func);
+        static;
+        ts_accessibility;
+        decorators;
+        comments;
+      }
+    ) =
   let module M = Ast.Class.Method in
   let {
     Ast.Function.params;
@@ -2353,10 +2363,21 @@ and class_method
         else
           Empty
       in
+      let s_accessibility =
+        match ts_accessibility with
+        | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) ->
+          fuse [Atom "private"; space]
+        | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Protected; _ }) ->
+          fuse [Atom "protected"; space]
+        | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Public; _ }) ->
+          fuse [Atom "public"; space]
+        | None -> Empty
+      in
       let prefix = fuse_with_space [s_async; s_kind; s_key] in
       fuse
         [
           decorators_list ~opts decorators;
+          s_accessibility;
           ( if static then
             fuse [Atom "static"; space]
           else
@@ -2406,12 +2427,23 @@ and class_declare_method ~opts (loc, { Ast.Class.DeclareMethod.key; annot; stati
         )
     )
 
-and class_property_helper ~opts loc key value static annot variance_ decorators comments =
+and class_property_helper
+    ~opts loc key value static annot variance_ ts_accessibility decorators comments =
   let (declare, value) =
     match value with
     | Ast.Class.Property.Declared -> (true, None)
     | Ast.Class.Property.Uninitialized -> (false, None)
     | Ast.Class.Property.Initialized expr -> (false, Some expr)
+  in
+  let s_accessibility =
+    match ts_accessibility with
+    | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) ->
+      fuse [Atom "private"; space]
+    | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Protected; _ }) ->
+      fuse [Atom "protected"; space]
+    | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Public; _ }) ->
+      fuse [Atom "public"; space]
+    | None -> Empty
   in
   source_location_with_comments
     ?comments
@@ -2425,6 +2457,7 @@ and class_property_helper ~opts loc key value static annot variance_ decorators 
              else
                Empty
              );
+             s_accessibility;
              ( if static then
                fuse [Atom "static"; space]
              else
@@ -2450,7 +2483,19 @@ and class_property_helper ~opts loc key value static annot variance_ decorators 
     )
 
 and class_property
-    ~opts (loc, { Ast.Class.Property.key; value; static; annot; variance; decorators; comments }) =
+    ~opts
+    ( loc,
+      {
+        Ast.Class.Property.key;
+        value;
+        static;
+        annot;
+        variance;
+        ts_accessibility;
+        decorators;
+        comments;
+      }
+    ) =
   class_property_helper
     ~opts
     loc
@@ -2459,6 +2504,7 @@ and class_property
     static
     annot
     variance
+    ts_accessibility
     decorators
     comments
 
@@ -2471,6 +2517,7 @@ and class_private_field
         static;
         annot;
         variance;
+        ts_accessibility;
         decorators;
         comments;
       }
@@ -2481,7 +2528,17 @@ and class_private_field
       key_comments
       (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
   in
-  class_property_helper ~opts loc key value static annot variance decorators comments
+  class_property_helper
+    ~opts
+    loc
+    key
+    value
+    static
+    annot
+    variance
+    ts_accessibility
+    decorators
+    comments
 
 and class_static_block ~opts (loc, { Ast.Class.StaticBlock.body; comments }) =
   let statements = statement_list ~opts ~pretty_semicolon:true body in

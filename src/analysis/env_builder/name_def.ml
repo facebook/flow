@@ -1980,7 +1980,18 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
-      let { key; value; annot; static = _; variance; decorators; comments = _ } = prop in
+      let {
+        key;
+        value;
+        annot;
+        static = _;
+        variance;
+        ts_accessibility = _;
+        decorators;
+        comments = _;
+      } =
+        prop
+      in
       run_list this#class_decorator decorators;
       ignore @@ this#object_key key;
       ignore @@ this#type_annotation_hint annot;
@@ -1996,7 +2007,18 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! class_private_field _loc (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static = _; variance; decorators; comments = _ } = prop in
+      let {
+        key;
+        value;
+        annot;
+        static = _;
+        variance;
+        ts_accessibility = _;
+        decorators;
+        comments = _;
+      } =
+        prop
+      in
       run_list this#class_decorator decorators;
       ignore @@ this#private_name key;
       ignore @@ this#type_annotation_hint annot;
@@ -2019,7 +2041,17 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! class_method _loc (meth : ('loc, 'loc) Ast.Class.Method.t') =
       let open Ast.Class.Method in
-      let { kind = _; key; value = (_, value); static = _; decorators; comments = _ } = meth in
+      let {
+        kind = _;
+        key;
+        value = (_, value);
+        static = _;
+        ts_accessibility = _;
+        decorators;
+        comments = _;
+      } =
+        meth
+      in
       let _ = this#object_key key in
       let scope_kind = func_scope_kind ~key value in
       let () =

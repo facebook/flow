@@ -153,7 +153,6 @@ type t =
   | StrictVarName
   | SuperPrivate
   | TSAbstractClass
-  | TSClassVisibility of [ `Public | `Private | `Protected ]
   | TSTemplateLiteralType
   | ThisParamAnnotationRequired
   | ThisParamBannedInArrowFunctions
@@ -480,20 +479,6 @@ module PP = struct
     | StrictVarName -> "Variable name may not be eval or arguments in strict mode"
     | SuperPrivate -> "You may not access a private field through the `super` keyword."
     | TSAbstractClass -> "Flow does not support abstract classes."
-    | TSClassVisibility kind ->
-      let (keyword, append) =
-        match kind with
-        | `Private ->
-          ( "private",
-            " You can try using JavaScript private fields by prepending `#` to the field name."
-          )
-        | `Public ->
-          ( "public",
-            " Fields and methods are public by default. You can simply omit the `public` keyword."
-          )
-        | `Protected -> ("protected", "")
-      in
-      Printf.sprintf "Flow does not support using `%s` in classes.%s" keyword append
     | TSTemplateLiteralType -> "Flow does not support template literal types."
     | ThisParamAnnotationRequired -> "A type annotation is required for the `this` parameter."
     | ThisParamBannedInArrowFunctions ->

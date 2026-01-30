@@ -1377,6 +1377,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             annot = annot1;
             static = s1;
             variance = var1;
+            ts_accessibility = acc1;
             decorators = decorators1;
             comments = comments1;
           }
@@ -1390,13 +1391,14 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             annot = annot2;
             static = s2;
             variance = var2;
+            ts_accessibility = acc2;
             decorators = decorators2;
             comments = comments2;
           }
         ) =
       field2
     in
-    ( if key1 != key2 || s1 != s2 || var1 != var2 then
+    ( if key1 != key2 || s1 != s2 || var1 != var2 || acc1 != acc2 then
       None
     else
       let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
@@ -1416,6 +1418,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             annot = annot1;
             static = s1;
             variance = var1;
+            ts_accessibility = acc1;
             decorators = decorators1;
             comments = comments1;
           }
@@ -1429,13 +1432,14 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             annot = annot2;
             static = s2;
             variance = var2;
+            ts_accessibility = acc2;
             decorators = decorators2;
             comments = comments2;
           }
         ) =
       prop2
     in
-    ( if key1 != key2 || s1 != s2 || var1 != var2 then
+    ( if key1 != key2 || s1 != s2 || var1 != var2 || acc1 != acc2 then
       None
     else
       let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
@@ -1463,6 +1467,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       key = key1;
       value = (value_loc, value1);
       static = static1;
+      ts_accessibility = acc1;
       decorators = decorators1;
       comments = comments1;
     } =
@@ -1473,6 +1478,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       key = key2;
       value = (_loc, value2);
       static = static2;
+      ts_accessibility = acc2;
       decorators = decorators2;
       comments = comments2;
     } =
@@ -1483,6 +1489,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       || key1 != key2
       (* value handled below *)
       || static1 != static2
+      || acc1 != acc2
     then
       None
     else

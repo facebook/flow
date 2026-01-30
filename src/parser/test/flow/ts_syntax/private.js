@@ -4,6 +4,9 @@ class A {
 
   private static x: string;
   private static m(): void {}
+
+  private readonly y: string;
+  private static readonly z: string;
 }
 
 class NoIssueField {

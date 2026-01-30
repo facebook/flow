@@ -685,7 +685,17 @@ struct
 
         method class_method_annotated (meth : ('loc, 'loc) Ast.Class.Method.t') =
           let open Ast.Class.Method in
-          let { kind = _; key; value = (_, value); static = _; decorators; comments = _ } = meth in
+          let {
+            kind = _;
+            key;
+            value = (_, value);
+            static = _;
+            ts_accessibility = _;
+            decorators;
+            comments = _;
+          } =
+            meth
+          in
           run_list this#class_decorator decorators;
           run this#object_key key;
           this#function_def ~fully_annotated:true value
@@ -704,7 +714,18 @@ struct
 
         method class_property_annotated (prop : ('loc, 'loc) Ast.Class.Property.t') =
           let open Ast.Class.Property in
-          let { key; value; annot; static = _; variance = _; decorators; comments = _ } = prop in
+          let {
+            key;
+            value;
+            annot;
+            static = _;
+            variance = _;
+            ts_accessibility = _;
+            decorators;
+            comments = _;
+          } =
+            prop
+          in
           run_list this#class_decorator decorators;
           run this#object_key key;
           run this#type_annotation_hint annot;
@@ -714,7 +735,18 @@ struct
 
         method class_private_field_annotated (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
           let open Ast.Class.PrivateField in
-          let { key; value; annot; static = _; variance = _; decorators; comments = _ } = prop in
+          let {
+            key;
+            value;
+            annot;
+            static = _;
+            variance = _;
+            ts_accessibility = _;
+            decorators;
+            comments = _;
+          } =
+            prop
+          in
           run_list this#class_decorator decorators;
           run this#private_name key;
           run this#type_annotation_hint annot;

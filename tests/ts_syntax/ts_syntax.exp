@@ -1,3 +1,187 @@
+Error --------------------------------------------------------------------------------------------- accessibility.js:2:3
+
+Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
+to `#foo`. [ts-syntax]
+
+   2|   private x: string; // ERROR
+        ^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- accessibility.js:3:3
+
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+
+   3|   protected y: number; // ERROR
+        ^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- accessibility.js:4:3
+
+Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
+modifier. [ts-syntax]
+
+   4|   public z: boolean; // ERROR
+        ^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- accessibility.js:6:3
+
+Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
+to `#foo`. [ts-syntax]
+
+   6|   private m1(): void {} // ERROR
+        ^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- accessibility.js:7:3
+
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+
+   7|   protected m2(): void {} // ERROR
+        ^^^^^^^^^
+
+
+Error --------------------------------------------------------------------------------------------- accessibility.js:8:3
+
+Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
+modifier. [ts-syntax]
+
+   8|   public m3(): void {} // ERROR
+        ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- accessibility.js:10:3
+
+Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
+to `#foo`. [ts-syntax]
+
+   10|   private static a: string; // ERROR
+         ^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- accessibility.js:11:3
+
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+
+   11|   protected static b: number; // ERROR
+         ^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- accessibility.js:12:3
+
+Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
+modifier. [ts-syntax]
+
+   12|   public static c: boolean; // ERROR
+         ^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- accessibility.js:15:3
+
+Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
+to `#foo`. [ts-syntax]
+
+   15|   private readonly d: string; // ERROR
+         ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- accessibility.js:15:11
+
+While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
+object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+
+   15|   private readonly d: string; // ERROR
+                 ^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- accessibility.js:16:3
+
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+
+   16|   protected readonly e: number; // ERROR
+         ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- accessibility.js:16:13
+
+While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
+object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+
+   16|   protected readonly e: number; // ERROR
+                   ^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- accessibility.js:17:3
+
+Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
+modifier. [ts-syntax]
+
+   17|   public readonly f: boolean; // ERROR
+         ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- accessibility.js:17:10
+
+While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
+object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+
+   17|   public readonly f: boolean; // ERROR
+                ^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- accessibility.js:19:3
+
+Flow does not support using `private` in classes. Use JavaScript private elements instead. To fix, change `private foo`
+to `#foo`. [ts-syntax]
+
+   19|   private static readonly g: string; // ERROR
+         ^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- accessibility.js:19:18
+
+While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
+object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+
+   19|   private static readonly g: string; // ERROR
+                        ^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- accessibility.js:20:3
+
+Flow does not support using `protected` in classes. To fix, remove the `protected` modifier. [ts-syntax]
+
+   20|   protected static readonly h: number; // ERROR
+         ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- accessibility.js:20:20
+
+While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
+object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+
+   20|   protected static readonly h: number; // ERROR
+                          ^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------------- accessibility.js:21:3
+
+Flow does not support using `public` in classes. Fields and methods are public by default. To fix, remove the `public`
+modifier. [ts-syntax]
+
+   21|   public static readonly i: boolean; // ERROR
+         ^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------- accessibility.js:21:17
+
+While TypeScript uses `readonly` to specify read only properties, Flow uses `+` in the form `+foo: T` for class and
+object type properties, and `+[string]: T` for dictionaries. [ts-syntax]
+
+   21|   public static readonly i: boolean; // ERROR
+                       ^^^^^^^^
+
+
 Error ------------------------------------------------------------------------- deprecated/excluded_dir/readonly.js:7:23
 
 Cannot assign object literal to `a` because property `b` is extra in object literal [1] but missing in object type [2].
@@ -737,4 +921,4 @@ types. [ts-syntax]
 
 
 
-Found 83 errors
+Found 104 errors

@@ -4747,6 +4747,31 @@ let to_printable_error :
         code "Readonly<T>";
         text ".";
       ]
+    | MessageTSClassAccessibility kind ->
+      let (modifier, suffix) =
+        match kind with
+        | Flow_ast.Class.TSAccessibility.Private ->
+          ( "private",
+            [
+              text "Use JavaScript private elements instead. To fix, change ";
+              code "private foo";
+              text " to ";
+              code "#foo";
+              text ".";
+            ]
+          )
+        | Flow_ast.Class.TSAccessibility.Public ->
+          ( "public",
+            [
+              text "Fields and methods are public by default. To fix, remove the ";
+              code "public";
+              text " modifier.";
+            ]
+          )
+        | Flow_ast.Class.TSAccessibility.Protected ->
+          ("protected", [text "To fix, remove the "; code "protected"; text " modifier."])
+      in
+      [text "Flow does not support using "; code modifier; text " in classes. "] @ suffix
     | MessageTSSatisfiesType enabled_casting_syntax ->
       let (example, _) = type_casting_examples enabled_casting_syntax in
       [

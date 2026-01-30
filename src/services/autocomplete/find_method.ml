@@ -63,6 +63,7 @@ let empty_method_of_property_type prop =
             key;
             value = (Loc.none, value);
             static;
+            ts_accessibility = None;
             decorators = [];
             comments = None;
           }
