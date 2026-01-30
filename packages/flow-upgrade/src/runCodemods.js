@@ -11,7 +11,6 @@
 import type {CliOptions, CodemodModule} from './Types';
 
 import fs from 'fs-extra';
-import {transform} from 'hermes-transform';
 
 export default async function runCodemods(
   codemods: $ReadOnlyArray<CodemodModule>,
@@ -34,6 +33,10 @@ export default async function runCodemods(
       const originalContents = await fs.readFile(filePath, 'utf8');
       let contents: string = originalContents;
       for (const codemod of codemods) {
+        if (typeof jest !== 'undefined') {
+          jest.resetModules();
+        }
+        const {transform} = require('hermes-transform');
         contents = await transform(
           contents,
           codemod.transform,
