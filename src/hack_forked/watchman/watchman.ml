@@ -694,12 +694,22 @@ let watch =
      returned an error. Let's do a best effort attempt to infer the relative path for each bad
      include. *)
   let guess_missing_relative_paths terms watch_root failed_paths =
+    let watch_root =
+      let normalized = Sys_utils.normalize_filename_dir_sep watch_root in
+      if String.is_suffix ~suffix:"/" normalized then
+        normalized
+      else
+        normalized ^ "/"
+    in
     let (terms, failed_paths) =
       SMap.fold
         (fun path err (terms, failed_paths) ->
-          match Files.make_path_relative_to_root ~root:watch_root path with
-          | Some relative_path -> (prepend_relative_path_term ~relative_path ~terms, failed_paths)
-          | None -> (terms, SMap.add path err failed_paths))
+          let path = Sys_utils.normalize_filename_dir_sep path in
+          if String.is_prefix ~prefix:watch_root path then
+            let relative_path = String_utils.lstrip path watch_root in
+            (prepend_relative_path_term ~relative_path ~terms, failed_paths)
+          else
+            (terms, SMap.add path err failed_paths))
         failed_paths
         (terms, SMap.empty)
     in
