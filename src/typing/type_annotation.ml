@@ -2411,12 +2411,22 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         None
       )
     | Function.Missing loc ->
-      Flow_js_utils.add_output
-        env.cx
-        (Error_message.EUnsupportedSyntax
-           (loc, Flow_intermediate_error_types.DeclareClassMethodMissingReturnType)
-        );
-      (AnyT.at (AnyError None) loc, Function.Missing loc, None)
+      (match meth_kind with
+      | ConstructorKind ->
+        if not (Context.tslib_syntax env.cx) then
+          Flow_js_utils.add_output
+            env.cx
+            (Error_message.EUnsupportedSyntax
+               (loc, Flow_intermediate_error_types.DeclareClassMethodMissingReturnType)
+            );
+        (VoidT.at loc, Function.Missing loc, None)
+      | _ ->
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.DeclareClassMethodMissingReturnType)
+          );
+        (AnyT.at (AnyError None) loc, Function.Missing loc, None))
 
   and mk_method_func_sig =
     let add_param env x param =

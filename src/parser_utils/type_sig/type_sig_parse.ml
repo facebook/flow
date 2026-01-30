@@ -1864,7 +1864,7 @@ and type_guard_opt opts scope tbls xs guard =
     (* TODO(pvekris) support assert type guards in type_sig_parse *)
     None
 
-and return_annot opts scope tbls xs = function
+and return_annot ~is_constructor opts scope tbls xs = function
   | T.Function.Available r -> (annot opts scope tbls xs r, None)
   | T.Function.TypeGuard ((loc, _) as g) ->
     let loc = push_loc tbls loc in
@@ -1877,7 +1877,10 @@ and return_annot opts scope tbls xs = function
     (Annot (Boolean loc), guard)
   | T.Function.Missing loc ->
     let loc = push_loc tbls loc in
-    (Annot (Any loc), None)
+    if is_constructor then
+      (Annot (Void loc), None)
+    else
+      (Annot (Any loc), None)
 
 and convert_effect opts effect_ fun_loc_opt name_opt =
   match (effect_, fun_loc_opt) with
@@ -1890,7 +1893,7 @@ and convert_effect opts effect_ fun_loc_opt name_opt =
     HookAnnot
   | (Ast.Function.Arbitrary, _) -> ArbitraryEffect
 
-and function_type opts scope tbls xs f =
+and function_type ?(is_constructor = false) opts scope tbls xs f =
   let module F = T.Function in
   let {
     F.tparams = tps;
@@ -1905,7 +1908,7 @@ and function_type opts scope tbls xs f =
   let this_param = function_type_this_param opts scope tbls xs this_ in
   let params = function_type_params opts scope tbls xs ps in
   let rest_param = function_type_rest_param opts scope tbls xs rp in
-  let (return, type_guard) = return_annot opts scope tbls xs r in
+  let (return, type_guard) = return_annot ~is_constructor opts scope tbls xs r in
   let effect_ = convert_effect opts effect_ None None in
   FunSig { tparams; params; rest_param; this_param; return; type_guard; effect_ }
 
@@ -2020,7 +2023,7 @@ and component_type =
 and getter_type opts scope tbls xs id_loc f =
   let module F = T.Function in
   let { F.return = r; _ } = f in
-  Get (id_loc, return_annot opts scope tbls xs r |> fst)
+  Get (id_loc, return_annot ~is_constructor:false opts scope tbls xs r |> fst)
 
 and setter_type opts scope tbls xs id_loc f =
   let module F = T.Function in
@@ -2354,7 +2357,7 @@ and declare_class_props =
       | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
         let fn_loc = push_loc tbls fn_loc in
         let id_loc = push_loc tbls id_loc in
-        let def = function_type opts scope tbls xs fn in
+        let def = function_type ~is_constructor:(name = "constructor") opts scope tbls xs fn in
         Acc.append_method ~static name id_loc fn_loc def acc
       | (true, _) -> acc (* unexpected non-function method *)
       | (false, O.Property.Init t) ->
@@ -4547,7 +4550,7 @@ let declare_function_decl opts scope tbls decl =
              let this_param = function_type_this_param opts scope tbls xs this_ in
              let params = function_type_params opts scope tbls xs ps in
              let rest_param = function_type_rest_param opts scope tbls xs rp in
-             let (return, type_guard) = return_annot opts scope tbls xs r in
+             let (return, type_guard) = return_annot ~is_constructor:false opts scope tbls xs r in
              let effect_ = convert_effect opts effect_ None (Some name) in
              FunSig { tparams; params; rest_param; this_param; return; type_guard; effect_ }
            | _ -> failwith "unexpected declare function annot"

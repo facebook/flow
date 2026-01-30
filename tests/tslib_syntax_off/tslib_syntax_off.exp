@@ -39,5 +39,13 @@ Cannot use `Component` as a type because it is an `any`-typed value. Type `Compo
                 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:15:25
 
-Found 5 errors
+Return type annotation is required for `declare class` methods. [unsupported-syntax]
+
+   15|   constructor(x: number); // ERROR
+                               
+
+
+
+Found 6 errors

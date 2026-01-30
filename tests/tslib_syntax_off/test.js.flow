@@ -9,3 +9,8 @@ component Button(props: { label: string }); // ERROR
 
 // Import type annotation
 type T = import("react").Component; // ERROR
+
+// Declare class constructor without return type
+declare class Foo {
+  constructor(x: number); // ERROR
+}

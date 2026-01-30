@@ -1,6 +1,6 @@
 // Constructor without return type
 declare class A {
-  constructor(); // ERROR
+  constructor(); // OK: with tslib_syntax=true
 }
 
 // Method without return type
@@ -10,7 +10,7 @@ declare class B {
 
 // Multiple methods without return type
 declare class C {
-  constructor(); // ERROR
+  constructor(); // OK: with tslib_syntax=true
   method(); // ERROR
   anotherMethod(x: number); // ERROR
 }

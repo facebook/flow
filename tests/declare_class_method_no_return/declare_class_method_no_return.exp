@@ -1,25 +1,9 @@
-Error ----------------------------------------------------------------------------------------- method_no_return.js:3:16
-
-Return type annotation is required for `declare class` methods. [unsupported-syntax]
-
-   3|   constructor(); // ERROR
-                     
-
-
 Error ----------------------------------------------------------------------------------------- method_no_return.js:8:11
 
 Return type annotation is required for `declare class` methods. [unsupported-syntax]
 
    8|   method(); // ERROR
                 
-
-
-Error ---------------------------------------------------------------------------------------- method_no_return.js:13:16
-
-Return type annotation is required for `declare class` methods. [unsupported-syntax]
-
-   13|   constructor(); // ERROR
-                      
 
 
 Error ---------------------------------------------------------------------------------------- method_no_return.js:14:11
@@ -39,4 +23,4 @@ Return type annotation is required for `declare class` methods. [unsupported-syn
 
 
 
-Found 5 errors
+Found 3 errors
