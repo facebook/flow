@@ -2300,6 +2300,15 @@ and component_renders ~opts return =
   | Ast.Type.AvailableRenders (loc, renders) ->
     source_location_with_comments (loc, fuse [space; render_type ~opts loc renders])
 
+and ts_accessibility_layout = function
+  | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) ->
+    fuse [Atom "private"; space]
+  | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Protected; _ }) ->
+    fuse [Atom "protected"; space]
+  | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Public; _ }) ->
+    fuse [Atom "public"; space]
+  | None -> Empty
+
 and class_method
     ~opts
     ( loc,
@@ -2363,21 +2372,12 @@ and class_method
         else
           Empty
       in
-      let s_accessibility =
-        match ts_accessibility with
-        | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) ->
-          fuse [Atom "private"; space]
-        | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Protected; _ }) ->
-          fuse [Atom "protected"; space]
-        | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Public; _ }) ->
-          fuse [Atom "public"; space]
-        | None -> Empty
-      in
+      let ts_accessibility = ts_accessibility_layout ts_accessibility in
       let prefix = fuse_with_space [s_async; s_kind; s_key] in
       fuse
         [
           decorators_list ~opts decorators;
-          s_accessibility;
+          ts_accessibility;
           ( if static then
             fuse [Atom "static"; space]
           else
@@ -2435,16 +2435,7 @@ and class_property_helper
     | Ast.Class.Property.Uninitialized -> (false, None)
     | Ast.Class.Property.Initialized expr -> (false, Some expr)
   in
-  let s_accessibility =
-    match ts_accessibility with
-    | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) ->
-      fuse [Atom "private"; space]
-    | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Protected; _ }) ->
-      fuse [Atom "protected"; space]
-    | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Public; _ }) ->
-      fuse [Atom "public"; space]
-    | None -> Empty
-  in
+  let ts_accessibility = ts_accessibility_layout ts_accessibility in
   source_location_with_comments
     ?comments
     ( loc,
@@ -2457,7 +2448,7 @@ and class_property_helper
              else
                Empty
              );
-             s_accessibility;
+             ts_accessibility;
              ( if static then
                fuse [Atom "static"; space]
              else

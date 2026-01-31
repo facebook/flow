@@ -1576,6 +1576,32 @@ let tests =
            assert_statement_string ~ctxt "class a{declare x;}";
            assert_statement_string ~ctxt "class a{declare x:string;}"
          );
+         ( "class_ts_accessibility" >:: fun ctxt ->
+           (* methods with accessibility modifiers *)
+           assert_statement_string ~ctxt "class C{private b(){}}";
+           assert_statement_string ~ctxt "class C{protected b(){}}";
+           assert_statement_string ~ctxt "class C{public b(){}}";
+           assert_statement_string ~ctxt "class C{private static b(){}}";
+           assert_statement_string ~ctxt "class C{protected static b(){}}";
+           assert_statement_string ~ctxt "class C{public static b(){}}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "class a {\n  private b() {}\n  protected c() {}\n  public d() {}\n}";
+           (* properties with accessibility modifiers *)
+           assert_statement_string ~ctxt "class C{private x;}";
+           assert_statement_string ~ctxt "class C{protected x;}";
+           assert_statement_string ~ctxt "class C{public x;}";
+           assert_statement_string ~ctxt "class C{private static x;}";
+           assert_statement_string ~ctxt "class C{protected static x;}";
+           assert_statement_string ~ctxt "class C{public static x;}";
+           assert_statement_string ~ctxt "class C{public readonly x;}";
+           assert_statement_string ~ctxt "class C{public static readonly x;}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "class C {\n  private x;\n  protected y;\n  public z;\n}"
+         );
          ( "forin_statement_declaration" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
