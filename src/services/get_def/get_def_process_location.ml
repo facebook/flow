@@ -606,7 +606,8 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
         super#type_ (annot, t)
 
     method! type_param_identifier id =
-      let (loc, { Ast.Identifier.name; comments = _ }) = id in
+      let (annot, { Ast.Identifier.name; comments = _ }) = id in
+      let loc = this#loc_of_annot annot in
       if covers_target loc then this#own_named_def loc name;
       id
 

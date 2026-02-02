@@ -1322,8 +1322,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         }
       )
 
-    method type_param_identifier (id : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t =
-      this#identifier id
+    method type_param_identifier (id : ('M, 'T) Ast.Identifier.t) : ('N, 'U) Ast.Identifier.t =
+      this#t_identifier id
 
     method generic_type (gt : ('M, 'T) Ast.Type.Generic.t) : ('N, 'U) Ast.Type.Generic.t =
       let open Ast.Type.Generic in

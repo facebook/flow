@@ -2682,8 +2682,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         in
         let t = Flow_js_utils.generic_of_tparam ~f:(fun x -> x) cx tparam in
         let name_ast =
-          let (loc, id_name) = id in
-          (loc, id_name)
+          let (name_loc, id_name) = id in
+          ((name_loc, t), id_name)
         in
         let ast =
           ( loc,

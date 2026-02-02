@@ -634,7 +634,7 @@ and Type : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
     and ('M, 'T) t' = {
-      name: ('M, 'M) Identifier.t;
+      name: ('M, 'T) Identifier.t;
       bound: ('M, 'T) Type.annotation_or_hint;
       bound_kind: bound_kind;
       variance: 'M Variance.t option;
