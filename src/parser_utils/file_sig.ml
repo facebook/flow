@@ -320,8 +320,8 @@ class requires_calculator ~file_key ~ast ~opts =
       this#handle_call call_loc callee targs arguments None;
       super#call call_loc expr
 
-    method! module_ref_literal loc lit =
-      let { Ast.ModuleRefLiteral.value; prefix_len; _ } = lit in
+    method! module_ref_literal lit =
+      let { Ast.ModuleRefLiteral.value; prefix_len; require_loc = loc; _ } = lit in
       let mref = Base.String.drop_prefix value prefix_len in
       let prefix =
         if prefix_len > 0 then
@@ -330,7 +330,7 @@ class requires_calculator ~file_key ~ast ~opts =
           None
       in
       this#add_require (Require { source = (loc, mref); require_loc = loc; bindings = None; prefix });
-      super#module_ref_literal loc lit
+      super#module_ref_literal lit
 
     method! generic_identifier_import_type (import' : Loc.t Ast.Type.Generic.Identifier.import_type')
         =
@@ -362,21 +362,20 @@ class requires_calculator ~file_key ~ast ~opts =
         | Error _ -> expr)
       | _ -> super#tagged_template loc expr
 
-    method! import import_loc (expr : (Loc.t, Loc.t) Ast.Expression.Import.t) =
-      let open Ast.Expression in
-      let { Import.argument; options = _; comments = _ } = expr in
-      begin
-        match argument with
+    method! expression ((import_loc, expr') as expr : (Loc.t, Loc.t) Ast.Expression.t) =
+      (match expr' with
+      | Ast.Expression.Import { Ast.Expression.Import.argument; options = _; comments = _ } ->
+        (match argument with
         | ( loc,
-            ( StringLiteral { Ast.StringLiteral.value = name; _ }
-            | TemplateLiteral
+            ( Ast.Expression.StringLiteral { Ast.StringLiteral.value = name; _ }
+            | Ast.Expression.TemplateLiteral
                 {
-                  TemplateLiteral.quasis =
+                  Ast.Expression.TemplateLiteral.quasis =
                     [
                       ( _,
                         {
-                          TemplateLiteral.Element.value =
-                            { TemplateLiteral.Element.cooked = name; _ };
+                          Ast.Expression.TemplateLiteral.Element.value =
+                            { Ast.Expression.TemplateLiteral.Element.cooked = name; _ };
                           _;
                         }
                       );
@@ -385,9 +384,9 @@ class requires_calculator ~file_key ~ast ~opts =
                 } )
           ) ->
           this#add_require (ImportDynamic { source = (loc, name); import_loc })
-        | _ -> ()
-      end;
-      super#import import_loc expr
+        | _ -> ())
+      | _ -> ());
+      super#expression expr
 
     method! import_declaration import_loc (decl : (Loc.t, Loc.t) Ast.Statement.ImportDeclaration.t)
         =

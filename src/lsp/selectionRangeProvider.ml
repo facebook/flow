@@ -212,11 +212,18 @@ class selection_range_finder ~position =
 
     method! object_property x = this#test super#object_property x
 
-    method! object_key_string_literal x = this#test super#object_key_string_literal x
-
-    method! object_key_number_literal x = this#test super#object_key_number_literal x
-
-    method! object_key_bigint_literal x = this#test super#object_key_bigint_literal x
+    method! object_key key =
+      let open Flow_ast.Expression.Object.Property in
+      (match key with
+      | StringLiteral (loc, _)
+      | NumberLiteral (loc, _)
+      | BigIntLiteral (loc, _) ->
+        if this#contains loc then this#add_loc loc
+      | Identifier _
+      | PrivateName _
+      | Computed _ ->
+        ());
+      super#object_key key
 
     method! pattern ?kind patt = this#test (super#pattern ?kind) patt
 

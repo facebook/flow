@@ -1735,8 +1735,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           | None -> this#add_ordinary_binding loc reason def
       )
 
-    method! function_type loc ft =
-      this#in_new_tparams_env ~keep:true (fun () -> super#function_type loc ft)
+    method! function_type ft = this#in_new_tparams_env ~keep:true (fun () -> super#function_type ft)
 
     method! object_mapped_type_property mt =
       this#in_new_tparams_env ~keep:true (fun () -> super#object_mapped_type_property mt)

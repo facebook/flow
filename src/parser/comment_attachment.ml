@@ -189,7 +189,7 @@ class ['loc] trailing_comments_remover ~after_pos =
           (loc, { params with comments = comments' })
       )
 
-    method! function_type _loc func =
+    method! function_type func =
       let open Ast.Type.Function in
       let { return; comments; _ } = func in
       let return' = this#function_type_return_annotation return in
@@ -211,7 +211,7 @@ class ['loc] trailing_comments_remover ~after_pos =
           Qualified (loc, { qualified with id = id' })
       | ImportTypeAnnot _ -> git
 
-    method! import _loc expr =
+    method! import expr =
       let open Ast.Expression.Import in
       let { comments; _ } = expr in
       id this#syntax_opt comments expr (fun comments' -> { expr with comments = comments' })
@@ -219,7 +219,10 @@ class ['loc] trailing_comments_remover ~after_pos =
     method! interface_type _loc t =
       let open Ast.Type.Interface in
       let { body; comments; _ } = t in
-      let body' = map_loc this#object_type body in
+      let body' =
+        let (bloc, b) = body in
+        id this#object_type b body (fun b' -> (bloc, b'))
+      in
       let comments' = this#syntax_opt comments in
       if body == body' && comments == comments' then
         t
@@ -301,7 +304,7 @@ class ['loc] trailing_comments_remover ~after_pos =
       let { comments; _ } = expr in
       id this#syntax_opt comments expr (fun comments' -> { expr with comments = comments' })
 
-    method! object_type _loc obj =
+    method! object_type obj =
       let open Ast.Type.Object in
       let { comments; _ } = obj in
       id this#syntax_opt comments obj (fun comments' -> { obj with comments = comments' })
@@ -486,12 +489,19 @@ let object_key_remove_trailing env key =
 
 let generic_type_remove_trailing env ty =
   let { remove_trailing; _ } = trailing_and_remover env in
-  remove_trailing ty (fun remover ty -> map_loc remover#generic_type ty)
+  remove_trailing ty (fun remover ty ->
+      let (tyloc, t) = ty in
+      id remover#generic_type t ty (fun t' -> (tyloc, t'))
+  )
 
 let generic_type_list_remove_trailing env extends =
   let { remove_trailing; _ } = trailing_and_remover env in
   remove_trailing extends (fun remover extends ->
-      id_list_last (map_loc remover#generic_type) extends
+      id_list_last
+        (fun ty ->
+          let (tyloc, t) = ty in
+          id remover#generic_type t ty (fun t' -> (tyloc, t')))
+        extends
   )
 
 let class_implements_remove_trailing env implements =
@@ -500,7 +510,7 @@ let class_implements_remove_trailing env implements =
 
 let string_literal_remove_trailing env str =
   let { remove_trailing; _ } = trailing_and_remover env in
-  remove_trailing str (fun remover (loc, str) -> (loc, remover#string_literal loc str))
+  remove_trailing str (fun remover (loc, str) -> (loc, remover#string_literal str))
 
 let statement_add_comments
     ((loc, stmt) : (Loc.t, Loc.t) Statement.t) (comments : (Loc.t, unit) Syntax.t option) :

@@ -2269,11 +2269,11 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       (* Override the object type constuctor to disable the EReferenceInAnnotation check
        * since this is a common and safe way to encode recursive object types. *)
-      method! object_type loc ot =
+      method! object_type ot =
         let old_val = env_state.current_bindings in
         env_state <- { env_state with current_bindings = L.LMap.empty };
         Exception.protect
-          ~f:(fun () -> ignore @@ super#object_type loc ot)
+          ~f:(fun () -> ignore @@ super#object_type ot)
           ~finally:(fun () -> env_state <- { env_state with current_bindings = old_val });
         ot
 
@@ -4484,7 +4484,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           ~with_bindings:this#with_bindings
           iface
 
-      method! function_type _loc ft =
+      method! function_type ft =
         function_type
           ~with_types:true
           (this :> ALoc.t Flow_ast_mapper.mapper)

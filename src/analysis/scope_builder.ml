@@ -298,7 +298,7 @@ let interface ~with_types (visitor : 'loc #Flow_ast_mapper.mapper) ~with_binding
       ?hoist_op:None
       ~in_tparam_scope:(fun () ->
         run_list visitor#type_args extends_targs;
-        run_loc visitor#object_type body)
+        ignore @@ visitor#object_type (snd body))
       tparams;
     iface
 
@@ -556,7 +556,7 @@ let declare_class ~with_types (visitor : 'loc #Flow_ast_mapper.mapper) ~with_bin
     run_opt visitor#type_args extends_targs;
     run_list visitor#type_args mixins_targs;
     run_list visitor#type_args implements_targs;
-    run_loc visitor#object_type body
+    ignore @@ visitor#object_type (snd body)
   in
   scoped_type_params ~with_types visitor ~with_bindings ?hoist_op:None ~in_tparam_scope tparams;
   decl
@@ -1222,7 +1222,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
           loc
           expr
 
-      method! function_type _loc ft =
+      method! function_type ft =
         function_type
           ~with_types
           (this :> L.t Flow_ast_mapper.mapper)

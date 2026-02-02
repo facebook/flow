@@ -1151,9 +1151,7 @@ module Statement
     in
     let (extends, body) = Type.interface_helper env in
     let { remove_trailing; _ } = statement_end_trailing_comments env in
-    let body =
-      remove_trailing body (fun remover (loc, body) -> (loc, remover#object_type loc body))
-    in
+    let body = remove_trailing body (fun remover (loc, body) -> (loc, remover#object_type body)) in
 
     {
       Statement.Interface.id;
@@ -1241,7 +1239,7 @@ module Statement
       let body = Type._object ~is_class:true env in
       let { remove_trailing; _ } = statement_end_trailing_comments env in
       let body =
-        remove_trailing body (fun remover (loc, body) -> (loc, remover#object_type loc body))
+        remove_trailing body (fun remover (loc, body) -> (loc, remover#object_type body))
       in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
       Statement.DeclareClass.{ id; tparams; body; extends; mixins; implements; comments }
@@ -1581,9 +1579,7 @@ module Statement
     match semicolon env with
     | Explicit trailing -> ((source_loc, source), trailing)
     | Implicit { remove_trailing; _ } ->
-      ( ( source_loc,
-          remove_trailing source (fun remover source -> remover#string_literal source_loc source)
-        ),
+      ( (source_loc, remove_trailing source (fun remover source -> remover#string_literal source)),
         []
       )
 
@@ -2525,7 +2521,7 @@ module Statement
         | Implicit { remove_trailing; _ } ->
           ( [],
             remove_trailing source (fun remover (loc, source) ->
-                (loc, remover#string_literal loc source)
+                (loc, remover#string_literal source)
             )
           )
       in

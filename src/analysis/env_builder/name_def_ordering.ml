@@ -1026,9 +1026,9 @@ struct
         depends_of_node
           (fun visitor ->
             run_opt (visitor#type_params ~kind:Flow_ast_mapper.DeclareClassTP) tparams;
-            run_loc visitor#object_type body;
-            run_loc_opt visitor#generic_type extends;
-            Base.List.iter ~f:(run_loc visitor#generic_type) mixins;
+            ignore @@ visitor#object_type (snd body);
+            Base.Option.iter ~f:(fun ext -> ignore @@ visitor#generic_type (snd ext)) extends;
+            Base.List.iter ~f:(fun m -> ignore @@ visitor#generic_type (snd m)) mixins;
             run_opt visitor#class_implements implements;
             ())
           EnvMap.empty
@@ -1090,8 +1090,8 @@ struct
         depends_of_node
           (fun visitor ->
             run_opt (visitor#type_params ~kind:Flow_ast_mapper.InterfaceTP) tparams;
-            Base.List.iter ~f:(run_loc visitor#generic_type) extends;
-            run_loc visitor#object_type body;
+            Base.List.iter ~f:(fun ext -> ignore @@ visitor#generic_type (snd ext)) extends;
+            ignore @@ visitor#object_type (snd body);
             ())
           EnvMap.empty
       in

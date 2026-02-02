@@ -61,14 +61,14 @@ class mapper ~ts_readonly_name target_loc =
     else
       "$ReadOnlySet"
   in
-  object
+  object (this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
     val mutable conversion_kind = None
 
     method get_conversion_kind () = conversion_kind
 
-    method! generic_type loc type_ =
+    method private handle_generic_type loc type_ =
       let open Ast.Type.Generic in
       let { id; targs; comments } = type_ in
       match (id, targs) with
@@ -86,54 +86,69 @@ class mapper ~ts_readonly_name target_loc =
          * at foo for `$ReadOnly<{foo: string}>` *)
         let targ' = super#type_ targ in
         if targ == targ' then
-          type_
+          (loc, Ast.Type.Generic type_)
         else
           let targs = Some (targs_loc, { targs with Ast.Type.TypeArgs.arguments = [targ'] }) in
-          { id; targs; comments }
+          (loc, Ast.Type.Generic { id; targs; comments })
       (* Array<T> ~> ReadonlyArray<T> *)
       | ( Identifier.Unqualified (id_loc, { Ast.Identifier.name = "Array"; comments = id_comments }),
           Some (_, { Ast.Type.TypeArgs.arguments = [_]; comments = _ })
         )
         when Loc.contains id_loc target_loc || Loc.equal loc target_loc ->
         conversion_kind <- Some ConversionToReadOnlyArray;
-        {
-          id =
-            Identifier.Unqualified
-              (loc, { Ast.Identifier.name = readonly_array_name; comments = id_comments });
-          targs;
-          comments;
-        }
+        ( loc,
+          Ast.Type.Generic
+            {
+              id =
+                Identifier.Unqualified
+                  (loc, { Ast.Identifier.name = readonly_array_name; comments = id_comments });
+              targs;
+              comments;
+            }
+        )
       (* Map<T> ~> ReadonlyMap<T> *)
       | ( Identifier.Unqualified (id_loc, { Ast.Identifier.name = "Map"; comments = id_comments }),
           Some (_, { Ast.Type.TypeArgs.arguments = [_; _]; comments = _ })
         )
         when Loc.contains id_loc target_loc || Loc.equal loc target_loc ->
         conversion_kind <- Some ConversionToReadOnlyMap;
-        {
-          id =
-            Identifier.Unqualified
-              (loc, { Ast.Identifier.name = readonly_map_name; comments = id_comments });
-          targs;
-          comments;
-        }
+        ( loc,
+          Ast.Type.Generic
+            {
+              id =
+                Identifier.Unqualified
+                  (loc, { Ast.Identifier.name = readonly_map_name; comments = id_comments });
+              targs;
+              comments;
+            }
+        )
       (* Map<T> ~> ReadonlySet<T> *)
       | ( Identifier.Unqualified (id_loc, { Ast.Identifier.name = "Set"; comments = id_comments }),
           Some (_, { Ast.Type.TypeArgs.arguments = [_]; comments = _ })
         )
         when Loc.contains id_loc target_loc || Loc.equal loc target_loc ->
         conversion_kind <- Some ConversionToReadOnlySet;
-        {
-          id =
-            Identifier.Unqualified
-              (loc, { Ast.Identifier.name = readonly_set_name; comments = id_comments });
-          targs;
-          comments;
-        }
-      | _ -> super#generic_type loc type_
+        ( loc,
+          Ast.Type.Generic
+            {
+              id =
+                Identifier.Unqualified
+                  (loc, { Ast.Identifier.name = readonly_set_name; comments = id_comments });
+              targs;
+              comments;
+            }
+        )
+      | _ ->
+        let type_' = super#generic_type type_ in
+        if type_ == type_' then
+          (loc, Ast.Type.Generic type_)
+        else
+          (loc, Ast.Type.Generic type_')
 
-    method! type_ (loc, type_) =
+    method! type_ ((loc, type_) as t) =
       let open Ast.Type in
       match type_ with
+      | Generic gt -> this#handle_generic_type loc gt
       | Array { Array.argument; comments } when Loc.equal loc target_loc ->
         conversion_kind <- Some ConversionToReadOnlyArray;
         ( loc,
@@ -162,7 +177,7 @@ class mapper ~ts_readonly_name target_loc =
               comments = None;
             }
         )
-      | _ -> super#type_ (loc, type_)
+      | _ -> super#type_ t
   end
 
 let convert ~ts_readonly_name ast loc =

@@ -241,17 +241,17 @@ let expand_loc_with_comments loc node =
   let comment_bounds =
     match node with
     | StringLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#string_literal loc lit)
+      bounds (loc, lit) (fun collect (loc, lit) -> (loc, collect#string_literal lit))
     | NumberLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#number_literal loc lit)
+      bounds (loc, lit) (fun collect (loc, lit) -> (loc, collect#number_literal lit))
     | BigIntLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#bigint_literal loc lit)
+      bounds (loc, lit) (fun collect (loc, lit) -> (loc, collect#bigint_literal lit))
     | BooleanLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#boolean_literal loc lit)
+      bounds (loc, lit) (fun collect (loc, lit) -> (loc, collect#boolean_literal lit))
     | RegExpLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#regexp_literal loc lit)
+      bounds (loc, lit) (fun collect (loc, lit) -> (loc, collect#regexp_literal lit))
     | ModuleRefLiteral (loc, lit) ->
-      bounds (loc, lit) (fun collect (loc, lit) -> collect#module_ref_literal loc lit)
+      bounds (loc, lit) (fun collect (loc, lit) -> (loc, collect#module_ref_literal lit))
     | Statement (stmt, _) -> bounds stmt (fun collect stmt -> collect#statement stmt)
     | Expression (expr, _) -> bounds expr (fun collect expr -> collect#expression expr)
     | Pattern pat -> bounds pat (fun collect pat -> collect#pattern pat)

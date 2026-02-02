@@ -17,13 +17,13 @@ class useless_mapper =
   object (this)
     inherit [Loc.t] Flow_ast_mapper.mapper as super
 
-    method! number_literal _loc (lit : Loc.t Ast.NumberLiteral.t) =
+    method! number_literal (lit : Loc.t Ast.NumberLiteral.t) =
       let open Ast.NumberLiteral in
       match lit.value with
       | 4.0 -> { value = 5.0; raw = "5"; comments = None }
       | _ -> lit
 
-    method! string_literal _loc (lit : Loc.t Ast.StringLiteral.t) =
+    method! string_literal (lit : Loc.t Ast.StringLiteral.t) =
       let open Ast.StringLiteral in
       let { value; comments; _ } = lit in
       if String.equal "RenameSL" value then
@@ -323,19 +323,19 @@ class literal_mapper =
         (loc, Ast.Expression.StringLiteral lit)
       | _ -> super#expression (loc, expr)
 
-    method! string_literal _loc lit =
+    method! string_literal lit =
       let open Ast.StringLiteral in
       match lit.value with
       | "rename" -> { value = "gotRenamed"; raw = "gotRenamed"; comments = None }
       | _ -> lit
 
-    method! boolean_literal _loc lit =
+    method! boolean_literal lit =
       let open Ast.BooleanLiteral in
       match lit.value with
       | false -> { value = true; comments = None }
       | _ -> lit
 
-    method! number_literal _loc lit =
+    method! number_literal lit =
       let open Ast.NumberLiteral in
       match lit.value with
       | 4.0 -> { value = 5.0; raw = "5"; comments = None }
@@ -910,7 +910,7 @@ class true_to_false_mapper =
   object
     inherit [Loc.t] Flow_ast_mapper.mapper
 
-    method! boolean_literal _loc (expr : Loc.t Ast.BooleanLiteral.t) =
+    method! boolean_literal (expr : Loc.t Ast.BooleanLiteral.t) =
       let open Ast.BooleanLiteral in
       match expr.value with
       | true -> { value = false; comments = None }

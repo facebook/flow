@@ -14,24 +14,23 @@ class mapper target_loc ~incorrect_name ~replacement_name =
       match t with
       | (loc, Mixed comments) when incorrect_name = "mixed" && this#is_target loc ->
         (loc, Unknown comments)
+      | (loc, Generic gt) ->
+        let { Generic.id; targs; comments } = gt in
+        if not @@ this#is_target loc then
+          super#type_ t
+        else (
+          match id with
+          | Generic.Identifier.Unqualified
+              (id_loc, { Flow_ast.Identifier.name; comments = id_comments })
+            when name = incorrect_name ->
+            let id =
+              Generic.Identifier.Unqualified
+                (id_loc, { Flow_ast.Identifier.name = replacement_name; comments = id_comments })
+            in
+            (loc, Generic { Generic.id; targs; comments })
+          | _ -> super#type_ t
+        )
       | _ -> super#type_ t
-
-    method! generic_type loc t =
-      let open Flow_ast.Type in
-      let { Generic.id; targs; comments } = t in
-      if not @@ this#is_target loc then
-        super#generic_type loc t
-      else
-        match id with
-        | Generic.Identifier.Unqualified
-            (id_loc, { Flow_ast.Identifier.name; comments = id_comments })
-          when name = incorrect_name ->
-          let id =
-            Generic.Identifier.Unqualified
-              (id_loc, { Flow_ast.Identifier.name = replacement_name; comments = id_comments })
-          in
-          { Generic.id; targs; comments }
-        | _ -> super#generic_type loc t
   end
 
 let convert_type ~incorrect_name ~replacement_name ast loc =
