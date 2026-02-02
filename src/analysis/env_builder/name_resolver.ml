@@ -2198,13 +2198,17 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! function_param param =
         let open Ast.Function.Param in
-        let (loc, { argument; default }) = param in
-        this#visit_function_or_component_param_pattern ~is_rest:false argument;
-        ignore @@ super#function_param_pattern argument;
-        Base.Option.iter default ~f:(fun default_expr ->
-            this#visit_default_with_pattern_bindings argument default_expr
-        );
-        (loc, { argument; default })
+        match param with
+        | (loc, RegularParam { argument; default }) ->
+          this#visit_function_or_component_param_pattern ~is_rest:false argument;
+          ignore @@ super#function_param_pattern argument;
+          Base.Option.iter default ~f:(fun default_expr ->
+              this#visit_default_with_pattern_bindings argument default_expr
+          );
+          (loc, RegularParam { argument; default })
+        | (loc, ParamProperty prop) ->
+          (* Skip parameter properties, they are not supported *)
+          (loc, ParamProperty prop)
 
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
@@ -6890,6 +6894,13 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method! object_key_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
 
       method! component_param_name param_name = param_name
+
+      (* Skip parameter properties - they're not supported *)
+      method! function_param (param : (ALoc.t, ALoc.t) Ast.Function.Param.t) =
+        let open Ast.Function.Param in
+        match param with
+        | (_, ParamProperty _) -> param
+        | _ -> super#function_param param
 
       method! import_named_specifier ~import_kind specifier =
         import_named_specifier

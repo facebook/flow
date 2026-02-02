@@ -95,7 +95,10 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
       let reason = mk_reason (RIdentifier (OrdinaryName name)) name_loc in
       let t = Type_env.find_write cx Env_api.OrdinaryNameLoc reason in
       let default = eval_default cx ~always_flow_default:true t has_anno default in
-      (loc, { Ast.Function.Param.argument = ((ploc, t), Ast.Pattern.Identifier id); default })
+      ( loc,
+        Ast.Function.Param.RegularParam
+          { argument = ((ploc, t), Ast.Pattern.Identifier id); default }
+      )
     | Object { annot; properties; comments } ->
       let default = eval_default cx t has_anno default in
       let properties =
@@ -104,11 +107,12 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
         Destructuring.object_properties cx ~f ~parent_loc:ploc init properties
       in
       ( loc,
-        {
-          Ast.Function.Param.argument =
-            ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; comments });
-          default;
-        }
+        Ast.Function.Param.RegularParam
+          {
+            argument =
+              ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; comments });
+            default;
+          }
       )
     | Array { annot; elements; comments } ->
       let default = eval_default cx t has_anno default in
@@ -118,12 +122,15 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
         Destructuring.array_elements cx ~f init elements
       in
       ( loc,
-        {
-          Ast.Function.Param.argument =
-            ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; comments });
-          default;
-        }
+        Ast.Function.Param.RegularParam
+          {
+            argument = ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; comments });
+            default;
+          }
       )
+    | ParamPropertyPattern prop ->
+      (* Parameter properties are not supported *)
+      (loc, Ast.Function.Param.ParamProperty prop)
 
   let eval_rest cx (Rest { t = _; loc; ploc; id; has_anno = _ }) =
     let { Ast.Pattern.Identifier.name = ((name_loc, _), { Ast.Identifier.name; _ }); _ } = id in

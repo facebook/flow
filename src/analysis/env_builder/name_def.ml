@@ -624,8 +624,14 @@ let function_params_all_annotated
     ~allow_unannotated_this
     ((_, { Ast.Function.Params.params = parameters; rest; _ }) as params)
     body =
-  Base.List.for_all parameters ~f:(fun (_, { Ast.Function.Param.argument; _ }) ->
-      argument |> Destructure.type_of_pattern |> Base.Option.is_some
+  Base.List.for_all parameters ~f:(fun (_, param) ->
+      match param with
+      | Ast.Function.Param.RegularParam { argument; _ } ->
+        argument |> Destructure.type_of_pattern |> Base.Option.is_some
+      | Ast.Function.Param.ParamProperty { Ast.Class.Property.annot; _ } ->
+        (match annot with
+        | Ast.Type.Available _ -> true
+        | Ast.Type.Missing _ -> false)
   )
   && Base.Option.value_map rest ~default:true ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
          argument |> Destructure.type_of_pattern |> Base.Option.is_some
@@ -1251,79 +1257,84 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
     method private visit_function_param ~hints ~effect_ (param : ('loc, 'loc) Ast.Function.Param.t)
         =
       let open Ast.Function.Param in
-      let (loc, { argument; default = default_expression }) = param in
-      let optional =
-        match argument with
-        | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.optional; _ }) -> optional
-        | _ -> false
-      in
-      let (param_loc, _) = argument in
-      let annot = Destructure.type_of_pattern argument in
-      let source =
-        match annot with
-        | Some annot ->
-          Base.Option.iter
-            default_expression
-            ~f:
-              (this#visit_expression
-                 ~hints:[Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
-                 ~cond:NoContext
-              );
-          Annotation
-            {
-              tparams_map = tparams;
-              optional;
-              has_default_expression = Base.Option.is_some default_expression;
-              react_deep_read_only =
-                ( if effect_ = Ast.Function.Hook then
-                  Some Hook
-                else
-                  None
+      let (loc, param') = param in
+      match param' with
+      | ParamProperty _ ->
+        (* Parameter properties are not supported *)
+        ()
+      | RegularParam { argument; default = default_expression } ->
+        let optional =
+          match argument with
+          | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.optional; _ }) -> optional
+          | _ -> false
+        in
+        let (param_loc, _) = argument in
+        let annot = Destructure.type_of_pattern argument in
+        let source =
+          match annot with
+          | Some annot ->
+            Base.Option.iter
+              default_expression
+              ~f:
+                (this#visit_expression
+                   ~hints:[Hint_t (AnnotationHint (tparams, annot), ExpectedTypeHint)]
+                   ~cond:NoContext
                 );
-              param_loc = Some param_loc;
-              annot;
-              concrete = None;
-            }
-        | None ->
-          Base.Option.iter default_expression ~f:(this#visit_expression ~hints:[] ~cond:NoContext);
-          let reason =
-            match argument with
-            | ( _,
-                Ast.Pattern.Identifier
-                  { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
-              ) ->
-              mk_reason (RParameter (Some name)) param_loc
-            | _ -> mk_reason RDestructuring param_loc
-          in
-          this#record_hint param_loc hints;
-          Contextual { reason; hints; optional; default_expression }
-      in
-      let record_identifier loc name binding =
-        this#add_ordinary_binding
-          loc
-          (mk_reason (RIdentifier (OrdinaryName name)) loc)
-          (Binding binding);
-        true
-      in
-      if
-        (not
-           (Destructure.fold_pattern
-              ~record_identifier
-              ~record_destructuring_intermediate:this#add_destructure_binding
-              ~visit_default_expression:(this#visit_expression ~cond:NoContext)
-              ~default:false
-              ~join:( || )
-              (Root source)
-              argument
-           )
-        )
-        && Base.Option.is_none annot
-      then
-        this#add_binding
-          (Env_api.FunctionParamLoc, loc)
-          (mk_reason RDestructuring loc)
-          (Binding (Root source));
-      ignore @@ super#function_param (loc, { argument; default = None })
+            Annotation
+              {
+                tparams_map = tparams;
+                optional;
+                has_default_expression = Base.Option.is_some default_expression;
+                react_deep_read_only =
+                  ( if effect_ = Ast.Function.Hook then
+                    Some Hook
+                  else
+                    None
+                  );
+                param_loc = Some param_loc;
+                annot;
+                concrete = None;
+              }
+          | None ->
+            Base.Option.iter default_expression ~f:(this#visit_expression ~hints:[] ~cond:NoContext);
+            let reason =
+              match argument with
+              | ( _,
+                  Ast.Pattern.Identifier
+                    { Ast.Pattern.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }
+                ) ->
+                mk_reason (RParameter (Some name)) param_loc
+              | _ -> mk_reason RDestructuring param_loc
+            in
+            this#record_hint param_loc hints;
+            Contextual { reason; hints; optional; default_expression }
+        in
+        let record_identifier loc name binding =
+          this#add_ordinary_binding
+            loc
+            (mk_reason (RIdentifier (OrdinaryName name)) loc)
+            (Binding binding);
+          true
+        in
+        if
+          (not
+             (Destructure.fold_pattern
+                ~record_identifier
+                ~record_destructuring_intermediate:this#add_destructure_binding
+                ~visit_default_expression:(this#visit_expression ~cond:NoContext)
+                ~default:false
+                ~join:( || )
+                (Root source)
+                argument
+             )
+          )
+          && Base.Option.is_none annot
+        then
+          this#add_binding
+            (Env_api.FunctionParamLoc, loc)
+            (mk_reason RDestructuring loc)
+            (Binding (Root source));
+        ignore @@ super#function_param (loc, RegularParam { argument; default = None })
 
     method private visit_function_rest_param
         ~hints ~effect_ (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
@@ -1755,14 +1766,15 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
               Ast.Function.Params.params =
                 [
                   ( _,
-                    {
-                      Ast.Function.Param.argument =
-                        ( _,
-                          Ast.Pattern.Identifier
-                            { Ast.Pattern.Identifier.name = (loc, { Ast.Identifier.name; _ }); _ }
-                        );
-                      _;
-                    }
+                    Ast.Function.Param.RegularParam
+                      {
+                        argument =
+                          ( _,
+                            Ast.Pattern.Identifier
+                              { Ast.Pattern.Identifier.name = (loc, { Ast.Identifier.name; _ }); _ }
+                          );
+                        _;
+                      }
                   );
                 ];
               rest = None;
@@ -1786,10 +1798,16 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method private name_of_param param =
       let module P = Ast.Pattern in
-      let (_, { Ast.Function.Param.argument; _ }) = param in
-      match argument with
-      | (_, P.Identifier { P.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }) -> Some name
-      | _ -> None
+      let (_, param') = param in
+      match param' with
+      | Ast.Function.Param.RegularParam { argument; _ } ->
+        (match argument with
+        | (_, P.Identifier { P.Identifier.name = (_, { Ast.Identifier.name; _ }); _ }) -> Some name
+        | _ -> None)
+      | Ast.Function.Param.ParamProperty { Ast.Class.Property.key; _ } ->
+        (match key with
+        | Ast.Expression.Object.Property.Identifier (_, { Ast.Identifier.name; _ }) -> Some name
+        | _ -> None)
 
     method private params_list_to_str_opt params = Base.List.map params ~f:this#name_of_param
 

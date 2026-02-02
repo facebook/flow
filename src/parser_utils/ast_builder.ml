@@ -209,7 +209,8 @@ module Functions = struct
   let params ?(loc = Loc.none) ?rest ?this_ ?comments ps =
     (loc, { Ast.Function.Params.params = ps; rest; comments; this_ })
 
-  let param ?(loc = Loc.none) ?default argument = (loc, { Ast.Function.Param.argument; default })
+  let param ?(loc = Loc.none) ?default argument =
+    (loc, Ast.Function.Param.RegularParam { argument; default })
 
   let rest_param ?(loc = Loc.none) ?comments argument =
     (loc, { Ast.Function.RestParam.argument; comments })
@@ -265,7 +266,7 @@ module Functions = struct
   let param_of_type param =
     let argument = pattern_of_param param in
     Base.Option.map argument ~f:(fun argument ->
-        (Loc.none, { Ast.Function.Param.argument; default = None })
+        (Loc.none, Ast.Function.Param.RegularParam { argument; default = None })
     )
 
   let rest_param_of_type rest =

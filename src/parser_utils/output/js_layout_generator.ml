@@ -1868,18 +1868,19 @@ and arrow_function
           Ast.Function.Params.params =
             [
               ( _,
-                {
-                  Ast.Function.Param.argument =
-                    ( _,
-                      Ast.Pattern.Identifier
-                        {
-                          Ast.Pattern.Identifier.optional = false;
-                          annot = Ast.Type.Missing _;
-                          name = (id_loc, { Ast.Identifier.comments = id_comments; _ });
-                        }
-                    );
-                  default = None;
-                }
+                Ast.Function.Param.RegularParam
+                  {
+                    argument =
+                      ( _,
+                        Ast.Pattern.Identifier
+                          {
+                            Ast.Pattern.Identifier.optional = false;
+                            annot = Ast.Type.Missing _;
+                            name = (id_loc, { Ast.Identifier.comments = id_comments; _ });
+                          }
+                      );
+                    default = None;
+                  }
               );
             ];
           rest = None;
@@ -2022,15 +2023,39 @@ and function_base ~opts ~prefix ~params ~body ~predicate ~return ~tparams ~loc ~
            body;
        ]
 
-and function_param ~ctxt ~opts (loc, { Ast.Function.Param.argument; default }) : Layout.layout_node
-    =
-  let node = pattern ~ctxt ~opts argument in
-  let node =
-    match default with
-    | Some expr -> fuse_with_default ~opts node expr
-    | None -> node
-  in
-  source_location_with_comments (loc, node)
+and function_param ~ctxt ~opts (loc, param) : Layout.layout_node =
+  let open Ast.Function.Param in
+  match param with
+  | RegularParam { argument; default } ->
+    let node = pattern ~ctxt ~opts argument in
+    let node =
+      match default with
+      | Some expr -> fuse_with_default ~opts node expr
+      | None -> node
+    in
+    source_location_with_comments (loc, node)
+  | ParamProperty
+      {
+        Ast.Class.Property.key;
+        value;
+        annot;
+        static;
+        variance;
+        ts_accessibility;
+        decorators;
+        comments;
+      } ->
+    class_property_helper
+      ~opts
+      loc
+      (object_property_key ~opts key)
+      value
+      static
+      annot
+      variance
+      ts_accessibility
+      decorators
+      comments
 
 and function_params_and_return
     ~opts (loc, { Ast.Function.params; predicate; return; tparams; comments; _ }) =
@@ -2439,38 +2464,36 @@ and class_property_helper
   source_location_with_comments
     ?comments
     ( loc,
-      with_semicolon
-        (fuse
-           [
-             decorators_list ~opts decorators;
-             ( if declare then
-               fuse [Atom "declare"; space]
-             else
-               Empty
-             );
-             ts_accessibility;
-             ( if static then
-               fuse [Atom "static"; space]
-             else
-               Empty
-             );
-             option variance variance_;
-             key;
-             hint (type_annotation ~opts) annot;
-             begin
-               match value with
-               | Some v ->
-                 fuse
-                   [
-                     pretty_space;
-                     Atom "=";
-                     pretty_space;
-                     expression_with_parens ~precedence:min_precedence ~ctxt:normal_context ~opts v;
-                   ]
-               | None -> Empty
-             end;
-           ]
-        )
+      fuse
+        [
+          decorators_list ~opts decorators;
+          ( if declare then
+            fuse [Atom "declare"; space]
+          else
+            Empty
+          );
+          ts_accessibility;
+          ( if static then
+            fuse [Atom "static"; space]
+          else
+            Empty
+          );
+          option variance variance_;
+          key;
+          hint (type_annotation ~opts) annot;
+          begin
+            match value with
+            | Some v ->
+              fuse
+                [
+                  pretty_space;
+                  Atom "=";
+                  pretty_space;
+                  expression_with_parens ~precedence:min_precedence ~ctxt:normal_context ~opts v;
+                ]
+            | None -> Empty
+          end;
+        ]
     )
 
 and class_property
@@ -2487,17 +2510,19 @@ and class_property
         comments;
       }
     ) =
-  class_property_helper
-    ~opts
-    loc
-    (object_property_key ~opts key)
-    value
-    static
-    annot
-    variance
-    ts_accessibility
-    decorators
-    comments
+  with_semicolon
+    (class_property_helper
+       ~opts
+       loc
+       (object_property_key ~opts key)
+       value
+       static
+       annot
+       variance
+       ts_accessibility
+       decorators
+       comments
+    )
 
 and class_private_field
     ~opts
@@ -2519,17 +2544,19 @@ and class_private_field
       key_comments
       (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
   in
-  class_property_helper
-    ~opts
-    loc
-    key
-    value
-    static
-    annot
-    variance
-    ts_accessibility
-    decorators
-    comments
+  with_semicolon
+    (class_property_helper
+       ~opts
+       loc
+       key
+       value
+       static
+       annot
+       variance
+       ts_accessibility
+       decorators
+       comments
+    )
 
 and class_static_block ~opts (loc, { Ast.Class.StaticBlock.body; comments }) =
   let statements = statement_list ~opts ~pretty_semicolon:true body in

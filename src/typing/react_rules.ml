@@ -908,12 +908,16 @@ let rec whole_ast_visitor tast ~under_function_or_class_body ~initial_hook_call_
           | [props_param; _] ->
             (* function Component(props: {...}) *)
             (* forwardRef(props: {...}, ref: ...) *)
-            let (_, { Ast.Function.Param.argument = ((props_loc, props_t), _); _ }) = props_param in
-            not
-            @@ Flow_js.FlowJs.speculative_subtyping_succeeds
-                 cx
-                 props_t
-                 (Fix_statement.Statement_.Anno.mk_empty_interface_type cx props_loc)
+            (match props_param with
+            | (_, Ast.Function.Param.RegularParam { argument = ((props_loc, props_t), _); _ }) ->
+              not
+              @@ Flow_js.FlowJs.speculative_subtyping_succeeds
+                   cx
+                   props_t
+                   (Fix_statement.Statement_.Anno.mk_empty_interface_type cx props_loc)
+            | (_, Ast.Function.Param.ParamProperty _) ->
+              (* Parameter properties not valid for React components *)
+              true)
           | _ -> true
         in
         let is_definitely_component_due_to_hint () =

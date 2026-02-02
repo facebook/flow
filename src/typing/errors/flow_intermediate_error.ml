@@ -4772,6 +4772,11 @@ let to_printable_error :
           ("protected", [text "To fix, remove the "; code "protected"; text " modifier."])
       in
       [text "Flow does not support using "; code modifier; text " in classes. "] @ suffix
+    | MessageTSParameterProperty ->
+      [
+        text "Flow does not support TypeScript parameter properties. ";
+        text "To fix, declare the property in the class body and assign it in the constructor.";
+      ]
     | MessageTSSatisfiesType enabled_casting_syntax ->
       let (example, _) = type_casting_examples enabled_casting_syntax in
       [

@@ -1602,6 +1602,16 @@ let tests =
              ~pretty:true
              "class C {\n  private x;\n  protected y;\n  public z;\n}"
          );
+         ( "class_ts_parameter_properties" >:: fun ctxt ->
+           assert_statement_string ~ctxt "class C{constructor(private x:number){}}";
+           assert_statement_string ~ctxt "class C{constructor(protected x:string){}}";
+           assert_statement_string ~ctxt "class C{constructor(public x:boolean){}}";
+           assert_statement_string ~ctxt "class C{constructor(public x:boolean=true){}}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "class C {\n  constructor(private x: number, protected y: string) {}\n}"
+         );
          ( "forin_statement_declaration" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement

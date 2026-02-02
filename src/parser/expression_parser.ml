@@ -1927,18 +1927,19 @@ module Expression
               in
               let param =
                 ( loc,
-                  {
-                    Ast.Function.Param.argument =
-                      ( loc,
-                        Pattern.Identifier
-                          {
-                            Pattern.Identifier.name;
-                            annot = Ast.Type.Missing (Peek.loc_skip_lookahead env);
-                            optional = false;
-                          }
-                      );
-                    default = None;
-                  }
+                  Ast.Function.Param.RegularParam
+                    {
+                      argument =
+                        ( loc,
+                          Pattern.Identifier
+                            {
+                              Pattern.Identifier.name;
+                              annot = Ast.Type.Missing (Peek.loc_skip_lookahead env);
+                              optional = false;
+                            }
+                        );
+                      default = None;
+                    }
                 )
               in
               ( tparams,

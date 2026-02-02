@@ -214,11 +214,8 @@ let infer_type_guard cx ~infer_expr params =
         Ast.Function.Params.params =
           [
             ( _,
-              {
-                Ast.Function.Param.argument =
-                  (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ });
-                _;
-              }
+              Ast.Function.Param.RegularParam
+                { argument = (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; _ }); _ }
             );
           ];
         rest = None;

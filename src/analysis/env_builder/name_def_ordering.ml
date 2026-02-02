@@ -508,11 +508,16 @@ struct
 
         method! function_param param =
           let open Ast.Function.Param in
-          let (loc, { argument; default = _ }) = param in
-          if (not (Flow_ast_utils.pattern_has_binding argument)) && not (pattern_has_annot argument)
-          then
-            this#add ~why:loc (Env_api.FunctionParamLoc, loc);
-          super#function_param param
+          match param with
+          | (loc, RegularParam { argument; default = _ }) ->
+            if
+              (not (Flow_ast_utils.pattern_has_binding argument)) && not (pattern_has_annot argument)
+            then
+              this#add ~why:loc (Env_api.FunctionParamLoc, loc);
+            super#function_param param
+          | (_, ParamProperty _) ->
+            (* Skip parameter properties - they're not supported *)
+            param
 
         method visit_annotation_in_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
           let open Ast.Pattern in
@@ -602,12 +607,17 @@ struct
 
         method function_param_annotated (param : ('loc, 'loc) Ast.Function.Param.t) =
           let open Ast.Function.Param in
-          let (loc, { argument; default = _ }) = param in
-          (* Skip default *)
-          run this#function_param_pattern_annotated argument;
-          if (not (Flow_ast_utils.pattern_has_binding argument)) && not (pattern_has_annot argument)
-          then
-            this#add ~why:loc (Env_api.FunctionParamLoc, loc);
+          (match param with
+          | (loc, RegularParam { argument; default = _ }) ->
+            (* Skip default *)
+            run this#function_param_pattern_annotated argument;
+            if
+              (not (Flow_ast_utils.pattern_has_binding argument)) && not (pattern_has_annot argument)
+            then
+              this#add ~why:loc (Env_api.FunctionParamLoc, loc)
+          | (_, ParamProperty _) ->
+            (* Skip parameter properties - they're not supported *)
+            ());
           param
 
         method function_rest_param_annotated (expr : ('loc, 'loc) Ast.Function.RestParam.t) =
@@ -638,8 +648,13 @@ struct
             let (_, { Ast.Function.Params.params = params_list; rest; comments = _; this_ }) =
               params
             in
-            Base.List.iter params_list ~f:(fun (_, { Ast.Function.Param.argument; _ }) ->
-                this#visit_annotation_in_pattern argument
+            Base.List.iter params_list ~f:(fun param ->
+                match param with
+                | (_, Ast.Function.Param.RegularParam { argument; _ }) ->
+                  this#visit_annotation_in_pattern argument
+                | (_, Ast.Function.Param.ParamProperty _) ->
+                  (* Skip parameter properties - they're not supported *)
+                  ()
             );
             Base.Option.iter rest ~f:(fun (_, { Ast.Function.RestParam.argument; _ }) ->
                 this#visit_annotation_in_pattern argument

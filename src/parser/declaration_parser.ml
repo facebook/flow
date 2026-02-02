@@ -61,7 +61,18 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
     let (_, { Ast.Function.Params.params; rest; this_ = _; comments = _ }) = params in
     let acc =
       List.fold_left
-        (fun acc (_, { Function.Param.argument; default = _ }) -> check_param acc argument)
+        (fun acc (loc, param) ->
+          match param with
+          | Function.Param.RegularParam { argument; default = _ } -> check_param acc argument
+          | Function.Param.ParamProperty { Class.Property.key; annot; _ } ->
+            (match key with
+            | Expression.Object.Property.Identifier ((id_loc, _) as name) ->
+              check_param
+                acc
+                (id_loc, Pattern.Identifier { Pattern.Identifier.name; annot; optional = false })
+            | _ ->
+              error_at env (loc, Parse_error.ExpectedPatternFoundExpression);
+              acc))
         (env, SSet.empty)
         params
     in
@@ -103,6 +114,45 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
     | Some (_, { Ast.Statement.ComponentDeclaration.RestParam.argument; comments = _ }) ->
       ignore (check_param acc argument)
     | None -> ()
+
+  let variance env ~parse_readonly is_async is_generator =
+    let loc = Peek.loc env in
+    let variance =
+      match Peek.token env with
+      | T_PLUS ->
+        let leading = Peek.comments env in
+        Eat.token env;
+        Some
+          ( loc,
+            { Variance.kind = Variance.Plus; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+          )
+      | T_MINUS ->
+        let leading = Peek.comments env in
+        Eat.token env;
+        Some
+          ( loc,
+            {
+              Variance.kind = Variance.Minus;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
+          )
+      | T_IDENTIFIER { raw = "readonly"; _ } when parse_readonly ->
+        let leading = Peek.comments env in
+        Eat.token env;
+        Some
+          ( loc,
+            {
+              Variance.kind = Variance.Readonly;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
+          )
+      | _ -> None
+    in
+    match variance with
+    | Some (loc, _) when is_async || is_generator ->
+      error_at env (loc, Parse_error.UnexpectedVariance);
+      None
+    | _ -> variance
 
   type param_type =
     | FunctionParams of (Loc.t, Loc.t) Ast.Function.Params.t
@@ -160,18 +210,74 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
       None
 
   let function_params =
+    let param_property env ts_accessibility =
+      let variance = variance env ~parse_readonly:true false false in
+      let leading = Peek.comments env in
+      let (name_loc, name_id) = Parse.identifier env in
+      let key =
+        Ast.Expression.Object.Property.Identifier
+          (name_loc, { name_id with Ast.Identifier.comments = None })
+      in
+      let annot = Type.annotation_opt env in
+      let value =
+        if Peek.token env = T_ASSIGN then (
+          Expect.token env T_ASSIGN;
+          Ast.Class.Property.Initialized (Parse.assignment env)
+        ) else
+          Ast.Class.Property.Uninitialized
+      in
+      let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+      {
+        Ast.Class.Property.key;
+        value;
+        annot;
+        static = false;
+        variance;
+        ts_accessibility;
+        decorators = [];
+        comments;
+      }
+    in
     let rec param =
       with_loc (fun env ->
           if Peek.token env = T_THIS then error env Parse_error.ThisParamMustBeFirst;
-          let argument = Parse.pattern env Parse_error.StrictParamName in
-          let default =
-            if Peek.token env = T_ASSIGN then (
-              Expect.token env T_ASSIGN;
-              Some (Parse.assignment env)
-            ) else
-              None
-          in
-          { Function.Param.argument; default }
+          match Peek.token env with
+          | (T_PUBLIC as t)
+          | (T_PRIVATE as t)
+          | (T_PROTECTED as t)
+            when Peek.ith_is_identifier ~i:1 env ->
+            let ts_accessibility =
+              (with_loc (fun env ->
+                   let leading = Peek.comments env in
+                   Eat.token env;
+                   let kind =
+                     match t with
+                     | T_PUBLIC -> Ast.Class.TSAccessibility.Public
+                     | T_PRIVATE -> Ast.Class.TSAccessibility.Private
+                     | T_PROTECTED -> Ast.Class.TSAccessibility.Protected
+                     | _ -> failwith "Must be one of the above"
+                   in
+                   {
+                     Ast.Class.TSAccessibility.kind;
+                     comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                   }
+               )
+              )
+                env
+            in
+            Function.Param.ParamProperty (param_property env (Some ts_accessibility))
+          | T_IDENTIFIER { raw = "readonly"; _ } when Peek.ith_is_identifier ~i:1 env ->
+            Function.Param.ParamProperty (param_property env None)
+          | _ ->
+            let argument = Parse.pattern env Parse_error.StrictParamName in
+            let default =
+              if Peek.token env = T_ASSIGN then (
+                Expect.token env T_ASSIGN;
+                Some (Parse.assignment env)
+              ) else
+                None
+            in
+            Function.Param.RegularParam { argument; default }
       )
     and param_list env acc =
       match Peek.token env with
@@ -250,45 +356,6 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
     in
     (Function.BodyBlock body_block, contains_use_strict)
 
-  let variance env ~parse_readonly is_async is_generator =
-    let loc = Peek.loc env in
-    let variance =
-      match Peek.token env with
-      | T_PLUS ->
-        let leading = Peek.comments env in
-        Eat.token env;
-        Some
-          ( loc,
-            { Variance.kind = Variance.Plus; comments = Flow_ast_utils.mk_comments_opt ~leading () }
-          )
-      | T_MINUS ->
-        let leading = Peek.comments env in
-        Eat.token env;
-        Some
-          ( loc,
-            {
-              Variance.kind = Variance.Minus;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            }
-          )
-      | T_IDENTIFIER { raw = "readonly"; _ } when parse_readonly ->
-        let leading = Peek.comments env in
-        Eat.token env;
-        Some
-          ( loc,
-            {
-              Variance.kind = Variance.Readonly;
-              comments = Flow_ast_utils.mk_comments_opt ~leading ();
-            }
-          )
-      | _ -> None
-    in
-    match variance with
-    | Some (loc, _) when is_async || is_generator ->
-      error_at env (loc, Parse_error.UnexpectedVariance);
-      None
-    | _ -> variance
-
   let generator env =
     if Peek.token env = T_MULT then (
       let leading = Peek.comments env in
@@ -311,19 +378,21 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
      Returns Ok type_param or Error error_reason. *)
   let convert_function_param_to_type_param (param_loc, param) =
     let open Function.Param in
-    let { argument; default = _ } = param in
-    match argument with
-    | (_, Pattern.Identifier { Pattern.Identifier.name; annot; optional }) ->
-      (match annot with
-      | Ast.Type.Available (_, (type_loc, type_annot)) ->
-        Ok
-          ( param_loc,
-            { Ast.Type.Function.Param.name = Some name; annot = (type_loc, type_annot); optional }
-          )
-      | Ast.Type.Missing _ ->
-        let (_, { Identifier.name = param_name; _ }) = name in
-        Error (Printf.sprintf "parameter '%s' is missing a type annotation" param_name))
-    | _ -> Error "complex parameter patterns are not allowed"
+    match param with
+    | RegularParam { argument; default = _ } ->
+      (match argument with
+      | (_, Pattern.Identifier { Pattern.Identifier.name; annot; optional }) ->
+        (match annot with
+        | Ast.Type.Available (_, (type_loc, type_annot)) ->
+          Ok
+            ( param_loc,
+              { Ast.Type.Function.Param.name = Some name; annot = (type_loc, type_annot); optional }
+            )
+        | Ast.Type.Missing _ ->
+          let (_, { Identifier.name = param_name; _ }) = name in
+          Error (Printf.sprintf "parameter '%s' is missing a type annotation" param_name))
+      | _ -> Error "complex parameter patterns are not allowed")
+    | ParamProperty _ -> Error "parameter properties are not allowed"
 
   (* Convert Function.Params to Type.Function.Params for implicit declare function.
      Returns Ok type_params or Error error_reasons. *)
@@ -352,7 +421,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
       | Some (rest_loc, { Function.RestParam.argument; comments = rest_comments }) ->
         (match
            convert_function_param_to_type_param
-             (rest_loc, { Function.Param.argument; default = None })
+             (rest_loc, Function.Param.RegularParam { argument; default = None })
          with
         | Ok (_, type_param) ->
           let rest_param =

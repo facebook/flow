@@ -1062,6 +1062,14 @@ end = struct
             ));
         left
 
+      method! function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
+        let open Ast.Function.Param in
+        match param with
+        | (_, ParamProperty _) ->
+          (* Skip parameter properties - they're not supported *)
+          param
+        | _ -> super#function_param param
+
       method! function_param_pattern (expr : ('loc, 'loc) Ast.Pattern.t) =
         (* NOTE: All function parameters are considered annotated, whether this
          * annotation is explicitly provided, is contextually inferred, or is

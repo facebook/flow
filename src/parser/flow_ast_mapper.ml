@@ -2141,13 +2141,21 @@ class ['loc] mapper =
 
     method function_param (param : ('loc, 'loc) Ast.Function.Param.t) =
       let open Ast.Function.Param in
-      let (loc, { argument; default }) = param in
-      let argument' = this#function_param_pattern argument in
-      let default' = this#default_opt default in
-      if argument == argument' && default == default' then
-        param
-      else
-        (loc, { argument = argument'; default = default' })
+      let (loc, param') = param in
+      match param' with
+      | RegularParam { argument; default } ->
+        let argument' = this#function_param_pattern argument in
+        let default' = this#default_opt default in
+        if argument == argument' && default == default' then
+          param
+        else
+          (loc, RegularParam { argument = argument'; default = default' })
+      | ParamProperty prop' ->
+        let prop'' = this#class_property loc prop' in
+        if prop' == prop'' then
+          param
+        else
+          (loc, ParamProperty prop'')
 
     method function_return_annotation (return : ('loc, 'loc) Ast.Function.ReturnAnnot.t) =
       let open Ast.Function.ReturnAnnot in

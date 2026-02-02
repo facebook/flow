@@ -910,6 +910,7 @@ and ts_syntax_kind =
   | TSSatisfiesType of Options.CastingSyntax.t
   | TSReadonlyType of [ `Tuple | `Array ] option
   | TSClassAccessibility of Flow_ast.Class.TSAccessibility.kind
+  | TSParameterProperty
 
 and invalid_mapped_type_error_kind =
   | InterfaceOrDeclaredClass
@@ -3725,6 +3726,7 @@ let friendly_message_of_msg = function
       | `Array -> Normal MessageTSReadonlyOperatorOnArray)
     | TSReadonlyType None -> Normal MessageTSReadonlyType
     | TSClassAccessibility kind -> Normal (MessageTSClassAccessibility kind)
+    | TSParameterProperty -> Normal MessageTSParameterProperty
   end
   | EInvalidBinaryArith { reason_out = _; reason_l; reason_r; kind } ->
     Normal (MessageCannotPerformBinaryArith { kind; reason_l; reason_r })

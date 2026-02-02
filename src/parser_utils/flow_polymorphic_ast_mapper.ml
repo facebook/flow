@@ -1715,11 +1715,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method function_param (param : ('M, 'T) Ast.Function.Param.t) : ('N, 'U) Ast.Function.Param.t =
       let open Ast.Function.Param in
-      let (annot, { argument; default }) = param in
+      let (annot, param') = param in
       let annot' = this#on_loc_annot annot in
-      let argument' = this#function_param_pattern argument in
-      let default' = this#default_opt default in
-      (annot', { argument = argument'; default = default' })
+      match param' with
+      | RegularParam { argument; default } ->
+        let argument' = this#function_param_pattern argument in
+        let default' = this#default_opt default in
+        (annot', RegularParam { argument = argument'; default = default' })
+      | ParamProperty prop ->
+        let prop' = this#class_property prop in
+        (annot', ParamProperty prop')
 
     method function_rest_param (expr : ('M, 'T) Ast.Function.RestParam.t)
         : ('N, 'U) Ast.Function.RestParam.t =

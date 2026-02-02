@@ -1069,13 +1069,54 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
   and function_param
       (param1 : (Loc.t, Loc.t) Ast.Function.Param.t) (param2 : (Loc.t, Loc.t) Ast.Function.Param.t)
       : node change list option =
-    let (_, { Ast.Function.Param.argument = arg1; default = def1 }) = param1 in
-    let (_, { Ast.Function.Param.argument = arg2; default = def2 }) = param2 in
-    let param_diff = diff_if_changed function_param_pattern arg1 arg2 |> Base.Option.return in
-    let default_diff =
-      diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) def1 def2
-    in
-    join_diff_list [param_diff; default_diff]
+    let open Ast.Function.Param in
+    let (_, param1') = param1 in
+    let (_, param2') = param2 in
+    match (param1', param2') with
+    | ( RegularParam { argument = arg1; default = def1 },
+        RegularParam { argument = arg2; default = def2 }
+      ) ->
+      let param_diff = diff_if_changed function_param_pattern arg1 arg2 |> Base.Option.return in
+      let default_diff =
+        diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) def1 def2
+      in
+      join_diff_list [param_diff; default_diff]
+    | (ParamProperty prop1, ParamProperty prop2) ->
+      let open Ast.Class.Property in
+      let (loc1, _) = param1 in
+      let {
+        key = key1;
+        value = val1;
+        annot = annot1;
+        static = s1;
+        variance = var1;
+        ts_accessibility = acc1;
+        decorators = decorators1;
+        comments = comments1;
+      } =
+        prop1
+      in
+      let {
+        key = key2;
+        value = val2;
+        annot = annot2;
+        static = s2;
+        variance = var2;
+        ts_accessibility = acc2;
+        decorators = decorators2;
+        comments = comments2;
+      } =
+        prop2
+      in
+      if key1 != key2 || s1 != s2 || var1 != var2 || acc1 != acc2 then
+        None
+      else
+        let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
+        let annots = Some (diff_if_changed type_annotation_hint annot1 annot2) in
+        let decorators = diff_and_recurse_no_trivial class_decorator decorators1 decorators2 in
+        let comments = syntax_opt loc1 comments1 comments2 in
+        join_diff_list [vals; annots; decorators; comments]
+    | _ -> None
   and function_return_annot
       (return1 : (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t)
       (return2 : (Loc.t, Loc.t) Ast.Function.ReturnAnnot.t) : node change list =

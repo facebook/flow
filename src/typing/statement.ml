@@ -9311,31 +9311,48 @@ module Make
       (t, { Ast.Pattern.Identifier.name; annot; optional })
     in
     let mk_param cx tparams_map param =
-      let (loc, { Ast.Function.Param.argument = (ploc, patt); default }) = param in
-      let has_param_anno =
-        match Destructuring.type_of_pattern (ploc, patt) with
-        | Ast.Type.Missing _ -> false
-        | Ast.Type.Available _ -> true
-      in
-      let (t, pattern) =
-        match patt with
-        | Ast.Pattern.Identifier id ->
-          let (t, id) =
-            id_param cx tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
-          in
-          (t, Func_stmt_config_types.Types.Id id)
-        | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
-          let reason = mk_reason RDestructuring ploc in
-          let (t, annot) = mk_param_annot cx tparams_map reason annot in
-          (t, Func_stmt_config_types.Types.Object { annot; properties; comments })
-        | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
-          let reason = mk_reason RDestructuring ploc in
-          let (t, annot) = mk_param_annot cx tparams_map reason annot in
-          (t, Func_stmt_config_types.Types.Array { annot; elements; comments })
-        | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
-      in
-      Func_stmt_config_types.Types.Param
-        { t; loc; ploc; pattern; default; has_anno = has_param_anno }
+      let (loc, param') = param in
+      match param' with
+      | Ast.Function.Param.ParamProperty prop ->
+        Flow_js_utils.add_output
+          cx
+          (Error_message.ETSSyntax { kind = Error_message.TSParameterProperty; loc });
+        Func_stmt_config_types.Types.Param
+          {
+            t = AnyT.make (AnyError None) (mk_reason (RParameter None) loc);
+            loc;
+            ploc = loc;
+            pattern =
+              Func_stmt_config_types.Types.ParamPropertyPattern
+                (Typed_ast_utils.error_mapper#class_property prop);
+            default = None;
+            has_anno = true;
+          }
+      | Ast.Function.Param.RegularParam { argument = (ploc, patt); default } ->
+        let has_param_anno =
+          match Destructuring.type_of_pattern (ploc, patt) with
+          | Ast.Type.Missing _ -> false
+          | Ast.Type.Available _ -> true
+        in
+        let (t, pattern) =
+          match patt with
+          | Ast.Pattern.Identifier id ->
+            let (t, id) =
+              id_param cx tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
+            in
+            (t, Func_stmt_config_types.Types.Id id)
+          | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
+            let reason = mk_reason RDestructuring ploc in
+            let (t, annot) = mk_param_annot cx tparams_map reason annot in
+            (t, Func_stmt_config_types.Types.Object { annot; properties; comments })
+          | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
+            let reason = mk_reason RDestructuring ploc in
+            let (t, annot) = mk_param_annot cx tparams_map reason annot in
+            (t, Func_stmt_config_types.Types.Array { annot; elements; comments })
+          | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
+        in
+        Func_stmt_config_types.Types.Param
+          { t; loc; ploc; pattern; default; has_anno = has_param_anno }
     in
     let mk_rest cx tparams_map rest =
       let (loc, { Ast.Function.RestParam.argument = (ploc, patt); comments = _ }) = rest in

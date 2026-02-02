@@ -452,6 +452,69 @@ The closest equivalent of TypeScript's `never` type in Flow is `empty`. [ts-synt
                ^^^^^
 
 
+Error -------------------------------------------------------------------------------------- parameter_properties.js:3:5
+
+Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
+the constructor. [ts-syntax]
+
+   3|     private name: string, // ERROR
+          ^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- parameter_properties.js:9:5
+
+Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
+the constructor. [ts-syntax]
+
+   9|     private readonly x: number, // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- parameter_properties.js:15:5
+
+Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
+the constructor. [ts-syntax]
+
+   15|     private a: string, // ERROR
+           ^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- parameter_properties.js:16:5
+
+Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
+the constructor. [ts-syntax]
+
+   16|     protected b: number, // ERROR
+           ^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- parameter_properties.js:17:5
+
+Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
+the constructor. [ts-syntax]
+
+   17|     public c: boolean, // ERROR
+           ^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- parameter_properties.js:18:5
+
+Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
+the constructor. [ts-syntax]
+
+   18|     protected readonly d: string, // ERROR
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- parameter_properties.js:24:5
+
+Flow does not support TypeScript parameter properties. To fix, declare the property in the class body and assign it in
+the constructor. [ts-syntax]
+
+   24|     private name: string = "default", // ERROR
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error -------------------------------------------------------------------------------------------- readonly_type.js:1:10
 
 The equivalent of TypeScript's `readonly` type operator applied to a tuple type is `Readonly<[T, S]>`. [ts-syntax]
@@ -921,4 +984,4 @@ types. [ts-syntax]
 
 
 
-Found 104 errors
+Found 111 errors

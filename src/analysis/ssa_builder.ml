@@ -540,6 +540,13 @@ struct
       (* don't rename the `foo` in `component C(foo: number) {}` *)
       method! component_param_name param_name = param_name
 
+      (* Skip parameter properties - they're not supported *)
+      method! function_param (param : (L.t, L.t) Ast.Function.Param.t) =
+        let open Ast.Function.Param in
+        match param with
+        | (_, ParamProperty _) -> param
+        | _ -> super#function_param param
+
       (* Order of evaluation matters *)
       method! assignment _loc (expr : (L.t, L.t) Ast.Expression.Assignment.t) =
         let open Ast.Expression.Assignment in

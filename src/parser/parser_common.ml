@@ -444,7 +444,11 @@ let private_identifier env =
     https://tc39.es/ecma262/#sec-static-semantics-issimpleparameterlist *)
 let is_simple_parameter_list =
   let is_simple_param = function
-    | (_, { Flow_ast.Function.Param.argument = (_, Pattern.Identifier _); default = None }) -> true
+    | ( _,
+        Flow_ast.Function.Param.RegularParam
+          { argument = (_, Pattern.Identifier _); default = None }
+      ) ->
+      true
     | _ -> false
   in
   fun (_, { Flow_ast.Function.Params.params; rest; comments = _; this_ = _ }) ->

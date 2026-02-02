@@ -1515,19 +1515,20 @@ with type t = Impl.t = struct
       | Expression.Object.Property.Computed
           (_, { ComputedKey.expression = expr; comments = key_comments }) ->
         (expression expr, true, Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments)
-    and class_property
-        ( loc,
-          {
-            Class.Property.key;
-            value;
-            annot;
-            static;
-            variance = variance_;
-            ts_accessibility;
-            decorators;
-            comments;
-          }
-        ) =
+    and class_property (loc, prop) = class_property_helper "PropertyDefinition" loc prop
+    and class_property_helper
+        type_
+        loc
+        {
+          Class.Property.key;
+          value;
+          annot;
+          static;
+          variance = variance_;
+          ts_accessibility;
+          decorators;
+          comments;
+        } =
       let (key, computed, comments) = property_key ~comments key in
       let (value, declare) =
         match value with
@@ -1558,7 +1559,7 @@ with type t = Impl.t = struct
         else
           []
       in
-      node ?comments "PropertyDefinition" loc props
+      node ?comments type_ loc props
     and component_declaration (loc, component) =
       let open Statement.ComponentDeclaration in
       let {
@@ -1769,11 +1770,15 @@ with type t = Impl.t = struct
         | (loc, Identifier pattern_id) -> pattern_identifier loc pattern_id
         | (_loc, Expression expr) -> expression expr
       )
-    and function_param (loc, { Ast.Function.Param.argument; default }) =
-      match default with
-      | Some default ->
-        node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
-      | None -> pattern argument
+    and function_param (loc, param) =
+      let open Ast.Function.Param in
+      match param with
+      | RegularParam { argument; default } ->
+        (match default with
+        | Some default ->
+          node "AssignmentPattern" loc [("left", pattern argument); ("right", expression default)]
+        | None -> pattern argument)
+      | ParamProperty prop -> class_property_helper "ParameterProperty" loc prop
     and this_param (loc, { Function.ThisParam.annot; comments }) =
       node
         ?comments

@@ -28,6 +28,7 @@ module Types = struct
         elements: (ALoc.t, ALoc.t) Ast.Pattern.Array.element list;
         comments: (ALoc.t, ALoc.t Ast.Comment.t list) Ast.Syntax.t option;
       }
+    | ParamPropertyPattern of (ALoc.t, ALoc.t * Type.t) Ast.Class.Property.t'
 
   type param =
     | Param of {

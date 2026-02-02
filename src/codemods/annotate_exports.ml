@@ -361,14 +361,15 @@ let mapper ~max_type_size ~default_any (cctx : Codemod_context.Typed.t) =
              Params.params =
                [
                  ( _,
-                   {
-                     Param.argument =
-                       ( _,
-                         Ast.Pattern.Identifier
-                           { Ast.Pattern.Identifier.annot = Ast.Type.Missing ploc; _ }
-                       );
-                     _;
-                   }
+                   Param.RegularParam
+                     {
+                       argument =
+                         ( _,
+                           Ast.Pattern.Identifier
+                             { Ast.Pattern.Identifier.annot = Ast.Type.Missing ploc; _ }
+                         );
+                       _;
+                     }
                  );
                ];
              rest = None;

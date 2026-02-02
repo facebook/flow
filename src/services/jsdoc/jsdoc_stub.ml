@@ -29,10 +29,19 @@ let stub_for_function
       | None -> jsdoc_params
     in
     let add_params params jsdoc_params =
-      Base.List.rev_map_append
-        params
-        jsdoc_params
-        ~f:(fun (_, { Flow_ast.Function.Param.argument; _ }) -> jsdoc_param_of_pattern argument
+      Base.List.rev_map_append params jsdoc_params ~f:(fun param ->
+          match param with
+          | (_, Flow_ast.Function.Param.RegularParam { argument; _ }) ->
+            jsdoc_param_of_pattern argument
+          | (_, Flow_ast.Function.Param.ParamProperty prop) ->
+            let name =
+              match prop.Flow_ast.Class.Property.key with
+              | Flow_ast.Expression.Object.Property.Identifier (_, { Flow_ast.Identifier.name; _ })
+                ->
+                name
+              | _ -> "param"
+            in
+            (name, [])
       )
     in
     let add_rest_param rest jsdoc_params =

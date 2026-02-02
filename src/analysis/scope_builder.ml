@@ -623,19 +623,23 @@ let lambda
   (* Parameter list *)
   let params_list_rev =
     Base.List.fold_left params_list ~init:[] ~f:(fun prev_params param ->
-        let (param_loc, { Param.argument; default }) = param in
-        let (annot, argument') = pattern_with_toplevel_annot_removed argument in
-        (match annot with
-        | Ast.Type.Available annot ->
-          let (annot_loc, _) = annot in
-          with_bindings ~lexical:false annot_loc hoist#acc (fun () ->
-              (* All previous params need to be declared in the current scope *)
-              List.rev prev_params |> List.iter (run visitor#function_param);
-              run visitor#type_annotation annot
-          )
-        | Ast.Type.Missing _ -> ());
-        run hoist#function_param param;
-        (param_loc, { Param.argument = argument'; default }) :: prev_params
+        match param with
+        | (param_loc, Param.RegularParam { argument; default }) ->
+          let (annot, argument') = pattern_with_toplevel_annot_removed argument in
+          (match annot with
+          | Ast.Type.Available annot ->
+            let (annot_loc, _) = annot in
+            with_bindings ~lexical:false annot_loc hoist#acc (fun () ->
+                (* All previous params need to be declared in the current scope *)
+                List.rev prev_params |> List.iter (run visitor#function_param);
+                run visitor#type_annotation annot
+            )
+          | Ast.Type.Missing _ -> ());
+          run hoist#function_param param;
+          (param_loc, Param.RegularParam { argument = argument'; default }) :: prev_params
+        | (_, Param.ParamProperty _) ->
+          (* Skip parameter properties - they're not supported *)
+          param :: prev_params
     )
   in
   (* Rest param *)

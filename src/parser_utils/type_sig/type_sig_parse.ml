@@ -2968,7 +2968,10 @@ let setter_def opts scope tbls xs id_loc f =
   let { F.params = (_, { F.Params.params; _ }); _ } = f in
   match params with
   | [
-   (param_loc, { F.Param.argument = (_, P.Identifier { P.Identifier.annot = t; _ }); default = _ });
+   ( param_loc,
+     F.Param.RegularParam
+       { argument = (_, P.Identifier { P.Identifier.annot = t; _ }); default = _ }
+   );
   ] ->
     let param_loc = push_loc tbls param_loc in
     let t =
@@ -3682,10 +3685,15 @@ and function_def_helper =
   let rec params opts scope tbls xs acc = function
     | [] -> (List.rev acc, scope)
     | p :: ps ->
-      let (loc, { F.Param.argument = (_, patt); default }) = p in
-      let (name, scope, t) = param opts scope tbls xs loc patt ~bind_names:true default in
-      let p = FunParam { name; t } in
-      params opts scope tbls xs (p :: acc) ps
+      let (loc, param') = p in
+      (match param' with
+      | F.Param.RegularParam { argument = (_, patt); default } ->
+        let (name, scope, t) = param opts scope tbls xs loc patt ~bind_names:true default in
+        let p = FunParam { name; t } in
+        params opts scope tbls xs (p :: acc) ps
+      | F.Param.ParamProperty _ ->
+        (* Parameter properties not supported, skip *)
+        params opts scope tbls xs acc ps)
   in
   let this_param opts scope tbls xs = function
     | None -> None

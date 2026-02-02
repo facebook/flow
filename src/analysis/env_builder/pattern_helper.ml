@@ -107,8 +107,12 @@ and object_properties =
 
 let bindings_of_params (_, { Ast.Function.Params.params; rest; _ }) =
   let acc =
-    Base.List.fold params ~init:SMap.empty ~f:(fun acc (_, { Ast.Function.Param.argument; _ }) ->
-        fold_pattern acc Root argument
+    Base.List.fold params ~init:SMap.empty ~f:(fun acc (_, param) ->
+        match param with
+        | Ast.Function.Param.RegularParam { argument; _ } -> fold_pattern acc Root argument
+        | Ast.Function.Param.ParamProperty _ ->
+          (* Skip param properties - they are not supported *)
+          acc
     )
   in
   Base.Option.fold rest ~init:acc ~f:(fun acc (_, { Ast.Function.RestParam.argument; _ }) ->

@@ -1100,6 +1100,7 @@ type 'loc message =
   | MessageTSVarianceOut
   | MessageTSVarianceReadOnly
   | MessageTSClassAccessibility of Flow_ast.Class.TSAccessibility.kind
+  | MessageTSParameterProperty
   | MessageTSUndefinedType
   | MessageTSUnknownType
   | MessageTupleElementNotReadable of {

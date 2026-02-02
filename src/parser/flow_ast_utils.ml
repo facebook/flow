@@ -785,14 +785,15 @@ let get_inferred_type_guard_candidate params body return =
           Function.Params.params =
             [
               ( _,
-                {
-                  Function.Param.argument =
-                    ( _,
-                      Pattern.Identifier
-                        { Pattern.Identifier.name = (loc, { Identifier.name; _ }); _ }
-                    );
-                  _;
-                }
+                Function.Param.RegularParam
+                  {
+                    argument =
+                      ( _,
+                        Pattern.Identifier
+                          { Pattern.Identifier.name = (loc, { Identifier.name; _ }); _ }
+                      );
+                    _;
+                  }
               );
             ];
           rest = None;

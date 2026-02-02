@@ -2530,10 +2530,12 @@ and Function : sig
   module Param : sig
     type ('M, 'T) t = 'M * ('M, 'T) t'
 
-    and ('M, 'T) t' = {
-      argument: ('M, 'T) Pattern.t;
-      default: ('M, 'T) Expression.t option;
-    }
+    and ('M, 'T) t' =
+      | RegularParam of {
+          argument: ('M, 'T) Pattern.t;
+          default: ('M, 'T) Expression.t option;
+        }
+      | ParamProperty of ('M, 'T) Class.Property.t'
     [@@deriving show]
   end
 
