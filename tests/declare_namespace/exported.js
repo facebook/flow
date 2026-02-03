@@ -20,7 +20,12 @@ declare namespace type_only {
   type T = number;
 }
 
-// TODO: support declare export namespace syntax
+// Test declare export namespace syntax
+declare export namespace direct_export_ns {
+  declare const x: number;
+  type T = string;
+}
+
 export {
   exported_ns,
   empty, // error: empty is type-only
@@ -38,3 +43,7 @@ exported_ns.f(3) as empty; // error: number ~> empty
 exported_ns.B.C as empty; // error: enum ~> empty
 exported_ns.React; // error: prop-missing
 exported_ns.CONSTANT as empty; // prop-missing
+
+// Test direct_export_ns
+direct_export_ns.x as empty; // error: number ~> empty
+1 as direct_export_ns.T; // error: number ~> string

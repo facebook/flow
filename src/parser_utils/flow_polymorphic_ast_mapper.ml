@@ -700,6 +700,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         NamedOpaqueType (this#on_loc_annot annot, this#opaque_type annot ot)
       | Interface (annot, iface) -> Interface (this#on_loc_annot annot, this#interface annot iface)
       | Enum (annot, enum) -> Enum (this#on_loc_annot annot, this#enum_declaration enum)
+      | Namespace (annot, ns) -> Namespace (this#on_loc_annot annot, this#declare_namespace annot ns)
 
     method declare_function (decl : ('M, 'T) Ast.Statement.DeclareFunction.t)
         : ('N, 'U) Ast.Statement.DeclareFunction.t =

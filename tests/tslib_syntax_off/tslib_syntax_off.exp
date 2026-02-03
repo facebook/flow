@@ -66,5 +66,16 @@ Declaration without `declare` is not enabled. [unsupported-syntax]
                ^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:24:16
 
-Found 8 errors
+`declare export namespace` is not enabled. [unsupported-syntax]
+
+                      v------------------------------
+   24| declare export namespace ExportedNS { // ERROR
+   25|   declare const y: string;
+   26| }
+       ^
+
+
+
+Found 9 errors

@@ -1951,6 +1951,15 @@ module Make
           | D.Enum (loc, enum) ->
             let enum_ast = enum_declaration cx loc enum in
             D.Enum (loc, enum_ast)
+          | D.Namespace (loc, ns) ->
+            if not (Context.tslib_syntax cx) then
+              Flow.add_output
+                cx
+                (Error_message.EUnsupportedSyntax
+                   (loc, Flow_intermediate_error_types.(TSLibSyntax DeclareExportNamespace))
+                );
+            let (_, ns_ast) = declare_namespace cx loc ns in
+            D.Namespace (loc, ns_ast)
         in
         Option.map f declaration
       in

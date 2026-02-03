@@ -339,22 +339,7 @@ with type t = Impl.t = struct
           | DeclareModule.Identifier id -> identifier id
         in
         node ?comments "DeclareModule" loc [("id", id); ("body", block body)]
-      | (loc, DeclareNamespace { DeclareNamespace.id; body; comments; implicit_declare }) ->
-        let (id, global) =
-          match id with
-          | DeclareNamespace.Local id -> (identifier id, false)
-          | DeclareNamespace.Global id -> (identifier id, true)
-        in
-        let props =
-          [("id", id); ("body", block body); ("implicitDeclare", bool implicit_declare)]
-        in
-        let props =
-          if global then
-            ("global", bool global) :: props
-          else
-            props
-        in
-        node ?comments "DeclareNamespace" loc props
+      | (loc, DeclareNamespace ns) -> declare_namespace (loc, ns)
       | ( loc,
           DeclareExportDeclaration
             { DeclareExportDeclaration.specifiers; declaration; default; source; comments }
@@ -378,6 +363,7 @@ with type t = Impl.t = struct
             | Some (DeclareExportDeclaration.NamedOpaqueType t) -> opaque_type ~declare:true t
             | Some (DeclareExportDeclaration.Interface i) -> interface_declaration i
             | Some (DeclareExportDeclaration.Enum enum) -> declare_enum enum
+            | Some (DeclareExportDeclaration.Namespace n) -> declare_namespace n
             | None -> null
           in
           node
@@ -1270,6 +1256,21 @@ with type t = Impl.t = struct
           ("body", object_type ~include_inexact:false body);
           ("extends", array_of_list interface_extends extends);
         ]
+    and declare_namespace (loc, { Statement.DeclareNamespace.id; body; comments; implicit_declare })
+        =
+      let (id, global) =
+        match id with
+        | Statement.DeclareNamespace.Local id -> (identifier id, false)
+        | Statement.DeclareNamespace.Global id -> (identifier id, true)
+      in
+      let props = [("id", id); ("body", block body); ("implicitDeclare", bool implicit_declare)] in
+      let props =
+        if global then
+          ("global", bool global) :: props
+        else
+          props
+      in
+      node ?comments "DeclareNamespace" loc props
     and string_of_export_kind = function
       | Statement.ExportType -> "type"
       | Statement.ExportValue -> "value"

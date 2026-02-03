@@ -182,7 +182,8 @@ class exports_error_checker ~is_local_use =
             | Class _
             | Component _
             | DefaultType _
-            | Enum _ ->
+            | Enum _
+            | Namespace _ ->
               ExportValue
             | NamedType _
             | NamedOpaqueType _

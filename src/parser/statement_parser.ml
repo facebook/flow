@@ -1951,6 +1951,31 @@ module Statement
             ~allow_specifiers:false
             ~err_expected:"a declaration after 'export declare'")
         env
+    | T_IDENTIFIER { raw = "namespace"; _ } when in_ambient_context env ->
+      (* export namespace X { ... } in ambient context - implicit declare *)
+      with_loc
+        ~start_loc
+        (fun env ->
+          let namespace =
+            with_loc
+              (fun env ->
+                Expect.identifier env "namespace";
+                let id = id_remove_trailing env (Parse.identifier env) in
+                let id = Statement.DeclareNamespace.Local id in
+                let body = declare_module_or_namespace_body env in
+                { Statement.DeclareNamespace.id; body; comments = None; implicit_declare = true })
+              env
+          in
+          let decl_comments = Flow_ast_utils.mk_comments_opt ~leading () in
+          Statement.DeclareExportDeclaration
+            {
+              Statement.DeclareExportDeclaration.default = None;
+              declaration = Some (Statement.DeclareExportDeclaration.Namespace namespace);
+              specifiers = None;
+              source = None;
+              comments = decl_comments;
+            })
+        env
     | T_MULT ->
       with_loc
         ~start_loc
@@ -2195,6 +2220,27 @@ module Statement
           {
             default = None;
             declaration = Some (Enum enum);
+            specifiers = None;
+            source = None;
+            comments;
+          }
+      | T_IDENTIFIER { raw = "namespace"; _ } ->
+        (* declare export namespace X { ... } *)
+        let namespace =
+          with_loc
+            (fun env ->
+              Expect.identifier env "namespace";
+              let id = id_remove_trailing env (Parse.identifier env) in
+              let id = Statement.DeclareNamespace.Local id in
+              let body = declare_module_or_namespace_body env in
+              { Statement.DeclareNamespace.id; body; comments = None; implicit_declare = false })
+            env
+        in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+        Statement.DeclareExportDeclaration
+          {
+            default = None;
+            declaration = Some (Namespace namespace);
             specifiers = None;
             source = None;
             comments;

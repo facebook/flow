@@ -1336,6 +1336,24 @@ module Scope = struct
         ignore2
     | _ -> failwith "The scope must be lexical"
 
+  (* Version of finalize_declare_namespace_exn that exports the namespace binding *)
+  let finalize_declare_namespace_exported_exn ~is_type_only scope tbls id_loc name k =
+    match scope with
+    | DeclareNamespace { values; types; parent; _ } ->
+      let (values, types) = namespace_binding_of_values_and_types scope (values, types) in
+      bind_local
+        ~type_only:is_type_only
+        parent
+        tbls
+        name
+        id_loc
+        (NamespaceBinding { id_loc; name; values; types })
+        k
+    | Global _ ->
+      (* Global namespaces cannot be exported *)
+      ()
+    | _ -> failwith "The scope must be lexical"
+
   let bind_globalThis scope tbls ~global_this_loc =
     match scope with
     | Global global_scope ->
@@ -4794,6 +4812,9 @@ let declare_export_decl opts scope tbls ?export_comments default =
   | D.Component (loc, c) ->
     declare_component_decl opts scope tbls loc c export_maybe_default_binding
   | D.Enum (_, enum) -> enum_decl opts scope tbls enum (Scope.export_binding scope S.ExportValue)
+  | D.Namespace _ ->
+    (* Namespace handling is done in the statement function where 'statement' is in scope *)
+    ()
   | D.DefaultType t ->
     let default_loc = Base.Option.value_exn default in
     let def = annot opts scope tbls SSet.empty t in
@@ -5067,6 +5088,37 @@ let rec statement opts scope tbls (loc, stmt) =
     begin
       match declaration with
       | None -> ()
+      | Some (D.Namespace (_, ns)) ->
+        (* Handle exported namespace - process the namespace body and export the binding *)
+        let {
+          Ast.Statement.DeclareNamespace.id;
+          body = (_, { Ast.Statement.Block.body = stmts; comments = _ });
+          implicit_declare = _;
+          comments = _;
+        } =
+          ns
+        in
+        (match id with
+        | Ast.Statement.DeclareNamespace.Global _ -> ()
+        | Ast.Statement.DeclareNamespace.Local (id_loc, { Ast.Identifier.name; _ }) ->
+          let id_loc = push_loc tbls id_loc in
+          let stmts =
+            Base.List.filter stmts ~f:(fun (_, stmt) ->
+                Flow_ast_utils.acceptable_statement_in_declaration_context
+                  ~in_declare_namespace:true
+                  stmt
+                |> Base.Result.is_ok
+            )
+          in
+          let ns_scope = Scope.push_declare_namespace scope in
+          List.iter (statement opts ns_scope tbls) stmts;
+          Scope.finalize_declare_namespace_exported_exn
+            ~is_type_only:false
+            ns_scope
+            tbls
+            id_loc
+            name
+            (Scope.export_binding scope S.ExportValue))
       | Some decl -> declare_export_decl opts scope tbls ?export_comments:comments default decl
     end;
     begin

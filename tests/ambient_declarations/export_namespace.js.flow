@@ -1,0 +1,7 @@
+// Test export namespace (without 'declare' keyword) in ambient context
+// This implicitly adds 'declare' in .js.flow files
+export namespace ExportedNS {
+  const x: number;
+  function foo(): void;
+  type T = string;
+}

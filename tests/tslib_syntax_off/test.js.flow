@@ -19,3 +19,8 @@ declare class Foo {
 namespace ImplicitNS { // ERROR
   const x: number;
 }
+
+// Declare export namespace
+declare export namespace ExportedNS { // ERROR
+  declare const y: string;
+}

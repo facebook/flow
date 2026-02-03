@@ -468,6 +468,13 @@ let rec is_type_only_declaration_statement (_, stmt') =
         DeclareExportDeclaration.
           { declaration = Some (NamedType _ | NamedOpaqueType _ | Interface _); _ } ->
       true
+    | DeclareExportDeclaration
+        DeclareExportDeclaration.
+          {
+            declaration = Some (Namespace (_, { DeclareNamespace.body = (_, { Block.body; _ }); _ }));
+            _;
+          } ->
+      List.for_all is_type_only_declaration_statement body
     | DeclareNamespace { DeclareNamespace.body = (_, { Block.body; _ }); _ } ->
       List.for_all is_type_only_declaration_statement body
     | ExportNamedDeclaration { ExportNamedDeclaration.export_kind; _ } -> export_kind = ExportType

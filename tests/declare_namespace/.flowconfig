@@ -3,3 +3,4 @@ all=true
 enums=true
 no_flowlib=false
 react.runtime=automatic
+experimental.tslib_syntax=true

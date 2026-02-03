@@ -305,6 +305,12 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
         let ((name_loc, t), { Ast.Identifier.name; comments = _ }) = id in
         if Context.enable_enums cx then
           Module_info.export_value info (OrdinaryName name) ~name_loc t
+      | D.Namespace (_, { DeclareNamespace.id; _ }) ->
+        (match id with
+        | DeclareNamespace.Local id ->
+          let ((name_loc, t), { Ast.Identifier.name; comments = _ }) = id in
+          Module_info.export_value info (OrdinaryName name) ~name_loc t
+        | DeclareNamespace.Global _ -> ())
     in
     Option.iter f declaration;
     let export_kind = Ast.Statement.ExportValue in

@@ -963,6 +963,12 @@ class ['loc] mapper =
           decl
         else
           Enum (loc, enum')
+      | Namespace (loc, ns) ->
+        let ns' = this#declare_namespace loc ns in
+        if ns' == ns then
+          decl
+        else
+          Namespace (loc, ns')
 
     method declare_function _loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       let open Ast.Statement.DeclareFunction in

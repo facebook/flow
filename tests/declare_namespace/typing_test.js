@@ -27,7 +27,7 @@ unsupported_statements.a as empty; // error: number ~> empty
 unsupported_statements.B.C as unsupported_statements.B; // ok
 unsupported_statements.B.D as empty; // error: enum ~> empty
 
-import {exported_ns, empty} from './exported';
+import {exported_ns, empty, direct_export_ns} from './exported';
 exported_ns.bar1 as empty; // error: number ~> empty
 exported_ns.bar2 as empty; // error: boolean ~> empty
 exported_ns.bar3 as empty; // error: string ~> empty
@@ -39,6 +39,10 @@ exported_ns.B.C as empty; // error: enum ~> empty
 exported_ns.React; // error: prop-missing
 exported_ns.CONSTANT as empty; // error: prop-missing
 empty as empty; // ok: already errored being type-only in exported.js
+
+// Test importing directly exported namespace (declare export namespace)
+direct_export_ns.x as empty; // error: number ~> empty
+1 as direct_export_ns.T; // error: number ~> string
 
 import type {type_only as exported_ns_type_only2, exported_ns_type_only} from './exported';
 exported_ns_type_only; exported_ns_type_only2; // error: type-as-value

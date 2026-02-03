@@ -202,6 +202,9 @@ class jsdoc_documentation_searcher find =
             | Enum (loc, d) ->
               (loc, Ast.Statement.DeclareEnum d)
               |> replace_comments_of_statement ~comments %> this#statement %> ignore
+            | Namespace (loc, d) ->
+              (loc, Ast.Statement.DeclareNamespace d)
+              |> replace_comments_of_statement ~comments %> this#statement %> ignore
             )
       in
       super#declare_export_declaration loc decl

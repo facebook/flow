@@ -5150,6 +5150,7 @@ let to_printable_error :
         match kind with
         | DeclarationWithoutDeclare -> "Declaration without `declare`"
         | ImportTypeAnnotation -> "`import(\"module\")` type syntax"
+        | DeclareExportNamespace -> "`declare export namespace`"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

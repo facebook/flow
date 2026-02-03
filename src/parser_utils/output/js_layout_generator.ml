@@ -5230,7 +5230,32 @@ and declare_export_declaration
     | Enum (loc, enum) ->
       source_location_with_comments
         ?comments
-        (loc, fuse [Atom "declare"; space; s_export; enum_declaration ~def:(Atom "enum") loc enum]))
+        (loc, fuse [Atom "declare"; space; s_export; enum_declaration ~def:(Atom "enum") loc enum])
+    (* declare export namespace *)
+    | Namespace (loc, ns) ->
+      let { Ast.Statement.DeclareNamespace.id; body; comments = _; implicit_declare } = ns in
+      source_location_with_comments
+        ?comments
+        ( loc,
+          fuse
+            (match id with
+            | Ast.Statement.DeclareNamespace.Global _ ->
+              failwith "Global namespace cannot be exported"
+            | Ast.Statement.DeclareNamespace.Local id ->
+              [
+                ( if implicit_declare then
+                  Empty
+                else
+                  fuse [Atom "declare"; space]
+                );
+                s_export;
+                Atom "namespace";
+                space;
+                identifier id;
+                pretty_space;
+                block ~opts body;
+              ])
+        ))
   | (None, Some specifier) ->
     source_location_with_comments
       ?comments

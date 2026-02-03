@@ -1300,6 +1300,8 @@ and Statement : sig
       | Interface of ('M * ('M, 'T) Interface.t)
       (* declare export enum *)
       | Enum of ('M * ('M, 'T) EnumDeclaration.t)
+      (* declare export namespace *)
+      | Namespace of ('M * ('M, 'T) DeclareNamespace.t)
 
     and ('M, 'T) t = {
       default: 'M option;

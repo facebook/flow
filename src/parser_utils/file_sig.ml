@@ -530,7 +530,8 @@ class requires_calculator ~file_key ~ast ~opts =
             | Class _
             | Component _
             | DefaultType _
-            | Enum _ ->
+            | Enum _
+            | Namespace _ ->
               ExportValue
             | NamedType _
             | NamedOpaqueType _

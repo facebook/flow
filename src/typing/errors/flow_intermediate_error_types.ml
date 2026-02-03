@@ -114,6 +114,7 @@ type unsupported_syntax =
 and ts_lib_syntax_kind =
   | DeclarationWithoutDeclare
   | ImportTypeAnnotation
+  | DeclareExportNamespace
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list
