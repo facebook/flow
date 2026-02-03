@@ -51,7 +51,7 @@ type saved_state_data = {
   parsed_heaps: (File_key.t * parsed_file_data) list;
   unparsed_heaps: (File_key.t * unparsed_file_data) list;
   package_heaps: (File_key.t * package_file_data) list;  (** package.json info *)
-  all_unordered_libs: SSet.t;
+  non_flowlib_libs: SSet.t;
   (* Why store local errors and not merge_errors/suppressions/etc? Well, I have a few reasons:
    *
    * 1. Much smaller data structure. The whole env.errors data structure can be hundreds of MBs
@@ -368,7 +368,17 @@ end = struct
             []
       )
     in
-    let all_unordered_libs = SSet.map (normalize_libdef_path t) env.ServerEnv.all_unordered_libs in
+    (* The builtin flowlibs are excluded from the saved state. The server which loads the saved state
+     * will extract and typecheck its own builtin flowlibs *)
+    let is_in_flowlib =
+      let file_options = Options.file_options options in
+      Files.is_in_flowlib file_options
+    in
+    let non_flowlib_libs =
+      env.ServerEnv.all_unordered_libs
+      |> SSet.filter (fun lib -> not (is_in_flowlib lib))
+      |> SSet.map (normalize_path t)
+    in
     let local_errors =
       FilenameMap.fold
         (fun fn error_set acc ->
@@ -416,7 +426,7 @@ end = struct
         parsed_heaps;
         unparsed_heaps;
         package_heaps;
-        all_unordered_libs;
+        non_flowlib_libs;
         local_errors;
         node_modules_containers;
         dependency_graph;
@@ -524,8 +534,6 @@ end = struct
     val without_cache : t -> t
 
     val denormalize_path : t -> string -> string
-
-    val denormalize_libdef_path : t -> string -> string
 
     val denormalize_file_key_no_cache : t -> File_key.t -> File_key.t
 
@@ -686,7 +694,7 @@ end = struct
       parsed_heaps;
       unparsed_heaps;
       package_heaps;
-      all_unordered_libs;
+      non_flowlib_libs;
       local_errors;
       node_modules_containers;
       dependency_graph;
@@ -715,8 +723,8 @@ end = struct
       let progress_fn = progress_fn (List.length unparsed_heaps) in
       denormalize_unparsed_heaps ~workers ~denormalizer ~progress_fn unparsed_heaps
     in
-    let all_unordered_libs =
-      SSet.map (FileDenormalizer.denormalize_libdef_path denormalizer) all_unordered_libs
+    let non_flowlib_libs =
+      SSet.map (FileDenormalizer.denormalize_path denormalizer) non_flowlib_libs
     in
     let local_errors =
       FilenameMap.fold
@@ -741,7 +749,7 @@ end = struct
         parsed_heaps;
         unparsed_heaps;
         package_heaps;
-        all_unordered_libs;
+        non_flowlib_libs;
         local_errors;
         node_modules_containers;
         dependency_graph;

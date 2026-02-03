@@ -1897,7 +1897,7 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
     parsed_heaps;
     unparsed_heaps;
     package_heaps;
-    all_unordered_libs = _;
+    non_flowlib_libs = _;
     local_errors;
     node_modules_containers;
     dependency_graph;
@@ -2310,7 +2310,7 @@ let load_saved_state ~profiling ~workers options =
        let updates =
          Recheck_updates.process_updates
            ~options
-           ~previous_all_unordered_libs:saved_state.Saved_state.all_unordered_libs
+           ~previous_all_unordered_libs:saved_state.Saved_state.non_flowlib_libs
            changed_files
        in
        let updates =
