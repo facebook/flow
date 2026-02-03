@@ -1877,7 +1877,12 @@ let handle_llm_context ~options ~reader ~profiling ~env input =
     )
   in
   let lsp_result =
-    LlmTypedContextProvider.generate_context ~strip_root ~files:typed_files ~token_budget
+    let include_imports = Options.llm_context_include_imports options in
+    LlmTypedContextProvider.generate_context
+      ~strip_root
+      ~files:typed_files
+      ~token_budget
+      ~include_imports
   in
   let result =
     Ok
@@ -3731,11 +3736,13 @@ let handle_persistent_llm_context ~options ~reader ~id ~params ~metadata ~client
             Some LlmTypedContextProvider.{ file_key; ast; cx; typed_ast; reader })
     )
   in
+  let include_imports = Options.llm_context_include_imports options in
   let result =
     LlmTypedContextProvider.generate_context
       ~strip_root
       ~files:typed_files
       ~token_budget:tokenBudget
+      ~include_imports
   in
   let response = ResponseMessage (id, LLMContextResult result) in
   Lwt.return (LspProt.LspFromServer (Some response), metadata)

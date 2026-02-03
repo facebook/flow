@@ -1509,6 +1509,7 @@ let make_options
     opt_instance_t_objkit_fix = FlowConfig.instance_t_objkit_fix flowconfig;
     opt_lazy_mode;
     opt_lint_severities = lint_severities;
+    opt_llm_context_include_imports = FlowConfig.llm_context_include_imports flowconfig;
     opt_log_file;
     opt_log_saving = FlowConfig.log_saving flowconfig;
     opt_long_lived_workers =

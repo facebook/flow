@@ -255,19 +255,35 @@ type typed_file_info = {
   reader: Parsing_heaps.Reader.reader;
 }
 
+let legacy_syntax_header =
+  String.concat
+    "\n"
+    [
+      "IMPORTANT:";
+      "The type `$ReadOnly<T>` is deprecated, use `Readonly<T>` instead.";
+      "The type `$ReadOnlyArray<T>` is deprecated, use `ReadonlyArray<T>` instead.";
+      "The type `mixed` is deprecated, use `unknown` instead.";
+    ]
+
 (** Generate context for multiple files with token budget.
-    This version receives typed file info including cx and typed_ast. *)
+    This version receives typed file info including cx and typed_ast.
+    When include_imports is false, file_contexts will be empty. *)
 let generate_context
-    ~(strip_root : File_path.t option) ~(files : typed_file_info list) ~(token_budget : int) :
-    Lsp.LLMContext.result =
+    ~(strip_root : File_path.t option)
+    ~(files : typed_file_info list)
+    ~(token_budget : int)
+    ~(include_imports : bool) : Lsp.LLMContext.result =
   let file_contexts =
-    List.map
-      (fun { file_key; ast; cx; typed_ast; reader } ->
-        let context = generate_file_context ~strip_root ~file_key ~ast ~cx ~typed_ast ~reader in
-        let tokens = count_tokens context in
-        let path = Reason.string_of_source ~strip_root file_key in
-        { path; context; tokens })
-      files
+    if include_imports then
+      List.map
+        (fun { file_key; ast; cx; typed_ast; reader } ->
+          let context = generate_file_context ~strip_root ~file_key ~ast ~cx ~typed_ast ~reader in
+          let tokens = count_tokens context in
+          let path = Reason.string_of_source ~strip_root file_key in
+          { path; context; tokens })
+        files
+    else
+      []
   in
   let rec accumulate ~remaining_budget ~acc_context ~acc_files ~truncated = function
     | [] -> (acc_context, acc_files, truncated)
@@ -282,17 +298,19 @@ let generate_context
       else
         (acc_context, acc_files, true)
   in
+  let header_tokens = count_tokens legacy_syntax_header in
   let (context, files_processed, truncated) =
     accumulate
-      ~remaining_budget:token_budget
+      ~remaining_budget:(token_budget - header_tokens)
       ~acc_context:""
       ~acc_files:[]
       ~truncated:false
       file_contexts
   in
-  let tokens_used = count_tokens context in
+  let full_context = legacy_syntax_header ^ "\n" ^ context in
+  let tokens_used = count_tokens full_context in
   {
-    Lsp.LLMContext.llmContext = context;
+    Lsp.LLMContext.llmContext = full_context;
     filesProcessed = Base.List.rev files_processed;
     tokensUsed = tokens_used;
     truncated;

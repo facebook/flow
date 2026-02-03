@@ -97,6 +97,7 @@ module Opts = struct
     instance_t_objkit_fix: bool;
     jest_integration: bool;
     lazy_mode: lazy_mode option;
+    llm_context_include_imports: bool;
     log_saving: Options.log_saving SMap.t;
     long_lived_workers: bool;
     max_files_checked_per_worker: int;
@@ -250,6 +251,7 @@ module Opts = struct
       instance_t_objkit_fix = false;
       jest_integration = false;
       lazy_mode = None;
+      llm_context_include_imports = false;
       log_saving = SMap.empty;
       long_lived_workers = false;
       max_files_checked_per_worker = 100;
@@ -1116,6 +1118,9 @@ module Opts = struct
       ("experimental.instance_t_objkit_fix", instance_t_objkit_fix_parser);
       ("experimental.long_lived_workers", long_lived_workers_parser ~enabled:true);
       ("experimental.long_lived_workers.windows", long_lived_workers_parser ~enabled:Sys.win32);
+      ( "experimental.llm_context.include_imports",
+        boolean (fun opts v -> Ok { opts with llm_context_include_imports = v })
+      );
       ("experimental.module.automatic_require_default", automatic_require_default_parser);
       ( "experimental.multi_platform",
         boolean (fun opts v -> Ok { opts with multi_platform = Some v })
@@ -1982,6 +1987,8 @@ let instance_t_objkit_fix c = c.options.Opts.instance_t_objkit_fix
 let jest_integration c = c.options.Opts.jest_integration
 
 let lazy_mode c = c.options.Opts.lazy_mode
+
+let llm_context_include_imports c = c.options.Opts.llm_context_include_imports
 
 (* global defaults for lint severities and strict mode *)
 let lint_severities c = c.lint_severities

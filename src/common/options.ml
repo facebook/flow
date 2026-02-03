@@ -148,6 +148,7 @@ type t = {
   opt_instance_t_objkit_fix: bool;
   opt_lazy_mode: bool;
   opt_lint_severities: Severity.severity LintSettings.t;
+  opt_llm_context_include_imports: bool;
   opt_log_file: File_path.t;
   opt_log_saving: log_saving SMap.t;
   opt_long_lived_workers: bool;
@@ -319,6 +320,8 @@ let is_quiet opts = opts.opt_quiet
 let lazy_mode opts = opts.opt_lazy_mode
 
 let lint_severities opts = opts.opt_lint_severities
+
+let llm_context_include_imports opts = opts.opt_llm_context_include_imports
 
 let log_file opts = opts.opt_log_file
 

@@ -171,6 +171,8 @@ val jest_integration : config -> bool
 
 val lazy_mode : config -> lazy_mode option
 
+val llm_context_include_imports : config -> bool
+
 (* global defaults for lint suppressions and strict mode *)
 val lint_severities : config -> Severity.severity LintSettings.t
 
