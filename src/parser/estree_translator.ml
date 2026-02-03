@@ -339,13 +339,15 @@ with type t = Impl.t = struct
           | DeclareModule.Identifier id -> identifier id
         in
         node ?comments "DeclareModule" loc [("id", id); ("body", block body)]
-      | (loc, DeclareNamespace { DeclareNamespace.id; body; comments }) ->
+      | (loc, DeclareNamespace { DeclareNamespace.id; body; comments; implicit_declare }) ->
         let (id, global) =
           match id with
           | DeclareNamespace.Local id -> (identifier id, false)
           | DeclareNamespace.Global id -> (identifier id, true)
         in
-        let props = [("id", id); ("body", block body)] in
+        let props =
+          [("id", id); ("body", block body); ("implicitDeclare", bool implicit_declare)]
+        in
         let props =
           if global then
             ("global", bool global) :: props

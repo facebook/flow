@@ -1099,7 +1099,7 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! declare_namespace _loc n =
         let open Ast.Statement.DeclareNamespace in
-        let { id; body; comments = _ } = n in
+        let { id; body; implicit_declare = _; comments = _ } = n in
         (match id with
         | Global _ -> ()
         | Local id -> ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id);

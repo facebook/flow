@@ -5146,7 +5146,8 @@ and declare_module ~opts loc { Ast.Statement.DeclareModule.id; body; comments } 
         ]
     )
 
-and declare_namespace ~opts loc { Ast.Statement.DeclareNamespace.id; body; comments } =
+and declare_namespace
+    ~opts loc { Ast.Statement.DeclareNamespace.id; body; comments; implicit_declare } =
   source_location_with_comments
     ?comments
     ( loc,
@@ -5156,8 +5157,11 @@ and declare_namespace ~opts loc { Ast.Statement.DeclareNamespace.id; body; comme
           [Atom "declare"; space; identifier id; pretty_space; block ~opts body]
         | Ast.Statement.DeclareNamespace.Local id ->
           [
-            Atom "declare";
-            space;
+            ( if implicit_declare then
+              Empty
+            else
+              fuse [Atom "declare"; space]
+            );
             Atom "namespace";
             space;
             identifier id;

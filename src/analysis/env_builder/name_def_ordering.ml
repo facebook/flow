@@ -1058,7 +1058,7 @@ struct
           EnvMap.empty
       in
       let depends_of_declared_namespace
-          { Ast.Statement.DeclareNamespace.id = _; body; comments = _ } =
+          { Ast.Statement.DeclareNamespace.id = _; body; implicit_declare = _; comments = _ } =
         depends_of_node
           (fun visitor ->
             run_loc visitor#block body;

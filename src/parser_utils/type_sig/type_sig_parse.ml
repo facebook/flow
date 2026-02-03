@@ -4582,6 +4582,7 @@ let namespace_decl
     {
       Ast.Statement.DeclareNamespace.id;
       body = (_, { Ast.Statement.Block.body = stmts; comments = _ });
+      implicit_declare = _;
       comments = _;
     } =
   match id with

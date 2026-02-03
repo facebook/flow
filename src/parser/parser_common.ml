@@ -248,6 +248,8 @@ module type STATEMENT = sig
   val var : env -> (Loc.t, Loc.t) Statement.t
 
   val const : env -> (Loc.t, Loc.t) Statement.t
+
+  val declare_namespace : env -> global:bool -> implicit_declare:bool -> (Loc.t, Loc.t) Statement.t
 end
 
 module type DECLARATION = sig

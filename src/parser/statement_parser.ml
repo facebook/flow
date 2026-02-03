@@ -1490,7 +1490,7 @@ module Statement
         with_loc ~start_loc (declare_module_ ~leading) env
 
   and declare_namespace =
-    let declare_namespace_ ~leading ~global env =
+    let declare_namespace_ ~leading ~global ~implicit_declare env =
       let id = id_remove_trailing env (Parse.identifier env) in
       let id =
         if global then
@@ -1500,15 +1500,22 @@ module Statement
       in
       let body = declare_module_or_namespace_body env in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-      Statement.(DeclareNamespace DeclareNamespace.{ id; body; comments })
+      Statement.(DeclareNamespace DeclareNamespace.{ id; body; comments; implicit_declare })
     in
-    fun env ~global ->
+    fun env ~global ~implicit_declare ->
       let start_loc = Peek.loc env in
       let leading = Peek.comments env in
-      Expect.token env T_DECLARE;
-      let leading = leading @ Peek.comments env in
-      if not global then Expect.identifier env "namespace";
-      with_loc ~start_loc (declare_namespace_ ~global ~leading) env
+      if not implicit_declare then begin
+        Expect.token env T_DECLARE;
+        let leading = leading @ Peek.comments env in
+        if not global then Expect.identifier env "namespace";
+        with_loc ~start_loc (declare_namespace_ ~global ~implicit_declare ~leading) env
+      end else begin
+        (* implicit declare: namespace keyword already peeked, just consume it *)
+        Expect.identifier env "namespace";
+        let leading = leading @ Peek.comments env in
+        with_loc ~start_loc (declare_namespace_ ~global:false ~implicit_declare ~leading) env
+      end
 
   and declare_module_exports ~leading env =
     let leading_period = Peek.comments env in
@@ -1551,8 +1558,10 @@ module Statement
     | T_LET -> declare_var_statement ~kind:Ast.Variable.Let env
     | T_EXPORT when in_module_or_namespace -> declare_export_declaration env
     | T_IDENTIFIER { raw = "module"; _ } -> declare_module env
-    | T_IDENTIFIER { raw = "global"; _ } -> declare_namespace ~global:true env
-    | T_IDENTIFIER { raw = "namespace"; _ } -> declare_namespace ~global:false env
+    | T_IDENTIFIER { raw = "global"; _ } ->
+      declare_namespace ~global:true ~implicit_declare:false env
+    | T_IDENTIFIER { raw = "namespace"; _ } ->
+      declare_namespace ~global:false ~implicit_declare:false env
     | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
       declare_component_statement env
     | _ when in_module_or_namespace ->

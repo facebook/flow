@@ -1228,6 +1228,7 @@ and Statement : sig
       id: ('M, 'T) id;
       body: 'M * ('M, 'T) Block.t;
       comments: ('M, unit) Syntax.t option;
+      implicit_declare: bool;
     }
     [@@deriving show]
   end

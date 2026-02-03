@@ -336,6 +336,8 @@ module rec Parse : PARSER = struct
     | _ when Peek.is_function env || Peek.is_hook env -> Declaration._function env
     | _ when Peek.is_class env -> class_declaration env decorators
     | T_INTERFACE -> interface env
+    | T_IDENTIFIER { raw = "namespace"; _ } when in_ambient_context env ->
+      Statement.declare_namespace ~global:false ~implicit_declare:true env
     | T_DECLARE -> declare env
     | T_TYPE -> type_alias env
     | T_OPAQUE -> opaque_type env

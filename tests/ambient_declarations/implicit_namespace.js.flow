@@ -1,0 +1,7 @@
+// Test implicit namespace (without 'declare' keyword) in ambient context
+namespace ImplicitNS {
+  const x: number;
+  function foo(): void;
+}
+
+export { ImplicitNS };

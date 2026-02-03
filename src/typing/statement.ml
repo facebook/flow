@@ -2488,7 +2488,14 @@ module Make
         Ast.Statement.DeclareNamespace.id;
         body = (body_loc, { Ast.Statement.Block.body; comments = body_comments });
         comments;
+        implicit_declare;
       } =
+    if implicit_declare && not (Context.tslib_syntax cx) then
+      Flow.add_output
+        cx
+        (Error_message.EUnsupportedSyntax
+           (loc, Flow_intermediate_error_types.(TSLibSyntax DeclarationWithoutDeclare))
+        );
     let node_cache = Context.node_cache cx in
     match Node_cache.get_declared_namespace node_cache loc with
     | Some x -> x
@@ -2536,7 +2543,7 @@ module Make
             Ast.Statement.DeclareNamespace.Local ((name_loc, t), { Ast.Identifier.name; comments })
           )
       in
-      (t, { Ast.Statement.DeclareNamespace.id; body; comments })
+      (t, { Ast.Statement.DeclareNamespace.id; body; comments; implicit_declare })
 
   and object_prop cx ~as_const ~frozen ~has_hint acc prop =
     let open Ast.Expression.Object in

@@ -306,6 +306,23 @@ References:
                  ^^^^^ [2]
 
 
+Error ----------------------------------------------------------------------------------- use_implicit_namespace.js:9:24
+
+Cannot assign `ImplicitNS.x` to `badVal` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   use_implicit_namespace.js:9:24
+   9| const badVal: string = ImplicitNS.x; // ERROR: number not assignable to string
+                             ^^^^^^^^^^^^
+
+References:
+   implicit_namespace.js.flow:3:12
+   3|   const x: number;
+                 ^^^^^^ [1]
+   use_implicit_namespace.js:9:15
+   9| const badVal: string = ImplicitNS.x; // ERROR: number not assignable to string
+                    ^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- use_namespace.js:21:22
 
 Cannot assign `MyNamespace.value` to `badX` because number [1] is incompatible with string [2]. [incompatible-type]
@@ -457,4 +474,4 @@ References:
 
 
 
-Found 28 errors
+Found 29 errors

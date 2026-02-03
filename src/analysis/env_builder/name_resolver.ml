@@ -7152,7 +7152,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! declare_namespace _loc n =
         let open Ast.Statement.DeclareNamespace in
-        let { id; body; comments = _ } = n in
+        let { id; body; implicit_declare = _; comments = _ } = n in
         (match id with
         | Global _ -> ()
         | Local id_ident -> ignore @@ this#pattern_identifier ~kind:Ast.Variable.Const id_ident);

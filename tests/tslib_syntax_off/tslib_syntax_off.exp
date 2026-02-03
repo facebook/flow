@@ -47,5 +47,24 @@ Return type annotation is required for `declare class` methods. [unsupported-syn
                                
 
 
+Error ------------------------------------------------------------------------------------------------ test.js.flow:19:1
 
-Found 6 errors
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+       v------------------------------
+   19| namespace ImplicitNS { // ERROR
+   20|   const x: number;
+   21| }
+       ^
+
+
+Error ------------------------------------------------------------------------------------------------ test.js.flow:20:9
+
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   20|   const x: number;
+               ^^^^^^^^^
+
+
+
+Found 8 errors

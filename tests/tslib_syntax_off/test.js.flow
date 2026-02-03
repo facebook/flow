@@ -14,3 +14,8 @@ type T = import("react").Component; // ERROR
 declare class Foo {
   constructor(x: number); // ERROR
 }
+
+// Namespace without declare keyword
+namespace ImplicitNS { // ERROR
+  const x: number;
+}
