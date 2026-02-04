@@ -682,6 +682,8 @@ and ValueUnion : sig
 
   val is_empty : t -> bool
 
+  val is_only_inexhaustible : t -> bool
+
   val to_pattern : t -> PatternUnion.t
 
   val to_type : Reason.t -> t -> Type.t
@@ -714,6 +716,18 @@ end = struct
     && Base.List.is_empty objects
     && Base.List.is_empty enum_unknown_members
     && Base.List.is_empty inexhaustible
+
+  (* Returns true if the ValueUnion only contains inexhaustible types.
+     This is useful for optimization: filtering a purely inexhaustible ValueUnion
+     by patterns won't change its effective type (the inexhaustible part is preserved). *)
+  let is_only_inexhaustible { leafs; tuples; arrays; objects; enum_unknown_members; inexhaustible }
+      =
+    LeafSet.is_empty leafs
+    && Base.List.is_empty tuples
+    && Base.List.is_empty arrays
+    && Base.List.is_empty objects
+    && Base.List.is_empty enum_unknown_members
+    && not (Base.List.is_empty inexhaustible)
 
   let union
       {

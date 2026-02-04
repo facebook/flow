@@ -88,6 +88,8 @@ val set_match_pattern : t -> ALoc.t -> (ALoc.t, ALoc.t * Type.t) Ast.MatchPatter
 
 val set_match_pattern_value_union : t -> ALoc.t -> Match_pattern_ir.ValueUnion.t -> unit
 
+val set_match_pattern_union : t -> ALoc.t -> Match_pattern_ir.PatternUnion.t * int -> unit
+
 val get_annotation : t -> ALoc.t -> (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation option
 
 val get_expression : t -> ALoc.t -> (ALoc.t, ALoc.t * Type.t) Ast.Expression.t option
@@ -168,3 +170,5 @@ val get_component_sig :
 val get_match_pattern : t -> ALoc.t -> ((ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t * bool) option
 
 val get_match_pattern_value_union : t -> ALoc.t -> Match_pattern_ir.ValueUnion.t option
+
+val get_match_pattern_union : t -> ALoc.t -> (Match_pattern_ir.PatternUnion.t * int) option

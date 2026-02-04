@@ -59,6 +59,18 @@ let get_class_info cx (t : Type.t) : (ALoc.id * string option) option =
 
 module PatternUnionBuilder : sig
   val of_patterns_ast : Context.t -> raise_errors:bool -> pattern_ast_list -> PatternUnion.t
+
+  (* For incremental building: add a single pattern to an existing (unfinalized) PatternUnion *)
+  val add_pattern :
+    Context.t ->
+    raise_errors:bool ->
+    PatternUnion.t * int ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t * bool ->
+    last:bool ->
+    PatternUnion.t * int
+
+  (* Finalize a PatternUnion by reversing the objects list *)
+  val finalize : PatternUnion.t -> PatternUnion.t
 end = struct
   open PatternUnion
 
@@ -458,15 +470,23 @@ end = struct
     in
     (pattern_union, next_i)
 
+  (* Finalize by reversing the objects list *)
+  let finalize pattern_union =
+    let { objects; _ } = pattern_union in
+    { pattern_union with objects = Base.List.rev objects }
+
+  (* Add a single pattern to an existing (unfinalized) PatternUnion *)
+  let add_pattern cx ~raise_errors acc (pattern_ast, guarded) ~last =
+    of_pattern_ast' cx acc ~raise_errors ~guarded ~last pattern_ast
+
   let of_patterns_ast cx ~raise_errors patterns_ast =
     let last_i = Base.List.length patterns_ast - 1 in
     let (pattern_union, _) =
-      Base.List.foldi patterns_ast ~init:(empty, 0) ~f:(fun i acc (pattern_ast, guarded) ->
-          of_pattern_ast' cx acc ~raise_errors ~guarded ~last:(i = last_i) pattern_ast
+      Base.List.foldi patterns_ast ~init:(empty, 0) ~f:(fun i acc pattern ->
+          add_pattern cx ~raise_errors acc pattern ~last:(i = last_i)
       )
     in
-    let { objects; _ } = pattern_union in
-    { pattern_union with objects = Base.List.rev objects }
+    finalize pattern_union
 end
 
 module rec ValueObjectPropertyBuilder : sig
@@ -1566,8 +1586,8 @@ let analyze cx ~match_loc patterns arg_t =
   );
   check_for_unused_patterns cx pattern_union used_pattern_locs
 
-let partial_leftover_value_union cx patterns root_t =
-  let pattern_union = PatternUnionBuilder.of_patterns_ast cx ~raise_errors:false patterns in
+(* Filter a type by a finalized PatternUnion *)
+let filter_by_pattern_union cx root_t pattern_union =
   let value_union = ValueUnionBuilder.of_type cx root_t in
   let { value_left; used_pattern_locs = _; value_matched = _ } =
     filter_values_by_patterns cx ~raise_errors:false ~value_union ~pattern_union

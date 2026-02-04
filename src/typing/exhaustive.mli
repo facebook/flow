@@ -14,8 +14,19 @@ val analyze :
   Type.t ->
   unit
 
-val partial_leftover_value_union :
-  Context.t ->
-  ((ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t * (* guarded *) bool) list ->
-  Type.t ->
-  Match_pattern_ir.ValueUnion.t
+(* Incremental PatternUnion building *)
+module PatternUnionBuilder : sig
+  val add_pattern :
+    Context.t ->
+    raise_errors:bool ->
+    Match_pattern_ir.PatternUnion.t * int ->
+    (ALoc.t, ALoc.t * Type.t) Flow_ast.MatchPattern.t * bool ->
+    last:bool ->
+    Match_pattern_ir.PatternUnion.t * int
+
+  val finalize : Match_pattern_ir.PatternUnion.t -> Match_pattern_ir.PatternUnion.t
+end
+
+(* Filter a ValueUnion by a finalized PatternUnion *)
+val filter_by_pattern_union :
+  Context.t -> Type.t -> Match_pattern_ir.PatternUnion.t -> Match_pattern_ir.ValueUnion.t

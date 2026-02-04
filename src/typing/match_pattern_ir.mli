@@ -182,6 +182,8 @@ and ValueUnion : sig
 
   val is_empty : t -> bool
 
+  val is_only_inexhaustible : t -> bool
+
   val to_pattern : t -> PatternUnion.t
 
   val to_type : Reason.t -> t -> Type.t

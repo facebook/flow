@@ -3553,16 +3553,16 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let _ =
         Base.List.foldi
           cases
-          ~init:[]
-          ~f:(fun i prev_pattern_locs_rev (_, { Case.pattern; body; guard; case_match_root_loc; _ })
-             ->
+          ~init:None
+          ~f:(fun i prev_pattern_loc (_, { Case.pattern; body; guard; case_match_root_loc; _ }) ->
             let acc =
               MatchCaseRoot
-                { case_match_root_loc; root_pattern_loc = fst pattern; prev_pattern_locs_rev }
+                { case_match_root_loc; root_pattern_loc = fst pattern; prev_pattern_loc }
             in
             this#add_match_destructure_bindings
               ~case_match_root_loc
               ~has_guard:(Option.is_some guard)
+              ~prev_pattern_loc
               acc
               pattern;
             ignore @@ super#match_pattern pattern;
@@ -3572,7 +3572,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             let value_hints = value_hints |> IMap.remove i |> IMap.values |> List.rev in
             let hints = Base.List.append hints value_hints in
             this#visit_expression ~hints ~cond:NoContext body;
-            fst pattern :: prev_pattern_locs_rev
+            Some (fst pattern)
         )
       in
       ()
@@ -3588,27 +3588,28 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       let _ =
         Base.List.fold
           cases
-          ~init:[]
-          ~f:(fun prev_pattern_locs_rev (_, { Case.pattern; body; guard; case_match_root_loc; _ })
-             ->
+          ~init:None
+          ~f:(fun prev_pattern_loc (_, { Case.pattern; body; guard; case_match_root_loc; _ }) ->
             let acc =
               MatchCaseRoot
-                { case_match_root_loc; root_pattern_loc = fst pattern; prev_pattern_locs_rev }
+                { case_match_root_loc; root_pattern_loc = fst pattern; prev_pattern_loc }
             in
             this#add_match_destructure_bindings
               ~case_match_root_loc
               ~has_guard:(Option.is_some guard)
+              ~prev_pattern_loc
               acc
               pattern;
             ignore @@ super#match_pattern pattern;
             Base.Option.iter guard ~f:(this#visit_expression ~hints:[] ~cond:OtherTestContext);
             run this#statement body;
-            fst pattern :: prev_pattern_locs_rev
+            Some (fst pattern)
         )
       in
       x
 
-    method add_match_destructure_bindings ~case_match_root_loc ~has_guard root pattern =
+    method add_match_destructure_bindings
+        ~case_match_root_loc ~has_guard ~prev_pattern_loc root pattern =
       let visit_binding loc name binding =
         let binding = this#mk_hooklike_if_necessary (Flow_ast_utils.hook_name name) binding in
         this#add_ordinary_binding
@@ -3620,7 +3621,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       this#add_binding
         (Env_api.MatchCasePatternLoc, pattern_loc)
         (mk_reason RMatchPattern pattern_loc)
-        (MatchCasePattern { case_match_root_loc; has_guard; pattern });
+        (MatchCasePattern { case_match_root_loc; has_guard; pattern; prev_pattern_loc });
       MatchPattern.visit_pattern
         ~visit_binding
         ~visit_non_binding_leaf:this#add_destructure_binding

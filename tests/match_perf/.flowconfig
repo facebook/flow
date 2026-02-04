@@ -1,0 +1,6 @@
+[options]
+all=true
+experimental.pattern_matching=true
+experimental.pattern_matching.instance_patterns=true
+component_syntax=true
+no_flowlib=false

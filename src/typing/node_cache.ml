@@ -58,6 +58,8 @@ type cache = {
     ALocMap.t;
   match_patterns: ((ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t * bool) ALocMap.t;
   match_pattern_value_unions: Match_pattern_ir.ValueUnion.t ALocMap.t;
+  (* Intermediate PatternUnion state for incremental building *)
+  match_pattern_unions: (Match_pattern_ir.PatternUnion.t * int) ALocMap.t;
 }
 
 type t = cache ref
@@ -83,6 +85,7 @@ let mk_empty () =
       component_sigs = ALocMap.empty;
       match_patterns = ALocMap.empty;
       match_pattern_value_unions = ALocMap.empty;
+      match_pattern_unions = ALocMap.empty;
     }
 
 let set_annotation cache ((loc, _) as anno) =
@@ -141,6 +144,9 @@ let set_match_pattern_value_union cache loc v =
   cache :=
     { !cache with match_pattern_value_unions = ALocMap.add loc v !cache.match_pattern_value_unions }
 
+let set_match_pattern_union cache loc v =
+  cache := { !cache with match_pattern_unions = ALocMap.add loc v !cache.match_pattern_unions }
+
 let get_annotation cache loc = ALocMap.find_opt loc !cache.annotations
 
 let get_expression cache loc = ALocMap.find_opt loc !cache.expressions
@@ -176,3 +182,5 @@ let get_component_sig cache loc = ALocMap.find_opt loc !cache.component_sigs
 let get_match_pattern cache loc = ALocMap.find_opt loc !cache.match_patterns
 
 let get_match_pattern_value_union cache loc = ALocMap.find_opt loc !cache.match_pattern_value_unions
+
+let get_match_pattern_union cache loc = ALocMap.find_opt loc !cache.match_pattern_unions

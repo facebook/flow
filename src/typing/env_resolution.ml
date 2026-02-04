@@ -43,6 +43,25 @@ let try_cache ~target_loc ~check ~cache cx =
     cache e;
     e
 
+(* Helper to incrementally build PatternUnion state from a previous pattern location.
+   Returns the pattern_union_state to use for the current pattern. *)
+let get_pattern_union_state_from_prev node_cache cx prev_pattern_loc =
+  match prev_pattern_loc with
+  | None ->
+    (* First pattern: start with empty PatternUnion *)
+    (Match_pattern_ir.PatternUnion.empty, 0)
+  | Some prev_loc ->
+    (match Node_cache.get_match_pattern_union node_cache prev_loc with
+    | Some prev_pattern_union_state ->
+      let prev_pattern = Base.Option.value_exn (Node_cache.get_match_pattern node_cache prev_loc) in
+      Exhaustive.PatternUnionBuilder.add_pattern
+        cx
+        ~raise_errors:false
+        prev_pattern_union_state
+        prev_pattern
+        ~last:false
+    | None -> failwith "ERROR: pattern_union cache missing - dependency ordering issue")
+
 let expression cx ?encl_ctx ?decl ?as_const exp =
   let cache = Context.node_cache cx in
   let target_loc =
@@ -481,18 +500,30 @@ let rec resolve_binding cx def_scope_kind reason loc b =
       t
   | Root (Value { hints = _; expr; decl_kind; as_const }) ->
     expression cx ?decl:decl_kind ~as_const expr
-  | Root (MatchCaseRoot { case_match_root_loc; root_pattern_loc; prev_pattern_locs_rev }) ->
+  | Root (MatchCaseRoot { case_match_root_loc; root_pattern_loc; prev_pattern_loc }) ->
     let unfiltered_t =
       Type_env.var_ref cx (OrdinaryName Flow_ast_utils.match_root_name) case_match_root_loc
     in
     let node_cache = Context.node_cache cx in
-    let patterns =
-      Base.List.rev_map prev_pattern_locs_rev ~f:(fun l ->
-          Base.Option.value_exn (Node_cache.get_match_pattern node_cache l)
+    let pattern_union_state = get_pattern_union_state_from_prev node_cache cx prev_pattern_loc in
+    (* Optimization: if the previous value_left was only inexhaustible (e.g., just `string`),
+       filtering won't change it, so we can reuse it directly. *)
+    let value_left =
+      Base.Option.bind prev_pattern_loc ~f:(fun prev_loc ->
+          Base.Option.filter
+            (Node_cache.get_match_pattern_value_union node_cache prev_loc)
+            ~f:Match_pattern_ir.ValueUnion.is_only_inexhaustible
       )
     in
-    let value_left = Exhaustive.partial_leftover_value_union cx patterns unfiltered_t in
-    Node_cache.set_match_pattern_value_union (Context.node_cache cx) root_pattern_loc value_left;
+    let value_left =
+      match value_left with
+      | Some value_left -> value_left
+      | None ->
+        let pattern_union = Exhaustive.PatternUnionBuilder.finalize (fst pattern_union_state) in
+        Exhaustive.filter_by_pattern_union cx unfiltered_t pattern_union
+    in
+    Node_cache.set_match_pattern_value_union node_cache root_pattern_loc value_left;
+    Node_cache.set_match_pattern_union node_cache root_pattern_loc pattern_union_state;
     Match_pattern_ir.ValueUnion.to_type (TypeUtil.reason_of_t unfiltered_t) value_left
   | Root (ObjectValue { obj_loc = loc; obj; synthesizable = ObjectSynthesizable _ }) ->
     let open Ast.Expression.Object in
@@ -1111,10 +1142,15 @@ let resolve_chain_expression cx ~cond exp =
 
 let resolve_write_expression cx ~cond exp = synthesizable_expression cx ~encl_ctx:cond exp
 
-let resolve_match_pattern cx def_reason case_match_root_loc ~has_guard pattern =
-  let (_pattern : (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t) =
+let resolve_match_pattern cx def_reason case_match_root_loc ~has_guard ~prev_pattern_loc pattern =
+  let (pattern_loc, _) : (ALoc.t, ALoc.t * Type.t) Ast.MatchPattern.t =
     Statement.match_pattern cx case_match_root_loc ~has_guard pattern
   in
+  (* Set the match pattern union cache for incremental PatternUnion building.
+     This allows subsequent patterns to depend on this one and build incrementally. *)
+  let cache = Context.node_cache cx in
+  let pattern_union_state = get_pattern_union_state_from_prev cache cx prev_pattern_loc in
+  Node_cache.set_match_pattern_union cache pattern_loc pattern_union_state;
   MixedT.why def_reason
 
 let resolve_generator_next cx reason gen =
@@ -1157,8 +1193,8 @@ let resolve cx (def_kind, id_loc) (def, def_scope_kind, class_stack, def_reason)
   let t =
     match def with
     | Binding b -> resolve_binding cx def_scope_kind def_reason id_loc b
-    | MatchCasePattern { case_match_root_loc; has_guard; pattern } ->
-      resolve_match_pattern cx def_reason case_match_root_loc ~has_guard pattern
+    | MatchCasePattern { case_match_root_loc; has_guard; pattern; prev_pattern_loc } ->
+      resolve_match_pattern cx def_reason case_match_root_loc ~has_guard ~prev_pattern_loc pattern
     | ExpressionDef { cond_context = cond; expr; chain = true; hints = _ } ->
       resolve_chain_expression cx ~cond expr
     | ExpressionDef { cond_context = cond; expr; chain = false; hints = _ } ->

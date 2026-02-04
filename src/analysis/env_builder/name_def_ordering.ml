@@ -1127,12 +1127,14 @@ struct
         | Value { hints; expr; decl_kind = _; as_const = _ } ->
           let state = depends_of_hints state hints in
           depends_of_expression expr state
-        | MatchCaseRoot { case_match_root_loc; root_pattern_loc = _; prev_pattern_locs_rev } ->
+        | MatchCaseRoot { case_match_root_loc; root_pattern_loc = _; prev_pattern_loc } ->
           depends_of_node
             (fun visitor ->
               run visitor#identifier (Flow_ast_utils.match_root_ident case_match_root_loc);
-              Base.List.iter prev_pattern_locs_rev ~f:(fun loc ->
-                  visitor#add ~why:loc (Env_api.MatchCasePatternLoc, loc)
+              Base.Option.iter prev_pattern_loc ~f:(fun prev_loc ->
+                  (* Only depend on the immediately previous pattern. Transitive dependencies
+                     ensure proper ordering without O(N) dependencies per pattern. *)
+                  visitor#add ~why:prev_loc (Env_api.MatchCasePatternLoc, prev_loc)
               ))
             state
         | ObjectValue { obj; synthesizable = ObjectSynthesizable _; _ } ->
@@ -1330,8 +1332,14 @@ struct
       in
       function
       | Binding binding -> depends_of_binding binding
-      | MatchCasePattern { case_match_root_loc; has_guard = _; pattern } ->
-        depends_on_match_pattern case_match_root_loc pattern EnvMap.empty
+      | MatchCasePattern { case_match_root_loc; has_guard = _; pattern; prev_pattern_loc } ->
+        let state =
+          Base.Option.value_map prev_pattern_loc ~default:EnvMap.empty ~f:(fun prev_loc ->
+              (* Add dependency on the immediately previous pattern for incremental PatternUnion building *)
+              EnvMap.singleton (Env_api.MatchCasePatternLoc, prev_loc) (Nel.one (fst pattern))
+          )
+        in
+        depends_on_match_pattern case_match_root_loc pattern state
       | ExpressionDef { expr; hints; _ } ->
         depends_of_hinted_expression ~for_expression_writes:true hints expr EnvMap.empty
       | Update _ -> depends_of_update None
