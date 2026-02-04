@@ -809,10 +809,6 @@ let pid_prefix =
     else
       ""
 
-(* Create a shallow copy of this context, so that mutations to the sig_cx's
- * fields will not affect the copy. *)
-let copy_of_context cx = { cx with ccx = { cx.ccx with sig_cx = cx.ccx.sig_cx } }
-
 (* mutators *)
 
 let add_exhaustive_check cx loc x =

@@ -371,8 +371,6 @@ val node_cache : t -> Node_cache.t
 
 val pid_prefix : t -> string
 
-val copy_of_context : t -> t
-
 val automatic_require_default : t -> bool
 
 (* modules *)
