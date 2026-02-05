@@ -758,15 +758,6 @@ class virtual ['a] t =
         else
           TypeGuard { reason; one_sided; inferred; param_name; type_guard = t' }
 
-    method private predicate_maps cx map_cx predicate =
-      let (reason, (lazy (pmap, nmap))) = predicate in
-      let pmap' = Key_map.ident_map (self#predicate cx map_cx) pmap in
-      let nmap' = Key_map.ident_map (self#predicate cx map_cx) nmap in
-      if pmap == pmap' && nmap == nmap' then
-        predicate
-      else
-        (reason, lazy (pmap', nmap'))
-
     method virtual exports : Context.t -> 'a -> Type.Exports.id -> Type.Exports.id
 
     method obj_flags cx map_cx flags =

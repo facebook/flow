@@ -265,8 +265,6 @@ class ['a] t =
         | Unspecialized ->
           acc)
 
-    method private tout cx pole acc (r, id) = self#tvar cx pole acc r id
-
     (* The default behavior here could be fleshed out a bit, to look up the graph,
        handle Resolved and Unresolved cases, etc. *)
     method tvar _cx _pole acc _r _id = acc
