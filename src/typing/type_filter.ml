@@ -800,6 +800,7 @@ module TypeTag = struct
     | ClassInstanceTag
     | ArrTag of { sentinel: sentinel_map }
     | EnumTag
+    | RendersTag
   [@@deriving ord]
 end
 
@@ -866,11 +867,11 @@ let rec tag_of_def_t cx = function
   | PolyT { t_out; _ } -> tag_of_t cx t_out
   | EnumValueT _ -> Some (TypeTagSet.singleton EnumTag)
   | EmptyT -> Some TypeTagSet.empty
+  | RendersT _ -> Some (TypeTagSet.singleton RendersTag)
   | MixedT _
   | ClassT _
   | TypeT _
   | ReactAbstractComponentT _
-  | RendersT _
   | EnumObjectT _ ->
     None
 

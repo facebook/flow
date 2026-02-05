@@ -44,3 +44,21 @@ function test4() {
     x as KB | KC; // okay
   }
 }
+
+function test_renders() {
+  // Test that type guards properly filter out `renders` types from unions
+  declare class C {}
+  declare component Component();
+  declare opaque type T: string | C;
+
+  declare var x: T | renders Component;
+  declare function isT(node: unknown): implies node is string | C;
+
+  if (isT(x)) {
+    x as T; // okay - renders type should be filtered out
+  }
+
+  if (typeof x === 'string' || x instanceof C) {
+    x as T; // okay
+  }
+}
