@@ -205,7 +205,15 @@ let rec is_literal_type cx seen t =
 
 class implicit_instantiation_literal_mapper ~singleton_action =
   object (self)
-    inherit [unit] Type_subst.type_subst_base as super
+    inherit [unit] Type_mapper.t as super
+
+    method tvar _cx _map_cx _r id = id
+
+    method call_prop cx map_cx id = Type_subst.call_prop (self :> _ #Type_mapper.t) cx map_cx id
+
+    method props cx map_cx id = Type_subst.props (self :> _ #Type_mapper.t) cx map_cx id
+
+    method exports cx map_cx id = Type_subst.exports (self :> _ #Type_mapper.t) cx map_cx id
 
     method! type_ cx map_cx t =
       if is_literal_type cx ISet.empty t then

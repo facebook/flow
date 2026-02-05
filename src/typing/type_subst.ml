@@ -164,52 +164,45 @@ let union_ident_map_and_dedup =
       in
       TypeUtil.union_of_ts r (List.rev ts)
 
-class virtual ['a] type_subst_base =
-  object (self)
-    inherit ['a] Type_mapper.t
+let call_prop (mapper : 'a #Type_mapper.t) cx map_cx id =
+  let t = Context.find_call cx id in
+  let t' = mapper#type_ cx map_cx t in
+  if t == t' then
+    id
+  else
+    Context.make_call_prop cx t'
 
-    method tvar _cx _map_cx _r id = id
+let props (mapper : 'a #Type_mapper.t) cx map_cx id =
+  let props_map = Context.find_props cx id in
+  let props_map' =
+    NameUtils.Map.ident_map (Property.ident_map_t (mapper#type_ cx map_cx)) props_map
+  in
+  let id' =
+    if props_map == props_map' then
+      id
+    (* When substitution results in a new property map, we have to use a
+       generated id, rather than a location from source. The substituted
+       object will have the same location as the generic version, meaning
+       that this location will not serve as a unique identifier. *)
+    else
+      Context.generate_property_map cx props_map'
+  in
+  id'
 
-    method call_prop cx map_cx id =
-      let t = Context.find_call cx id in
-      let t' = self#type_ cx map_cx t in
-      if t == t' then
-        id
-      else
-        Context.make_call_prop cx t'
-
-    method props cx map_cx id =
-      let props_map = Context.find_props cx id in
-      let props_map' =
-        NameUtils.Map.ident_map (Property.ident_map_t (self#type_ cx map_cx)) props_map
-      in
-      let id' =
-        if props_map == props_map' then
-          id
-        (* When substitution results in a new property map, we have to use a
-           generated id, rather than a location from source. The substituted
-           object will have the same location as the generic version, meaning
-           that this location will not serve as a unique identifier. *)
-        else
-          Context.generate_property_map cx props_map'
-      in
-      id'
-
-    method exports cx map_cx id =
-      let exps = Context.find_exports cx id in
-      let map_named_symbol ({ name_loc; preferred_def_locs; type_ } as orig) =
-        let type_' = self#type_ cx map_cx type_ in
-        if type_ == type_' then
-          orig
-        else
-          { name_loc; preferred_def_locs; type_ = type_' }
-      in
-      let exps' = NameUtils.Map.ident_map map_named_symbol exps in
-      if exps == exps' then
-        id
-      else
-        Context.make_export_map cx exps'
-  end
+let exports (mapper : 'a #Type_mapper.t) cx map_cx id =
+  let exps = Context.find_exports cx id in
+  let map_named_symbol ({ name_loc; preferred_def_locs; type_ } as orig) =
+    let type_' = mapper#type_ cx map_cx type_ in
+    if type_ == type_' then
+      orig
+    else
+      { name_loc; preferred_def_locs; type_ = type_' }
+  in
+  let exps' = NameUtils.Map.ident_map map_named_symbol exps in
+  if exps == exps' then
+    id
+  else
+    Context.make_export_map cx exps'
 
 module Purpose = struct
   type t =
@@ -224,7 +217,15 @@ end
 let substituter =
   object (self)
     inherit
-      [replacement Subst_name.Map.t * bool * bool * Purpose.t * use_op option] type_subst_base as super
+      [replacement Subst_name.Map.t * bool * bool * Purpose.t * use_op option] Type_mapper.t as super
+
+    method tvar _cx _map_cx _r id = id
+
+    method call_prop cx map_cx id = call_prop (self :> _ #Type_mapper.t) cx map_cx id
+
+    method props cx map_cx id = props (self :> _ #Type_mapper.t) cx map_cx id
+
+    method exports cx map_cx id = exports (self :> _ #Type_mapper.t) cx map_cx id
 
     val mutable change_id = false
 
