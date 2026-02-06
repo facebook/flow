@@ -1720,8 +1720,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:302:5
 
-Cannot compare `a` [1] to `b` [2], because string [3] is not a subtype of number literal `0` [2] and number literal
-`0` [2] is not a subtype of string [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
+Cannot compare `a` [1] to `b` [2], because string [3] is not a subtype of number literal `0` [4] and number literal
+`0` [4] is not a subtype of string [3]. In **rare** cases, these types may have overlapping values but lack a subtyping
 relationship. If that happens, you can cast one side to the union of both types to pass the flow check. 
 [invalid-compare]
 
@@ -1739,6 +1739,9 @@ References:
    typed_check.js:299:20
    299|   declare const a: string;
                            ^^^^^^ [3]
+   typed_check.js:300:20
+   300|   declare const b: number;
+                           ^^^^^^ [4]
 
 
 Error --------------------------------------------------------------------------------------------- typed_check.js:312:3

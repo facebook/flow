@@ -615,8 +615,8 @@ let check_strict_comparison cx all_strict_comparisons =
       let left_conc_t = Flow_js.singleton_concrete_type_for_inspection cx l_reason left_t in
       let right_conc_t = Flow_js.singleton_concrete_type_for_inspection cx r_reason right_t in
       (* the reason after concretization will contain more information. *)
-      let l_singleton_reason = TypeUtil.singleton_reason_of_t left_conc_t in
-      let r_singleton_reason = TypeUtil.singleton_reason_of_t right_conc_t in
+      let l_singleton_reason = TypeUtil.reason_of_t left_conc_t in
+      let r_singleton_reason = TypeUtil.reason_of_t right_conc_t in
       let has_null_type cx t =
         match Type_filter.not_null cx t with
         | Type_filter.TypeFilterResult { changed = true; _ } -> true

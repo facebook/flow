@@ -105,22 +105,6 @@ and reason_of_use_t = function
   | ExitRendersT { renders_reason; _ } -> renders_reason
   | EvalTypeDestructorT { reason; _ } -> reason
 
-(* When the type is a singleton and not from annotation, convert it to literal reason. *)
-let singleton_reason_of_t = function
-  | DefT (reason, SingletonStrT { value; from_annot }) when from_annot = false ->
-    let loc = Reason.loc_of_reason reason in
-    Reason.mk_reason (Reason.RStringLit value) loc
-  | DefT (reason, SingletonNumT { value; from_annot }) when from_annot = false ->
-    let loc = Reason.loc_of_reason reason in
-    Reason.mk_reason (Reason.RNumberLit (snd value)) loc
-  | DefT (reason, SingletonBoolT { value; from_annot }) when from_annot = false ->
-    let loc = Reason.loc_of_reason reason in
-    Reason.mk_reason (Reason.RBooleanLit value) loc
-  | DefT (reason, SingletonBigIntT { value; from_annot }) when from_annot = false ->
-    let loc = Reason.loc_of_reason reason in
-    Reason.mk_reason (Reason.RBigIntLit (snd value)) loc
-  | t -> reason_of_t t
-
 let generalized_reason_of_t =
   let not_a_string = function
     | DefT (_, SingletonStrT _)

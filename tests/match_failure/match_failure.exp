@@ -398,9 +398,9 @@ References:
    disjoint_union.js:116:9
    116|   const C = 'C';
                 ^ [2]
-   disjoint_union.js:126:12
-   126|       case C: break; // error C is not included in 'A' | 'B'
-                   ^ [3]
+   disjoint_union.js:116:13
+   116|   const C = 'C';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:127:7
@@ -421,9 +421,9 @@ References:
    disjoint_union.js:117:9
    117|   const D = 'D';
                 ^ [2]
-   disjoint_union.js:127:12
-   127|       case D: break; // error D is not included in 'A' | 'B'
-                   ^ [3]
+   disjoint_union.js:117:13
+   117|   const D = 'D';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:134:9
@@ -444,9 +444,9 @@ References:
    disjoint_union.js:116:9
    116|   const C = 'C';
                 ^ [2]
-   disjoint_union.js:134:20
-   134|     if (x.type === C) {}; // error C is not included in 'A' | 'B'
-                           ^ [3]
+   disjoint_union.js:116:13
+   116|   const C = 'C';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:135:9
@@ -467,9 +467,9 @@ References:
    disjoint_union.js:117:9
    117|   const D = 'D';
                 ^ [2]
-   disjoint_union.js:135:20
-   135|     if (x.type === D) {}; // error D is not included in 'A' | 'B'
-                           ^ [3]
+   disjoint_union.js:117:13
+   117|   const D = 'D';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:142:7
@@ -490,9 +490,9 @@ References:
    disjoint_union.js:116:9
    116|   const C = 'C';
                 ^ [2]
-   disjoint_union.js:142:12
-   142|       case C: break; // error C is not included in 'A'
-                   ^ [3]
+   disjoint_union.js:116:13
+   116|   const C = 'C';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:143:7
@@ -513,9 +513,9 @@ References:
    disjoint_union.js:117:9
    117|   const D = 'D';
                 ^ [2]
-   disjoint_union.js:143:12
-   143|       case D: break; // error D is not included in 'A'
-                   ^ [3]
+   disjoint_union.js:117:13
+   117|   const D = 'D';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:150:9
@@ -536,9 +536,9 @@ References:
    disjoint_union.js:116:9
    116|   const C = 'C';
                 ^ [2]
-   disjoint_union.js:150:20
-   150|     if (x.type === C) {}; // error C is not included in 'A'
-                           ^ [3]
+   disjoint_union.js:116:13
+   116|   const C = 'C';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:151:9
@@ -559,9 +559,9 @@ References:
    disjoint_union.js:117:9
    117|   const D = 'D';
                 ^ [2]
-   disjoint_union.js:151:20
-   151|     if (x.type === D) {}; // error D is not included in 'A'
-                           ^ [3]
+   disjoint_union.js:117:13
+   117|   const D = 'D';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:161:7
@@ -582,9 +582,9 @@ References:
    disjoint_union.js:116:9
    116|   const C = 'C';
                 ^ [2]
-   disjoint_union.js:161:12
-   161|       case C: break; // error C is not included in 'A'|'B'
-                   ^ [3]
+   disjoint_union.js:116:13
+   116|   const C = 'C';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:162:7
@@ -605,9 +605,9 @@ References:
    disjoint_union.js:117:9
    117|   const D = 'D';
                 ^ [2]
-   disjoint_union.js:162:12
-   162|       case D: break; // error D is not included in 'A'|'B'
-                   ^ [3]
+   disjoint_union.js:117:13
+   117|   const D = 'D';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:169:9
@@ -628,9 +628,9 @@ References:
    disjoint_union.js:116:9
    116|   const C = 'C';
                 ^ [2]
-   disjoint_union.js:169:20
-   169|     if (x.type === C) {}; // error C is not included in 'A'|'B'
-                           ^ [3]
+   disjoint_union.js:116:13
+   116|   const C = 'C';
+                    ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------ disjoint_union.js:170:9
@@ -651,9 +651,9 @@ References:
    disjoint_union.js:117:9
    117|   const D = 'D';
                 ^ [2]
-   disjoint_union.js:170:20
-   170|     if (x.type === D) {}; // error D is not included in 'A'|'B'
-                           ^ [3]
+   disjoint_union.js:117:13
+   117|   const D = 'D';
+                    ^^^ [3]
 
 
 Error ----------------------------------------------------------------------------------------------------- enum.js:6:14
