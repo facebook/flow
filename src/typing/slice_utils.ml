@@ -10,9 +10,6 @@ open Type
 open TypeUtil
 module U = Utils_js
 
-(* Don't use Flow_js directly from here *)
-module Flow_js = struct end
-
 let mk_object_type
     cx
     ~reason

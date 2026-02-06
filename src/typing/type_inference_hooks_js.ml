@@ -9,17 +9,11 @@ let id_nop _ _ _ = false
 
 let literal_nop _ _ = false
 
-let member_nop _ _ _ _ = false
-
 let jsx_nop _ _ _ = false
-
-let ref_nop _ _ _ = ()
 
 let obj_prop_decl_nop _ _ _ = false
 
 let obj_to_obj_nop _ _ _ = ()
-
-let export_named_nop _ _ = ()
 
 (* This type represents the possible definition-points for an lvalue. *)
 type def =

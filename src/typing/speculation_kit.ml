@@ -10,7 +10,6 @@ open Instantiation_utils
 open Reason
 open Type
 open TypeUtil
-module ALocFuzzyMap = Loc_collections.ALocFuzzyMap
 
 module type INPUT = sig
   include Flow_common.BASE
