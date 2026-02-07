@@ -1166,7 +1166,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           { Type.Function.params; return; tparams; comments = None; effect_ = Function.Arbitrary })
         env
     in
-    let method_property env start_loc static key ~leading =
+    let method_property env start_loc static abstract key ~leading =
       let key = object_key_remove_trailing env key in
       let tparams =
         type_params_remove_trailing env ~kind:Flow_ast_mapper.FunctionTypeTP (type_params env)
@@ -1183,6 +1183,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               static = static <> None;
               proto = false;
               _method = true;
+              abstract;
               variance = None;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             }
@@ -1209,7 +1210,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       in
       Type.Object.CallProperty prop
     in
-    let init_property env start_loc ~variance ~static ~proto ~leading (key_loc, key) =
+    let init_property env start_loc ~variance ~static ~proto ~abstract ~leading (key_loc, key) =
       ignore proto;
       if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
       let prop =
@@ -1231,6 +1232,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 static = static <> None;
                 proto = proto <> None;
                 _method = false;
+                abstract;
                 variance;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
@@ -1277,6 +1279,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 static = static <> None;
                 proto = false;
                 _method = false;
+                abstract = false;
                 variance = None;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
@@ -1547,9 +1550,11 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             ~is_class
             ~allow_static:is_class
             ~allow_proto:is_class
+            ~allow_abstract:is_class
             ~variance:None
             ~static:None
             ~proto:None
+            ~abstract:false
             ~leading:[]
         in
         semicolon exact env;
@@ -1561,7 +1566,17 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           env
           (prop :: props, inexact, internal)
     and property
-        env ~is_class ~allow_static ~allow_proto ~variance ~static ~proto ~leading start_loc =
+        env
+        ~is_class
+        ~allow_static
+        ~allow_proto
+        ~allow_abstract
+        ~variance
+        ~static
+        ~proto
+        ~abstract
+        ~leading
+        start_loc =
       match Peek.token env with
       | T_PLUS
       | T_MINUS
@@ -1572,9 +1587,11 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~is_class
           ~allow_static:false
           ~allow_proto:false
+          ~allow_abstract:false
           ~variance
           ~static
           ~proto
+          ~abstract
           ~leading
           start_loc
       | T_STATIC when allow_static ->
@@ -1589,9 +1606,11 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~is_class
           ~allow_static:false
           ~allow_proto:false
+          ~allow_abstract
           ~variance
           ~static
           ~proto
+          ~abstract
           ~leading
           start_loc
       | T_IDENTIFIER { raw = "proto"; _ } when allow_proto ->
@@ -1606,9 +1625,28 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~is_class
           ~allow_static:false
           ~allow_proto:false
+          ~allow_abstract
           ~variance
           ~static
           ~proto
+          ~abstract
+          ~leading
+          start_loc
+      | T_IDENTIFIER { raw = "abstract"; _ } when allow_abstract && Peek.ith_is_identifier ~i:1 env
+        ->
+        if static <> None then error env Parse_error.StaticAbstractMethod;
+        let leading = leading @ Peek.comments env in
+        Eat.token env;
+        property
+          env
+          ~is_class
+          ~allow_static:false
+          ~allow_proto:false
+          ~allow_abstract:false
+          ~variance
+          ~static
+          ~proto
+          ~abstract:true
           ~leading
           start_loc
       | T_READONLY
@@ -1620,9 +1658,11 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~is_class
           ~allow_static:false
           ~allow_proto:false
+          ~allow_abstract:false
           ~variance
           ~static
           ~proto
+          ~abstract
           ~leading
           start_loc
       | T_LBRACKET ->
@@ -1654,7 +1694,15 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               )
           in
           let static = None in
-          init_property env start_loc ~variance ~static ~proto ~leading:[] (static_loc, key)
+          init_property
+            env
+            start_loc
+            ~variance
+            ~static
+            ~proto
+            ~abstract:false
+            ~leading:[]
+            (static_loc, key)
         | (None, Some proto_loc, (T_PLING | T_COLON)) ->
           (* We speculatively parsed `proto` as a proto modifier, but now
              that we've parsed the next token, we changed our minds and want
@@ -1667,7 +1715,15 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               )
           in
           let proto = None in
-          init_property env start_loc ~variance ~static ~proto ~leading:[] (proto_loc, key)
+          init_property
+            env
+            start_loc
+            ~variance
+            ~static
+            ~proto
+            ~abstract:false
+            ~leading:[]
+            (proto_loc, key)
         | _ ->
           let object_key env =
             Eat.push_lex_mode env Lex_mode.NORMAL;
@@ -1687,10 +1743,10 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             | T_LPAREN ->
               error_unexpected_proto env proto;
               error_unexpected_variance env variance;
-              method_property env start_loc static key ~leading
+              method_property env start_loc static abstract key ~leading
             | T_COLON
             | T_PLING ->
-              init_property env start_loc ~variance ~static ~proto ~leading (key_loc, key)
+              init_property env start_loc ~variance ~static ~proto ~abstract ~leading (key_loc, key)
             | _ ->
               ignore (object_key_remove_trailing env key);
               let key = object_key env in
@@ -1706,10 +1762,10 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             | T_LPAREN ->
               error_unexpected_proto env proto;
               error_unexpected_variance env variance;
-              method_property env start_loc static key ~leading
+              method_property env start_loc static abstract key ~leading
             | _ ->
               error_invalid_property_name env is_class static key;
-              init_property env start_loc ~variance ~static ~proto ~leading (key_loc, key)
+              init_property env start_loc ~variance ~static ~proto ~abstract ~leading (key_loc, key)
           end))
     in
     fun ~is_class ~allow_exact ~allow_spread env ->

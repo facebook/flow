@@ -202,6 +202,7 @@ class ['loc] lexical_hoister ~(enable_enums : bool) =
         extends = _;
         implements = _;
         class_decorators = _;
+        abstract = _;
         comments = _;
       } =
         cls

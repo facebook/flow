@@ -1,0 +1,44 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:1:1
+
+Flow does not support `abstract` classes. [ts-syntax]
+
+      v----------------------------
+   1| abstract class Foo { // ERROR
+   2|   abstract getName(): string; // ERROR
+   3|
+   4|   concreteMethod(): void {}
+   5| }
+      ^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:2:3
+
+Flow does not support `abstract` methods. [ts-syntax]
+
+   2|   abstract getName(): string; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:7:1
+
+Flow does not support `abstract` classes. [ts-syntax]
+
+       v------------------------------------
+    7| declare abstract class Bar { // ERROR
+    8|   abstract getName(): string; // ERROR
+    9|
+   10|   meth(): void;
+   11| }
+       ^
+
+
+Error ------------------------------------------------------------------------------------------------------ test.js:8:3
+
+Flow does not support `abstract` methods. [ts-syntax]
+
+   8|   abstract getName(): string; // ERROR
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 4 errors

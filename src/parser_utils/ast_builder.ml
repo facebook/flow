@@ -33,6 +33,7 @@ module Types = struct
         ?(static = false)
         ?(proto = false)
         ?(_method = false)
+        ?(abstract = false)
         ?(variance = None)
         ?comments
         key
@@ -45,6 +46,7 @@ module Types = struct
           static;
           proto;
           _method;
+          abstract;
           variance;
           comments;
         }
@@ -396,7 +398,7 @@ module Classes = struct
   let method_ ?comments ?(decorators = []) ?(static = false) ~id function_ =
     Body.Method (Methods.make ?comments ~decorators ~static ~id function_)
 
-  let make ?comments ?super ?(implements = []) ?id elements =
+  let make ?comments ?super ?(implements = []) ?(abstract = false) ?id elements =
     let extends =
       match super with
       | None -> None
@@ -415,6 +417,7 @@ module Classes = struct
       implements;
       class_decorators = [];
       comments;
+      abstract;
     }
 end
 

@@ -1190,7 +1190,7 @@ module Statement
       | _ -> List.rev acc
       (* This is identical to `interface`, except that mixins are allowed *)
     in
-    fun ~leading env ->
+    fun ~abstract ~leading env ->
       let env = env |> with_strict true in
       let leading = leading @ Peek.comments env in
       Expect.token env T_CLASS;
@@ -1242,14 +1242,15 @@ module Statement
         remove_trailing body (fun remover (loc, body) -> (loc, remover#object_type body))
       in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-      Statement.DeclareClass.{ id; tparams; body; extends; mixins; implements; comments }
+      Statement.DeclareClass.{ id; tparams; body; extends; mixins; implements; abstract; comments }
 
-  and declare_class_statement env =
+  and declare_class_statement ~abstract env =
     with_loc
       (fun env ->
         let leading = Peek.comments env in
         Expect.token env T_DECLARE;
-        let fn = declare_class ~leading env in
+        if abstract then Expect.identifier env "abstract";
+        let fn = declare_class ~abstract ~leading env in
         Statement.DeclareClass fn)
       env
 
@@ -1539,7 +1540,8 @@ module Statement
 
     (* eventually, just emit a wrapper AST node *)
     match Peek.ith_token ~i:1 env with
-    | T_CLASS -> declare_class_statement env
+    | T_CLASS -> declare_class_statement ~abstract:false env
+    | T_IDENTIFIER { raw = "abstract"; _ } -> declare_class_statement ~abstract:true env
     | T_CONST -> declare_const_or_enum env
     | T_ENUM when (parse_options env).enums -> declare_enum ~const_:false env
     | T_INTERFACE -> declare_interface env
@@ -2078,7 +2080,12 @@ module Statement
             (Some (Function fn), [])
           | T_CLASS ->
             (* declare export default class foo { ... } *)
-            let class_ = with_loc (declare_class ~leading:[]) env in
+            let class_ = with_loc (declare_class ~abstract:false ~leading:[]) env in
+            (Some (Class class_), [])
+          | T_IDENTIFIER { raw = "abstract"; _ } ->
+            (* declare export default abstract class foo { ... } *)
+            Eat.token env;
+            let class_ = with_loc (declare_class ~abstract:true ~leading:[]) env in
             (Some (Class class_), [])
           | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
             (* declare export default component Foo() { ... } *)
@@ -2115,7 +2122,7 @@ module Statement
             Some (Function fn)
           | T_CLASS ->
             (* declare export class foo { ... } *)
-            let class_ = with_loc (declare_class ~leading:[]) env in
+            let class_ = with_loc (declare_class ~abstract:false ~leading:[]) env in
             Some (Class class_)
           | T_VAR ->
             (* declare export var foo: ... *)
@@ -2154,6 +2161,16 @@ module Statement
         let declaration =
           let component = with_loc (declare_component ~leading:[]) env in
           Some (Component component)
+        in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+        Statement.DeclareExportDeclaration
+          { default = None; declaration; specifiers = None; source = None; comments }
+      | T_IDENTIFIER { raw = "abstract"; _ } ->
+        (* declare export abstract class foo { ... } *)
+        let declaration =
+          Eat.token env;
+          let class_ = with_loc (declare_class ~abstract:true ~leading:[]) env in
+          Some (Class class_)
         in
         let comments = Flow_ast_utils.mk_comments_opt ~leading () in
         Statement.DeclareExportDeclaration

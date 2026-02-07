@@ -6,6 +6,8 @@
  *)
 
 type t =
+  | AbstractMethodInNonAbstractClass
+  | AbstractMethodWithBody
   | AccessorDataProperty
   | AccessorGetSet
   | AdjacentJSXElements
@@ -136,6 +138,7 @@ type t =
   | Redeclaration of string * string
   | SetterArity
   | SetterMayNotHaveThisParam
+  | StaticAbstractMethod
   | StrictCatchVariable
   | StrictDelete
   | StrictDuplicateProperty
@@ -152,7 +155,6 @@ type t =
   | StrictReservedWord
   | StrictVarName
   | SuperPrivate
-  | TSAbstractClass
   | TSTemplateLiteralType
   | ThisParamAnnotationRequired
   | ThisParamBannedInArrowFunctions
@@ -195,6 +197,9 @@ let error loc e = raise (Error ((loc, e), []))
 
 module PP = struct
   let error = function
+    | AbstractMethodInNonAbstractClass ->
+      "Abstract methods can only appear within an abstract class."
+    | AbstractMethodWithBody -> "Abstract methods cannot have an implementation."
     | AccessorDataProperty ->
       "Object literal may not have data and accessor property with the same name"
     | AccessorGetSet -> "Object literal may not have multiple get/set accessors with the same name"
@@ -458,6 +463,7 @@ module PP = struct
     | Redeclaration (what, name) -> Printf.sprintf "%s '%s' has already been declared" what name
     | SetterArity -> "Setter should have exactly one parameter"
     | SetterMayNotHaveThisParam -> "A setter cannot have a `this` parameter."
+    | StaticAbstractMethod -> "`static` modifier can't be used with the `abstract` modifier."
     | StrictCatchVariable -> "Catch variable may not be eval or arguments in strict mode"
     | StrictDelete -> "Delete of an unqualified identifier in strict mode."
     | StrictDuplicateProperty ->
@@ -478,7 +484,6 @@ module PP = struct
     | StrictReservedWord -> "Use of reserved word in strict mode"
     | StrictVarName -> "Variable name may not be eval or arguments in strict mode"
     | SuperPrivate -> "You may not access a private field through the `super` keyword."
-    | TSAbstractClass -> "Flow does not support abstract classes."
     | TSTemplateLiteralType -> "Flow does not support template literal types."
     | ThisParamAnnotationRequired -> "A type annotation is required for the `this` parameter."
     | ThisParamBannedInArrowFunctions ->

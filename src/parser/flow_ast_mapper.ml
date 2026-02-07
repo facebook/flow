@@ -437,7 +437,7 @@ class ['loc] mapper =
 
     method class_ _loc (cls : ('loc, 'loc) Ast.Class.t) =
       let open Ast.Class in
-      let { id; body; tparams; extends; implements; class_decorators; comments } = cls in
+      let { id; body; tparams; extends; implements; class_decorators; abstract; comments } = cls in
       let id' = map_opt this#class_identifier id in
       let tparams' = map_opt (this#type_params ~kind:ClassTP) tparams in
       let body' = this#class_body body in
@@ -462,8 +462,9 @@ class ['loc] mapper =
           extends = extends';
           implements = implements';
           class_decorators = class_decorators';
-          comments = comments';
+          abstract;
           tparams = tparams';
+          comments = comments';
         }
 
     method class_extends _loc (extends : ('loc, 'loc) Ast.Class.Extends.t') =
@@ -514,6 +515,10 @@ class ['loc] mapper =
         id_loc this#class_declare_method loc decl_meth elem (fun decl_meth ->
             DeclareMethod (loc, decl_meth)
         )
+      | AbstractMethod (loc, abs_meth) ->
+        id_loc this#class_abstract_method loc abs_meth elem (fun abs_meth ->
+            AbstractMethod (loc, abs_meth)
+        )
 
     method class_implements (implements : ('loc, 'loc) Ast.Class.Implements.t) =
       let open Ast.Class.Implements in
@@ -557,6 +562,17 @@ class ['loc] mapper =
         decl_meth
       else
         { decl_meth with key = key'; annot = annot'; comments = comments' }
+
+    method class_abstract_method _loc (abs_meth : ('loc, 'loc) Ast.Class.AbstractMethod.t') =
+      let open Ast.Class.AbstractMethod in
+      let { key; annot = (annot_loc, func); ts_accessibility = _; comments } = abs_meth in
+      let key' = this#object_key key in
+      let func' = this#function_type func in
+      let comments' = this#syntax_opt comments in
+      if key == key' && func == func' && comments == comments' then
+        abs_meth
+      else
+        { abs_meth with key = key'; annot = (annot_loc, func'); comments = comments' }
 
     method class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
@@ -764,7 +780,7 @@ class ['loc] mapper =
 
     method declare_class _loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =
       let open Ast.Statement.DeclareClass in
-      let { id = ident; tparams; body; extends; mixins; implements; comments } = decl in
+      let { id = ident; tparams; body; extends; mixins; implements; abstract; comments } = decl in
       let id' = this#class_identifier ident in
       let tparams' = map_opt (this#type_params ~kind:DeclareClassTP) tparams in
       let body' =
@@ -805,6 +821,7 @@ class ['loc] mapper =
           extends = extends';
           mixins = mixins';
           implements = implements';
+          abstract;
           comments = comments';
         }
 
@@ -1479,7 +1496,9 @@ class ['loc] mapper =
 
     method object_property_type (opt : ('loc, 'loc) Ast.Type.Object.Property.t) =
       let open Ast.Type.Object.Property in
-      let (loc, { key; value; optional; static; proto; _method; variance; comments }) = opt in
+      let (loc, { key; value; optional; static; proto; _method; abstract; variance; comments }) =
+        opt
+      in
       let key' = this#object_key key in
       let value' = this#object_property_value_type value in
       let variance' = this#variance_opt variance in
@@ -1495,6 +1514,7 @@ class ['loc] mapper =
             static;
             proto;
             _method;
+            abstract;
             variance = variance';
             comments = comments';
           }

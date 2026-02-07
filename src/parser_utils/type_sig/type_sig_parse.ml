@@ -2082,8 +2082,17 @@ and object_type =
     | _ -> failwith "unexpected method"
   in
   let prop opts scope tbls xs acc p =
-    let { O.Property.key; value; optional; static = _; proto = _; _method; variance; comments = _ }
-        =
+    let {
+      O.Property.key;
+      value;
+      optional;
+      static = _;
+      proto = _;
+      _method;
+      abstract = _;
+      variance;
+      comments = _;
+    } =
       p
     in
     match value with
@@ -2276,8 +2285,17 @@ and interface_props =
   let module O = Ast.Type.Object in
   let module Acc = InterfaceAcc in
   let prop opts scope tbls xs acc p =
-    let { O.Property.key; value; optional; static = _; proto = _; _method; variance; comments = _ }
-        =
+    let {
+      O.Property.key;
+      value;
+      optional;
+      static = _;
+      proto = _;
+      _method;
+      abstract = _;
+      variance;
+      comments = _;
+    } =
       p
     in
     let module P = Ast.Expression.Object.Property in
@@ -2361,7 +2379,19 @@ and declare_class_props =
   let module O = Ast.Type.Object in
   let module Acc = DeclareClassAcc in
   let prop opts scope tbls xs acc p =
-    let { O.Property.key; value; optional; static; proto; _method; variance; comments = _ } = p in
+    let {
+      O.Property.key;
+      value;
+      optional;
+      static;
+      proto;
+      _method;
+      abstract = _;
+      variance;
+      comments = _;
+    } =
+      p
+    in
     let module P = Ast.Expression.Object.Property in
     match key with
     | P.StringLiteral _
@@ -4019,7 +4049,8 @@ and class_def =
         | C.Body.Property (_, { C.Property.key = P.PrivateName _; _ }) ->
           acc
         (* unexpected non-private method/field with private name *)
-        | C.Body.StaticBlock _ -> acc (* static blocks are unreachable from exports *))
+        | C.Body.StaticBlock _ -> acc (* static blocks are unreachable from exports *)
+        | C.Body.AbstractMethod _ -> acc (* abstract methods are not supported *))
       acc
       elements
   in
@@ -4032,6 +4063,7 @@ and class_def =
       implements;
       class_decorators = _;
       comments = _;
+      abstract = _;
     } =
       decl
     in
@@ -4230,6 +4262,7 @@ let declare_class_def =
       extends;
       mixins;
       implements;
+      abstract = _;
       comments = _;
     } =
       decl

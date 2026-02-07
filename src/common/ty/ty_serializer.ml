@@ -366,6 +366,7 @@ let type_ options =
           static = false;
           proto = false;
           _method = false;
+          abstract = false;
           variance = variance_ polarity;
           comments = None;
         }
@@ -378,6 +379,7 @@ let type_ options =
           static = false;
           proto = false;
           _method = true;
+          abstract = false;
           variance = None;
           comments = None;
         }
@@ -390,6 +392,7 @@ let type_ options =
           static = false;
           proto = false;
           _method = false;
+          abstract = false;
           variance = None;
           comments = None;
         }
@@ -402,6 +405,7 @@ let type_ options =
           static = false;
           proto = false;
           _method = false;
+          abstract = false;
           variance = None;
           comments = None;
         }

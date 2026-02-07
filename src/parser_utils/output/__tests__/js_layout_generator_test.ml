@@ -1612,6 +1612,28 @@ let tests =
              ~pretty:true
              "class C {\n  constructor(private x: number, protected y: string) {}\n}"
          );
+         ( "abstract_classes" >:: fun ctxt ->
+           assert_statement_string ~ctxt "abstract class C{}";
+           assert_statement_string ~ctxt "abstract class C extends B{}";
+           assert_statement_string ~ctxt "abstract class C{a(){}}";
+           assert_statement_string ~ctxt ~pretty:true "abstract class C {\n  a() {}\n}";
+           assert_statement_string ~ctxt "abstract class C{abstract a():void;}";
+           assert_statement_string ~ctxt ~pretty:true "abstract class C {\n  abstract a(): void;\n}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "abstract class C {\n  abstract a(): void;\n  b() {}\n}"
+         );
+         ( "declare_abstract_classes" >:: fun ctxt ->
+           assert_statement_string ~ctxt "declare abstract class C{}";
+           assert_statement_string ~ctxt "declare abstract class C{a():void}";
+           assert_statement_string ~ctxt ~pretty:true "declare abstract class C {\n  a(): void,\n}";
+           assert_statement_string ~ctxt "declare abstract class C{abstract a():void}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare abstract class C {\n  abstract a(): void,\n}"
+         );
          ( "forin_statement_declaration" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement
@@ -2295,6 +2317,8 @@ let tests =
            assert_statement_string ~ctxt "declare export default function a():a;";
            assert_statement_string ~ctxt "declare export class a{}";
            assert_statement_string ~ctxt "declare export default class a{}";
+           assert_statement_string ~ctxt "declare export abstract class a{}";
+           assert_statement_string ~ctxt "declare export default abstract class a{}";
            assert_statement_string ~ctxt "declare export enum E{A,}";
            assert_statement_string ~ctxt "declare export{}";
            assert_statement_string ~ctxt "declare export{a,b}";

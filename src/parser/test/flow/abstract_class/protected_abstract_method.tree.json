@@ -1,0 +1,167 @@
+{
+  "type": "Program",
+  "loc": {
+    "source": null,
+    "start": {
+      "line": 1,
+      "column": 0
+    },
+    "end": {
+      "line": 3,
+      "column": 1
+    }
+  },
+  "range": [
+    0,
+    62
+  ],
+  "body": [
+    {
+      "type": "ClassDeclaration",
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 1
+        }
+      },
+      "range": [
+        0,
+        62
+      ],
+      "id": {
+        "type": "Identifier",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 15
+          },
+          "end": {
+            "line": 1,
+            "column": 18
+          }
+        },
+        "range": [
+          15,
+          18
+        ],
+        "name": "Foo",
+        "typeAnnotation": null,
+        "optional": false
+      },
+      "body": {
+        "type": "ClassBody",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 19
+          },
+          "end": {
+            "line": 3,
+            "column": 1
+          }
+        },
+        "range": [
+          19,
+          62
+        ],
+        "body": [
+          {
+            "type": "AbstractMethodDefinition",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 2,
+                "column": 2
+              },
+              "end": {
+                "line": 2,
+                "column": 38
+              }
+            },
+            "range": [
+              23,
+              59
+            ],
+            "key": {
+              "type": "Identifier",
+              "loc": {
+                "source": null,
+                "start": {
+                  "line": 2,
+                  "column": 21
+                },
+                "end": {
+                  "line": 2,
+                  "column": 28
+                }
+              },
+              "range": [
+                42,
+                49
+              ],
+              "name": "getName",
+              "typeAnnotation": null,
+              "optional": false
+            },
+            "value": {
+              "type": "FunctionTypeAnnotation",
+              "loc": {
+                "source": null,
+                "start": {
+                  "line": 2,
+                  "column": 28
+                },
+                "end": {
+                  "line": 2,
+                  "column": 30
+                }
+              },
+              "range": [
+                49,
+                51
+              ],
+              "params": [],
+              "returnType": {
+                "type": "StringTypeAnnotation",
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 2,
+                    "column": 32
+                  },
+                  "end": {
+                    "line": 2,
+                    "column": 38
+                  }
+                },
+                "range": [
+                  53,
+                  59
+                ]
+              },
+              "rest": null,
+              "typeParameters": null,
+              "this": null
+            },
+            "computed": false,
+            "tsAccessibility": "protected"
+          }
+        ]
+      },
+      "typeParameters": null,
+      "superClass": null,
+      "superTypeArguments": null,
+      "implements": [],
+      "decorators": [],
+      "abstract": true
+    }
+  ],
+  "comments": []
+}

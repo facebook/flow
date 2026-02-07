@@ -803,6 +803,7 @@ module Object
         ~async
         ~generator
         ~static
+        ~abstract
         ~declare
         variance
         ts_accessibility
@@ -826,6 +827,7 @@ module Object
           ~async
           ~generator
           ~static
+          ~abstract
           ~declare
           variance
           ts_accessibility
@@ -887,99 +889,74 @@ module Object
               (tparams, params, return))
             env
         in
-        (* Check for implicit declare method: semicolon instead of body.
-           Similar to implicit_declare for functions in declaration_parser.ml *)
-        let implicit_declare_conversion =
-          if
-            Peek.token env = T_SEMICOLON
-            && (not async)
-            && (not generator)
-            && kind <> Ast.Class.Method.Constructor
-            && kind <> Ast.Class.Method.Get
-            && kind <> Ast.Class.Method.Set
-            && List.length decorators = 0
-            &&
-            match return with
-            | Function.ReturnAnnot.Missing _ -> false
-            | _ -> true
-          then
-            match Declaration.convert_function_params_to_type_params params with
-            | Ok tp -> Some tp
-            | Error _ -> None
-          else
-            None
-        in
-        (match implicit_declare_conversion with
-        | Some type_params ->
-          (* Consume the semicolon *)
-          Eat.token env;
+        (* Helper to build method function type *)
+        let make_method_func_type type_params =
           let return_annot =
             match return with
             | Function.ReturnAnnot.Available (_, (ret_loc, t)) ->
               Ast.Type.Function.Available (ret_loc, t)
             | Function.ReturnAnnot.TypeGuard (_, tg) -> Ast.Type.Function.TypeGuard tg
             | Function.ReturnAnnot.Missing _ ->
-              (* Should not happen - already checked above *)
               Ast.Type.Function.Available (Loc.none, Ast.Type.Any None)
           in
-          let fn_type =
-            Ast.Type.Function
-              {
-                Ast.Type.Function.tparams;
-                params = type_params;
-                return = return_annot;
-                comments = None;
-                effect_ = Function.Arbitrary;
-              }
+          let func =
+            {
+              Ast.Type.Function.tparams;
+              params = type_params;
+              return = return_annot;
+              comments = None;
+              effect_ = Function.Arbitrary;
+            }
           in
           let annot_loc =
             match tparams with
             | Some (tparams_loc, _) -> tparams_loc
             | None -> fst params
           in
-          let annot = (annot_loc, (annot_loc, fn_type)) in
-          let open Ast.Class in
-          Body.DeclareMethod
-            ( Loc.btwn start_loc sig_loc,
+          (annot_loc, func)
+        in
+        (* Wrap function type as Type.annotation for DeclareMethod *)
+        let make_method_annot type_params =
+          let (annot_loc, func) = make_method_func_type type_params in
+          (annot_loc, (annot_loc, Ast.Type.Function func))
+        in
+        (* Check for bodyless method: semicolon instead of body *)
+        let is_bodyless_method =
+          Peek.token env = T_SEMICOLON
+          && (not async)
+          && (not generator)
+          && kind <> Ast.Class.Method.Constructor
+        in
+        let make_method_value env =
+          with_loc
+            ~start_loc:sig_loc
+            (fun env ->
+              let simple_params = is_simple_parameter_list params in
+              let (body, contains_use_strict) =
+                Declaration.function_body env ~async ~generator ~expression:false ~simple_params
+              in
+              Declaration.strict_function_post_check env ~contains_use_strict None params;
               {
-                DeclareMethod.key;
-                annot;
-                static;
-                comments = Flow_ast_utils.mk_comments_opt ~leading ();
-              }
-            )
-        | None ->
-          (* Normal method with body *)
-          let value =
-            with_loc
-              ~start_loc:sig_loc
-              (fun env ->
-                let simple_params = is_simple_parameter_list params in
-                let (body, contains_use_strict) =
-                  Declaration.function_body env ~async ~generator ~expression:false ~simple_params
-                in
-                Declaration.strict_function_post_check env ~contains_use_strict None params;
-                {
-                  Function.id = None;
-                  params;
-                  body;
-                  generator;
-                  async;
-                  effect_ = Function.Arbitrary;
-                  (* TODO: add support for method predicates *)
-                  predicate = None;
-                  return;
-                  tparams;
-                  sig_loc;
-                  comments = None;
-                })
-              env
-          in
-          let open Ast.Class in
-          Body.Method
+                Function.id = None;
+                params;
+                body;
+                generator;
+                async;
+                effect_ = Function.Arbitrary;
+                predicate = None;
+                return;
+                tparams;
+                sig_loc;
+                comments = None;
+              })
+            env
+        in
+        let make_method env =
+          let value = make_method_value env in
+          Class.Body.Method
             ( Loc.btwn start_loc (fst value),
               {
-                Method.key;
+                Class.Method.key;
                 value;
                 kind;
                 static;
@@ -987,7 +964,58 @@ module Object
                 decorators;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               }
-            ))
+            )
+        in
+        if abstract && is_bodyless_method then
+          (* Abstract method - try to convert params to type params *)
+          match Declaration.convert_function_params_to_type_params params with
+          | Ok type_params ->
+            Expect.token env T_SEMICOLON;
+            Class.Body.AbstractMethod
+              ( Loc.btwn start_loc sig_loc,
+                {
+                  Class.AbstractMethod.key;
+                  annot = make_method_func_type type_params;
+                  ts_accessibility;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
+              )
+          | Error _ ->
+            (* Params couldn't be converted - fall back to normal method with body *)
+            make_method env
+        else if abstract then (
+          (* Abstract method with a body - error *)
+          error env Parse_error.AbstractMethodWithBody;
+          make_method env
+        ) else if
+            is_bodyless_method
+            && kind <> Class.Method.Get
+            && kind <> Class.Method.Set
+            && List.length decorators = 0
+            &&
+            match return with
+            | Function.ReturnAnnot.Missing _ -> false
+            | _ -> true
+          then
+          (* Implicit declare method *)
+          match Declaration.convert_function_params_to_type_params params with
+          | Ok type_params ->
+            Expect.token env T_SEMICOLON;
+            Class.Body.DeclareMethod
+              ( Loc.btwn start_loc sig_loc,
+                {
+                  Class.DeclareMethod.key;
+                  annot = make_method_annot type_params;
+                  static;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
+              )
+          | Error _ ->
+            (* Normal method with body *)
+            make_method env
+        else
+          (* Normal method with body *)
+          make_method env
     in
     let ith_implies_identifier ~i env =
       match Peek.ith_token ~i env with
@@ -1057,6 +1085,22 @@ module Object
         ) else
           []
       in
+      (* Parse abstract modifier *)
+      let abstract =
+        match Peek.token env with
+        | T_IDENTIFIER { raw = "abstract"; _ } when Peek.ith_is_identifier ~i:1 env -> true
+        | _ -> false
+      in
+      let leading_abstract =
+        if abstract then (
+          let leading = Peek.comments env in
+          Eat.token env;
+          leading
+        ) else
+          []
+      in
+      (* Error if both static and abstract *)
+      if static && abstract then error env Parse_error.StaticAbstractMethod;
       if static && Option.is_none declare && Eat.maybe env T_LCURLY then
         Class.Body.StaticBlock
           (with_loc
@@ -1111,6 +1155,7 @@ module Object
               leading_declare;
               leading_accessibility;
               leading_static;
+              leading_abstract;
               leading_async;
               leading_generator;
             ]
@@ -1128,6 +1173,7 @@ module Object
               ~async
               ~generator
               ~static
+              ~abstract
               ~declare
               variance
               ts_accessibility
@@ -1150,6 +1196,7 @@ module Object
               ~async
               ~generator
               ~static
+              ~abstract
               ~declare
               variance
               ts_accessibility
@@ -1170,13 +1217,14 @@ module Object
             ~async
             ~generator
             ~static
+            ~abstract
             ~declare
             variance
             ts_accessibility
             leading
 
   let class_body =
-    let rec elements env seen_constructor private_names acc =
+    let rec elements env ~abstract seen_constructor private_names acc =
       match Peek.token env with
       | T_EOF
       | T_RCURLY ->
@@ -1184,7 +1232,7 @@ module Object
       | T_SEMICOLON ->
         (* Skip empty elements *)
         Expect.token env T_SEMICOLON;
-        elements env seen_constructor private_names acc
+        elements env ~abstract seen_constructor private_names acc
       | _ ->
         let element = class_element env in
         let (seen_constructor', private_names') =
@@ -1245,16 +1293,20 @@ module Object
           | Ast.Class.Body.DeclareMethod _ ->
             (* DeclareMethod is a bodyless method signature, no private name checking needed *)
             (seen_constructor, private_names)
+          | Ast.Class.Body.AbstractMethod (loc, _) ->
+            if not abstract then error_at env (loc, Parse_error.AbstractMethodInNonAbstractClass);
+            (* AbstractMethod is a bodyless method signature, no private name checking needed *)
+            (seen_constructor, private_names)
         in
-        elements env seen_constructor' private_names' (element :: acc)
+        elements env ~abstract seen_constructor' private_names' (element :: acc)
     in
-    fun ~expression env ->
+    fun ~expression ~abstract env ->
       with_loc
         (fun env ->
           let leading = Peek.comments env in
           if Eat.maybe env T_LCURLY then (
             enter_class env;
-            let body = elements env false SMap.empty [] in
+            let body = elements env ~abstract false SMap.empty [] in
             exit_class env;
             Expect.token env T_RCURLY;
             let trailing =
@@ -1277,11 +1329,13 @@ module Object
     let env = env |> with_strict true in
     let decorators = decorators @ decorator_list env in
     let leading = Peek.comments env in
-    (match Peek.token env with
-    | T_IDENTIFIER { raw = "abstract"; _ } ->
-      error env Parse_error.TSAbstractClass;
-      Eat.token env
-    | _ -> ());
+    let abstract =
+      match Peek.token env with
+      | T_IDENTIFIER { raw = "abstract"; _ } ->
+        Eat.token env;
+        true
+      | _ -> false
+    in
     Expect.token env T_CLASS;
     let id =
       let tmp_env = env |> with_no_let true in
@@ -1311,9 +1365,18 @@ module Object
           )
     in
     let (extends, implements) = class_heritage env in
-    let body = class_body env ~expression in
+    let body = class_body env ~expression ~abstract in
     let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-    { Class.id; body; tparams; extends; implements; class_decorators = decorators; comments }
+    {
+      Class.id;
+      body;
+      tparams;
+      extends;
+      implements;
+      class_decorators = decorators;
+      abstract;
+      comments;
+    }
 
   let class_declaration env decorators =
     with_loc

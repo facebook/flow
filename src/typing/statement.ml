@@ -2348,9 +2348,17 @@ module Make
         (lazy [spf "Declared class cache hit at %s" (ALoc.debug_to_string loc)]);
       node
     | None ->
-      let { Ast.Statement.DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ }); _ } =
+      let {
+        Ast.Statement.DeclareClass.id = (name_loc, { Ast.Identifier.name; comments = _ });
+        abstract;
+        _;
+      } =
         decl
       in
+      if abstract && not (Context.abstract_classes cx) then
+        Flow_js_utils.add_output
+          cx
+          (Error_message.ETSSyntax { kind = Error_message.AbstractClass; loc });
       let desc = RType (OrdinaryName name) in
       let reason = mk_reason desc name_loc in
       let (t, class_sig, decl_ast) = Anno.mk_declare_class_sig cx loc name reason decl in
@@ -7893,6 +7901,7 @@ module Make
           implements;
           class_decorators;
           comments;
+          abstract;
         } =
           cls
         in
@@ -8103,6 +8112,10 @@ module Make
                 (Error_message.ETSSyntax { kind = Error_message.TSClassAccessibility kind; loc })
             | None -> ()
         in
+        if abstract && not (Context.abstract_classes cx) then
+          Flow_js_utils.add_output
+            cx
+            (Error_message.ETSSyntax { kind = Error_message.AbstractClass; loc = class_loc });
 
         (* NOTE: We used to mine field declarations from field assignments in a
            constructor as a convenience, but it was not worth it: often, all that did
@@ -8529,6 +8542,15 @@ module Make
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
                 )
+              | Body.AbstractMethod (loc, _) as elem ->
+                if not (Context.abstract_classes cx) then
+                  Flow_js_utils.add_output
+                    cx
+                    (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
+                ( c,
+                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                  public_seen_names
+                )
             )
             (class_sig, [], empty_seen_names)
             elements
@@ -8571,6 +8593,7 @@ module Make
               implements = implements_ast;
               class_decorators = class_decorators_ast;
               comments;
+              abstract;
             }
         )
     in

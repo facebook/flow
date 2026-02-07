@@ -1128,7 +1128,18 @@ with type t = Impl.t = struct
         @ predicate
         )
     and declare_class
-        (loc, { Statement.DeclareClass.id; tparams; body; extends; implements; mixins; comments }) =
+        ( loc,
+          {
+            Statement.DeclareClass.id;
+            tparams;
+            body;
+            extends;
+            implements;
+            mixins;
+            abstract;
+            comments;
+          }
+        ) =
       (* TODO: extends shouldn't return an array *)
       let extends =
         match extends with
@@ -1145,14 +1156,20 @@ with type t = Impl.t = struct
         ?comments
         "DeclareClass"
         loc
-        [
-          ("id", identifier id);
-          ("typeParameters", option type_parameter_declaration tparams);
-          ("body", object_type ~include_inexact:false body);
-          ("extends", extends);
-          ("implements", implements);
-          ("mixins", array_of_list interface_extends mixins);
-        ]
+        ([
+           ("id", identifier id);
+           ("typeParameters", option type_parameter_declaration tparams);
+           ("body", object_type ~include_inexact:false body);
+           ("extends", extends);
+           ("implements", implements);
+           ("mixins", array_of_list interface_extends mixins);
+         ]
+        @
+        if abstract then
+          [("abstract", bool abstract)]
+        else
+          []
+        )
     and declare_component (loc, component) =
       let {
         Statement.DeclareComponent.id;
@@ -1339,7 +1356,8 @@ with type t = Impl.t = struct
     and class_declaration ast = class_helper "ClassDeclaration" ast
     and class_expression ast = class_helper "ClassExpression" ast
     and class_helper
-        node_type (loc, { Class.id; extends; body; tparams; implements; class_decorators; comments })
+        node_type
+        (loc, { Class.id; extends; body; tparams; implements; class_decorators; abstract; comments })
         =
       let (super, super_targs, comments) =
         match extends with
@@ -1359,18 +1377,24 @@ with type t = Impl.t = struct
         ?comments
         node_type
         loc
-        [
-          (* estree hasn't come around to the idea that class decls can have
-             optional ids, but acorn, babel, espree and esprima all have, so let's
-             do it too. see https://github.com/estree/estree/issues/98 *)
-          ("id", option identifier id);
-          ("body", class_body body);
-          ("typeParameters", option type_parameter_declaration tparams);
-          ("superClass", option expression super);
-          ("superTypeArguments", option type_args super_targs);
-          ("implements", implements);
-          ("decorators", array_of_list class_decorator class_decorators);
-        ]
+        ([
+           (* estree hasn't come around to the idea that class decls can have
+              optional ids, but acorn, babel, espree and esprima all have, so let's
+              do it too. see https://github.com/estree/estree/issues/98 *)
+           ("id", option identifier id);
+           ("body", class_body body);
+           ("typeParameters", option type_parameter_declaration tparams);
+           ("superClass", option expression super);
+           ("superTypeArguments", option type_args super_targs);
+           ("implements", implements);
+           ("decorators", array_of_list class_decorator class_decorators);
+         ]
+        @
+        if abstract then
+          [("abstract", bool abstract)]
+        else
+          []
+        )
     and class_decorator (loc, { Class.Decorator.expression = expr; comments }) =
       node ?comments "Decorator" loc [("expression", expression expr)]
     and class_implements (loc, { Class.Implements.Interface.id; targs }) =
@@ -1398,6 +1422,7 @@ with type t = Impl.t = struct
             loc
             [("body", statement_list body)]
         | DeclareMethod dm -> class_declare_method dm
+        | AbstractMethod am -> class_abstract_method am
       )
     and class_method
         (loc, { Class.Method.key; value; kind; static; ts_accessibility; decorators; comments }) =
@@ -1466,6 +1491,19 @@ with type t = Impl.t = struct
           ("static", bool static);
           ("computed", bool computed);
         ]
+    and class_abstract_method (loc, { Class.AbstractMethod.key; annot; ts_accessibility; comments })
+        =
+      let (key, computed, comments) = property_key ~comments key in
+      node
+        ?comments
+        "AbstractMethodDefinition"
+        loc
+        ([("key", key); ("value", function_type annot); ("computed", bool computed)]
+        @
+        match ts_accessibility_to_string ts_accessibility with
+        | Some v -> [("tsAccessibility", string v)]
+        | None -> []
+        )
     and class_private_field
         ( loc,
           {
@@ -1514,7 +1552,7 @@ with type t = Impl.t = struct
       | Expression.Object.Property.NumberLiteral lit -> (number_literal lit, false, comments)
       | Expression.Object.Property.BigIntLiteral lit -> (bigint_literal lit, false, comments)
       | Expression.Object.Property.Identifier id -> (identifier id, false, comments)
-      | Expression.Object.Property.PrivateName _ -> failwith "Internal Error: Private name"
+      | Expression.Object.Property.PrivateName name -> (private_identifier name, false, comments)
       | Expression.Object.Property.Computed
           (_, { ComputedKey.expression = expr; comments = key_comments }) ->
         (expression expr, true, Flow_ast_utils.merge_comments ~outer:comments ~inner:key_comments)
@@ -2168,6 +2206,7 @@ with type t = Impl.t = struct
             proto;
             variance = variance_;
             _method;
+            abstract;
             comments;
           }
         ) =
@@ -2190,6 +2229,7 @@ with type t = Impl.t = struct
           ("optional", bool optional);
           ("static", bool static);
           ("proto", bool proto);
+          ("abstract", bool abstract);
           ("variance", option variance variance_);
           ("kind", string kind);
         ]

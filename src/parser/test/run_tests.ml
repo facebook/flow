@@ -302,6 +302,8 @@ end = struct
     (* Esprima doesn't support decorators *)
     (* https://github.com/estree/estree/blob/master/experimental/decorators.md *)
     | (_, None, Some "decorators")
+    (* Esprima doesn't support abstract classes *)
+    | (_, None, Some "abstract")
     (* Esprima doesn't support async functions *)
     | (_, None, Some "async")
     (* Esprima doesn't support for-await *)

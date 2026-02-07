@@ -378,7 +378,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_ (cls : ('M, 'T) Ast.Class.t) : ('N, 'U) Ast.Class.t =
       let open Ast.Class in
-      let { id; body; tparams; extends; implements; class_decorators; comments } = cls in
+      let { id; body; tparams; extends; implements; class_decorators; abstract; comments } = cls in
       let id' = Option.map ~f:this#class_identifier id in
       let comments' = this#syntax_opt comments in
       this#type_params_opt tparams (fun tparams' ->
@@ -394,6 +394,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             implements = implements';
             class_decorators = class_decorators';
             comments = comments';
+            abstract;
           }
       )
 
@@ -437,6 +438,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         StaticBlock (this#on_loc_annot annot, this#class_static_block block)
       | DeclareMethod (annot, decl_meth) ->
         DeclareMethod (this#on_type_annot annot, this#class_declare_method decl_meth)
+      | AbstractMethod (annot, abs_meth) ->
+        AbstractMethod (this#on_type_annot annot, this#class_abstract_method abs_meth)
 
     method class_key key = this#object_key key
 
@@ -468,6 +471,18 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in
       { key = key'; annot = annot'; static; comments = comments' }
+
+    method class_abstract_method (abs_meth : ('M, 'T) Ast.Class.AbstractMethod.t')
+        : ('N, 'U) Ast.Class.AbstractMethod.t' =
+      let open Ast.Class.AbstractMethod in
+      let { key; annot = (annot_loc, func); ts_accessibility; comments } = abs_meth in
+      let key' = this#class_method_key key in
+      let annot' = (this#on_loc_annot annot_loc, this#function_type func) in
+      let ts_accessibility' =
+        Option.map ~f:(this#on_loc_annot * this#ts_accessibility) ts_accessibility
+      in
+      let comments' = this#syntax_opt comments in
+      { key = key'; annot = annot'; ts_accessibility = ts_accessibility'; comments = comments' }
 
     method class_method_key key = this#class_key key
 
@@ -560,7 +575,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method declare_class (decl : ('M, 'T) Ast.Statement.DeclareClass.t)
         : ('N, 'U) Ast.Statement.DeclareClass.t =
       let open Ast.Statement.DeclareClass in
-      let { id = ident; tparams; body; extends; mixins; implements; comments } = decl in
+      let { id = ident; tparams; body; extends; mixins; implements; abstract; comments } = decl in
       let id' = this#class_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let body' =
@@ -578,6 +593,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             extends = extends';
             mixins = mixins';
             implements = implements';
+            abstract;
             comments = comments';
           }
       )
@@ -1129,7 +1145,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method object_property_type (opt : ('M, 'T) Ast.Type.Object.Property.t)
         : ('N, 'U) Ast.Type.Object.Property.t =
       let open Ast.Type.Object.Property in
-      let (annot, { key; value; optional; static; proto; _method; variance; comments }) = opt in
+      let (annot, { key; value; optional; static; proto; _method; abstract; variance; comments }) =
+        opt
+      in
       let key' = this#object_key key in
       let value' = this#object_property_value_type value in
       let variance' = this#variance_opt variance in
@@ -1142,6 +1160,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           static;
           proto;
           _method;
+          abstract;
           variance = variance';
           comments = comments';
         }

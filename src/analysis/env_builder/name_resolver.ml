@@ -4859,6 +4859,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
                 | Ast.Class.Body.PrivateField (_, { Ast.Class.PrivateField.static; _ })
                 | Ast.Class.Body.DeclareMethod (_, { Ast.Class.DeclareMethod.static; _ }) ->
                   static
+                | Ast.Class.Body.AbstractMethod _ -> false
                 | Ast.Class.Body.StaticBlock _ -> true
                 )
           in

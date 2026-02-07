@@ -4777,6 +4777,8 @@ let to_printable_error :
         text "Flow does not support TypeScript parameter properties. ";
         text "To fix, declare the property in the class body and assign it in the constructor.";
       ]
+    | MessageAbstractClass -> [text "Flow does not support "; code "abstract"; text " classes."]
+    | MessageAbstractMethod -> [text "Flow does not support "; code "abstract"; text " methods."]
     | MessageTSSatisfiesType enabled_casting_syntax ->
       let (example, _) = type_casting_examples enabled_casting_syntax in
       [

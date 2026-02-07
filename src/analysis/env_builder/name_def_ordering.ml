@@ -697,6 +697,7 @@ struct
           | PrivateField (_, field) -> this#class_private_field_annotated field
           | StaticBlock _ -> ()
           | DeclareMethod _ -> () (* DeclareMethod is a type annotation, no runtime def *)
+          | AbstractMethod _ -> () (* AbstractMethod is a type annotation, no runtime def *)
 
         method class_method_annotated (meth : ('loc, 'loc) Ast.Class.Method.t') =
           let open Ast.Class.Method in
@@ -1000,7 +1001,16 @@ struct
           (depends_of_tparams_map tparams_map state)
       in
       let depends_of_class
-          { Ast.Class.id = _; body; tparams; extends; implements; class_decorators; comments = _ } =
+          {
+            Ast.Class.id = _;
+            body;
+            tparams;
+            extends;
+            implements;
+            class_decorators;
+            abstract = _;
+            comments = _;
+          } =
         depends_of_node
           (fun visitor ->
             run visitor#class_body_annotated body;
@@ -1036,6 +1046,7 @@ struct
             extends;
             mixins;
             implements;
+            abstract = _;
             comments = _;
           } =
         depends_of_node

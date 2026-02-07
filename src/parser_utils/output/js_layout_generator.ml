@@ -2452,6 +2452,28 @@ and class_declare_method ~opts (loc, { Ast.Class.DeclareMethod.key; annot; stati
         )
     )
 
+and class_abstract_method
+    ~opts
+    ( loc,
+      { Ast.Class.AbstractMethod.key; annot = (annot_loc, func); ts_accessibility = _; comments }
+    ) =
+  let s_key =
+    match key with
+    | Ast.Expression.Object.Property.PrivateName
+        (ident_loc, { Ast.PrivateName.name; comments = key_comments }) ->
+      layout_node_with_comments_opt
+        ident_loc
+        key_comments
+        (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
+    | _ -> object_property_key ~opts key
+  in
+  source_location_with_comments
+    ?comments
+    ( loc,
+      with_semicolon
+        (fuse [Atom "abstract"; space; s_key; type_function ~opts ~sep:(Atom ":") annot_loc func])
+    )
+
 and class_property_helper
     ~opts loc key value static annot variance_ ts_accessibility decorators comments =
   let (declare, value) =
@@ -2611,6 +2633,13 @@ and class_body ~opts (loc, { Ast.Class.Body.body; comments }) =
             )
           in
           (loc, comment_bounds, class_declare_method ~opts decl_meth)
+        | Ast.Class.Body.AbstractMethod ((loc, _) as abs_meth) ->
+          let comment_bounds =
+            comment_bounds loc abs_meth (fun collector (loc, abs_meth) ->
+                collector#class_abstract_method loc abs_meth
+            )
+          in
+          (loc, comment_bounds, class_abstract_method ~opts abs_meth)
         )
       body
     |> list_with_newlines
@@ -2647,10 +2676,17 @@ and class_implements ~opts implements =
       )
 
 and class_base
-    ~opts loc { Ast.Class.id; body; tparams; extends; implements; class_decorators; comments } =
+    ~opts
+    loc
+    { Ast.Class.id; body; tparams; extends; implements; class_decorators; abstract; comments } =
   let decorator_parts = decorators_list ~opts class_decorators in
   let class_parts =
     [
+      ( if abstract then
+        fuse [Atom "abstract"; space]
+      else
+        Empty
+      );
       Atom "class";
       begin
         match id with
@@ -4330,7 +4366,17 @@ and type_object_property ~opts =
   function
   | Property
       ( loc,
-        { Property.key; value; optional; static; proto; variance = variance_; _method; comments }
+        {
+          Property.key;
+          value;
+          optional;
+          static;
+          proto;
+          variance = variance_;
+          _method;
+          abstract;
+          comments;
+        }
       ) ->
     let s_static =
       if static then
@@ -4344,6 +4390,12 @@ and type_object_property ~opts =
       else
         Empty
     in
+    let s_abstract =
+      if abstract then
+        fuse [Atom "abstract"; space]
+      else
+        Empty
+    in
     source_location_with_comments
       ?comments
       ( loc,
@@ -4354,6 +4406,7 @@ and type_object_property ~opts =
             ( loc,
               fuse
                 [
+                  s_abstract;
                   s_static;
                   object_property_key ~opts key;
                   type_function ~opts ~sep:(Atom ":") loc func;
@@ -4363,6 +4416,7 @@ and type_object_property ~opts =
         | (Property.Init t, _, _, _) ->
           fuse
             [
+              s_abstract;
               s_static;
               s_proto;
               option variance variance_;
@@ -4872,18 +4926,22 @@ and declare_class
       extends;
       mixins;
       implements;
+      abstract;
       comments;
     } =
   let class_parts =
-    [
-      Atom "declare";
-      space;
-      s_type;
-      Atom "class";
-      space;
-      identifier id;
-      option (type_parameter ~opts ~kind:Flow_ast_mapper.DeclareClassTP) tparams;
-    ]
+    [Atom "declare"; space; s_type]
+    @ ( if abstract then
+        [Atom "abstract"; space]
+      else
+        []
+      )
+    @ [
+        Atom "class";
+        space;
+        identifier id;
+        option (type_parameter ~opts ~kind:Flow_ast_mapper.DeclareClassTP) tparams;
+      ]
   in
   let extends_parts =
     let class_extends =

@@ -524,7 +524,7 @@ let class_expression ~with_bindings ~on_cls loc cls =
 
 let declare_class ~with_types (visitor : 'loc #Flow_ast_mapper.mapper) ~with_bindings decl =
   let open Ast.Statement.DeclareClass in
-  let { id; tparams; body; extends; mixins; implements; comments = _ } = decl in
+  let { id; tparams; body; extends; mixins; implements; abstract = _; comments = _ } = decl in
   ignore @@ visitor#class_identifier id;
   let extends_targs =
     Base.Option.value_map
@@ -700,7 +700,9 @@ let class_
     loc
     cls =
   let open Ast.Class in
-  let { id; body; tparams; extends; implements; class_decorators; comments = _ } = cls in
+  let { id; body; tparams; extends; implements; class_decorators; abstract = _; comments = _ } =
+    cls
+  in
   ignore @@ Base.List.map ~f:visitor#class_decorator class_decorators;
   let extends_targs =
     Base.Option.value_map

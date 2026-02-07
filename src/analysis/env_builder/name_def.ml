@@ -1922,8 +1922,16 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method private class_internal ~kind loc expr =
       let open Ast.Class in
-      let { id; body; tparams = class_tparams; extends; implements; class_decorators; comments = _ }
-          =
+      let {
+        id;
+        body;
+        tparams = class_tparams;
+        extends;
+        implements;
+        class_decorators;
+        abstract = _;
+        comments = _;
+      } =
         expr
       in
       this#in_new_tparams_env (fun () ->

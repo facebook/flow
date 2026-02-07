@@ -675,8 +675,19 @@ module GraphQL : sig
 end = struct
   let rec visit_object_property_type defs tgt ~opt_chain ty p =
     let open Ast.Type.Object.Property in
-    let (_, { key; value; optional; static = _; proto = _; _method = _; variance = _; comments = _ })
-        =
+    let ( _,
+          {
+            key;
+            value;
+            optional;
+            static = _;
+            proto = _;
+            _method = _;
+            abstract = _;
+            variance = _;
+            comments = _;
+          }
+        ) =
       p
     in
     let open Ast.Expression.Object.Property in

@@ -323,6 +323,7 @@ and Type : sig
         static: bool;
         proto: bool;
         _method: bool;
+        abstract: bool;
         variance: 'M Variance.t option;
         comments: ('M, unit) Syntax.t option;
       }
@@ -1160,6 +1161,7 @@ and Statement : sig
       extends: ('M * ('M, 'T) Type.Generic.t) option;
       mixins: ('M * ('M, 'T) Type.Generic.t) list;
       implements: ('M, 'T) Class.Implements.t option;
+      abstract: bool;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]
@@ -2401,6 +2403,18 @@ and Class : sig
     [@@deriving show]
   end
 
+  module AbstractMethod : sig
+    type ('M, 'T) t = 'T * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      key: ('M, 'T) Expression.Object.Property.key;
+      annot: 'M * ('M, 'T) Type.Function.t;
+      ts_accessibility: 'M TSAccessibility.t option;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Property : sig
     type ('M, 'T) t = 'T * ('M, 'T) t'
 
@@ -2493,6 +2507,7 @@ and Class : sig
       | PrivateField of ('M, 'T) PrivateField.t
       | StaticBlock of ('M, 'T) StaticBlock.t
       | DeclareMethod of ('M, 'T) DeclareMethod.t
+      | AbstractMethod of ('M, 'T) AbstractMethod.t
     [@@deriving show]
   end
 
@@ -2513,6 +2528,7 @@ and Class : sig
     extends: ('M, 'T) Extends.t option;
     implements: ('M, 'T) Implements.t option;
     class_decorators: ('M, 'T) Decorator.t list;
+    abstract: bool;
     comments: ('M, unit) Syntax.t option;
   }
   [@@deriving show]

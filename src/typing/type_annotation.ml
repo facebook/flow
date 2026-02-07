@@ -1920,8 +1920,19 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     let open Ast.Type in
     let named_property env loc acc prop =
       match prop with
-      | { Object.Property.key; value = Object.Property.Init value; optional; variance; _method; _ }
-        ->
+      | {
+       Object.Property.key;
+       value = Object.Property.Init value;
+       optional;
+       variance;
+       _method;
+       abstract;
+       _;
+      } ->
+        if abstract && not (Context.abstract_classes env.cx) then
+          Flow_js_utils.add_output
+            env.cx
+            (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
         let prop_of_name ~loc name =
           let (((_, t), _) as value_ast) = convert env value in
           let prop_ast t =
@@ -2785,10 +2796,23 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
             | Property
                 ( loc,
-                  ( { Property.key; value; static; proto; optional; _method; variance; comments = _ }
-                  as prop
+                  ( {
+                      Property.key;
+                      value;
+                      static;
+                      proto;
+                      optional;
+                      _method;
+                      abstract;
+                      variance;
+                      comments = _;
+                    } as prop
                   )
                 ) ->
+              if abstract && not (Context.abstract_classes env.cx) then
+                Flow_js_utils.add_output
+                  env.cx
+                  (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
               if optional && _method then
                 Flow_js_utils.add_output env.cx Error_message.(EInternal (loc, OptionalMethod));
               let polarity = polarity env.cx variance in
@@ -3443,6 +3467,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         extends;
         mixins;
         implements;
+        abstract;
         comments;
       } =
         decl
@@ -3543,6 +3568,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           extends = extends_ast;
           mixins = mixins_ast;
           implements = implements_ast;
+          abstract;
           comments;
         }
       )

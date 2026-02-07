@@ -1277,6 +1277,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       extends = extends1;
       implements = implements1;
       class_decorators = class_decorators1;
+      abstract = abstract1;
       comments = comments1;
     } =
       class1
@@ -1288,11 +1289,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       extends = extends2;
       implements = implements2;
       class_decorators = class_decorators2;
+      abstract = abstract2;
       comments = comments2;
     } =
       class2
     in
-    if id1 != id2 then
+    if id1 != id2 || abstract1 != abstract2 then
       None
     else
       let tparams_diff = diff_if_changed_opt type_params tparams1 tparams2 in
@@ -1408,6 +1410,9 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       None
     | (DeclareMethod _, _)
     | (_, DeclareMethod _) ->
+      None
+    | (AbstractMethod _, _)
+    | (_, AbstractMethod _) ->
       None
   and class_private_field field1 field2 : node change list =
     let open Ast.Class.PrivateField in
@@ -2863,6 +2868,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             static = static1;
             proto = proto1;
             _method = method1;
+            abstract = abstract1;
             variance = var1;
             comments = comments1;
           }
@@ -2877,13 +2883,20 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             static = static2;
             proto = proto2;
             _method = method2;
+            abstract = abstract2;
             variance = var2;
             comments = comments2;
           }
         ) =
       optype2
     in
-    if opt1 != opt2 || static1 != static2 || proto1 != proto2 || method1 != method2 then
+    if
+      opt1 != opt2
+      || static1 != static2
+      || proto1 != proto2
+      || method1 != method2
+      || abstract1 != abstract2
+    then
       None
     else
       let variance_diff = diff_if_changed_ret_opt variance var1 var2 in
@@ -3311,6 +3324,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       extends = extends1;
       mixins = mixins1;
       implements = implements1;
+      abstract = abstract1;
       comments = comments1;
     } =
       dclass1
@@ -3322,21 +3336,25 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       extends = extends2;
       mixins = mixins2;
       implements = implements2;
+      abstract = abstract2;
       comments = comments2;
     } =
       dclass2
     in
-    let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
-    let t_params_diff = diff_if_changed_opt type_params tparams1 tparams2 in
-    let body_diff = diff_if_changed_ret_opt (object_type body_loc) body1 body2 in
-    let extends_diff = diff_if_changed_opt generic_type_with_loc extends1 extends2 in
-    let implements_diff = diff_if_changed_opt class_implements implements1 implements2 in
-    let comments_diff = syntax_opt loc comments1 comments2 in
-    if mixins1 != mixins2 then
+    if abstract1 != abstract2 then
       None
     else
-      join_diff_list
-        [id_diff; t_params_diff; body_diff; extends_diff; implements_diff; comments_diff]
+      let id_diff = diff_if_changed identifier id1 id2 |> Base.Option.return in
+      let t_params_diff = diff_if_changed_opt type_params tparams1 tparams2 in
+      let body_diff = diff_if_changed_ret_opt (object_type body_loc) body1 body2 in
+      let extends_diff = diff_if_changed_opt generic_type_with_loc extends1 extends2 in
+      let implements_diff = diff_if_changed_opt class_implements implements1 implements2 in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      if mixins1 != mixins2 then
+        None
+      else
+        join_diff_list
+          [id_diff; t_params_diff; body_diff; extends_diff; implements_diff; comments_diff]
   and declare_function
       (loc : Loc.t)
       (func1 : (Loc.t, Loc.t) Ast.Statement.DeclareFunction.t)
