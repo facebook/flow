@@ -33,6 +33,7 @@ type metadata = {
   strict_local: bool;
   verbose: Verbose.t option;
   (* global *)
+  abstract_classes: bool;
   assert_operator: Options.AssertOperator.t;
   automatic_require_default: bool;
   babel_loose_array_spread: bool;
@@ -290,6 +291,7 @@ let metadata_of_options options =
     verbose = Options.verbose options;
     slow_to_check_logging = Options.slow_to_check_logging options;
     (* global *)
+    abstract_classes = Options.abstract_classes options;
     automatic_require_default = Options.automatic_require_default options;
     babel_loose_array_spread = Options.babel_loose_array_spread options;
     casting_syntax = Options.casting_syntax options;
@@ -798,6 +800,8 @@ let hint_map_arglist_cache cx = cx.hint_map_arglist_cache
 let hint_map_jsx_cache cx = cx.hint_map_jsx_cache
 
 let hint_eval_cache_find_opt cx id = IMap.find_opt id cx.hint_eval_cache
+
+let abstract_classes cx = cx.metadata.abstract_classes
 
 let automatic_require_default cx = cx.metadata.automatic_require_default
 

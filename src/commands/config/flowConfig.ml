@@ -44,6 +44,7 @@ module Opts = struct
   type opt_error = int * error_kind
 
   type t = {
+    abstract_classes: bool;
     all: bool option;
     assert_operator: Options.AssertOperator.t;
     autoimports: bool option;
@@ -198,6 +199,7 @@ module Opts = struct
 
   let default_options =
     {
+      abstract_classes = false;
       all = None;
       assert_operator = Options.AssertOperator.Disabled;
       autoimports = None;
@@ -1064,6 +1066,9 @@ module Opts = struct
       ("enums", boolean (fun opts v -> Ok { opts with enums = v }));
       ("estimate_recheck_time", estimate_recheck_time_parser);
       ("exact_by_default", boolean (fun opts v -> Ok { opts with exact_by_default = Some v }));
+      ( "experimental.abstract_classes",
+        boolean (fun opts v -> Ok { opts with abstract_classes = v })
+      );
       ("experimental.assert_operator", assert_operator_parser);
       ( "experimental.casting_syntax.only_support_as.excludes",
         string
@@ -1879,6 +1884,8 @@ let includes config = config.includes
 let libs config = config.libs
 
 (* options *)
+
+let abstract_classes c = c.options.Opts.abstract_classes
 
 let all c = c.options.Opts.all
 

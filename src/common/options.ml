@@ -101,6 +101,7 @@ module CastingSyntax = struct
 end
 
 type t = {
+  opt_abstract_classes: bool;
   opt_all: bool;
   opt_assert_operator: AssertOperator.t;
   opt_autoimports: bool;
@@ -204,6 +205,8 @@ type t = {
   opt_vpn_less: bool;
   opt_wait_for_recheck: bool;
 }
+
+let abstract_classes opts = opts.opt_abstract_classes
 
 let all opts = opts.opt_all
 

@@ -22,6 +22,7 @@ let metadata =
     verbose = None;
     slow_to_check_logging = Slow_to_check_logging.default;
     (* global *)
+    abstract_classes = false;
     assert_operator = Options.AssertOperator.Disabled;
     automatic_require_default = false;
     babel_loose_array_spread = false;
