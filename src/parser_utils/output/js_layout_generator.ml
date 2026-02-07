@@ -2454,8 +2454,37 @@ and class_declare_method ~opts (loc, { Ast.Class.DeclareMethod.key; annot; stati
 
 and class_abstract_method
     ~opts
+    (loc, { Ast.Class.AbstractMethod.key; annot = (annot_loc, func); ts_accessibility; comments }) =
+  let s_key =
+    match key with
+    | Ast.Expression.Object.Property.PrivateName
+        (ident_loc, { Ast.PrivateName.name; comments = key_comments }) ->
+      layout_node_with_comments_opt
+        ident_loc
+        key_comments
+        (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
+    | _ -> object_property_key ~opts key
+  in
+  let ts_accessibility = ts_accessibility_layout ts_accessibility in
+  source_location_with_comments
+    ?comments
     ( loc,
-      { Ast.Class.AbstractMethod.key; annot = (annot_loc, func); ts_accessibility = _; comments }
+      with_semicolon
+        (fuse
+           [
+             ts_accessibility;
+             Atom "abstract";
+             space;
+             s_key;
+             type_function ~opts ~sep:(Atom ":") annot_loc func;
+           ]
+        )
+    )
+
+and class_abstract_property
+    ~opts
+    ( loc,
+      { Ast.Class.AbstractProperty.key; annot; ts_accessibility; variance = variance_; comments }
     ) =
   let s_key =
     match key with
@@ -2467,11 +2496,21 @@ and class_abstract_method
         (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
     | _ -> object_property_key ~opts key
   in
+  let ts_accessibility = ts_accessibility_layout ts_accessibility in
   source_location_with_comments
     ?comments
     ( loc,
       with_semicolon
-        (fuse [Atom "abstract"; space; s_key; type_function ~opts ~sep:(Atom ":") annot_loc func])
+        (fuse
+           [
+             ts_accessibility;
+             Atom "abstract";
+             space;
+             option variance variance_;
+             s_key;
+             hint (type_annotation ~opts) annot;
+           ]
+        )
     )
 
 and class_property_helper
@@ -2640,6 +2679,13 @@ and class_body ~opts (loc, { Ast.Class.Body.body; comments }) =
             )
           in
           (loc, comment_bounds, class_abstract_method ~opts abs_meth)
+        | Ast.Class.Body.AbstractProperty ((loc, _) as abs_prop) ->
+          let comment_bounds =
+            comment_bounds loc abs_prop (fun collector (loc, abs_prop) ->
+                collector#class_abstract_property loc abs_prop
+            )
+          in
+          (loc, comment_bounds, class_abstract_property ~opts abs_prop)
         )
       body
     |> list_with_newlines

@@ -1,0 +1,178 @@
+{
+  "errors": [
+    {
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 2,
+          "column": 2
+        },
+        "end": {
+          "line": 2,
+          "column": 24
+        }
+      },
+      "message": "Abstract properties can only appear within an abstract class."
+    }
+  ],
+  "type": "Program",
+  "loc": {
+    "source": null,
+    "start": {
+      "line": 1,
+      "column": 0
+    },
+    "end": {
+      "line": 3,
+      "column": 1
+    }
+  },
+  "range": [
+    0,
+    38
+  ],
+  "body": [
+    {
+      "type": "ClassDeclaration",
+      "loc": {
+        "source": null,
+        "start": {
+          "line": 1,
+          "column": 0
+        },
+        "end": {
+          "line": 3,
+          "column": 1
+        }
+      },
+      "range": [
+        0,
+        38
+      ],
+      "id": {
+        "type": "Identifier",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 6
+          },
+          "end": {
+            "line": 1,
+            "column": 9
+          }
+        },
+        "range": [
+          6,
+          9
+        ],
+        "name": "Foo",
+        "typeAnnotation": null,
+        "optional": false
+      },
+      "body": {
+        "type": "ClassBody",
+        "loc": {
+          "source": null,
+          "start": {
+            "line": 1,
+            "column": 10
+          },
+          "end": {
+            "line": 3,
+            "column": 1
+          }
+        },
+        "range": [
+          10,
+          38
+        ],
+        "body": [
+          {
+            "type": "AbstractPropertyDefinition",
+            "loc": {
+              "source": null,
+              "start": {
+                "line": 2,
+                "column": 2
+              },
+              "end": {
+                "line": 2,
+                "column": 24
+              }
+            },
+            "range": [
+              14,
+              36
+            ],
+            "key": {
+              "type": "Identifier",
+              "loc": {
+                "source": null,
+                "start": {
+                  "line": 2,
+                  "column": 11
+                },
+                "end": {
+                  "line": 2,
+                  "column": 15
+                }
+              },
+              "range": [
+                23,
+                27
+              ],
+              "name": "name",
+              "typeAnnotation": null,
+              "optional": false
+            },
+            "value": {
+              "type": "TypeAnnotation",
+              "loc": {
+                "source": null,
+                "start": {
+                  "line": 2,
+                  "column": 15
+                },
+                "end": {
+                  "line": 2,
+                  "column": 23
+                }
+              },
+              "range": [
+                27,
+                35
+              ],
+              "typeAnnotation": {
+                "type": "StringTypeAnnotation",
+                "loc": {
+                  "source": null,
+                  "start": {
+                    "line": 2,
+                    "column": 17
+                  },
+                  "end": {
+                    "line": 2,
+                    "column": 23
+                  }
+                },
+                "range": [
+                  29,
+                  35
+                ]
+              }
+            },
+            "computed": false,
+            "variance": null
+          }
+        ]
+      },
+      "typeParameters": null,
+      "superClass": null,
+      "superTypeArguments": null,
+      "implements": [],
+      "decorators": []
+    }
+  ],
+  "comments": []
+}

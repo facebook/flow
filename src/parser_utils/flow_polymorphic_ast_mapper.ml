@@ -440,6 +440,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         DeclareMethod (this#on_type_annot annot, this#class_declare_method decl_meth)
       | AbstractMethod (annot, abs_meth) ->
         AbstractMethod (this#on_type_annot annot, this#class_abstract_method abs_meth)
+      | AbstractProperty (annot, abs_prop) ->
+        AbstractProperty (this#on_type_annot annot, this#class_abstract_property abs_prop)
 
     method class_key key = this#object_key key
 
@@ -483,6 +485,25 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       in
       let comments' = this#syntax_opt comments in
       { key = key'; annot = annot'; ts_accessibility = ts_accessibility'; comments = comments' }
+
+    method class_abstract_property (abs_prop : ('M, 'T) Ast.Class.AbstractProperty.t')
+        : ('N, 'U) Ast.Class.AbstractProperty.t' =
+      let open Ast.Class.AbstractProperty in
+      let { key; annot; ts_accessibility; variance; comments } = abs_prop in
+      let key' = this#class_property_key key in
+      let annot' = this#type_annotation_hint annot in
+      let ts_accessibility' =
+        Option.map ~f:(this#on_loc_annot * this#ts_accessibility) ts_accessibility
+      in
+      let variance' = this#variance_opt variance in
+      let comments' = this#syntax_opt comments in
+      {
+        key = key';
+        annot = annot';
+        ts_accessibility = ts_accessibility';
+        variance = variance';
+        comments = comments';
+      }
 
     method class_method_key key = this#class_key key
 

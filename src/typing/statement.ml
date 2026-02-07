@@ -8551,6 +8551,15 @@ module Make
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
                 )
+              | Body.AbstractProperty (loc, _) as elem ->
+                if not (Context.abstract_classes cx) then
+                  Flow_js_utils.add_output
+                    cx
+                    (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
+                ( c,
+                  (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
+                  public_seen_names
+                )
             )
             (class_sig, [], empty_seen_names)
             elements

@@ -125,6 +125,7 @@ module Def_kind_search = struct
             | Body.StaticBlock _ -> acc
             | Body.DeclareMethod _ -> acc
             | Body.AbstractMethod _ -> acc
+            | Body.AbstractProperty _ -> acc
           )
         in
         let saved_available_private_names = available_private_names in

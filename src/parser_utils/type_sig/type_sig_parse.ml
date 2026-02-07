@@ -4050,7 +4050,8 @@ and class_def =
           acc
         (* unexpected non-private method/field with private name *)
         | C.Body.StaticBlock _ -> acc (* static blocks are unreachable from exports *)
-        | C.Body.AbstractMethod _ -> acc (* abstract methods are not supported *))
+        | C.Body.AbstractMethod _ -> acc (* abstract methods are not supported *)
+        | C.Body.AbstractProperty _ -> acc (* abstract properties are not supported *))
       acc
       elements
   in

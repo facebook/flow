@@ -134,6 +134,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method class_abstract_method :
       ('M, 'T) Ast.Class.AbstractMethod.t' -> ('N, 'U) Ast.Class.AbstractMethod.t'
 
+    method class_abstract_property :
+      ('M, 'T) Ast.Class.AbstractProperty.t' -> ('N, 'U) Ast.Class.AbstractProperty.t'
+
     method class_method_key :
       ('M, 'T) Ast.Expression.Object.Property.key -> ('N, 'U) Ast.Expression.Object.Property.key
 

@@ -743,7 +743,8 @@ module Object
         in
         (key, annot, value, [])
     in
-    let property env start_loc decorators key static declare variance ts_accessibility leading =
+    let property
+        env start_loc decorators key static declare variance ts_accessibility ~abstract leading =
       let (loc, (key, annot, value, comments)) =
         with_loc
           ~start_loc
@@ -766,27 +767,66 @@ module Object
             (key, annot, value, Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
           env
       in
-      let open Ast.Class in
-      match key with
-      | Ast.Expression.Object.Property.PrivateName key ->
-        Body.PrivateField
-          ( loc,
-            {
-              PrivateField.key;
-              value;
-              annot;
-              static;
-              variance;
-              ts_accessibility;
-              decorators;
-              comments;
-            }
-          )
-      | _ ->
-        Body.Property
-          ( loc,
-            { Property.key; value; annot; static; variance; ts_accessibility; decorators; comments }
-          )
+      if abstract then begin
+        (match value with
+        | Ast.Class.Property.Initialized _ ->
+          error_at env (loc, Parse_error.AbstractPropertyWithInitializer)
+        | _ -> ());
+        let open Ast.Class in
+        match key with
+        | Ast.Expression.Object.Property.PrivateName _ ->
+          (* Private abstract properties fall back to PrivateField *)
+          Body.PrivateField
+            ( loc,
+              {
+                PrivateField.key =
+                  (match key with
+                  | Ast.Expression.Object.Property.PrivateName k -> k
+                  | _ -> failwith "unreachable");
+                value;
+                annot;
+                static;
+                variance;
+                ts_accessibility;
+                decorators;
+                comments;
+              }
+            )
+        | _ ->
+          Body.AbstractProperty
+            (loc, { AbstractProperty.key; annot; ts_accessibility; variance; comments })
+      end else begin
+        let open Ast.Class in
+        match key with
+        | Ast.Expression.Object.Property.PrivateName key ->
+          Body.PrivateField
+            ( loc,
+              {
+                PrivateField.key;
+                value;
+                annot;
+                static;
+                variance;
+                ts_accessibility;
+                decorators;
+                comments;
+              }
+            )
+        | _ ->
+          Body.Property
+            ( loc,
+              {
+                Property.key;
+                value;
+                annot;
+                static;
+                variance;
+                ts_accessibility;
+                decorators;
+                comments;
+              }
+            )
+      end
     in
     let is_asi env =
       match Peek.token env with
@@ -814,7 +854,17 @@ module Object
       | T_SEMICOLON
       | T_RCURLY
         when (not async) && not generator ->
-        property env start_loc decorators key static declare variance ts_accessibility leading
+        property
+          env
+          start_loc
+          decorators
+          key
+          static
+          declare
+          variance
+          ts_accessibility
+          ~abstract
+          leading
       | T_PLING ->
         (* TODO: add support for optional class properties *)
         error_unexpected env;
@@ -834,7 +884,17 @@ module Object
           leading
       | _ when is_asi env ->
         (* an uninitialized, unannotated property *)
-        property env start_loc decorators key static declare variance ts_accessibility leading
+        property
+          env
+          start_loc
+          decorators
+          key
+          static
+          declare
+          variance
+          ts_accessibility
+          ~abstract
+          leading
       | _ ->
         error_unsupported_declare env declare;
         error_unsupported_variance env variance;
@@ -1296,6 +1356,9 @@ module Object
           | Ast.Class.Body.AbstractMethod (loc, _) ->
             if not abstract then error_at env (loc, Parse_error.AbstractMethodInNonAbstractClass);
             (* AbstractMethod is a bodyless method signature, no private name checking needed *)
+            (seen_constructor, private_names)
+          | Ast.Class.Body.AbstractProperty (loc, _) ->
+            if not abstract then error_at env (loc, Parse_error.AbstractPropertyInNonAbstractClass);
             (seen_constructor, private_names)
         in
         elements env ~abstract seen_constructor' private_names' (element :: acc)

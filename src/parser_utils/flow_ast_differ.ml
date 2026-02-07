@@ -1414,6 +1414,9 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     | (AbstractMethod _, _)
     | (_, AbstractMethod _) ->
       None
+    | (AbstractProperty _, _)
+    | (_, AbstractProperty _) ->
+      None
   and class_private_field field1 field2 : node change list =
     let open Ast.Class.PrivateField in
     let ( loc1,

@@ -8,6 +8,8 @@
 type t =
   | AbstractMethodInNonAbstractClass
   | AbstractMethodWithBody
+  | AbstractPropertyInNonAbstractClass
+  | AbstractPropertyWithInitializer
   | AccessorDataProperty
   | AccessorGetSet
   | AdjacentJSXElements
@@ -200,6 +202,9 @@ module PP = struct
     | AbstractMethodInNonAbstractClass ->
       "Abstract methods can only appear within an abstract class."
     | AbstractMethodWithBody -> "Abstract methods cannot have an implementation."
+    | AbstractPropertyInNonAbstractClass ->
+      "Abstract properties can only appear within an abstract class."
+    | AbstractPropertyWithInitializer -> "Abstract properties cannot have an initializer."
     | AccessorDataProperty ->
       "Object literal may not have data and accessor property with the same name"
     | AccessorGetSet -> "Object literal may not have multiple get/set accessors with the same name"

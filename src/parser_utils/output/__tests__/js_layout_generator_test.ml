@@ -1624,6 +1624,13 @@ let tests =
              ~pretty:true
              "abstract class C {\n  abstract a(): void;\n  b() {}\n}"
          );
+         ( "abstract_classes_with_accessibility" >:: fun ctxt ->
+           assert_statement_string ~ctxt "abstract class C{abstract a:string;}";
+           assert_statement_string ~ctxt "abstract class C{protected abstract a:string;}";
+           assert_statement_string ~ctxt "abstract class C{public abstract a:string;}";
+           assert_statement_string ~ctxt "abstract class C{protected abstract a():void;}";
+           assert_statement_string ~ctxt "abstract class C{public abstract a():void;}"
+         );
          ( "declare_abstract_classes" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare abstract class C{}";
            assert_statement_string ~ctxt "declare abstract class C{a():void}";

@@ -1423,6 +1423,7 @@ with type t = Impl.t = struct
             [("body", statement_list body)]
         | DeclareMethod dm -> class_declare_method dm
         | AbstractMethod am -> class_abstract_method am
+        | AbstractProperty ap -> class_abstract_property ap
       )
     and class_method
         (loc, { Class.Method.key; value; kind; static; ts_accessibility; decorators; comments }) =
@@ -1499,6 +1500,26 @@ with type t = Impl.t = struct
         "AbstractMethodDefinition"
         loc
         ([("key", key); ("value", function_type annot); ("computed", bool computed)]
+        @
+        match ts_accessibility_to_string ts_accessibility with
+        | Some v -> [("tsAccessibility", string v)]
+        | None -> []
+        )
+    and class_abstract_property
+        ( loc,
+          { Class.AbstractProperty.key; annot; ts_accessibility; variance = variance_; comments }
+        ) =
+      let (key, computed, comments) = property_key ~comments key in
+      node
+        ?comments
+        "AbstractPropertyDefinition"
+        loc
+        ([
+           ("key", key);
+           ("value", hint type_annotation annot);
+           ("computed", bool computed);
+           ("variance", option variance variance_);
+         ]
         @
         match ts_accessibility_to_string ts_accessibility with
         | Some v -> [("tsAccessibility", string v)]

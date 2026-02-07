@@ -2415,6 +2415,19 @@ and Class : sig
     [@@deriving show]
   end
 
+  module AbstractProperty : sig
+    type ('M, 'T) t = 'T * ('M, 'T) t'
+
+    and ('M, 'T) t' = {
+      key: ('M, 'T) Expression.Object.Property.key;
+      annot: ('M, 'T) Type.annotation_or_hint;
+      ts_accessibility: 'M TSAccessibility.t option;
+      variance: 'M Variance.t option;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Property : sig
     type ('M, 'T) t = 'T * ('M, 'T) t'
 
@@ -2508,6 +2521,7 @@ and Class : sig
       | StaticBlock of ('M, 'T) StaticBlock.t
       | DeclareMethod of ('M, 'T) DeclareMethod.t
       | AbstractMethod of ('M, 'T) AbstractMethod.t
+      | AbstractProperty of ('M, 'T) AbstractProperty.t
     [@@deriving show]
   end
 

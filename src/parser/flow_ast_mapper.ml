@@ -519,6 +519,10 @@ class ['loc] mapper =
         id_loc this#class_abstract_method loc abs_meth elem (fun abs_meth ->
             AbstractMethod (loc, abs_meth)
         )
+      | AbstractProperty (loc, abs_prop) ->
+        id_loc this#class_abstract_property loc abs_prop elem (fun abs_prop ->
+            AbstractProperty (loc, abs_prop)
+        )
 
     method class_implements (implements : ('loc, 'loc) Ast.Class.Implements.t) =
       let open Ast.Class.Implements in
@@ -573,6 +577,18 @@ class ['loc] mapper =
         abs_meth
       else
         { abs_meth with key = key'; annot = (annot_loc, func'); comments = comments' }
+
+    method class_abstract_property _loc (abs_prop : ('loc, 'loc) Ast.Class.AbstractProperty.t') =
+      let open Ast.Class.AbstractProperty in
+      let { key; annot; ts_accessibility = _; variance; comments } = abs_prop in
+      let key' = this#object_key key in
+      let annot' = this#type_annotation_hint annot in
+      let variance' = this#variance_opt variance in
+      let comments' = this#syntax_opt comments in
+      if key == key' && annot == annot' && variance == variance' && comments == comments' then
+        abs_prop
+      else
+        { abs_prop with key = key'; annot = annot'; variance = variance'; comments = comments' }
 
     method class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
