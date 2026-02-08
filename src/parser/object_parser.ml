@@ -956,8 +956,11 @@ module Object
             | Function.ReturnAnnot.Available (_, (ret_loc, t)) ->
               Ast.Type.Function.Available (ret_loc, t)
             | Function.ReturnAnnot.TypeGuard (_, tg) -> Ast.Type.Function.TypeGuard tg
-            | Function.ReturnAnnot.Missing _ ->
-              Ast.Type.Function.Available (Loc.none, Ast.Type.Any None)
+            | Function.ReturnAnnot.Missing loc ->
+              if kind = Ast.Class.Method.Constructor then
+                Ast.Type.Function.Missing loc
+              else
+                Ast.Type.Function.Available (Loc.none, Ast.Type.Any None)
           in
           let func =
             {
@@ -985,7 +988,7 @@ module Object
           Peek.token env = T_SEMICOLON
           && (not async)
           && (not generator)
-          && kind <> Ast.Class.Method.Constructor
+          && (kind <> Ast.Class.Method.Constructor || in_ambient_context env)
         in
         let make_method_value env =
           with_loc
@@ -1054,7 +1057,7 @@ module Object
             && List.length decorators = 0
             &&
             match return with
-            | Function.ReturnAnnot.Missing _ -> false
+            | Function.ReturnAnnot.Missing _ -> kind = Ast.Class.Method.Constructor
             | _ -> true
           then
           (* Implicit declare method *)

@@ -15,6 +15,11 @@ declare class Foo {
   constructor(x: number); // ERROR
 }
 
+// Regular class constructor without return type (bodyless in ambient context)
+class Bar {
+  constructor(x: number); // ERROR
+}
+
 // Namespace without declare keyword
 namespace ImplicitNS { // ERROR
   const x: number;

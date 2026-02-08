@@ -4039,7 +4039,7 @@ and class_def =
           else
             let id_loc = push_loc tbls id_loc in
             let fn_loc = push_loc tbls fn_loc in
-            let def = function_type opts scope tbls xs f in
+            let def = function_type ~is_constructor:(name = "constructor") opts scope tbls xs f in
             Acc.add_method ~static name id_loc fn_loc ~async:false ~generator:false def acc
         | C.Body.DeclareMethod _ -> acc (* unsupported DeclareMethod key types *)
         | C.Body.Method (_, { C.Method.key = P.Computed _; _ })

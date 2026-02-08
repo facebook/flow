@@ -47,35 +47,43 @@ Return type annotation is required for `declare class` methods. [unsupported-syn
                                
 
 
-Error ------------------------------------------------------------------------------------------------ test.js.flow:19:1
+Error ------------------------------------------------------------------------------------------------ test.js.flow:20:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   20|   constructor(x: number); // ERROR
+         ^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ test.js.flow:24:1
 
 Declaration without `declare` is not enabled. [unsupported-syntax]
 
        v------------------------------
-   19| namespace ImplicitNS { // ERROR
-   20|   const x: number;
-   21| }
-       ^
-
-
-Error ------------------------------------------------------------------------------------------------ test.js.flow:20:9
-
-Declaration without `declare` is not enabled. [unsupported-syntax]
-
-   20|   const x: number;
-               ^^^^^^^^^
-
-
-Error ----------------------------------------------------------------------------------------------- test.js.flow:24:16
-
-`declare export namespace` is not enabled. [unsupported-syntax]
-
-                      v------------------------------
-   24| declare export namespace ExportedNS { // ERROR
-   25|   declare const y: string;
+   24| namespace ImplicitNS { // ERROR
+   25|   const x: number;
    26| }
        ^
 
 
+Error ------------------------------------------------------------------------------------------------ test.js.flow:25:9
 
-Found 9 errors
+Declaration without `declare` is not enabled. [unsupported-syntax]
+
+   25|   const x: number;
+               ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:29:16
+
+`declare export namespace` is not enabled. [unsupported-syntax]
+
+                      v------------------------------
+   29| declare export namespace ExportedNS { // ERROR
+   30|   declare const y: string;
+   31| }
+       ^
+
+
+
+Found 10 errors

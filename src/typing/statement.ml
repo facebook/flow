@@ -8533,11 +8533,12 @@ module Make
                   public_seen_names
                 )
               | Body.DeclareMethod (loc, _) as elem ->
-                Flow.add_output
-                  cx
-                  (Error_message.EUnsupportedSyntax
-                     (loc, Flow_intermediate_error_types.ClassDeclareMethod)
-                  );
+                if not (Context.tslib_syntax cx && Context.under_declaration_context cx) then
+                  Flow.add_output
+                    cx
+                    (Error_message.EUnsupportedSyntax
+                       (loc, Flow_intermediate_error_types.ClassDeclareMethod)
+                    );
                 ( c,
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
