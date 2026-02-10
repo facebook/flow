@@ -1,3 +1,8 @@
+### 0.300.0
+
+Misc:
+* Minor changes to the flow-upgrade script
+
 ### 0.299.0
 
 Parser:
