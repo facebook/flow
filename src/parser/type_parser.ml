@@ -1166,7 +1166,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           { Type.Function.params; return; tparams; comments = None; effect_ = Function.Arbitrary })
         env
     in
-    let method_property env start_loc static abstract key ~leading =
+    let method_property env start_loc static abstract key ~ts_accessibility ~leading =
       let key = object_key_remove_trailing env key in
       let tparams =
         type_params_remove_trailing env ~kind:Flow_ast_mapper.FunctionTypeTP (type_params env)
@@ -1185,6 +1185,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               _method = true;
               abstract;
               variance = None;
+              ts_accessibility;
               comments = Flow_ast_utils.mk_comments_opt ~leading ();
             }
           )
@@ -1210,7 +1211,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       in
       Type.Object.CallProperty prop
     in
-    let init_property env start_loc ~variance ~static ~proto ~abstract ~leading (key_loc, key) =
+    let init_property
+        env start_loc ~variance ~static ~proto ~abstract ~ts_accessibility ~leading (key_loc, key) =
       ignore proto;
       if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
       let prop =
@@ -1219,7 +1221,16 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           (fun env ->
             let optional = Eat.maybe env T_PLING in
             let value =
-              if Expect.token_maybe env T_COLON then
+              (* Private fields can omit the type annotation since they are
+                 dropped from the public interface of the declare class *)
+              let ate_colon =
+                match ts_accessibility with
+                | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ })
+                  ->
+                  Eat.maybe env T_COLON
+                | _ -> Expect.token_maybe env T_COLON
+              in
+              if ate_colon then
                 _type env
               else
                 (key_loc, Type.Any None)
@@ -1234,13 +1245,14 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 _method = false;
                 abstract;
                 variance;
+                ts_accessibility;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
           env
       in
       Type.Object.Property prop
     in
-    let getter_or_setter ~is_getter ~leading env start_loc static key =
+    let getter_or_setter ~is_getter ~leading ~ts_accessibility env start_loc static key =
       let prop =
         with_loc
           ~start_loc
@@ -1281,6 +1293,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                 _method = false;
                 abstract = false;
                 variance = None;
+                ts_accessibility;
                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
               })
           env
@@ -1551,10 +1564,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             ~allow_static:is_class
             ~allow_proto:is_class
             ~allow_abstract:is_class
+            ~allow_accessibility:is_class
             ~variance:None
             ~static:None
             ~proto:None
             ~abstract:false
+            ~ts_accessibility:None
             ~leading:[]
         in
         semicolon exact env;
@@ -1571,10 +1586,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         ~allow_static
         ~allow_proto
         ~allow_abstract
+        ~allow_accessibility
         ~variance
         ~static
         ~proto
         ~abstract
+        ~ts_accessibility
         ~leading
         start_loc =
       match Peek.token env with
@@ -1588,10 +1605,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_static:false
           ~allow_proto:false
           ~allow_abstract:false
+          ~allow_accessibility:false
           ~variance
           ~static
           ~proto
           ~abstract
+          ~ts_accessibility
           ~leading
           start_loc
       | T_STATIC when allow_static ->
@@ -1607,10 +1626,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_static:false
           ~allow_proto:false
           ~allow_abstract
+          ~allow_accessibility:false
           ~variance
           ~static
           ~proto
           ~abstract
+          ~ts_accessibility
           ~leading
           start_loc
       | T_IDENTIFIER { raw = "proto"; _ } when allow_proto ->
@@ -1626,10 +1647,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_static:false
           ~allow_proto:false
           ~allow_abstract
+          ~allow_accessibility:false
           ~variance
           ~static
           ~proto
           ~abstract
+          ~ts_accessibility
           ~leading
           start_loc
       | T_IDENTIFIER { raw = "abstract"; _ } when allow_abstract && Peek.ith_is_identifier ~i:1 env
@@ -1643,10 +1666,45 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_static:false
           ~allow_proto:false
           ~allow_abstract:false
+          ~allow_accessibility:false
           ~variance
           ~static
           ~proto
           ~abstract:true
+          ~ts_accessibility
+          ~leading
+          start_loc
+      | T_IDENTIFIER { raw = ("private" | "protected" | "public") as raw; _ }
+        when allow_accessibility
+             && (Peek.ith_is_identifier ~i:1 env
+                || Peek.ith_token ~i:1 env = T_READONLY
+                || Peek.ith_token ~i:1 env = T_STATIC
+                ) ->
+        let kind =
+          match raw with
+          | "private" -> Ast.Class.TSAccessibility.Private
+          | "protected" -> Ast.Class.TSAccessibility.Protected
+          | "public" -> Ast.Class.TSAccessibility.Public
+          | _ -> failwith "Must be one of the above"
+        in
+        let acc_loc = Peek.loc env in
+        let leading = leading @ Peek.comments env in
+        Eat.token env;
+        let ts_accessibility =
+          Some (acc_loc, { Ast.Class.TSAccessibility.kind; comments = None })
+        in
+        property
+          env
+          ~is_class
+          ~allow_static:is_class
+          ~allow_proto:false
+          ~allow_abstract
+          ~allow_accessibility:false
+          ~variance
+          ~static
+          ~proto
+          ~abstract
+          ~ts_accessibility
           ~leading
           start_loc
       | T_READONLY
@@ -1659,10 +1717,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_static:false
           ~allow_proto:false
           ~allow_abstract:false
+          ~allow_accessibility:false
           ~variance
           ~static
           ~proto
           ~abstract
+          ~ts_accessibility
           ~leading
           start_loc
       | T_LBRACKET ->
@@ -1701,6 +1761,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             ~static
             ~proto
             ~abstract:false
+            ~ts_accessibility:None
             ~leading:[]
             (static_loc, key)
         | (None, Some proto_loc, (T_PLING | T_COLON)) ->
@@ -1722,6 +1783,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             ~static
             ~proto
             ~abstract:false
+            ~ts_accessibility:None
             ~leading:[]
             (proto_loc, key)
         | _ ->
@@ -1743,10 +1805,19 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             | T_LPAREN ->
               error_unexpected_proto env proto;
               error_unexpected_variance env variance;
-              method_property env start_loc static abstract key ~leading
+              method_property env start_loc static abstract key ~ts_accessibility ~leading
             | T_COLON
             | T_PLING ->
-              init_property env start_loc ~variance ~static ~proto ~abstract ~leading (key_loc, key)
+              init_property
+                env
+                start_loc
+                ~variance
+                ~static
+                ~proto
+                ~abstract
+                ~ts_accessibility
+                ~leading
+                (key_loc, key)
             | _ ->
               ignore (object_key_remove_trailing env key);
               let key = object_key env in
@@ -1754,7 +1825,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               let leading = leading @ leading_key in
               error_unexpected_proto env proto;
               error_unexpected_variance env variance;
-              getter_or_setter ~is_getter ~leading env start_loc static key
+              getter_or_setter ~is_getter ~leading ~ts_accessibility env start_loc static key
           end
           | (key_loc, key) -> begin
             match Peek.token env with
@@ -1762,10 +1833,19 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             | T_LPAREN ->
               error_unexpected_proto env proto;
               error_unexpected_variance env variance;
-              method_property env start_loc static abstract key ~leading
+              method_property env start_loc static abstract key ~ts_accessibility ~leading
             | _ ->
               error_invalid_property_name env is_class static key;
-              init_property env start_loc ~variance ~static ~proto ~abstract ~leading (key_loc, key)
+              init_property
+                env
+                start_loc
+                ~variance
+                ~static
+                ~proto
+                ~abstract
+                ~ts_accessibility
+                ~leading
+                (key_loc, key)
           end))
     in
     fun ~is_class ~allow_exact ~allow_spread env ->

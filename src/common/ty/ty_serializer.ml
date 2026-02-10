@@ -368,6 +368,7 @@ let type_ options =
           _method = false;
           abstract = false;
           variance = variance_ polarity;
+          ts_accessibility = None;
           comments = None;
         }
       | Method f ->
@@ -381,6 +382,7 @@ let type_ options =
           _method = true;
           abstract = false;
           variance = None;
+          ts_accessibility = None;
           comments = None;
         }
       | Get t ->
@@ -394,6 +396,7 @@ let type_ options =
           _method = false;
           abstract = false;
           variance = None;
+          ts_accessibility = None;
           comments = None;
         }
       | Set t ->
@@ -407,6 +410,7 @@ let type_ options =
           _method = false;
           abstract = false;
           variance = None;
+          ts_accessibility = None;
           comments = None;
         }
   and obj_index_prop d =

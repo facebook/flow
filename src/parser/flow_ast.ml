@@ -325,6 +325,7 @@ and Type : sig
         _method: bool;
         abstract: bool;
         variance: 'M Variance.t option;
+        ts_accessibility: 'M Class.TSAccessibility.t option;
         comments: ('M, unit) Syntax.t option;
       }
 

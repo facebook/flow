@@ -35,6 +35,7 @@ module Types = struct
         ?(_method = false)
         ?(abstract = false)
         ?(variance = None)
+        ?(ts_accessibility = None)
         ?comments
         key
         value =
@@ -48,6 +49,7 @@ module Types = struct
           _method;
           abstract;
           variance;
+          ts_accessibility;
           comments;
         }
       )

@@ -685,6 +685,7 @@ end = struct
             _method = _;
             abstract = _;
             variance = _;
+            ts_accessibility = _;
             comments = _;
           }
         ) =

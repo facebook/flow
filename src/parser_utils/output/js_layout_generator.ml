@@ -4421,6 +4421,7 @@ and type_object_property ~opts =
           variance = variance_;
           _method;
           abstract;
+          ts_accessibility;
           comments;
         }
       ) ->
@@ -4442,6 +4443,7 @@ and type_object_property ~opts =
       else
         Empty
     in
+    let s_accessibility = ts_accessibility_layout ts_accessibility in
     source_location_with_comments
       ?comments
       ( loc,
@@ -4452,6 +4454,7 @@ and type_object_property ~opts =
             ( loc,
               fuse
                 [
+                  s_accessibility;
                   s_abstract;
                   s_static;
                   object_property_key ~opts key;
@@ -4459,9 +4462,21 @@ and type_object_property ~opts =
                 ]
             )
         (* Normal properties *)
+        | (Property.Init (_, Ast.Type.Any None), _, _, _) when ts_accessibility <> None ->
+          (* Property with accessibility modifier but no annotation, e.g. `private x` *)
+          fuse
+            [
+              s_accessibility;
+              s_abstract;
+              s_static;
+              s_proto;
+              option variance variance_;
+              object_property_key ~opts key;
+            ]
         | (Property.Init t, _, _, _) ->
           fuse
             [
+              s_accessibility;
               s_abstract;
               s_static;
               s_proto;

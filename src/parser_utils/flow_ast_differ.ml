@@ -2873,6 +2873,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             _method = method1;
             abstract = abstract1;
             variance = var1;
+            ts_accessibility = ts_accessibility1;
             comments = comments1;
           }
         ) =
@@ -2888,6 +2889,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             _method = method2;
             abstract = abstract2;
             variance = var2;
+            ts_accessibility = ts_accessibility2;
             comments = comments2;
           }
         ) =
@@ -2899,6 +2901,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       || proto1 != proto2
       || method1 != method2
       || abstract1 != abstract2
+      || ts_accessibility1 <> ts_accessibility2
     then
       None
     else

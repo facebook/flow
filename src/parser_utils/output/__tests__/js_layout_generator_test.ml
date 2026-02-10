@@ -1602,6 +1602,33 @@ let tests =
              ~pretty:true
              "class C {\n  private x;\n  protected y;\n  public z;\n}"
          );
+         ( "declare_class_ts_accessibility" >:: fun ctxt ->
+           (* accessibility without annotation *)
+           assert_statement_string ~ctxt "declare class C{private b}";
+           assert_statement_string ~ctxt "declare class C{private readonly b}";
+           assert_statement_string ~ctxt "declare class C{private static b}";
+           (* accessibility with annotation *)
+           assert_statement_string ~ctxt "declare class C{private b:T}";
+           assert_statement_string ~ctxt "declare class C{protected b:T}";
+           assert_statement_string ~ctxt "declare class C{public b:T}";
+           (* accessibility with static *)
+           assert_statement_string ~ctxt "declare class C{protected static b:T}";
+           assert_statement_string ~ctxt "declare class C{public static b:T}";
+           assert_statement_string ~ctxt "declare class C{private static readonly b:T}";
+           (* accessibility with methods *)
+           assert_statement_string ~ctxt "declare class C{private b():T}";
+           assert_statement_string ~ctxt "declare class C{protected b():T}";
+           assert_statement_string ~ctxt "declare class C{public b():T}";
+           (* accessibility modifiers as property names *)
+           assert_statement_string ~ctxt "declare class C{private:T}";
+           assert_statement_string ~ctxt "declare class C{protected:T}";
+           assert_statement_string ~ctxt "declare class C{public:T}";
+           (* pretty printed *)
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare class C {\n  private b,\n  private readonly c,\n  protected d: T,\n}"
+         );
          ( "class_ts_parameter_properties" >:: fun ctxt ->
            assert_statement_string ~ctxt "class C{constructor(private x:number){}}";
            assert_statement_string ~ctxt "class C{constructor(protected x:string){}}";

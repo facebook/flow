@@ -1512,7 +1512,20 @@ class ['loc] mapper =
 
     method object_property_type (opt : ('loc, 'loc) Ast.Type.Object.Property.t) =
       let open Ast.Type.Object.Property in
-      let (loc, { key; value; optional; static; proto; _method; abstract; variance; comments }) =
+      let ( loc,
+            {
+              key;
+              value;
+              optional;
+              static;
+              proto;
+              _method;
+              abstract;
+              variance;
+              ts_accessibility;
+              comments;
+            }
+          ) =
         opt
       in
       let key' = this#object_key key in
@@ -1532,6 +1545,7 @@ class ['loc] mapper =
             _method;
             abstract;
             variance = variance';
+            ts_accessibility;
             comments = comments';
           }
         )

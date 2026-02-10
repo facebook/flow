@@ -28,3 +28,35 @@ class Valid {
   public: boolean;
   static private: string;
 }
+
+// Declare class accessibility modifiers
+declare class D {
+  private a; // ERROR
+  private b: number; // ERROR
+  private readonly c; // ERROR
+  private static d: string; // ERROR
+  protected e: number; // ERROR
+  public f: string; // ERROR
+  public readonly g: boolean; // ERROR
+  private h(): void; // ERROR
+  protected i(): number; // ERROR
+  public j(): string; // ERROR
+  protected static k: number; // ERROR
+  public static l: boolean; // ERROR
+  private static readonly m: string; // ERROR
+}
+
+// Declare class accessibility + abstract
+declare class F {
+  protected abstract n: number; // ERROR
+  public abstract o: string; // ERROR
+  protected abstract p(): void; // ERROR
+  public abstract q(): number; // ERROR
+}
+
+// accessibility modifiers as property names in declare class
+declare class E {
+  private: string;
+  protected: number;
+  public: boolean;
+}

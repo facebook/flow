@@ -2091,6 +2091,7 @@ and object_type =
       _method;
       abstract = _;
       variance;
+      ts_accessibility = _;
       comments = _;
     } =
       p
@@ -2294,6 +2295,7 @@ and interface_props =
       _method;
       abstract = _;
       variance;
+      ts_accessibility = _;
       comments = _;
     } =
       p
@@ -2388,48 +2390,53 @@ and declare_class_props =
       _method;
       abstract = _;
       variance;
+      ts_accessibility;
       comments = _;
     } =
       p
     in
-    let module P = Ast.Expression.Object.Property in
-    match key with
-    | P.StringLiteral _
-    | P.NumberLiteral _
-    | P.BigIntLiteral _
-    | P.PrivateName _
-    | P.Computed _ ->
-      acc (* unsupported interface / declare class keys *)
-    | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
-      (match (_method, value) with
-      | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
-        let fn_loc = push_loc tbls fn_loc in
-        let id_loc = push_loc tbls id_loc in
-        let def = function_type ~is_constructor:(name = "constructor") opts scope tbls xs fn in
-        Acc.append_method ~static name id_loc fn_loc def acc
-      | (true, _) -> acc (* unexpected non-function method *)
-      | (false, O.Property.Init t) ->
-        let id_loc = push_loc tbls id_loc in
-        let t = annot opts scope tbls xs t in
-        let t =
-          if optional then
-            Annot (Optional t)
+    (* Skip private properties entirely *)
+    match ts_accessibility with
+    | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) -> acc
+    | _ ->
+      let module P = Ast.Expression.Object.Property in
+      (match key with
+      | P.StringLiteral _
+      | P.NumberLiteral _
+      | P.BigIntLiteral _
+      | P.PrivateName _
+      | P.Computed _ ->
+        acc (* unsupported interface / declare class keys *)
+      | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
+        (match (_method, value) with
+        | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
+          let fn_loc = push_loc tbls fn_loc in
+          let id_loc = push_loc tbls id_loc in
+          let def = function_type ~is_constructor:(name = "constructor") opts scope tbls xs fn in
+          Acc.append_method ~static name id_loc fn_loc def acc
+        | (true, _) -> acc (* unexpected non-function method *)
+        | (false, O.Property.Init t) ->
+          let id_loc = push_loc tbls id_loc in
+          let t = annot opts scope tbls xs t in
+          let t =
+            if optional then
+              Annot (Optional t)
+            else
+              t
+          in
+          let polarity = polarity variance in
+          if proto then
+            Acc.add_proto_field name id_loc polarity t acc
           else
-            t
-        in
-        let polarity = polarity variance in
-        if proto then
-          Acc.add_proto_field name id_loc polarity t acc
-        else
-          Acc.add_field ~static name id_loc polarity t acc
-      | (_, O.Property.Get (_, fn)) ->
-        let id_loc = push_loc tbls id_loc in
-        let getter = getter_type opts scope tbls xs id_loc fn in
-        Acc.add_accessor ~static name getter acc
-      | (_, O.Property.Set (_, fn)) ->
-        let id_loc = push_loc tbls id_loc in
-        let setter = setter_type opts scope tbls xs id_loc fn in
-        Acc.add_accessor ~static name setter acc)
+            Acc.add_field ~static name id_loc polarity t acc
+        | (_, O.Property.Get (_, fn)) ->
+          let id_loc = push_loc tbls id_loc in
+          let getter = getter_type opts scope tbls xs id_loc fn in
+          Acc.add_accessor ~static name getter acc
+        | (_, O.Property.Set (_, fn)) ->
+          let id_loc = push_loc tbls id_loc in
+          let setter = setter_type opts scope tbls xs id_loc fn in
+          Acc.add_accessor ~static name setter acc))
   in
   let class_indexer opts scope tbls xs acc p =
     let { O.Indexer.static; _ } = p in

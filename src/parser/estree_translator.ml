@@ -2228,6 +2228,7 @@ with type t = Impl.t = struct
             variance = variance_;
             _method;
             abstract;
+            ts_accessibility;
             comments;
           }
         ) =
@@ -2243,17 +2244,22 @@ with type t = Impl.t = struct
         ?comments
         "ObjectTypeProperty"
         loc
-        [
-          ("key", key);
-          ("value", value);
-          ("method", bool _method);
-          ("optional", bool optional);
-          ("static", bool static);
-          ("proto", bool proto);
-          ("abstract", bool abstract);
-          ("variance", option variance variance_);
-          ("kind", string kind);
-        ]
+        ([
+           ("key", key);
+           ("value", value);
+           ("method", bool _method);
+           ("optional", bool optional);
+           ("static", bool static);
+           ("proto", bool proto);
+           ("abstract", bool abstract);
+           ("variance", option variance variance_);
+           ("kind", string kind);
+         ]
+        @
+        match ts_accessibility_to_string ts_accessibility with
+        | Some v -> [("tsAccessibility", string v)]
+        | None -> []
+        )
     and object_type_spread_property (loc, { Type.Object.SpreadProperty.argument; comments }) =
       node ?comments "ObjectTypeSpreadProperty" loc [("argument", _type argument)]
     and object_type_indexer

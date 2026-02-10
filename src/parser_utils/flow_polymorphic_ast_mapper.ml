@@ -1166,12 +1166,28 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method object_property_type (opt : ('M, 'T) Ast.Type.Object.Property.t)
         : ('N, 'U) Ast.Type.Object.Property.t =
       let open Ast.Type.Object.Property in
-      let (annot, { key; value; optional; static; proto; _method; abstract; variance; comments }) =
+      let ( annot,
+            {
+              key;
+              value;
+              optional;
+              static;
+              proto;
+              _method;
+              abstract;
+              variance;
+              ts_accessibility;
+              comments;
+            }
+          ) =
         opt
       in
       let key' = this#object_key key in
       let value' = this#object_property_value_type value in
       let variance' = this#variance_opt variance in
+      let ts_accessibility' =
+        Option.map ~f:(this#on_loc_annot * this#ts_accessibility) ts_accessibility
+      in
       let comments' = this#syntax_opt comments in
       ( this#on_loc_annot annot,
         {
@@ -1183,6 +1199,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           _method;
           abstract;
           variance = variance';
+          ts_accessibility = ts_accessibility';
           comments = comments';
         }
       )
