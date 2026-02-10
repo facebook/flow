@@ -143,12 +143,24 @@ let dump_types ~printer ~evaluate_type_destructors cx file_sig typed_ast =
 
 let dump_types_for_tool cx typed_ast depth =
   let types = Typed_ast_utils.typed_ast_to_list typed_ast in
+  let env = Context.environment cx in
+  let { Loc_env.var_info = { Env_api.env_values; _ }; _ } = env in
+  let type_to_json t =
+    Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t t) t
+    |> ConvertTypes.type_to_json cx depth
+  in
   let print_type_json (loc, t) =
-    ( loc,
-      Flow_js.singleton_concrete_type_for_inspection cx (TypeUtil.reason_of_t t) t
-      |> ConvertTypes.type_to_json cx depth
-      |> Hh_json.json_to_string
-    )
+    let open Loc_collections in
+    let expression_type = type_to_json t in
+    let fields = [("expression_type", expression_type)] in
+    let fields =
+      match ALocMap.find_opt loc env_values with
+      | Some { Env_api.def_loc = Some dl; _ } ->
+        let provider_json = type_to_json (Type_env.provider_type_for_def_loc cx env dl) in
+        fields @ [("provider_type", provider_json)]
+      | _ -> fields
+    in
+    (loc, Hh_json.json_to_string (Hh_json.JSON_Object fields))
   in
   Base.List.map types ~f:print_type_json |> concretize_loc_pairs |> sort_loc_pairs
 
