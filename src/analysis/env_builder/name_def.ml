@@ -2646,6 +2646,34 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
         default;
       super#import_declaration loc decl
 
+    method! import_equals_declaration _loc decl =
+      let open Ast.Statement.ImportEqualsDeclaration in
+      let {
+        id = (id_loc, { Ast.Identifier.name = local_name; _ });
+        module_reference;
+        import_kind;
+        is_export = _;
+        comments = _;
+      } =
+        decl
+      in
+      (match module_reference with
+      | ExternalModuleReference (source_loc, { Ast.StringLiteral.value = source; _ }) ->
+        let import_reason =
+          mk_reason
+            (RDefaultImportedType (local_name, Flow_import_specifier.userland source))
+            id_loc
+        in
+        this#add_ordinary_binding
+          id_loc
+          import_reason
+          (Import { import_kind; source; source_loc; import = Default local_name })
+      | Identifier _ ->
+        (* import Foo = A.B.C: qualified name access is not resolved through
+           name_def/env_resolution. The binding is handled by the type_sig layer. *)
+        ());
+      decl
+
     method! call loc _ = fail loc "Should be visited by visit_call_expression"
 
     method private visit_call_expression ~hints ~cond ~visit_callee loc expr =

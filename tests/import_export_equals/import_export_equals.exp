@@ -1,0 +1,19 @@
+Error --------------------------------------------------------------------------------- import_equals_declaration.js:5:1
+
+Cannot cast `Foo.x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   import_equals_declaration.js:5:1
+   5| Foo.x as empty; // ERROR
+      ^^^^^
+
+References:
+   export_assignment.js:1:14
+   1| export = {x: 42, y: "hello"};
+                   ^^ [1]
+   import_equals_declaration.js:5:10
+   5| Foo.x as empty; // ERROR
+               ^^^^^ [2]
+
+
+
+Found 1 error

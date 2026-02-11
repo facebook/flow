@@ -176,6 +176,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
   | (_, RecordDeclaration _)
   | (_, DeclareModule _)
   | (_, ImportDeclaration _)
+  | (_, ImportEqualsDeclaration _)
   | (_, DeclareNamespace { DeclareNamespace.id = DeclareNamespace.Global _; _ }) ->
     ()
   | (_, DeclareTypeAlias { TypeAlias.id; _ })
@@ -319,6 +320,8 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
       DeclareModuleExports
         { Ast.Statement.DeclareModuleExports.annot = (exports_loc, ((_, t), _)); comments = _ }
     ) ->
+    Module_info.cjs_mod_export info (fun _ -> Module_info.CJSModuleExports (exports_loc, t))
+  | (_, ExportAssignment { ExportAssignment.expression = ((exports_loc, t), _); comments = _ }) ->
     Module_info.cjs_mod_export info (fun _ -> Module_info.CJSModuleExports (exports_loc, t))
   | ( loc,
       ExportNamedDeclaration

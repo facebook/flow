@@ -29,3 +29,11 @@ namespace ImplicitNS { // ERROR
 declare export namespace ExportedNS { // ERROR
   declare const y: string;
 }
+
+// Export assignment
+export = foo; // ERROR
+
+// Import equals declaration
+import A = require("./exports"); // ERROR
+import type B = require("./exports"); // ERROR
+import C = Foo.Bar; // ERROR

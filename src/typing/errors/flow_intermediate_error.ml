@@ -5153,6 +5153,9 @@ let to_printable_error :
         | DeclarationWithoutDeclare -> "Declaration without `declare`"
         | ImportTypeAnnotation -> "`import(\"module\")` type syntax"
         | DeclareExportNamespace -> "`declare export namespace`"
+        | ExportAssignment -> "`export =` syntax"
+        | ImportEqualsDeclaration -> "`import ... = ...` syntax"
+        | ImportEqualsQualifiedName -> "`import ... = <QualifiedName>` syntax"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

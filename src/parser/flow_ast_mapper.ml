@@ -168,6 +168,8 @@ class ['loc] mapper =
         id_loc this#export_named_declaration loc decl stmt (fun decl ->
             (loc, ExportNamedDeclaration decl)
         )
+      | (loc, ExportAssignment assign) ->
+        id_loc this#export_assignment loc assign stmt (fun assign -> (loc, ExportAssignment assign))
       | (loc, Expression expr) ->
         id_loc this#expression_statement loc expr stmt (fun expr -> (loc, Expression expr))
       | (loc, For for_stmt) ->
@@ -182,6 +184,10 @@ class ['loc] mapper =
         id_loc this#if_statement loc if_stmt stmt (fun if_stmt -> (loc, If if_stmt))
       | (loc, ImportDeclaration decl) ->
         id_loc this#import_declaration loc decl stmt (fun decl -> (loc, ImportDeclaration decl))
+      | (loc, ImportEqualsDeclaration decl) ->
+        id_loc this#import_equals_declaration loc decl stmt (fun decl ->
+            (loc, ImportEqualsDeclaration decl)
+        )
       | (loc, InterfaceDeclaration stuff) ->
         id_loc this#interface_declaration loc stuff stmt (fun stuff ->
             (loc, InterfaceDeclaration stuff)
@@ -1321,6 +1327,16 @@ class ['loc] mapper =
       else
         { value; raw; comments = comments' }
 
+    method export_assignment _loc (assign : ('loc, 'loc) Ast.Statement.ExportAssignment.t) =
+      let open Ast.Statement.ExportAssignment in
+      let { expression = expr; comments } = assign in
+      let expr' = this#expression expr in
+      let comments' = this#syntax_opt comments in
+      if expr == expr' && comments == comments' then
+        assign
+      else
+        { expression = expr'; comments = comments' }
+
     method expression_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Expression.t) =
       let open Ast.Statement.Expression in
       let { expression = expr; directive; comments } = stmt in
@@ -2386,6 +2402,43 @@ class ['loc] mapper =
         source
       else
         { value; raw; comments = comments' }
+
+    method import_equals_declaration
+        _loc (decl : ('loc, 'loc) Ast.Statement.ImportEqualsDeclaration.t) =
+      let open Ast.Statement.ImportEqualsDeclaration in
+      let { id = ident; module_reference; import_kind; is_export; comments } = decl in
+      let ident' =
+        let open Ast.Statement.ImportDeclaration in
+        match import_kind with
+        | ImportType
+        | ImportTypeof ->
+          this#binding_type_identifier ident
+        | ImportValue -> this#pattern_identifier ~kind:Ast.Variable.Let ident
+      in
+      let module_reference' = this#import_equals_module_reference module_reference in
+      let comments' = this#syntax_opt comments in
+      if ident == ident' && module_reference == module_reference' && comments == comments' then
+        decl
+      else
+        {
+          id = ident';
+          module_reference = module_reference';
+          import_kind;
+          is_export;
+          comments = comments';
+        }
+
+    method import_equals_module_reference
+        (ref : ('loc, 'loc) Ast.Statement.ImportEqualsDeclaration.module_reference) =
+      let open Ast.Statement.ImportEqualsDeclaration in
+      match ref with
+      | ExternalModuleReference (annot, lit) ->
+        let lit' = this#string_literal lit in
+        if lit == lit' then
+          ref
+        else
+          ExternalModuleReference (annot, lit')
+      | Identifier ident -> id this#generic_identifier_type ident ref (fun ident -> Identifier ident)
 
     method import_attributes
         _loc (attrs : ('loc, 'loc) Ast.Statement.ImportDeclaration.import_attribute list) =

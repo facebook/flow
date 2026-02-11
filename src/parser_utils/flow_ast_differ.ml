@@ -380,6 +380,7 @@ let is_import_stmt (stmt : (Loc.t, Loc.t) Ast.Statement.t) =
   let open Ast.Statement.VariableDeclaration.Declarator in
   match stmt with
   | (_, Ast.Statement.ImportDeclaration _) -> true
+  | (_, Ast.Statement.ImportEqualsDeclaration _) -> true
   | (_, Ast.Statement.Expression { expression = expr; _ }) -> is_import_expr expr
   | (_, Ast.Statement.VariableDeclaration { declarations = decs; _ }) ->
     List.exists
@@ -671,6 +672,9 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         enum_declaration loc enum1 enum2
       | ((loc, Match m1), (_, Match m2)) -> match_statement loc m1 m2
       | ((loc, Empty empty1), (_, Empty empty2)) -> empty_statement loc empty1 empty2
+      | ((loc, ExportAssignment a1), (_, ExportAssignment a2)) -> Some (export_assignment loc a1 a2)
+      | ((loc, ImportEqualsDeclaration d1), (_, ImportEqualsDeclaration d2)) ->
+        import_equals_declaration loc d1 d2
       | (_, _) -> None
     in
     let old_loc = Ast_utils.loc_of_statement stmt1 in
@@ -4119,6 +4123,38 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     in
     let comments = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
     comments @ name
+  and export_assignment
+      (loc : Loc.t)
+      (a1 : (Loc.t, Loc.t) Ast.Statement.ExportAssignment.t)
+      (a2 : (Loc.t, Loc.t) Ast.Statement.ExportAssignment.t) : node change list =
+    let open Ast.Statement.ExportAssignment in
+    let { expression = expr1; comments = comments1 } = a1 in
+    let { expression = expr2; comments = comments2 } = a2 in
+    let expr_diff =
+      diff_if_changed
+        (expression ~parent:(StatementParentOfExpression (loc, Ast.Statement.ExportAssignment a2)))
+        expr1
+        expr2
+    in
+    let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    expr_diff @ comments_diff
+  and import_equals_declaration
+      (loc : Loc.t)
+      (d1 : (Loc.t, Loc.t) Ast.Statement.ImportEqualsDeclaration.t)
+      (d2 : (Loc.t, Loc.t) Ast.Statement.ImportEqualsDeclaration.t) : node change list option =
+    let open Ast.Statement.ImportEqualsDeclaration in
+    let { id = id1; module_reference = mr1; import_kind = ik1; is_export = ie1; comments = c1 } =
+      d1
+    in
+    let { id = id2; module_reference = mr2; import_kind = ik2; is_export = ie2; comments = c2 } =
+      d2
+    in
+    if ik1 <> ik2 || ie1 <> ie2 || mr1 <> mr2 then
+      None
+    else
+      let id_diff = diff_if_changed identifier id1 id2 in
+      let comments_diff = syntax_opt loc c1 c2 |> Base.Option.value ~default:[] in
+      Some (id_diff @ comments_diff)
   and empty_statement
       (loc : Loc.t) (empty1 : Loc.t Ast.Statement.Empty.t) (empty2 : Loc.t Ast.Statement.Empty.t) :
       node change list option =

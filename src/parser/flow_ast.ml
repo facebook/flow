@@ -1236,6 +1236,14 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module ExportAssignment : sig
+    type ('M, 'T) t = {
+      expression: ('M, 'T) Expression.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module ExportNamedDeclaration : sig
     module ExportSpecifier : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
@@ -1361,6 +1369,21 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module ImportEqualsDeclaration : sig
+    type ('M, 'T) module_reference =
+      | ExternalModuleReference of ('T * 'M StringLiteral.t)
+      | Identifier of ('M, 'T) Type.Generic.Identifier.t
+
+    and ('M, 'T) t = {
+      id: ('M, 'T) Identifier.t;
+      module_reference: ('M, 'T) module_reference;
+      import_kind: ImportDeclaration.import_kind;
+      is_export: bool;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module Expression : sig
     type ('M, 'T) t = {
       expression: ('M, 'T) Expression.t;
@@ -1404,6 +1427,7 @@ and Statement : sig
     | EnumDeclaration of ('M, 'T) EnumDeclaration.t
     | ExportDefaultDeclaration of ('M, 'T) ExportDefaultDeclaration.t
     | ExportNamedDeclaration of ('M, 'T) ExportNamedDeclaration.t
+    | ExportAssignment of ('M, 'T) ExportAssignment.t
     | Expression of ('M, 'T) Expression.t
     | For of ('M, 'T) For.t
     | ForIn of ('M, 'T) ForIn.t
@@ -1411,6 +1435,7 @@ and Statement : sig
     | FunctionDeclaration of ('M, 'T) Function.t
     | If of ('M, 'T) If.t
     | ImportDeclaration of ('M, 'T) ImportDeclaration.t
+    | ImportEqualsDeclaration of ('M, 'T) ImportEqualsDeclaration.t
     | InterfaceDeclaration of ('M, 'T) Interface.t
     | Labeled of ('M, 'T) Labeled.t
     | Match of ('M, 'T) match_statement

@@ -932,8 +932,10 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
                statement_after_test ~opts ~pretty_semicolon body;
              ]
       | S.ImportDeclaration import -> import_declaration ~opts loc import
+      | S.ImportEqualsDeclaration import_eq -> import_equals_declaration ~opts loc import_eq
       | S.ExportNamedDeclaration export -> export_declaration ~opts loc export
       | S.ExportDefaultDeclaration export -> export_default_declaration ~opts loc export
+      | S.ExportAssignment assign -> export_assignment ~opts loc assign
       | S.TypeAlias typeAlias -> type_alias ~opts ~declare:false loc typeAlias
       | S.OpaqueType opaqueType -> opaque_type ~opts ~declare:false loc opaqueType
       | S.InterfaceDeclaration interface -> interface_declaration ~opts loc interface
@@ -3725,6 +3727,67 @@ and export_default_declaration
          | Expression expr -> with_semicolon (expression ~opts expr)
          );
        ]
+
+and export_assignment ~opts loc { Ast.Statement.ExportAssignment.expression = expr; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ with_semicolon
+       (fuse [Atom "export"; pretty_space; Atom "="; pretty_space; expression ~opts expr])
+
+and import_equals_declaration
+    ~opts
+    loc
+    {
+      Ast.Statement.ImportEqualsDeclaration.id = ident;
+      module_reference;
+      import_kind;
+      is_export;
+      comments;
+    } =
+  let module I = Ast.Statement.ImportDeclaration in
+  let module IE = Ast.Statement.ImportEqualsDeclaration in
+  let module GI = Ast.Type.Generic.Identifier in
+  let module_ref_layout =
+    match module_reference with
+    | IE.ExternalModuleReference (ref_loc, lit) ->
+      fuse [Atom "require"; Atom "("; string_literal ~opts ref_loc lit; Atom ")"]
+    | IE.Identifier git ->
+      let rec generic_identifier = function
+        | GI.Unqualified id -> identifier id
+        | GI.Qualified (loc, { GI.qualification; id }) ->
+          source_location_with_comments
+            (loc, fuse [generic_identifier qualification; Atom "."; identifier id])
+        | GI.ImportTypeAnnot (loc, { GI.argument = (arg_loc, arg); comments }) ->
+          layout_node_with_comments_opt
+            loc
+            comments
+            (fuse [Atom "import"; Atom "("; string_literal ~opts arg_loc arg; Atom ")"])
+      in
+      generic_identifier git
+  in
+  layout_node_with_comments_opt loc comments
+  @@ with_semicolon
+       (fuse
+          [
+            ( if is_export then
+              fuse [Atom "export"; space]
+            else
+              Empty
+            );
+            Atom "import";
+            begin
+              match import_kind with
+              | I.ImportType -> fuse [space; Atom "type"]
+              | I.ImportTypeof -> fuse [space; Atom "typeof"]
+              | I.ImportValue -> Empty
+            end;
+            space;
+            identifier ident;
+            pretty_space;
+            Atom "=";
+            pretty_space;
+            module_ref_layout;
+          ]
+       )
 
 and variance (loc, { Ast.Variance.kind; comments }) =
   source_location_with_comments

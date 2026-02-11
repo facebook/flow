@@ -5180,6 +5180,37 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.DeclareModuleExports { S.DeclareModuleExports.annot = (_, t); comments = _ } ->
     let t = annot opts scope tbls SSet.empty t in
     Scope.cjs_clobber scope t
+  | S.ExportAssignment { S.ExportAssignment.expression = e; comments = _ } ->
+    let t = expression opts scope tbls e in
+    Scope.cjs_clobber scope t
+  | S.ImportEqualsDeclaration
+      { S.ImportEqualsDeclaration.id; module_reference; import_kind; is_export; comments = _ } ->
+    let (id_loc, { Ast.Identifier.name = local; comments = _ }) = id in
+    let id_loc = push_loc tbls id_loc in
+    (match module_reference with
+    | S.ImportEqualsDeclaration.ExternalModuleReference (_, { Ast.StringLiteral.value = mref; _ })
+      ->
+      let mref = Flow_import_specifier.userland mref in
+      Scope.bind_import scope tbls import_kind id_loc ~local ~remote:"default" mref;
+      if is_export then
+        let export_kind =
+          match import_kind with
+          | S.ImportDeclaration.ImportType -> Ast.Statement.ExportType
+          | _ -> Ast.Statement.ExportValue
+        in
+        Scope.export_ref scope tbls export_kind ~local:id ~exported:None
+    | S.ImportEqualsDeclaration.Identifier _ ->
+      (* import Foo = A.B.C: qualified name form is not supported;
+         bind as any so downstream code doesn't break. *)
+      let def = lazy (Annot (Any id_loc)) in
+      Scope.bind_var scope tbls Ast.Variable.Const id_loc local def ignore2;
+      if is_export then
+        let export_kind =
+          match import_kind with
+          | S.ImportDeclaration.ImportType -> Ast.Statement.ExportType
+          | _ -> Ast.Statement.ExportValue
+        in
+        Scope.export_ref scope tbls export_kind ~local:id ~exported:None)
   | S.DeclareModule { S.DeclareModule.id; body; comments = _ } ->
     let (loc, name) =
       match id with

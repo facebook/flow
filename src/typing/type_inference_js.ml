@@ -450,6 +450,7 @@ class lib_def_loc_mapper_and_validator cx =
       | DeclareInterface _
       | DeclareModule _
       | DeclareModuleExports _
+      | ExportAssignment _
       | DeclareTypeAlias _
       | DeclareOpaqueType _
       | DeclareVariable _
@@ -465,6 +466,18 @@ class lib_def_loc_mapper_and_validator cx =
       | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportValue; _ } ->
         Some (error "value export")
       | ImportDeclaration _ ->
+        if in_toplevel_scope then
+          Some
+            (Error_message.EUnsupportedSyntax
+               ( loc,
+                 Flow_intermediate_error_types.(
+                   ContextDependentUnsupportedStatement ToplevelLibraryImport
+                 )
+               )
+            )
+        else
+          None
+      | ImportEqualsDeclaration _ ->
         if in_toplevel_scope then
           Some
             (Error_message.EUnsupportedSyntax

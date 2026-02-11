@@ -58,6 +58,9 @@ let replace_comments_of_statement ~comments =
       | DeclareOpaqueType x -> DeclareOpaqueType OpaqueType.{ x with comments }
       | DeclareInterface x -> DeclareInterface Interface.{ x with comments }
       | DeclareEnum x -> DeclareEnum EnumDeclaration.{ x with comments }
+      | ExportAssignment x -> ExportAssignment ExportAssignment.{ x with comments }
+      | ImportEqualsDeclaration x ->
+        ImportEqualsDeclaration ImportEqualsDeclaration.{ x with comments }
       | ( Block _ | Break _ | Continue _ | Debugger _ | DeclareExportDeclaration _ | DeclareModule _
         | DeclareModuleExports _ | DeclareNamespace _ | DoWhile _ | Empty _
         | ExportDefaultDeclaration _ | ExportNamedDeclaration _ | Expression _ | For _ | ForIn _

@@ -1994,6 +1994,19 @@ module Make
       ( loc,
         DeclareModuleExports { Ast.Statement.DeclareModuleExports.annot = (t_loc, t_ast); comments }
       )
+    | (loc, ExportAssignment _) as s when not (Context.tslib_syntax cx) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EUnsupportedSyntax
+           ( loc,
+             Flow_intermediate_error_types.TSLibSyntax
+               Flow_intermediate_error_types.ExportAssignment
+           )
+        );
+      Tast_utils.error_mapper#statement s
+    | (loc, ExportAssignment { Ast.Statement.ExportAssignment.expression = e; comments }) ->
+      let expr = expression cx e in
+      (loc, ExportAssignment { Ast.Statement.ExportAssignment.expression = expr; comments })
     | ( loc,
         ExportNamedDeclaration
           ( { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ } as
@@ -2208,6 +2221,72 @@ module Make
             comments;
           }
       )
+    | (loc, ImportEqualsDeclaration _) as s when not (Context.tslib_syntax cx) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EUnsupportedSyntax
+           ( loc,
+             Flow_intermediate_error_types.TSLibSyntax
+               Flow_intermediate_error_types.ImportEqualsDeclaration
+           )
+        );
+      Tast_utils.error_mapper#statement s
+    | (loc, ImportEqualsDeclaration import_decl) ->
+      let open Ast.Statement.ImportEqualsDeclaration in
+      let { id = (id_loc, id_ident); module_reference; import_kind; is_export; comments } =
+        import_decl
+      in
+      (match module_reference with
+      | ExternalModuleReference
+          (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) ->
+        let (perform_platform_validation, import_kind_for_untyped_import_validation) =
+          match import_kind with
+          | ImportDeclaration.ImportType -> (false, Some ImportType)
+          | ImportDeclaration.ImportTypeof -> (false, Some ImportTypeof)
+          | ImportDeclaration.ImportValue -> (true, Some ImportValue)
+        in
+        let module_name = Flow_import_specifier.userland module_name in
+        let source_module =
+          Flow_js_utils.ImportExportUtils.get_module_type_or_any
+            cx
+            ~import_kind_for_untyped_import_validation
+            (source_loc, module_name)
+            ~perform_platform_validation
+        in
+        let local_name = id_ident.Ast.Identifier.name in
+        let import_reason = mk_reason (RDefaultImportedType (local_name, module_name)) id_loc in
+        let (_remote_default_name_def_loc, imported_t) =
+          Flow_js_utils.ImportExportUtils.import_default_specifier_type
+            cx
+            import_reason
+            ~singleton_concretize_type_for_imports_exports:
+              Flow.singleton_concretize_type_for_imports_exports
+            ~import_kind
+            ~module_name
+            ~source_module
+            ~local_name
+        in
+        ( loc,
+          ImportEqualsDeclaration
+            {
+              id = ((id_loc, imported_t), id_ident);
+              module_reference =
+                ExternalModuleReference ((source_loc, StrModuleT.at source_loc), source_literal);
+              import_kind;
+              is_export;
+              comments;
+            }
+        )
+      | Identifier _ ->
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             ( loc,
+               Flow_intermediate_error_types.TSLibSyntax
+                 Flow_intermediate_error_types.ImportEqualsQualifiedName
+             )
+          );
+        Tast_utils.error_mapper#statement (loc, ImportEqualsDeclaration import_decl))
 
   and statement_list cx stmts =
     Base.List.map stmts ~f:(fun stmt ->

@@ -432,6 +432,8 @@ with type t = Impl.t = struct
             ("declaration", declaration);
             ("exportKind", string (string_of_export_kind Statement.ExportValue));
           ]
+      | (loc, ExportAssignment { ExportAssignment.expression = expr; comments }) ->
+        node ?comments "ExportAssignment" loc [("expression", expression expr)]
       | ( loc,
           ImportDeclaration
             { ImportDeclaration.specifiers; default; import_kind; source; attributes; comments }
@@ -473,6 +475,49 @@ with type t = Impl.t = struct
            ]
           @ attributes_json
           )
+      | ( loc,
+          ImportEqualsDeclaration
+            {
+              ImportEqualsDeclaration.id = ident;
+              module_reference;
+              import_kind;
+              is_export;
+              comments;
+            }
+        ) ->
+        let module_reference_json =
+          let open ImportEqualsDeclaration in
+          match module_reference with
+          | ExternalModuleReference (annot_loc, lit) ->
+            node
+              "ExternalModuleReference"
+              annot_loc
+              [("expression", string_literal (annot_loc, lit))]
+          | Identifier git ->
+            let open Type.Generic.Identifier in
+            let generic_id = function
+              | Unqualified id -> identifier id
+              | Qualified q -> generic_type_qualified_identifier q
+              | ImportTypeAnnot it -> import_type it
+            in
+            generic_id git
+        in
+        let import_kind_str =
+          match import_kind with
+          | ImportDeclaration.ImportType -> "type"
+          | ImportDeclaration.ImportTypeof -> "typeof"
+          | ImportDeclaration.ImportValue -> "value"
+        in
+        node
+          ?comments
+          "ImportEqualsDeclaration"
+          loc
+          [
+            ("id", identifier ident);
+            ("moduleReference", module_reference_json);
+            ("importKind", string import_kind_str);
+            ("isExport", bool is_export);
+          ]
     and expression =
       let open Expression in
       function

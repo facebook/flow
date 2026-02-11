@@ -115,6 +115,9 @@ and ts_lib_syntax_kind =
   | DeclarationWithoutDeclare
   | ImportTypeAnnotation
   | DeclareExportNamespace
+  | ExportAssignment
+  | ImportEqualsDeclaration
+  | ImportEqualsQualifiedName
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

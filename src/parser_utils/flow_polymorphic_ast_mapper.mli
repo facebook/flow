@@ -297,6 +297,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M, 'T) Ast.Statement.ExportNamedDeclaration.t ->
       ('N, 'U) Ast.Statement.ExportNamedDeclaration.t
 
+    method export_assignment :
+      ('M, 'T) Ast.Statement.ExportAssignment.t -> ('N, 'U) Ast.Statement.ExportAssignment.t
+
     method export_named_specifier :
       ('M, 'T) Ast.Statement.ExportNamedDeclaration.specifier ->
       ('N, 'U) Ast.Statement.ExportNamedDeclaration.specifier
@@ -435,6 +438,14 @@ class virtual ['M, 'T, 'N, 'U] mapper :
 
     method import_declaration :
       'M -> ('M, 'T) Ast.Statement.ImportDeclaration.t -> ('N, 'U) Ast.Statement.ImportDeclaration.t
+
+    method import_equals_declaration :
+      ('M, 'T) Ast.Statement.ImportEqualsDeclaration.t ->
+      ('N, 'U) Ast.Statement.ImportEqualsDeclaration.t
+
+    method import_equals_module_reference :
+      ('M, 'T) Ast.Statement.ImportEqualsDeclaration.module_reference ->
+      ('N, 'U) Ast.Statement.ImportEqualsDeclaration.module_reference
 
     method import_default_specifier :
       import_kind:Ast.Statement.ImportDeclaration.import_kind ->

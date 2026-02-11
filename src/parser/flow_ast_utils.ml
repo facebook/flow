@@ -447,7 +447,9 @@ let acceptable_statement_in_declaration_context ~in_declare_namespace =
   | DeclareVariable _
   | Empty _
   | EnumDeclaration _
+  | ExportAssignment _
   | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportType; _ }
+  | ImportEqualsDeclaration _
   | InterfaceDeclaration _
   | OpaqueType _
   | TypeAlias _ ->
@@ -486,6 +488,7 @@ let rec is_type_only_declaration_statement (_, stmt') =
     | Debugger _
     | DoWhile _
     | EnumDeclaration _
+    | ExportAssignment _
     | ExportDefaultDeclaration _
     | Expression _
     | For _
@@ -493,6 +496,7 @@ let rec is_type_only_declaration_statement (_, stmt') =
     | ForOf _
     | FunctionDeclaration _
     | If _
+    | ImportEqualsDeclaration _
     | Labeled _
     | Match _
     | RecordDeclaration _

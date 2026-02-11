@@ -1,0 +1,1 @@
+import Foo = require("foo");

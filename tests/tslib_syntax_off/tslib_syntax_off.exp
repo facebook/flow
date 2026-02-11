@@ -85,5 +85,37 @@ Error --------------------------------------------------------------------------
        ^
 
 
+Error ------------------------------------------------------------------------------------------------ test.js.flow:34:1
 
-Found 10 errors
+`export =` syntax is not enabled. [unsupported-syntax]
+
+   34| export = foo; // ERROR
+       ^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ test.js.flow:37:1
+
+`import ... = ...` syntax is not enabled. [unsupported-syntax]
+
+   37| import A = require("./exports"); // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ test.js.flow:38:1
+
+`import ... = ...` syntax is not enabled. [unsupported-syntax]
+
+   38| import type B = require("./exports"); // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------------------ test.js.flow:39:1
+
+`import ... = ...` syntax is not enabled. [unsupported-syntax]
+
+   39| import C = Foo.Bar; // ERROR
+       ^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 14 errors

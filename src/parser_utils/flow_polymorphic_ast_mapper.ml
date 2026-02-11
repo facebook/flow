@@ -67,6 +67,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           ExportDefaultDeclaration (this#export_default_declaration annot decl)
         | ExportNamedDeclaration decl ->
           ExportNamedDeclaration (this#export_named_declaration annot decl)
+        | ExportAssignment assign -> ExportAssignment (this#export_assignment assign)
         | Expression expr -> Expression (this#expression_statement expr)
         | For for_stmt -> For (this#for_statement for_stmt)
         | ForIn stuff -> ForIn (this#for_in_statement stuff)
@@ -74,6 +75,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | FunctionDeclaration func -> FunctionDeclaration (this#function_declaration func)
         | If if_stmt -> If (this#if_statement if_stmt)
         | ImportDeclaration decl -> ImportDeclaration (this#import_declaration annot decl)
+        | ImportEqualsDeclaration decl ->
+          ImportEqualsDeclaration (this#import_equals_declaration decl)
         | InterfaceDeclaration stuff -> InterfaceDeclaration (this#interface_declaration annot stuff)
         | Labeled label -> Labeled (this#labeled_statement label)
         | Match x -> Match (this#match_statement x)
@@ -994,6 +997,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let annot' = this#on_loc_annot annot in
       let name' = Option.map ~f:this#t_identifier name in
       (annot', name')
+
+    method export_assignment (assign : ('M, 'T) Ast.Statement.ExportAssignment.t)
+        : ('N, 'U) Ast.Statement.ExportAssignment.t =
+      let open Ast.Statement.ExportAssignment in
+      let { expression = expr; comments } = assign in
+      let expression' = this#expression expr in
+      let comments' = this#syntax_opt comments in
+      { expression = expression'; comments = comments' }
 
     method expression_statement (stmt : ('M, 'T) Ast.Statement.Expression.t)
         : ('N, 'U) Ast.Statement.Expression.t =
@@ -1939,6 +1950,30 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       }
 
     method import_source _loc source = this#string_literal source
+
+    method import_equals_declaration (decl : ('M, 'T) Ast.Statement.ImportEqualsDeclaration.t)
+        : ('N, 'U) Ast.Statement.ImportEqualsDeclaration.t =
+      let open Ast.Statement.ImportEqualsDeclaration in
+      let { id = ident; module_reference; import_kind; is_export; comments } = decl in
+      let id' = this#t_identifier ident in
+      let module_reference' = this#import_equals_module_reference module_reference in
+      let comments' = this#syntax_opt comments in
+      {
+        id = id';
+        module_reference = module_reference';
+        import_kind;
+        is_export;
+        comments = comments';
+      }
+
+    method import_equals_module_reference
+        (ref : ('M, 'T) Ast.Statement.ImportEqualsDeclaration.module_reference)
+        : ('N, 'U) Ast.Statement.ImportEqualsDeclaration.module_reference =
+      let open Ast.Statement.ImportEqualsDeclaration in
+      match ref with
+      | ExternalModuleReference (annot, lit) ->
+        ExternalModuleReference (this#on_type_annot annot, this#string_literal lit)
+      | Identifier ident -> Identifier (this#generic_identifier_type ident)
 
     method import_attribute_key
         (key : ('M, 'T) Ast.Statement.ImportDeclaration.import_attribute_key)

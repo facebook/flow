@@ -568,6 +568,8 @@ let statement_add_comments
         { s with ExportDefaultDeclaration.comments = merge_comments comments }
     | ExportNamedDeclaration ({ ExportNamedDeclaration.comments; _ } as s) ->
       ExportNamedDeclaration { s with ExportNamedDeclaration.comments = merge_comments comments }
+    | ExportAssignment ({ ExportAssignment.comments; _ } as s) ->
+      ExportAssignment { s with ExportAssignment.comments = merge_comments comments }
     | Expression ({ Expression.comments; _ } as s) ->
       Expression { s with Expression.comments = merge_comments comments }
     | For ({ For.comments; _ } as s) -> For { s with For.comments = merge_comments comments }
@@ -580,6 +582,8 @@ let statement_add_comments
     | If ({ If.comments; _ } as s) -> If { s with If.comments = merge_comments comments }
     | ImportDeclaration ({ ImportDeclaration.comments; _ } as s) ->
       ImportDeclaration { s with ImportDeclaration.comments = merge_comments comments }
+    | ImportEqualsDeclaration ({ ImportEqualsDeclaration.comments; _ } as s) ->
+      ImportEqualsDeclaration { s with ImportEqualsDeclaration.comments = merge_comments comments }
     | InterfaceDeclaration ({ Interface.comments; _ } as s) ->
       InterfaceDeclaration { s with Interface.comments = merge_comments comments }
     | Labeled ({ Labeled.comments; _ } as s) ->

@@ -642,6 +642,16 @@ class requires_calculator ~file_key ~ast ~opts =
           this#add_require (Import0 { source = (source_loc, name) })
         | _ -> ()
 
+    method! import_equals_declaration
+        _loc (decl : (Loc.t, Loc.t) Ast.Statement.ImportEqualsDeclaration.t) =
+      let open Ast.Statement.ImportEqualsDeclaration in
+      let { module_reference; id = _; import_kind = _; is_export = _; comments = _ } = decl in
+      (match module_reference with
+      | ExternalModuleReference (source_loc, { Ast.StringLiteral.value = name; _ }) ->
+        this#add_require (Import0 { source = (source_loc, name) })
+      | Identifier _ -> ());
+      decl
+
     (* skip declare module *)
     method! declare_module _loc (m : (Loc.t, Loc.t) Ast.Statement.DeclareModule.t) = m
   end

@@ -1637,12 +1637,98 @@ module Statement
           assert_identifier_name_is_identifier ~restricted_error:Parse_error.StrictVarName env id)
       specifiers
 
+  (* Parse the module_reference part of an ImportEqualsDeclaration:
+     either `require("module")` or a qualified name like `A.B.C` *)
+  and import_equals_module_reference env =
+    match Peek.token env with
+    | T_IDENTIFIER { raw = "require"; _ } when Peek.ith_token ~i:1 env = T_LPAREN ->
+      (* require("module") *)
+      Eat.token env;
+      (* consume 'require' *)
+      Expect.token env T_LPAREN;
+      let source =
+        match Peek.token env with
+        | T_STRING str -> string_literal env str
+        | _ ->
+          error_unexpected ~expected:"a string" env;
+          let loc = Peek.loc_skip_lookahead env in
+          (loc, { StringLiteral.value = ""; raw = ""; comments = None })
+      in
+      Expect.token env T_RPAREN;
+      Statement.ImportEqualsDeclaration.ExternalModuleReference source
+    | _ ->
+      (* Qualified name like A.B.C *)
+      let (_loc, { Ast.Type.Generic.id; targs = _; comments = _ }) = Type.generic env in
+      Statement.ImportEqualsDeclaration.Identifier id
+
+  (* Parse an ImportEqualsDeclaration: `import [type] Foo = require("module")` or `import [type] Foo = A.B.C` *)
+  and import_equals_declaration ~import_kind ~is_export ~leading env =
+    let id = Parse.identifier env in
+    Expect.token env T_ASSIGN;
+    let module_reference = import_equals_module_reference env in
+    let trailing =
+      match semicolon env with
+      | Explicit trailing -> trailing
+      | Implicit { trailing; _ } -> trailing
+    in
+    Statement.ImportEqualsDeclaration
+      {
+        Statement.ImportEqualsDeclaration.id;
+        module_reference;
+        import_kind;
+        is_export;
+        comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+      }
+
   and export_declaration ~decorators env =
     let env = env |> with_strict true |> with_in_export true in
     let leading = Peek.comments env in
     let start_loc = Peek.loc env in
     Expect.token env T_EXPORT;
     match Peek.token env with
+    | T_ASSIGN ->
+      (* export = expr; *)
+      with_loc
+        ~start_loc
+        (fun env ->
+          Eat.token env;
+          let expression = Parse.assignment env in
+          let trailing =
+            match semicolon env with
+            | Explicit trailing -> trailing
+            | Implicit { trailing; _ } -> trailing
+          in
+          Statement.ExportAssignment
+            {
+              Statement.ExportAssignment.expression;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            })
+        env
+    | T_IMPORT when Peek.ith_is_identifier ~i:1 env ->
+      (* export import [type] Foo = ...; *)
+      with_loc
+        ~start_loc
+        (fun env ->
+          let leading = leading @ Peek.comments env in
+          Eat.token env;
+          let import_kind =
+            match Peek.token env with
+            | T_TYPE -> begin
+              match Peek.ith_token ~i:1 env with
+              (* `export import type, ...` or `export import type from ...` or
+                 `export import type = ...` means 'type' is the binding name, not a keyword *)
+              | T_COMMA
+              | T_ASSIGN
+              | T_IDENTIFIER { raw = "from"; _ } ->
+                Statement.ImportDeclaration.ImportValue
+              | _ ->
+                Eat.token env;
+                Statement.ImportDeclaration.ImportType
+            end
+            | _ -> Statement.ImportDeclaration.ImportValue
+          in
+          import_equals_declaration ~import_kind ~is_export:true ~leading env)
+        env
     | T_DEFAULT ->
       (* export default ... *)
       with_loc
@@ -2319,7 +2405,7 @@ module Statement
             "a declaration, export specifier, or export batch specifier after 'declare export'")
       env
 
-  and import_declaration =
+  and import_declaration env =
     Statement.ImportDeclaration.(
       let missing_source env =
         (* Just make up a string for the error case *)
@@ -2646,7 +2732,8 @@ module Statement
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }
       in
-      with_loc (fun env ->
+      with_loc
+        (fun env ->
           let env = env |> with_strict true in
           let leading = Peek.comments env in
           Expect.token env T_IMPORT;
@@ -2680,6 +2767,10 @@ module Statement
             | T_IDENTIFIER { raw = "from"; _ } ->
               (* Importing the exported value named "type". This is not a type-import.*)
               with_default ImportValue env leading
+            (* `import type = ...`: 'type' is the binding name, not a keyword *)
+            | T_ASSIGN ->
+              import_equals_declaration ~import_kind:ImportValue ~is_export:false ~leading env
+            (* `import type *` is invalid, since the namespace can't be a type *)
             | T_MULT ->
               (* consume `type` *)
               Eat.token env;
@@ -2694,7 +2785,11 @@ module Statement
               (* consume `type` *)
               Eat.token env;
 
-              with_default ImportType env leading
+              (* Check for import type Foo = ... *)
+              if Peek.is_identifier env && Peek.ith_token ~i:1 env = T_ASSIGN then
+                import_equals_declaration ~import_kind:ImportType ~is_export:false ~leading env
+              else
+                with_default ImportType env leading
           end
           (* `import typeof ... from "ModuleName";` *)
           | T_TYPEOF when should_parse_types env ->
@@ -2706,8 +2801,13 @@ module Statement
                 with_specifiers ImportTypeof env leading
               | _ -> with_default ImportTypeof env leading
             end
-          (* import Foo from "ModuleName"; *)
-          | _ -> with_default ImportValue env leading
-      )
+          (* import Foo from "ModuleName"; or import Foo = ... *)
+          | _ ->
+            (* Check for import equals: import Foo = ... *)
+            if Peek.is_identifier env && Peek.ith_token ~i:1 env = T_ASSIGN then
+              import_equals_declaration ~import_kind:ImportValue ~is_export:false ~leading env
+            else
+              with_default ImportValue env leading)
+        env
     )
 end

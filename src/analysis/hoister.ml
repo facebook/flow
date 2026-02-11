@@ -79,6 +79,7 @@ class ['loc] lexical_hoister ~(enable_enums : bool) =
       | (_, ExportNamedDeclaration _)
       | (_, ExportDefaultDeclaration _)
       | (_, ImportDeclaration _)
+      | (_, ImportEqualsDeclaration _)
       | (_, Labeled _) ->
         super#statement stmt
       | (_, FunctionDeclaration _)
@@ -98,6 +99,7 @@ class ['loc] lexical_hoister ~(enable_enums : bool) =
       | (_, DeclareOpaqueType _)
       | (_, DoWhile _)
       | (_, Empty _)
+      | (_, ExportAssignment _)
       | (_, Expression _)
       | (_, For _)
       | (_, ForIn _)
@@ -377,6 +379,21 @@ class ['loc] hoister ~(enable_enums : bool) ~(with_types : bool) =
       | (false, ImportTypeof) ->
         decl
       | _ -> super#import_declaration loc decl
+
+    method! import_equals_declaration _loc decl =
+      let open Ast.Statement.ImportEqualsDeclaration in
+      let { id; import_kind; _ } = decl in
+      let open Ast.Statement.ImportDeclaration in
+      begin
+        match import_kind with
+        | ImportValue -> this#add_const_binding ~kind:Bindings.Import id
+        | ImportType
+        | ImportTypeof
+          when with_types ->
+          this#add_type_binding ~imported:true id
+        | _ -> ()
+      end;
+      decl
 
     method! import_named_specifier
         ~import_kind (specifier : ('loc, 'loc) Ast.Statement.ImportDeclaration.named_specifier) =

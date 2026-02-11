@@ -6773,3 +6773,114 @@ let%expect_test "record_disabled" =
     Local defs:
     0. DisabledRecordBinding {id_loc = [1:14-15]; name = "R"}
   |}]
+
+let%expect_test "export_assignment" =
+  print_sig {|
+    export = {a: 1, b: "hello"};
+  |};
+  [%expect {|
+    CJSModule {type_exports = [||];
+      exports =
+      (Some (Value
+               ObjLit {loc = [1:9-27];
+                 frozen = false; proto = None;
+                 props =
+                 { "a" ->
+                   (ObjValueField ([1:10-11], (
+                      Value (NumberLit ([1:13-14], 1., "1"))), Polarity.Neutral));
+                   "b" ->
+                   (ObjValueField ([1:16-17], (
+                      Value (StringLit ([1:19-26], "hello"))), Polarity.Neutral)) }}));
+      info =
+      CJSModuleInfo {type_export_keys = [||];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+  |}]
+
+let%expect_test "import_equals_require" =
+  print_sig {|
+    import Foo = require("foo");
+    export default (0: Foo);
+  |};
+  [%expect {|
+    ESModule {type_exports = [||];
+      exports =
+      [|ExportDefault {default_loc = [2:7-14];
+          def = (TyRef (Unqualified RemoteRef {ref_loc = [2:19-22]; index = 0}))}
+        |];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"default"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Module refs:
+    0. foo
+
+    Remote refs:
+    0. Import {id_loc = [1:7-10]; name = "Foo"; index = 0; remote = "default"}
+  |}]
+
+let%expect_test "import_type_equals_require" =
+  print_sig {|
+    import type Foo = require("foo");
+    export type T = Foo;
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"T"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Module refs:
+    0. foo
+
+    Local defs:
+    0. TypeAlias {id_loc = [2:12-13];
+         custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = (TyRef (Unqualified RemoteRef {ref_loc = [2:16-19]; index = 0}))}
+
+    Remote refs:
+    0. ImportType {id_loc = [1:12-15]; name = "Foo"; index = 0; remote = "default"}
+  |}]
+
+let%expect_test "export_import_equals_require" =
+  print_sig {|
+    export import Foo = require("foo");
+  |};
+  [%expect {|
+    ESModule {type_exports = [||];
+      exports = [|(ExportRef RemoteRef {ref_loc = [1:14-17]; index = 0})|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"Foo"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Module refs:
+    0. foo
+
+    Remote refs:
+    0. Import {id_loc = [1:14-17]; name = "Foo"; index = 0; remote = "default"}
+  |}]
+
+let%expect_test "import_equals_qualified_name" =
+  print_sig {|
+    import Foo = A.B.C;
+    export default (0: Foo);
+  |};
+  [%expect {|
+    ESModule {type_exports = [||];
+      exports =
+      [|ExportDefault {default_loc = [2:7-14];
+          def = (TyRef (Unqualified LocalRef {ref_loc = [2:19-22]; index = 0}))}
+        |];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"default"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. Variable {id_loc = [1:7-10]; name = "Foo"; def = (Annot (Any [1:7-10]))}
+  |}]

@@ -1,0 +1,35 @@
+{
+  "type":"Program",
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":33}},
+  "range":[0,33],
+  "body":[
+    {
+      "type":"ImportEqualsDeclaration",
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":33}},
+      "range":[0,33],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":1,"column":12},"end":{"line":1,"column":15}},
+        "range":[12,15],
+        "name":"Foo",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "moduleReference":{
+        "type":"ExternalModuleReference",
+        "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":31}},
+        "range":[26,31],
+        "expression":{
+          "type":"Literal",
+          "loc":{"source":null,"start":{"line":1,"column":26},"end":{"line":1,"column":31}},
+          "range":[26,31],
+          "value":"foo",
+          "raw":"\"foo\""
+        }
+      },
+      "importKind":"type",
+      "isExport":false
+    }
+  ],
+  "comments":[]
+}
