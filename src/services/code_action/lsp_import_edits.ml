@@ -313,6 +313,13 @@ let text_edits_of_import ~layout_options ~module_system_info ~src_dir ~ast kind 
   match from with
   | None -> None
   | Some from ->
+    (* Hardcode React default import to namespace import *)
+    let kind =
+      if kind = Export_index.Default && name = "React" && from = "react" then
+        Export_index.Namespace
+      else
+        kind
+    in
     let title =
       match kind with
       | Export_index.DefaultType -> Printf.sprintf "Import default type from %s" from
