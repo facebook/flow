@@ -458,9 +458,8 @@ let tests =
            let source = "import type * as Foo from 'foo'" in
            let requires = visit source |> File_sig.requires in
            match requires with
-           | [Import { source = (_, "foo"); ns; typesof_ns; _ }] ->
-             assert_equal ~ctxt None ns;
-             assert_equal ~ctxt None typesof_ns
+           | [Import { source = (_, "foo"); type_ns = Some (loc, "Foo"); _ }] ->
+             assert_substring_equal ~ctxt "Foo" source loc
            | _ -> assert_failure "Unexpected requires"
          );
          ( "export_star" >:: fun ctxt ->

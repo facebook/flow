@@ -51,6 +51,7 @@ and require =
       types: imported_locs Nel.t SMap.t SMap.t;
       typesof: imported_locs Nel.t SMap.t SMap.t;
       typesof_ns: Loc.t Ast_utils.ident option;
+      type_ns: Loc.t Ast_utils.ident option;
     }
   | ExportFrom of { source: Loc.t Flow_ast_utils.source }
 
@@ -405,6 +406,7 @@ class requires_calculator ~file_key ~ast ~opts =
           let types = ref SMap.empty in
           let typesof = ref SMap.empty in
           let typesof_ns = ref None in
+          let type_ns = ref None in
           let ref_of_kind = function
             | ImportType -> types
             | ImportTypeof -> typesof
@@ -438,9 +440,7 @@ class requires_calculator ~file_key ~ast ~opts =
               | ImportNamespaceSpecifier (_, (loc, { Ast.Identifier.name = local; comments = _ }))
                 ->
                 (match import_kind with
-                | ImportType ->
-                  (* this is a parse error. ignore it. *)
-                  ()
+                | ImportType -> set_ns local loc type_ns
                 | ImportTypeof -> set_ns local loc typesof_ns
                 | ImportValue -> set_ns local loc ns)
               | ImportNamedSpecifiers named_specifiers ->
@@ -476,6 +476,7 @@ class requires_calculator ~file_key ~ast ~opts =
               types = !types;
               typesof = !typesof;
               typesof_ns = !typesof_ns;
+              type_ns = !type_ns;
             }
       in
       this#add_require import;

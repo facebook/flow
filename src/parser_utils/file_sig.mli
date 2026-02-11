@@ -91,6 +91,10 @@ and require =
        * source: import typeof * as X from "foo";
        * result: loc, X *)
       typesof_ns: Loc.t Flow_ast_utils.ident option;
+      (* optional pair of location of namespace type import and local name
+       * source: import type * as X from "foo";
+       * result: loc, X *)
+      type_ns: Loc.t Flow_ast_utils.ident option;
     }
   | ExportFrom of { source: Loc.t Flow_ast_utils.source }
 

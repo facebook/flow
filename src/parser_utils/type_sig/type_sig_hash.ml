@@ -173,7 +173,8 @@ let visit_remote_ref edge dep_edge file = function
   | P.ImportTypeof { index; remote; _ } ->
     edge_import remote edge dep_edge file index
   | P.ImportTypeofNs { index; _ }
-  | P.ImportNs { index; _ } ->
+  | P.ImportNs { index; _ }
+  | P.ImportTypeNs { index; _ } ->
     edge_import_ns edge dep_edge file index
 
 let visit_pattern edge file = function

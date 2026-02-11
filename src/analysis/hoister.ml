@@ -417,10 +417,9 @@ class ['loc] hoister ~(enable_enums : bool) ~(with_types : bool) =
       begin
         match import_kind with
         | ImportValue -> this#add_const_binding ~kind:Bindings.Import id
-        | ImportType
-        | ImportTypeof
-          when with_types ->
-          this#add_type_binding ~imported:true id
+        | ImportType when with_types ->
+          this#update_acc Bindings.(add (id, Type { imported = true; type_only_namespace = true }))
+        | ImportTypeof when with_types -> this#add_type_binding ~imported:true id
         | _ -> ()
       end;
       id

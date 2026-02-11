@@ -2245,7 +2245,8 @@ end = struct
       cx import_reason ~import_kind ~module_name ~namespace_symbol ~source_module ~local_loc =
     let open Flow_ast.Statement in
     match import_kind with
-    | ImportDeclaration.ImportType -> assert_false "import type * is a parse error"
+    | ImportDeclaration.ImportType ->
+      get_module_namespace_type cx import_reason ~namespace_symbol source_module
     | ImportDeclaration.ImportTypeof ->
       let module_ns_t =
         get_module_namespace_type cx import_reason ~namespace_symbol source_module

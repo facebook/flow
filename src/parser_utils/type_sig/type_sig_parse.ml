@@ -290,6 +290,11 @@ and 'loc remote_binding =
       name: string;
       mref: module_ref_node;
     }
+  | ImportTypeNsBinding of {
+      id_loc: 'loc loc_node;
+      name: string;
+      mref: module_ref_node;
+    }
 
 and 'loc pattern =
   | PDef of 'loc pattern_def_node Lazy.t
@@ -378,7 +383,8 @@ let loc_of_binding = function
     | ImportTypeBinding { id_loc; _ }
     | ImportTypeofBinding { id_loc; _ }
     | ImportNsBinding { id_loc; _ }
-    | ImportTypeofNsBinding { id_loc; _ } ->
+    | ImportTypeofNsBinding { id_loc; _ }
+    | ImportTypeNsBinding { id_loc; _ } ->
       id_loc)
 
 let create_tables () =
@@ -659,7 +665,7 @@ module Scope = struct
     match kind with
     | ID.ImportValue -> ImportNsBinding { id_loc; name; mref }
     | ID.ImportTypeof -> ImportTypeofNsBinding { id_loc; name; mref }
-    | ID.ImportType -> failwith "unexpected import type *"
+    | ID.ImportType -> ImportTypeNsBinding { id_loc; name; mref }
 
   let bind ~type_only scope tbls name id_loc f =
     let bind_updater ~in_global_scope f existing_binding =

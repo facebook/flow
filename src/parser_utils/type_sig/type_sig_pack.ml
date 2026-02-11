@@ -57,6 +57,11 @@ type 'loc remote_ref =
       name: string;
       index: Module_refs.index;
     }
+  | ImportTypeNs of {
+      id_loc: 'loc;
+      name: string;
+      index: Module_refs.index;
+    }
   | ImportNs of {
       id_loc: 'loc;
       name: string;
@@ -71,7 +76,8 @@ let remote_ref_loc = function
   | ImportType { id_loc; _ }
   | ImportTypeof { id_loc; _ }
   | ImportNs { id_loc; _ }
-  | ImportTypeofNs { id_loc; _ } ->
+  | ImportTypeofNs { id_loc; _ }
+  | ImportTypeNs { id_loc; _ } ->
     id_loc
 
 let remote_ref_name = function
@@ -79,7 +85,8 @@ let remote_ref_name = function
   | ImportType { name; _ }
   | ImportTypeof { name; _ }
   | ImportNs { name; _ }
-  | ImportTypeofNs { name; _ } ->
+  | ImportTypeofNs { name; _ }
+  | ImportTypeNs { name; _ } ->
     name
 
 type 'loc packed_ref =
@@ -416,6 +423,10 @@ and pack_remote_binding = function
     let id_loc = pack_loc id_loc in
     let index = Module_refs.index_exn mref in
     ImportTypeofNs { id_loc; name; index }
+  | P.ImportTypeNsBinding { id_loc; name; mref } ->
+    let id_loc = pack_loc id_loc in
+    let index = Module_refs.index_exn mref in
+    ImportTypeNs { id_loc; name; index }
 
 and pack_pattern = function
   | P.PDef def ->

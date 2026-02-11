@@ -79,7 +79,8 @@ let remote_ref_reason = function
     Reason.(mk_reason (RIdentifier (OrdinaryName name)) id_loc)
   | Pack.ImportType { id_loc; name; _ }
   | Pack.ImportTypeof { id_loc; name; _ }
-  | Pack.ImportTypeofNs { id_loc; name; _ } ->
+  | Pack.ImportTypeofNs { id_loc; name; _ }
+  | Pack.ImportTypeNs { id_loc; name; _ } ->
     Type.DescFormat.type_reason (Reason.OrdinaryName name) id_loc
 
 let eval_id_of_aloc file loc =
@@ -374,6 +375,7 @@ let merge_remote_ref file reason = function
     import file reason index Type.ImportTypeof ~remote ~local:name
   | Pack.ImportNs { id_loc; name; index } -> import_ns file reason name id_loc index
   | Pack.ImportTypeofNs { id_loc; name; index } -> import_typeof_ns file reason name id_loc index
+  | Pack.ImportTypeNs { id_loc; name; index } -> import_ns file reason name id_loc index
 
 let merge_ref :
       'a.

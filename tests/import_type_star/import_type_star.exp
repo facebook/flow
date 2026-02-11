@@ -1,0 +1,138 @@
+Error ----------------------------------------------------------------------------------------- import_type_star.js:6:13
+
+Cannot assign `42` to `a2` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   import_type_star.js:6:13
+   6| var a2: A = 42; // Error: number ~> string
+                  ^^ [1]
+
+References:
+   import_type_star.js:6:9
+   6| var a2: A = 42; // Error: number ~> string
+              ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- import_type_star.js:10:17
+
+Cannot assign object literal to `b2` because in property `x`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   import_type_star.js:10:17
+   10| var b2: B = {x: 'hello'}; // Error: string ~> number
+                       ^^^^^^^ [1]
+
+References:
+   ExportNamed.js:2:35
+    2| export interface MyInterface { x: number }
+                                         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- import_type_star.js:15:13
+
+Cannot assign `'hello'` to `c2` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   import_type_star.js:15:13
+   15| var c2: C = 'hello'; // Error: string ~> number
+                   ^^^^^^^ [1]
+
+References:
+   import_type_star.js:15:9
+   15| var c2: C = 'hello'; // Error: string ~> number
+               ^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- import_type_star.js:19:19
+
+Cannot assign function to `d2` because in the return value: number [1] is incompatible with string [2].
+[incompatible-type]
+
+   import_type_star.js:19:19
+   19| var d2: D = () => 42; // Error: number ~> string
+                         ^^ [1]
+
+References:
+   ExportNamed.js:4:27
+    4| export function myFunc(): string { return 'hello'; }
+                                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- import_type_star.js:24:13
+
+Cannot assign `42` to `e2` because number [1] is incompatible with `MyClass` [2]. [incompatible-type]
+
+   import_type_star.js:24:13
+   24| var e2: E = 42; // Error: number ~> MyClass
+                   ^^ [1]
+
+References:
+   import_type_star.js:24:9
+   24| var e2: E = 42; // Error: number ~> MyClass
+               ^ [2]
+
+
+Error ----------------------------------------------------------------------------------------- import_type_star.js:27:1
+
+Cannot use type-only namespace `Foo` [1] as a value. Type-only namespaces are erased and don't exist at runtime. If the
+exported binding can also be used as a value, try importing it using `import Foo` instead of `import type Foo` and
+`import {Foo}` instead of `import type {Foo}`. [type-as-value]
+
+   import_type_star.js:27:1
+   27| Foo; // error
+       ^^^
+
+References:
+   import_type_star.js:1:18
+    1| import type * as Foo from './ExportNamed';
+                        ^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------- import_type_star.js:28:1
+
+Cannot use type-only namespace `Foo` [1] as a value. Type-only namespaces are erased and don't exist at runtime. If the
+exported binding can also be used as a value, try importing it using `import Foo` instead of `import type Foo` and
+`import {Foo}` instead of `import type {Foo}`. [type-as-value]
+
+   import_type_star.js:28:1
+   28| Foo.myValue; // error
+       ^^^
+
+References:
+   import_type_star.js:1:18
+    1| import type * as Foo from './ExportNamed';
+                        ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------- import_type_star.js:29:11
+
+Cannot use type-only namespace `Foo` [1] as a value. Type-only namespaces are erased and don't exist at runtime. If the
+exported binding can also be used as a value, try importing it using `import Foo` instead of `import type Foo` and
+`import {Foo}` instead of `import type {Foo}`. [type-as-value]
+
+   import_type_star.js:29:11
+   29| const x = Foo.myFunc(); // error
+                 ^^^
+
+References:
+   import_type_star.js:1:18
+    1| import type * as Foo from './ExportNamed';
+                        ^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------------- test_with_react.js:6:1
+
+Cannot use type-only namespace `React` [1] as a value. Type-only namespaces are erased and don't exist at runtime. If
+the exported binding can also be used as a value, try importing it using `import React` instead of `import type React`
+and `import {React}` instead of `import type {React}`. [type-as-value]
+
+   test_with_react.js:6:1
+   6| React.act; // error: 'React' cannot be used as a value because it was imported using 'import type'
+      ^^^^^
+
+References:
+   test_with_react.js:1:18
+   1| import type * as React from 'react'; // React is namespace, not an object type
+                       ^^^^^ [1]
+
+
+
+Found 9 errors

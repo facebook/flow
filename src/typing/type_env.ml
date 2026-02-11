@@ -607,11 +607,25 @@ let read_entry ~lookup_mode cx loc reason =
   | Error loc -> Error loc
   | Ok { Env_api.def_loc; write_locs; val_kind; name; id } ->
     (match (val_kind, name, def_loc, lookup_mode) with
-    | ( Env_api.Type { imported; type_only_namespace },
-        Some name,
-        Some def_loc,
-        (ForValue | ForTypeof)
+    | (Env_api.Type { imported; type_only_namespace }, Some name, Some def_loc, ForValue) ->
+      Flow_js.add_output
+        cx
+        (Error_message.EBindingError
+           ( Error_message.ETypeInValuePosition { imported; type_only_namespace; name },
+             loc,
+             OrdinaryName name,
+             def_loc
+           )
+        );
+      Ok (AnyT.at (AnyError None) loc)
+    | ( Env_api.Type { imported = _; type_only_namespace = true },
+        Some _name,
+        Some _def_loc,
+        ForTypeof
       ) ->
+      let t = type_of_state ~lookup_mode ~val_kind cx loc reason write_locs id None in
+      Ok t
+    | (Env_api.Type { imported; type_only_namespace }, Some name, Some def_loc, ForTypeof) ->
       Flow_js.add_output
         cx
         (Error_message.EBindingError

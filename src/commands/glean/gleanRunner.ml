@@ -136,7 +136,8 @@ let source_of_type_exports ~root ~write_root ~file ~reader ~loc_source ~type_sig
     | ImportTypeof { id_loc; name; _ } ->
       let loc = loc_of_index ~loc_source ~reader id_loc in
       return (SourceOfTypeExport.TypeDeclaration TypeDeclaration.{ name; loc })
-    | ImportTypeofNs { index; _ } ->
+    | ImportTypeofNs { index; _ }
+    | ImportTypeNs { index; _ } ->
       let module_ =
         let module_ref = Type_sig_collections.Module_refs.get module_refs index in
         module_of_module_ref ~resolved_modules ~root ~write_root module_ref
@@ -205,7 +206,7 @@ let type_import_declarations ~root ~write_root ~resolved_modules ~file_sig =
   let open File_sig in
   let open Base.List.Let_syntax in
   (match%bind requires file_sig with
-  | Import { source = (_, module_ref); types; typesof; typesof_ns; _ } ->
+  | Import { source = (_, module_ref); types; typesof; typesof_ns; type_ns; _ } ->
     let module_ =
       module_of_module_ref
         ~resolved_modules
@@ -237,7 +238,13 @@ let type_import_declarations ~root ~write_root ~resolved_modules ~file_sig =
       let typeDeclaration = TypeDeclaration.{ loc; name } in
       return TypeImportDeclaration.{ import; typeDeclaration }
     in
-    types_info @ typesof_info @ typesof_ns_info
+    let type_ns_info =
+      let%bind (loc, name) = Base.Option.to_list type_ns in
+      let import = TypeImportDeclaration.ModuleTypeof module_ in
+      let typeDeclaration = TypeDeclaration.{ loc; name } in
+      return TypeImportDeclaration.{ import; typeDeclaration }
+    in
+    types_info @ typesof_info @ typesof_ns_info @ type_ns_info
   | Require _
   | Import0 _
   | ImportDynamic _
@@ -411,7 +418,8 @@ let source_of_exports ~root ~write_root ~loc_source ~type_sig ~resolved_modules 
       return (SourceOfExport.ModuleNamespace module_)
     | ImportType _
     | ImportTypeof _
-    | ImportTypeofNs _ ->
+    | ImportTypeofNs _
+    | ImportTypeNs _ ->
       []
   in
   let source_of_packed_ref = function

@@ -23,7 +23,7 @@ let search ~loc_of_aloc ~cx ~file_sig ~ast ~typed_ast def_locs =
             Base.List.fold names ~init:acc ~f:(fun acc (_, bindings) -> loop acc bindings)
         in
         loop acc bindings
-      | Import { named; types; ns; _ } ->
+      | Import { named; types; ns; type_ns = _; _ } ->
         let add_map map acc =
           SMap.fold
             (fun _ ->

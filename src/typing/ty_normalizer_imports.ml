@@ -147,7 +147,7 @@ let add_import_bindings cx ~typed_ast acc require =
   match require with
   | Require { source; require_loc = _; bindings; prefix = _ } ->
     add_require_bindings cx ~typed_ast ~import_mode:Ty.ValueMode ~source bindings acc
-  | Import { import_loc = _; source; named; ns = _; types; typesof; typesof_ns = _ } ->
+  | Import { import_loc = _; source; named; ns = _; types; typesof; typesof_ns = _; type_ns = _ } ->
     (* TODO import namespaces (`ns`) as modules that might contain imported types *)
     acc
     |> add_imported_loc_map_bindings cx ~typed_ast ~import_mode:Ty.ValueMode ~source named

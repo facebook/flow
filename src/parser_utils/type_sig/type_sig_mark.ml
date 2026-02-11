@@ -163,7 +163,8 @@ and mark_remote_binding = function
   | P.ImportTypeBinding { id_loc; name = _; mref; remote = _ }
   | P.ImportTypeofBinding { id_loc; name = _; mref; remote = _ }
   | P.ImportNsBinding { id_loc; name = _; mref }
-  | P.ImportTypeofNsBinding { id_loc; name = _; mref } ->
+  | P.ImportTypeofNsBinding { id_loc; name = _; mref }
+  | P.ImportTypeNsBinding { id_loc; name = _; mref } ->
     mark_loc ~visit_loc:ignore id_loc;
     mark_mref mref
 
