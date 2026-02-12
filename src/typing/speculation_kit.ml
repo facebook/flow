@@ -237,12 +237,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
      iteratively and processes its results. *)
   and speculative_match cx branch f =
     let typeapp_stack = TypeAppExpansion.get cx in
-    let constraint_cache_ref = Context.constraint_cache cx in
-    let constraint_cache = !constraint_cache_ref in
     Speculation.set_speculative cx branch;
     let restore () =
       Speculation.restore_speculative cx;
-      constraint_cache_ref := constraint_cache;
       TypeAppExpansion.set cx typeapp_stack
     in
     try
@@ -287,6 +284,15 @@ module Make (Flow : INPUT) : OUTPUT = struct
     (* extract stuff to ignore while considering actions *)
     (* split spec into a list of pairs of types to try speculative matching on *)
     let trials = trials_of_spec spec in
+    (* Save the constraint cache once before trying any branches. The constraint
+       cache records (lower, upper) pairs that have already been fully checked.
+       When a branch fails, we roll back the cache to discard entries that may
+       have been valid only under speculative assumptions. When a branch succeeds,
+       we keep the accumulated cache entries so that subsequent type-checking does
+       not redundantly re-check the same flow pairs. The cache is only restored
+       to this snapshot if ALL branches fail. *)
+    let constraint_cache_ref = Context.constraint_cache cx in
+    let constraint_cache_snapshot = !constraint_cache_ref in
     (* Here errs records all errors we have seen up to this point. *)
     let rec loop errs = function
       | [] -> return errs
@@ -309,6 +315,10 @@ module Make (Flow : INPUT) : OUTPUT = struct
             NoInformationForSynthesisLogging
         in
         let case = { case_id; errors = []; information_for_synthesis_logging } in
+        (* Save the constraint cache before this branch so we can roll back
+           on failure. Entries added during a failed speculative branch may
+           only be valid under the speculative assumption of that branch. *)
+        let constraint_cache_before_branch = !constraint_cache_ref in
         (* speculatively match the pair of types in this trial *)
         let error =
           speculative_match cx { speculation_id; case } (fun () ->
@@ -322,16 +332,23 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (match error with
         | None -> begin
           (* no error, looking great so far... *)
+          (* Keep the constraint cache entries from this successful branch. *)
           fire_actions cx trace spec case speculation_id
         end
         | Some err -> begin
           (* if an error is found, then throw away this alternative... *)
+          (* Roll back the constraint cache to before this failed branch,
+             since entries added during speculation may depend on the
+             speculative assumption that was just disproven. *)
+          constraint_cache_ref := constraint_cache_before_branch;
           (* ...adding to the error list if no promising alternative has been
            * found yet *)
           loop (err :: errs) trials
         end)
     and return msgs =
-      (* everything failed; make a really detailed error message listing out the
+      (* everything failed; restore constraint cache to pre-speculation state *)
+      constraint_cache_ref := constraint_cache_snapshot;
+      (* make a really detailed error message listing out the
        * error found for each alternative *)
       (* Add the error. *)
       match spec with
