@@ -6845,10 +6845,14 @@ struct
     eval_destructor cx ~trace use_op reason t d (reason, tvar);
     let result = OpenT (reason, tvar) in
     if
-      (not (Subst_name.Set.is_empty (Type_subst.free_var_finder cx t)))
-      || (not (Subst_name.Set.is_empty (Type_subst.free_var_finder_in_destructor cx d)))
-      || Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t
+      (* Check has_unresolved_tvars first: these use exception-based early exit
+         and are cheaper than free_var_finder which traverses the entire type.
+         Due to short-circuit evaluation, if unresolved tvars are found, the
+         more expensive free_var_finder calls are skipped entirely. *)
+      Flow_js_utils.TvarVisitors.has_unresolved_tvars cx t
       || Flow_js_utils.TvarVisitors.has_unresolved_tvars_in_destructors cx d
+      || (not (Subst_name.Set.is_empty (Type_subst.free_var_finder cx t)))
+      || not (Subst_name.Set.is_empty (Type_subst.free_var_finder_in_destructor cx d))
     then
       result
     else (

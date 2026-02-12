@@ -14,7 +14,7 @@ open Reason
 (*****************)
 
 type replacement =
-  | TypeSubst of Type.t * (* Free vars in type *) Subst_name.Set.t
+  | TypeSubst of Type.t * (* Free vars in type (lazy for memoization) *) Subst_name.Set.t Lazy.t
   | AlphaRename of Subst_name.t
 
 type fv_acc = {
@@ -120,7 +120,7 @@ let fvs_of_map map =
   Subst_name.Map.fold
     (fun _ t acc ->
       match t with
-      | TypeSubst (_, fvs) -> Subst_name.Set.union fvs acc
+      | TypeSubst (_, fvs) -> Subst_name.Set.union (Lazy.force fvs) acc
       | AlphaRename _ -> acc)
     map
     Subst_name.Set.empty
@@ -477,12 +477,12 @@ let substituter =
 
 let subst
     cx ?use_op ?(force = true) ?(placeholder_no_infer = false) ?(purpose = Purpose.Normal) map ty =
-  let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
+  let map = Subst_name.Map.map (fun t -> TypeSubst (t, lazy (free_var_finder cx t))) map in
   substituter#type_ cx (map, force, placeholder_no_infer, purpose, use_op) ty
 
 let subst_destructor
     cx ?use_op ?(force = true) ?(placeholder_no_infer = false) ?(purpose = Purpose.Normal) map des =
-  let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
+  let map = Subst_name.Map.map (fun t -> TypeSubst (t, lazy (free_var_finder cx t))) map in
   substituter#destructor cx (map, force, placeholder_no_infer, purpose, use_op) des
 
 let subst_instance_type
@@ -493,5 +493,5 @@ let subst_instance_type
     ?(purpose = Purpose.Normal)
     map
     instance_t =
-  let map = Subst_name.Map.map (fun t -> TypeSubst (t, free_var_finder cx t)) map in
+  let map = Subst_name.Map.map (fun t -> TypeSubst (t, lazy (free_var_finder cx t))) map in
   substituter#instance_type cx (map, force, placeholder_no_infer, purpose, use_op) instance_t
