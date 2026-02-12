@@ -1,3 +1,8 @@
+### 0.301.0
+
+IDE:
+* For `React` autoimport, it will now always be in the form of `import * as React from 'react'`
+
 ### 0.300.0
 
 Misc:
