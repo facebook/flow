@@ -205,6 +205,7 @@ jobs:
     - name: Install cygwin
       uses: cygwin/cygwin-install-action@master
       with:
+        site: https://cygwin.mirror.constant.com/ https://mirror.clarkson.edu/cygwin/ https://mirrors.xmission.com/cygwin/ https://mirrors.kernel.org/sourceware/cygwin/
         packages: >-
           rsync
           patch
