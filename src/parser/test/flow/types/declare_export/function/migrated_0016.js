@@ -1,1 +1,1 @@
-declare export function foo(x: number, string): void
+declare export function foo(x: number, y: string): void

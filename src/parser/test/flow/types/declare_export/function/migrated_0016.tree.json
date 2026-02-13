@@ -1,30 +1,30 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":52}},
-  "range":[0,52],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":55}},
+  "range":[0,55],
   "body":[
     {
       "type":"DeclareExportDeclaration",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":52}},
-      "range":[0,52],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":55}},
+      "range":[0,55],
       "default":false,
       "declaration":{
         "type":"DeclareFunction",
-        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":52}},
-        "range":[15,52],
+        "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":55}},
+        "range":[15,55],
         "id":{
           "type":"Identifier",
-          "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":52}},
-          "range":[24,52],
+          "loc":{"source":null,"start":{"line":1,"column":24},"end":{"line":1,"column":55}},
+          "range":[24,55],
           "name":"foo",
           "typeAnnotation":{
             "type":"TypeAnnotation",
-            "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":52}},
-            "range":[27,52],
+            "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":55}},
+            "range":[27,55],
             "typeAnnotation":{
               "type":"FunctionTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":52}},
-              "range":[27,52],
+              "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":55}},
+              "range":[27,55],
               "params":[
                 {
                   "type":"FunctionTypeParam",
@@ -47,21 +47,28 @@
                 },
                 {
                   "type":"FunctionTypeParam",
-                  "loc":{"source":null,"start":{"line":1,"column":39},"end":{"line":1,"column":45}},
-                  "range":[39,45],
-                  "name":null,
+                  "loc":{"source":null,"start":{"line":1,"column":39},"end":{"line":1,"column":48}},
+                  "range":[39,48],
+                  "name":{
+                    "type":"Identifier",
+                    "loc":{"source":null,"start":{"line":1,"column":39},"end":{"line":1,"column":40}},
+                    "range":[39,40],
+                    "name":"y",
+                    "typeAnnotation":null,
+                    "optional":false
+                  },
                   "typeAnnotation":{
                     "type":"StringTypeAnnotation",
-                    "loc":{"source":null,"start":{"line":1,"column":39},"end":{"line":1,"column":45}},
-                    "range":[39,45]
+                    "loc":{"source":null,"start":{"line":1,"column":42},"end":{"line":1,"column":48}},
+                    "range":[42,48]
                   },
                   "optional":false
                 }
               ],
               "returnType":{
                 "type":"VoidTypeAnnotation",
-                "loc":{"source":null,"start":{"line":1,"column":48},"end":{"line":1,"column":52}},
-                "range":[48,52]
+                "loc":{"source":null,"start":{"line":1,"column":51},"end":{"line":1,"column":55}},
+                "range":[51,55]
               },
               "rest":null,
               "typeParameters":null,

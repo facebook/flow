@@ -1153,10 +1153,10 @@ declare module 'a' {
 }
 type S = number;
 declare module B {
-  declare function f(S): S;
+  declare function f(v: S): S;
 }
   |};
-  [%expect {|
+  [%expect{|
     (5, 5) to (5, 6) =>
     (3, 15) to (3, 16) =>
     (7, 19) to (7, 20) |}]
@@ -1178,7 +1178,7 @@ declare namespace a {
 }
 type S = number;
 declare namespace B {
-  declare function f(S): S;
+  declare function f(v: S): S;
 }
 declare namespace F {
   declare type T = string;
@@ -1187,7 +1187,7 @@ declare namespace F {
 const c = F.v;
 type T = F.T;
   |};
-  [%expect {|
+  [%expect{|
     (5, 5) to (5, 6) =>
     (3, 15) to (3, 16) =>
     (2, 18) to (2, 19) =>
