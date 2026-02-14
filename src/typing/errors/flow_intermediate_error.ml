@@ -4506,7 +4506,7 @@ let to_printable_error :
           ]
       in
       let props =
-        Nel.to_list props |> Base.List.sort ~compare:(fun (a, _, _) (b, _, _) -> compare a b)
+        Nel.to_list props |> Base.List.sort ~compare:(fun (a, _, _) (b, _, _) -> Stdlib.compare a b)
       in
       let number_to_check = List.length props in
       let props =

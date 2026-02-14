@@ -3848,8 +3848,6 @@ include TypeTerm
 
 (*********************************************************)
 
-let compare = Stdlib.compare
-
 let open_tvar tvar =
   match tvar with
   | OpenT (reason, id) -> (reason, id)

@@ -785,7 +785,7 @@ module TypeTag = struct
   let compare_sentinel_map (s1 : sentinel_val SMap.t) (s2 : sentinel_val SMap.t) =
     let s1' = SMap.filter (fun k _ -> SMap.mem k s2) s1 in
     let s2' = SMap.filter (fun k _ -> SMap.mem k s1) s2 in
-    compare s1' s2'
+    Stdlib.compare s1' s2'
 
   type t =
     | BoolTag

@@ -481,7 +481,7 @@ let reasonless_compare =
     if t1 == t2 then
       0
     else
-      compare t1 (swap_reason t2 t1)
+      Stdlib.compare t1 (swap_reason t2 t1)
 
 let reasonless_eq t1 t2 = reasonless_compare t1 t2 = 0
 

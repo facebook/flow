@@ -60,12 +60,12 @@ let rec eq cx t1 t2 =
       (match Context.find_graph cx id1 with
       | Resolved t1 -> eq cx t1 t2
       | FullyResolved s1 -> eq cx (Context.force_fully_resolved_tvar cx s1) t2
-      | Unresolved _ -> compare t1 (swap_reason t2 t1) = 0)
+      | Unresolved _ -> Stdlib.compare t1 (swap_reason t2 t1) = 0)
     | (_, OpenT (_, id2)) ->
       (match Context.find_graph cx id2 with
       | Resolved t2 -> eq cx t1 t2
       | FullyResolved s2 -> eq cx t1 (Context.force_fully_resolved_tvar cx s2)
-      | Unresolved _ -> compare t1 (swap_reason t2 t1) = 0)
+      | Unresolved _ -> Stdlib.compare t1 (swap_reason t2 t1) = 0)
     | (AnnotT (_, t1, _), _) -> eq cx t1 t2
     | (_, AnnotT (_, t2, _)) -> eq cx t1 t2
     | (UnionT (_, rep1), UnionT (_, rep2)) ->
@@ -75,18 +75,18 @@ let rec eq cx t1 t2 =
     | (EvalT { type_ = _; defer_use_t = _; id }, _) ->
       (match Type.Eval.Map.find_opt id (Context.evaluated cx) with
       | Some t -> eq cx t t2
-      | None -> compare t1 (swap_reason t2 t1) = 0)
+      | None -> Stdlib.compare t1 (swap_reason t2 t1) = 0)
     | (_, EvalT { type_ = _; defer_use_t = _; id }) ->
       (match Type.Eval.Map.find_opt id (Context.evaluated cx) with
       | Some t -> eq cx t1 t
-      | None -> compare t1 (swap_reason t2 t1) = 0)
+      | None -> Stdlib.compare t1 (swap_reason t2 t1) = 0)
     | ( TypeAppT
           { reason = _; use_op = _; type_ = t1; targs = targs1; from_value = fv1; use_desc = _ },
         TypeAppT
           { reason = _; use_op = _; type_ = t2; targs = targs2; from_value = fv2; use_desc = _ }
       ) ->
       eq cx t1 t2 && fv1 = fv2 && eq_targs cx targs1 targs2
-    | _ -> compare t1 (swap_reason t2 t1) = 0
+    | _ -> Stdlib.compare t1 (swap_reason t2 t1) = 0
 
 and eq_targs cx targs1 targs2 =
   match Base.List.for_all2 targs1 targs2 ~f:(eq cx) with

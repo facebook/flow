@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-open Type
 open Reason
 open Error_message
 
@@ -34,7 +33,7 @@ let kind_of_error err = msg_of_error err |> kind_of_msg
 module Error (M : Set.OrderedType) : Set.OrderedType with type t = M.t t = struct
   type nonrec t = M.t t
 
-  let compare = compare
+  let compare = Stdlib.compare
 end
 
 module ErrorSet = Flow_set.Make (Error (ALoc))
