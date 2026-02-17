@@ -552,6 +552,22 @@ The utility type `$ReadOnlySet` is deprecated, use `ReadonlySet` instead. [depre
                ^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:1:8
+
+`:` is deprecated. Use `extends` to specify type parameter bounds in the form `type T<A extends B> = ...`. [ts-syntax]
+
+   1| type A<T: string> = [T]; // ERROR
+             ^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:2:8
+
+`:` is deprecated. Use `extends` to specify type parameter bounds in the form `type T<A extends B> = ...`. [ts-syntax]
+
+   2| type B<+T: string> = [T]; // ERROR
+             ^^^^^^^^^^
+
+
 Error ---------------------------------------------------------------------- deprecated/type_param_colon_extends.js:2:23
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
@@ -565,6 +581,22 @@ References:
    deprecated/type_param_colon_extends.js:2:9
    2| type B<+T: string> = [T]; // ERROR
               ^ [1]
+
+
+Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:3:8
+
+`:` is deprecated. Use `extends` to specify type parameter bounds in the form `type T<A extends B> = ...`. [ts-syntax]
+
+   3| type C<T: string = "hi"> = [T]; // ERROR
+             ^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:4:8
+
+`:` is deprecated. Use `extends` to specify type parameter bounds in the form `type T<A extends B> = ...`. [ts-syntax]
+
+   4| type D<+T: string = "hi"> = [T]; // ERROR
+             ^^^^^^^^^^^^^^^^^
 
 
 Error ---------------------------------------------------------------------- deprecated/type_param_colon_extends.js:4:30
@@ -1257,4 +1289,4 @@ types. [ts-syntax]
 
 
 
-Found 137 errors
+Found 141 errors
