@@ -876,6 +876,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
             body;
             renders;
             tparams;
+            async = false;
             sig_loc;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }

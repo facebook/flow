@@ -3889,7 +3889,16 @@ and component_sig_helper opts scope tbls tps ps r =
 
 and component_def opts scope tbls f =
   let module C = Ast.Statement.ComponentDeclaration in
-  let { C.id = _; tparams = tps; params = ps; body = _; renders = r; sig_loc = _; comments = _ } =
+  let {
+    C.id = _;
+    tparams = tps;
+    params = ps;
+    body = _;
+    renders = r;
+    sig_loc = _;
+    async = _;
+    comments = _;
+  } =
     f
   in
   component_sig_helper opts scope tbls tps ps r
@@ -4562,6 +4571,7 @@ let component_decl opts scope tbls decl =
   let {
     Ast.Statement.ComponentDeclaration.id = (id_loc, { Ast.Identifier.name; comments = _ });
     sig_loc;
+    async = _;
     _;
   } =
     decl

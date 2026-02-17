@@ -1461,6 +1461,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
             body;
             renders;
             tparams = component_tparams;
+            async = _;
             sig_loc = _;
             comments = _;
           } =

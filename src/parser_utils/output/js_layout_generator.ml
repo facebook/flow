@@ -2225,12 +2225,19 @@ and component_declaration ~opts loc component =
     body;
     renders;
     tparams;
+    async;
     comments;
     sig_loc = _;
   } =
     component
   in
-  let prefix = fuse [Atom "component"; space; identifier id] in
+  let prefix =
+    let s_component = fuse [Atom "component"; space; identifier id] in
+    if async then
+      fuse [Atom "async"; space; s_component]
+    else
+      s_component
+  in
   component_base ~opts ~prefix ~params ~body ~renders ~tparams ~loc ~comments
 
 and component_base ~opts ~prefix ~params ~body ~renders ~tparams ~loc ~comments =

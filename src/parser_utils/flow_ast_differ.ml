@@ -873,6 +873,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       body = body1_opt;
       renders = renders1;
       tparams = tparams1;
+      async = _;
       sig_loc = _;
       comments = comments1;
     } =
@@ -884,6 +885,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       body = body2_opt;
       renders = renders2;
       tparams = tparams2;
+      async = _;
       sig_loc = _;
       comments = comments2;
     } =

@@ -9354,6 +9354,7 @@ module Make
         params;
         id;
         sig_loc;
+        async = _;
         comments = _;
       } =
         component

@@ -331,7 +331,7 @@ let component_declaration
     loc
     expr =
   let open Ast.Statement.ComponentDeclaration in
-  let { id; params; body; renders; tparams; sig_loc = _; comments = _ } = expr in
+  let { id; params; body; renders; tparams; async = _; sig_loc = _; comments = _ } = expr in
   ignore @@ visitor#component_identifier id;
   scoped_type_params
     ~with_types

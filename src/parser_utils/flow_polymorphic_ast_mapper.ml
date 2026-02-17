@@ -297,7 +297,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method component_declaration (component : ('M, 'T) Ast.Statement.ComponentDeclaration.t)
         : ('N, 'U) Ast.Statement.ComponentDeclaration.t =
       let open Ast.Statement.ComponentDeclaration in
-      let { id = ident; params; body; renders; tparams; comments; sig_loc } = component in
+      let { id = ident; params; body; renders; tparams; async; comments; sig_loc } = component in
       let ident' = this#component_identifier ident in
       this#type_params_opt tparams (fun tparams' ->
           let params' = this#component_params params in
@@ -315,6 +315,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             renders = renders';
             body = body';
             tparams = tparams';
+            async;
             comments = comments';
             sig_loc = sig_loc';
           }

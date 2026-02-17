@@ -1067,6 +1067,7 @@ and Statement : sig
       params: ('M, 'T) Params.t;
       renders: ('M, 'T) Type.component_renders_annotation;
       body: ('M * ('M, 'T) Statement.Block.t) option;
+      async: bool;
       comments: ('M, unit) Syntax.t option;
       (* Location of the signature portion of a component, e.g.
        * component Foo(): void {}

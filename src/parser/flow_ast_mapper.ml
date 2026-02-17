@@ -686,7 +686,7 @@ class ['loc] mapper =
     method component_declaration _loc (component : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t)
         =
       let open Ast.Statement.ComponentDeclaration in
-      let { id = ident; tparams; params; body; renders; comments; sig_loc } = component in
+      let { id = ident; tparams; params; body; renders; async; comments; sig_loc } = component in
       let ident' = this#component_identifier ident in
       let tparams' = map_opt (this#type_params ~kind:ComponentDeclarationTP) tparams in
       let params' = this#component_params params in
@@ -709,6 +709,7 @@ class ['loc] mapper =
           params = params';
           body = body';
           renders = renders';
+          async;
           comments = comments';
           sig_loc;
         }

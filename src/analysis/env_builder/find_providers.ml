@@ -628,7 +628,9 @@ end = struct
       (* As above, since components compile to function declarations *)
       method! component_declaration loc (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
         let open Ast.Statement.ComponentDeclaration in
-        let { id = ident; tparams; params; body; renders; comments = _; sig_loc = _ } = expr in
+        let { id = ident; tparams; params; body; renders; async = _; comments = _; sig_loc = _ } =
+          expr
+        in
         run this#component_identifier ident;
         this#enter_possibly_polymorphic_scope
           ~is_polymorphic:(Option.is_some tparams)
@@ -957,7 +959,9 @@ end = struct
 
       method! component_declaration loc (expr : ('loc, 'loc) Ast.Statement.ComponentDeclaration.t) =
         let open Ast.Statement.ComponentDeclaration in
-        let { id = ident; tparams; params; body; renders; comments = _; sig_loc = _ } = expr in
+        let { id = ident; tparams; params; body; renders; async = _; comments = _; sig_loc = _ } =
+          expr
+        in
         let init_state = Annotation { contextual = false } in
         this#visit_in_context
           ~mod_cx:(fun _cx -> { init_state })

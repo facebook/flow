@@ -1675,6 +1675,7 @@ with type t = Impl.t = struct
         params = (_, { Params.comments = params_comments; _ }) as params;
         body;
         renders;
+        async;
         comments = component_comments;
         sig_loc = _;
       } =
@@ -1695,6 +1696,7 @@ with type t = Impl.t = struct
         node_type
         loc
         [
+          ("async", bool async);
           ("body", option block body);
           ("id", identifier id);
           ("implicitDeclare", bool implicit_declare);

@@ -7,6 +7,7 @@
       "type":"ComponentDeclaration",
       "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":36}},
       "range":[0,36],
+      "async":false,
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":36}},
@@ -53,6 +54,7 @@
       "type":"ComponentDeclaration",
       "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":44}},
       "range":[38,82],
+      "async":false,
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":3,"column":42},"end":{"line":3,"column":44}},
@@ -117,6 +119,7 @@
       "type":"ComponentDeclaration",
       "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":38}},
       "range":[84,122],
+      "async":false,
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":5,"column":36},"end":{"line":5,"column":38}},
@@ -162,6 +165,7 @@
       "type":"ComponentDeclaration",
       "loc":{"source":null,"start":{"line":7,"column":0},"end":{"line":7,"column":38}},
       "range":[124,162],
+      "async":false,
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":7,"column":36},"end":{"line":7,"column":38}},
@@ -233,6 +237,7 @@
       "type":"ComponentDeclaration",
       "loc":{"source":null,"start":{"line":9,"column":0},"end":{"line":9,"column":38}},
       "range":[164,202],
+      "async":false,
       "body":{
         "type":"BlockStatement",
         "loc":{"source":null,"start":{"line":9,"column":36},"end":{"line":9,"column":38}},

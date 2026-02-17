@@ -1769,6 +1769,7 @@ module Statement
                     tparams;
                     params;
                     renders;
+                    async = _;
                     comments;
                     sig_loc = _;
                   }
@@ -2001,6 +2002,7 @@ module Statement
                   tparams;
                   params;
                   renders;
+                  async = _;
                   comments;
                   sig_loc = _;
                 }
