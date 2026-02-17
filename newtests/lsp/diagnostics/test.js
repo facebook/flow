@@ -431,6 +431,55 @@ module.exports = (suite(
         .sleep(1000)
         .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
     ]).flowConfig('_flowconfig_with_ignores'),
+    test('live parse diagnostics should ignore ignored file', [
+      lspStartAndConnect(),
+      // Open an ignored file with a syntax error. Since the file is ignored,
+      // we should NOT get any diagnostics — not even parse errors.
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/ignoreme.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+function broken(): number {return 1+;}
+`,
+        },
+      })
+        .sleep(2000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
+    ]).flowConfig('_flowconfig_with_ignores'),
+    test('live diagnostics should ignore file in ignored directory', [
+      lspStartAndConnect(),
+      // Open a file inside an ignored directory (build/) with both a syntax
+      // error and a type error. Since the directory is in [ignore], we should
+      // NOT receive any diagnostics at all.
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/build/index.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+let x: string = 123;
+`,
+        },
+      })
+        .sleep(2000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
+      // Also try opening with a parse error — this specifically tests
+      // the live parse error path in flowLsp.ml that bypasses ignore checks
+      lspNotification('textDocument/didOpen', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/build/broken.js',
+          languageId: 'javascript',
+          version: 1,
+          text: `// @flow
+function broken(): number {return 1+;}
+`,
+        },
+      })
+        .sleep(2000)
+        .verifyAllLSPMessagesInStep([], [...lspIgnoreStatusAndCancellation]),
+    ]).flowConfig('_flowconfig_with_dir_ignores'),
     test('live non-parse diagnostics ignores non-flow files', [
       lspStartAndConnect(),
       // Open a document with the wrong extension

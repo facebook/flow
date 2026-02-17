@@ -766,6 +766,29 @@ let file_options =
       ~multi_platform_extension_group_mapping
       ~node_resolver_dirnames
 
+let file_options_of_flowconfig ~root flowconfig =
+  file_options
+    ~root
+    ~no_flowlib:true
+    ~temp_dir:(File_path.make Server_files_js.default_temp_dir)
+    ~implicitly_include_root:(FlowConfig.files_implicitly_include_root flowconfig)
+    ~haste_paths_excludes:
+      (Base.List.map
+         ~f:(fun f -> f |> Files.expand_project_root_token ~root |> Str.regexp)
+         (FlowConfig.haste_paths_excludes flowconfig)
+      )
+    ~haste_paths_includes:
+      (Base.List.map
+         ~f:(fun f -> f |> Files.expand_project_root_token ~root |> Str.regexp)
+         (FlowConfig.haste_paths_includes flowconfig)
+      )
+    ~ignores:[]
+    ~includes:[]
+    ~libs:[]
+    ~untyped:[]
+    ~declarations:[]
+    flowconfig
+
 let ignore_flag prev =
   CommandSpec.ArgSpec.(
     prev

@@ -108,6 +108,7 @@ type initialized_env = {
   i_errors: LspErrors.t;
   i_config: Hh_json.json;
   i_flowconfig: FlowConfig.config;
+  i_file_options: Files.options;
 }
 
 and disconnected_env = {
@@ -1686,50 +1687,62 @@ let do_live_diagnostics
     (trigger : LspInteraction.trigger option)
     (metadata : LspProt.metadata)
     (uri : Lsp.DocumentUri.t) : server_state =
-  (* Normally we don't log interactions for unknown triggers. But in this case we're providing live
-     diagnostics and want to log what triggered it regardless of whether it's known or not *)
-  let trigger = Base.Option.value trigger ~default:LspInteraction.UnknownTrigger in
-  let () =
-    (* Only ask the server for live errors if we're connected *)
-    match state with
-    | Connected cenv ->
-      let metadata =
-        { metadata with LspProt.interaction_tracking_id = Some (start_interaction ~trigger state) }
-      in
-      send_to_server cenv (LspProt.LiveErrorsRequest uri) metadata
-    | Disconnected _ -> ()
-  in
-  let interaction_id = start_interaction ~trigger state in
-  (* reparse the file and write it into the state's editor_open_files as needed *)
-  let (state, (_, live_parse_errors)) = parse_and_cache state uri in
-  (* Set the live parse errors *)
-  let (state, ux) =
-    match live_parse_errors with
-    | None -> (state, LspInteraction.ErroredPushingLiveParseErrors)
-    | Some live_parse_errors ->
-      let state =
-        state
-        |> update_errors (LspErrors.set_live_parse_errors_and_send to_stdout uri live_parse_errors)
-      in
-      (state, LspInteraction.PushedLiveParseErrors uri)
-  in
-  log_interaction ~ux state interaction_id;
-  let error_count =
-    Base.Option.value_map live_parse_errors ~default:Hh_json.JSON_Null ~f:(fun errors ->
-        Hh_json.JSON_Number (errors |> List.length |> string_of_int)
-    )
-  in
-  FlowEventLogger.live_parse_errors
-    ~request:(metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
-    ~data:
-      Hh_json.(
-        JSON_Object
-          [("uri", JSON_String (Lsp.DocumentUri.to_string uri)); ("error_count", error_count)]
-        |> json_to_string
+  let file_path = Lsp_helpers.lsp_uri_to_path uri in
+  (* If the file is in the [ignore] section of .flowconfig, skip all live diagnostics.
+     The server-side LiveErrorsRequest handler already checks this via
+     check_that_we_care_about_this_file, but live parse errors are generated locally
+     in the LSP process and must be filtered here as well. *)
+  let (is_ignored, _) = Files.is_ignored (get_ienv state).i_file_options file_path in
+  if is_ignored then
+    state
+  else
+    (* Normally we don't log interactions for unknown triggers. But in this case we're providing live
+       diagnostics and want to log what triggered it regardless of whether it's known or not *)
+    let trigger = Base.Option.value trigger ~default:LspInteraction.UnknownTrigger in
+    let () =
+      (* Only ask the server for live errors if we're connected *)
+      match state with
+      | Connected cenv ->
+        let metadata =
+          {
+            metadata with
+            LspProt.interaction_tracking_id = Some (start_interaction ~trigger state);
+          }
+        in
+        send_to_server cenv (LspProt.LiveErrorsRequest uri) metadata
+      | Disconnected _ -> ()
+    in
+    let interaction_id = start_interaction ~trigger state in
+    (* reparse the file and write it into the state's editor_open_files as needed *)
+    let (state, (_, live_parse_errors)) = parse_and_cache state uri in
+    (* Set the live parse errors *)
+    let (state, ux) =
+      match live_parse_errors with
+      | None -> (state, LspInteraction.ErroredPushingLiveParseErrors)
+      | Some live_parse_errors ->
+        let state =
+          state
+          |> update_errors (LspErrors.set_live_parse_errors_and_send to_stdout uri live_parse_errors)
+        in
+        (state, LspInteraction.PushedLiveParseErrors uri)
+    in
+    log_interaction ~ux state interaction_id;
+    let error_count =
+      Base.Option.value_map live_parse_errors ~default:Hh_json.JSON_Null ~f:(fun errors ->
+          Hh_json.JSON_Number (errors |> List.length |> string_of_int)
       )
-    ~wall_start:metadata.LspProt.start_wall_time;
+    in
+    FlowEventLogger.live_parse_errors
+      ~request:(metadata.LspProt.start_json_truncated |> Hh_json.json_to_string)
+      ~data:
+        Hh_json.(
+          JSON_Object
+            [("uri", JSON_String (Lsp.DocumentUri.to_string uri)); ("error_count", error_count)]
+          |> json_to_string
+        )
+      ~wall_start:metadata.LspProt.start_wall_time;
 
-  state
+    state
 
 let get_local_request_handler ienv (id, result) =
   match IdMap.find_opt id ienv.i_outstanding_local_handlers with
@@ -2440,6 +2453,7 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
         i_errors = LspErrors.empty;
         i_config = Hh_json.JSON_Null;
         i_flowconfig = flowconfig;
+        i_file_options = file_options_of_flowconfig ~root:i_root flowconfig;
       }
     in
     FlowInteractionLogger.set_server_config

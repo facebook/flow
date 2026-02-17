@@ -1,0 +1,5 @@
+[ignore]
+<PROJECT_ROOT>/build/.*
+
+[options]
+exact_by_default=false
