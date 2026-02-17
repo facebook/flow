@@ -2633,25 +2633,6 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         | (None, _) -> false
       in
       (match bound_kind with
-      | Ast.Type.TypeParam.Extends when not (kind = Flow_ast_mapper.InferTP || Context.ts_syntax cx)
-        ->
-        Flow_js_utils.add_output
-          cx
-          (Error_message.ETSSyntax { kind = Error_message.TSTypeParamExtends; loc });
-        let t = AnyT.at (AnyError None) loc in
-        let tparam =
-          {
-            reason;
-            name = Subst_name.Name name;
-            bound = t;
-            polarity;
-            default = None;
-            is_this = false;
-            is_const;
-          }
-        in
-        let ast = Tast_utils.error_mapper#type_param (loc, type_param) in
-        (ast, tparam, t)
       | _ ->
         let mk_type env annot =
           let (((_, t), _) as annot_ast) = convert env annot in

@@ -1127,40 +1127,34 @@ The closest equivalent of TypeScript's `satisfies` expression in Flow is to do a
                        ^^^^^^^^^^^^^
 
 
-Error ---------------------------------------------------------------------------------------- type_param_extends.js:1:8
+Error --------------------------------------------------------------------------------------- type_param_extends.js:2:30
 
-While TypeScript uses `extends` to specify type parameter bounds, Flow uses `:` in the form `type T<A: B> = ...`.
-[ts-syntax]
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
-   1| type A<T extends string> = [T];
-             ^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------- type_param_extends.js:2:8
-
-While TypeScript uses `extends` to specify type parameter bounds, Flow uses `:` in the form `type T<A: B> = ...`.
-[ts-syntax]
-
+   type_param_extends.js:2:30
    2| type B<+T extends string> = [T];
-             ^^^^^^^^^^^^^^^^^
+                                   ^
+
+References:
+   type_param_extends.js:2:9
+   2| type B<+T extends string> = [T];
+              ^ [1]
 
 
-Error ---------------------------------------------------------------------------------------- type_param_extends.js:3:8
+Error --------------------------------------------------------------------------------------- type_param_extends.js:4:37
 
-While TypeScript uses `extends` to specify type parameter bounds, Flow uses `:` in the form `type T<A: B> = ...`.
-[ts-syntax]
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
 
-   3| type C<T extends string = "hi"> = [T];
-             ^^^^^^^^^^^^^^^^^^^^^^^
-
-
-Error ---------------------------------------------------------------------------------------- type_param_extends.js:4:8
-
-While TypeScript uses `extends` to specify type parameter bounds, Flow uses `:` in the form `type T<A: B> = ...`.
-[ts-syntax]
-
+   type_param_extends.js:4:37
    4| type D<+T extends string = "hi"> = [T];
-             ^^^^^^^^^^^^^^^^^^^^^^^^
+                                          ^
+
+References:
+   type_param_extends.js:4:9
+   4| type D<+T extends string = "hi"> = [T];
+              ^ [1]
 
 
 Error ------------------------------------------------------------------------------------------------ undefined.js:1:10
@@ -1173,4 +1167,4 @@ types. [ts-syntax]
 
 
 
-Found 133 errors
+Found 131 errors
