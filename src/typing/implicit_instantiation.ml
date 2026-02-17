@@ -1184,81 +1184,106 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
   let solve_targs
       cx ~use_op ?(allow_underconstrained = false) ?(has_syntactic_hint = false) ?return_hint check
       =
-    Context.run_and_rolled_back_cache cx (fun () ->
-        let init_errors = Context.errors cx in
-        let cache_snapshot = Context.take_cache_snapshot cx in
-        let (inferred_targ_list, marked_tparams, tparams_map, tout) =
-          implicitly_instantiate cx check
-        in
-        let errors_before_using_return_hint = Context.errors cx in
-        let has_new_errors = init_errors != errors_before_using_return_hint in
-        let (inferred_targ_list, marked_tparams, tparams_map, has_new_errors) =
-          match (return_hint, tout) with
-          | (_, None)
-          | (None, _) ->
-            (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
-          | (Some (hint, kind), Some tout) ->
-            (* Protect the effect of return hint constraining against speculative exns *)
-            let speculative_exn =
-              match Flow.flow_t cx (tout, hint) with
-              | exception (Flow_js_utils.SpeculativeError _ as e) -> Some (Exception.wrap e)
-              | () -> None
-            in
-            let errors_after_using_return_hint = Context.errors cx in
-            let return_hint_has_errors =
-              errors_before_using_return_hint != errors_after_using_return_hint
-            in
-            if
-              (Base.Option.is_some speculative_exn || return_hint_has_errors)
-              && kind = Hint.BestEffortHint
-            then (
-              (* Restore state *)
-              Context.restore_cache_snapshot cx cache_snapshot;
-              Context.reset_errors cx init_errors;
-              (* Re-run the implicit instantiation *)
-              let (inferred_targ_list, marked_tparams, tparams_map, _tout) =
-                implicitly_instantiate cx check
+    let constraint_cache = Context.constraint_cache cx in
+    let preserved_constraint_cache = ref None in
+    let result =
+      Context.run_and_rolled_back_cache cx (fun () ->
+          let init_errors = Context.errors cx in
+          let cache_snapshot = Context.take_cache_snapshot cx in
+          let (inferred_targ_list, marked_tparams, tparams_map, tout) =
+            implicitly_instantiate cx check
+          in
+          let errors_before_using_return_hint = Context.errors cx in
+          let has_new_errors = init_errors != errors_before_using_return_hint in
+          (* Capture constraint cache right after implicitly_instantiate, before
+           * the return hint flow or pin_types can add entries that may be
+           * associated with error-producing checks. Only safe if
+           * implicitly_instantiate did not produce errors. *)
+          if not has_new_errors then preserved_constraint_cache := Some !constraint_cache;
+          let (inferred_targ_list, marked_tparams, tparams_map, has_new_errors) =
+            match (return_hint, tout) with
+            | (_, None)
+            | (None, _) ->
+              (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
+            | (Some (hint, kind), Some tout) ->
+              (* Protect the effect of return hint constraining against speculative exns *)
+              let speculative_exn =
+                match Flow.flow_t cx (tout, hint) with
+                | exception (Flow_js_utils.SpeculativeError _ as e) -> Some (Exception.wrap e)
+                | () -> None
               in
-              let has_new_errors = init_errors != Context.errors cx in
-              (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
-            ) else (
-              (* We're keeping the results with the current hint, but if there was
-               * an exception that we caught, we need to rethrow it. *)
-              Base.Option.iter speculative_exn ~f:Exception.reraise;
-              (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
-            )
-        in
-        Context.reset_errors cx Flow_error.ErrorSet.empty;
-        Exception.protect
-          ~f:(fun () ->
-            pin_types
-              cx
-              ~use_op
-              ~has_new_errors
-              ~allow_underconstrained
-              ~has_syntactic_hint
-              inferred_targ_list
-              marked_tparams
-              tparams_map
-              check)
-          ~finally:(fun () ->
-            let implicit_instantiation_errors =
-              Context.errors cx
-              |> Flow_error.ErrorSet.filter (fun error ->
-                     match Flow_error.msg_of_error error with
-                     | Error_message.EImplicitInstantiationUnderconstrainedError _
-                     | Error_message.EInternal _ ->
-                       true
-                     | _ -> false
-                 )
-            in
-            (* Since we will be performing the same check again using the solution
-             * of the implicit instantiation, we only need to keep errors related
-             * to pinning types, eg. [underconstrained-implicit-instantiation]. *)
-            Context.reset_errors
-              cx
-              (Flow_error.ErrorSet.union init_errors implicit_instantiation_errors))
-    )
+              let errors_after_using_return_hint = Context.errors cx in
+              let return_hint_has_errors =
+                errors_before_using_return_hint != errors_after_using_return_hint
+              in
+              if
+                (Base.Option.is_some speculative_exn || return_hint_has_errors)
+                && kind = Hint.BestEffortHint
+              then (
+                (* Restore state *)
+                Context.restore_cache_snapshot cx cache_snapshot;
+                Context.reset_errors cx init_errors;
+                (* Re-run the implicit instantiation *)
+                let (inferred_targ_list, marked_tparams, tparams_map, _tout) =
+                  implicitly_instantiate cx check
+                in
+                let has_new_errors = init_errors != Context.errors cx in
+                (* Re-capture constraint cache after retry *)
+                preserved_constraint_cache :=
+                  if not has_new_errors then
+                    Some !constraint_cache
+                  else
+                    None;
+                (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
+              ) else (
+                (* We're keeping the results with the current hint, but if there was
+                 * an exception that we caught, we need to rethrow it. *)
+                Base.Option.iter speculative_exn ~f:Exception.reraise;
+                (inferred_targ_list, marked_tparams, tparams_map, has_new_errors)
+              )
+          in
+          Context.reset_errors cx Flow_error.ErrorSet.empty;
+          Exception.protect
+            ~f:(fun () ->
+              pin_types
+                cx
+                ~use_op
+                ~has_new_errors
+                ~allow_underconstrained
+                ~has_syntactic_hint
+                inferred_targ_list
+                marked_tparams
+                tparams_map
+                check)
+            ~finally:(fun () ->
+              let implicit_instantiation_errors =
+                Context.errors cx
+                |> Flow_error.ErrorSet.filter (fun error ->
+                       match Flow_error.msg_of_error error with
+                       | Error_message.EImplicitInstantiationUnderconstrainedError _
+                       | Error_message.EInternal _ ->
+                         true
+                       | _ -> false
+                   )
+              in
+              (* Since we will be performing the same check again using the solution
+               * of the implicit instantiation, we only need to keep errors related
+               * to pinning types, eg. [underconstrained-implicit-instantiation]. *)
+              Context.reset_errors
+                cx
+                (Flow_error.ErrorSet.union init_errors implicit_instantiation_errors))
+      )
+    in
+    (* After run_and_rolled_back_cache restores all caches (including constraint_cache),
+     * selectively re-apply the constraint cache if it was safe to preserve.
+     * We only preserve entries from implicitly_instantiate (not return hint flow
+     * or pin_types) to avoid caching entries from error-producing checks.
+     *
+     * This is a full overwrite rather than a merge because cc is a superset of
+     * the restored cache: it was captured after starting from the same base
+     * state and implicitly_instantiate only adds entries, never removes them. *)
+    Base.Option.iter !preserved_constraint_cache ~f:(fun cc -> constraint_cache := cc);
+    result
 
   let solve_conditional_type_targs cx trace ~use_op ~reason ~tparams ~check_t ~extends_t ~true_t =
     let (subst_map, inferred_targ_list) =
