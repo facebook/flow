@@ -1127,6 +1127,36 @@ The closest equivalent of TypeScript's `satisfies` expression in Flow is to do a
                        ^^^^^^^^^^^^^
 
 
+Error --------------------------------------------------------------------------------- type_param_colon_extends.js:2:23
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   type_param_colon_extends.js:2:23
+   2| type B<+T: string> = [T];
+                            ^
+
+References:
+   type_param_colon_extends.js:2:9
+   2| type B<+T: string> = [T];
+              ^ [1]
+
+
+Error --------------------------------------------------------------------------------- type_param_colon_extends.js:4:30
+
+Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
+[incompatible-variance]
+
+   type_param_colon_extends.js:4:30
+   4| type D<+T: string = "hi"> = [T];
+                                   ^
+
+References:
+   type_param_colon_extends.js:4:9
+   4| type D<+T: string = "hi"> = [T];
+              ^ [1]
+
+
 Error --------------------------------------------------------------------------------------- type_param_extends.js:2:30
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
@@ -1167,4 +1197,4 @@ types. [ts-syntax]
 
 
 
-Found 131 errors
+Found 133 errors
