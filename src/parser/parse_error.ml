@@ -22,6 +22,7 @@ type t =
   | ConstructorCannotBeAsync
   | ConstructorCannotBeGenerator
   | DeclareAsync
+  | DeclareAsyncComponent
   | DeclareClassElement
   | DeclareClassFieldInitializer
   | DeclareOpaqueTypeInitializer
@@ -223,6 +224,8 @@ module PP = struct
     | DeclareAsync ->
       "async is an implementation detail and isn't necessary for your declare function statement. "
       ^ "It is sufficient for your declare function to just have a Promise return type."
+    | DeclareAsyncComponent ->
+      "async is an implementation detail and isn't necessary for declared components. Use `declare component` instead."
     | DeclareClassElement -> "`declare` modifier can only appear on class fields."
     | DeclareClassFieldInitializer ->
       "Unexpected token `=`. Initializers are not allowed in a `declare`."

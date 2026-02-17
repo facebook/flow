@@ -1302,6 +1302,35 @@ module Statement
         Statement.DeclareComponent component)
       env
 
+  and declare_async_statement env =
+    with_loc
+      (fun env ->
+        let leading = Peek.comments env in
+        Expect.token env T_DECLARE;
+        (* Now T_ASYNC is at position 0 and we can peek at position 1 *)
+        let is_component =
+          (parse_options env).components
+          && (not (Peek.ith_is_line_terminator ~i:1 env))
+          &&
+          match Peek.ith_token ~i:1 env with
+          | T_IDENTIFIER { raw = "component"; _ } -> true
+          | _ -> false
+        in
+        if is_component then begin
+          error env Parse_error.DeclareAsyncComponent;
+          let leading_async = Peek.comments env in
+          Eat.token env;
+          let leading = leading @ leading_async in
+          let component = declare_component ~leading env in
+          Statement.DeclareComponent component
+        end else begin
+          error env Parse_error.DeclareAsync;
+          Expect.token env T_ASYNC;
+          let fn = declare_function ~async:true ~leading env in
+          Statement.DeclareFunction fn
+        end)
+      env
+
   and declare_enum ~const_ env =
     with_loc
       (fun env ->
@@ -1551,9 +1580,8 @@ module Statement
       | _ -> declare_type_alias env)
     | T_OPAQUE -> declare_opaque_type env
     | T_TYPEOF when Peek.token env = T_IMPORT -> import_declaration env
-    | T_FUNCTION
-    | T_ASYNC ->
-      declare_function_statement env
+    | T_FUNCTION -> declare_function_statement env
+    | T_ASYNC -> declare_async_statement env
     | T_IDENTIFIER { raw = "hook"; _ } when (parse_options env).components ->
       declare_function_statement env
     | T_VAR -> declare_var_statement ~kind:Ast.Variable.Var env
@@ -2179,6 +2207,17 @@ module Statement
             (* declare export default component Foo() { ... } *)
             let component = with_loc (declare_component ~leading:[]) env in
             (Some (Component component), [])
+          | T_ASYNC
+            when (parse_options env).components
+                 &&
+                 match Peek.ith_token ~i:1 env with
+                 | T_IDENTIFIER { raw = "component"; _ } -> true
+                 | _ -> false ->
+            (* declare export default async component Foo() { ... } *)
+            error env Parse_error.DeclareAsyncComponent;
+            Eat.token env;
+            let component = with_loc (declare_component ~leading:[]) env in
+            (Some (Component component), [])
           | T_IDENTIFIER { raw = "hook"; _ } when (parse_options env).components ->
             (* declare export default hook foo (...): ... *)
             let fn = with_loc (declare_function ~async:false) env in
@@ -2247,6 +2286,22 @@ module Statement
       | T_IDENTIFIER { raw = "component"; _ } when (parse_options env).components ->
         (* declare export component Foo() { ... } *)
         let declaration =
+          let component = with_loc (declare_component ~leading:[]) env in
+          Some (Component component)
+        in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+        Statement.DeclareExportDeclaration
+          { default = None; declaration; specifiers = None; source = None; comments }
+      | T_ASYNC
+        when (parse_options env).components
+             &&
+             match Peek.ith_token ~i:1 env with
+             | T_IDENTIFIER { raw = "component"; _ } -> true
+             | _ -> false ->
+        (* declare export async component Foo() { ... } *)
+        let declaration =
+          error env Parse_error.DeclareAsyncComponent;
+          Eat.token env;
           let component = with_loc (declare_component ~leading:[]) env in
           Some (Component component)
         in

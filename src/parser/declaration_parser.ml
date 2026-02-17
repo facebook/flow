@@ -810,20 +810,16 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
         }
     )
 
-  let component_body env =
-    function_or_component_body
-      env
-      ~async:false
-      ~generator:false
-      ~expression:false
-      ~simple_params:false
+  let component_body ~async env =
+    function_or_component_body env ~async ~generator:false ~expression:false ~simple_params:false
 
   let component =
     with_loc (fun env ->
+        let (async, async_leading) = async env in
         let (sig_loc, (tparams, id, params, renders, leading)) =
           with_loc
             (fun env ->
-              let leading = Peek.comments env in
+              let leading = async_leading @ Peek.comments env in
               Expect.identifier env "component";
               let id =
                 id_remove_trailing
@@ -864,7 +860,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
             in
             (None, false, trailing)
           end else begin
-            let (body, contains_use_strict) = component_body env in
+            let (body, contains_use_strict) = component_body ~async env in
             (Some body, contains_use_strict, [])
           end
         in
@@ -876,7 +872,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
             body;
             renders;
             tparams;
-            async = false;
+            async;
             sig_loc;
             comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
           }

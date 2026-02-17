@@ -1052,6 +1052,13 @@ module Peek = struct
     &&
     match token env with
     | T_IDENTIFIER { raw = "component"; _ } when ith_is_identifier ~i:1 env -> true
+    | T_ASYNC
+      when (loc env)._end.line = (ith_loc ~i:1 env).start.line
+           &&
+           match ith_token ~i:1 env with
+           | T_IDENTIFIER { raw = "component"; _ } -> true
+           | _ -> false ->
+      true
     | _ -> false
 
   let is_renders_ident env =
