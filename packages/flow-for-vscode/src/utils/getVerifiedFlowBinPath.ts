@@ -19,13 +19,15 @@ import { window } from 'vscode';
 const { readFile, readdir, access } = promises;
 
 function getFlowBinDirPrefixForPlatform(): null | string {
-  return process.platform === 'darwin'
-    ? 'flow-osx-v'
-    : process.platform === 'linux' && process.arch === 'x64'
-      ? 'flow-linux64-v'
-      : process.platform === 'win32' && process.arch === 'x64'
-        ? 'flow-win64-v'
-        : null;
+  return process.platform === 'darwin' && process.arch === 'arm64'
+    ? 'flow-osx-arm64-v'
+    : process.platform === 'darwin' && process.arch === 'x64'
+      ? 'flow-osx-v'
+      : process.platform === 'linux' && process.arch === 'x64'
+        ? 'flow-linux64-v'
+        : process.platform === 'win32' && process.arch === 'x64'
+          ? 'flow-win64-v'
+          : null;
 }
 
 async function getFlowBinRelativePath(
