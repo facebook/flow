@@ -78,6 +78,7 @@ let stub_metadata ~root ~checked =
     strict_es6_import_export = false;
     strip_root = true;
     ts_syntax = true;
+    deprecated_colon_extends = [];
     ts_utility_syntax = true;
     tslib_syntax = false;
     type_expansion_recursion_limit = 3;

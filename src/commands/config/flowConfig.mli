@@ -297,6 +297,8 @@ val supported_operating_systems : config -> Options.supported_os list
 
 val ts_syntax : config -> bool
 
+val deprecated_colon_extends : config -> string list
+
 val ts_utility_syntax : config -> bool
 
 val tslib_syntax : config -> bool

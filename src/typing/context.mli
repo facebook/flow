@@ -132,6 +132,7 @@ type metadata = {
   strict_es6_import_export: bool;
   strip_root: bool;
   ts_syntax: bool;
+  deprecated_colon_extends: string list;
   ts_utility_syntax: bool;
   tslib_syntax: bool;
   type_expansion_recursion_limit: int;
@@ -308,6 +309,10 @@ val should_munge_underscores : t -> bool
 val should_strip_root : t -> bool
 
 val ts_syntax : t -> bool
+
+val deprecated_colon_extends : t -> string list
+
+val is_colon_extends_deprecated : t -> bool
 
 val ts_utility_syntax : t -> bool
 

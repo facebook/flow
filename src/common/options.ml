@@ -197,6 +197,7 @@ type t = {
   opt_supported_operating_systems: supported_os list;
   opt_temp_dir: string;
   opt_ts_syntax: bool;
+  opt_deprecated_colon_extends: string list;
   opt_ts_utility_syntax: bool;
   opt_tslib_syntax: bool;
   opt_type_expansion_recursion_limit: int;
@@ -423,6 +424,8 @@ let supported_operating_systems opts = opts.opt_supported_operating_systems
 let temp_dir opts = opts.opt_temp_dir
 
 let ts_syntax opts = opts.opt_ts_syntax
+
+let deprecated_colon_extends opts = opts.opt_deprecated_colon_extends
 
 let ts_utility_syntax opts = opts.opt_ts_utility_syntax
 

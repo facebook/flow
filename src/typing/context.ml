@@ -82,6 +82,7 @@ type metadata = {
   strict_es6_import_export: bool;
   strip_root: bool;
   ts_syntax: bool;
+  deprecated_colon_extends: string list;
   ts_utility_syntax: bool;
   tslib_syntax: bool;
   type_expansion_recursion_limit: int;
@@ -341,6 +342,7 @@ let metadata_of_options options =
     strict_es6_import_export = Options.strict_es6_import_export options;
     strip_root = Options.should_strip_root options;
     ts_syntax = Options.ts_syntax options;
+    deprecated_colon_extends = Options.deprecated_colon_extends options;
     ts_utility_syntax = Options.ts_utility_syntax options;
     tslib_syntax = Options.tslib_syntax options;
     deprecated_utilities = Options.deprecated_utilities options;
@@ -710,6 +712,19 @@ let should_munge_underscores cx = cx.metadata.munge_underscores
 let should_strip_root cx = cx.metadata.strip_root
 
 let ts_syntax cx = cx.metadata.ts_syntax
+
+let deprecated_colon_extends cx = cx.metadata.deprecated_colon_extends
+
+let is_colon_extends_deprecated cx =
+  if is_lib_file cx then
+    false
+  else
+    match cx.metadata.deprecated_colon_extends with
+    | [] -> false
+    | dirs ->
+      let filename = File_key.to_string (file cx) in
+      let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
+      List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
 
 let ts_utility_syntax cx = cx.metadata.ts_utility_syntax
 

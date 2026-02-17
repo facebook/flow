@@ -1593,6 +1593,11 @@ let make_options
     opt_supported_operating_systems = FlowConfig.supported_operating_systems flowconfig;
     opt_temp_dir;
     opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
+    opt_deprecated_colon_extends =
+      Base.List.map
+        ~f:(fun s ->
+          s |> Files.expand_project_root_token ~root |> Files.expand_builtin_root_token ~flowlib_dir)
+        (FlowConfig.deprecated_colon_extends flowconfig);
     opt_ts_utility_syntax = FlowConfig.ts_utility_syntax flowconfig;
     opt_tslib_syntax = FlowConfig.tslib_syntax flowconfig;
     opt_type_expansion_recursion_limit = FlowConfig.type_expansion_recursion_limit flowconfig;

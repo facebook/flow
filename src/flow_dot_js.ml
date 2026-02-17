@@ -154,6 +154,7 @@ let stub_metadata ~root ~checked =
     root;
     strict_es6_import_export = false;
     strip_root = true;
+    deprecated_colon_extends = [];
     ts_syntax = true;
     ts_utility_syntax = true;
     tslib_syntax = true;
