@@ -913,6 +913,7 @@ and ts_syntax_kind =
   | TSParameterProperty
   | AbstractClass
   | AbstractMethod
+  | DeprecatedTypeParamColon
 
 and invalid_mapped_type_error_kind =
   | InterfaceOrDeclaredClass
@@ -3731,6 +3732,7 @@ let friendly_message_of_msg = function
     | TSParameterProperty -> Normal MessageTSParameterProperty
     | AbstractClass -> Normal MessageAbstractClass
     | AbstractMethod -> Normal MessageAbstractMethod
+    | DeprecatedTypeParamColon -> Normal MessageDeprecatedTypeParamColonBound
   end
   | EInvalidBinaryArith { reason_out = _; reason_l; reason_r; kind } ->
     Normal (MessageCannotPerformBinaryArith { kind; reason_l; reason_r })

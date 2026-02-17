@@ -2633,6 +2633,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         | (None, _) -> false
       in
       (match bound_kind with
+      | Ast.Type.TypeParam.Colon
+        when (not (kind = Flow_ast_mapper.InferTP)) && Context.is_colon_extends_deprecated env.cx ->
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.ETSSyntax { kind = Error_message.DeprecatedTypeParamColon; loc })
+      | _ -> ());
+      (match bound_kind with
       | _ ->
         let mk_type env annot =
           let (((_, t), _) as annot_ast) = convert env annot in

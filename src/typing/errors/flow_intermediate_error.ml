@@ -3456,6 +3456,15 @@ let to_printable_error :
       @ tl_recur
       @ (text ". Please add an annotation to " :: annot_message)
     | MessageDeprecatedBool -> [text "Deprecated type. Use "; code "boolean"; text " instead."]
+    | MessageDeprecatedTypeParamColonBound ->
+      [
+        code ":";
+        text " is deprecated. Use ";
+        code "extends";
+        text " to specify type parameter bounds in the form ";
+        code "type T<A extends B> = ...";
+        text ".";
+      ]
     | MessageDevOnlyRefinedLocInfo { refining_locs } ->
       text "Refined at" :: Base.List.map refining_locs ~f:no_desc_ref
     | MessageDevOnlyInvalidatedRefinementInfo invalidation_info ->
