@@ -114,6 +114,7 @@ type t = {
   opt_casting_syntax: CastingSyntax.t;
   opt_casting_syntax_only_support_as_excludes: Str.regexp list;
   opt_channel_mode: [ `pipe | `socket ];
+  opt_async_component_syntax: bool;
   opt_component_syntax: bool;
   opt_debug: bool;
   opt_deprecated_utilities: string list SMap.t;
@@ -232,6 +233,8 @@ let casting_syntax opts = opts.opt_casting_syntax
 let casting_syntax_only_support_as_excludes opts = opts.opt_casting_syntax_only_support_as_excludes
 
 let channel_mode opts = opts.opt_channel_mode
+
+let async_component_syntax opts = opts.opt_async_component_syntax
 
 let component_syntax opts = opts.opt_component_syntax
 

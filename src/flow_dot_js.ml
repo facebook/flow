@@ -112,6 +112,7 @@ let stub_metadata ~root ~checked =
     casting_syntax = Options.CastingSyntax.Both;
     casting_syntax_only_support_as_excludes = [];
     component_syntax = true;
+    async_component_syntax = false;
     deprecated_utilities = SMap.empty;
     deprecated_utilities_excludes = [];
     dev_only_refinement_info_as_errors = false;

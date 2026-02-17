@@ -91,6 +91,8 @@ val casting_syntax_only_support_as_excludes : config -> string list
 
 val channel_mode : config -> [ `pipe | `socket ] option
 
+val async_component_syntax : config -> bool
+
 val component_syntax : config -> bool
 
 val deprecated_utilities : config -> string list SMap.t

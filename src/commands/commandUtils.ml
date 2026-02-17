@@ -1434,6 +1434,7 @@ let make_options
         ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
         (FlowConfig.casting_syntax_only_support_as_excludes flowconfig);
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
+    opt_async_component_syntax = FlowConfig.async_component_syntax flowconfig;
     opt_component_syntax = FlowConfig.component_syntax flowconfig;
     opt_debug = options_flags.debug;
     opt_deprecated_utilities =

@@ -22,6 +22,7 @@ type scope_kind =
   | Global (* global scope *)
   | Ctor (* constructor function *)
   | ComponentOrHookBody (* component or hook syntax *)
+  | AsyncComponentOrHookBody (* async component or hook syntax *)
 [@@deriving show]
 
 type class_stack = ALoc.t list

@@ -90,6 +90,7 @@ type metadata = {
   ban_spread_key_props: bool;
   casting_syntax: Options.CastingSyntax.t;
   casting_syntax_only_support_as_excludes: Str.regexp list;
+  async_component_syntax: bool;
   component_syntax: bool;
   deprecated_utilities: string list SMap.t;
   deprecated_utilities_excludes: Str.regexp list;
@@ -192,6 +193,8 @@ val builtin_module_opt :
   t -> Flow_import_specifier.userland -> (Reason.t * Type.moduletype Lazy.t) option
 
 val casting_syntax : t -> Options.CastingSyntax.t
+
+val async_component_syntax : t -> bool
 
 val component_syntax : t -> bool
 

@@ -5052,6 +5052,15 @@ let to_printable_error :
         code ".flowconfig";
         text ".";
       ]
+    | MessageUnsupportedSyntax AsyncComponentSyntax ->
+      [
+        text "Async component syntax is not enabled. ";
+        text "You may opt in to using async component syntax by setting ";
+        code "experimental.async_component_syntax=true";
+        text " in your ";
+        code ".flowconfig";
+        text ".";
+      ]
     | MessageUnsupportedSyntax (ContextDependentUnsupportedStatement NonLibdefToplevelDeclareModule)
       ->
       [

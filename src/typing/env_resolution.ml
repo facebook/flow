@@ -407,7 +407,10 @@ let resolve_pred_func cx (class_stack, ex, callee, targs, arguments) =
 let resolve_annotated_function
     cx ~scope_kind ~bind_this ~statics ~hook_like reason tparams_map function_loc function_ =
   let { Ast.Function.sig_loc; effect_; _ } = function_ in
-  if scope_kind = ComponentOrHookBody && effect_ = Ast.Function.Hook then begin
+  if
+    (scope_kind = ComponentOrHookBody || scope_kind = AsyncComponentOrHookBody)
+    && effect_ = Ast.Function.Hook
+  then begin
     Flow_js_utils.add_output cx Error_message.(ENestedHook reason)
   end;
   let cache = Context.node_cache cx in
@@ -447,9 +450,16 @@ let resolve_annotated_component cx scope_kind reason tparams_map component_loc c
       );
     AnyT.at (AnyError None) component_loc
   end else begin
-    if scope_kind = ComponentOrHookBody then begin
+    if scope_kind = ComponentOrHookBody || scope_kind = AsyncComponentOrHookBody then begin
       Flow_js_utils.add_output cx Error_message.(ENestedComponent reason)
     end;
+    if component.Ast.Statement.ComponentDeclaration.async && not (Context.async_component_syntax cx)
+    then
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EUnsupportedSyntax
+           (component_loc, Flow_intermediate_error_types.AsyncComponentSyntax)
+        );
     let tparams_map = mk_tparams_map cx tparams_map in
     let { Ast.Statement.ComponentDeclaration.sig_loc; body; _ } = component in
     let ((component_sig, _) as sig_data) =
@@ -934,7 +944,10 @@ let resolve_inferred_function
     Statement.mk_function cx ~needs_this_param ~statics reason function_loc function_
   in
   Node_cache.set_function cache id_loc fn;
-  if scope_kind = ComponentOrHookBody && function_.Ast.Function.effect_ = Ast.Function.Hook then begin
+  if
+    (scope_kind = ComponentOrHookBody || scope_kind = AsyncComponentOrHookBody)
+    && function_.Ast.Function.effect_ = Ast.Function.Hook
+  then begin
     Flow_js_utils.add_output cx Error_message.(ENestedHook reason)
   end;
   if

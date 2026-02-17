@@ -105,6 +105,7 @@ type unsupported_syntax =
   | ContextDependentUnsupportedStatement of context_dependent_unsupported_statement
   | WithStatement
   | ComponentSyntax
+  | AsyncComponentSyntax
   | DeclareGlobal
   | NonnullAssertion
   | Records

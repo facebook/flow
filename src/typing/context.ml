@@ -40,6 +40,7 @@ type metadata = {
   ban_spread_key_props: bool;
   casting_syntax: Options.CastingSyntax.t;
   casting_syntax_only_support_as_excludes: Str.regexp list;
+  async_component_syntax: bool;
   component_syntax: bool;
   deprecated_utilities: string list SMap.t;
   deprecated_utilities_excludes: Str.regexp list;
@@ -297,6 +298,7 @@ let metadata_of_options options =
     casting_syntax = Options.casting_syntax options;
     casting_syntax_only_support_as_excludes =
       Options.casting_syntax_only_support_as_excludes options;
+    async_component_syntax = Options.async_component_syntax options;
     component_syntax = Options.component_syntax options;
     deprecated_utilities_excludes = Options.deprecated_utilities_excludes options;
     hook_compatibility_excludes = Options.hook_compatibility_excludes options;
@@ -537,6 +539,8 @@ let casting_syntax cx =
       Options.CastingSyntax.Both
     else
       Options.CastingSyntax.As
+
+let async_component_syntax cx = cx.metadata.async_component_syntax
 
 let component_syntax cx = cx.metadata.component_syntax || File_key.is_lib_file cx.file
 

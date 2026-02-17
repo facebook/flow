@@ -1446,6 +1446,7 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
       )
 
     method private visit_component stmt =
+      let { Ast.Statement.ComponentDeclaration.async; _ } = stmt in
       this#in_scope
         (fun () ->
           let {
@@ -1494,7 +1495,11 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
           | None -> ()
           | Some body -> run_loc this#block body);
           return_hint_stack <- old_stack)
-        ComponentOrHookBody
+        ( if async then
+          AsyncComponentOrHookBody
+        else
+          ComponentOrHookBody
+        )
         ()
 
     method private visit_component_param

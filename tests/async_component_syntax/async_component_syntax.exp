@@ -1,0 +1,32 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:20:37
+
+Cannot create `AsyncWithProps` element because in property `foo`: string [1] is incompatible with number [2].
+[incompatible-type]
+
+   test.js:20:37
+   20| const _usage3 = <AsyncWithProps foo="bad" bar={42} />; // ERROR 2x
+                                           ^^^^^ [1]
+
+References:
+   test.js:14:37
+   14| async component AsyncWithProps(foo: number, bar: string) {
+                                           ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:20:48
+
+Cannot create `AsyncWithProps` element because in property `bar`: number [1] is incompatible with string [2].
+[incompatible-type]
+
+   test.js:20:48
+   20| const _usage3 = <AsyncWithProps foo="bad" bar={42} />; // ERROR 2x
+                                                      ^^ [1]
+
+References:
+   test.js:14:50
+   14| async component AsyncWithProps(foo: number, bar: string) {
+                                                        ^^^^^^ [2]
+
+
+
+Found 2 errors

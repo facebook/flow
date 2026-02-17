@@ -1,0 +1,15 @@
+Error ------------------------------------------------------------------------------------------------------ test.js:3:1
+
+Async component syntax is not enabled. You may opt in to using async component syntax by setting
+`experimental.async_component_syntax=true` in your `.flowconfig`. [unsupported-syntax]
+
+      v-------------------------------------------------------------------------
+   3| async component AsyncComp() { // ERROR: async component syntax not enabled
+   4|   await Promise.resolve();
+   5|   return <div />;
+   6| }
+      ^
+
+
+
+Found 1 error
