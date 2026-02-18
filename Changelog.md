@@ -1,3 +1,15 @@
+### 0.302.0
+
+Notable bug fixes:
+* Fix https://github.com/facebook/flow/issues/9357
+
+Misc:
+* Flow no longer errors on colon-style extends and now supports extends by default, previously gated by the ts_syntax option.
+* Add format, and test commands to LLM rules
+
+IDE:
+* Fixed https://github.com/facebook/flow/issues/9350
+
 ### 0.301.0
 
 IDE:
