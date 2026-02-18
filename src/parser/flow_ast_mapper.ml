@@ -1200,10 +1200,12 @@ class ['loc] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#enum_member_identifier ident in
-      if ident == id' then
+      let (init_loc, init_val) = init in
+      let init_val' = this#boolean_literal init_val in
+      if ident == id' && init_val == init_val' then
         member
       else
-        (loc, { id = id'; init })
+        (loc, { id = id'; init = (init_loc, init_val') })
 
     method enum_number_member
         (member : ('loc Ast.NumberLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t)
@@ -1211,10 +1213,12 @@ class ['loc] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#enum_member_identifier ident in
-      if ident == id' then
+      let (init_loc, init_val) = init in
+      let init_val' = this#number_literal init_val in
+      if ident == id' && init_val == init_val' then
         member
       else
-        (loc, { id = id'; init })
+        (loc, { id = id'; init = (init_loc, init_val') })
 
     method enum_string_member
         (member : ('loc Ast.StringLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t)
@@ -1222,10 +1226,12 @@ class ['loc] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#enum_member_identifier ident in
-      if ident == id' then
+      let (init_loc, init_val) = init in
+      let init_val' = this#string_literal init_val in
+      if ident == id' && init_val == init_val' then
         member
       else
-        (loc, { id = id'; init })
+        (loc, { id = id'; init = (init_loc, init_val') })
 
     method enum_bigint_member
         (member : ('loc Ast.BigIntLiteral.t, 'loc) Ast.Statement.EnumDeclaration.InitializedMember.t)
@@ -1233,10 +1239,12 @@ class ['loc] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
       let id' = this#enum_member_identifier ident in
-      if ident == id' then
+      let (init_loc, init_val) = init in
+      let init_val' = this#bigint_literal init_val in
+      if ident == id' && init_val == init_val' then
         member
       else
-        (loc, { id = id'; init })
+        (loc, { id = id'; init = (init_loc, init_val') })
 
     method enum_member_identifier (id : ('loc, 'loc) Ast.Identifier.t) = this#identifier id
 
