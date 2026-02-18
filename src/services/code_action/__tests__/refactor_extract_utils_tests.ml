@@ -77,6 +77,7 @@ let stub_metadata ~root ~checked =
     root;
     strict_es6_import_export = false;
     strip_root = true;
+    stylex_shorthand_prop = None;
     ts_syntax = true;
     deprecated_colon_extends = [];
     ts_utility_syntax = true;

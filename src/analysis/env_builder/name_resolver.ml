@@ -6780,9 +6780,38 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
 
       method! jsx_element loc expr =
         let open Ast.JSX in
-        let { opening_element = (_, { Opening.attributes = opening_attributes; _ }); _ } = expr in
+        let { opening_element = (_, { Opening.name; attributes = opening_attributes; _ }); _ } =
+          expr
+        in
         Eq_test.jsx_attributes_possible_sentinel_refinements opening_attributes
         |> this#add_sentinel_check_writes;
+        (* Record a phantom read of "stylex" when the configured prop is used on lowercase elements,
+         * but only if stylex is actually in scope (i.e. imported) and the feature is enabled. *)
+        (match Context.stylex_shorthand_prop cx with
+        | Some shorthand_prop_name ->
+          (match name with
+          | Identifier (_, { Identifier.name = ename; _ })
+            when ename <> String.capitalize_ascii ename ->
+            (match this#env_read_opt "stylex" with
+            | Some _ ->
+              List.iter
+                (fun attr ->
+                  match attr with
+                  | Opening.Attribute
+                      ( _,
+                        {
+                          Attribute.name =
+                            Attribute.Identifier (id_loc, { Identifier.name = aname; _ });
+                          _;
+                        }
+                      )
+                    when aname = shorthand_prop_name ->
+                    this#any_identifier id_loc "stylex"
+                  | _ -> ())
+                opening_attributes
+            | None -> ())
+          | _ -> ())
+        | None -> ());
         this#jsx_function_call loc;
         super#jsx_element loc expr
 

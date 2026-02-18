@@ -90,6 +90,8 @@ val local_scope_entry_exists : Context.t -> ALoc.t -> bool
 
 val is_global_var : Context.t -> ALoc.t -> bool
 
+val has_var_read : Context.t -> ALoc.t -> bool
+
 val get_class_entries : Context.t -> Type.class_binding list
 
 val with_class_stack : Context.t -> ALoc.t list -> f:(unit -> 'a) -> 'a

@@ -131,6 +131,7 @@ type metadata = {
   root: File_path.t;
   strict_es6_import_export: bool;
   strip_root: bool;
+  stylex_shorthand_prop: string option;
   ts_syntax: bool;
   deprecated_colon_extends: string list;
   ts_utility_syntax: bool;
@@ -307,6 +308,8 @@ val should_ignore_non_literal_requires : t -> bool
 val should_munge_underscores : t -> bool
 
 val should_strip_root : t -> bool
+
+val stylex_shorthand_prop : t -> string option
 
 val ts_syntax : t -> bool
 

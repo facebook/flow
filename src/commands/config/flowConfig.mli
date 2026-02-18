@@ -295,6 +295,8 @@ val strict_mode : config -> StrictModeSettings.t
 
 val supported_operating_systems : config -> Options.supported_os list
 
+val stylex_shorthand_prop : config -> string option
+
 val ts_syntax : config -> bool
 
 val deprecated_colon_extends : config -> string list

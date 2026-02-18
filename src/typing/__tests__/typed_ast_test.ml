@@ -71,6 +71,7 @@ let metadata =
     root = File_path.dummy_path;
     strict_es6_import_export = false;
     strip_root = true;
+    stylex_shorthand_prop = None;
     ts_syntax = true;
     ts_utility_syntax = true;
     tslib_syntax = false;

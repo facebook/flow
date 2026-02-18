@@ -137,6 +137,7 @@ module Opts = struct
     projects_strict_boundary_import_pattern_opt_outs: Str.regexp list;
     projects_strict_boundary_validate_import_pattern_opt_outs: bool;
     react_custom_jsx_typing: bool;
+    stylex_shorthand_prop: string option;
     react_ref_as_prop: Options.ReactRefAsProp.t;
     react_rules: Options.react_rules list;
     react_runtime: Options.react_runtime;
@@ -294,6 +295,7 @@ module Opts = struct
       projects_strict_boundary_import_pattern_opt_outs = [];
       projects_strict_boundary_validate_import_pattern_opt_outs = true;
       react_custom_jsx_typing = false;
+      stylex_shorthand_prop = None;
       react_ref_as_prop = Options.ReactRefAsProp.FullSupport;
       react_rules = [];
       react_runtime = Options.ReactRuntimeClassic;
@@ -1289,6 +1291,9 @@ module Opts = struct
           (fun opts v ->
             Ok { opts with supported_operating_systems = v :: opts.supported_operating_systems })
       );
+      ( "stylex_shorthand_prop",
+        string (fun opts v -> Ok { opts with stylex_shorthand_prop = Some v })
+      );
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("unsuppressable_error_codes", unsuppressable_error_codes_parser);
@@ -2133,6 +2138,8 @@ let strict_es6_import_export c = c.options.Opts.strict_es6_import_export
 let strict_mode c = c.strict_mode
 
 let supported_operating_systems c = c.options.Opts.supported_operating_systems
+
+let stylex_shorthand_prop c = c.options.Opts.stylex_shorthand_prop
 
 let ts_syntax c = c.options.Opts.ts_syntax
 

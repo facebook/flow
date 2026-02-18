@@ -46,6 +46,8 @@ module Context = struct
 
   let enable_const_params _cx = false
 
+  let stylex_shorthand_prop _cx = None
+
   let add_exhaustive_check _ _ _ = ()
 
   let exhaustive_check _ _ = ([], false)

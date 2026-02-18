@@ -195,6 +195,7 @@ type t = {
   opt_strict_mode: StrictModeSettings.t;
   opt_strip_root: bool;
   opt_supported_operating_systems: supported_os list;
+  opt_stylex_shorthand_prop: string option;
   opt_temp_dir: string;
   opt_ts_syntax: bool;
   opt_deprecated_colon_extends: string list;
@@ -420,6 +421,8 @@ let strict_es6_import_export opts = opts.opt_strict_es6_import_export
 let strict_mode opts = opts.opt_strict_mode
 
 let supported_operating_systems opts = opts.opt_supported_operating_systems
+
+let stylex_shorthand_prop opts = opts.opt_stylex_shorthand_prop
 
 let temp_dir opts = opts.opt_temp_dir
 

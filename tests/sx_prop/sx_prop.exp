@@ -1,0 +1,111 @@
+Error ------------------------------------------------------------------------------------------------- no_import.js:5:2
+
+Cannot create `div` element because property `sx` is extra in props [1] but missing in props of `div` [2]. Exact objects
+do not accept extra props. [incompatible-type]
+
+   no_import.js:5:2
+   5| <div sx={[1, 2, 3]} />; // ERROR — sx is not a known prop on div
+       ^^^ [2]
+
+References:
+   no_import.js:5:1
+   5| <div sx={[1, 2, 3]} />; // ERROR — sx is not a known prop on div
+      ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:16:10
+
+Cannot create `div` element because number [1] is incompatible with property `sx` [2]. [incompatible-type]
+
+   test.js:16:10
+   16| <div sx={42} />; // ERROR — not an array
+                ^^ [1]
+
+References:
+   test.js:16:6
+   16| <div sx={42} />; // ERROR — not an array
+            ^^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:17:6
+
+Cannot create `div` element because in array element: [incompatible-type]
+ - Either number [1] is incompatible with boolean [2].
+ - Or number [1] is incompatible with nullable boolean [3].
+
+   test.js:17:6
+   17| <div sx={[42]} />; // ERROR
+            ^^
+
+References:
+   test.js:17:11
+   17| <div sx={[42]} />; // ERROR
+                 ^^ [1]
+   stylex.js:6:41
+    6|   ...styles: ReadonlyArray<StyleXArray<?boolean | CompiledStyles>>
+                                               ^^^^^^^ [2]
+   stylex.js:6:40
+    6|   ...styles: ReadonlyArray<StyleXArray<?boolean | CompiledStyles>>
+                                              ^^^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:18:6
+
+Cannot create `div` element because in array element: [incompatible-type]
+ - Either string [1] is incompatible with boolean [2].
+ - Or string [1] is incompatible with nullable boolean [3].
+
+   test.js:18:6
+   18| <div sx={["not-a-style"]} />; // ERROR
+            ^^
+
+References:
+   test.js:18:11
+   18| <div sx={["not-a-style"]} />; // ERROR
+                 ^^^^^^^^^^^^^ [1]
+   stylex.js:6:41
+    6|   ...styles: ReadonlyArray<StyleXArray<?boolean | CompiledStyles>>
+                                               ^^^^^^^ [2]
+   stylex.js:6:40
+    6|   ...styles: ReadonlyArray<StyleXArray<?boolean | CompiledStyles>>
+                                              ^^^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------------------------ uppercase.js:14:2
+
+Cannot create `MyComponent` element because property `sx` is extra in props [1] but missing in object type [2]. Exact
+objects do not accept extra props. [incompatible-type]
+
+   uppercase.js:14:2
+   14| <MyComponent name="hello" sx={[styles.foo]} />; // ERROR — sx is not in MyComponent's props
+        ^^^^^^^^^^^
+
+References:
+   uppercase.js:14:1
+   14| <MyComponent name="hello" sx={[styles.foo]} />; // ERROR — sx is not in MyComponent's props
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   uppercase.js:10:29
+   10| function MyComponent(props: {name: string}): React.Node {
+                                   ^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- wrong_import.js:6:2
+
+Cannot create `div` element because property `sx` is extra in props [1] but missing in props of `div` [2]. Exact objects
+do not accept extra props. [incompatible-type]
+
+   wrong_import.js:6:2
+   6| <div sx={[1, 2, 3]} />; // ERROR — sx is not a known prop on div
+       ^^^ [2]
+
+References:
+   wrong_import.js:6:1
+   6| <div sx={[1, 2, 3]} />; // ERROR — sx is not a known prop on div
+      ^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 6 errors
+
+Only showing the most relevant union/intersection branches.
+To see all branches, re-run Flow with --show-all-branches

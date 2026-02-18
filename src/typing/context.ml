@@ -81,6 +81,7 @@ type metadata = {
   root: File_path.t;
   strict_es6_import_export: bool;
   strip_root: bool;
+  stylex_shorthand_prop: string option;
   ts_syntax: bool;
   deprecated_colon_extends: string list;
   ts_utility_syntax: bool;
@@ -341,6 +342,7 @@ let metadata_of_options options =
     root = Options.root options;
     strict_es6_import_export = Options.strict_es6_import_export options;
     strip_root = Options.should_strip_root options;
+    stylex_shorthand_prop = Options.stylex_shorthand_prop options;
     ts_syntax = Options.ts_syntax options;
     deprecated_colon_extends = Options.deprecated_colon_extends options;
     ts_utility_syntax = Options.ts_utility_syntax options;
@@ -710,6 +712,8 @@ let should_ignore_non_literal_requires cx = cx.metadata.ignore_non_literal_requi
 let should_munge_underscores cx = cx.metadata.munge_underscores
 
 let should_strip_root cx = cx.metadata.strip_root
+
+let stylex_shorthand_prop cx = cx.metadata.stylex_shorthand_prop
 
 let ts_syntax cx = cx.metadata.ts_syntax
 

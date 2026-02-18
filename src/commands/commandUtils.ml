@@ -1614,6 +1614,7 @@ let make_options
     opt_strict_mode = strict_mode;
     opt_strip_root = options_flags.strip_root;
     opt_supported_operating_systems = FlowConfig.supported_operating_systems flowconfig;
+    opt_stylex_shorthand_prop = FlowConfig.stylex_shorthand_prop flowconfig;
     opt_temp_dir;
     opt_ts_syntax = FlowConfig.ts_syntax flowconfig;
     opt_deprecated_colon_extends =

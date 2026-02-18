@@ -18,6 +18,8 @@ module type C = sig
 
   val enable_const_params : t -> bool
 
+  val stylex_shorthand_prop : t -> string option
+
   val add_exhaustive_check : t -> ALoc.t -> ALoc.t list * bool -> unit
 
   val exhaustive_check : t -> ALoc.t -> ALoc.t list * bool

@@ -1,0 +1,17 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:10:2
+
+Cannot create `div` element because property `sx` is extra in props [1] but missing in props of `div` [2]. Exact objects
+do not accept extra props. [incompatible-type]
+
+   test.js:10:2
+   10| <div sx={[styles.foo]} />; // ERROR — sx is not a known prop on div
+        ^^^ [2]
+
+References:
+   test.js:10:1
+   10| <div sx={[styles.foo]} />; // ERROR — sx is not a known prop on div
+       ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+
+Found 1 error

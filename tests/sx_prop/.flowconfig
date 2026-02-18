@@ -1,0 +1,7 @@
+[libs]
+flow-typed
+
+[options]
+all=true
+no_flowlib=false
+stylex_shorthand_prop=sx

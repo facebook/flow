@@ -791,6 +791,12 @@ let is_global_var cx loc =
 
 let local_scope_entry_exists cx loc = not (is_global_var cx loc)
 
+let has_var_read cx loc =
+  let { Loc_env.var_info; _ } = Context.environment cx in
+  match find_var_opt var_info loc with
+  | Ok _ -> true
+  | Error _ -> false
+
 let get_var_declared_type ?(lookup_mode = ForValue) ?(is_declared_function = false) cx name loc =
   match (name, lookup_mode) with
   | (OrdinaryName _, ForType) ->

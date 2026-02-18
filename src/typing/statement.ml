@@ -6757,10 +6757,136 @@ module Make
     (* Use the same reason for proto and the ObjT so we can walk the proto chain
        and use the root proto reason to build an error. *)
     let proto = ObjProtoT reason_props in
+    let is_lowercase_element = name <> String.capitalize_ascii name in
+    let shorthand_prop_name =
+      if is_lowercase_element then
+        Context.stylex_shorthand_prop cx
+      else
+        None
+    in
+    (* Helper to type an attribute's value expression *)
+    let jsx_attr_value_type attr_loc value =
+      match value with
+      (* <element name="literal" /> *)
+      | Some (Attribute.StringLiteral (loc, lit)) ->
+        let syntactic_flags =
+          Natural_inference.mk_syntactic_flags ~encl_ctx:JsxAttrOrChildrenContext ()
+        in
+        let t = string_literal cx syntactic_flags loc lit in
+        (t, Some (Attribute.StringLiteral ((loc, t), lit)))
+      (* <element name={expression} /> *)
+      | Some
+          (Attribute.ExpressionContainer
+            ( ec_loc,
+              { ExpressionContainer.expression = ExpressionContainer.Expression (loc, e); comments }
+            )
+            ) ->
+        let (((_, t), _) as e) = check_expression ~has_hint:(lazy true) cx (loc, e) in
+        ( t,
+          Some
+            (Attribute.ExpressionContainer
+               ( (ec_loc, t),
+                 { ExpressionContainer.expression = ExpressionContainer.Expression e; comments }
+               )
+            )
+        )
+      (* <element name={} /> *)
+      | Some (Attribute.ExpressionContainer _ as ec) ->
+        let t = EmptyT.at attr_loc in
+        (t, Some (Tast_utils.unchecked_mapper#jsx_attribute_value ec))
+      (* <element name /> *)
+      | None ->
+        ( DefT (mk_reason RBoolean attr_loc, SingletonBoolT { value = true; from_annot = false }),
+          None
+        )
+    in
+    (* Desugar the configured prop (e.g. sx={...}) into a stylex.props() call.
+     * Returns the spread type to add to acc and the typed attribute node.
+     *
+     * Instead of calling stylex.props(...sx_value) with SpreadArg (which produces
+     * confusing errors about "$Iterable" and "spread" when sx is not an array),
+     * we first check that the sx value is an array, extracting the element type,
+     * then call stylex.props(elem) with a regular Arg. *)
+    let desugar_shorthand_prop prop_name attr_loc id_loc acomments value =
+      let (atype, value) = jsx_attr_value_type attr_loc value in
+      (* Look up stylex from the environment *)
+      let stylex_t = Type_env.var_ref ~lookup_mode:ForValue cx (OrdinaryName "stylex") id_loc in
+      (* Get stylex.props *)
+      let props_reason = mk_reason (RProperty (Some (OrdinaryName "props"))) id_loc in
+      let stylex_props_t =
+        get_prop
+          ~encl_ctx:NoContext
+          cx
+          props_reason
+          ~use_op:(Op (GetProperty props_reason))
+          ~hint:hint_unavailable
+          stylex_t
+          (props_reason, "props")
+      in
+      (* Check that the prop value is an array and extract element type.
+       * This produces errors like "Cannot create `div` element because ..."
+       * instead of confusing messages about spread and $Iterable. *)
+      let shorthand_arr_reason = mk_reason (RProperty (Some (OrdinaryName prop_name))) attr_loc in
+      let component = mk_reason (RIdentifier (OrdinaryName name)) (loc_of_reason reason) in
+      let use_op = Op (JSXCreateElement { op = reason; component }) in
+      let elem_reason = mk_reason RArrayElement attr_loc in
+      let elem_t =
+        Tvar_resolver.mk_tvar_and_fully_resolve_where cx elem_reason (fun elem_t ->
+            Flow.flow
+              cx
+              (atype, UseT (use_op, DefT (shorthand_arr_reason, ArrT (ROArrayAT (elem_t, None)))))
+        )
+      in
+      (* Call stylex.props(elem) to check element types and get the return type *)
+      let call_reason = mk_reason (RProperty (Some (OrdinaryName "props"))) id_loc in
+      let tout =
+        Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx call_reason (fun tout_tvar ->
+            Flow.flow
+              cx
+              ( stylex_props_t,
+                CallT
+                  {
+                    use_op;
+                    reason = call_reason;
+                    call_action =
+                      Funcalltype (mk_functioncalltype call_reason None [Arg elem_t] tout_tvar);
+                    return_hint = Type.hint_unavailable;
+                  }
+              )
+        )
+      in
+      let att =
+        Opening.Attribute
+          ( attr_loc,
+            {
+              Attribute.name =
+                Attribute.Identifier
+                  ((id_loc, atype), { Identifier.name = prop_name; comments = acomments });
+              value;
+            }
+          )
+      in
+      (tout, att)
+    in
     let (acc, atts) =
       List.fold_left
         (fun (acc, atts) att ->
           match att with
+          (* The configured prop (e.g. sx=) on lowercase (intrinsic) JSX elements
+           * desugars to {...stylex.props(styles.foo, styles.bar)}
+           * Only when the option is set and stylex is imported (phantom read exists). *)
+          | Opening.Attribute
+              ( attr_loc,
+                {
+                  Attribute.name =
+                    Attribute.Identifier (id_loc, { Identifier.name = aname; comments = acomments });
+                  value;
+                }
+              )
+            when shorthand_prop_name = Some aname && Type_env.has_var_read cx id_loc ->
+            let (spread_t, att) = desugar_shorthand_prop aname attr_loc id_loc acomments value in
+            let acc = ObjectExpressionAcc.add_spread spread_t acc in
+            (acc, att :: atts)
           (* All attributes with a non-namespaced name that are not a react ignored
            * attribute. *)
           | Opening.Attribute
@@ -6771,51 +6897,7 @@ module Make
                   value;
                 }
               ) ->
-            (* Get the type for the attribute's value. *)
-            let (atype, value) =
-              match value with
-              (* <element name="literal" /> *)
-              | Some (Attribute.StringLiteral (loc, lit)) ->
-                let syntactic_flags =
-                  Natural_inference.mk_syntactic_flags ~encl_ctx:JsxAttrOrChildrenContext ()
-                in
-                let t = string_literal cx syntactic_flags loc lit in
-                (t, Some (Attribute.StringLiteral ((loc, t), lit)))
-              (* <element name={expression} /> *)
-              | Some
-                  (Attribute.ExpressionContainer
-                    ( ec_loc,
-                      {
-                        ExpressionContainer.expression = ExpressionContainer.Expression (loc, e);
-                        comments;
-                      }
-                    )
-                    ) ->
-                let (((_, t), _) as e) = check_expression ~has_hint:(lazy true) cx (loc, e) in
-                ( t,
-                  Some
-                    (Attribute.ExpressionContainer
-                       ( (ec_loc, t),
-                         {
-                           ExpressionContainer.expression = ExpressionContainer.Expression e;
-                           comments;
-                         }
-                       )
-                    )
-                )
-              (* <element name={} /> *)
-              | Some (Attribute.ExpressionContainer _ as ec) ->
-                let t = EmptyT.at attr_loc in
-                (t, Some (Tast_utils.unchecked_mapper#jsx_attribute_value ec))
-              (* <element name /> *)
-              | None ->
-                ( DefT
-                    ( mk_reason RBoolean attr_loc,
-                      SingletonBoolT { value = true; from_annot = false }
-                    ),
-                  None
-                )
-            in
+            let (atype, value) = jsx_attr_value_type attr_loc value in
             let acc =
               if Type_inference_hooks_js.dispatch_jsx_hook cx aname id_loc then
                 (* don't add `aname` to the prop map because it is the autocomplete token *)
