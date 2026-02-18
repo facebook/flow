@@ -2,4 +2,6 @@
  (name code_action_tests)
  (libraries ounit2 flow_code_action flow_state_heaps_parsing)
  (preprocess
-  (pps ppx_deriving.std)))
+  (pps ppx_deriving.std))
+ (action
+  (run %{test} -runner sequential)))
