@@ -317,7 +317,7 @@ let import_declarations ~root ~write_root ~resolved_modules ~file_sig =
   let open File_sig in
   let open Base.List.Let_syntax in
   (match%bind requires file_sig with
-  | Require { source = (_, module_ref); bindings; _ } ->
+  | Require { source = (source_loc, module_ref); bindings; _ } ->
     let module_ =
       module_of_module_ref
         ~resolved_modules
@@ -325,26 +325,21 @@ let import_declarations ~root ~write_root ~resolved_modules ~file_sig =
         ~write_root
         (Flow_import_specifier.userland module_ref)
     in
-    (match bindings with
-    | None -> []
-    | Some (BindIdent (loc, name)) ->
-      let import =
-        ImportDeclaration.ModuleExport ModuleExport.{ module_; export = Export.CommonJS }
-      in
+    let make_import_decl ~export ~loc ~name =
+      let import = ImportDeclaration.ModuleExport ModuleExport.{ module_; export } in
       let declaration = Declaration.{ loc; name } in
       return ImportDeclaration.{ import; declaration }
+    in
+    (match bindings with
+    | None -> make_import_decl ~export:Export.CommonJS ~loc:source_loc ~name:module_ref
+    | Some (BindIdent (loc, name)) -> make_import_decl ~export:Export.CommonJS ~loc ~name
     | Some (BindNamed named_bindings) ->
       (match%bind named_bindings with
       | (_, BindNamed _) ->
         (* currently we only track the top-level members of commonJS imports/exports *)
         []
       | ((_, export_name), BindIdent (loc, name)) ->
-        let import =
-          let export = Export.CommonJSMember export_name in
-          ImportDeclaration.ModuleExport ModuleExport.{ module_; export }
-        in
-        let declaration = Declaration.{ loc; name } in
-        return ImportDeclaration.{ import; declaration }))
+        make_import_decl ~export:(Export.CommonJSMember export_name) ~loc ~name))
   | ImportDynamic _
   | Import0 _
   | ImportSyntheticUserland _
