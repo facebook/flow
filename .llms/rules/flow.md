@@ -22,18 +22,61 @@ make
 # This produces bin/flow
 ```
 
-### Meta Internal Development (Buck2)
+### Meta Internal Development (Buck)
 ```bash
 # Build Flow binary
-buck2 build //flow:flow
+buck build //flow
 
 # Get the binary path for testing
-FLOW_BIN=$(buck2 build //flow:flow --show-full-output | awk '{print $2}')
+FLOW_BIN=$(buck build //flow:flow --show-full-output | awk '{print $2}')
 ```
+
+## Formatting Code
+
+```bash
+arc f
+```
+
+## After Editing OCaml Code
+
+After every edit to OCaml files (`.ml`, `.mli`), you MUST run both of these commands:
+1. `arc f` — to format the code
+2. `buck build //flow` — to verify the build succeeds
 
 ## Running Tests
 
 See tests/README.md for detailed instructions.
+
+### Checker Tests (tests/)
+Run only checker-related tests (`flow full-check`) under `tests/`:
+```bash
+env FLOW_RUNTESTS_PARALLELISM=176 ./runtests.sh -c facebook/flowd
+```
+
+### All Tests (tests/)
+Run all tests under `tests/`:
+```bash
+env FLOW_RUNTESTS_PARALLELISM=176 ./runtests.sh facebook/flowd
+```
+
+### Re-record Expected Outputs
+To update expected test outputs:
+```bash
+env FLOW_RUNTESTS_PARALLELISM=176 ./runtests.sh -r -c facebook/flowd
+```
+
+### IDE / LSP Tests
+Run IDE tests:
+```bash
+./tool test --bin facebook/flowd
+```
+
+Run a specific IDE test (e.g. `newtests/lsp/llmContext`):
+```bash
+./tool test --bin facebook/flowd newtests/lsp/llmContext
+```
+
+The output of a failing IDE test will show how to update expected output.
 
 ## Architecture
 
