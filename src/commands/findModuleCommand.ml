@@ -58,6 +58,7 @@ let main
       | Some root -> Some root
       | None -> Some filename)
   in
+  let filename = expand_path filename in
   let request = ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck } in
   let (resolution_result, failed_candidates) =
     match connect_and_make_request flowconfig_name option_values root request with

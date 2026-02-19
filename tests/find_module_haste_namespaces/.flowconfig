@@ -1,0 +1,7 @@
+[options]
+all=true
+module.system=haste
+experimental.projects=web
+experimental.projects=native
+experimental.projects_path_mapping='<PROJECT_ROOT>/web/' -> 'web'
+experimental.projects_path_mapping='<PROJECT_ROOT>/native/' -> 'native'
