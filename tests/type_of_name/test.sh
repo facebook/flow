@@ -111,3 +111,107 @@ assert_ok "$FLOW" type-of-name-experimental types.js LargeObjType --strip-root
 assert_ok "$FLOW" type-of-name-experimental types.js Formatter --strip-root
 # Generic type alias (should show "(generic type)" or similar)
 assert_ok "$FLOW" type-of-name-experimental types.js DataDisplayProps --strip-root
+
+# Complex types
+printf "\n=== Utility Types ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ReadOnlyUser --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js PartialUser --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js RequiredUser --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js UserSummary --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js UserWithoutEmail --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js UserKeys --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js UserValues --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js StatusMap --strip-root
+
+printf "\n=== Nullable, NonNullable, Exclude, Extract ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js MaybeString --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js DefinitelyString --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ActiveStatus --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js DangerStatus --strip-root
+
+printf "\n=== ReturnType, Parameters, Class ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js SampleReturn --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js SampleParams --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js AnimalClass --strip-root
+
+printf "\n=== Exact and KeyMirror ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ExactFromInexact --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js KeyMirrorExample --strip-root
+
+printf "\n=== Intersection Types ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Named --strip-root
+
+printf "\n=== Tuple Types ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Pair --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js LabeledTuple --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ReadOnlyTuple --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js OptionalTuple --strip-root
+
+printf "\n=== Promise Types ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js StringPromise --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js NestedPromise --strip-root
+
+printf "\n=== Readonly Collections ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ReadOnlyArray_t --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ReadOnlyMap_t --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ReadOnlySet_t --strip-root
+
+printf "\n=== Interfaces ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Serializable --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Comparable --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Printable --strip-root
+
+printf "\n=== Opaque Types ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js UserID --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Timestamp --strip-root
+
+printf "\n=== Complex Generics ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Result --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js TreeNode --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Container --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Animal --strip-root
+
+printf "\n=== Mapped Types ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js MakeReadonly --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js MakeOptional --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Methodify --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Validators --strip-root
+
+printf "\n=== Conditional Types ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js UnwrapPromise --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js UnwrapArray --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js IsString --strip-root
+
+printf "\n=== Complex Function Types ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Middleware --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Callback --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js AsyncFn --strip-root
+
+printf "\n=== Nested/Deep Object Types ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js DeepConfig --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ExactObj --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js InexactObj --strip-root
+
+printf "\n=== Component with Complex Refs ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ComplexComponent --strip-root
+
+printf "\n=== Misc Complex Types ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js Direction --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js DatabaseHost --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js CacheTTL --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ConfigType --strip-root
+
+printf "\n=== StringPrefix and StringSuffix ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js DataAttr --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js ExclaimStr --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js CSSVar --strip-root
+
+printf "\n=== Mapped Types over Tuples ===\n"
+assert_ok "$FLOW" type-of-name-experimental complex_types.js NumberTuple --strip-root
+assert_ok "$FLOW" type-of-name-experimental complex_types.js StringifiedTuple --strip-root
+
+printf "\n=== Complex Types from empty file (via index) ===\n"
+assert_ok "$FLOW" type-of-name-experimental empty_file.js ReadOnlyUser --strip-root
+assert_ok "$FLOW" type-of-name-experimental empty_file.js Result --strip-root
+assert_ok "$FLOW" type-of-name-experimental empty_file.js ComplexComponent --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js Container --strip-root

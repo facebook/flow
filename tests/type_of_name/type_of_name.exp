@@ -448,3 +448,345 @@ type DataDisplayProps<T> = {
 where
 'DataDisplayProps' is defined at types.js:12:13-28
 
+
+=== Utility Types ===
+Found exact match 'ReadOnlyUser' defined at complex_types.js:13:6,13:17 with type `type ReadOnlyUser = Readonly<User>` 
+where
+'ReadOnlyUser' is defined at complex_types.js:13:6-17
+'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
+
+Found exact match 'PartialUser' defined at complex_types.js:16:6,16:16 with type `type PartialUser = Partial<User>` 
+where
+'PartialUser' is defined at complex_types.js:16:6-16
+'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
+
+Found exact match 'RequiredUser' defined at complex_types.js:19:6,19:17 with type `type RequiredUser = Required<{age?: number, name?: string}>` 
+where
+'RequiredUser' is defined at complex_types.js:19:6-17
+
+Found exact match 'UserSummary' defined at complex_types.js:22:6,22:16 with type `type UserSummary = any (implicit)` 
+where
+'UserSummary' is defined at complex_types.js:22:6-16
+
+Found exact match 'UserWithoutEmail' defined at complex_types.js:25:6,25:21 with type `type UserWithoutEmail = any (implicit)` 
+where
+'UserWithoutEmail' is defined at complex_types.js:25:6-21
+
+Found exact match 'UserKeys' defined at complex_types.js:28:6,28:13 with type `type UserKeys = "name" | "isAdmin" | "email" | "age"` 
+where
+'UserKeys' is defined at complex_types.js:28:6-13
+
+Found exact match 'UserValues' defined at complex_types.js:29:6,29:15 with type `type UserValues = Values<User>` 
+where
+'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
+'UserValues' is defined at complex_types.js:29:6-15
+
+Found exact match 'StatusMap' defined at complex_types.js:32:6,32:14 with type `type StatusMap = any (implicit)` 
+where
+'StatusMap' is defined at complex_types.js:32:6-14
+
+
+=== Nullable, NonNullable, Exclude, Extract ===
+Found exact match 'MaybeString' defined at complex_types.js:35:6,35:16 with type `type MaybeString = ?string` 
+where
+'MaybeString' is defined at complex_types.js:35:6-16
+
+Found exact match 'DefinitelyString' defined at complex_types.js:36:6,36:21 with type `type DefinitelyString = NonNullable<MaybeString>` 
+where
+'DefinitelyString' is defined at complex_types.js:36:6-21
+'MaybeString' is defined at complex_types.js:35:6-16 = ?string
+
+Found exact match 'ActiveStatus' defined at complex_types.js:40:6,40:17 with type `type ActiveStatus = any (implicit)` 
+where
+'ActiveStatus' is defined at complex_types.js:40:6-17
+
+Found exact match 'DangerStatus' defined at complex_types.js:41:6,41:17 with type `type DangerStatus = any (implicit)` 
+where
+'DangerStatus' is defined at complex_types.js:41:6-17
+
+
+=== ReturnType, Parameters, Class ===
+Found exact match 'SampleReturn' defined at complex_types.js:45:6,45:17 with type `type SampleReturn = any (implicit)` 
+where
+'SampleReturn' is defined at complex_types.js:45:6-17
+
+Found exact match 'SampleParams' defined at complex_types.js:46:6,46:17 with type `type SampleParams = any (implicit)` 
+where
+'SampleParams' is defined at complex_types.js:46:6-17
+
+Found exact match 'AnimalClass' defined at complex_types.js:55:6,55:16 with type `type AnimalClass = Class<Animal>` 
+where
+'Animal' is defined at complex_types.js:49:7-12
+'AnimalClass' is defined at complex_types.js:55:6-16
+
+
+=== Exact and KeyMirror ===
+Found exact match 'ExactFromInexact' defined at complex_types.js:59:6,59:21 with type `type ExactFromInexact = $Exact<InexactBase>` 
+where
+'ExactFromInexact' is defined at complex_types.js:59:6-21
+'InexactBase' is defined at complex_types.js:58:6-16 = {age: number, name: string, ...}
+
+Found exact match 'KeyMirrorExample' defined at complex_types.js:62:6,62:21 with type `type KeyMirrorExample = $KeyMirror<{bar: string, foo: number}>` 
+where
+'KeyMirrorExample' is defined at complex_types.js:62:6-21
+
+
+=== Intersection Types ===
+Found exact match 'Named' defined at complex_types.js:68:6,68:10 with type `type Named = HasName & HasAge` 
+where
+'HasAge' is defined at complex_types.js:67:6-11 = {age: number}
+'HasName' is defined at complex_types.js:66:6-12 = {name: string}
+'Named' is defined at complex_types.js:68:6-10
+
+
+=== Tuple Types ===
+Found exact match 'Pair' defined at complex_types.js:72:6,72:9 with type `type Pair = [string, number]` 
+where
+'Pair' is defined at complex_types.js:72:6-9
+
+Found exact match 'LabeledTuple' defined at complex_types.js:73:6,73:17 with type `type LabeledTuple = [name: string, age: number, active: boolean]` 
+where
+'LabeledTuple' is defined at complex_types.js:73:6-17
+
+Found exact match 'ReadOnlyTuple' defined at complex_types.js:74:6,74:18 with type `type ReadOnlyTuple = Readonly<[string, number, boolean]>` 
+where
+'ReadOnlyTuple' is defined at complex_types.js:74:6-18
+
+Found exact match 'OptionalTuple' defined at complex_types.js:75:6,75:18 with type `type OptionalTuple = [required: string, optional?: number]` 
+where
+'OptionalTuple' is defined at complex_types.js:75:6-18
+
+
+=== Promise Types ===
+Found exact match 'StringPromise' defined at complex_types.js:79:6,79:18 with type `type StringPromise = Promise<string>` 
+where
+'Promise' is defined at [LIB] prelude.js:46:15-21
+'StringPromise' is defined at complex_types.js:79:6-18
+
+Found exact match 'NestedPromise' defined at complex_types.js:80:6,80:18 with type `type NestedPromise = Promise<Promise<number>>` 
+where
+'NestedPromise' is defined at complex_types.js:80:6-18
+'Promise' is defined at [LIB] prelude.js:46:15-21
+
+
+=== Readonly Collections ===
+Found exact match 'ReadOnlyArray_t' defined at complex_types.js:84:6,84:20 with type `type ReadOnlyArray_t = ReadonlyArray<number>` 
+where
+'ReadOnlyArray_t' is defined at complex_types.js:84:6-20
+
+Found exact match 'ReadOnlyMap_t' defined at complex_types.js:85:6,85:18 with type `type ReadOnlyMap_t = any (implicit)` 
+where
+'ReadOnlyMap_t' is defined at complex_types.js:85:6-18
+
+Found exact match 'ReadOnlySet_t' defined at complex_types.js:86:6,86:18 with type `type ReadOnlySet_t = any (implicit)` 
+where
+'ReadOnlySet_t' is defined at complex_types.js:86:6-18
+
+
+=== Interfaces ===
+Found exact match 'Serializable' defined at complex_types.js:90:11,90:22 with type `interface Serializable` 
+where
+'Serializable' is defined at complex_types.js:90:11-22
+
+Found exact match 'Comparable' defined at complex_types.js:95:11,95:20 with type `interface Comparable<T>` 
+where
+'Comparable' is defined at complex_types.js:95:11-20
+
+Found exact match 'Printable' defined at complex_types.js:99:11,99:19 with type `interface Printable` 
+where
+'Printable' is defined at complex_types.js:99:11-19
+
+
+=== Opaque Types ===
+Found exact match 'UserID' defined at complex_types.js:105:13,105:18 with type `type UserID = string` 
+where
+'UserID' is defined at complex_types.js:105:13-18
+
+Found exact match 'Timestamp' defined at complex_types.js:106:13,106:21 with type `type Timestamp = number` 
+where
+'Timestamp' is defined at complex_types.js:106:13-21
+
+
+=== Complex Generics ===
+Found exact match 'Result' defined at complex_types.js:110:6,110:11 with type `type Result<T, E> = {ok: true, value: T} | {error: E, ok: false}` 
+where
+'Result' is defined at complex_types.js:110:6-11
+
+Found exact match 'TreeNode' defined at complex_types.js:112:6,112:13 with type `type TreeNode<T> = {children: Array<TreeNode<T>>, value: T}` 
+where
+'TreeNode' is defined at complex_types.js:112:6-13
+
+Found exact match 'Container' defined at complex_types.js:131:7,131:15 with type `class Container<T>` 
+where
+'Container' is defined at complex_types.js:131:7-15
+
+Found exact match 'Animal' defined at complex_types.js:49:7,49:12 with type `class Animal` 
+where
+'Animal' is defined at complex_types.js:49:7-12
+
+
+=== Mapped Types ===
+Found exact match 'MakeReadonly' defined at complex_types.js:119:6,119:17 with type `type MakeReadonly<T: {...}> = {+[K in keyof T]: T[K]}` 
+where
+'MakeReadonly' is defined at complex_types.js:119:6-17
+
+Found exact match 'MakeOptional' defined at complex_types.js:120:6,120:17 with type `type MakeOptional<T: {...}> = {[K in keyof T]?: T[K]}` 
+where
+'MakeOptional' is defined at complex_types.js:120:6-17
+
+Found exact match 'Methodify' defined at complex_types.js:121:6,121:14 with type `type Methodify<T: {...}> = {[K in keyof T]: () => T[K]}` 
+where
+'Methodify' is defined at complex_types.js:121:6-14
+
+Found exact match 'Validators' defined at complex_types.js:210:6,210:15 with type `type Validators<T: {...}> = {[K in keyof T]: (value: T[K]) => boolean}` 
+where
+'Validators' is defined at complex_types.js:210:6-15
+
+
+=== Conditional Types ===
+Found exact match 'UnwrapPromise' defined at complex_types.js:125:6,125:18 with type `type UnwrapPromise<T> = T extends Promise<infer V> ? V : T` 
+where
+'Promise' is defined at [LIB] prelude.js:46:15-21
+'UnwrapPromise' is defined at complex_types.js:125:6-18
+'V' is defined at complex_types.js:125:49
+
+Found exact match 'UnwrapArray' defined at complex_types.js:126:6,126:16 with type `type UnwrapArray<T> = T extends ReadonlyArray<infer V> ? V : T` 
+where
+'UnwrapArray' is defined at complex_types.js:126:6-16
+'V' is defined at complex_types.js:126:53
+
+Found exact match 'IsString' defined at complex_types.js:127:6,127:13 with type `type IsString<T> = T extends string ? true : false` 
+where
+'IsString' is defined at complex_types.js:127:6-13
+
+
+=== Complex Function Types ===
+Found exact match 'Middleware' defined at complex_types.js:143:6,143:15 with type `type Middleware<S, A> = (state: S, action: A, next: (A) => S) => S` 
+where
+'Middleware' is defined at complex_types.js:143:6-15
+
+Found exact match 'Callback' defined at complex_types.js:144:6,144:13 with type `type Callback<T> = (error: any | null, result: T) => void` 
+where
+'Callback' is defined at complex_types.js:144:6-13
+
+Found exact match 'AsyncFn' defined at complex_types.js:145:6,145:12 with type `type AsyncFn<T> = () => Promise<T>` 
+where
+'AsyncFn' is defined at complex_types.js:145:6-12
+'Promise' is defined at [LIB] prelude.js:46:15-21
+
+
+=== Nested/Deep Object Types ===
+Found exact match 'DeepConfig' defined at complex_types.js:149:6,149:15 with type
+```
+type DeepConfig = {
+  cache: {maxSize: number, ttl: number},
+  database: {
+    credentials: {password: string, username: string},
+    host: string,
+    port: number
+  },
+  features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>
+}
+```
+where
+'DeepConfig' is defined at complex_types.js:149:6-15
+
+Found exact match 'ExactObj' defined at complex_types.js:170:6,170:13 with type `type ExactObj = {age: number, name: string}` 
+where
+'ExactObj' is defined at complex_types.js:170:6-13
+
+Found exact match 'InexactObj' defined at complex_types.js:171:6,171:15 with type `type InexactObj = {age: number, name: string, ...}` 
+where
+'InexactObj' is defined at complex_types.js:171:6-15
+
+
+=== Component with Complex Refs ===
+Found exact match 'ComplexComponent' defined at complex_types.js:175:11,175:26 with type
+```
+component ComplexComponent(
+  config: DeepConfig,
+  result: Result<string, any>,
+  user: ReadOnlyUser
+)
+```
+where
+'ComplexComponent' is defined at complex_types.js:175:1,179:1
+'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
+'ReadOnlyUser' is defined at complex_types.js:13:6-17 = Readonly<User>
+'Result' is defined at complex_types.js:110:6-11
+
+
+=== Misc Complex Types ===
+Found exact match 'Direction' defined at complex_types.js:185:6,185:14 with type `type Direction = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw"` 
+where
+'Direction' is defined at complex_types.js:185:6-14
+
+Found exact match 'DatabaseHost' defined at complex_types.js:189:6,189:17 with type `type DatabaseHost = DeepConfig["database"]["host"]` 
+where
+'DatabaseHost' is defined at complex_types.js:189:6-17
+'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
+
+Found exact match 'CacheTTL' defined at complex_types.js:190:6,190:13 with type `type CacheTTL = DeepConfig["cache"]["ttl"]` 
+where
+'CacheTTL' is defined at complex_types.js:190:6-13
+'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
+
+Found exact match 'ConfigType' defined at complex_types.js:195:6,195:15 with type `type ConfigType = DeepConfig` 
+where
+'ConfigType' is defined at complex_types.js:195:6-15
+'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
+
+
+=== StringPrefix and StringSuffix ===
+Found exact match 'DataAttr' defined at complex_types.js:199:6,199:13 with type `type DataAttr = StringPrefix<"data-">` 
+where
+'DataAttr' is defined at complex_types.js:199:6-13
+
+Found exact match 'ExclaimStr' defined at complex_types.js:200:6,200:15 with type `type ExclaimStr = StringSuffix<"!">` 
+where
+'ExclaimStr' is defined at complex_types.js:200:6-15
+
+Found exact match 'CSSVar' defined at complex_types.js:201:6,201:11 with type `type CSSVar = StringPrefix<"var(--"> & StringSuffix<")">` 
+where
+'CSSVar' is defined at complex_types.js:201:6-11
+
+
+=== Mapped Types over Tuples ===
+Found exact match 'NumberTuple' defined at complex_types.js:205:6,205:16 with type `type NumberTuple = [number, number, number]` 
+where
+'NumberTuple' is defined at complex_types.js:205:6-16
+
+Found exact match 'StringifiedTuple' defined at complex_types.js:206:6,206:21 with type `type StringifiedTuple = {[K in keyof NumberTuple]: string}` 
+where
+'NumberTuple' is defined at complex_types.js:205:6-16 = [number, number, number]
+'StringifiedTuple' is defined at complex_types.js:206:6-21
+
+
+=== Complex Types from empty file (via index) ===
+Found exact match 'ReadOnlyUser' defined at complex_types.js:13:6,13:17 with type `type ReadOnlyUser = Readonly<User>` 
+where
+'ReadOnlyUser' is defined at complex_types.js:13:6-17
+'User' is defined at complex_types.js:5:6-9 = {age: number, email: string, isAdmin: boolean, name: string}
+
+Found exact match 'Result' defined at complex_types.js:110:6,110:11 with type `type Result<T, E> = {ok: true, value: T} | {error: E, ok: false}` 
+where
+'Result' is defined at complex_types.js:110:6-11
+
+Found exact match 'ComplexComponent' defined at complex_types.js:175:1,179:1 with type
+```
+component ComplexComponent(
+  config: DeepConfig,
+  result: Result<string, any>,
+  user: ReadOnlyUser
+)
+```
+where
+'ComplexComponent' is defined at complex_types.js:175:1,179:1
+'DeepConfig' is defined at complex_types.js:149:6-15 = {cache: {maxSize: number, ttl: number}, database: {credentials: {password: string, username: string}, host: string, port: number}, features: Readonly<{enableLogging: boolean, enableMetrics: boolean}>}
+'ReadOnlyUser' is defined at complex_types.js:13:6-17 = Readonly<User>
+'Result' is defined at complex_types.js:110:6-11
+
+Found exact match 'Container' defined at complex_types.js:131:7,131:15 with type `class Container<T>` 
+where
+'Container' is defined at complex_types.js:131:7-15
+
