@@ -50,6 +50,7 @@ let type_of_name_from_artifacts
   let options =
     {
       Ty_normalizer_env.expand_internal_types = false;
+      expand_enum_members = true;
       evaluate_type_destructors =
         Ty_normalizer_env.EvaluateCustom
           (function

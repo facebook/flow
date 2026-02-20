@@ -530,7 +530,25 @@ let layout_of_elt
     | Conditional _ ->
       wrap_in_parens (type_ ~depth t)
     | _ -> type_ ~depth t
-  and enum_decl s = fuse [Atom "enum"; space; identifier (local_name_of_symbol s)]
+  and enum_decl name members has_unknown_members truncated_members_count =
+    let base = fuse [Atom "enum"; space; identifier (local_name_of_symbol name)] in
+    match members with
+    | None -> base
+    | Some ms ->
+      let member_atoms = List.map (fun m -> Atom m) ms in
+      let member_atoms =
+        if truncated_members_count > 0 then
+          let truncated_comment =
+            Printf.sprintf "/* ... %d more members */" truncated_members_count
+          in
+          member_atoms @ [Atom truncated_comment]
+        else if has_unknown_members then
+          member_atoms @ [Atom "..."]
+        else
+          member_atoms
+      in
+      fuse
+        [base; space; list ~wrap:(Atom "{", Atom "}") ~sep:(Atom ",") ~trailing:false member_atoms]
   and utility ~depth u =
     match u with
     | ReadOnly (Tup _ as t) when ts_syntax -> fuse [Atom "readonly"; space; type_ ~depth t]
@@ -663,7 +681,8 @@ let layout_of_elt
     | ClassDecl (s, ps) -> class_decl ~depth s ps
     | InterfaceDecl (s, ps) -> interface_decl ~depth s ps
     | RecordDecl (s, ps) -> record_decl ~depth s ps
-    | EnumDecl n -> enum_decl n
+    | EnumDecl { name; members; has_unknown_members; truncated_members_count } ->
+      enum_decl name members has_unknown_members truncated_members_count
     | NominalComponentDecl { name; tparams; targs; props; renders; is_type } ->
       nominal_component_decl ~depth name tparams targs props renders is_type
     | NamespaceDecl { name; exports = _ } -> namespace name

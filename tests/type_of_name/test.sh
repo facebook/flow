@@ -87,3 +87,11 @@ assert_errors "$FLOW" type-of-name-experimental empty_file.js NO_UserProfile --s
 
 # Check builtins
 assert_ok "$FLOW" type-of-name-experimental empty_file.js Array --strip-root
+
+# Enums
+printf "\n=== Enums ===\n"
+assert_ok "$FLOW" type-of-name-experimental basic.js MyStringEnum --strip-root
+assert_ok "$FLOW" type-of-name-experimental basic.js MyNumberEnum --strip-root
+assert_ok "$FLOW" type-of-name-experimental basic.js MyBooleanEnum --strip-root
+assert_ok "$FLOW" type-of-name-experimental basic.js enumValue --strip-root
+assert_ok "$FLOW" type-of-name-experimental basic.js LargeEnum --strip-root

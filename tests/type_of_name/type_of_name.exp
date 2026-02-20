@@ -289,3 +289,80 @@ Found exact match 'Array' defined as a library definition (no need to import) wi
 where
 'Array' is defined at [LIB] prelude.js:30:15-19
 
+
+=== Enums ===
+Found exact match 'MyStringEnum' defined at basic.js:57:6,57:17 with type `enum MyStringEnum {One, Three, Two}` 
+where
+'MyStringEnum' is defined at basic.js:57:6-17
+
+Found exact match 'MyNumberEnum' defined at basic.js:63:6,63:17 with type `enum MyNumberEnum {A, B, C}` 
+where
+'MyNumberEnum' is defined at basic.js:63:6-17
+
+Found exact match 'MyBooleanEnum' defined at basic.js:69:6,69:18 with type `enum MyBooleanEnum {No, Yes}` 
+where
+'MyBooleanEnum' is defined at basic.js:69:6-18
+
+Found exact match 'enumValue' defined at basic.js:74:7,74:15 with type `MyStringEnum` 
+where
+'MyStringEnum' is defined at basic.js:57:6-17
+
+Found exact match 'LargeEnum' defined at basic.js:77:6,77:14 with type
+```
+enum LargeEnum {
+  Member001,
+  Member002,
+  Member003,
+  Member004,
+  Member005,
+  Member006,
+  Member007,
+  Member008,
+  Member009,
+  Member010,
+  Member011,
+  Member012,
+  Member013,
+  Member014,
+  Member015,
+  Member016,
+  Member017,
+  Member018,
+  Member019,
+  Member020,
+  Member021,
+  Member022,
+  Member023,
+  Member024,
+  Member025,
+  Member026,
+  Member027,
+  Member028,
+  Member029,
+  Member030,
+  Member031,
+  Member032,
+  Member033,
+  Member034,
+  Member035,
+  Member036,
+  Member037,
+  Member038,
+  Member039,
+  Member040,
+  Member041,
+  Member042,
+  Member043,
+  Member044,
+  Member045,
+  Member046,
+  Member047,
+  Member048,
+  Member049,
+  Member050,
+  /* ... 50 more members */
+}
+```
+where
+'LargeEnum' is defined at basic.js:77:6-14
+

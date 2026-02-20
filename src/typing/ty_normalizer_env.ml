@@ -28,6 +28,8 @@ type options = {
    * Function.prototype.apply: (thisArg: any, argArray?: any): any
    *)
   expand_internal_types: bool;
+  (* If true, expand enum declarations to include their members. *)
+  expand_enum_members: bool;
   (* Consider all kinds of Bot and Any the same when simplifying types.
    *
    * The normalized type Ty.Bot may correspond to either the `Empty` type,
@@ -65,6 +67,7 @@ let default_options =
   {
     evaluate_type_destructors = EvaluateNone;
     expand_internal_types = false;
+    expand_enum_members = false;
     merge_bot_and_any_kinds = true;
     omit_targ_defaults_option = false;
     optimize_types = true;
@@ -76,6 +79,7 @@ let default_options =
 let default_codemod_options =
   {
     expand_internal_types = false;
+    expand_enum_members = false;
     evaluate_type_destructors = EvaluateSome;
     optimize_types = false;
     omit_targ_defaults_option = true;
@@ -153,3 +157,5 @@ let merge_bot_and_any_kinds e = e.genv.options.merge_bot_and_any_kinds
 let verbose e = e.genv.options.verbose_normalizer
 
 let toplevel_is_type_identifier_reference e = e.genv.options.toplevel_is_type_identifier_reference
+
+let expand_enum_members e = e.genv.options.expand_enum_members

@@ -452,7 +452,20 @@ struct
     | InterfaceDecl (s, ps) ->
       spf "InterfaceDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
     | RecordDecl (s, ps) -> spf "RecordDecl (%s) (%s)" (dump_symbol s) (dump_type_params ~depth ps)
-    | EnumDecl name -> spf "Enum(%s)" (dump_symbol name)
+    | EnumDecl { name; members; has_unknown_members; truncated_members_count } ->
+      let members_str =
+        match members with
+        | None -> ""
+        | Some ms ->
+          let ms_str = String.concat ", " ms in
+          if truncated_members_count > 0 then
+            spf " { %s, /* ... %d more members */ }" ms_str truncated_members_count
+          else if has_unknown_members then
+            spf " { %s, ... }" ms_str
+          else
+            spf " { %s }" ms_str
+      in
+      spf "Enum(%s)%s" (dump_symbol name) members_str
     | NominalComponentDecl { name; tparams; targs = _; props = _; renders = _; is_type } ->
       spf
         "NominalComponentDecl (%s, %s, %b)"
@@ -854,7 +867,17 @@ struct
       | ClassDecl (s, ps) -> json_of_class_decl (s, ps)
       | InterfaceDecl (s, ps) -> json_of_interface_decl (s, ps)
       | RecordDecl (s, ps) -> json_of_record_decl (s, ps)
-      | EnumDecl name -> [("name", json_of_symbol name)]
+      | EnumDecl { name; members; has_unknown_members; truncated_members_count } ->
+        [
+          ("name", json_of_symbol name);
+          ( "members",
+            match members with
+            | Some ms -> JSON_Array (List.map (fun m -> JSON_String m) ms)
+            | None -> JSON_Null
+          );
+          ("has_unknown_members", JSON_Bool has_unknown_members);
+          ("truncated_members_count", JSON_Number (string_of_int truncated_members_count));
+        ]
       | NominalComponentDecl { name; tparams; targs = _; props; renders; is_type } ->
         json_of_nominal_component_decl (name, tparams, props, renders, is_type)
       | NamespaceDecl { name; exports } -> json_of_namespace name exports

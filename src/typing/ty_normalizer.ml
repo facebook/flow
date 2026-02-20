@@ -1893,9 +1893,28 @@ module Make (I : INPUT) : S = struct
              }
           )
       in
-      let enum_decl ~env reason =
+      let enum_decl ~env reason enum_info_opt =
         let%bind symbol = Reason_utils.local_type_alias_symbol env reason in
-        return (Ty.Decl Ty.(EnumDecl symbol))
+        let (members, has_unknown_members, truncated_members_count) =
+          if Env.expand_enum_members env then
+            let max_enum_members = 50 in
+            match enum_info_opt with
+            | Some (T.ConcreteEnum { T.members; has_unknown_members; _ }) ->
+              let all_members = SMap.keys members |> List.sort String.compare in
+              let num_members = List.length all_members in
+              if num_members > max_enum_members then
+                let truncated = Base.List.take all_members max_enum_members in
+                (Some truncated, has_unknown_members, num_members - max_enum_members)
+              else
+                (Some all_members, has_unknown_members, 0)
+            | _ -> (None, false, 0)
+          else
+            (None, false, 0)
+        in
+        return
+          (Ty.Decl
+             Ty.(EnumDecl { name = symbol; members; has_unknown_members; truncated_members_count })
+          )
       in
       let singleton_poly ~env ~orig_t tparams = function
         (* Imported interfaces *)
@@ -1954,9 +1973,9 @@ module Make (I : INPUT) : S = struct
         | DefT (_, TypeT (ImportClassKind, DefT (r, InstanceT { super; inst; _ }))) ->
           class_or_interface_decl ~env r None super inst
         (* Enums *)
-        | DefT (reason, EnumObjectT _)
+        | DefT (reason, EnumObjectT { enum_info; _ }) -> enum_decl ~env reason (Some enum_info)
         | DefT (_, TypeT (ImportEnumKind, DefT (reason, EnumValueT _))) ->
-          enum_decl ~env reason
+          enum_decl ~env reason None
         | DefT
             ( reason,
               ReactAbstractComponentT { component_kind = Nominal (_, name, targs); config; renders }
@@ -2132,7 +2151,7 @@ module Make (I : INPUT) : S = struct
       | ClassDecl ({ sym_def_loc; _ }, _)
       | InterfaceDecl ({ sym_def_loc; _ }, _)
       | RecordDecl ({ sym_def_loc; _ }, _)
-      | EnumDecl { sym_def_loc; _ }
+      | EnumDecl { name = { sym_def_loc; _ }; _ }
       | NominalComponentDecl { name = { sym_def_loc; _ }; _ } ->
         Some sym_def_loc
       | TypeAliasDecl { import = true; type_ = Some t; _ } -> def_loc_of_ty t

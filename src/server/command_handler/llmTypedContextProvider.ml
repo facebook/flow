@@ -28,6 +28,7 @@ let normalize_type ~cx ~file_sig ~typed_ast ~reader (t : Type.t) :
   let options =
     {
       Ty_normalizer_env.expand_internal_types = false;
+      expand_enum_members = false;
       evaluate_type_destructors = Ty_normalizer_env.EvaluateNone;
       optimize_types = true;
       omit_targ_defaults_option = false;

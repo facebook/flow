@@ -322,7 +322,12 @@ and decl =
   | ClassDecl of symbol * type_param list option
   | InterfaceDecl of symbol * type_param list option
   | RecordDecl of symbol * type_param list option
-  | EnumDecl of symbol
+  | EnumDecl of {
+      name: symbol;
+      members: string list option;
+      has_unknown_members: bool;
+      truncated_members_count: int;
+    }
   | NominalComponentDecl of {
       name: symbol;
       tparams: type_param list option;

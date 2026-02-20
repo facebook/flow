@@ -1193,7 +1193,7 @@ let exports_of_module_ty
                (sym_name, edit_locs)
                d
             )
-        | EnumDecl { Ty.sym_name; sym_def_loc; _ } as d when is_ok `Either sym_name ->
+        | EnumDecl { name = Ty.{ sym_name; sym_def_loc; _ }; _ } as d when is_ok `Either sym_name ->
           let sym_name = Reason.display_string_of_name sym_name in
           let documentation_and_tags = documentation_and_tags_of_module_member sym_def_loc in
           Some

@@ -316,6 +316,7 @@ let extract ?(force_instance = false) ?allowed_prop_names ~cx ~typed_ast_opt ~fi
   let options =
     {
       Ty_normalizer_env.expand_internal_types = true;
+      expand_enum_members = false;
       evaluate_type_destructors = Ty_normalizer_env.EvaluateNone;
       optimize_types = false;
       omit_targ_defaults_option = false;
