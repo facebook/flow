@@ -321,12 +321,18 @@ module Response = struct
   type get_def_response = (Loc.t list, string) result
 
   module InferTypeOfName = struct
+    type prop_doc = {
+      prop_name: string;
+      description: string;
+    }
+
     type t = {
       loc: Loc.t;
       actual_name: string;
       type_: string;
       refs: (string * Loc.t) list option;
       documentation: string option;
+      prop_docs: prop_doc list option;
       source: Export_index.source;
     }
   end

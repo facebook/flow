@@ -370,6 +370,55 @@ let search_jsdoc def_loc ast =
   with
   | FoundJsdoc documentation -> Some documentation
 
+let search_jsdocs target_locs ast =
+  let module LSet = Loc_sig.LocS.LSet in
+  let module LMap = Loc_sig.LocS.LMap in
+  let results = ref LMap.empty in
+  let searcher =
+    new jsdoc_documentation_searcher (fun found_loc comments ->
+        if LSet.mem found_loc target_locs then
+          Base.Option.iter (Jsdoc.of_comments comments) ~f:(fun (_, jsdoc) ->
+              results := LMap.add found_loc jsdoc !results
+          )
+    )
+  in
+  ignore (searcher#program ast);
+  !results
+
+let jsdocs_of_getdef_locs ~ast ~get_ast_from_shared_mem def_locs =
+  let module LSet = Loc_sig.LocS.LSet in
+  let module LMap = Loc_sig.LocS.LMap in
+  let by_file =
+    List.fold_left
+      (fun acc loc ->
+        match Loc.source loc with
+        | None -> acc
+        | Some source ->
+          let existing =
+            match Utils_js.FilenameMap.find_opt source acc with
+            | None -> LSet.empty
+            | Some locs -> locs
+          in
+          Utils_js.FilenameMap.add source (LSet.add loc existing) acc)
+      Utils_js.FilenameMap.empty
+      def_locs
+  in
+  let get_file_ast source =
+    let (current_file_loc, _) = ast in
+    match Loc.source current_file_loc with
+    | Some current_source when source = current_source -> Some ast
+    | _ -> get_ast_from_shared_mem source
+  in
+  Utils_js.FilenameMap.fold
+    (fun source locs results ->
+      match get_file_ast source with
+      | None -> results
+      | Some file_ast ->
+        let file_results = search_jsdocs locs file_ast in
+        LMap.union ~combine:(fun _ a _ -> Some a) results file_results)
+    by_file
+    LMap.empty
+
 let jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem def_loc =
   let open Base.Option.Let_syntax in
   let%bind source = Loc.source def_loc in

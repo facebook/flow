@@ -95,3 +95,7 @@ assert_ok "$FLOW" type-of-name-experimental basic.js MyNumberEnum --strip-root
 assert_ok "$FLOW" type-of-name-experimental basic.js MyBooleanEnum --strip-root
 assert_ok "$FLOW" type-of-name-experimental basic.js enumValue --strip-root
 assert_ok "$FLOW" type-of-name-experimental basic.js LargeEnum --strip-root
+
+# Prop documentation
+printf "\n=== Prop Documentation ===\n"
+assert_ok "$FLOW" type-of-name-experimental react.js DocumentedComponent --strip-root

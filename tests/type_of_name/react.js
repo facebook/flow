@@ -1,7 +1,7 @@
 // @flow
 
 import * as React from 'react';
-import type {UserCardProps, DataDisplayProps, ProductItemProps} from './types';
+import type {UserCardProps, DataDisplayProps, ProductItemProps, DocumentedProps} from './types';
 
 // Basic component
 component BasicComponent(title: string, count: number) {
@@ -115,3 +115,16 @@ export {
   UserProfile,
   NotificationWithDocblock,
 };
+
+// Component using props with per-field JSDoc documentation
+component DocumentedComponent(...props: DocumentedProps) {
+  return (
+    <div>
+      <span>{props.displayName}</span>
+      <span>{props.userId}</span>
+      {props.isOnline && <span>Online</span>}
+    </div>
+  );
+}
+
+export {DocumentedComponent};

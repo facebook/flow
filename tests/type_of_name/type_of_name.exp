@@ -65,17 +65,17 @@ where
 Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(...UserCardProps)` 
 where
 'UserCard' is defined at react.js:37:1-43
-'UserCardProps' is defined at types.js:4:6-18
+'UserCardProps' is defined at types.js:4:13-25
 
 Found exact match 'DataDisplay' defined at react.js:49:11,49:21 with type `component DataDisplay<T>(...DataDisplayProps<T>)` 
 where
 'DataDisplay' is defined at react.js:49:1-55
-'DataDisplayProps' is defined at types.js:12:6-21
+'DataDisplayProps' is defined at types.js:12:13-28
 
 Found exact match 'ProductItem' defined at react.js:59:11,59:21 with type `component ProductItem(...ProductItemProps)` 
 where
 'ProductItem' is defined at react.js:59:1-49
-'ProductItemProps' is defined at types.js:19:6-21
+'ProductItemProps' is defined at types.js:19:13-28
 
 Found exact match 'UserProfile' defined at react.js:71:11,71:21 with type
 ```
@@ -84,7 +84,7 @@ component UserProfile(
 )
 ```
 where
-'UserCardProps' is defined at types.js:4:6-18
+'UserCardProps' is defined at types.js:4:13-25
 'UserProfile' is defined at react.js:71:1,75:1
 
 Found exact match 'NotificationWithDocblock' defined at react.js:96:11,96:34 with type
@@ -169,7 +169,7 @@ Found exact match 'NamedProps' defined at react.js:32:1,32:84 with type `compone
 where
 'NamedProps' is defined at react.js:32:1-84
 
-Found approximate match 'UserCardProps' (instead of 'UserCard') defined at types.js:4:6,4:18 with type
+Found approximate match 'UserCardProps' (instead of 'UserCard') defined at types.js:4:13,4:25 with type
 ```
 type UserCardProps = {
   age?: number,
@@ -179,9 +179,9 @@ type UserCardProps = {
 }
 ```
 where
-'UserCardProps' is defined at types.js:4:6-18
+'UserCardProps' is defined at types.js:4:13-25
 
-Found approximate match 'DataDisplayProps' (instead of 'DataDisplay') defined at types.js:12:6,12:21 with type
+Found approximate match 'DataDisplayProps' (instead of 'DataDisplay') defined at types.js:12:13,12:28 with type
 ```
 type DataDisplayProps<T> = {
   data: T,
@@ -190,9 +190,9 @@ type DataDisplayProps<T> = {
 }
 ```
 where
-'DataDisplayProps' is defined at types.js:12:6-21
+'DataDisplayProps' is defined at types.js:12:13-28
 
-Found approximate match 'ProductItemProps' (instead of 'ProductItem') defined at types.js:19:6,19:21 with type
+Found approximate match 'ProductItemProps' (instead of 'ProductItem') defined at types.js:19:13,19:28 with type
 ```
 type ProductItemProps = {
   category?: string,
@@ -203,7 +203,7 @@ type ProductItemProps = {
 }
 ```
 where
-'ProductItemProps' is defined at types.js:19:6-21
+'ProductItemProps' is defined at types.js:19:13-28
 
 Found exact match 'UserProfile' defined at react.js:71:1,75:1 with type
 ```
@@ -212,7 +212,7 @@ component UserProfile(
 )
 ```
 where
-'UserCardProps' is defined at types.js:4:6-18
+'UserCardProps' is defined at types.js:4:13-25
 'UserProfile' is defined at react.js:71:1,75:1
 
 Found exact match 'NotificationWithDocblock' defined at react.js:96:1,100:1 with type
@@ -230,7 +230,7 @@ and documentation:
 
  A component that displays a notification message.
 
-Found approximate match 'UserCardProps' (instead of 'UserCard') defined at types.js:4:6,4:18 with type
+Found approximate match 'UserCardProps' (instead of 'UserCard') defined at types.js:4:13,4:25 with type
 ```
 type UserCardProps = {
   age?: number,
@@ -240,9 +240,9 @@ type UserCardProps = {
 }
 ```
 where
-'UserCardProps' is defined at types.js:4:6-18
+'UserCardProps' is defined at types.js:4:13-25
 
-Found approximate match 'DataDisplayProps' (instead of 'DataDisplay') defined at types.js:12:6,12:21 with type
+Found approximate match 'DataDisplayProps' (instead of 'DataDisplay') defined at types.js:12:13,12:28 with type
 ```
 type DataDisplayProps<T> = {
   data: T,
@@ -251,9 +251,9 @@ type DataDisplayProps<T> = {
 }
 ```
 where
-'DataDisplayProps' is defined at types.js:12:6-21
+'DataDisplayProps' is defined at types.js:12:13-28
 
-Found approximate match 'ProductItemProps' (instead of 'ProductItem') defined at types.js:19:6,19:21 with type
+Found approximate match 'ProductItemProps' (instead of 'ProductItem') defined at types.js:19:13,19:28 with type
 ```
 type ProductItemProps = {
   category?: string,
@@ -264,7 +264,7 @@ type ProductItemProps = {
 }
 ```
 where
-'ProductItemProps' is defined at types.js:19:6-21
+'ProductItemProps' is defined at types.js:19:13-28
 
 Found exact match 'UserProfile' defined at react.js:71:1,75:1 with type
 ```
@@ -283,7 +283,7 @@ where
 Found exact match 'UserCard' defined at react.js:37:1,37:43 with type `component UserCard(...UserCardProps)` 
 where
 'UserCard' is defined at react.js:37:1-43
-'UserCardProps' is defined at types.js:4:6-18
+'UserCardProps' is defined at types.js:4:13-25
 
 Found exact match 'Array' defined as a library definition (no need to import) with type `class Array<T>` 
 where
@@ -365,4 +365,22 @@ enum LargeEnum {
 ```
 where
 'LargeEnum' is defined at basic.js:77:6-14
+
+
+=== Prop Documentation ===
+Found exact match 'DocumentedComponent' defined at react.js:120:11,120:29 with type
+```
+component DocumentedComponent(
+  displayName: string,
+  isOnline?: boolean,
+  userId: string
+)
+```
+where
+'DocumentedComponent' is defined at react.js:120:1-56
+
+Prop documentation:
+  displayName -  The user's display name
+  isOnline -  Whether the user is currently online
+  userId -  The user's unique identifier
 

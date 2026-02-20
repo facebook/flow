@@ -29,6 +29,52 @@ let find_identifier_and_type target_name typed_ast =
   | exception Found (aloc, t) -> Some (aloc, t)
   | _ -> None
 
+(* Extract per-prop documentation from flattened component props *)
+let extract_prop_docs ~reader ~ast (ty : Ty.elt) :
+    ServerProt.Response.InferTypeOfName.prop_doc list option =
+  let get_ast_from_shared_mem file_key = Parsing_heaps.Reader.get_ast ~reader file_key in
+  let get_props = function
+    | Ty.Type (Ty.Component { regular_props = Ty.FlattenedComponentProps { props; _ }; _ }) ->
+      Some props
+    | Ty.Decl (Ty.NominalComponentDecl { props = Ty.FlattenedComponentProps { props; _ }; _ }) ->
+      Some props
+    | _ -> None
+  in
+  match get_props ty with
+  | None -> None
+  | Some props ->
+    (* Collect all def_locs, then batch-lookup JSDoc in a single AST traversal per file *)
+    let prop_locs =
+      Base.List.filter_map props ~f:(fun (Ty.FlattenedComponentProp { def_locs; _ }) ->
+          match def_locs with
+          | aloc :: _ -> Some (Parsing_heaps.Reader.loc_of_aloc ~reader aloc)
+          | [] -> None
+      )
+    in
+    let jsdoc_map =
+      Find_documentation.jsdocs_of_getdef_locs ~ast ~get_ast_from_shared_mem prop_locs
+    in
+    let docs =
+      Base.List.filter_map props ~f:(fun (Ty.FlattenedComponentProp { name; def_locs; _ }) ->
+          let prop_name = Reason.display_string_of_name name in
+          let description =
+            match def_locs with
+            | aloc :: _ ->
+              let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+              Loc_sig.LocS.LMap.find_opt loc jsdoc_map
+              |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+            | [] -> None
+          in
+          match description with
+          | Some description -> Some { ServerProt.Response.InferTypeOfName.prop_name; description }
+          | None -> None
+      )
+    in
+    if Base.List.is_empty docs then
+      None
+    else
+      Some docs
+
 let type_of_name_from_artifacts
     ~doc_at_loc
     ~reader
@@ -72,8 +118,10 @@ let type_of_name_from_artifacts
     let (type_, refs) =
       Ty_printer.string_of_type_at_pos_result ~exact_by_default:true ~ts_syntax:false r
     in
+    let prop_docs = extract_prop_docs ~reader ~ast ty in
     let response =
-      ServerProt.Response.InferTypeOfName.{ loc; type_; refs; actual_name; documentation; source }
+      ServerProt.Response.InferTypeOfName.
+        { loc; type_; refs; actual_name; documentation; prop_docs; source }
     in
     Ok response
   | Error e -> Error ("normalizer error " ^ Ty_normalizer.error_to_string e)

@@ -11,6 +11,12 @@ val jsdoc_of_getdef_loc :
   Loc.t ->
   Jsdoc.t option
 
+val jsdocs_of_getdef_locs :
+  ast:(Loc.t, Loc.t) Flow_ast.Program.t ->
+  get_ast_from_shared_mem:(File_key.t -> (Loc.t, Loc.t) Flow_ast.Program.t option) ->
+  Loc.t list ->
+  Jsdoc.t Loc_sig.LocS.LMap.t
+
 val documentation_of_jsdoc : Jsdoc.t -> string option
 
 val def_loc_to_comment_loc_map : (Loc.t, Loc.t) Flow_ast.Program.t -> Loc.t Loc_sig.LocS.LMap.t

@@ -1,7 +1,7 @@
 // @flow
 
 // Type alias for component properties
-type UserCardProps = {
+export type UserCardProps = {
   name: string,
   age?: number,
   email: string,
@@ -9,14 +9,14 @@ type UserCardProps = {
 };
 
 // Type alias for generic component properties
-type DataDisplayProps<T> = {
+export type DataDisplayProps<T> = {
   data: T,
   formatter: (T) => string,
   showLabel?: boolean,
 };
 
 // Type alias for product item properties
-type ProductItemProps = {
+export type ProductItemProps = {
   id: string,
   title: string,
   price: number,
@@ -24,4 +24,15 @@ type ProductItemProps = {
   category?: string,
 };
 
-export type {UserCardProps, DataDisplayProps, ProductItemProps};
+/**
+ * Props for a documented component with per-field JSDoc.
+ */
+export type DocumentedProps = {
+  /** The user's display name */
+  displayName: string,
+  /** The user's unique identifier */
+  userId: string,
+  /** Whether the user is currently online */
+  isOnline?: boolean,
+};
+

@@ -47,7 +47,15 @@ let spec =
   }
 
 let handle_response ~strip_root ~hide_references ~query_name response =
-  let { ServerProt.Response.InferTypeOfName.loc; actual_name; type_; refs; documentation; source } =
+  let {
+    ServerProt.Response.InferTypeOfName.loc;
+    actual_name;
+    type_;
+    refs;
+    documentation;
+    prop_docs;
+    source;
+  } =
     response
   in
 
@@ -102,7 +110,21 @@ let handle_response ~strip_root ~hide_references ~query_name response =
     | Some doc -> spf "\nand documentation:\n%s\n" doc
     | None -> ""
   in
-  print_endline (spf "Found %s%s with type%s%s%s" match_exactness range type_str refs doc)
+  let prop_docs_str =
+    match prop_docs with
+    | None -> ""
+    | Some docs ->
+      let lines =
+        Base.List.map docs ~f:(fun { ServerProt.Response.InferTypeOfName.prop_name; description } ->
+            spf "  %s - %s" prop_name description
+        )
+      in
+      (match lines with
+      | [] -> ""
+      | _ -> "\nProp documentation:\n" ^ String.concat "\n" lines ^ "\n")
+  in
+  print_endline
+    (spf "Found %s%s with type%s%s%s%s" match_exactness range type_str refs doc prop_docs_str)
 
 let handle_error err =
   prerr_endline err;
