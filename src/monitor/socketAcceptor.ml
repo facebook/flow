@@ -314,6 +314,9 @@ end = struct
   let cancel_countdown () = Lwt.cancel !current_countdown
 
   let start_countdown () =
+    (* Cancel any existing countdown to prevent orphaned timers that can't
+     * be canceled via cancel_countdown *)
+    Lwt.cancel !current_countdown;
     current_countdown :=
       let%lwt () = Lwt_unix.sleep 60. in
       Server.stop Server.Autostopped
