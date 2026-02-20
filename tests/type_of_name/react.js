@@ -101,11 +101,17 @@ component NotificationWithDocblock(
   return <div>{message}</div>;
 }
 
+// Component with constrained generic type parameter
+component ConstrainedGeneric<T: {id: string, label: string}>(items: Array<T>, selected?: T) {
+  return <div>{items.length}</div>;
+}
+
 // Export components for external use
 export {
   BasicComponent,
   OptionalProps,
   GenericComponent,
+  ConstrainedGeneric,
   InexactRest,
   IndexedRest,
   NamedProps,

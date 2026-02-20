@@ -50,6 +50,16 @@ Found exact match 'GenericComponent' defined at react.js:17:11,17:26 with type `
 where
 'GenericComponent' is defined at react.js:17:1-64
 
+Found exact match 'ConstrainedGeneric' defined at react.js:105:11,105:28 with type
+```
+component ConstrainedGeneric<T: {id: string, label: string}>(
+  items: Array<T>,
+  selected?: T
+)
+```
+where
+'ConstrainedGeneric' is defined at react.js:105:1-91
+
 Found exact match 'InexactRest' defined at react.js:22:11,22:21 with type `component InexactRest(bar: string, foo: number)` 
 where
 'InexactRest' is defined at react.js:22:1-63
@@ -156,6 +166,16 @@ where
 Found exact match 'GenericComponent' defined at react.js:17:1,17:64 with type `component GenericComponent<T>(data: T, formatter: (T) => string)` 
 where
 'GenericComponent' is defined at react.js:17:1-64
+
+Found exact match 'ConstrainedGeneric' defined at react.js:105:1,105:91 with type
+```
+component ConstrainedGeneric<T: {id: string, label: string}>(
+  items: Array<T>,
+  selected?: T
+)
+```
+where
+'ConstrainedGeneric' is defined at react.js:105:1-91
 
 Found exact match 'InexactRest' defined at react.js:22:1,22:63 with type `component InexactRest(bar: string, foo: number)` 
 where
@@ -368,7 +388,7 @@ where
 
 
 === Prop Documentation ===
-Found exact match 'DocumentedComponent' defined at react.js:120:11,120:29 with type
+Found exact match 'DocumentedComponent' defined at react.js:126:11,126:29 with type
 ```
 component DocumentedComponent(
   displayName: string,
@@ -377,7 +397,7 @@ component DocumentedComponent(
 )
 ```
 where
-'DocumentedComponent' is defined at react.js:120:1-56
+'DocumentedComponent' is defined at react.js:126:1-56
 
 Prop documentation:
   displayName -  The user's display name

@@ -44,6 +44,7 @@ printf "\n=== React Components ===\n"
 assert_ok "$FLOW" type-of-name-experimental react.js BasicComponent --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental react.js OptionalProps --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental react.js GenericComponent --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js ConstrainedGeneric --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental react.js InexactRest --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental react.js IndexedRest --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental react.js NamedProps --strip-root --unexpand-component-props
@@ -68,6 +69,7 @@ printf "\n=== React Components in empty file ===\n"
 assert_ok "$FLOW" type-of-name-experimental empty_file.js BasicComponent --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js OptionalProps --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js GenericComponent --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js ConstrainedGeneric --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js InexactRest --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js IndexedRest --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js NamedProps --strip-root --unexpand-component-props
