@@ -285,3 +285,12 @@ let string_of_utf8 (lexbuf : int array) : string =
 
 let backoff lexbuf npos =
   lexbuf.pos <- lexbuf.pos - npos
+
+let peek lexbuf n =
+  let i = lexbuf.pos + n in
+  if i >= lexbuf.len then
+    -1
+  else
+    lexbuf.buf.!(i)
+
+let bump lexbuf n = lexbuf.pos <- lexbuf.pos + n
