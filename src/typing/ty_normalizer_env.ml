@@ -104,6 +104,9 @@ type genv = {
   imported_names: Ty.imported_ident Loc_collections.ALocMap.t Lazy.t;
   (* Normalization parameters *)
   options: options;
+  (* When set, the normalizer collects the body Type.t for each type alias it encounters.
+     This is keyed by the type alias name string. Used by type-of-name to expand refs. *)
+  ref_type_bodies: (string, Type.t) Hashtbl.t option;
 }
 
 module SymbolSet = Flow_set.Make (struct

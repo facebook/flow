@@ -95,9 +95,15 @@ let handle_response ~strip_root ~hide_references ~query_name response =
       | None -> ""
       | Some refs ->
         let refs =
-          Base.List.concat_map refs ~f:(fun (name, loc) ->
+          Base.List.concat_map refs ~f:(fun (name, loc, summary) ->
               match str_of_loc loc with
-              | Some s -> [Utils_js.spf "'%s' is defined at %s" name s]
+              | Some s ->
+                let summary_str =
+                  match summary with
+                  | Some summary -> " " ^ summary
+                  | None -> ""
+                in
+                [Utils_js.spf "'%s' is defined at %s%s" name s summary_str]
               | None -> []
           )
         in

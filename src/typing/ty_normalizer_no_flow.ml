@@ -46,7 +46,7 @@ let mk_genv ~options ~cx ~typed_ast_opt ~file_sig =
   let imported_names =
     lazy (normalize_imports cx file_sig typed_ast_opt options dummy_import_list)
   in
-  { Ty_normalizer_env.options; cx; typed_ast_opt; file_sig; imported_names }
+  { Ty_normalizer_env.options; cx; typed_ast_opt; file_sig; imported_names; ref_type_bodies = None }
 
 let mk_default_genv ?(options = Ty_normalizer_env.default_options) cx =
   let typed_ast =

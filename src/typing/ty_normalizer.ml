@@ -747,6 +747,10 @@ module Make (I : INPUT) : S = struct
              is also A, then we are still at the top-level of the type-alias, so we
              proceed by expanding one level preserving the same environment. *)
           let symbol = symbol_from_loc env loc (Reason.OrdinaryName name) in
+          (* Optionally collect the body type for ref expansion *)
+          (match env.Env.genv.Env.ref_type_bodies with
+          | Some tbl -> if not (Hashtbl.mem tbl name) then Hashtbl.add tbl name t
+          | None -> ());
           return (generic_talias symbol None)
         | _ ->
           (* We are now beyond the point of the one-off expansion. Reset the environment
@@ -2180,6 +2184,7 @@ module Make (I : INPUT) : S = struct
           file_sig;
           typed_ast_opt;
           imported_names = lazy Loc_collections.ALocMap.empty;
+          ref_type_bodies = None;
         }
       in
       let state = State.empty in

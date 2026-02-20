@@ -99,3 +99,15 @@ assert_ok "$FLOW" type-of-name-experimental basic.js LargeEnum --strip-root
 # Prop documentation
 printf "\n=== Prop Documentation ===\n"
 assert_ok "$FLOW" type-of-name-experimental react.js DocumentedComponent --strip-root
+
+# Ref expansion heuristics
+printf "\n=== Ref Expansion ===\n"
+# Component with refs of various kinds: simple union, larger union, large object, function
+assert_ok "$FLOW" type-of-name-experimental types.js RefExpansionTest --strip-root
+# Direct type aliases from current file
+assert_ok "$FLOW" type-of-name-experimental types.js TextWrap --strip-root
+assert_ok "$FLOW" type-of-name-experimental types.js SevenColors --strip-root
+assert_ok "$FLOW" type-of-name-experimental types.js LargeObjType --strip-root
+assert_ok "$FLOW" type-of-name-experimental types.js Formatter --strip-root
+# Generic type alias (should show "(generic type)" or similar)
+assert_ok "$FLOW" type-of-name-experimental types.js DataDisplayProps --strip-root

@@ -36,3 +36,36 @@ export type DocumentedProps = {
   isOnline?: boolean,
 };
 
+// Types for testing ref expansion heuristics
+
+// Simple union type (should expand fully)
+type TextWrap = 'wrap' | 'nowrap';
+
+// Larger union type (should truncate)
+type SevenColors = 'red' | 'orange' | 'yellow' | 'green' | 'blue' | 'indigo' | 'violet';
+
+// Large object type (should show field count)
+type LargeObjType = {
+  field1: string,
+  field2: number,
+  field3: boolean,
+  field4: string,
+  field5: number,
+  field6: boolean,
+};
+
+// Function type alias
+type Formatter = (input: string) => string;
+
+// Component using various ref types for expansion testing
+component RefExpansionTest(
+  textWrap: TextWrap,
+  colors: SevenColors,
+  config: LargeObjType,
+  fmt: Formatter,
+) {
+  return null;
+}
+
+export type {TextWrap, SevenColors, LargeObjType, Formatter};
+export {RefExpansionTest};

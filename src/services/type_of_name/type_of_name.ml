@@ -75,6 +75,95 @@ let extract_prop_docs ~reader ~ast (ty : Ty.elt) :
     else
       Some docs
 
+(* Generate a type summary string from a Ty.t for ref expansion *)
+let rec summarize_ty t =
+  let type_str = Ty_printer.string_of_t_single_line ~exact_by_default:true ~ts_syntax:false t in
+  match t with
+  | Ty.Obj { Ty.obj_props; _ } ->
+    let n = Base.List.length obj_props in
+    if n > 5 then
+      Some (spf "(%d fields)" n)
+    else
+      Some (spf "= %s" type_str)
+  | Ty.Union _ ->
+    if String.length type_str > 60 then
+      (* Find a good truncation point near a '|' boundary *)
+      let truncation_point =
+        try
+          let idx = ref 57 in
+          while !idx > 0 && type_str.[!idx] <> '|' do
+            decr idx
+          done;
+          if !idx > 0 then
+            !idx - 1
+          else
+            57
+        with
+        | _ -> 57
+      in
+      Some (spf "= %s | ..." (String.sub type_str 0 truncation_point))
+    else
+      Some (spf "= %s" type_str)
+  | Ty.Fun _ ->
+    if String.length type_str > 80 then
+      None
+    else
+      Some (spf "= %s" type_str)
+  | Ty.Generic (_, Ty.ClassKind, _) -> Some "(class)"
+  | Ty.Generic (_, Ty.InterfaceKind, _) -> Some "(interface)"
+  | Ty.Generic (_, Ty.EnumKind, _) -> Some "(enum)"
+  | Ty.Generic (_, Ty.ComponentKind, _) -> Some "(component)"
+  | _ ->
+    if String.length type_str > 60 then
+      None
+    else
+      Some (spf "= %s" type_str)
+
+(* Generate a type summary from a Ty.elt *)
+and summarize_ty_elt ty_elt =
+  match ty_elt with
+  | Ty.Decl (Ty.ClassDecl _) -> Some "(class)"
+  | Ty.Decl (Ty.InterfaceDecl _) -> Some "(interface)"
+  | Ty.Decl (Ty.NominalComponentDecl _) -> Some "(component)"
+  | Ty.Decl (Ty.EnumDecl _) -> Some "(enum)"
+  | Ty.Decl (Ty.TypeAliasDecl { tparams = Some _; _ }) -> Some "(generic type)"
+  | Ty.Decl (Ty.TypeAliasDecl { type_ = Some body; tparams = None; _ }) -> summarize_ty body
+  | Ty.Type t -> summarize_ty t
+  | _ -> None
+
+(* Compute a type summary for a ref's body Type.t *)
+let compute_ref_summary ~genv body_type =
+  (* Strip the RTypeAlias reason to force the normalizer to expand the body
+     instead of creating another Generic node *)
+  let stripped =
+    TypeUtil.mod_reason_of_t (Reason.replace_desc_reason (Reason.RCustom "ref_expansion")) body_type
+  in
+  (* Use compact options: disable ref body collection to avoid recursion,
+     use shallow depth *)
+  let compact_genv =
+    {
+      genv with
+      Ty_normalizer_env.ref_type_bodies = None;
+      options = { genv.Ty_normalizer_env.options with Ty_normalizer_env.max_depth = Some 3 };
+    }
+  in
+  match Ty_normalizer_flow.from_type compact_genv stripped with
+  | Error _ -> None
+  | Ok ty_elt -> summarize_ty_elt ty_elt
+
+(* Augment refs with type summaries from collected ref type bodies *)
+let augment_refs_with_summaries ~genv ~ref_type_bodies_tbl refs =
+  Base.Option.map refs ~f:(fun refs ->
+      Base.List.map refs ~f:(fun (name, loc) ->
+          let summary =
+            match Hashtbl.find_opt ref_type_bodies_tbl name with
+            | Some body_type -> compute_ref_summary ~genv body_type
+            | None -> None
+          in
+          (name, loc, summary)
+      )
+  )
+
 let type_of_name_from_artifacts
     ~doc_at_loc
     ~reader
@@ -110,7 +199,13 @@ let type_of_name_from_artifacts
       toplevel_is_type_identifier_reference = false;
     }
   in
-  let genv = Ty_normalizer_flow.mk_genv ~options ~cx ~file_sig ~typed_ast_opt:(Some typed_ast) in
+  let ref_type_bodies_tbl = Hashtbl.create 16 in
+  let genv =
+    let base_genv =
+      Ty_normalizer_flow.mk_genv ~options ~cx ~file_sig ~typed_ast_opt:(Some typed_ast)
+    in
+    { base_genv with Ty_normalizer_env.ref_type_bodies = Some ref_type_bodies_tbl }
+  in
   match Ty_normalizer_flow.from_type genv type_ with
   | Ok ty ->
     let refs = Ty.symbols_of_elt ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader) ty in
@@ -118,6 +213,7 @@ let type_of_name_from_artifacts
     let (type_, refs) =
       Ty_printer.string_of_type_at_pos_result ~exact_by_default:true ~ts_syntax:false r
     in
+    let refs = augment_refs_with_summaries ~genv ~ref_type_bodies_tbl refs in
     let prop_docs = extract_prop_docs ~reader ~ast ty in
     let response =
       ServerProt.Response.InferTypeOfName.

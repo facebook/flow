@@ -330,7 +330,7 @@ module Response = struct
       loc: Loc.t;
       actual_name: string;
       type_: string;
-      refs: (string * Loc.t) list option;
+      refs: (string * Loc.t * string option) list option;
       documentation: string option;
       prop_docs: prop_doc list option;
       source: Export_index.source;

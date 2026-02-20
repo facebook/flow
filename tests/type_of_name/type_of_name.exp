@@ -28,7 +28,7 @@ where
 
 Found exact match 'typeVar' defined at basic.js:34:7,34:13 with type `MyType` 
 where
-'MyType' is defined at basic.js:33:6-11
+'MyType' is defined at basic.js:33:6-11 = {bar: number, foo: string}
 
 
 === Destructuring ===
@@ -65,7 +65,7 @@ where
 Found exact match 'UserCard' defined at react.js:37:11,37:18 with type `component UserCard(...UserCardProps)` 
 where
 'UserCard' is defined at react.js:37:1-43
-'UserCardProps' is defined at types.js:4:13-25
+'UserCardProps' is defined at types.js:4:13-25 = {age?: number, email: string, isActive: boolean, name: string}
 
 Found exact match 'DataDisplay' defined at react.js:49:11,49:21 with type `component DataDisplay<T>(...DataDisplayProps<T>)` 
 where
@@ -75,7 +75,7 @@ where
 Found exact match 'ProductItem' defined at react.js:59:11,59:21 with type `component ProductItem(...ProductItemProps)` 
 where
 'ProductItem' is defined at react.js:59:1-49
-'ProductItemProps' is defined at types.js:19:13-28
+'ProductItemProps' is defined at types.js:19:13-28 = {category?: string, id: string, inStock: boolean, price: number, title: string}
 
 Found exact match 'UserProfile' defined at react.js:71:11,71:21 with type
 ```
@@ -84,7 +84,7 @@ component UserProfile(
 )
 ```
 where
-'UserCardProps' is defined at types.js:4:13-25
+'UserCardProps' is defined at types.js:4:13-25 = {age?: number, email: string, isActive: boolean, name: string}
 'UserProfile' is defined at react.js:71:1,75:1
 
 Found exact match 'NotificationWithDocblock' defined at react.js:96:11,96:34 with type
@@ -212,7 +212,7 @@ component UserProfile(
 )
 ```
 where
-'UserCardProps' is defined at types.js:4:13-25
+'UserCardProps' is defined at types.js:4:13-25 = {age?: number, email: string, isActive: boolean, name: string}
 'UserProfile' is defined at react.js:71:1,75:1
 
 Found exact match 'NotificationWithDocblock' defined at react.js:96:1,100:1 with type
@@ -283,7 +283,7 @@ where
 Found exact match 'UserCard' defined at react.js:37:1,37:43 with type `component UserCard(...UserCardProps)` 
 where
 'UserCard' is defined at react.js:37:1-43
-'UserCardProps' is defined at types.js:4:13-25
+'UserCardProps' is defined at types.js:4:13-25 = {age?: number, email: string, isActive: boolean, name: string}
 
 Found exact match 'Array' defined as a library definition (no need to import) with type `class Array<T>` 
 where
@@ -383,4 +383,68 @@ Prop documentation:
   displayName -  The user's display name
   isOnline -  Whether the user is currently online
   userId -  The user's unique identifier
+
+
+=== Ref Expansion ===
+Found exact match 'RefExpansionTest' defined at types.js:61:11,61:26 with type
+```
+component RefExpansionTest(
+  colors: SevenColors,
+  config: LargeObjType,
+  fmt: Formatter,
+  textWrap: TextWrap
+)
+```
+where
+'Formatter' is defined at types.js:58:6-14 = (input: string) => string
+'LargeObjType' is defined at types.js:48:6-17 (6 fields)
+'RefExpansionTest' is defined at types.js:61:1,66:1
+'SevenColors' is defined at types.js:45:6-16 = "red" | "orange" | "yellow" | "green" | "blue" | ...
+'TextWrap' is defined at types.js:42:6-13 = "wrap" | "nowrap"
+
+Found exact match 'TextWrap' defined at types.js:42:6,42:13 with type `type TextWrap = "wrap" | "nowrap"` 
+where
+'TextWrap' is defined at types.js:42:6-13
+
+Found exact match 'SevenColors' defined at types.js:45:6,45:16 with type
+```
+type SevenColors = "red"
+| "orange"
+| "yellow"
+| "green"
+| "blue"
+| "indigo"
+| "violet"
+```
+where
+'SevenColors' is defined at types.js:45:6-16
+
+Found exact match 'LargeObjType' defined at types.js:48:6,48:17 with type
+```
+type LargeObjType = {
+  field1: string,
+  field2: number,
+  field3: boolean,
+  field4: string,
+  field5: number,
+  field6: boolean
+}
+```
+where
+'LargeObjType' is defined at types.js:48:6-17
+
+Found exact match 'Formatter' defined at types.js:58:6,58:14 with type `type Formatter = (input: string) => string` 
+where
+'Formatter' is defined at types.js:58:6-14
+
+Found exact match 'DataDisplayProps' defined at types.js:12:13,12:28 with type
+```
+type DataDisplayProps<T> = {
+  data: T,
+  formatter: (T) => string,
+  showLabel?: boolean
+}
+```
+where
+'DataDisplayProps' is defined at types.js:12:13-28
 
