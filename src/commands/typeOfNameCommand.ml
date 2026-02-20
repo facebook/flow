@@ -18,7 +18,8 @@ let spec =
     doc = "";
     usage =
       Printf.sprintf
-        "Usage: %s type-of-name-experimental [OPTION]... FILE NAME\n\ne.g. %s type-of-name foo.js myVariable\n"
+        "Usage: %s type-of-name-experimental [OPTION]... FILE NAME [NAME...]\n\ne.g. %s type-of-name foo.js myVariable\ne.g. %s type-of-name foo.js UserCard DataDisplay ProductItem\n"
+        CommandUtils.exe_name
         CommandUtils.exe_name
         CommandUtils.exe_name;
     args =
@@ -150,12 +151,12 @@ let main
     exact_match_only
     args
     () =
-  let (file, name) =
+  let (file, names) =
     match args with
-    | [file; name] -> (file, name)
+    | file :: (_ :: _ as names) -> (file, names)
     | _ ->
       CommandSpec.usage spec;
-      Exit.exit ~msg:"Expected exactly two arguments: FILE and NAME" Exit.Commandline_usage_error
+      Exit.exit ~msg:"Expected FILE followed by one or more NAMEs" Exit.Commandline_usage_error
   in
   let flowconfig_name = base_flags.Base_flags.flowconfig_name in
   let file_input = get_file_from_filename_or_stdin ~cmd:CommandSpec.(spec.name) path (Some file) in
@@ -172,7 +173,7 @@ let main
   let options =
     {
       ServerProt.Type_of_name_options.input = file_input;
-      name;
+      names;
       verbose;
       wait_for_recheck;
       expand_component_props;
@@ -182,9 +183,18 @@ let main
   in
   let request = ServerProt.Request.TYPE_OF_NAME options in
   match connect_and_make_request flowconfig_name option_values root request with
-  | ServerProt.Response.TYPE_OF_NAME (Error err) -> handle_error err
-  | ServerProt.Response.TYPE_OF_NAME (Ok resp) ->
-    handle_response ~strip_root ~hide_references ~query_name:name resp
+  | ServerProt.Response.TYPE_OF_NAME results ->
+    let pairs = Base.List.zip_exn names results in
+    let has_error = ref false in
+    Base.List.iteri pairs ~f:(fun i (query_name, result) ->
+        if i > 0 then print_newline ();
+        match result with
+        | Error err ->
+          has_error := true;
+          prerr_endline err
+        | Ok resp -> handle_response ~strip_root ~hide_references ~query_name resp
+    );
+    if !has_error then Exit.(exit Type_error)
   | response -> failwith_bad_response ~request ~response
 
 let command = CommandSpec.command spec main

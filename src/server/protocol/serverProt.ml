@@ -38,7 +38,7 @@ end
 module Type_of_name_options = struct
   type t = {
     input: File_input.t;
-    name: string;
+    names: string list;
     verbose: Verbose.t option;
     wait_for_recheck: bool option;
     expand_component_props: bool;
@@ -214,8 +214,11 @@ module Request = struct
       Printf.sprintf "type-at-pos %s:%d:%d" (File_input.filename_of_file_input input) line char
     | INLAY_HINT { Inlay_hint_options.input; _ } ->
       Printf.sprintf "inlay-hint %s" (File_input.filename_of_file_input input)
-    | TYPE_OF_NAME { Type_of_name_options.input; name; _ } ->
-      Printf.sprintf "type-of-name %s %s" (File_input.filename_of_file_input input) name
+    | TYPE_OF_NAME { Type_of_name_options.input; names; _ } ->
+      Printf.sprintf
+        "type-of-name %s %s"
+        (File_input.filename_of_file_input input)
+        (String.concat " " names)
     | INSERT_TYPE { input; target; _ } ->
       Loc.(
         Printf.sprintf
@@ -423,7 +426,7 @@ module Response = struct
     | GET_DEF of get_def_response
     | INFER_TYPE of infer_type_response
     | INLAY_HINT of InlayHint.response
-    | TYPE_OF_NAME of infer_type_of_name_response
+    | TYPE_OF_NAME of infer_type_of_name_response list
     | INSERT_TYPE of insert_type_response
     | RAGE of rage_response
     | STATUS of {

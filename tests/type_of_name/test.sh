@@ -217,3 +217,12 @@ assert_ok "$FLOW" type-of-name-experimental empty_file.js ReadOnlyUser --strip-r
 assert_ok "$FLOW" type-of-name-experimental empty_file.js Result --strip-root
 assert_ok "$FLOW" type-of-name-experimental empty_file.js ComplexComponent --strip-root --unexpand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js Container --strip-root
+
+# Batch queries
+printf "\n=== Batch Queries ===\n"
+# Multiple names from same file, all found
+assert_ok "$FLOW" type-of-name-experimental basic.js myString myNumber myBoolean --strip-root
+# Multiple names, mixed found/not-found (exits non-zero due to error)
+assert_errors "$FLOW" type-of-name-experimental basic.js myString nonexistent myNumber --strip-root
+# Multiple names from empty file (index lookup)
+assert_ok "$FLOW" type-of-name-experimental empty_file.js UserCard DataDisplay --strip-root --unexpand-component-props

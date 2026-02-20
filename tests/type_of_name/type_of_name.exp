@@ -810,3 +810,38 @@ Found exact match 'Container' defined at complex_types.js:131:7,131:15 with type
 where
 'Container' is defined at complex_types.js:131:7-15
 
+
+=== Batch Queries ===
+Found exact match 'myString' defined at basic.js:4:7,4:14 with type `string` 
+
+Found exact match 'myNumber' defined at basic.js:5:7,5:14 with type `number` 
+
+Found exact match 'myBoolean' defined at basic.js:6:7,6:15 with type `boolean` 
+Found exact match 'myString' defined at basic.js:4:7,4:14 with type `string` 
+
+
+Found exact match 'myNumber' defined at basic.js:5:7,5:14 with type `number` 
+Found approximate match 'UserCardProps' (instead of 'UserCard') defined at types.js:4:13,4:25 with type
+```
+type UserCardProps = {
+  age?: number,
+  email: string,
+  isActive: boolean,
+  name: string
+}
+```
+where
+'UserCardProps' is defined at types.js:4:13-25
+
+
+Found approximate match 'DataDisplayProps' (instead of 'DataDisplay') defined at types.js:12:13,12:28 with type
+```
+type DataDisplayProps<T> = {
+  data: T,
+  formatter: (T) => string,
+  showLabel?: boolean
+}
+```
+where
+'DataDisplayProps' is defined at types.js:12:13-28
+

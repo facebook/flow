@@ -956,11 +956,11 @@ let type_of_name
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
     ~type_parse_artifacts_cache
-    input : ServerProt.Response.infer_type_of_name_response =
-  let { ServerProt.Type_of_name_options.input = file_input; verbose; _ } = input in
+    input : ServerProt.Response.infer_type_of_name_response list =
+  let { ServerProt.Type_of_name_options.input = file_input; names; verbose; _ } = input in
   match of_file_input ~options ~env file_input with
-  | Error (Failed e) -> Error e
-  | Error (Skipped reason) -> Error ("file skipped: " ^ reason)
+  | Error (Failed e) -> Base.List.map names ~f:(fun _ -> Error e)
+  | Error (Skipped reason) -> Base.List.map names ~f:(fun _ -> Error ("file skipped: " ^ reason))
   | Ok (file_key, content) ->
     let options = { options with Options.opt_verbose = verbose } in
     let (file_artifacts_result, _did_hit_cache) =
@@ -975,7 +975,7 @@ let type_of_name
     in
     begin
       match file_artifacts_result with
-      | Error _parse_errors -> Error "Cannot parse"
+      | Error _parse_errors -> Base.List.map names ~f:(fun _ -> Error "Cannot parse")
       | Ok check_result ->
         Type_of_name.type_of_name
           ~doc_at_loc:documentation_at_loc
@@ -1834,9 +1834,16 @@ let handle_infer_type ~options ~reader ~profiling ~env input =
 
 let handle_type_of_name ~options ~reader ~profiling ~env input =
   let (result, json_data) =
-    try_with_json (fun () ->
-        (type_of_name ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input, None)
-    )
+    try
+      (type_of_name ~options ~reader ~env ~profiling ~type_parse_artifacts_cache:None input, None)
+    with
+    | Lwt.Canceled as exn ->
+      let exn = Exception.wrap exn in
+      Exception.reraise exn
+    | exn ->
+      let exn = Exception.wrap exn in
+      let names = input.ServerProt.Type_of_name_options.names in
+      (Base.List.map names ~f:(fun _ -> Error (Exception.to_string exn)), None)
   in
   Lwt.return (ServerProt.Response.TYPE_OF_NAME result, json_data)
 

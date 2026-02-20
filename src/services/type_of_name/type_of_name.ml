@@ -342,26 +342,17 @@ let type_of_name_from_index
       | None -> Error "Unexpected: no type found for identifier in phony program"
     end
 
-let type_of_name
+let type_of_name_single
     ~(options : Options.t)
     ~(reader : Parsing_heaps.Reader.reader)
     ~(env : ServerEnv.env)
     ~(profiling : Profiling_js.running)
     ~doc_at_loc
+    ~expand_component_props
+    ~exact_match_only
+    ~target_name
     file_key
-    input
     check_result : ServerProt.Response.infer_type_of_name_response =
-  let {
-    ServerProt.Type_of_name_options.input = _file_input;
-    name = target_name;
-    verbose = _;
-    expand_component_props;
-    exact_match_only;
-    wait_for_recheck = _;
-    strip_root = _;
-  } =
-    input
-  in
   let (Parse_artifacts _, Typecheck_artifacts { typed_ast; _ }) = check_result in
   match find_identifier_and_type target_name typed_ast with
   | Some r ->
@@ -387,3 +378,37 @@ let type_of_name
       ~exact_match_only
       target_name
       file_key
+
+let type_of_name
+    ~(options : Options.t)
+    ~(reader : Parsing_heaps.Reader.reader)
+    ~(env : ServerEnv.env)
+    ~(profiling : Profiling_js.running)
+    ~doc_at_loc
+    file_key
+    input
+    check_result : ServerProt.Response.infer_type_of_name_response list =
+  let {
+    ServerProt.Type_of_name_options.input = _file_input;
+    names;
+    verbose = _;
+    expand_component_props;
+    exact_match_only;
+    wait_for_recheck = _;
+    strip_root = _;
+  } =
+    input
+  in
+  Base.List.map names ~f:(fun target_name ->
+      type_of_name_single
+        ~options
+        ~reader
+        ~env
+        ~profiling
+        ~doc_at_loc
+        ~expand_component_props
+        ~exact_match_only
+        ~target_name
+        file_key
+        check_result
+  )
