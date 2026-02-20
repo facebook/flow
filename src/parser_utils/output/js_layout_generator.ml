@@ -5295,20 +5295,18 @@ and declare_function
        )
 
 and declare_variable
-    ?(s_type = Empty) ~opts loc { Ast.Statement.DeclareVariable.id; annot; kind; comments } =
+    ?(s_type = Empty) ~opts loc { Ast.Statement.DeclareVariable.declarations; kind; comments } =
+  let decls_layout =
+    match declarations with
+    | [] -> Empty
+    | [single_decl] -> variable_declarator ~ctxt:normal_context ~opts single_decl
+    | hd :: tl ->
+      let hd = variable_declarator ~ctxt:normal_context ~opts hd in
+      let tl = Base.List.map ~f:(variable_declarator ~ctxt:normal_context ~opts) tl in
+      group [hd; Atom ","; Indent (fuse [pretty_line; join (fuse [Atom ","; pretty_line]) tl])]
+  in
   layout_node_with_comments_opt loc comments
-  @@ with_semicolon
-       (fuse
-          [
-            Atom "declare";
-            space;
-            s_type;
-            variable_kind kind;
-            space;
-            identifier id;
-            type_annotation ~opts annot;
-          ]
-       )
+  @@ with_semicolon (fuse [Atom "declare"; space; s_type; variable_kind kind; space; decls_layout])
 
 and declare_module_exports ~opts loc { Ast.Statement.DeclareModuleExports.annot; comments } =
   layout_node_with_comments_opt loc comments

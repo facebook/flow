@@ -1076,14 +1076,37 @@ class ['loc] mapper =
 
     method declare_variable _loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
-      let { id = ident; annot; kind; comments } = decl in
-      let id' = this#pattern_identifier ~kind ident in
-      let annot' = this#type_annotation annot in
+      let { declarations; kind; comments } = decl in
+      let declarations' = map_list (this#declare_variable_declarator ~kind) declarations in
       let comments' = this#syntax_opt comments in
-      if id' == ident && annot' == annot && comments' == comments then
+      if declarations == declarations' && comments == comments' then
         decl
       else
-        { id = id'; annot = annot'; kind; comments = comments' }
+        { declarations = declarations'; kind; comments = comments' }
+
+    method declare_variable_declarator
+        ~kind (decl : ('loc, 'loc) Ast.Statement.VariableDeclaration.Declarator.t) =
+      let open Ast.Statement.VariableDeclaration.Declarator in
+      let (loc, { id; init }) = decl in
+      let id' =
+        match id with
+        | (ploc, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name; annot; optional }) ->
+          let name' = this#pattern_identifier ~kind name in
+          let annot' = this#type_annotation_hint annot in
+          if name == name' && annot == annot' then
+            id
+          else
+            ( ploc,
+              Ast.Pattern.Identifier
+                { Ast.Pattern.Identifier.name = name'; annot = annot'; optional }
+            )
+        | _ -> id
+      in
+      let init' = map_opt this#expression init in
+      if id == id' && init == init' then
+        decl
+      else
+        (loc, { id = id'; init = init' })
 
     method do_while _loc (stuff : ('loc, 'loc) Ast.Statement.DoWhile.t) =
       let open Ast.Statement.DoWhile in

@@ -873,6 +873,8 @@ let rec resolve_binding cx def_scope_kind reason loc b =
       MixedT.at loc
     else
       AnyT (mk_reason RAnyImplicit loc, AnyError (Some MissingAnnotation))
+  | Root DeclareVariableMissingAnnotationAndInit ->
+    AnyT (mk_reason RAnyImplicit loc, AnyError (Some MissingAnnotation))
   | Root (For (kind, exp)) ->
     let right_t = expression cx ~encl_ctx:OtherTestContext exp in
     (match kind with

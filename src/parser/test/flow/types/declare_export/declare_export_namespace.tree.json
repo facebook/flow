@@ -29,23 +29,31 @@
               "type":"DeclareVariable",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":26}},
               "range":[33,57],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":25}},
-                "range":[47,56],
-                "name":"x",
-                "typeAnnotation":{
-                  "type":"TypeAnnotation",
-                  "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":25}},
-                  "range":[48,56],
-                  "typeAnnotation":{
-                    "type":"NumberTypeAnnotation",
-                    "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":25}},
-                    "range":[50,56]
-                  }
-                },
-                "optional":false
-              },
+              "declarations":[
+                {
+                  "type":"VariableDeclarator",
+                  "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":25}},
+                  "range":[47,56],
+                  "id":{
+                    "type":"Identifier",
+                    "loc":{"source":null,"start":{"line":2,"column":16},"end":{"line":2,"column":25}},
+                    "range":[47,56],
+                    "name":"x",
+                    "typeAnnotation":{
+                      "type":"TypeAnnotation",
+                      "loc":{"source":null,"start":{"line":2,"column":17},"end":{"line":2,"column":25}},
+                      "range":[48,56],
+                      "typeAnnotation":{
+                        "type":"NumberTypeAnnotation",
+                        "loc":{"source":null,"start":{"line":2,"column":19},"end":{"line":2,"column":25}},
+                        "range":[50,56]
+                      }
+                    },
+                    "optional":false
+                  },
+                  "init":null
+                }
+              ],
               "kind":"const"
             },
             {

@@ -1215,9 +1215,26 @@ module Make (L : Loc_sig.S) (Api : Scope_api_sig.S with module L = L) :
 
       method! declare_variable _ decl =
         let open Ast.Statement.DeclareVariable in
-        let { id = ident; annot; kind; comments = _ } = decl in
-        ignore @@ this#pattern_identifier ~kind ident;
-        this#hoist_annotations (fun () -> ignore @@ this#type_annotation annot);
+        let { declarations; kind; comments = _ } = decl in
+        List.iter
+          (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; init = _ }) ->
+            match id with
+            | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = ident; _ }) ->
+              ignore @@ this#pattern_identifier ~kind ident
+            | _ -> ())
+          declarations;
+        this#hoist_annotations (fun () ->
+            List.iter
+              (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; init }) ->
+                match id with
+                | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.annot; _ }) ->
+                  (match annot with
+                  | Ast.Type.Available annot -> ignore @@ this#type_annotation annot
+                  | Ast.Type.Missing _ -> ());
+                  Base.Option.iter init ~f:(fun init -> ignore @@ this#expression init)
+                | _ -> ())
+              declarations
+        );
         decl
 
       method! declare_function loc expr =

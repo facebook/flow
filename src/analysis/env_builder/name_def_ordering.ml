@@ -1248,6 +1248,7 @@ struct
           in
           depends_of_hints state hints
         | CatchUnannotated -> state
+        | DeclareVariableMissingAnnotationAndInit -> state
         | UnannotatedParameter _ -> state
       in
       let depends_of_selector state = function
@@ -1403,6 +1404,7 @@ struct
       let rec bind_loop b =
         match b with
         | Root CatchUnannotated -> true
+        | Root DeclareVariableMissingAnnotationAndInit -> true
         | Root (UnannotatedParameter _) -> true
         | Root (Annotation _) -> true
         | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) -> true
@@ -1480,6 +1482,7 @@ struct
     let rec bind_loop b =
       match b with
       | Root CatchUnannotated
+      | Root DeclareVariableMissingAnnotationAndInit
       | Root (UnannotatedParameter _)
       | Root (Annotation _)
       | Root (ObjectValue { synthesizable = ObjectSynthesizable _; _ }) ->

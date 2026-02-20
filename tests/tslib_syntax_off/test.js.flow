@@ -37,3 +37,9 @@ export = foo; // ERROR
 import A = require("./exports"); // ERROR
 import type B = require("./exports"); // ERROR
 import C = Foo.Bar; // ERROR
+
+// DeclareVariable multiple declarations
+declare const x: string, y: number; // ERROR
+
+// DeclareVariable literal init
+declare const s = 'foo'; // ERROR

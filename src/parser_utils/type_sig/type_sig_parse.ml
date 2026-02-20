@@ -4597,12 +4597,48 @@ let declare_component_decl opts scope tbls c_loc decl =
   in
   Scope.bind_component scope tbls id_loc sig_loc name def
 
-let declare_variable_decl opts scope tbls decl =
-  let { Ast.Statement.DeclareVariable.id; annot = (_, t); kind; comments = _ } = decl in
-  let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
-  let id_loc = push_loc tbls id_loc in
-  let def = lazy (splice tbls id_loc (fun tbls -> annot opts scope tbls SSet.empty t)) in
-  Scope.bind_var scope tbls kind id_loc name def
+let declare_variable_decl opts scope tbls decl k =
+  let { Ast.Statement.DeclareVariable.declarations; kind; comments = _ } = decl in
+  List.iter
+    (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; init }) ->
+      match id with
+      | ( _,
+          Ast.Pattern.Identifier
+            {
+              Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ });
+              annot = id_annot;
+              _;
+            }
+        ) ->
+        let id_loc = push_loc tbls id_loc in
+        (match (id_annot, init) with
+        | (Ast.Type.Available (_, t), _) ->
+          let def = lazy (splice tbls id_loc (fun tbls -> annot opts scope tbls SSet.empty t)) in
+          Scope.bind_var scope tbls kind id_loc name def k
+        | (Ast.Type.Missing _, Some (_, Ast.Expression.StringLiteral { Ast.StringLiteral.value; _ }))
+          ->
+          let def = lazy (Value (Type_sig.StringLit (id_loc, value))) in
+          Scope.bind_var scope tbls kind id_loc name def k
+        | ( Ast.Type.Missing _,
+            Some (_, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value; raw; _ })
+          ) ->
+          let def = lazy (Value (Type_sig.NumberLit (id_loc, value, raw))) in
+          Scope.bind_var scope tbls kind id_loc name def k
+        | ( Ast.Type.Missing _,
+            Some (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value; _ })
+          ) ->
+          let def = lazy (Value (Type_sig.BooleanLit (id_loc, value))) in
+          Scope.bind_var scope tbls kind id_loc name def k
+        | ( Ast.Type.Missing _,
+            Some (_, Ast.Expression.BigIntLiteral { Ast.BigIntLiteral.value; raw; _ })
+          ) ->
+          let def = lazy (Value (Type_sig.BigIntLit (id_loc, value, raw))) in
+          Scope.bind_var scope tbls kind id_loc name def k
+        | _ ->
+          let def = lazy (Annot (Type_sig.Any id_loc)) in
+          Scope.bind_var scope tbls kind id_loc name def k)
+      | _ -> ())
+    declarations
 
 let declare_function_decl opts scope tbls decl =
   let {

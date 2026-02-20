@@ -61,23 +61,31 @@
               "type":"DeclareVariable",
               "loc":{"source":null,"start":{"line":1,"column":70},"end":{"line":1,"column":86}},
               "range":[70,86],
-              "id":{
-                "type":"Identifier",
-                "loc":{"source":null,"start":{"line":1,"column":74},"end":{"line":1,"column":85}},
-                "range":[74,85],
-                "name":"baz",
-                "typeAnnotation":{
-                  "type":"TypeAnnotation",
-                  "loc":{"source":null,"start":{"line":1,"column":77},"end":{"line":1,"column":85}},
-                  "range":[77,85],
-                  "typeAnnotation":{
-                    "type":"NumberTypeAnnotation",
-                    "loc":{"source":null,"start":{"line":1,"column":79},"end":{"line":1,"column":85}},
-                    "range":[79,85]
-                  }
-                },
-                "optional":false
-              },
+              "declarations":[
+                {
+                  "type":"VariableDeclarator",
+                  "loc":{"source":null,"start":{"line":1,"column":74},"end":{"line":1,"column":85}},
+                  "range":[74,85],
+                  "id":{
+                    "type":"Identifier",
+                    "loc":{"source":null,"start":{"line":1,"column":74},"end":{"line":1,"column":85}},
+                    "range":[74,85],
+                    "name":"baz",
+                    "typeAnnotation":{
+                      "type":"TypeAnnotation",
+                      "loc":{"source":null,"start":{"line":1,"column":77},"end":{"line":1,"column":85}},
+                      "range":[77,85],
+                      "typeAnnotation":{
+                        "type":"NumberTypeAnnotation",
+                        "loc":{"source":null,"start":{"line":1,"column":79},"end":{"line":1,"column":85}},
+                        "range":[79,85]
+                      }
+                    },
+                    "optional":false
+                  },
+                  "init":null
+                }
+              ],
               "kind":"var"
             },
             "specifiers":[],

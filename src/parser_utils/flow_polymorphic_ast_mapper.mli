@@ -235,6 +235,11 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method declare_variable :
       ('M, 'T) Ast.Statement.DeclareVariable.t -> ('N, 'U) Ast.Statement.DeclareVariable.t
 
+    method declare_variable_declarator :
+      kind:Ast.Variable.kind ->
+      ('M, 'T) Ast.Statement.VariableDeclaration.Declarator.t ->
+      ('N, 'U) Ast.Statement.VariableDeclaration.Declarator.t
+
     method do_while : ('M, 'T) Ast.Statement.DoWhile.t -> ('N, 'U) Ast.Statement.DoWhile.t
 
     method empty : 'M Ast.Statement.Empty.t -> 'N Ast.Statement.Empty.t

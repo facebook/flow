@@ -1215,29 +1215,57 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
-      let { id = (id_loc, { Ast.Identifier.name; _ }); annot; kind = _; comments = _ } = decl in
-      let hook_like = Flow_ast_utils.hook_name name in
-      this#add_ordinary_binding
-        id_loc
-        (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
-        (Binding
-           (this#mk_hooklike_if_necessary
-              hook_like
-              (Root
-                 (Annotation
-                    {
-                      tparams_map = ALocMap.empty;
-                      optional = false;
-                      has_default_expression = false;
-                      react_deep_read_only = None;
-                      param_loc = None;
-                      annot;
-                      concrete = None;
-                    }
-                 )
-              )
-           )
-        );
+      let { declarations; kind; comments = _ } = decl in
+      List.iter
+        (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; init }) ->
+          match id with
+          | ( _,
+              Ast.Pattern.Identifier
+                { Ast.Pattern.Identifier.name = (id_loc, { Ast.Identifier.name; _ }); annot; _ }
+            ) ->
+            let hook_like = Flow_ast_utils.hook_name name in
+            (match (annot, init) with
+            | (Ast.Type.Available annot, _) ->
+              this#add_ordinary_binding
+                id_loc
+                (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
+                (Binding
+                   (this#mk_hooklike_if_necessary
+                      hook_like
+                      (Root
+                         (Annotation
+                            {
+                              tparams_map = ALocMap.empty;
+                              optional = false;
+                              has_default_expression = false;
+                              react_deep_read_only = None;
+                              param_loc = None;
+                              annot;
+                              concrete = None;
+                            }
+                         )
+                      )
+                   )
+                )
+            | (Ast.Type.Missing _, Some init_expr) ->
+              this#add_ordinary_binding
+                id_loc
+                (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
+                (Binding
+                   (this#mk_hooklike_if_necessary
+                      hook_like
+                      (Root (mk_value ~as_const:true ~decl_kind:kind init_expr))
+                   )
+                )
+            | (Ast.Type.Missing _, None) ->
+              (* Error case: no annotation and no init. Type checker will report the error.
+                 We still need to add a binding for completeness. *)
+              this#add_ordinary_binding
+                id_loc
+                (mk_reason (RIdentifier (OrdinaryName name)) id_loc)
+                (Binding (Root DeclareVariableMissingAnnotationAndInit)))
+          | _ -> ())
+        declarations;
       super#declare_variable loc decl
 
     method! pattern_array_element ?kind elem =

@@ -2334,7 +2334,15 @@ let tests =
          ( "declare_var_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare var a:b;";
            assert_statement_string ~ctxt "declare let a:b;";
-           assert_statement_string ~ctxt "declare const a:b;"
+           assert_statement_string ~ctxt "declare const a:b;";
+           (* multiple declarations *)
+           assert_statement_string ~ctxt "declare const a:b,c:d;";
+           assert_statement_string ~ctxt "declare let a:b,c:d;";
+           assert_statement_string ~ctxt "declare var a:b,c:d;";
+           (* literal initializer *)
+           assert_statement_string ~ctxt "declare const s=\"foo\";";
+           assert_statement_string ~ctxt "declare const n=10;";
+           assert_statement_string ~ctxt "declare const b=true;"
          );
          ( "declare_module_exports_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare module.exports:a;"

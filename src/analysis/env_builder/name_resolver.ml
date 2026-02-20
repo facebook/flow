@@ -2739,11 +2739,22 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         decl
 
       method! declare_variable _ decl =
-        let { Ast.Statement.DeclareVariable.id = ident; annot; kind; comments = _ } = decl in
-        ignore @@ this#pattern_identifier ~kind ident;
-        this#hoist_annotations (fun () ->
-            this#with_current_id_binding ident ~f:(fun () -> ignore @@ this#type_annotation annot)
-        );
+        let { Ast.Statement.DeclareVariable.declarations; kind; comments = _ } = decl in
+        List.iter
+          (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; init }) ->
+            match id with
+            | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = ident; annot; _ }) ->
+              ignore @@ this#pattern_identifier ~kind ident;
+              this#hoist_annotations (fun () ->
+                  this#with_current_id_binding ident ~f:(fun () ->
+                      (match annot with
+                      | Ast.Type.Available annot -> ignore @@ this#type_annotation annot
+                      | Ast.Type.Missing _ -> ());
+                      Base.Option.iter init ~f:(fun init -> ignore @@ this#expression init)
+                  )
+              )
+            | _ -> ())
+          declarations;
         decl
 
       (* read and write (when the argument is an identifier) *)

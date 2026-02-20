@@ -5165,6 +5165,24 @@ let to_printable_error :
     | MessageUnsupportedSyntax Records -> [text "Records are not enabled."]
     | MessageUnsupportedSyntax DeclareClassMethodMissingReturnType ->
       [text "Return type annotation is required for "; code "declare class"; text " methods."]
+    | MessageUnsupportedSyntax DeclareVariableNonLiteralInit ->
+      [
+        text "Initializer in a ";
+        code "declare";
+        text " variable must be a literal (string, number, bigint, or boolean).";
+      ]
+    | MessageUnsupportedSyntax DeclareVariableDestructuring ->
+      [text "Destructuring is not supported in "; code "declare"; text " variable declarations."]
+    | MessageUnsupportedSyntax DeclareVariableMissingAnnotationOrInit ->
+      [
+        code "declare";
+        text " variable declarations require a type annotation or a literal initializer.";
+      ]
+    | MessageUnsupportedSyntax DeclareVariableAnnotationAndInit ->
+      [
+        code "declare";
+        text " variable declarations cannot have both a type annotation and an initializer.";
+      ]
     | MessageUnsupportedSyntax (TSLibSyntax kind) ->
       let kind_str =
         match kind with
@@ -5174,6 +5192,8 @@ let to_printable_error :
         | ExportAssignment -> "`export =` syntax"
         | ImportEqualsDeclaration -> "`import ... = ...` syntax"
         | ImportEqualsQualifiedName -> "`import ... = <QualifiedName>` syntax"
+        | DeclareVariableMultipleDeclarators -> "Multiple `declare` variable declarators"
+        | DeclareVariableLiteralInit -> "`declare` variable with literal initializer"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

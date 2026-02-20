@@ -849,11 +849,25 @@ end = struct
         this#set_acc (env, cx)
 
       method! declare_variable _loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
-        let { Ast.Statement.DeclareVariable.id = ident; annot; kind; comments = _ } = decl in
-        let (_ : ('a, 'b) Ast.Type.annotation) = this#type_annotation annot in
-        this#visit_in_context
-          ~mod_cx:(fun _cx -> { init_state = Annotation { contextual = false } })
-          (fun () -> this#pattern_identifier ~kind ident);
+        let { Ast.Statement.DeclareVariable.declarations; kind; comments = _ } = decl in
+        List.iter
+          (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; init }) ->
+            match id with
+            | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = ident; annot; _ }) ->
+              (match annot with
+              | Ast.Type.Available annot ->
+                let (_ : ('a, 'b) Ast.Type.annotation) = this#type_annotation annot in
+                ()
+              | Ast.Type.Missing _ -> ());
+              Base.Option.iter init ~f:(fun init ->
+                  let (_ : ('a, 'b) Ast.Expression.t) = this#expression init in
+                  ()
+              );
+              this#visit_in_context
+                ~mod_cx:(fun _cx -> { init_state = Annotation { contextual = false } })
+                (fun () -> this#pattern_identifier ~kind ident)
+            | _ -> ())
+          declarations;
         decl
 
       method! variable_declarator

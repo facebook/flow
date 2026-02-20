@@ -117,5 +117,21 @@ Error --------------------------------------------------------------------------
        ^^^^^^^^^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------ test.js.flow:42:1
 
-Found 14 errors
+Multiple `declare` variable declarators is not enabled. [unsupported-syntax]
+
+   42| declare const x: string, y: number; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:45:19
+
+`declare` variable with literal initializer is not enabled. [unsupported-syntax]
+
+   45| declare const s = 'foo'; // ERROR
+                         ^^^^^
+
+
+
+Found 16 errors

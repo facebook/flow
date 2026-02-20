@@ -131,6 +131,7 @@ type root =
       default_expression: (ALoc.t, ALoc.t) Ast.Expression.t option;
     }
   | CatchUnannotated
+  | DeclareVariableMissingAnnotationAndInit
   | UnannotatedParameter of Reason.t
   | For of for_kind * (ALoc.t, ALoc.t) Ast.Expression.t
 
@@ -255,6 +256,7 @@ module Print = struct
     | Contextual _ -> "contextual"
     | EmptyArray _ -> "[]"
     | CatchUnannotated -> "unannotated catch param"
+    | DeclareVariableMissingAnnotationAndInit -> "declare var missing annotation or init"
     | UnannotatedParameter r -> Reason.string_of_reason r
     | Annotation { annot = (loc, _); _ } -> spf "annot %s" (ALoc.debug_to_string loc)
     | Value { expr = (loc, _); _ } -> spf "val %s" (ALoc.debug_to_string loc)

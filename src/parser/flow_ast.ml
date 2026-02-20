@@ -1182,8 +1182,7 @@ and Statement : sig
 
   module DeclareVariable : sig
     type ('M, 'T) t = {
-      id: ('M, 'T) Identifier.t;
-      annot: ('M, 'T) Type.annotation;
+      declarations: ('M, 'T) VariableDeclaration.Declarator.t list;
       kind: Variable.kind;
       comments: ('M, unit) Syntax.t option;
     }

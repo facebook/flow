@@ -110,6 +110,10 @@ type unsupported_syntax =
   | NonnullAssertion
   | Records
   | DeclareClassMethodMissingReturnType
+  | DeclareVariableNonLiteralInit
+  | DeclareVariableDestructuring
+  | DeclareVariableMissingAnnotationOrInit
+  | DeclareVariableAnnotationAndInit
   | TSLibSyntax of ts_lib_syntax_kind
 
 and ts_lib_syntax_kind =
@@ -119,6 +123,8 @@ and ts_lib_syntax_kind =
   | ExportAssignment
   | ImportEqualsDeclaration
   | ImportEqualsQualifiedName
+  | DeclareVariableMultipleDeclarators
+  | DeclareVariableLiteralInit
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

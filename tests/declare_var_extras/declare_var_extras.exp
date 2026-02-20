@@ -1,0 +1,88 @@
+Error ----------------------------------------------------------------------------------------------------- test.js:24:1
+
+Cannot cast `s` to string literal `bar` because string literal `foo` [1] is incompatible with string literal `bar` [2].
+[incompatible-type]
+
+   test.js:24:1
+   24| s as 'bar'; // ERROR - 'foo' !== 'bar'
+       ^
+
+References:
+   test.js:2:19
+    2| declare const s = 'foo';
+                         ^^^^^ [1]
+   test.js:24:6
+   24| s as 'bar'; // ERROR - 'foo' !== 'bar'
+            ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:25:1
+
+Cannot cast `n` to number literal `20` because number literal `10` [1] is incompatible with number literal `20` [2].
+[incompatible-type]
+
+   test.js:25:1
+   25| n as 20; // ERROR - 10 !== 20
+       ^
+
+References:
+   test.js:3:19
+    3| declare const n = 10;
+                         ^^ [1]
+   test.js:25:6
+   25| n as 20; // ERROR - 10 !== 20
+            ^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:26:1
+
+Cannot cast `bi` to bigint literal `200n` because bigint literal `100n` [1] is incompatible with bigint literal
+`200n` [2]. [incompatible-type]
+
+   test.js:26:1
+   26| bi as 200n; // ERROR - 100n !== 200n
+       ^^
+
+References:
+   test.js:5:20
+    5| declare const bi = 100n;
+                          ^^^^ [1]
+   test.js:26:7
+   26| bi as 200n; // ERROR - 100n !== 200n
+             ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:30:27
+
+`declare` variable declarations cannot have both a type annotation and an initializer. [unsupported-syntax]
+
+   30| declare const e: string = 'hello'; // ERROR
+                                 ^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:33:19
+
+Initializer in a `declare` variable must be a literal (string, number, bigint, or boolean). [unsupported-syntax]
+
+   33| declare const f = 1 + 2; // ERROR
+                         ^^^^^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:36:15
+
+`declare` variable declarations require a type annotation or a literal initializer. [unsupported-syntax]
+
+   36| declare const h; // ERROR
+                     ^
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:39:15
+
+Destructuring is not supported in `declare` variable declarations. [unsupported-syntax]
+
+   39| declare const [g] = 'foo'; // ERROR
+                     ^^^
+
+
+
+Found 7 errors

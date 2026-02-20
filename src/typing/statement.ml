@@ -1795,7 +1795,7 @@ module Make
       let enum_ast = enum_declaration cx loc enum in
       (loc, EnumDeclaration enum_ast)
     | (loc, DeclareVariable decl) ->
-      let decl_ast = declare_variable cx decl in
+      let decl_ast = declare_variable cx loc decl in
       (loc, DeclareVariable decl_ast)
     | (loc, DeclareFunction decl) ->
       let decl_ast = declare_function cx loc decl in
@@ -1921,7 +1921,7 @@ module Make
       let declaration =
         let f = function
           | D.Variable (loc, v) ->
-            let v_ast = declare_variable cx v in
+            let v_ast = declare_variable cx loc v in
             D.Variable (loc, v_ast)
           | D.Function (loc, f) ->
             let f_ast = declare_function cx loc f in
@@ -2413,10 +2413,108 @@ module Make
       Class_type_sig.check_signature_compatibility cx (mk_reason desc loc) iface_sig;
       (t, decl_ast)
 
-  and declare_variable cx decl =
-    let { Ast.Statement.DeclareVariable.id = (id_loc, id); annot; kind; comments } = decl in
-    let (t, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-    { Ast.Statement.DeclareVariable.id = ((id_loc, t), id); annot = annot_ast; kind; comments }
+  and declare_variable cx loc decl =
+    let { Ast.Statement.DeclareVariable.declarations; kind; comments } = decl in
+    (* TSLib gates *)
+    if not (Context.tslib_syntax cx) then begin
+      if List.length declarations > 1 then
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.(TSLibSyntax DeclareVariableMultipleDeclarators))
+          );
+      List.iter
+        (fun (_, { Ast.Statement.VariableDeclaration.Declarator.init; _ }) ->
+          match init with
+          | Some (expr_loc, _) ->
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EUnsupportedSyntax
+                 (expr_loc, Flow_intermediate_error_types.(TSLibSyntax DeclareVariableLiteralInit))
+              )
+          | None -> ())
+        declarations
+    end;
+    let declarations' =
+      List.map
+        (fun ((decl_loc, { Ast.Statement.VariableDeclaration.Declarator.id; init }) as decl) ->
+          match id with
+          | ( pat_loc,
+              Ast.Pattern.Identifier
+                { Ast.Pattern.Identifier.name = (id_loc, id_name); annot; optional = _ }
+            ) -> begin
+            match (annot, init) with
+            | (Ast.Type.Available annot, None) ->
+              let (t, annot_ast) =
+                Anno.mk_type_available_annotation cx Subst_name.Map.empty annot
+              in
+              let typed_id =
+                ( (pat_loc, t),
+                  Ast.Pattern.Identifier
+                    {
+                      Ast.Pattern.Identifier.name = ((id_loc, t), id_name);
+                      annot = Ast.Type.Available annot_ast;
+                      optional = false;
+                    }
+                )
+              in
+              (decl_loc, { Ast.Statement.VariableDeclaration.Declarator.id = typed_id; init = None })
+            | (Ast.Type.Missing missing_loc, Some init_expr) -> begin
+              match snd init_expr with
+              | Ast.Expression.StringLiteral _
+              | Ast.Expression.NumberLiteral _
+              | Ast.Expression.BigIntLiteral _
+              | Ast.Expression.BooleanLiteral _ ->
+                let (((_, t), _) as init_ast) = expression cx ~as_const:true init_expr in
+                let typed_id =
+                  ( (pat_loc, t),
+                    Ast.Pattern.Identifier
+                      {
+                        Ast.Pattern.Identifier.name = ((id_loc, t), id_name);
+                        annot = Ast.Type.Missing (missing_loc, t);
+                        optional = false;
+                      }
+                  )
+                in
+                ( decl_loc,
+                  {
+                    Ast.Statement.VariableDeclaration.Declarator.id = typed_id;
+                    init = Some init_ast;
+                  }
+                )
+              | _ ->
+                Flow_js_utils.add_output
+                  cx
+                  (Error_message.EUnsupportedSyntax
+                     (fst init_expr, Flow_intermediate_error_types.DeclareVariableNonLiteralInit)
+                  );
+                Tast_utils.error_mapper#variable_declarator ~kind decl
+            end
+            | (Ast.Type.Available _, Some (init_loc, _)) ->
+              Flow_js_utils.add_output
+                cx
+                (Error_message.EUnsupportedSyntax
+                   (init_loc, Flow_intermediate_error_types.DeclareVariableAnnotationAndInit)
+                );
+              Tast_utils.error_mapper#variable_declarator ~kind decl
+            | (Ast.Type.Missing _, None) ->
+              Flow_js_utils.add_output
+                cx
+                (Error_message.EUnsupportedSyntax
+                   (id_loc, Flow_intermediate_error_types.DeclareVariableMissingAnnotationOrInit)
+                );
+              Tast_utils.error_mapper#variable_declarator ~kind decl
+          end
+          | (pat_loc, _) ->
+            Flow_js_utils.add_output
+              cx
+              (Error_message.EUnsupportedSyntax
+                 (pat_loc, Flow_intermediate_error_types.DeclareVariableDestructuring)
+              );
+            Tast_utils.error_mapper#variable_declarator ~kind decl)
+        declarations
+    in
+    { Ast.Statement.DeclareVariable.declarations = declarations'; kind; comments }
 
   and declare_class cx loc decl =
     let node_cache = Context.node_cache cx in

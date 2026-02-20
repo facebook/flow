@@ -1441,20 +1441,11 @@ module Statement
     | Ast.Variable.Var -> Expect.token env T_VAR
     | Ast.Variable.Let -> Expect.token env T_LET
     | Ast.Variable.Const -> Expect.token env T_CONST);
-    let name = Parse.identifier ~restricted_error:Parse_error.StrictVarName env in
-    let annot = Type.annotation env in
-    let (trailing, name, annot) =
-      match semicolon env with
-      (* declare var x; *)
-      | Explicit trailing -> (trailing, name, annot)
-      (* declare var x *)
-      | Implicit { remove_trailing; _ } ->
-        ([], name, remove_trailing annot (fun remover annot -> remover#type_annotation annot))
-    in
-
+    let (declarations, errs) = Declaration.variable_declaration_list env in
+    List.iter (error_at env) errs;
+    let (trailing, declarations) = variable_declaration_end ~kind env declarations in
     {
-      Statement.DeclareVariable.id = name;
-      annot;
+      Statement.DeclareVariable.declarations;
       kind;
       comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
     }

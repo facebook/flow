@@ -189,7 +189,19 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
     if in_declare_namespace then
       let ((name_loc, t), { Ast.Identifier.name; _ }) = id in
       Module_info.export_type info (OrdinaryName name) ~name_loc t
-  | (_, DeclareVariable { DeclareVariable.id; _ })
+  | (_, DeclareVariable { DeclareVariable.declarations; _ }) ->
+    (* A declared namespace will auto-export all toplevel names *)
+    if in_declare_namespace then
+      List.iter
+        (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; _ }) ->
+          match id with
+          | ( _,
+              Ast.Pattern.Identifier
+                { Ast.Pattern.Identifier.name = ((name_loc, t), { Ast.Identifier.name; _ }); _ }
+            ) ->
+            Module_info.export_value info (OrdinaryName name) ~name_loc t
+          | _ -> ())
+        declarations
   | (_, DeclareFunction { DeclareFunction.id; _ })
   | (_, DeclareClass { DeclareClass.id; _ })
   | (_, DeclareComponent { DeclareComponent.id; _ })
@@ -288,9 +300,17 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
         Module_info.export_value info (OrdinaryName "default") ~name_loc:default_loc t
     in
     let f = function
-      | D.Variable (_, { DeclareVariable.id; _ }) ->
-        let ((name_loc, t), { Ast.Identifier.name; comments = _ }) = id in
-        Module_info.export_value info (OrdinaryName name) ~name_loc t
+      | D.Variable (_, { DeclareVariable.declarations; _ }) ->
+        List.iter
+          (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; _ }) ->
+            match id with
+            | ( _,
+                Ast.Pattern.Identifier
+                  { Ast.Pattern.Identifier.name = ((name_loc, t), { Ast.Identifier.name; _ }); _ }
+              ) ->
+              Module_info.export_value info (OrdinaryName name) ~name_loc t
+            | _ -> ())
+          declarations
       | D.Function (_, f) -> export_maybe_default_binding f.DeclareFunction.id
       | D.Class (_, c) -> export_maybe_default_binding c.DeclareClass.id
       | D.Component (_, c) -> export_maybe_default_binding c.DeclareComponent.id

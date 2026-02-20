@@ -267,12 +267,15 @@ class visitor =
 
     method! declare_variable loc (decl : (Loc.t, Loc.t) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
-      let { id; _ } = decl in
-      let (name, selection) =
-        Base.Option.value ~default:("<var>", loc) (name_and_loc_of_identifier id)
-      in
-      let kind = Lsp.SymbolInformation.Variable in
-      this#add_with_children ~loc ~selection ~name ~kind (super#declare_variable loc) decl;
+      let { declarations; kind; _ } = decl in
+      List.iter
+        (fun ((_, { Ast.Statement.VariableDeclaration.Declarator.id; _ }) as d) ->
+          let (name, selection) =
+            Base.Option.value ~default:("<var>", loc) (name_and_loc_of_pattern id)
+          in
+          let k = Lsp.SymbolInformation.Variable in
+          this#add_with_children ~loc ~selection ~name ~kind:k (super#variable_declarator ~kind) d)
+        declarations;
       decl
 
     method! enum_declaration loc (enum : (Loc.t, Loc.t) Ast.Statement.EnumDeclaration.t) =

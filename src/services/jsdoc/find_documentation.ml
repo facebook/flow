@@ -154,8 +154,18 @@ class jsdoc_documentation_searcher find =
 
     method! declare_variable stmt_loc decl =
       let open Ast.Statement.DeclareVariable in
-      let { id = (loc, _); comments; _ } = decl in
-      find loc comments;
+      let { declarations; comments; _ } = decl in
+      (match declarations with
+      | ( _,
+          {
+            Ast.Statement.VariableDeclaration.Declarator.id =
+              (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = (loc, _); _ });
+            _;
+          }
+        )
+        :: _ ->
+        find loc comments
+      | _ -> ());
       super#declare_variable stmt_loc decl
 
     method! declare_class stmt_loc decl =

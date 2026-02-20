@@ -306,6 +306,10 @@ module type DECLARATION = sig
     * Loc.t Comment.t list
     * (Loc.t * Parse_error.t) list
 
+  val variable_declaration_list :
+    env ->
+    (Loc.t, Loc.t) Statement.VariableDeclaration.Declarator.t list * (Loc.t * Parse_error.t) list
+
   val _function : env -> (Loc.t, Loc.t) Statement.t
 
   val enum_declaration :

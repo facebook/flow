@@ -252,11 +252,17 @@ class ['loc] lexical_hoister ~(enable_enums : bool) =
 
     method! declare_variable _ (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
-      let { id; kind; _ } = decl in
-      (match kind with
-      | Ast.Variable.Var -> ()
-      | Ast.Variable.Let -> this#add_declared_let_binding id
-      | Ast.Variable.Const -> this#add_declared_const_binding id);
+      let { declarations; kind; _ } = decl in
+      List.iter
+        (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; _ }) ->
+          match id with
+          | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = id; _ }) ->
+            (match kind with
+            | Ast.Variable.Var -> ()
+            | Ast.Variable.Let -> this#add_declared_let_binding id
+            | Ast.Variable.Const -> this#add_declared_const_binding id)
+          | _ -> ())
+        declarations;
       decl
 
     method! enum_declaration _loc (enum : ('loc, 'loc) Ast.Statement.EnumDeclaration.t) =
@@ -344,11 +350,17 @@ class ['loc] hoister ~(enable_enums : bool) ~(with_types : bool) =
     (* don't hoist let/const bindings *)
     method! declare_variable loc (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =
       let open Ast.Statement.DeclareVariable in
-      let { id; kind; _ } = decl in
-      (match kind with
-      | Ast.Variable.Var -> this#add_declared_var_binding id
-      | Ast.Variable.Let -> this#add_declared_let_binding id
-      | Ast.Variable.Const -> this#add_declared_const_binding id);
+      let { declarations; kind; _ } = decl in
+      List.iter
+        (fun (_, { Ast.Statement.VariableDeclaration.Declarator.id; _ }) ->
+          match id with
+          | (_, Ast.Pattern.Identifier { Ast.Pattern.Identifier.name = id; _ }) ->
+            (match kind with
+            | Ast.Variable.Var -> this#add_declared_var_binding id
+            | Ast.Variable.Let -> this#add_declared_let_binding id
+            | Ast.Variable.Const -> this#add_declared_const_binding id)
+          | _ -> ())
+        declarations;
       super#declare_variable loc decl
 
     (* We intentionally skip the hoisting of infer type names,

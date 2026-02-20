@@ -1127,20 +1127,14 @@ with type t = Impl.t = struct
         "BlockStatement"
         loc
         [("body", statement_list body)]
-    and declare_variable (loc, { Statement.DeclareVariable.id; annot; kind; comments }) =
-      let id_loc = Loc.btwn (fst id) (fst annot) in
-      let kind = Flow_ast_utils.string_of_variable_kind kind in
+    and declare_variable (loc, { Statement.DeclareVariable.declarations; kind; comments }) =
+      let kind_str = Flow_ast_utils.string_of_variable_kind kind in
       node
         ?comments
         "DeclareVariable"
         loc
         [
-          ( "id",
-            pattern_identifier
-              id_loc
-              { Pattern.Identifier.name = id; annot = Ast.Type.Available annot; optional = false }
-          );
-          ("kind", string kind);
+          ("declarations", array_of_list variable_declarator declarations); ("kind", string kind_str);
         ]
     and declare_function
         ( loc,
