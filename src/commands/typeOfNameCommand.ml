@@ -18,7 +18,8 @@ let spec =
     doc = "";
     usage =
       Printf.sprintf
-        "Usage: %s type-of-name-experimental [OPTION]... FILE NAME [NAME...]\n\ne.g. %s type-of-name foo.js myVariable\ne.g. %s type-of-name foo.js UserCard DataDisplay ProductItem\n"
+        "Usage: %s type-of-name-experimental [OPTION]... FILE NAME [NAME...]\n\ne.g. %s type-of-name foo.js myVariable\ne.g. %s type-of-name foo.js UserCard DataDisplay ProductItem\ne.g. %s type-of-name foo.js UserCard.name UserCard.email\n"
+        CommandUtils.exe_name
         CommandUtils.exe_name
         CommandUtils.exe_name
         CommandUtils.exe_name;

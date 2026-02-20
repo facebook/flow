@@ -226,3 +226,26 @@ assert_ok "$FLOW" type-of-name-experimental basic.js myString myNumber myBoolean
 assert_errors "$FLOW" type-of-name-experimental basic.js myString nonexistent myNumber --strip-root
 # Multiple names from empty file (index lookup)
 assert_ok "$FLOW" type-of-name-experimental empty_file.js UserCard DataDisplay --strip-root --unexpand-component-props
+
+# Member lookup
+printf "\n=== Member Lookup ===\n"
+# Component prop lookup (from current file)
+assert_ok "$FLOW" type-of-name-experimental react.js BasicComponent.title --strip-root
+assert_ok "$FLOW" type-of-name-experimental react.js BasicComponent.count --strip-root
+# Object property lookup
+assert_ok "$FLOW" type-of-name-experimental basic.js myObject.x --strip-root
+assert_ok "$FLOW" type-of-name-experimental basic.js myObject.y --strip-root
+# Class method/property lookup
+assert_ok "$FLOW" type-of-name-experimental basic.js MyClass.methodName --strip-root
+assert_ok "$FLOW" type-of-name-experimental basic.js instance.methodName --strip-root
+# Type alias property lookup
+assert_ok "$FLOW" type-of-name-experimental types.js UserCardProps.name --strip-root
+# Nonexistent member
+assert_errors "$FLOW" type-of-name-experimental react.js BasicComponent.nonexistent --strip-root
+# Batch with members
+assert_ok "$FLOW" type-of-name-experimental react.js BasicComponent.title BasicComponent.count --strip-root
+# Member from index lookup (empty file)
+assert_ok "$FLOW" type-of-name-experimental empty_file.js BasicComponent.title --strip-root
+# Member with prop-level documentation
+assert_ok "$FLOW" type-of-name-experimental react.js DocumentedComponent.displayName --strip-root
+assert_ok "$FLOW" type-of-name-experimental react.js DocumentedComponent.userId --strip-root

@@ -75,6 +75,50 @@ let extract_prop_docs ~reader ~ast (ty : Ty.elt) :
     else
       Some docs
 
+(* Member lookup: find a member's type and def_locs from a Ty.elt *)
+let lookup_member_in_component_props member_name props =
+  let target = Reason.OrdinaryName member_name in
+  Base.List.find_map props ~f:(fun (Ty.FlattenedComponentProp { name; t; def_locs; _ }) ->
+      if name = target then
+        Some (t, def_locs)
+      else
+        None
+  )
+
+let lookup_member_in_obj_props member_name obj_props =
+  let target = Reason.OrdinaryName member_name in
+  Base.List.find_map obj_props ~f:(function
+      | Ty.NamedProp { name; prop; def_locs; _ } when name = target ->
+        let t =
+          match prop with
+          | Ty.Field { t; _ } -> t
+          | Ty.Method ft -> Ty.Fun ft
+          | Ty.Get t
+          | Ty.Set t ->
+            t
+        in
+        Some (t, def_locs)
+      | _ -> None
+      )
+
+let rec lookup_member_in_elt member_name ty_elt =
+  match ty_elt with
+  (* Component value types *)
+  | Ty.Type (Ty.Component { regular_props = Ty.FlattenedComponentProps { props; _ }; _ }) ->
+    lookup_member_in_component_props member_name props
+  (* Component declaration types *)
+  | Ty.Decl (Ty.NominalComponentDecl { props = Ty.FlattenedComponentProps { props; _ }; _ }) ->
+    lookup_member_in_component_props member_name props
+  (* Object types *)
+  | Ty.Type (Ty.Obj { Ty.obj_props; _ }) -> lookup_member_in_obj_props member_name obj_props
+  (* Inline interfaces *)
+  | Ty.Type (Ty.InlineInterface { Ty.if_props; _ }) ->
+    lookup_member_in_obj_props member_name if_props
+  (* Type alias with body — unwrap and recurse *)
+  | Ty.Decl (Ty.TypeAliasDecl { type_ = Some body; _ }) ->
+    lookup_member_in_elt member_name (Ty.Type body)
+  | _ -> None
+
 (* Generate a type summary string from a Ty.t for ref expansion *)
 let rec summarize_ty t =
   let type_str = Ty_printer.string_of_t_single_line ~exact_by_default:true ~ts_syntax:false t in
@@ -164,24 +208,8 @@ let augment_refs_with_summaries ~genv ~ref_type_bodies_tbl refs =
       )
   )
 
-let type_of_name_from_artifacts
-    ~doc_at_loc
-    ~reader
-    ~profiling
-    ~check_result
-    ~expand_component_props
-    ~actual_name
-    ~source
-    (aloc, type_) =
-  let (Parse_artifacts { file_sig; ast; _ }, Typecheck_artifacts { cx; typed_ast; _ }) =
-    check_result
-  in
-  let file_key = Context.file cx in
-  let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-  let documentation =
-    let { Loc.start = { Loc.line; column; _ }; _ } = loc in
-    doc_at_loc ~reader ~profiling ~check_result ~ast file_key line column
-  in
+let mk_normalizer_genv ~expand_component_props ~check_result =
+  let (Parse_artifacts { file_sig; _ }, Typecheck_artifacts { cx; typed_ast; _ }) = check_result in
   let options =
     {
       Ty_normalizer_env.expand_internal_types = false;
@@ -200,27 +228,115 @@ let type_of_name_from_artifacts
     }
   in
   let ref_type_bodies_tbl = Hashtbl.create 16 in
-  let genv =
-    let base_genv =
-      Ty_normalizer_flow.mk_genv ~options ~cx ~file_sig ~typed_ast_opt:(Some typed_ast)
-    in
-    { base_genv with Ty_normalizer_env.ref_type_bodies = Some ref_type_bodies_tbl }
+  let base_genv =
+    Ty_normalizer_flow.mk_genv ~options ~cx ~file_sig ~typed_ast_opt:(Some typed_ast)
   in
+  let genv = { base_genv with Ty_normalizer_env.ref_type_bodies = Some ref_type_bodies_tbl } in
+  (genv, ref_type_bodies_tbl)
+
+let format_ty_elt_response
+    ~reader ~genv ~ref_type_bodies_tbl ~loc ~documentation ~ast ~actual_name ~source ty_elt =
+  let refs = Ty.symbols_of_elt ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader) ty_elt in
+  let r = { Ty.unevaluated = ty_elt; evaluated = None; refs = Some refs } in
+  let (type_str, refs) =
+    Ty_printer.string_of_type_at_pos_result ~exact_by_default:true ~ts_syntax:false r
+  in
+  let refs = augment_refs_with_summaries ~genv ~ref_type_bodies_tbl refs in
+  let prop_docs = extract_prop_docs ~reader ~ast ty_elt in
+  ServerProt.Response.InferTypeOfName.
+    { loc; type_ = type_str; refs; actual_name; documentation; prop_docs; source }
+
+let type_of_name_from_artifacts
+    ~doc_at_loc
+    ~reader
+    ~profiling
+    ~check_result
+    ~expand_component_props
+    ~actual_name
+    ~source
+    (aloc, type_) =
+  let (Parse_artifacts { ast; _ }, Typecheck_artifacts { cx; _ }) = check_result in
+  let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+  let documentation =
+    let { Loc.start = { Loc.line; column; _ }; _ } = loc in
+    doc_at_loc ~reader ~profiling ~check_result ~ast (Context.file cx) line column
+  in
+  let (genv, ref_type_bodies_tbl) = mk_normalizer_genv ~expand_component_props ~check_result in
   match Ty_normalizer_flow.from_type genv type_ with
-  | Ok ty ->
-    let refs = Ty.symbols_of_elt ~loc_of_aloc:(Parsing_heaps.Reader.loc_of_aloc ~reader) ty in
-    let r = { Ty.unevaluated = ty; evaluated = None; refs = Some refs } in
-    let (type_, refs) =
-      Ty_printer.string_of_type_at_pos_result ~exact_by_default:true ~ts_syntax:false r
-    in
-    let refs = augment_refs_with_summaries ~genv ~ref_type_bodies_tbl refs in
-    let prop_docs = extract_prop_docs ~reader ~ast ty in
-    let response =
-      ServerProt.Response.InferTypeOfName.
-        { loc; type_; refs; actual_name; documentation; prop_docs; source }
-    in
-    Ok response
+  | Ok ty_elt ->
+    Ok
+      (format_ty_elt_response
+         ~reader
+         ~genv
+         ~ref_type_bodies_tbl
+         ~loc
+         ~documentation
+         ~ast
+         ~actual_name
+         ~source
+         ty_elt
+      )
   | Error e -> Error ("normalizer error " ^ Ty_normalizer.error_to_string e)
+
+let member_doc_from_def_locs ~reader ~ast def_locs =
+  let get_ast_from_shared_mem file_key = Parsing_heaps.Reader.get_ast ~reader file_key in
+  match def_locs with
+  | aloc :: _ ->
+    let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+    Find_documentation.jsdoc_of_getdef_loc ~ast ~get_ast_from_shared_mem loc
+    |> Base.Option.bind ~f:Find_documentation.documentation_of_jsdoc
+  | [] -> None
+
+let type_of_name_member
+    ~reader ~profiling:_ ~check_result ~doc_at_loc:_ ~full_name ~member_name ~source (_, type_) =
+  let (Parse_artifacts { file_sig; ast; _ }, Typecheck_artifacts { cx; typed_ast; _ }) =
+    check_result
+  in
+  let (genv, ref_type_bodies_tbl) = mk_normalizer_genv ~expand_component_props:true ~check_result in
+  match Ty_normalizer_flow.from_type genv type_ with
+  | Error e -> Error ("normalizer error " ^ Ty_normalizer.error_to_string e)
+  | Ok ty_elt ->
+    let format_member_ty member_ty def_locs =
+      let (loc, documentation) =
+        match def_locs with
+        | aloc :: _ ->
+          let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+          let documentation = member_doc_from_def_locs ~reader ~ast def_locs in
+          (loc, documentation)
+        | [] -> (Loc.none, None)
+      in
+      Ok
+        (format_ty_elt_response
+           ~reader
+           ~genv
+           ~ref_type_bodies_tbl
+           ~loc
+           ~documentation
+           ~ast
+           ~actual_name:full_name
+           ~source
+           (Ty.Type member_ty)
+        )
+    in
+    (* First try Ty-layer lookup (components, objects, type aliases) *)
+    (match lookup_member_in_elt member_name ty_elt with
+    | Some (member_ty, def_locs) -> format_member_ty member_ty def_locs
+    | None ->
+      (* Fall back to Ty_members.extract for classes/interfaces *)
+      (match
+         Ty_members.extract
+           ~force_instance:true
+           ~allowed_prop_names:[Reason.OrdinaryName member_name]
+           ~cx
+           ~typed_ast_opt:(Some typed_ast)
+           ~file_sig
+           type_
+       with
+      | Ok { Ty_members.members; _ } ->
+        (match NameUtils.Map.find_opt (Reason.OrdinaryName member_name) members with
+        | Some Ty_members.{ ty = member_ty; def_locs; _ } -> format_member_ty member_ty def_locs
+        | None -> Error (Printf.sprintf "member '%s' not found on type" member_name))
+      | Error _ -> Error (Printf.sprintf "member '%s' not found on type" member_name)))
 
 let get_server_exports env =
   match env.ServerEnv.exports with
@@ -243,16 +359,7 @@ let find_first_match ~exact_match_only target_name results =
       | _ -> false
       )
 
-let type_of_name_from_index
-    ~doc_at_loc
-    ~options
-    ~reader
-    ~env
-    ~profiling
-    ~expand_component_props
-    ~exact_match_only
-    target_name
-    file_key =
+let resolve_name_from_index ~options ~env ~profiling ~exact_match_only target_name file_key =
   let open Base.Result.Let_syntax in
   let%bind exports = get_server_exports env in
   let { Export_search_types.results; is_incomplete = _ } =
@@ -276,7 +383,7 @@ let type_of_name_from_index
           _;
         } ->
       Ok (actual_name, source, kind)
-    | None -> Error "No results found"
+    | None -> Error (Printf.sprintf "'%s' not found" target_name)
   in
   (* Create contents of the form
    *
@@ -304,7 +411,7 @@ let type_of_name_from_index
       Ok (spf "import %s from '%s';" thing (File_key.to_string s))
     | (Global, (DefaultType | NamedType)) -> Ok (spf "declare var _: %s;" actual_name)
     | (Global, (Default | Named | Namespace)) -> Ok (spf "%s;" actual_name)
-    | (Builtin _, _) -> Error "(handled earlier)"
+    | (Builtin _, _) -> Error "builtin lookup not supported"
   in
   let contents = "/* @flow */ " ^ contents_body in
   let parse_result = Type_contents.parse_contents ~options ~profiling contents file_key in
@@ -319,28 +426,39 @@ let type_of_name_from_index
   | Error _errors -> Error "Parse or typing errors on index"
   | Ok check_result ->
     let (Parse_artifacts _, Typecheck_artifacts { typed_ast; _ }) = check_result in
-    begin
-      match find_identifier_and_type actual_name typed_ast with
-      | Some (loc, type_) ->
-        let result =
-          type_of_name_from_artifacts
-            ~doc_at_loc
-            ~reader
-            ~profiling
-            ~check_result
-            ~expand_component_props
-            ~actual_name
-            ~source
-            (loc, type_)
-        in
-        (* Use def-loc of type in the response, but pass `loc` above to
-         * `type_of_name_from_artifacts` so that we properly compute documentation *)
-        let def_loc = Parsing_heaps.Reader.loc_of_aloc ~reader (TypeUtil.def_loc_of_t type_) in
-        Base.Result.map result ~f:(fun r ->
-            { r with ServerProt.Response.InferTypeOfName.loc = def_loc }
-        )
-      | None -> Error "Unexpected: no type found for identifier in phony program"
-    end
+    (match find_identifier_and_type actual_name typed_ast with
+    | Some (aloc, type_) -> Ok (actual_name, source, check_result, aloc, type_)
+    | None -> Error "Unexpected: no type found for identifier in phony program")
+
+let type_of_name_from_index
+    ~doc_at_loc
+    ~options
+    ~reader
+    ~env
+    ~profiling
+    ~expand_component_props
+    ~exact_match_only
+    target_name
+    file_key =
+  let open Base.Result.Let_syntax in
+  let%bind (actual_name, source, check_result, aloc, type_) =
+    resolve_name_from_index ~options ~env ~profiling ~exact_match_only target_name file_key
+  in
+  let result =
+    type_of_name_from_artifacts
+      ~doc_at_loc
+      ~reader
+      ~profiling
+      ~check_result
+      ~expand_component_props
+      ~actual_name
+      ~source
+      (aloc, type_)
+  in
+  (* Use def-loc of type in the response, but pass `loc` above to
+   * `type_of_name_from_artifacts` so that we properly compute documentation *)
+  let def_loc = Parsing_heaps.Reader.loc_of_aloc ~reader (TypeUtil.def_loc_of_t type_) in
+  Base.Result.map result ~f:(fun r -> { r with ServerProt.Response.InferTypeOfName.loc = def_loc })
 
 let type_of_name_single
     ~(options : Options.t)
@@ -353,31 +471,70 @@ let type_of_name_single
     ~target_name
     file_key
     check_result : ServerProt.Response.infer_type_of_name_response =
-  let (Parse_artifacts _, Typecheck_artifacts { typed_ast; _ }) = check_result in
-  match find_identifier_and_type target_name typed_ast with
-  | Some r ->
-    (* Identifier exists in current file. Use type from TAST. *)
-    type_of_name_from_artifacts
-      ~doc_at_loc
-      ~reader
-      ~profiling
-      ~check_result
-      ~expand_component_props
-      ~actual_name:target_name
-      ~source:(Export_index.File_key file_key)
-      r
-  | None ->
-    (* Identifier does not exist in current file. Look up the index. *)
-    type_of_name_from_index
-      ~doc_at_loc
-      ~options
-      ~reader
-      ~env
-      ~profiling
-      ~expand_component_props
-      ~exact_match_only
-      target_name
-      file_key
+  match String.split_on_char '.' target_name with
+  | [] -> Error "empty name"
+  | [_] ->
+    (* No dot — existing logic *)
+    let (Parse_artifacts _, Typecheck_artifacts { typed_ast; _ }) = check_result in
+    (match find_identifier_and_type target_name typed_ast with
+    | Some r ->
+      (* Identifier exists in current file. Use type from TAST. *)
+      type_of_name_from_artifacts
+        ~doc_at_loc
+        ~reader
+        ~profiling
+        ~check_result
+        ~expand_component_props
+        ~actual_name:target_name
+        ~source:(Export_index.File_key file_key)
+        r
+    | None ->
+      (* Identifier does not exist in current file. Look up the index. *)
+      type_of_name_from_index
+        ~doc_at_loc
+        ~options
+        ~reader
+        ~env
+        ~profiling
+        ~expand_component_props
+        ~exact_match_only
+        target_name
+        file_key)
+  | base_name :: member_parts ->
+    let member_name = String.concat "." member_parts in
+    let full_name = target_name in
+    let resolve_member_from_check_result base_check_result base_source (aloc, type_) =
+      type_of_name_member
+        ~reader
+        ~profiling
+        ~check_result:base_check_result
+        ~doc_at_loc
+        ~full_name
+        ~member_name
+        ~source:base_source
+        (aloc, type_)
+    in
+    (* Try to find the base name in the current file first *)
+    let (Parse_artifacts _, Typecheck_artifacts { typed_ast; _ }) = check_result in
+    (match find_identifier_and_type base_name typed_ast with
+    | Some (aloc, type_) ->
+      resolve_member_from_check_result check_result (Export_index.File_key file_key) (aloc, type_)
+    | None ->
+      (* Base name not in current file — look it up via the index, then do member lookup *)
+      let open Base.Result.Let_syntax in
+      let%bind (actual_base_name, source, index_check_result, aloc, type_) =
+        resolve_name_from_index ~options ~env ~profiling ~exact_match_only base_name file_key
+      in
+      let actual_full_name = actual_base_name ^ "." ^ member_name in
+      type_of_name_member
+        ~reader
+        ~profiling
+        ~check_result:index_check_result
+        ~doc_at_loc
+        ~full_name:actual_full_name
+        ~member_name
+        ~source
+        (aloc, type_))
 
 let type_of_name
     ~(options : Options.t)

@@ -845,3 +845,24 @@ type DataDisplayProps<T> = {
 where
 'DataDisplayProps' is defined at types.js:12:13-28
 
+
+=== Member Lookup ===
+Found exact match 'BasicComponent.title' defined at react.js:7:26,7:30 with type `string` 
+Found exact match 'BasicComponent.count' defined at react.js:7:41,7:45 with type `number` 
+Found exact match 'myObject.x' defined at basic.js:8:18,8:18 with type `number` 
+Found exact match 'myObject.y' defined at basic.js:8:29,8:29 with type `string` 
+Found exact match 'MyClass.methodName' defined at basic.js:25:3,25:12 with type `() => number` 
+Found exact match 'instance.methodName' defined at basic.js:25:3,25:12 with type `() => number` 
+Found exact match 'UserCardProps.name' defined at types.js:5:3,5:6 with type `string` 
+Found exact match 'BasicComponent.title' defined at react.js:7:26,7:30 with type `string` 
+
+Found exact match 'BasicComponent.count' defined at react.js:7:41,7:45 with type `number` 
+Found exact match 'BasicComponent.title' defined at react.js:7:26,7:30 with type `string` 
+Found exact match 'DocumentedComponent.displayName' defined at types.js:32:3,32:13 with type `string` 
+and documentation:
+ The user's display name
+
+Found exact match 'DocumentedComponent.userId' defined at types.js:34:3,34:8 with type `string` 
+and documentation:
+ The user's unique identifier
+
