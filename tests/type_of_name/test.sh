@@ -41,21 +41,21 @@ assert_errors "$FLOW" type-of-name-experimental basic.js nonexistent # prints "n
 
 # React components
 printf "\n=== React Components ===\n"
-assert_ok "$FLOW" type-of-name-experimental react.js BasicComponent --strip-root
-assert_ok "$FLOW" type-of-name-experimental react.js OptionalProps --strip-root
-assert_ok "$FLOW" type-of-name-experimental react.js GenericComponent --strip-root
-assert_ok "$FLOW" type-of-name-experimental react.js InexactRest --strip-root
-assert_ok "$FLOW" type-of-name-experimental react.js IndexedRest --strip-root
-assert_ok "$FLOW" type-of-name-experimental react.js NamedProps --strip-root
-assert_ok "$FLOW" type-of-name-experimental react.js UserCard --strip-root
-assert_ok "$FLOW" type-of-name-experimental react.js DataDisplay --strip-root
-assert_ok "$FLOW" type-of-name-experimental react.js ProductItem --strip-root
-assert_ok "$FLOW" type-of-name-experimental react.js UserProfile --strip-root
-assert_ok "$FLOW" type-of-name-experimental react.js NotificationWithDocblock --strip-root
+assert_ok "$FLOW" type-of-name-experimental react.js BasicComponent --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js OptionalProps --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js GenericComponent --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js InexactRest --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js IndexedRest --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js NamedProps --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js UserCard --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js DataDisplay --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js ProductItem --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js UserProfile --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js NotificationWithDocblock --strip-root --unexpand-component-props
 
 printf "\n=== React Components (--hide-references) ===\n"
-assert_ok "$FLOW" type-of-name-experimental react.js UserCard --strip-root --hide-references
-assert_ok "$FLOW" type-of-name-experimental react.js DataDisplay --strip-root --hide-references
+assert_ok "$FLOW" type-of-name-experimental react.js UserCard --strip-root --hide-references --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental react.js DataDisplay --strip-root --hide-references --unexpand-component-props
 
 printf "\n=== React Components (--expand-component-props) ===\n"
 assert_ok "$FLOW" type-of-name-experimental react.js UserCard --strip-root --expand-component-props
@@ -65,23 +65,23 @@ assert_ok "$FLOW" type-of-name-experimental react.js UserProfile --strip-root --
 
 # Check indexer with requests from empty file
 printf "\n=== React Components in empty file ===\n"
-assert_ok "$FLOW" type-of-name-experimental empty_file.js BasicComponent --strip-root
-assert_ok "$FLOW" type-of-name-experimental empty_file.js OptionalProps --strip-root
-assert_ok "$FLOW" type-of-name-experimental empty_file.js GenericComponent --strip-root
-assert_ok "$FLOW" type-of-name-experimental empty_file.js InexactRest --strip-root
-assert_ok "$FLOW" type-of-name-experimental empty_file.js IndexedRest --strip-root
-assert_ok "$FLOW" type-of-name-experimental empty_file.js NamedProps --strip-root
-assert_ok "$FLOW" type-of-name-experimental empty_file.js UserCard --strip-root
-assert_ok "$FLOW" type-of-name-experimental empty_file.js DataDisplay --strip-root
-assert_ok "$FLOW" type-of-name-experimental empty_file.js ProductItem --strip-root
-assert_ok "$FLOW" type-of-name-experimental empty_file.js UserProfile --strip-root
-assert_ok "$FLOW" type-of-name-experimental empty_file.js NotificationWithDocblock --strip-root
+assert_ok "$FLOW" type-of-name-experimental empty_file.js BasicComponent --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js OptionalProps --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js GenericComponent --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js InexactRest --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js IndexedRest --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js NamedProps --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js UserCard --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js DataDisplay --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js ProductItem --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js UserProfile --strip-root --unexpand-component-props
+assert_ok "$FLOW" type-of-name-experimental empty_file.js NotificationWithDocblock --strip-root --unexpand-component-props
 
 assert_ok "$FLOW" type-of-name-experimental empty_file.js UserCard --strip-root --expand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js DataDisplay --strip-root --expand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js ProductItem --strip-root --expand-component-props
 assert_ok "$FLOW" type-of-name-experimental empty_file.js UserProfile --strip-root --expand-component-props
-assert_ok "$FLOW" type-of-name-experimental empty_file.js UserCard --strip-root --exact-match-only # returns result from react.js
+assert_ok "$FLOW" type-of-name-experimental empty_file.js UserCard --strip-root --exact-match-only --unexpand-component-props # returns result from react.js
 
 assert_errors "$FLOW" type-of-name-experimental empty_file.js NO_UserProfile --strip-root --exact-match-only
 

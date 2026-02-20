@@ -32,7 +32,14 @@ let spec =
         |> from_flag
         |> path_flag
         |> wait_for_recheck_flag
-        |> flag "--expand-component-props" truthy ~doc:"Expand rest props of components"
+        |> flag
+             "--expand-component-props"
+             truthy
+             ~doc:"[DEPRECATED: now default] Expand rest props of components"
+        |> flag
+             "--unexpand-component-props"
+             truthy
+             ~doc:"Show spread types without expanding (e.g., ...UserCardProps)"
         |> flag "--hide-references" truthy ~doc:"Hide definition information of names within types"
         |> flag "--exact-match-only" truthy ~doc:"Only show results that match the name exactly"
         |> anon "args" (required (list_of string))
@@ -109,7 +116,8 @@ let main
     verbose
     path
     wait_for_recheck
-    expand_component_props
+    _expand_component_props_deprecated
+    unexpanded
     hide_references
     exact_match_only
     args
@@ -131,6 +139,8 @@ let main
       None
   in
   if verbose <> None then prerr_endline "NOTE: --verbose writes to the server log file";
+  (* Default is now expanded (true), --unexpanded sets to false *)
+  let expand_component_props = not unexpanded in
   let options =
     {
       ServerProt.Type_of_name_options.input = file_input;
