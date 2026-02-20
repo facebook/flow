@@ -1460,6 +1460,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         Eat.token env
       | T_RCURLYBAR when exact -> ()
       | T_RCURLY when not exact -> ()
+      | _ when Peek.is_implicit_semicolon env -> ()
       | _ -> Expect.error env T_COMMA
     in
     let error_unexpected_variance env = function

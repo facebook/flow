@@ -10,10 +10,6 @@
     },
     {
       "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
-      "message":"Unexpected end of input, expected the token `,`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":0}},
       "message":"Unexpected end of input, expected the token `}`"
     }
   ],
@@ -61,6 +57,7 @@
             "optional":false,
             "static":true,
             "proto":false,
+            "abstract":false,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":10}},

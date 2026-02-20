@@ -3,7 +3,7 @@
  */
 declare class ExampleClass {
 
-  methodA: () => any // parse error, missing comma
+  methodA: () => any! // parse error, !
 
   methodB: () => any
 

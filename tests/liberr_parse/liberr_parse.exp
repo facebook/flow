@@ -1,9 +1,9 @@
-Error ------------------------------------------------------------------------------------------ libs/parse_error.js:8:3
+Error ----------------------------------------------------------------------------------------- libs/parse_error.js:6:21
 
-Unexpected identifier, expected the token `,` [ParseError]
+Unexpected token `!`, expected the token `,` [ParseError]
 
-   8|   methodB: () => any
-        ^^^^^^^
+   6|   methodA: () => any! // parse error, !
+                          ^
 
 
 

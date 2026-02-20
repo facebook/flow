@@ -3,10 +3,6 @@
     {
       "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":5}},
       "message":"Unexpected identifier, expected the token `:`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":3,"column":2},"end":{"line":3,"column":5}},
-      "message":"Unexpected identifier, expected the token `,`"
     }
   ],
   "type":"Program",
@@ -54,6 +50,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           },
@@ -78,6 +75,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           }
