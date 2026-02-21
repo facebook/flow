@@ -59,7 +59,15 @@ let to_string path = path
 let concat path more = make (Filename.concat path more)
 
 let parent path =
-  if Sys.is_directory path then
+  (* Sys.is_directory raises Sys_error on non-existent paths. We catch it and
+     treat missing paths as non-directories, so that callers like Vcs.find_root
+     don't crash when given paths to deleted files (e.g. files reported as
+     changed by Mercurial that no longer exist on disk). *)
+  let is_dir =
+    try Sys.is_directory path with
+    | Sys_error _ -> false
+  in
+  if is_dir then
     make (concat path Filename.parent_dir_name)
   else
     make (Filename.dirname path)
