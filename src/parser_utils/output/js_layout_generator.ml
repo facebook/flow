@@ -3655,6 +3655,7 @@ and export_specifier ~opts source =
                         {
                           ExportSpecifier.local;
                           exported;
+                          export_kind;
                           from_remote = _;
                           imported_name_def_loc = _;
                         }
@@ -3663,6 +3664,9 @@ and export_specifier ~opts source =
                      ( loc,
                        fuse
                          [
+                           (match export_kind with
+                           | Ast.Statement.ExportType -> fuse [Atom "type"; space]
+                           | Ast.Statement.ExportValue -> Empty);
                            identifier local;
                            begin
                              match exported with

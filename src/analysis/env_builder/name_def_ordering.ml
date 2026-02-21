@@ -423,7 +423,11 @@ struct
             (spec : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
           let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
           (* Ignore renamed export *)
-          let (_, { local; exported = _; from_remote = _; imported_name_def_loc = _ }) = spec in
+          let ( _,
+                { local; exported = _; export_kind = _; from_remote = _; imported_name_def_loc = _ }
+              ) =
+            spec
+          in
           run this#identifier local;
           spec
 

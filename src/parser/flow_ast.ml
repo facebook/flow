@@ -1251,6 +1251,7 @@ and Statement : sig
       and ('M, 'T) t' = {
         local: ('M, 'T) Identifier.t;
         exported: ('M, 'T) Identifier.t option;
+        export_kind: Statement.export_kind;
         from_remote: bool;
         (* Imported name's definition location. It will be populated only in typed AST for `export {foo} from '...'`. *)
         imported_name_def_loc: 'M option;

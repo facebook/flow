@@ -5736,6 +5736,55 @@ let%expect_test "es_export_star" =
     2. baz
     3. qux |}]
 
+let%expect_test "es_export_type_specifier" =
+  print_sig {|
+    type T = string;
+    type S = number;
+    const value: string = "hello";
+    export {type T};
+    export {value, type S};
+  |};
+  [%expect {|
+    ESModule {
+      type_exports =
+      [|(ExportTypeRef LocalRef {ref_loc = [5:20-21]; index = 1});
+        (ExportTypeRef LocalRef {ref_loc = [4:13-14]; index = 0})|];
+      exports = [|(ExportRef LocalRef {ref_loc = [5:8-13]; index = 2})|];
+      info =
+      ESModuleInfo {type_export_keys = [|"S"; "T"|];
+        type_stars = []; export_keys = [|"value"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:5-6]; custom_error_loc_opt = None;
+         name = "T"; tparams = Mono;
+         body = (Annot (String [1:9-15]))}
+    1. TypeAlias {id_loc = [2:5-6]; custom_error_loc_opt = None;
+         name = "S"; tparams = Mono;
+         body = (Annot (Number [2:9-15]))}
+    2. Variable {id_loc = [3:6-11]; name = "value"; def = (Annot (String [3:13-19]))} |}]
+
+let%expect_test "es_export_type_specifier_from" =
+  print_sig {|
+    export {type T} from 'foo';
+    export {value, type S} from 'foo';
+  |};
+  [%expect {|
+    ESModule {type_exports = [|(ExportTypeFrom 2); (ExportTypeFrom 0)|];
+      exports = [|(ExportFrom 1)|];
+      info =
+      ESModuleInfo {type_export_keys = [|"S"; "T"|];
+        type_stars = []; export_keys = [|"value"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Module refs:
+    0. foo
+
+    Remote refs:
+    0. ImportType {id_loc = [1:13-14]; name = "T"; index = 0; remote = "T"}
+    1. Import {id_loc = [2:8-13]; name = "value"; index = 0; remote = "value"}
+    2. ImportType {id_loc = [2:20-21]; name = "S"; index = 0; remote = "S"} |}]
+
 let%expect_test "duplicate_binding" =
   print_sig {|
     import type {T} from 'foo';

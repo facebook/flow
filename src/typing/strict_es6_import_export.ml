@@ -430,6 +430,7 @@ class import_export_visitor ~cx ~scope_info ~declarations =
                    {
                      ExportSpecifier.local = (id_loc, { Ast.Identifier.name; _ });
                      exported;
+                     export_kind = _;
                      from_remote = _;
                      imported_name_def_loc = _;
                    }

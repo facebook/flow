@@ -97,6 +97,7 @@ let check_for_duplicate_exports =
                  {
                    Statement.ExportNamedDeclaration.ExportSpecifier.local;
                    exported;
+                   export_kind = _;
                    from_remote = _;
                    imported_name_def_loc = _;
                  }

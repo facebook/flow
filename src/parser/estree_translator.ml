@@ -2729,6 +2729,7 @@ with type t = Impl.t = struct
           {
             Statement.ExportNamedDeclaration.ExportSpecifier.exported;
             local;
+            export_kind;
             from_remote = _;
             imported_name_def_loc = _;
           }
@@ -2738,7 +2739,14 @@ with type t = Impl.t = struct
         | Some exported -> identifier exported
         | None -> identifier local
       in
-      node "ExportSpecifier" loc [("local", identifier local); ("exported", exported)]
+      node
+        "ExportSpecifier"
+        loc
+        [
+          ("local", identifier local);
+          ("exported", exported);
+          ("exportKind", string (string_of_export_kind export_kind));
+        ]
     and import_default_specifier
         { Statement.ImportDeclaration.identifier = id; remote_default_name_def_loc = _ } =
       node "ImportDefaultSpecifier" (fst id) [("local", identifier id)]

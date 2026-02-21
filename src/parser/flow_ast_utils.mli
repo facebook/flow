@@ -212,4 +212,14 @@ val unwrap_nonnull_lhs_expr :
 val unwrap_nonnull_lhs :
   'loc 'tloc. ('loc, 'tloc) Flow_ast.Pattern.t -> ('loc, 'tloc) Flow_ast.Pattern.t * bool
 
+val effective_export_kind :
+  statement_export_kind:Flow_ast.Statement.export_kind ->
+  Flow_ast.Statement.export_kind ->
+  Flow_ast.Statement.export_kind
+
+val export_specifiers_has_value_export :
+  statement_export_kind:Flow_ast.Statement.export_kind ->
+  ('M, 'T) Flow_ast.Statement.ExportNamedDeclaration.ExportSpecifier.t list ->
+  bool
+
 val string_of_bigint : 'm Flow_ast.BigIntLiteral.t -> string

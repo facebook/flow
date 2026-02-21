@@ -5184,6 +5184,16 @@ let to_printable_error :
         code "declare";
         text " variable declarations cannot have both a type annotation and an initializer.";
       ]
+    | MessageUnsupportedSyntax ExportTypeSpecifierInExportType ->
+      [
+        text "The ";
+        code "type";
+        text " keyword on named exports can only be used on regular ";
+        code "export";
+        text " statements. It cannot be used with ";
+        code "export type";
+        text " statements.";
+      ]
     | MessageUnsupportedSyntax (TSLibSyntax kind) ->
       let kind_str =
         match kind with
@@ -5195,6 +5205,7 @@ let to_printable_error :
         | ImportEqualsQualifiedName -> "`import ... = <QualifiedName>` syntax"
         | DeclareVariableMultipleDeclarators -> "Multiple `declare` variable declarators"
         | DeclareVariableLiteralInit -> "`declare` variable with literal initializer"
+        | ExportTypeSpecifier -> "Inline `type` modifier on export specifier"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

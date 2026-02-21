@@ -4582,7 +4582,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method! export_named_declaration_specifier
           (spec : (ALoc.t, ALoc.t) Flow_ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
         let open Flow_ast.Statement.ExportNamedDeclaration.ExportSpecifier in
-        let (_, { local; exported = _; from_remote = _; imported_name_def_loc = _ }) = spec in
+        let (_, { local; exported = _; export_kind = _; from_remote = _; imported_name_def_loc = _ })
+            =
+          spec
+        in
         ignore (this#identifier local);
         spec
 
@@ -6954,7 +6957,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
       method! export_named_declaration_specifier
           (spec : (ALoc.t, ALoc.t) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
         let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
-        let (_, { local; exported = _; from_remote = _; imported_name_def_loc = _ }) = spec in
+        let (_, { local; exported = _; export_kind = _; from_remote = _; imported_name_def_loc = _ })
+            =
+          spec
+        in
         ignore (this#identifier local);
         spec
 

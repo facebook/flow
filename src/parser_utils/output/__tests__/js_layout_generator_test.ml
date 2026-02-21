@@ -2000,7 +2000,14 @@ let tests =
              ~ctxt
              ~pretty:true
              ("export * as " ^ String.make 80 'a' ^ " from \"a\";");
-           assert_statement_string ~ctxt ~pretty:true "export opaque type a = b;"
+           assert_statement_string ~ctxt ~pretty:true "export opaque type a = b;";
+           assert_statement_string ~ctxt "export{type a};";
+           assert_statement_string ~ctxt "export{a,type b};";
+           assert_statement_string ~ctxt "export{type a}from\"a\";";
+           assert_statement_string ~ctxt ~pretty:true "export { type a };";
+           assert_statement_string ~ctxt ~pretty:true "export { a, type b };";
+           assert_statement_string ~ctxt "export{type a as b};";
+           assert_statement_string ~ctxt ~pretty:true "export { type a as b };"
          )
          (* TODO: Flow does not parse this but should
             assert_statement_string ~ctxt "export a,{b}from'a';";

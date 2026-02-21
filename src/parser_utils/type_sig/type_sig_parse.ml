@@ -4982,12 +4982,23 @@ let export_specifiers scope tbls kind source =
     Scope.export_star scope tbls kind loc mref
   | E.ExportSpecifiers specifiers ->
     List.iter
-      (fun (_, { E.ExportSpecifier.local; exported; from_remote = _; imported_name_def_loc = _ }) ->
+      (fun ( _,
+             {
+               E.ExportSpecifier.local;
+               exported;
+               export_kind;
+               from_remote = _;
+               imported_name_def_loc = _;
+             }
+           ) ->
+        let specifier_kind =
+          Flow_ast_utils.effective_export_kind ~statement_export_kind:kind export_kind
+        in
         match source with
-        | None -> Scope.export_ref scope tbls kind ~local ~exported
+        | None -> Scope.export_ref scope tbls specifier_kind ~local ~exported
         | Some mref ->
           let mref = Flow_import_specifier.userland mref in
-          Scope.export_from scope tbls kind mref ~local ~exported)
+          Scope.export_from scope tbls specifier_kind mref ~local ~exported)
       specifiers
 
 let assignment =

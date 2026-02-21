@@ -234,7 +234,9 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method! export_named_declaration_specifier spec =
       let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
-      let (_, { local; exported; from_remote; imported_name_def_loc = _ }) = spec in
+      let (_, { local; exported; export_kind = _; from_remote; imported_name_def_loc = _ }) =
+        spec
+      in
       Base.Option.iter exported ~f:(fun (annot, { Ast.Identifier.name; _ }) ->
           if this#annot_covers_target annot then
             (* Either `export {foo as bar}` or `export {foo as bar} from '...'`
@@ -875,7 +877,13 @@ let find_imported_name_def_loc_in_node local_loc node =
       method! export_named_declaration_specifier spec =
         let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
         let ( _,
-              { local = ((local_loc', _), _); exported = _; from_remote = _; imported_name_def_loc }
+              {
+                local = ((local_loc', _), _);
+                exported = _;
+                export_kind = _;
+                from_remote = _;
+                imported_name_def_loc;
+              }
             ) =
           spec
         in

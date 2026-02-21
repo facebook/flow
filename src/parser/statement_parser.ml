@@ -1623,20 +1623,96 @@ module Statement
       let specifier =
         with_loc
           (fun env ->
-            let local = identifier_name env in
-            let exported =
+            if Peek.token env = T_TYPE then
+              (* consume `type`, but we don't know yet whether this is `type foo` or
+                 `type as foo` (a value named "type"). *)
+              let type_keyword_or_local = identifier_name env in
               match Peek.token env with
-              | T_IDENTIFIER { raw = "as"; _ } ->
-                Eat.token env;
-                Some (identifier_name env)
-              | _ -> None
-            in
-            {
-              Statement.ExportNamedDeclaration.ExportSpecifier.local;
-              exported;
-              from_remote = false;
-              imported_name_def_loc = None;
-            })
+              (* `type` (a value named "type") *)
+              | T_EOF
+              | T_RCURLY
+              | T_COMMA ->
+                let local = type_keyword_or_local in
+                {
+                  Statement.ExportNamedDeclaration.ExportSpecifier.local;
+                  exported = None;
+                  export_kind = Statement.ExportValue;
+                  from_remote = false;
+                  imported_name_def_loc = None;
+                }
+              (* `type as ...` - ambiguous *)
+              | T_IDENTIFIER { raw = "as"; _ } -> begin
+                match Peek.ith_token ~i:1 env with
+                (* `type as` - type export of "as" *)
+                | T_EOF
+                | T_RCURLY
+                | T_COMMA ->
+                  let local = identifier_name env in
+                  {
+                    Statement.ExportNamedDeclaration.ExportSpecifier.local;
+                    exported = None;
+                    export_kind = Statement.ExportType;
+                    from_remote = false;
+                    imported_name_def_loc = None;
+                  }
+                (* `type as as foo` - type export of "as" renamed to "foo" *)
+                | T_IDENTIFIER { raw = "as"; _ } ->
+                  let local = identifier_name env in
+                  Eat.token env;
+                  let exported = Some (identifier_name env) in
+                  {
+                    Statement.ExportNamedDeclaration.ExportSpecifier.local;
+                    exported;
+                    export_kind = Statement.ExportType;
+                    from_remote = false;
+                    imported_name_def_loc = None;
+                  }
+                | _ ->
+                  (* `type as foo` - value named "type" exported as "foo" *)
+                  let local = type_keyword_or_local in
+                  Eat.token env;
+                  let exported = Some (identifier_name env) in
+                  {
+                    Statement.ExportNamedDeclaration.ExportSpecifier.local;
+                    exported;
+                    export_kind = Statement.ExportValue;
+                    from_remote = false;
+                    imported_name_def_loc = None;
+                  }
+              end
+              (* `type X` or `type X as Y` - type export of X *)
+              | _ ->
+                let local = identifier_name env in
+                let exported =
+                  match Peek.token env with
+                  | T_IDENTIFIER { raw = "as"; _ } ->
+                    Eat.token env;
+                    Some (identifier_name env)
+                  | _ -> None
+                in
+                {
+                  Statement.ExportNamedDeclaration.ExportSpecifier.local;
+                  exported;
+                  export_kind = Statement.ExportType;
+                  from_remote = false;
+                  imported_name_def_loc = None;
+                }
+            else
+              let local = identifier_name env in
+              let exported =
+                match Peek.token env with
+                | T_IDENTIFIER { raw = "as"; _ } ->
+                  Eat.token env;
+                  Some (identifier_name env)
+                | _ -> None
+              in
+              {
+                Statement.ExportNamedDeclaration.ExportSpecifier.local;
+                exported;
+                export_kind = Statement.ExportValue;
+                from_remote = false;
+                imported_name_def_loc = None;
+              })
           env
       in
       let preceding_comma = Eat.maybe env T_COMMA in
@@ -1649,11 +1725,15 @@ module Statement
             {
               Statement.ExportNamedDeclaration.ExportSpecifier.local = id;
               exported = _;
+              export_kind;
               from_remote = _;
               imported_name_def_loc = _;
             }
           ) ->
-          assert_identifier_name_is_identifier ~restricted_error:Parse_error.StrictVarName env id)
+          (match export_kind with
+          | Statement.ExportValue ->
+            assert_identifier_name_is_identifier ~restricted_error:Parse_error.StrictVarName env id
+          | Statement.ExportType -> ()))
       specifiers
 
   (* Parse the module_reference part of an ImportEqualsDeclaration:

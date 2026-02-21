@@ -96,33 +96,45 @@ end
 let export_specifiers cx info loc source export_kind =
   let open Ast.Statement in
   let module E = ExportNamedDeclaration in
-  (* [declare] export [type] {foo [as bar]}; *)
-  let export_ref loc local_type remote_name =
-    match export_kind with
+  let effective_kind specifier_export_kind =
+    Flow_ast_utils.effective_export_kind ~statement_export_kind:export_kind specifier_export_kind
+  in
+  (* [declare] export [type] {[type] foo [as bar]}; *)
+  let export_ref kind loc local_type remote_name =
+    match kind with
     | Ast.Statement.ExportType -> Module_info.export_type info remote_name ~name_loc:loc local_type
     | Ast.Statement.ExportValue ->
       Module_info.export_value info remote_name ~name_loc:loc local_type
   in
-  (* [declare] export [type] {foo [as bar]} from 'module' *)
-  let export_from loc local_type remote_name =
-    match export_kind with
+  (* [declare] export [type] {[type] foo [as bar]} from 'module' *)
+  let export_from kind loc local_type remote_name =
+    match kind with
     | Ast.Statement.ExportType -> Module_info.export_type info remote_name ~name_loc:loc local_type
     | Ast.Statement.ExportValue ->
       Module_info.export_value info remote_name ~name_loc:loc local_type
   in
   let export_specifier
-      export (_, { E.ExportSpecifier.local; exported; from_remote = _; imported_name_def_loc = _ })
-      =
+      export
+      ( _,
+        {
+          E.ExportSpecifier.local;
+          exported;
+          export_kind = specifier_export_kind;
+          from_remote = _;
+          imported_name_def_loc = _;
+        }
+      ) =
+    let kind = effective_kind specifier_export_kind in
     let ((local_loc, local_type), { Ast.Identifier.name = local_name; comments = _ }) = local in
     let remote_name =
       match exported with
       | None -> OrdinaryName local_name
       | Some (_, { Ast.Identifier.name = remote_name; comments = _ }) -> OrdinaryName remote_name
     in
-    export local_loc local_type remote_name
+    export kind local_loc local_type remote_name
   in
   function
-  (* [declare] export [type] {foo [as bar]} [from ...]; *)
+  (* [declare] export [type] {[type] foo [as bar]} [from ...]; *)
   | E.ExportSpecifiers specifiers ->
     let export =
       match source with

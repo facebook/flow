@@ -863,6 +863,18 @@ let unwrap_nonnull_lhs : 'loc 'tloc. ('loc, 'tloc) Pattern.t -> ('loc, 'tloc) Pa
     end
   | _ -> (pat, false)
 
+let effective_export_kind ~statement_export_kind specifier_export_kind =
+  match specifier_export_kind with
+  | Statement.ExportType -> Statement.ExportType
+  | Statement.ExportValue -> statement_export_kind
+
+let export_specifiers_has_value_export ~statement_export_kind specs =
+  let open Statement.ExportNamedDeclaration in
+  List.exists
+    (fun (_, { ExportSpecifier.export_kind = specifier_export_kind; _ }) ->
+      effective_export_kind ~statement_export_kind specifier_export_kind = Statement.ExportValue)
+    specs
+
 let string_of_bigint { BigIntLiteral.value; raw; comments = _ } =
   (* https://github.com/estree/estree/blob/master/es2020.md#bigintliteral
    * `bigint` property is the string representation of the `BigInt` value.

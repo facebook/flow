@@ -1,0 +1,79 @@
+Error --------------------------------------------------------------------------------------------------- import.js:10:1
+
+Cannot cast `t` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   import.js:10:1
+   10| t as empty; // ERROR
+       ^
+
+References:
+   import.js:8:18
+    8| declare const t: T;
+                        ^ [1]
+   import.js:10:6
+   10| t as empty; // ERROR
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:14:1
+
+Cannot cast `s` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   import.js:14:1
+   14| s as empty; // ERROR
+       ^
+
+References:
+   import.js:12:18
+   12| declare const s: S;
+                        ^ [1]
+   import.js:14:6
+   14| s as empty; // ERROR
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:18:1
+
+Cannot cast `r` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+
+   import.js:18:1
+   18| r as empty; // ERROR
+       ^
+
+References:
+   import.js:16:18
+   16| declare const r: R;
+                        ^ [1]
+   import.js:18:6
+   18| r as empty; // ERROR
+            ^^^^^ [2]
+
+
+Error --------------------------------------------------------------------------------------------------- import.js:22:1
+
+Cannot cast `rt` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   import.js:22:1
+   22| rt as empty; // ERROR
+       ^^
+
+References:
+   import.js:20:19
+   20| declare const rt: RenamedT;
+                         ^^^^^^^^ [1]
+   import.js:22:7
+   22| rt as empty; // ERROR
+             ^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:20:1
+
+The `type` keyword on named exports can only be used on regular `export` statements. It cannot be used with
+`export type` statements. [unsupported-syntax]
+
+   20| export type {type X}; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 5 errors

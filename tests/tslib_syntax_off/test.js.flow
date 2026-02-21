@@ -43,3 +43,7 @@ declare const x: string, y: number; // ERROR
 
 // DeclareVariable literal init
 declare const s = 'foo'; // ERROR
+
+// Export type specifier
+type SomeType = string;
+export {type SomeType}; // ERROR

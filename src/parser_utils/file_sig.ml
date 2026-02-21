@@ -506,7 +506,16 @@ class requires_calculator ~file_key ~ast ~opts =
       begin
         match specifiers with
         | None -> ()
-        | Some _ -> this#add_exports export_kind source
+        | Some (ExportSpecifiers specs) ->
+          if
+            Flow_ast_utils.export_specifiers_has_value_export
+              ~statement_export_kind:export_kind
+              specs
+          then
+            this#add_exports Ast.Statement.ExportValue source
+          else
+            this#add_exports Ast.Statement.ExportType source
+        | Some (ExportBatchSpecifier _) -> this#add_exports export_kind source
       end;
       super#export_named_declaration stmt_loc decl
 

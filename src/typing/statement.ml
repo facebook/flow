@@ -1052,23 +1052,27 @@ module Make
   let export_specifiers cx source export_kind =
     let open Ast.Statement in
     let module E = ExportNamedDeclaration in
-    let lookup_mode =
-      match export_kind with
+    let effective_kind specifier_export_kind =
+      Flow_ast_utils.effective_export_kind ~statement_export_kind:export_kind specifier_export_kind
+    in
+    let lookup_mode_of_kind kind =
+      match kind with
       | Ast.Statement.ExportValue -> ForValue
       | Ast.Statement.ExportType -> ForType
     in
-    (* [declare] export [type] {foo [as bar]}; *)
-    let export_ref loc local_name =
+    (* [declare] export [type] {[type] foo [as bar]}; *)
+    let export_ref kind loc local_name =
+      let lookup_mode = lookup_mode_of_kind kind in
       let t = Type_env.var_ref ~lookup_mode cx local_name loc in
-      match export_kind with
+      match kind with
       | Ast.Statement.ExportType -> (None, TypeAssertions.assert_export_is_type cx local_name t)
       | Ast.Statement.ExportValue -> (None, t)
     in
-    (* [declare] export [type] {foo [as bar]} from 'module' *)
-    let export_from ~module_name ~source_module loc local_name =
+    (* [declare] export [type] {[type] foo [as bar]} from 'module' *)
+    let export_from kind ~module_name ~source_module loc local_name =
       let reason = mk_reason (RIdentifier local_name) loc in
       let import_kind =
-        match export_kind with
+        match kind with
         | Ast.Statement.ExportType -> Ast.Statement.ImportDeclaration.ImportType
         | Ast.Statement.ExportValue -> Ast.Statement.ImportDeclaration.ImportValue
       in
@@ -1084,8 +1088,18 @@ module Make
         ~local_name:(Reason.display_string_of_name local_name)
     in
     let export_specifier
-        export (loc, { E.ExportSpecifier.local; exported; from_remote; imported_name_def_loc = _ })
-        =
+        make_export
+        ( loc,
+          {
+            E.ExportSpecifier.local;
+            exported;
+            export_kind = specifier_export_kind;
+            from_remote;
+            imported_name_def_loc = _;
+          }
+        ) =
+      let kind = effective_kind specifier_export_kind in
+      let export = make_export kind in
       let (local_loc, ({ Ast.Identifier.name = local_name; comments = _ } as local_id)) = local in
       let local_name = OrdinaryName local_name in
       let reconstruct_remote =
@@ -1098,21 +1112,26 @@ module Make
         {
           E.ExportSpecifier.local = ((local_loc, t), local_id);
           exported = reconstruct_remote t;
+          export_kind = specifier_export_kind;
           from_remote;
           imported_name_def_loc;
         }
       )
     in
     function
-    (* [declare] export [type] {foo [as bar]} [from ...]; *)
+    (* [declare] export [type] {[type] foo [as bar]} [from ...]; *)
     | E.ExportSpecifiers specifiers ->
-      let export =
+      let make_export =
         match source with
         | Some (source_module, _, { Ast.StringLiteral.value = module_name; _ }) ->
-          export_from ~module_name:(Flow_import_specifier.userland module_name) ~source_module
-        | None -> export_ref
+          fun kind ->
+            export_from
+              kind
+              ~module_name:(Flow_import_specifier.userland module_name)
+              ~source_module
+        | None -> (fun kind -> export_ref kind)
       in
-      let specifiers = Base.List.map ~f:(export_specifier export) specifiers in
+      let specifiers = Base.List.map ~f:(export_specifier make_export) specifiers in
       E.ExportSpecifiers specifiers
     (* [declare] export [type] * as id from "source"; *)
     | E.ExportBatchSpecifier (specifier_loc, Some (id_loc, ({ Ast.Identifier.name; _ } as id))) ->
@@ -2013,37 +2032,64 @@ module Make
           export_decl
           )
       ) ->
-      let declaration =
-        match declaration with
-        | None -> None
-        | Some (loc, stmt) ->
-          let stmt' = statement cx (loc, stmt) in
-          Some stmt'
+      let has_type_specifier =
+        match specifiers with
+        | Some (ExportNamedDeclaration.ExportSpecifiers specs) ->
+          List.exists
+            (fun (_, { ExportNamedDeclaration.ExportSpecifier.export_kind = sk; _ }) ->
+              sk = Ast.Statement.ExportType)
+            specs
+        | _ -> false
       in
-      let source =
-        match source with
-        | None -> None
-        | Some (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) ->
-          let (perform_platform_validation, import_kind_for_untyped_import_validation) =
-            match export_kind with
-            | Ast.Statement.ExportType -> (false, Some ImportType)
-            | Ast.Statement.ExportValue -> (true, Some ImportValue)
-          in
-          let source_module =
-            Flow_js_utils.ImportExportUtils.get_module_type_or_any
-              cx
-              ~import_kind_for_untyped_import_validation
-              (source_loc, Flow_import_specifier.userland module_name)
-              ~perform_platform_validation
-          in
-          Some (source_module, (source_loc, StrModuleT.at source_loc), source_literal)
-      in
-      let specifiers = Option.map (export_specifiers cx source export_kind) specifiers in
-      let source = Option.map (fun (_, t, ast) -> (t, ast)) source in
-      ( loc,
-        ExportNamedDeclaration
-          { export_decl with ExportNamedDeclaration.declaration; specifiers; source }
-      )
+      if has_type_specifier && not (Context.tslib_syntax cx) then (
+        Flow_js_utils.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             ( loc,
+               Flow_intermediate_error_types.TSLibSyntax
+                 Flow_intermediate_error_types.ExportTypeSpecifier
+             )
+          );
+        Tast_utils.error_mapper#statement (loc, ExportNamedDeclaration export_decl)
+      ) else begin
+        if has_type_specifier && export_kind = Ast.Statement.ExportType then
+          Flow_js_utils.add_output
+            cx
+            (Error_message.EUnsupportedSyntax
+               (loc, Flow_intermediate_error_types.ExportTypeSpecifierInExportType)
+            );
+        let declaration =
+          match declaration with
+          | None -> None
+          | Some (loc, stmt) ->
+            let stmt' = statement cx (loc, stmt) in
+            Some stmt'
+        in
+        let source =
+          match source with
+          | None -> None
+          | Some (source_loc, ({ Ast.StringLiteral.value = module_name; _ } as source_literal)) ->
+            let (perform_platform_validation, import_kind_for_untyped_import_validation) =
+              match export_kind with
+              | Ast.Statement.ExportType -> (false, Some ImportType)
+              | Ast.Statement.ExportValue -> (true, Some ImportValue)
+            in
+            let source_module =
+              Flow_js_utils.ImportExportUtils.get_module_type_or_any
+                cx
+                ~import_kind_for_untyped_import_validation
+                (source_loc, Flow_import_specifier.userland module_name)
+                ~perform_platform_validation
+            in
+            Some (source_module, (source_loc, StrModuleT.at source_loc), source_literal)
+        in
+        let specifiers = Option.map (export_specifiers cx source export_kind) specifiers in
+        let source = Option.map (fun (_, t, ast) -> (t, ast)) source in
+        ( loc,
+          ExportNamedDeclaration
+            { export_decl with ExportNamedDeclaration.declaration; specifiers; source }
+        )
+      end
     | (loc, ExportDefaultDeclaration { ExportDefaultDeclaration.default; declaration; comments }) ->
       let module D = ExportDefaultDeclaration in
       let (t, declaration) =

@@ -115,12 +115,14 @@ type unsupported_syntax =
   | DeclareVariableMissingAnnotationOrInit
   | DeclareVariableAnnotationAndInit
   | TSLibSyntax of ts_lib_syntax_kind
+  | ExportTypeSpecifierInExportType
 
 and ts_lib_syntax_kind =
   | DeclarationWithoutDeclare
   | ImportTypeAnnotation
   | DeclareExportNamespace
   | ExportAssignment
+  | ExportTypeSpecifier
   | ImportEqualsDeclaration
   | ImportEqualsQualifiedName
   | DeclareVariableMultipleDeclarators

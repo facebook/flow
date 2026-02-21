@@ -157,7 +157,16 @@ class exports_error_checker ~is_local_use =
       begin
         match specifiers with
         | None -> ()
-        | Some _ -> this#add_exports stmt_loc export_kind
+        | Some (ExportSpecifiers specs) ->
+          if
+            Flow_ast_utils.export_specifiers_has_value_export
+              ~statement_export_kind:export_kind
+              specs
+          then
+            this#add_exports stmt_loc Ast.Statement.ExportValue
+          else
+            this#add_exports stmt_loc Ast.Statement.ExportType
+        | Some (ExportBatchSpecifier _) -> this#add_exports stmt_loc export_kind
       end;
       super#export_named_declaration stmt_loc decl
 

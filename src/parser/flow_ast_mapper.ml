@@ -1316,13 +1316,15 @@ class ['loc] mapper =
     method export_named_declaration_specifier
         (spec : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.ExportSpecifier.t) =
       let open Ast.Statement.ExportNamedDeclaration.ExportSpecifier in
-      let (loc, { local; exported; from_remote; imported_name_def_loc }) = spec in
+      let (loc, { local; exported; export_kind; from_remote; imported_name_def_loc }) = spec in
       let local' = this#identifier local in
       let exported' = map_opt this#identifier exported in
       if local == local' && exported == exported' then
         spec
       else
-        (loc, { local = local'; exported = exported'; from_remote; imported_name_def_loc })
+        ( loc,
+          { local = local'; exported = exported'; export_kind; from_remote; imported_name_def_loc }
+        )
 
     method export_batch_specifier
         (spec : ('loc, 'loc) Ast.Statement.ExportNamedDeclaration.ExportBatchSpecifier.t) =

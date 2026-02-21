@@ -133,5 +133,13 @@ Error --------------------------------------------------------------------------
                          ^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------ test.js.flow:49:1
 
-Found 16 errors
+Inline `type` modifier on export specifier is not enabled. [unsupported-syntax]
+
+   49| export {type SomeType}; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 17 errors
