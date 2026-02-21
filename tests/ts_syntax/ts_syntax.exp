@@ -554,7 +554,7 @@ The utility type `$ReadOnlySet` is deprecated, use `ReadonlySet` instead. [depre
 
 Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:1:8
 
-`:` is deprecated. Use `extends` to specify type parameter bounds in the form `type T<A extends B> = ...`. [ts-syntax]
+Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`). [ts-syntax]
 
    1| type A<T: string> = [T]; // ERROR
              ^^^^^^^^^
@@ -562,7 +562,7 @@ Error ----------------------------------------------------------------------- de
 
 Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:2:8
 
-`:` is deprecated. Use `extends` to specify type parameter bounds in the form `type T<A extends B> = ...`. [ts-syntax]
+Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`). [ts-syntax]
 
    2| type B<+T: string> = [T]; // ERROR
              ^^^^^^^^^^
@@ -585,7 +585,7 @@ References:
 
 Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:3:8
 
-`:` is deprecated. Use `extends` to specify type parameter bounds in the form `type T<A extends B> = ...`. [ts-syntax]
+Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`). [ts-syntax]
 
    3| type C<T: string = "hi"> = [T]; // ERROR
              ^^^^^^^^^^^^^^^^
@@ -593,7 +593,7 @@ Error ----------------------------------------------------------------------- de
 
 Error ----------------------------------------------------------------------- deprecated/type_param_colon_extends.js:4:8
 
-`:` is deprecated. Use `extends` to specify type parameter bounds in the form `type T<A extends B> = ...`. [ts-syntax]
+Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`). [ts-syntax]
 
    4| type D<+T: string = "hi"> = [T]; // ERROR
              ^^^^^^^^^^^^^^^^^

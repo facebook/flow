@@ -3458,12 +3458,13 @@ let to_printable_error :
     | MessageDeprecatedBool -> [text "Deprecated type. Use "; code "boolean"; text " instead."]
     | MessageDeprecatedTypeParamColonBound ->
       [
+        text "Using ";
         code ":";
-        text " is deprecated. Use ";
+        text " for type parameter bounds is deprecated. Use ";
         code "extends";
-        text " to specify type parameter bounds in the form ";
-        code "type T<A extends B> = ...";
-        text ".";
+        text " instead (e.g., ";
+        code "<T extends Bound>";
+        text ").";
       ]
     | MessageDevOnlyRefinedLocInfo { refining_locs } ->
       text "Refined at" :: Base.List.map refining_locs ~f:no_desc_ref
