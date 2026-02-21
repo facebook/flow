@@ -614,14 +614,6 @@ References:
               ^ [1]
 
 
-Error ---------------------------------------------------------------------- deprecated/type_param_colon_extends.js:6:33
-
-Using `:` for type parameter bounds is deprecated. Use `extends` instead (e.g., `<T extends Bound>`). [ts-syntax]
-
-   6| export function intersectArrays<T>(arr1: Array<T>, arr2: Array<T>): Array<T> {
-                                      ^
-
-
 Error ---------------------------------------------------------------------------- deprecated/type_param_extends.js:2:30
 
 Cannot use `T` [1] in an input/output position because `T` [1] is expected to occur only in output positions.
@@ -1297,4 +1289,4 @@ types. [ts-syntax]
 
 
 
-Found 142 errors
+Found 141 errors
