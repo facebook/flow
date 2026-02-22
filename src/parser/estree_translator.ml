@@ -2112,6 +2112,7 @@ with type t = Impl.t = struct
         | NumberLiteral n -> number_literal_type (loc, n)
         | BigIntLiteral n -> bigint_literal_type (loc, n)
         | BooleanLiteral b -> boolean_literal_type (loc, b)
+        | TemplateLiteral t -> template_literal_type (loc, t)
         | Exists comments -> exists_type loc comments
         | Unknown comments -> unknown_type loc comments
         | Never comments -> never_type loc comments
@@ -2537,6 +2538,25 @@ with type t = Impl.t = struct
               )
           );
         ]
+    and template_literal_type (loc, { Ast.Type.TemplateLiteral.quasis; types; comments }) =
+      node
+        ?comments
+        "TemplateLiteralTypeAnnotation"
+        loc
+        [
+          ("quasis", array_of_list template_element_type quasis);
+          ("types", array_of_list _type types);
+        ]
+    and template_element_type
+        ( loc,
+          {
+            Ast.Type.TemplateLiteral.Element.value =
+              { Ast.Type.TemplateLiteral.Element.raw; cooked };
+            tail;
+          }
+        ) =
+      let value = obj [("raw", string raw); ("cooked", string cooked)] in
+      node "TemplateElement" loc [("value", value); ("tail", bool tail)]
     and exists_type loc comments = node ?comments "ExistsTypeAnnotation" loc []
     and type_annotation (loc, ty) = node "TypeAnnotation" loc [("typeAnnotation", _type ty)]
     and type_guard_annotation (loc, (loc1, guard)) =

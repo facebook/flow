@@ -47,3 +47,6 @@ declare const s = 'foo'; // ERROR
 // Export type specifier
 type SomeType = string;
 export {type SomeType}; // ERROR
+
+// Template literal type
+type TLT = `foo ${string}`; // ERROR

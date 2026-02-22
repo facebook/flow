@@ -2057,6 +2057,16 @@ class ['loc] mapper =
       else
         { argument = argument'; comments = comments' }
 
+    method template_literal_type (t : ('loc, 'loc) Ast.Type.TemplateLiteral.t) =
+      let open Ast.Type.TemplateLiteral in
+      let { quasis; types; comments } = t in
+      let types' = map_list this#type_ types in
+      let comments' = this#syntax_opt comments in
+      if types' == types && comments' == comments then
+        t
+      else
+        { quasis; types = types'; comments = comments' }
+
     method union_type _loc (t : ('loc, 'loc) Ast.Type.Union.t) =
       let open Ast.Type.Union in
       let { types = (t0, t1, ts); comments } = t in
@@ -2134,6 +2144,8 @@ class ['loc] mapper =
         id this#bigint_literal lit t (fun lit -> (loc, BigIntLiteral lit))
       | (loc, BooleanLiteral lit) ->
         id this#boolean_literal lit t (fun lit -> (loc, BooleanLiteral lit))
+      | (loc, TemplateLiteral t') ->
+        id this#template_literal_type t' t (fun t' -> (loc, TemplateLiteral t'))
       | (loc, Union t') -> id_loc this#union_type loc t' t (fun t' -> (loc, Union t'))
       | (loc, Intersection t') ->
         id_loc this#intersection_type loc t' t (fun t' -> (loc, Intersection t'))

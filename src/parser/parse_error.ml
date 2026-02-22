@@ -158,7 +158,6 @@ type t =
   | StrictReservedWord
   | StrictVarName
   | SuperPrivate
-  | TSTemplateLiteralType
   | ThisParamAnnotationRequired
   | ThisParamBannedInArrowFunctions
   | ThisParamBannedInConstructor
@@ -492,7 +491,6 @@ module PP = struct
     | StrictReservedWord -> "Use of reserved word in strict mode"
     | StrictVarName -> "Variable name may not be eval or arguments in strict mode"
     | SuperPrivate -> "You may not access a private field through the `super` keyword."
-    | TSTemplateLiteralType -> "Flow does not support template literal types."
     | ThisParamAnnotationRequired -> "A type annotation is required for the `this` parameter."
     | ThisParamBannedInArrowFunctions ->
       "Arrow functions cannot have a `this` parameter; arrow functions automatically bind `this` when declared."

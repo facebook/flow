@@ -559,6 +559,30 @@ and Type : sig
     [@@deriving show]
   end
 
+  module TemplateLiteral : sig
+    module Element : sig
+      type value = {
+        raw: string;
+        cooked: string;
+      }
+
+      and 'M t = 'M * t'
+
+      and t' = {
+        value: value;
+        tail: bool;
+      }
+      [@@deriving show]
+    end
+
+    type ('M, 'T) t = {
+      quasis: 'M Element.t list;
+      types: ('M, 'T) Type.t list;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   type ('M, 'T) t = 'T * ('M, 'T) t'
 
   (* Yes, we could add a little complexity here to show that Any and Void
@@ -600,6 +624,7 @@ and Type : sig
     | NumberLiteral of 'M NumberLiteral.t
     | BigIntLiteral of 'M BigIntLiteral.t
     | BooleanLiteral of 'M BooleanLiteral.t
+    | TemplateLiteral of ('M, 'T) TemplateLiteral.t
     | Unknown of ('M, unit) Syntax.t option
     | Never of ('M, unit) Syntax.t option
     | Undefined of ('M, unit) Syntax.t option

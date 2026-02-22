@@ -1,22 +1,12 @@
 {
-  "errors":[
-    {
-      "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":10}},
-      "message":"Flow does not support template literal types."
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":16}},
-      "message":"Unexpected template literal part, expected the token `;`"
-    }
-  ],
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":20}},
-  "range":[0,20],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":5,"column":16}},
+  "range":[0,94],
   "body":[
     {
       "type":"TypeAlias",
-      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":8}},
-      "range":[0,8],
+      "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":20}},
+      "range":[0,20],
       "id":{
         "type":"Identifier",
         "loc":{"source":null,"start":{"line":1,"column":5},"end":{"line":1,"column":6}},
@@ -27,17 +17,7 @@
       },
       "typeParameters":null,
       "right":{
-        "type":"AnyTypeAnnotation",
-        "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":10}},
-        "range":[9,10]
-      }
-    },
-    {
-      "type":"ExpressionStatement",
-      "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":20}},
-      "range":[9,20],
-      "expression":{
-        "type":"TemplateLiteral",
+        "type":"TemplateLiteralTypeAnnotation",
         "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":19}},
         "range":[9,19],
         "quasis":[
@@ -56,18 +36,209 @@
             "tail":true
           }
         ],
-        "expressions":[
+        "types":[
           {
-            "type":"Identifier",
+            "type":"GenericTypeAnnotation",
             "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":17}},
             "range":[16,17],
-            "name":"S",
-            "typeAnnotation":null,
-            "optional":false
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":1,"column":16},"end":{"line":1,"column":17}},
+              "range":[16,17],
+              "name":"S",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeParameters":null
           }
         ]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":17}},
+      "range":[21,38],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":2,"column":5},"end":{"line":2,"column":6}},
+        "range":[26,27],
+        "name":"S",
+        "typeAnnotation":null,
+        "optional":false
       },
-      "directive":null
+      "typeParameters":null,
+      "right":{
+        "type":"TemplateLiteralTypeAnnotation",
+        "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":16}},
+        "range":[30,37],
+        "quasis":[
+          {
+            "type":"TemplateElement",
+            "loc":{"source":null,"start":{"line":2,"column":9},"end":{"line":2,"column":16}},
+            "range":[30,37],
+            "value":{"raw":"hello","cooked":"hello"},
+            "tail":true
+          }
+        ],
+        "types":[]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":3,"column":0},"end":{"line":3,"column":25}},
+      "range":[39,64],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":3,"column":5},"end":{"line":3,"column":6}},
+        "range":[44,45],
+        "name":"U",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"TemplateLiteralTypeAnnotation",
+        "loc":{"source":null,"start":{"line":3,"column":9},"end":{"line":3,"column":24}},
+        "range":[48,63],
+        "quasis":[
+          {
+            "type":"TemplateElement",
+            "loc":{"source":null,"start":{"line":3,"column":9},"end":{"line":3,"column":12}},
+            "range":[48,51],
+            "value":{"raw":"","cooked":""},
+            "tail":false
+          },
+          {
+            "type":"TemplateElement",
+            "loc":{"source":null,"start":{"line":3,"column":13},"end":{"line":3,"column":21}},
+            "range":[52,60],
+            "value":{"raw":" and ","cooked":" and "},
+            "tail":false
+          },
+          {
+            "type":"TemplateElement",
+            "loc":{"source":null,"start":{"line":3,"column":22},"end":{"line":3,"column":24}},
+            "range":[61,63],
+            "value":{"raw":"","cooked":""},
+            "tail":true
+          }
+        ],
+        "types":[
+          {
+            "type":"GenericTypeAnnotation",
+            "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":3,"column":13}},
+            "range":[51,52],
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":3,"column":12},"end":{"line":3,"column":13}},
+              "range":[51,52],
+              "name":"A",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeParameters":null
+          },
+          {
+            "type":"GenericTypeAnnotation",
+            "loc":{"source":null,"start":{"line":3,"column":21},"end":{"line":3,"column":22}},
+            "range":[60,61],
+            "id":{
+              "type":"Identifier",
+              "loc":{"source":null,"start":{"line":3,"column":21},"end":{"line":3,"column":22}},
+              "range":[60,61],
+              "name":"B",
+              "typeAnnotation":null,
+              "optional":false
+            },
+            "typeParameters":null
+          }
+        ]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":4,"column":0},"end":{"line":4,"column":12}},
+      "range":[65,77],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":4,"column":5},"end":{"line":4,"column":6}},
+        "range":[70,71],
+        "name":"V",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"TemplateLiteralTypeAnnotation",
+        "loc":{"source":null,"start":{"line":4,"column":9},"end":{"line":4,"column":11}},
+        "range":[74,76],
+        "quasis":[
+          {
+            "type":"TemplateElement",
+            "loc":{"source":null,"start":{"line":4,"column":9},"end":{"line":4,"column":11}},
+            "range":[74,76],
+            "value":{"raw":"","cooked":""},
+            "tail":true
+          }
+        ],
+        "types":[]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":5,"column":0},"end":{"line":5,"column":16}},
+      "range":[78,94],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":5,"column":5},"end":{"line":5,"column":6}},
+        "range":[83,84],
+        "name":"W",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"TemplateLiteralTypeAnnotation",
+        "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":16}},
+        "range":[87,94],
+        "quasis":[
+          {
+            "type":"TemplateElement",
+            "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":5,"column":12}},
+            "range":[87,90],
+            "value":{"raw":"","cooked":""},
+            "tail":false
+          },
+          {
+            "type":"TemplateElement",
+            "loc":{"source":null,"start":{"line":5,"column":14},"end":{"line":5,"column":16}},
+            "range":[92,94],
+            "value":{"raw":"","cooked":""},
+            "tail":true
+          }
+        ],
+        "types":[
+          {
+            "type":"NullableTypeAnnotation",
+            "loc":{"source":null,"start":{"line":5,"column":12},"end":{"line":5,"column":14}},
+            "range":[90,92],
+            "typeAnnotation":{
+              "type":"GenericTypeAnnotation",
+              "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":14}},
+              "range":[91,92],
+              "id":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":5,"column":13},"end":{"line":5,"column":14}},
+                "range":[91,92],
+                "name":"S",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "typeParameters":null
+            }
+          }
+        ]
+      }
     }
   ],
   "comments":[]

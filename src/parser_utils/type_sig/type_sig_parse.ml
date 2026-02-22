@@ -1823,6 +1823,7 @@ and annot_with_loc opts scope tbls xs (loc, t) =
       let t = annot opts scope tbls xs argument in
       Annot (ReadOnlyArray (loc, t))
     | T.ReadOnly _ -> Annot (Any loc)
+    | T.TemplateLiteral _ -> Annot (Any loc)
     | T.Exists _ -> Annot (Exists loc)
   in
   (loc, annot)

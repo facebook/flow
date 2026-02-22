@@ -1960,6 +1960,12 @@ let tests =
            assert_expression_string ~ctxt "`a${b}c${d}e`";
            assert_expression_string ~ctxt "`\\``"
          );
+         ( "template_literal_type" >:: fun ctxt ->
+           assert_statement_string ~ctxt "type T=`foo ${S}`;";
+           assert_statement_string ~ctxt "type T=`hello`;";
+           assert_statement_string ~ctxt "type T=`${A} and ${B}`;";
+           assert_statement_string ~ctxt "type T=``;"
+         );
          ( "import_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt {|import("a")|};
            assert_expression_string ~ctxt "import(a)"

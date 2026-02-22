@@ -1788,6 +1788,37 @@ and template_literal ~opts { Ast.Expression.TemplateLiteral.quasis; expressions;
   in
   fuse [Atom "`"; fuse (List.mapi template_element quasis); Atom "`"]
 
+and template_literal_type ~opts { Ast.Type.TemplateLiteral.quasis; types; comments = _ } =
+  let module T = Ast.Type.TemplateLiteral in
+  let template_element i (loc, { T.Element.value = { T.Element.raw; _ }; tail }) =
+    fuse
+      [
+        source_location_with_comments
+          ( loc,
+            fuse
+              [
+                ( if i > 0 then
+                  Atom "}"
+                else
+                  Empty
+                );
+                Atom raw;
+                ( if not tail then
+                  Atom "${"
+                else
+                  Empty
+                );
+              ]
+          );
+        ( if not tail then
+          type_ ~opts (List.nth types i)
+        else
+          Empty
+        );
+      ]
+  in
+  fuse [Atom "`"; fuse (List.mapi template_element quasis); Atom "`"]
+
 and variable_kind kind = Atom (Flow_ast_utils.string_of_variable_kind kind)
 
 and variable_declaration
@@ -5021,6 +5052,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.NumberLiteral lit -> number_literal ~opts loc lit
       | T.BigIntLiteral lit -> bigint_literal loc lit
       | T.BooleanLiteral lit -> boolean_literal loc lit
+      | T.TemplateLiteral t -> template_literal_type ~opts t
       | T.Exists comments -> layout_node_with_comments_opt loc comments (Atom "*")
     )
 

@@ -141,5 +141,13 @@ Inline `type` modifier on export specifier is not enabled. [unsupported-syntax]
        ^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:52:12
 
-Found 17 errors
+Template literal type is not enabled. [unsupported-syntax]
+
+   52| type TLT = `foo ${string}`; // ERROR
+                  ^^^^^^^^^^^^^^^
+
+
+
+Found 18 errors

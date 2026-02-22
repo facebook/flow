@@ -1616,6 +1616,20 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let comments' = this#syntax_opt comments in
       { value; comments = comments' }
 
+    method template_literal_type (t : ('M, 'T) Ast.Type.TemplateLiteral.t)
+        : ('N, 'U) Ast.Type.TemplateLiteral.t =
+      let open Ast.Type.TemplateLiteral in
+      let { quasis; types; comments } = t in
+      let quasis' =
+        List.map
+          ~f:(fun (loc, ({ Element.value; tail } : Element.t')) ->
+            (this#on_loc_annot loc, { Element.value; tail }))
+          quasis
+      in
+      let types' = List.map ~f:this#type_ types in
+      let comments' = this#syntax_opt comments in
+      { quasis = quasis'; types = types'; comments = comments' }
+
     method regexp_literal (t : 'M Ast.RegExpLiteral.t) : 'N Ast.RegExpLiteral.t =
       let open Ast.RegExpLiteral in
       let { pattern; flags; raw; comments } = t in
@@ -1678,6 +1692,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | NumberLiteral t' -> NumberLiteral (this#number_literal t')
         | BigIntLiteral t' -> BigIntLiteral (this#bigint_literal t')
         | BooleanLiteral t' -> BooleanLiteral (this#boolean_literal t')
+        | TemplateLiteral t' -> TemplateLiteral (this#template_literal_type t')
       )
 
     method implicit (t : ('M, 'T) Ast.Expression.CallTypeArg.Implicit.t)

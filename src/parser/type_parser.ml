@@ -552,15 +552,78 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           Type.Infer
             { Type.Infer.tparam; comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () })
         env
-    | T_ERROR "`" ->
-      error env Parse_error.TSTemplateLiteralType;
-      (loc, Type.Any None)
+    | T_TEMPLATE_PART part ->
+      let (template_loc, template) = template_literal_type env part in
+      (template_loc, Type.TemplateLiteral template)
     | _ ->
       (match primitive env with
       | Some t -> (loc, t)
       | None ->
         error_unexpected ~expected:"a type" env;
         (loc, Type.Any None))
+
+  and template_literal_type =
+    let rec template_parts env quasis types =
+      let t = _type env in
+      let types = t :: types in
+      match Peek.token env with
+      | T_RCURLY ->
+        Eat.push_lex_mode env Lex_mode.TEMPLATE;
+        let (loc, part, is_tail) =
+          match Peek.token env with
+          | T_TEMPLATE_PART (loc, cooked, raw, _, tail) ->
+            let open Ast.Type.TemplateLiteral in
+            Eat.token env;
+            (loc, { Element.value = { Element.cooked; raw }; tail }, tail)
+          | _ -> assert false
+        in
+        Eat.pop_lex_mode env;
+        let quasis = (loc, part) :: quasis in
+        if is_tail then
+          (loc, List.rev quasis, List.rev types)
+        else
+          template_parts env quasis types
+      | _ ->
+        (* Malformed template *)
+        error_unexpected ~expected:"a template literal part" env;
+        let imaginary_quasi =
+          ( fst t,
+            {
+              Ast.Type.TemplateLiteral.Element.value =
+                { Ast.Type.TemplateLiteral.Element.raw = ""; cooked = "" };
+              tail = true;
+            }
+          )
+        in
+        (fst t, List.rev (imaginary_quasi :: quasis), List.rev types)
+    in
+    fun env ((start_loc, cooked, raw, _, is_tail) as part) ->
+      let leading = Peek.comments env in
+      Expect.token env (T_TEMPLATE_PART part);
+      let (end_loc, quasis, types) =
+        let head =
+          ( start_loc,
+            {
+              Ast.Type.TemplateLiteral.Element.value =
+                { Ast.Type.TemplateLiteral.Element.cooked; raw };
+              tail = is_tail;
+            }
+          )
+        in
+        if is_tail then
+          (start_loc, [head], [])
+        else
+          template_parts env [head] []
+      in
+      let trailing = Eat.trailing_comments env in
+      let loc = Loc.btwn start_loc end_loc in
+      ( loc,
+        {
+          Ast.Type.TemplateLiteral.quasis;
+          types;
+          comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+        }
+      )
 
   and negate env =
     let leading = Peek.comments env in
@@ -2276,6 +2339,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         BigIntLiteral { t with BigIntLiteral.comments = merge_comments comments }
       | BooleanLiteral ({ BooleanLiteral.comments; _ } as t) ->
         BooleanLiteral { t with BooleanLiteral.comments = merge_comments comments }
+      | TemplateLiteral ({ Type.TemplateLiteral.comments; _ } as t) ->
+        TemplateLiteral { t with Type.TemplateLiteral.comments = merge_comments comments }
     )
 
   let predicate_checks_contents env ~leading =

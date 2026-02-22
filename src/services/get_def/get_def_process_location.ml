@@ -599,7 +599,8 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
         | Union _
         | Intersection _
         | Tuple _
-        | Renders _ ->
+        | Renders _
+        | TemplateLiteral _ ->
           super#type_ (annot, t)
       else
         (* it is tempting to not recurse here, but comments are not included in

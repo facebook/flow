@@ -655,16 +655,13 @@ let token_base ~for_type_token (env : Lex_env.t) lexbuf : result =
     let loc = { Loc.source = Lex_env.source env; start; _end } in
     Token (env, T_STRING (loc, Buffer.contents buf, Buffer.contents raw, octal))
   | '`' ->
-    if for_type_token then
-      Token (env, T_ERROR (lexeme lexbuf))
-    else
-      let value = Buffer.create 127 in
-      let raw = Buffer.create 127 in
-      let start = start_pos_of_lexbuf env lexbuf in
-      let (env, is_tail) = template_part env value raw lexbuf in
-      let _end = end_pos_of_lexbuf env lexbuf in
-      let loc = { Loc.source = Lex_env.source env; start; _end } in
-      Token (env, T_TEMPLATE_PART (loc, Buffer.contents value, Buffer.contents raw, true, is_tail))
+    let value = Buffer.create 127 in
+    let raw = Buffer.create 127 in
+    let start = start_pos_of_lexbuf env lexbuf in
+    let (env, is_tail) = template_part env value raw lexbuf in
+    let _end = end_pos_of_lexbuf env lexbuf in
+    let loc = { Loc.source = Lex_env.source env; start; _end } in
+    Token (env, T_TEMPLATE_PART (loc, Buffer.contents value, Buffer.contents raw, true, is_tail))
   (*
    * Number literals
    *)
