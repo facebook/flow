@@ -585,6 +585,7 @@ end = struct
 
   type env = {
     instance: Edenfs_watcher.instance;
+    notification_fd: Lwt_unix.file_descr;
     mutable files: SSet.t;
     mutable metadata: MonitorProt.file_watcher_metadata;
     mutable is_initial: bool;
@@ -657,29 +658,25 @@ end = struct
           )
 
     (** Wait for the notification fd to become readable, then get changes.
-        This uses the raw fd with Lwt_unix.wait_read to integrate with the LWT scheduler
-        without wrapping the fd in a cached Lwt_unix.file_descr (which caused shutdown issues). *)
-    let get_changes_async_lwt instance =
-      match Edenfs_watcher.get_notification_fd instance with
+        Uses the persistent Lwt_unix.file_descr created once during init, so
+        that Lwt's internal state for this fd stays consistent across calls. *)
+    let get_changes_async_lwt env =
+      match%lwt
+        try%lwt
+          let%lwt () = Lwt_unix.wait_read env.notification_fd in
+          Lwt.return (Ok ())
+        with
+        | Unix.Unix_error (Unix.EBADF, _, _) ->
+          Lwt.return (Error (Edenfs_watcher_types.EdenfsWatcherError "Notification fd closed"))
+        | exn ->
+          let msg = Exception.wrap exn |> Exception.to_string in
+          Lwt.return (Error (Edenfs_watcher_types.EdenfsWatcherError msg))
+      with
       | Error err -> Lwt.return (Error err)
-      | Ok fd ->
-        let lwt_fd = Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:true fd in
-        (match%lwt
-           try%lwt
-             let%lwt () = Lwt_unix.wait_read lwt_fd in
-             Lwt.return (Ok ())
-           with
-           | Unix.Unix_error (Unix.EBADF, _, _) ->
-             Lwt.return (Error (Edenfs_watcher_types.EdenfsWatcherError "Notification fd closed"))
-           | exn ->
-             let msg = Exception.wrap exn |> Exception.to_string in
-             Lwt.return (Error (Edenfs_watcher_types.EdenfsWatcherError msg))
-         with
-        | Error err -> Lwt.return (Error err)
-        | Ok () -> Lwt.return (Edenfs_watcher.get_changes_async instance))
+      | Ok () -> Lwt.return (Edenfs_watcher.get_changes_async env.instance)
 
     let main env =
-      match%lwt get_changes_async_lwt env.instance with
+      match%lwt get_changes_async_lwt env with
       | Error (Edenfs_watcher_types.LostChanges msg) ->
         Logger.error "EdenFS watcher lost changes: %s" msg;
         env.metadata <-
@@ -785,10 +782,21 @@ end = struct
           match result with
           | Ok (instance, _clock) ->
             if edenfs_options.FlowServerMonitorOptions.edenfs_debug then self#log_watch_spec;
+            (* Create the Lwt fd wrapper once and reuse it for the lifetime of the
+               watcher. Recreating it on every poll call corrupts Lwt's internal
+               state for the fd, causing wait_read to stop waking up. *)
+            let notification_fd =
+              match Edenfs_watcher.get_notification_fd instance with
+              | Ok fd -> Lwt_unix.of_unix_file_descr ~blocking:false ~set_flags:false fd
+              | Error err ->
+                let msg = Edenfs_watcher.show_edenfs_watcher_error err in
+                failwith (Printf.sprintf "Failed to get EdenFS notification fd: %s" msg)
+            in
             let (waiter, wakener) = Lwt.task () in
             let new_env =
               {
                 instance;
+                notification_fd;
                 files = SSet.empty;
                 listening_thread =
                   (let%lwt env = waiter in
