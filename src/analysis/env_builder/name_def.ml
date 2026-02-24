@@ -811,7 +811,10 @@ let func_scope_kind ?key { Ast.Function.async; generator; effect_; _ } =
     ) ->
     Ctor
   | (true, true, _) -> AsyncGenerator
-  | (true, false, _) -> Async
+  | (true, false, _) ->
+    (match effect_ with
+    | Ast.Function.Hook -> AsyncComponentOrHookBody
+    | Ast.Function.Arbitrary -> Async)
   | (false, true, _) -> Generator
   | (false, false, _) ->
     (match effect_ with

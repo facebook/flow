@@ -28,5 +28,39 @@ References:
                                                         ^^^^^^ [2]
 
 
+Error ---------------------------------------------------------------------------------------------------- test.js:47:10
 
-Found 2 errors
+Cannot return `result` because `Promise` [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:47:10
+     47|   return result;
+                  ^^^^^^
+
+References:
+   <BUILTINS>/core.js:2285:15
+   2285| declare class Promise<+R = mixed> {
+                       ^^^^^^^ [1]
+   test.js:45:28
+     45| async hook useAsyncHook(): string {
+                                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:64:10
+
+Cannot return `await Promise.resolve(...)` because `Promise` [1] is incompatible with string [2]. [incompatible-type]
+
+   test.js:64:10
+     64|   return await Promise.resolve("hello");
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   <BUILTINS>/core.js:2285:15
+   2285| declare class Promise<+R = mixed> {
+                       ^^^^^^^ [1]
+   test.js:63:43
+     63| export async hook useExportedAsyncHook(): string {
+                                                   ^^^^^^ [2]
+
+
+
+Found 4 errors

@@ -1018,7 +1018,7 @@ with type t = Impl.t = struct
       in
       let (node_name, nonhook_attrs) =
         if effect_ = Function.Hook then
-          ("HookDeclaration", [])
+          ("HookDeclaration", [("async", bool async)])
         else
           ( "FunctionDeclaration",
             [

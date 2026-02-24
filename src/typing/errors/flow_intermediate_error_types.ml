@@ -106,6 +106,7 @@ type unsupported_syntax =
   | WithStatement
   | ComponentSyntax
   | AsyncComponentSyntax
+  | AsyncHookSyntax
   | DeclareGlobal
   | NonnullAssertion
   | Records

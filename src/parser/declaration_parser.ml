@@ -462,7 +462,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
                 | T_FUNCTION ->
                   Eat.token env;
                   (Function.Arbitrary, generator env)
-                | T_IDENTIFIER { raw = "hook"; _ } when not async ->
+                | T_IDENTIFIER { raw = "hook"; _ } ->
                   Eat.token env;
                   (Function.Hook, (false, []))
                 | t ->

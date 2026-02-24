@@ -40,3 +40,26 @@ export async component ExportedAsync() {
 export default async component DefaultAsync() {
   return <div />;
 }
+
+// Basic async hook with await
+async hook useAsyncHook(): string {
+  const result = await Promise.resolve("hello");
+  return result;
+}
+
+// Async hook with params
+async hook useAsyncHookWithParams(foo: number): Promise<number> {
+  const result = await Promise.resolve(foo);
+  return result;
+}
+
+// Async hook with type params
+async hook useAsyncGenericHook<T: string>(value: T): Promise<T> {
+  const result = await Promise.resolve(value);
+  return result;
+}
+
+// Export async hook
+export async hook useExportedAsyncHook(): string {
+  return await Promise.resolve("hello");
+}
