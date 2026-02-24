@@ -4811,14 +4811,17 @@
         {
           "comment": "e.g. component play<T>(arg1, arg2) { }",
           "name": "meta.component.syntax.flowtype",
-          "begin": "\\s*+(?:(?<=\\.\\.\\.)|(?<!\\.))(\\bcomponent\\b)\\s*+((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)?(?=\\s*+(\\(|<))",
+          "begin": "\\s*+(?:\\b(async)\\b\\s+)?\\s*+(?:(?<=\\.\\.\\.)|(?<!\\.))(\\bcomponent\\b)\\s*+((?:[$_\\p{L}\\p{Nl}]|\\\\u\\h{4}|\\\\u{\\h+})(?:[$_\\p{L}\\p{Mn}\\p{Mc}\\p{Nd}\\p{Nl}\\p{Pc}\\x{200C}\\x{200D}]|\\\\u\\h{4}|\\\\u{\\h+})*+)?(?=\\s*+(\\(|<))",
           "end": "(?<=})|\\s*(?=,|;|:|{|\\*/|\\b(if|switch|case|break|default|try|var|let|const|static|function|return|class|do|for|while|debugger|export|import|yield|type|declare|interface|enum|component|hook)\\b|\\)|})",
           "applyEndPatternLast": 1,
           "beginCaptures": {
             "1": {
-              "name": "storage.type.component.syntax.flowtype"
+              "name": "storage.type.js"
             },
             "2": {
+              "name": "storage.type.component.syntax.flowtype"
+            },
+            "3": {
               "name": "entity.name.function.component.syntax.flowtype"
             }
           },
