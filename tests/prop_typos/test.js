@@ -53,3 +53,11 @@ C.s33333;
 if (x.asd) {} // Error with suggestion
 if (b.fooo) {} // Error with suggestion
 if (C.s333) {} // Error with suggestion
+
+// Test that typo_suggestions picks the closest match, not just any match
+// within the edit distance limit.
+let obj = {
+  abcdef: 1, // distance 2 from xbcdeg (x->a, g->f)
+  xbcdef: 2, // distance 1 from xbcdeg (g->f)
+};
+obj.xbcdeg; // Error: should suggest `xbcdef`

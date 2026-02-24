@@ -377,5 +377,24 @@ References:
              ^ [1]
 
 
+Error ----------------------------------------------------------------------------------------------------- test.js:63:5
 
-Found 27 errors
+Cannot get `obj.xbcdeg` because property `xbcdeg` (did you mean `xbcdef`?) is missing in object literal [1].
+[prop-missing]
+
+   test.js:63:5
+   63| obj.xbcdeg; // Error: should suggest `xbcdef`
+           ^^^^^^
+
+References:
+   test.js:59:11
+                 v
+   59| let obj = {
+   60|   abcdef: 1, // distance 2 from xbcdeg (x->a, g->f)
+   61|   xbcdef: 2, // distance 1 from xbcdeg (g->f)
+   62| };
+       ^ [1]
+
+
+
+Found 28 errors

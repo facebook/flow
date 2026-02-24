@@ -175,7 +175,7 @@ let typo_suggestions =
     | Some distance ->
       let (curr_choice, curr_dist) = results in
       if distance < curr_dist then
-        ([poss_name], curr_dist)
+        ([poss_name], distance)
       else if distance = curr_dist then
         (poss_name :: curr_choice, curr_dist)
       else
@@ -229,19 +229,29 @@ let ordinal = function
   | 5 -> "fifth"
   | 6 -> "sixth"
   | 7 -> "seventh"
-  | 8 -> "eigth"
+  | 8 -> "eighth"
   | 9 -> "ninth"
   | n ->
-    let n = string_of_int n in
-    let th = n.[String.length n - 1] in
-    let th =
-      match th with
-      | '1' -> "st"
-      | '2' -> "nd"
-      | '3' -> "rd"
-      | _ -> "th"
+    let s = string_of_int n in
+    let len = String.length s in
+    let tens =
+      if len >= 2 then
+        Char.code s.[len - 2] - Char.code '0'
+      else
+        0
     in
-    n ^ th
+    let ones = Char.code s.[len - 1] - Char.code '0' in
+    let suffix =
+      if tens = 1 then
+        "th"
+      else
+        match ones with
+        | 1 -> "st"
+        | 2 -> "nd"
+        | 3 -> "rd"
+        | _ -> "th"
+    in
+    s ^ suffix
 
 (* Module implementing the recommended way to augment a map.
 

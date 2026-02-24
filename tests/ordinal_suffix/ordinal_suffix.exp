@@ -1,0 +1,47 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:12:34
+
+Cannot call `f` with `"eleven"` bound to the 11th parameter because string [1] is incompatible with number [2].
+[incompatible-type]
+
+   test.js:12:34
+   12| f(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "eleven", "twelve", "thirteen");
+                                        ^^^^^^^^ [1]
+
+References:
+   test.js:9:3
+    9|   number, number, number,
+         ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:44
+
+Cannot call `f` with `"twelve"` bound to the 12th parameter because string [1] is incompatible with number [2].
+[incompatible-type]
+
+   test.js:12:44
+   12| f(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "eleven", "twelve", "thirteen");
+                                                  ^^^^^^^^ [1]
+
+References:
+   test.js:9:11
+    9|   number, number, number,
+                 ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:12:54
+
+Cannot call `f` with `"thirteen"` bound to the 13th parameter because string [1] is incompatible with number [2].
+[incompatible-type]
+
+   test.js:12:54
+   12| f(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, "eleven", "twelve", "thirteen");
+                                                            ^^^^^^^^^^ [1]
+
+References:
+   test.js:9:19
+    9|   number, number, number,
+                         ^^^^^^ [2]
+
+
+
+Found 3 errors
