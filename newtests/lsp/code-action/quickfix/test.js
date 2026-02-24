@@ -140,49 +140,6 @@ module.exports = (suite(
         'quickfix-method-unbinding',
       ),
     ),
-    test('ignore method unbinding when super is used', [
-      addFile('method-unbinding.js.ignored', 'method-unbinding.js'),
-      lspStartAndConnect(),
-      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
-        textDocument: {
-          uri: '<PLACEHOLDER_PROJECT_URL>/method-unbinding.js',
-        },
-        range: {
-          start: {
-            line: 6,
-            character: 8,
-          },
-          end: {
-            line: 6,
-            character: 9,
-          },
-        },
-        context: {
-          diagnostics: [
-            {
-              range: {
-                start: {
-                  line: 12,
-                  character: 8,
-                },
-                end: {
-                  line: 12,
-                  character: 9,
-                },
-              },
-              message:
-                'Cannot get `(new B).f` because  property `f` [1] cannot be unbound from the  context [2] where it was defined.',
-              severity: 1,
-              code: 'InferError',
-              source: 'Flow',
-            },
-          ],
-        },
-      }).verifyAllLSPMessagesInStep(
-        [['textDocument/codeAction', '[]']],
-        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
-      ),
-    ]),
     test(
       'provide quickfix for unused promise errors',
       generateSimpleTests(

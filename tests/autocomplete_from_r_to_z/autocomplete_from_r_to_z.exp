@@ -1220,6 +1220,37 @@ Flags: --lsp
   }
 }
 
+typeof_qualified.js:4:19
+Flags: --lsp
+{
+  "label":"['b-c']",
+  "labelDetails":{"detail":": string"},
+  "kind":6,
+  "detail":"string",
+  "sortText":"00000000000000000000",
+  "insertTextFormat":1,
+  "textEdit":{
+    "range":{"start":{"line":3,"character":17},"end":{"line":3,"character":18}},
+    "newText":"['b-c']"
+  },
+  "command":{
+    "title":"",
+    "command":"log:<PLACEHOLDER_PROJECT_URL>",
+    "arguments":[
+      "textDocument/completion",
+      "dot-member switched to bracket-syntax member",
+      {
+        "token":null,
+        "index":0,
+        "session_requests":null,
+        "typed_length":null,
+        "completion":"['b-c']",
+        "ac_type":"Acmem"
+      }
+    ]
+  }
+}
+
 typeparams_function.js:3:4
 Flags: --pretty
 {

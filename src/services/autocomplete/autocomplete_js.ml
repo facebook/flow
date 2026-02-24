@@ -716,7 +716,8 @@ class process_request_searcher cx file_sig ~from_trigger_character ~cursor =
                  obj_type;
                  in_optional_chain = false;
                  bracket_syntax = None;
-                 member_loc = Some (compute_member_loc ~expr_loc ~obj_loc:loc);
+                 member_loc =
+                   Some (compute_member_loc ~expr_loc ~obj_loc:(loc_of_typeof qualification));
                  is_type_annotation = false;
                  is_super = false;
                }

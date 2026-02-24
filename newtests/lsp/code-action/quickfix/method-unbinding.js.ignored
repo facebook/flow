@@ -1,5 +1,6 @@
 //@flow
 
+// Should quickfix
 class A {
     f(x : number) : number { return x }
 }
@@ -7,8 +8,18 @@ class A {
 (new A).f;
 //      ^
 
+// No quickfix: super use
 class B extends class { f() {}} {
     f(x) : void { super.f }
 }
 
 (new B).f;
+//      ^
+
+// No quickfix: arguments use
+class C {
+    f(x: number): number { console.log(arguments); return x }
+}
+
+(new C).f;
+//      ^

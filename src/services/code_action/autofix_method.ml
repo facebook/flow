@@ -36,7 +36,7 @@ module Arguments_finder = struct
       inherit [bool, Loc.t] Flow_ast_visitor.visitor ~init:false
 
       method! identifier ((_, Flow_ast.Identifier.{ name; _ }) as id) =
-        this#set_acc (name = "arguments");
+        if name = "arguments" then this#set_acc true;
         id
 
       (* Any mentions of `this` in these constructs would reference

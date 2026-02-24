@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Rewrite function as an arrow function",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/method-unbinding.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 0
+                },
+                "end": {
+                  "line": 5,
+                  "character": 1
+                }
+              },
+              "newText": "// Should quickfix\nclass A {\n  f = (x: number): number => {\n    return x;\n  };\n}"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "replace_method_with_arrow",
+          "Rewrite function as an arrow function"
+        ]
+      }
+    }
+  ]
+}

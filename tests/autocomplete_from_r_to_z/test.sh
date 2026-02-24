@@ -25,6 +25,7 @@ queries_in_file autocomplete "type-alias.js" --pretty
 queries_in_file autocomplete "type_binding_id.js" --pretty
 queries_in_file autocomplete "typeof_2.js" --lsp
 queries_in_file autocomplete "typeof.js" --lsp
+queries_in_file autocomplete "typeof_qualified.js" --lsp
 queries_in_file autocomplete "typeparams_function.js" --pretty
 queries_in_file autocomplete "typeparams.js" --pretty
 queries_in_file autocomplete "type_string_literal.js" --pretty
