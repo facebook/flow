@@ -22,3 +22,10 @@ interface I {
 const readonly = 1; // OK
 
 type T = [readonly foo: number]; // ERROR
+
+type ObjStringKey = {
+  readonly "foo": string, // ERROR
+};
+type ObjNumberKey = {
+  readonly 0: string, // ERROR
+};

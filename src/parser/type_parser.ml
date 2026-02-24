@@ -1773,7 +1773,16 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           start_loc
       | T_READONLY
         when variance = None
-             && (Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET) ->
+             && (Peek.ith_is_identifier ~i:1 env
+                ||
+                match Peek.ith_token ~i:1 env with
+                | T_LBRACKET
+                | T_STRING _
+                | T_NUMBER_SINGLETON_TYPE _
+                | T_BIGINT_SINGLETON_TYPE _ ->
+                  true
+                | _ -> false
+                ) ->
         let variance = maybe_variance ~parse_readonly:true env in
         property
           env

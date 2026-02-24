@@ -41,3 +41,13 @@ type Tuple2 = [readonly a: string, readonly b: number];
 type Tuple3 = [+a: string, readonly b: number, -c: boolean];
 type Tuple4 = [readonly a?: string];
 type TupleRegressionTest = [readonly: string]
+
+type ObjStringKey = {
+  readonly "foo": string,
+};
+type ObjNumberKey = {
+  readonly 0: string,
+};
+type ObjBigIntKey = {
+  readonly 0n: string,
+};

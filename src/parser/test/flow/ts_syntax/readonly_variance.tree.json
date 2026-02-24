@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":43,"column":45}},
-  "range":[0,790],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":53,"column":2}},
+  "range":[0,937],
   "body":[
     {
       "type":"TypeAlias",
@@ -44,6 +44,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":2,"column":2},"end":{"line":2,"column":10}},
@@ -99,6 +100,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           },
@@ -123,6 +125,7 @@
             "optional":true,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           },
@@ -156,6 +159,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           },
@@ -214,6 +218,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           }
@@ -678,6 +683,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":28,"column":2},"end":{"line":28,"column":10}},
@@ -733,6 +739,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           },
@@ -757,6 +764,7 @@
             "optional":true,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           },
@@ -799,6 +807,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           },
@@ -857,6 +866,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           }
@@ -1198,6 +1208,172 @@
           }
         ],
         "inexact":false
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":45,"column":0},"end":{"line":47,"column":2}},
+      "range":[792,842],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":45,"column":5},"end":{"line":45,"column":17}},
+        "range":[797,809],
+        "name":"ObjStringKey",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":45,"column":20},"end":{"line":47,"column":1}},
+        "range":[812,841],
+        "inexact":false,
+        "exact":false,
+        "properties":[
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":46,"column":2},"end":{"line":46,"column":24}},
+            "range":[816,838],
+            "key":{
+              "type":"Literal",
+              "loc":{"source":null,"start":{"line":46,"column":11},"end":{"line":46,"column":16}},
+              "range":[825,830],
+              "value":"foo",
+              "raw":"\"foo\""
+            },
+            "value":{
+              "type":"StringTypeAnnotation",
+              "loc":{"source":null,"start":{"line":46,"column":18},"end":{"line":46,"column":24}},
+              "range":[832,838]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "abstract":false,
+            "variance":{
+              "type":"Variance",
+              "loc":{"source":null,"start":{"line":46,"column":2},"end":{"line":46,"column":10}},
+              "range":[816,824],
+              "kind":"readonly"
+            },
+            "kind":"init"
+          }
+        ],
+        "indexers":[],
+        "callProperties":[],
+        "internalSlots":[]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":48,"column":0},"end":{"line":50,"column":2}},
+      "range":[843,889],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":48,"column":5},"end":{"line":48,"column":17}},
+        "range":[848,860],
+        "name":"ObjNumberKey",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":48,"column":20},"end":{"line":50,"column":1}},
+        "range":[863,888],
+        "inexact":false,
+        "exact":false,
+        "properties":[
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":49,"column":2},"end":{"line":49,"column":20}},
+            "range":[867,885],
+            "key":{
+              "type":"Literal",
+              "loc":{"source":null,"start":{"line":49,"column":11},"end":{"line":49,"column":12}},
+              "range":[876,877],
+              "value":0,
+              "raw":"0"
+            },
+            "value":{
+              "type":"StringTypeAnnotation",
+              "loc":{"source":null,"start":{"line":49,"column":14},"end":{"line":49,"column":20}},
+              "range":[879,885]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "abstract":false,
+            "variance":{
+              "type":"Variance",
+              "loc":{"source":null,"start":{"line":49,"column":2},"end":{"line":49,"column":10}},
+              "range":[867,875],
+              "kind":"readonly"
+            },
+            "kind":"init"
+          }
+        ],
+        "indexers":[],
+        "callProperties":[],
+        "internalSlots":[]
+      }
+    },
+    {
+      "type":"TypeAlias",
+      "loc":{"source":null,"start":{"line":51,"column":0},"end":{"line":53,"column":2}},
+      "range":[890,937],
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":51,"column":5},"end":{"line":51,"column":17}},
+        "range":[895,907],
+        "name":"ObjBigIntKey",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "typeParameters":null,
+      "right":{
+        "type":"ObjectTypeAnnotation",
+        "loc":{"source":null,"start":{"line":51,"column":20},"end":{"line":53,"column":1}},
+        "range":[910,936],
+        "inexact":false,
+        "exact":false,
+        "properties":[
+          {
+            "type":"ObjectTypeProperty",
+            "loc":{"source":null,"start":{"line":52,"column":2},"end":{"line":52,"column":21}},
+            "range":[914,933],
+            "key":{
+              "type":"Literal",
+              "loc":{"source":null,"start":{"line":52,"column":11},"end":{"line":52,"column":13}},
+              "range":[923,925],
+              "value":null,
+              "bigint":"0",
+              "raw":"0n"
+            },
+            "value":{
+              "type":"StringTypeAnnotation",
+              "loc":{"source":null,"start":{"line":52,"column":15},"end":{"line":52,"column":21}},
+              "range":[927,933]
+            },
+            "method":false,
+            "optional":false,
+            "static":false,
+            "proto":false,
+            "abstract":false,
+            "variance":{
+              "type":"Variance",
+              "loc":{"source":null,"start":{"line":52,"column":2},"end":{"line":52,"column":10}},
+              "range":[914,922],
+              "kind":"readonly"
+            },
+            "kind":"init"
+          }
+        ],
+        "indexers":[],
+        "callProperties":[],
+        "internalSlots":[]
       }
     }
   ],
