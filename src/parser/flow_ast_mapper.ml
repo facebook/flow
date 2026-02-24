@@ -1901,7 +1901,7 @@ class ['loc] mapper =
       if comments == comments' then
         lit
       else
-        { value; require_loc; def_loc_opt; prefix_len; raw; comments }
+        { value; require_loc; def_loc_opt; prefix_len; raw; comments = comments' }
 
     method nullable_type (t : ('loc, 'loc) Ast.Type.Nullable.t) =
       let open Ast.Type.Nullable in
@@ -1954,7 +1954,7 @@ class ['loc] mapper =
       let argument' = this#typeof_expression argument in
       let targs' = map_opt this#type_args targs in
       let comments' = this#syntax_opt comments in
-      if argument == argument' && targs = targs' && comments == comments' then
+      if argument == argument' && targs == targs' && comments == comments' then
         t
       else
         { argument = argument'; targs = targs'; comments = comments' }
@@ -3534,7 +3534,7 @@ class ['loc] mapper =
         (type_guard_annotation : ('loc, 'loc) Ast.Type.type_guard_annotation) =
       let (loc, type_guard) = type_guard_annotation in
       let type_guard' = this#type_guard type_guard in
-      if type_guard' = type_guard then
+      if type_guard' == type_guard then
         type_guard_annotation
       else
         (loc, type_guard')
@@ -3801,7 +3801,7 @@ class ['loc] mapper =
       let expression' = this#expression expression in
       let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in
-      if expression' == expression && annot' = annot && comments' == comments then
+      if expression' == expression && annot' == annot && comments' == comments then
         expr
       else
         { expression = expression'; annot = annot'; comments = comments' }

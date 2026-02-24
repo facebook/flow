@@ -230,7 +230,7 @@ class virtual ['a] t =
     method private enum_concrete_info cx map_cx e =
       let { enum_name; enum_id; members; representation_t; has_unknown_members } = e in
       let representation_t' = self#type_ cx map_cx representation_t in
-      if representation_t' = representation_t then
+      if representation_t' == representation_t then
         e
       else
         { enum_name; enum_id; members; representation_t = representation_t'; has_unknown_members }
@@ -245,7 +245,7 @@ class virtual ['a] t =
           ConcreteEnum enum_concrete_info'
       | AbstractEnum { representation_t } ->
         let representation_t' = self#type_ cx map_cx representation_t in
-        if representation_t' = representation_t then
+        if representation_t' == representation_t then
           e
         else
           AbstractEnum { representation_t = representation_t' }
