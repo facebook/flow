@@ -850,6 +850,9 @@ end = struct
         let env = self#get_env in
         Logger.info "Canceling EdenFS listening thread";
         Lwt.cancel env.listening_thread;
+        (* The exit hook will call destroy_instance_ffi on the Rust instance,
+           which stops the worker thread and shuts down the Tokio runtime
+           before Folly's atexit handlers run. *)
         Lwt.return_unit
 
       method waitpid =

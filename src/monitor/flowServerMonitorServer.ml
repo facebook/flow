@@ -51,6 +51,15 @@ let exit ?error ~msg exit_status =
   else (
     exiting := true;
     Logger.info "Monitor is exiting code %d (%s)" (Exit.error_code exit_status) msg;
+
+    (* Destroy the EdenFS watcher instance before broadcasting to threads.
+       This must happen synchronously, before Lwt_unix.sleep yields to the event loop,
+       to ensure the EdenFsInstance (and its Thrift client backed by Folly's
+       IOThreadPoolExecutor) is fully dropped before Stdlib.exit triggers Folly's
+       atexit handlers. Otherwise, the atexit handlers may abort() due to EBADF
+       when Folly's IO threads are still blocked on epoll_wait. *)
+    List.iter (fun hook -> hook ()) !Edenfs_watcher.hooks_upon_clean_exit;
+
     Logger.info "Broadcasting to threads and waiting 1 second for them to exit";
     Lwt_condition.broadcast ExitSignal.signal (exit_status, msg);
 
@@ -58,7 +67,6 @@ let exit ?error ~msg exit_status =
     Lwt.protected
       (let%lwt () = Lwt_unix.sleep 1.0 in
        FlowEventLogger.exit ?error (Some msg) (Exit.to_string exit_status);
-       List.iter (fun hook -> hook ()) !Edenfs_watcher.hooks_upon_clean_exit;
        Stdlib.exit (Exit.error_code exit_status)
       )
   )
