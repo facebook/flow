@@ -420,21 +420,18 @@ end = struct
            let%lwt init_result = watcher#wait_for_init ~timeout:(Some 5.0) in
            match init_result with
            | Ok () ->
-             FlowEventLogger.set_file_watcher_edenfs ();
              Logger.info "EdenFS watcher initialized successfully";
-             (* Return watcher and flag indicating it's already initialized *)
              Lwt.return (watcher, true)
            | Error msg ->
              Logger.info "EdenFS watcher init failed: %s. Falling back to Watchman." msg;
-             (* Log specific telemetry for NonEdenMount (www not on Eden) *)
              if Base.String.is_substring msg ~substring:"NonEdenMount" then
                FlowEventLogger.edenfs_watcher_non_eden_www ~backtrace:msg
              else
                FlowEventLogger.edenfs_watcher_fallback ~msg;
+             FlowEventLogger.set_file_watcher "Watchman";
              let watchman_options =
                edenfs_options.FlowServerMonitorOptions.edenfs_watchman_fallback
              in
-             (* Watchman watcher needs start_init called by the caller *)
              Lwt.return
                (new FileWatcher.watchman ~mergebase_with server_options watchman_options, false)
          with
@@ -443,13 +440,12 @@ end = struct
           let msg = Exception.get_ctor_string exn_wrapper in
           let backtrace = Exception.get_backtrace_string exn_wrapper in
           Logger.info "EdenFS watcher raised exception: %s. Falling back to Watchman." msg;
-          (* Log specific telemetry for NonEdenMount (www not on Eden) *)
           if Base.String.is_substring msg ~substring:"NonEdenMount" then
             FlowEventLogger.edenfs_watcher_non_eden_www ~backtrace
           else
             FlowEventLogger.edenfs_watcher_fallback ~msg;
+          FlowEventLogger.set_file_watcher "Watchman";
           let watchman_options = edenfs_options.FlowServerMonitorOptions.edenfs_watchman_fallback in
-          (* Watchman watcher needs start_init called by the caller *)
           Lwt.return
             (new FileWatcher.watchman ~mergebase_with server_options watchman_options, false))
     in

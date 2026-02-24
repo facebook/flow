@@ -207,7 +207,7 @@ let dfind_ready _ _ = ()
 
 let parsing_exception _ = ()
 
-let set_file_watcher_edenfs () = ()
+let set_file_watcher _ = ()
 
 let edenfs_watcher_fallback ~msg:_ = ()
 
