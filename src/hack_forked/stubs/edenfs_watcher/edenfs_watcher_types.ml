@@ -75,6 +75,7 @@ type settings = {
   report_telemetry: bool;
   state_tracking: bool;
   sync_queries_obey_deferral: bool;
+  defer_states: string list;
 }
 
 type changes =

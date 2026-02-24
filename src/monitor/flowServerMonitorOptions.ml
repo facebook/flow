@@ -19,6 +19,7 @@ type edenfs_options = {
   edenfs_debug: bool;  (** Turn on debugging messages for the EdenFS watcher *)
   edenfs_timeout_secs: int;  (** Timeout for EdenFS watcher initialization *)
   edenfs_throttle_time_ms: int;  (** Throttle time for EdenFS watcher notifications *)
+  edenfs_defer_states: string list;  (** States to track and defer in the EdenFS watcher *)
   edenfs_watchman_fallback: watchman_options;
       (** Watchman options to use if EdenFS watcher fails to initialize (e.g., non-Eden mount) *)
 }

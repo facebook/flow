@@ -756,6 +756,7 @@ end = struct
           FlowServerMonitorOptions.edenfs_debug;
           edenfs_timeout_secs;
           edenfs_throttle_time_ms;
+          edenfs_defer_states;
           edenfs_watchman_fallback = _;
         } =
           edenfs_options
@@ -770,6 +771,7 @@ end = struct
             report_telemetry = true;
             state_tracking = true;
             sync_queries_obey_deferral = false;
+            defer_states = edenfs_defer_states;
           }
         in
         init_thread <- Some (Lwt.return (Edenfs_watcher.init settings))

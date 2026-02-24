@@ -2011,11 +2011,15 @@ let choose_file_watcher ~flowconfig ~lazy_mode ~file_watcher ~file_watcher_debug
     let watchman_fallback =
       { FlowServerMonitorOptions.debug = file_watcher_debug; defer_states; sync_timeout }
     in
+    (* Watchman natively defers during hg operations via Defer_changes subscribe mode.
+       EdenFS requires explicit state names, so we hardcode the hg states here. *)
+    let edenfs_defer_states = ["hg.update"; "hg.transaction"] @ defer_states in
     FlowServerMonitorOptions.EdenFS
       {
         FlowServerMonitorOptions.edenfs_debug = file_watcher_debug;
         edenfs_timeout_secs = FlowConfig.file_watcher_edenfs_timeout flowconfig;
         edenfs_throttle_time_ms = FlowConfig.file_watcher_edenfs_throttle_time_ms flowconfig;
+        edenfs_defer_states;
         edenfs_watchman_fallback = watchman_fallback;
       }
 
