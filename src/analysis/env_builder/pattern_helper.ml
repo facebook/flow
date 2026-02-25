@@ -53,7 +53,7 @@ let object_property (parent_loc, bind) xs key direct_default =
     when Js_number.is_float_safe_integer value ->
     let name = Dtoa.ecma_string_of_float value in
     let bind = object_named_property (parent_loc, bind) loc name direct_default in
-    (bind, xs, true)
+    (bind, name :: xs, false)
   | Property.NumberLiteral (_, _) -> (bind, xs, false)
   | Property.BigIntLiteral (_, _) -> (bind, xs, false)
 

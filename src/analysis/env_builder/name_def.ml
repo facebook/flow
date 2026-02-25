@@ -84,7 +84,7 @@ end = struct
       when Js_number.is_float_safe_integer value ->
       let name = Dtoa.ecma_string_of_float value in
       let acc = object_named_property (parent_loc, acc) loc name direct_default in
-      (acc, xs, true)
+      (acc, name :: xs, false)
     | Property.NumberLiteral _ -> (acc, xs, false)
     | Property.BigIntLiteral _ -> (acc, xs, false)
 
