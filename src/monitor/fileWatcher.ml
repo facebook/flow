@@ -679,13 +679,18 @@ end = struct
       match%lwt get_changes_async_lwt env with
       | Error (Edenfs_watcher_types.LostChanges msg) ->
         Logger.error "EdenFS watcher lost changes: %s" msg;
+        FlowEventLogger.edenfs_watcher_lost_changes ~msg ~backtrace:msg;
         env.metadata <-
           MonitorProt.merge_file_watcher_metadata
             env.metadata
             { MonitorProt.changed_mergebase = None; missed_changes = true };
         broadcast env;
         Lwt.return env
-      | Error err -> raise (EdenFS_failure err)
+      | Error err ->
+        let msg = Edenfs_watcher.show_edenfs_watcher_error err in
+        let backtrace = Printexc.get_backtrace () in
+        FlowEventLogger.edenfs_watcher_error ~msg ~backtrace;
+        raise (EdenFS_failure err)
       | Ok (changes_list, _clock, _telemetry) ->
         handle_state_changes changes_list;
         let (new_files, new_metadata) = convert_changes changes_list in
