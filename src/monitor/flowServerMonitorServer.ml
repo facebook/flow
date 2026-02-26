@@ -427,7 +427,8 @@ end = struct
              if Base.String.is_substring msg ~substring:"NonEdenMount" then
                FlowEventLogger.edenfs_watcher_non_eden_www ~backtrace:msg
              else
-               FlowEventLogger.edenfs_watcher_fallback ~msg;
+               FlowEventLogger.edenfs_watcher_error ~msg ~backtrace:msg;
+             FlowEventLogger.edenfs_watcher_fallback ~msg;
              FlowEventLogger.set_file_watcher "Watchman";
              let watchman_options =
                edenfs_options.FlowServerMonitorOptions.edenfs_watchman_fallback
@@ -443,7 +444,8 @@ end = struct
           if Base.String.is_substring msg ~substring:"NonEdenMount" then
             FlowEventLogger.edenfs_watcher_non_eden_www ~backtrace
           else
-            FlowEventLogger.edenfs_watcher_fallback ~msg;
+            FlowEventLogger.edenfs_watcher_error ~msg ~backtrace;
+          FlowEventLogger.edenfs_watcher_fallback ~msg;
           FlowEventLogger.set_file_watcher "Watchman";
           let watchman_options = edenfs_options.FlowServerMonitorOptions.edenfs_watchman_fallback in
           Lwt.return
