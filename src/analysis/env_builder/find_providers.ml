@@ -1076,7 +1076,7 @@ end = struct
         | _ ->
           raise
             (ImpossibleState
-               "Syntactically valid for-in loops must have exactly one left declaration"
+               "Syntactically valid for-of loops must have exactly one left declaration"
             ));
         left
 
