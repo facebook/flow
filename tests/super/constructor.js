@@ -145,3 +145,21 @@ class N extends N_ {
 }
 (new N_(): N_);
 (new N(): N);
+
+// super() inside nested function should not count for the enclosing constructor
+class O extends A {
+  constructor() {
+    const f = function() { super(); };
+    this.x; // ERROR: no super call in this constructor
+  }
+}
+
+// conditional super() followed by unconditional super() should flag duplicate
+class P extends A {
+  constructor(b: boolean) {
+    if (b) {
+      super(); // maybe called
+    }
+    super(); // ERROR: duplicate super
+  }
+}

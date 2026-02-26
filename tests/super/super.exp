@@ -176,6 +176,48 @@ References:
                         [2]
 
 
+Error --------------------------------------------------------------------------------------------- constructor.js:153:5
+
+Must call `super` before accessing `this` [1] in a derived constructor. [reference-before-declaration]
+
+   constructor.js:153:5
+   153|     this.x; // ERROR: no super call in this constructor
+            ^^^^
+
+References:
+   constructor.js:150:7
+   150| class O extends A {
+              ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- constructor.js:163:5
+
+Cannot declare `this` [1] because the name is already bound. [name-already-bound]
+
+   constructor.js:163:5
+   163|     super(); // ERROR: duplicate super
+            ^^^^^^^
+
+References:
+   constructor.js:158:7
+   158| class P extends A {
+              ^ [1]
+
+
+Error --------------------------------------------------------------------------------------------- constructor.js:163:5
+
+Cannot declare `super` [1] because the name is already bound. [name-already-bound]
+
+   constructor.js:163:5
+   163|     super(); // ERROR: duplicate super
+            ^^^^^^^
+
+References:
+   constructor.js:158:17
+   158| class P extends A {
+                        ^ [1]
+
+
 Error ------------------------------------------------------------------------------------------ multi-call-error.js:7:9
 
 Cannot declare `this` [1] because the name is already bound. [name-already-bound]
@@ -287,4 +329,4 @@ References:
 
 
 
-Found 19 errors
+Found 22 errors

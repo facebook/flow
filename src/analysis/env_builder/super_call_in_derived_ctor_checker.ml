@@ -47,9 +47,10 @@ class checker ~add_output this_def_loc super_def_loc =
     method private mark_super_called loc =
       match super_call_state with
       | Called -> duplicate_super_call_locs <- loc :: duplicate_super_call_locs
-      | NotCalled
       | MaybeCalled ->
+        duplicate_super_call_locs <- loc :: duplicate_super_call_locs;
         super_call_state <- Called
+      | NotCalled -> super_call_state <- Called
 
     method private run_in_branch : 'a. (unit -> 'a) -> super_call_state =
       fun f ->
@@ -86,6 +87,14 @@ class checker ~add_output this_def_loc super_def_loc =
     method! class_ _ cls = cls
 
     method! record_declaration _ record = record
+
+    (* Skip nested regular functions - they bind their own `this` and `super`,
+       so this/super references inside them don't refer to the enclosing constructor.
+       Note: arrow functions are NOT skipped because they inherit `this` from the
+       enclosing scope. *)
+    method! function_declaration _ decl = decl
+
+    method! function_expression _ expr = expr
 
     (* Control flow merging: if statement *)
     method! if_statement _loc stmt =
