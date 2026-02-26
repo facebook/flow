@@ -1,3 +1,8 @@
+### 0.303.0
+
+New Features:
+* Adds a new `stylex_shorthand_prop` flowconfig option that enables syntactic sugar for StyleX on lowercase (intrinsic) JSX elements. When set to a prop name (e.g. `stylex_shorthand_prop=sx`), `<div sx={[styles.foo, styles.bar]} />` desugars to `<div {...stylex.props(styles.foo, styles.bar)} />`.
+
 ### 0.302.0
 
 Notable bug fixes:
