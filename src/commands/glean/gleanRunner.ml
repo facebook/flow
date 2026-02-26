@@ -276,11 +276,12 @@ let type_declaration_references ~root ~write_root ~reader ~cx ~typed_ast =
   ignore ((new type_reference_searcher add_reference)#program typed_ast);
   !results |> Base.List.map ~f:(TypeDeclarationReference.to_json ~root ~write_root)
 
-let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t list =
+let extract_member_def ~imported_names ~cx ~typed_ast ~file_sig scheme name : ALoc.t list =
   match
     Ty_members.extract
       ~cx
       ~allowed_prop_names:[Reason.OrdinaryName name]
+      ~imported_names
       ~typed_ast_opt:(Some typed_ast)
       ~file_sig
       scheme
@@ -295,10 +296,13 @@ let extract_member_def ~cx ~typed_ast ~file_sig scheme name : ALoc.t list =
        )
       )
 
-let member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file_sig =
+let member_declaration_references ~imported_names ~root ~write_root ~reader ~cx ~typed_ast ~file_sig
+    =
   let results = ref [] in
   let add_member ~type_ ~aloc ~name =
-    Base.List.iter (extract_member_def ~cx ~typed_ast ~file_sig type_ name) ~f:(fun def_aloc ->
+    Base.List.iter
+      (extract_member_def ~imported_names ~cx ~typed_ast ~file_sig type_ name)
+      ~f:(fun def_aloc ->
         let memberDeclaration =
           let loc = Parsing_heaps.Reader.loc_of_aloc ~reader def_aloc in
           MemberDeclaration.{ name; loc }
@@ -671,7 +675,17 @@ let module_documentations ~root ~write_root ~ast ~file : Hh_json.json list =
   | _ -> []
 
 let declaration_infos
-    ~root ~write_root ~glean_log ~scope_info ~file ~file_sig ~cx ~reader ~typed_ast ~ast =
+    ~imported_names
+    ~root
+    ~write_root
+    ~glean_log
+    ~scope_info
+    ~file
+    ~file_sig
+    ~cx
+    ~reader
+    ~typed_ast
+    ~ast =
   let infos = ref [] in
   let add_info kind name loc (type_ : Type.t) = infos := ((kind, name, loc), type_) :: !infos in
   let add_var_info = add_info `Declaration in
@@ -689,7 +703,14 @@ let declaration_infos
        typed_ast
     );
   let options = Ty_normalizer_env.default_options in
-  let genv = Ty_normalizer_flow.mk_genv ~options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig in
+  let genv =
+    Ty_normalizer_flow.mk_genv_with_imported_names
+      ~options
+      ~cx
+      ~typed_ast_opt:(Some typed_ast)
+      ~file_sig
+      ~imported_names
+  in
   let exact_by_default = Context.exact_by_default cx in
   let docs_and_spans = DocumentationFullspanMap.create ast file in
   Base.List.fold
@@ -831,6 +852,13 @@ let create_typed_runner_config
           else
             ()
         in
+        let imported_names =
+          let options = Ty_normalizer_env.default_options in
+          let genv =
+            Ty_normalizer_flow.mk_genv ~options ~cx ~typed_ast_opt:(Some typed_ast) ~file_sig
+          in
+          genv.Ty_normalizer_env.imported_names
+        in
         log "scope info";
         let scope_info =
           Scope_builder.program ~enable_enums:(Options.enums options) ~with_types:false ast
@@ -840,6 +868,7 @@ let create_typed_runner_config
         log "declaration info";
         let (declaration_info, member_declaration_info, type_declaration_info) =
           declaration_infos
+            ~imported_names
             ~scope_info
             ~root
             ~write_root
@@ -881,7 +910,14 @@ let create_typed_runner_config
         in
         log "member declaration reference";
         let member_declaration_reference =
-          member_declaration_references ~root ~write_root ~reader ~cx ~typed_ast ~file_sig
+          member_declaration_references
+            ~imported_names
+            ~root
+            ~write_root
+            ~reader
+            ~cx
+            ~typed_ast
+            ~file_sig
         in
         log "type declaration reference";
         let type_declaration_reference =

@@ -25,6 +25,7 @@ type ty_members = {
 val extract :
   ?force_instance:bool ->
   ?allowed_prop_names:Reason.name list ->
+  ?imported_names:Ty.imported_ident Loc_collections.ALocMap.t Lazy.t ->
   cx:Context.t ->
   typed_ast_opt:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
   file_sig:File_sig.t ->

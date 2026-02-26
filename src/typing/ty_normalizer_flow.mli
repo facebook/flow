@@ -18,6 +18,14 @@ val mk_genv :
   file_sig:File_sig.t ->
   genv
 
+val mk_genv_with_imported_names :
+  options:options ->
+  cx:Context.t ->
+  typed_ast_opt:(ALoc.t, ALoc.t * Type.t) Flow_ast.Program.t option ->
+  file_sig:File_sig.t ->
+  imported_names:Ty.imported_ident Loc_collections.ALocMap.t Lazy.t ->
+  genv
+
 val from_type_with_found_computed_type :
   genv -> Type.t -> (Ty.elt, Ty_normalizer.error) result * bool
 
