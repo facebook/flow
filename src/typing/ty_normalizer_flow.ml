@@ -125,6 +125,9 @@ let mk_genv ~options ~cx ~typed_ast_opt ~file_sig =
   in
   { Ty_normalizer_env.options; cx; typed_ast_opt; file_sig; imported_names; ref_type_bodies = None }
 
+let mk_genv_with_imported_names ~options ~cx ~typed_ast_opt ~file_sig ~imported_names =
+  { Ty_normalizer_env.options; cx; typed_ast_opt; file_sig; imported_names; ref_type_bodies = None }
+
 let debug_string_of_t cx t =
   let typed_ast =
     ( ALoc.none,

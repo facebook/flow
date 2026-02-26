@@ -312,7 +312,8 @@ type ty_members = {
   errors: string list;
 }
 
-let extract ?(force_instance = false) ?allowed_prop_names ~cx ~typed_ast_opt ~file_sig scheme =
+let extract
+    ?(force_instance = false) ?allowed_prop_names ?imported_names ~cx ~typed_ast_opt ~file_sig t =
   let options =
     {
       Ty_normalizer_env.expand_internal_types = true;
@@ -326,8 +327,18 @@ let extract ?(force_instance = false) ?allowed_prop_names ~cx ~typed_ast_opt ~fi
       toplevel_is_type_identifier_reference = false;
     }
   in
-  let genv = Ty_normalizer_flow.mk_genv ~options ~cx ~typed_ast_opt ~file_sig in
-  match Ty_normalizer_flow.expand_members ~force_instance ?allowed_prop_names genv scheme with
+  let genv =
+    match imported_names with
+    | Some imported_names ->
+      Ty_normalizer_flow.mk_genv_with_imported_names
+        ~options
+        ~cx
+        ~typed_ast_opt
+        ~file_sig
+        ~imported_names
+    | None -> Ty_normalizer_flow.mk_genv ~options ~cx ~typed_ast_opt ~file_sig
+  in
+  match Ty_normalizer_flow.expand_members ~force_instance ?allowed_prop_names genv t with
   | Error error -> Error (Ty_normalizer.error_to_string error)
   | Ok (Ty.Any _) -> Error "not enough type information to extract members"
   | Ok this_ty ->
