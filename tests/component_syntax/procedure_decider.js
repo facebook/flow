@@ -7,3 +7,12 @@ export function Procedure() {
     return bar();
   }
 }
+
+// Generic functions require return annotations if they have non-void returns.
+// A return inside a nested component should not count as a return of the
+// enclosing generic function.
+function generic<T>() { // OK
+  component Bar() {
+    return null;
+  }
+}

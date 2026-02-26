@@ -54,6 +54,8 @@ class return_finder =
     method! function_expression _ x = x
 
     method! arrow_function _ x = x
+
+    method! component_declaration _ x = x
   end
 
 let might_have_nonvoid_return loc function_ast =
