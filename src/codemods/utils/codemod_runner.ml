@@ -301,6 +301,7 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
   let expand_roots = C.expand_roots
 
   let merge_and_check env workers options profiling roots ~iteration =
+    let should_print = Options.should_profile options in
     Transaction.with_transaction "codemod" (fun transaction ->
         let reader = Mutator_state_reader.create transaction in
 
@@ -320,16 +321,18 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
         let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
-          Merge_service.merge_runner
-            ~job:merge_job
-            ~mutator
-            ~reader
-            ~options
-            ~for_find_all_refs:false
-            ~workers
-            ~sig_dependency_graph
-            ~components
-            ~recheck_set:files_to_merge
+          Memory_utils.with_memory_timer_lwt ~should_print "Merge" profiling (fun () ->
+              Merge_service.merge_runner
+                ~job:merge_job
+                ~mutator
+                ~reader
+                ~options
+                ~for_find_all_refs:false
+                ~workers
+                ~sig_dependency_graph
+                ~components
+                ~recheck_set:files_to_merge
+          )
         in
         Hh_logger.info "Merging done.";
         Hh_logger.info "Checking %d files" (FilenameSet.cardinal roots);
@@ -338,7 +341,11 @@ module SimpleTypedRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_CONFIG 
         let metadata = Context.metadata_of_options options in
         let mk_check () = mk_check ~visit:C.visit ~iteration ~reader ~options ~metadata () in
         let job = Job_utils.mk_job ~mk_check ~options () in
-        let%lwt result = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
+        let%lwt result =
+          Memory_utils.with_memory_timer_lwt ~should_print "Check" profiling (fun () ->
+              MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next
+          )
+        in
         Hh_logger.info "Done";
         Lwt.return result
     )
@@ -365,6 +372,7 @@ module SimpleTypedTwoPassRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_
   let expand_roots = C.expand_roots
 
   let merge_and_check env workers options profiling roots ~iteration =
+    let should_print = Options.should_profile options in
     Transaction.with_transaction "codemod" (fun transaction ->
         let reader = Mutator_state_reader.create transaction in
 
@@ -384,16 +392,18 @@ module SimpleTypedTwoPassRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_
         let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
-          Merge_service.merge_runner
-            ~job:merge_job
-            ~mutator
-            ~reader
-            ~options
-            ~for_find_all_refs:false
-            ~workers
-            ~sig_dependency_graph
-            ~components
-            ~recheck_set:files_to_merge
+          Memory_utils.with_memory_timer_lwt ~should_print "Merge" profiling (fun () ->
+              Merge_service.merge_runner
+                ~job:merge_job
+                ~mutator
+                ~reader
+                ~options
+                ~for_find_all_refs:false
+                ~workers
+                ~sig_dependency_graph
+                ~components
+                ~recheck_set:files_to_merge
+          )
         in
         Hh_logger.info "Merging done.";
         Hh_logger.info "Checking %d files" (FilenameSet.cardinal roots);
@@ -406,7 +416,11 @@ module SimpleTypedTwoPassRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_
         in
         let mk_check () = mk_check ~visit ~iteration ~reader ~options ~metadata () in
         let job = Job_utils.mk_job ~mk_check ~options () in
-        let%lwt initial_run_result = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
+        let%lwt initial_run_result =
+          Memory_utils.with_memory_timer_lwt ~should_print "Check" profiling (fun () ->
+              MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next
+          )
+        in
         Hh_logger.info "Initial run done";
         let second_run_roots =
           Base.List.fold initial_run_result ~init:Utils_js.FilenameSet.empty ~f:(fun acc (_, r) ->
@@ -431,21 +445,25 @@ module SimpleTypedTwoPassRunner (C : SIMPLE_TYPED_RUNNER_CONFIG) : TYPED_RUNNER_
         let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
-          Merge_service.merge_runner
-            ~job:merge_job
-            ~mutator
-            ~reader
-            ~options
-            ~for_find_all_refs:false
-            ~workers
-            ~sig_dependency_graph
-            ~components
-            ~recheck_set:files_to_merge
+          Memory_utils.with_memory_timer_lwt ~should_print "MergePrunedDeps" profiling (fun () ->
+              Merge_service.merge_runner
+                ~job:merge_job
+                ~mutator
+                ~reader
+                ~options
+                ~for_find_all_refs:false
+                ~workers
+                ~sig_dependency_graph
+                ~components
+                ~recheck_set:files_to_merge
+          )
         in
         Hh_logger.info "Merging done.";
         let (next, merge) = mk_next_for_check ~options ~workers second_run_roots in
         let%lwt result =
-          MultiWorkerLwt.call workers ~job ~neutral:initial_run_result ~merge ~next
+          Memory_utils.with_memory_timer_lwt ~should_print "CheckPrunedDeps" profiling (fun () ->
+              MultiWorkerLwt.call workers ~job ~neutral:initial_run_result ~merge ~next
+          )
         in
         Hh_logger.info "Pruned-deps run done";
         Lwt.return result
@@ -495,6 +513,7 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
       roots
 
   let merge_and_check env workers options profiling roots ~iteration =
+    let should_print = Options.should_profile options in
     Transaction.with_transaction "codemod" (fun transaction ->
         let reader = Mutator_state_reader.create transaction in
 
@@ -502,7 +521,6 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         let%lwt (sig_dependency_graph, components, files_to_merge, files_to_check) =
           let get_dependent_files sig_dependency_graph implementation_dependency_graph roots =
             if C.include_dependents_in_prepass then
-              let should_print = Options.should_profile options in
               Memory_utils.with_memory_timer_lwt
                 ~should_print
                 "AllDependentFiles"
@@ -531,28 +549,32 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         let mutator = Parsing_heaps.Merge_context_mutator.create transaction files_to_merge in
         Hh_logger.info "Merging %d files" (FilenameSet.cardinal files_to_merge);
         let%lwt _ =
-          Merge_service.merge_runner
-            ~job:merge_job
-            ~mutator
-            ~reader
-            ~options
-            ~for_find_all_refs:false
-            ~workers
-            ~sig_dependency_graph
-            ~components
-            ~recheck_set:files_to_merge
+          Memory_utils.with_memory_timer_lwt ~should_print "Merge" profiling (fun () ->
+              Merge_service.merge_runner
+                ~job:merge_job
+                ~mutator
+                ~reader
+                ~options
+                ~for_find_all_refs:false
+                ~workers
+                ~sig_dependency_graph
+                ~components
+                ~recheck_set:files_to_merge
+          )
         in
         Hh_logger.info "Merging done.";
         let files_to_check = CheckedSet.all files_to_check in
         Hh_logger.info "Pre-Checking %d files" (FilenameSet.cardinal files_to_check);
         (* TODO: refactor pre-pass to use Job_utils as well *)
         let%lwt result =
-          MultiWorkerLwt.call
-            workers
-            ~job:(pre_check_job ~reader ~options)
-            ~neutral:FilenameMap.empty
-            ~merge:FilenameMap.union
-            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files_to_check))
+          Memory_utils.with_memory_timer_lwt ~should_print "PreCheck" profiling (fun () ->
+              MultiWorkerLwt.call
+                workers
+                ~job:(pre_check_job ~reader ~options)
+                ~neutral:FilenameMap.empty
+                ~merge:FilenameMap.union
+                ~next:(MultiWorkerLwt.next workers (FilenameSet.elements files_to_check))
+          )
         in
         Hh_logger.info "Pre-checking Done";
         Hh_logger.info "Storing pre-checking results";
@@ -564,7 +586,11 @@ module TypedRunnerWithPrepass (C : TYPED_RUNNER_WITH_PREPASS_CONFIG) : TYPED_RUN
         let metadata = Context.metadata_of_options options in
         let mk_check () = mk_check ~visit:C.visit ~iteration ~reader ~options ~metadata () in
         let job = Job_utils.mk_job ~mk_check ~options () in
-        let%lwt result = MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next in
+        let%lwt result =
+          Memory_utils.with_memory_timer_lwt ~should_print "Check" profiling (fun () ->
+              MultiWorkerLwt.call workers ~job ~neutral:[] ~merge ~next
+          )
+        in
         Hh_logger.info "Checking+Codemodding Done";
         Lwt.return result
     )
