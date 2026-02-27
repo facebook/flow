@@ -12,6 +12,99 @@ open CommandUtils
 (* flow status (report current error set) command impl *)
 (***********************************************************************)
 
+type status_args = {
+  root: File_path.t;
+  output_json: bool;
+  output_json_version: Flow_errors_utils.Json_output.json_version option;
+  offset_style: CommandUtils.offset_style option;
+  pretty: bool;
+  error_flags: Flow_errors_utils.Cli_output.error_flags;
+  strip_root: bool;
+}
+
+let check_status flowconfig_name (args : status_args) connect_flags =
+  let include_warnings = args.error_flags.Flow_errors_utils.Cli_output.include_warnings in
+  let request = ServerProt.Request.STATUS { include_warnings } in
+  let (response, lazy_stats) =
+    match CommandUtils.connect_and_make_request flowconfig_name connect_flags args.root request with
+    | ServerProt.Response.STATUS { status_response; lazy_stats } -> (status_response, lazy_stats)
+    | response -> CommandUtils.failwith_bad_response ~request ~response
+  in
+  let strip_root =
+    if args.strip_root then
+      Some args.root
+    else
+      None
+  in
+  let offset_kind = CommandUtils.offset_kind_of_offset_style args.offset_style in
+  let print_json =
+    Flow_errors_utils.Json_output.print_errors
+      ~out_channel:stdout
+      ~strip_root
+      ~pretty:args.pretty
+      ?version:args.output_json_version
+      ~offset_kind
+  in
+  let lazy_msg =
+    match lazy_stats.ServerProt.Response.lazy_mode with
+    | false -> None
+    | true ->
+      Some
+        (Printf.sprintf
+           ("The Flow server is currently in lazy mode and is only checking %d/%d files.\n"
+           ^^ "To learn more, visit flow.org/en/docs/lang/lazy-modes"
+           )
+           lazy_stats.ServerProt.Response.checked_files
+           lazy_stats.ServerProt.Response.total_files
+        )
+  in
+  match response with
+  | ServerProt.Response.ERRORS { errors; warnings; suppressed_errors } ->
+    let error_flags = args.error_flags in
+    let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
+    begin
+      if args.output_json then
+        print_json ~errors ~warnings ~suppressed_errors ()
+      else if from = Some "vim" || from = Some "emacs" then
+        Flow_errors_utils.Vim_emacs_output.print_errors ~strip_root stdout ~errors ~warnings ()
+      else
+        let errors =
+          List.fold_left
+            (fun acc (error, _) -> Flow_errors_utils.ConcreteLocPrintableErrorSet.add error acc)
+            errors
+            suppressed_errors
+        in
+        Flow_errors_utils.Cli_output.print_errors
+          ~strip_root
+          ~flags:error_flags
+          ~out_channel:stdout
+          ~errors
+          ~warnings
+          ~lazy_msg
+          ()
+    end;
+    Exit.exit
+      (CommandUtils.get_check_or_status_exit_code
+         errors
+         warnings
+         error_flags.Flow_errors_utils.Cli_output.max_warnings
+      )
+  | ServerProt.Response.NO_ERRORS ->
+    if args.output_json then
+      print_json
+        ~errors:Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
+        ~warnings:Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
+        ~suppressed_errors:[]
+        ()
+    else (
+      Printf.printf "No errors!\n%!";
+      Base.Option.iter lazy_msg ~f:(Printf.printf "\n%s\n%!")
+    );
+    Exit.(exit No_error)
+  | ServerProt.Response.NOT_COVERED ->
+    let msg = "Why on earth did the server respond with NOT_COVERED?" in
+    Exit.(exit ~msg Unknown_error)
+
 module type CONFIG = sig
   (* explicit == called with "flow status ..."
      rather than simply "flow ..." *)
@@ -72,99 +165,6 @@ module Impl (CommandList : COMMAND_LIST) (Config : CONFIG) = struct
             |> anon "root" (optional string)
           );
       }
-
-  type args = {
-    root: File_path.t;
-    output_json: bool;
-    output_json_version: Flow_errors_utils.Json_output.json_version option;
-    offset_style: CommandUtils.offset_style option;
-    pretty: bool;
-    error_flags: Flow_errors_utils.Cli_output.error_flags;
-    strip_root: bool;
-  }
-
-  let check_status flowconfig_name (args : args) connect_flags =
-    let include_warnings = args.error_flags.Flow_errors_utils.Cli_output.include_warnings in
-    let request = ServerProt.Request.STATUS { include_warnings } in
-    let (response, lazy_stats) =
-      match connect_and_make_request flowconfig_name connect_flags args.root request with
-      | ServerProt.Response.STATUS { status_response; lazy_stats } -> (status_response, lazy_stats)
-      | response -> failwith_bad_response ~request ~response
-    in
-    let strip_root =
-      if args.strip_root then
-        Some args.root
-      else
-        None
-    in
-    let offset_kind = CommandUtils.offset_kind_of_offset_style args.offset_style in
-    let print_json =
-      Flow_errors_utils.Json_output.print_errors
-        ~out_channel:stdout
-        ~strip_root
-        ~pretty:args.pretty
-        ?version:args.output_json_version
-        ~offset_kind
-    in
-    let lazy_msg =
-      match lazy_stats.ServerProt.Response.lazy_mode with
-      | false -> None
-      | true ->
-        Some
-          (Printf.sprintf
-             ("The Flow server is currently in lazy mode and is only checking %d/%d files.\n"
-             ^^ "To learn more, visit flow.org/en/docs/lang/lazy-modes"
-             )
-             lazy_stats.ServerProt.Response.checked_files
-             lazy_stats.ServerProt.Response.total_files
-          )
-    in
-    match response with
-    | ServerProt.Response.ERRORS { errors; warnings; suppressed_errors } ->
-      let error_flags = args.error_flags in
-      let from = FlowEventLogger.get_from_I_AM_A_CLOWN () in
-      begin
-        if args.output_json then
-          print_json ~errors ~warnings ~suppressed_errors ()
-        else if from = Some "vim" || from = Some "emacs" then
-          Flow_errors_utils.Vim_emacs_output.print_errors ~strip_root stdout ~errors ~warnings ()
-        else
-          let errors =
-            List.fold_left
-              (fun acc (error, _) -> Flow_errors_utils.ConcreteLocPrintableErrorSet.add error acc)
-              errors
-              suppressed_errors
-          in
-          Flow_errors_utils.Cli_output.print_errors
-            ~strip_root
-            ~flags:error_flags
-            ~out_channel:stdout
-            ~errors
-            ~warnings
-            ~lazy_msg
-            ()
-      end;
-      Exit.exit
-        (get_check_or_status_exit_code
-           errors
-           warnings
-           error_flags.Flow_errors_utils.Cli_output.max_warnings
-        )
-    | ServerProt.Response.NO_ERRORS ->
-      if args.output_json then
-        print_json
-          ~errors:Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
-          ~warnings:Flow_errors_utils.ConcreteLocPrintableErrorSet.empty
-          ~suppressed_errors:[]
-          ()
-      else (
-        Printf.printf "No errors!\n%!";
-        Base.Option.iter lazy_msg ~f:(Printf.printf "\n%s\n%!")
-      );
-      Exit.(exit No_error)
-    | ServerProt.Response.NOT_COVERED ->
-      let msg = "Why on earth did the server respond with NOT_COVERED?" in
-      Exit.(exit ~msg Unknown_error)
 
   let main
       base_flags

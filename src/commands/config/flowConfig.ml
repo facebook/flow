@@ -57,6 +57,7 @@ module Opts = struct
     casting_syntax: Options.CastingSyntax.t option;
     casting_syntax_only_support_as_excludes: string list;
     channel_mode: [ `pipe | `socket ] option;
+    check_is_status: bool;
     async_component_syntax: bool;
     component_syntax: bool;
     deprecated_utilities: string list SMap.t;
@@ -215,6 +216,7 @@ module Opts = struct
       casting_syntax = None;
       casting_syntax_only_support_as_excludes = [];
       channel_mode = None;
+      check_is_status = false;
       async_component_syntax = false;
       component_syntax = false;
       deprecated_utilities = SMap.empty;
@@ -1064,6 +1066,7 @@ module Opts = struct
       ("babel_loose_array_spread", babel_loose_array_spread_parser);
       ("ban_spread_key_props", ban_spread_key_props_parser);
       ("casting_syntax", casting_syntax_parser);
+      ("check_is_status", boolean (fun opts v -> Ok { opts with check_is_status = v }));
       ("component_syntax", component_syntax_parser);
       ( "dev_only.refinement_info_as_errors",
         boolean (fun opts v -> Ok { opts with dev_only_refinement_info_as_errors = v })
@@ -1931,6 +1934,8 @@ let casting_syntax_only_support_as_excludes c =
   c.options.Opts.casting_syntax_only_support_as_excludes
 
 let channel_mode c = c.options.Opts.channel_mode
+
+let check_is_status c = c.options.Opts.check_is_status
 
 let async_component_syntax c = c.options.Opts.async_component_syntax
 

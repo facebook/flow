@@ -101,55 +101,86 @@ let full_check_main
     let flowconfig_path = Server_files_js.config_file flowconfig_name root in
     read_config_and_hash_or_exit ~enforce_warnings:(not ignore_version) flowconfig_path
   in
-  let options =
-    let lazy_mode = Some FlowConfig.Non_lazy in
-    (* Saved state doesn't make sense for `flow check`, so disable it. *)
-    let saved_state_options_flags =
+  if FlowConfig.check_is_status flowconfig then begin
+    let json = json || Base.Option.is_some json_version || pretty in
+    let connect_flags =
       {
-        (* None would mean we would just use the value in the .flowconfig, if available.
-         * Instead, let's override that and turn off saved state entirely. *)
-        CommandUtils.Saved_state_flags.saved_state_fetcher = Some Options.Dummy_fetcher;
-        saved_state_force_recheck = false;
-        saved_state_no_fallback = false;
-        saved_state_skip_version_check = false;
-        saved_state_verify = false;
+        CommandUtils.retries = 3;
+        timeout = None;
+        no_auto_start = false;
+        autostop = false;
+        lazy_mode = None;
+        temp_dir = None;
+        shm_flags = { CommandUtils.shm_hash_table_pow = None; shm_heap_size = None };
+        ignore_version;
+        quiet = json;
+        on_mismatch = CommandUtils.Choose_newest;
       }
     in
-
-    make_options
-      ~flowconfig_name
-      ~flowconfig_hash
-      ~flowconfig
-      ~lazy_mode
-      ~root
-      ~options_flags
-      ~saved_state_options_flags
-  in
-  let init_id = Random_id.short_string () in
-  let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
-  (* initialize loggers before doing too much, especially anything that might exit *)
-  LoggingUtils.init_loggers ~options ~min_level:Hh_logger.Level.Error ();
-
-  if not ignore_version then assert_version flowconfig;
-
-  let shared_mem_config = shm_config shm_flags flowconfig in
-  let format_errors =
-    let client_include_warnings = error_flags.Flow_errors_utils.Cli_output.include_warnings in
-    let printer =
-      if json || Base.Option.is_some json_version || pretty then
-        Json { pretty; version = json_version }
-      else
-        Cli error_flags
+    let args =
+      StatusCommands.
+        {
+          root;
+          output_json = json;
+          output_json_version = json_version;
+          offset_style;
+          pretty;
+          error_flags;
+          strip_root = false;
+        }
     in
-    format_errors ~printer ~client_include_warnings ~offset_kind options
-  in
-  let (errors, warnings) = Server.check_once options ~init_id ~shared_mem_config ~format_errors in
-  Exit.exit
-    (get_check_or_status_exit_code
-       errors
-       warnings
-       error_flags.Flow_errors_utils.Cli_output.max_warnings
-    )
+    StatusCommands.check_status flowconfig_name args connect_flags
+  end else begin
+    let options =
+      let lazy_mode = Some FlowConfig.Non_lazy in
+      (* Saved state doesn't make sense for `flow check`, so disable it. *)
+      let saved_state_options_flags =
+        {
+          (* None would mean we would just use the value in the .flowconfig, if available.
+           * Instead, let's override that and turn off saved state entirely. *)
+          CommandUtils.Saved_state_flags.saved_state_fetcher = Some Options.Dummy_fetcher;
+          saved_state_force_recheck = false;
+          saved_state_no_fallback = false;
+          saved_state_skip_version_check = false;
+          saved_state_verify = false;
+        }
+      in
+
+      make_options
+        ~flowconfig_name
+        ~flowconfig_hash
+        ~flowconfig
+        ~lazy_mode
+        ~root
+        ~options_flags
+        ~saved_state_options_flags
+    in
+    let init_id = Random_id.short_string () in
+    let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
+    (* initialize loggers before doing too much, especially anything that might exit *)
+    LoggingUtils.init_loggers ~options ~min_level:Hh_logger.Level.Error ();
+
+    if not ignore_version then assert_version flowconfig;
+
+    let shared_mem_config = shm_config shm_flags flowconfig in
+    let format_errors =
+      let client_include_warnings = error_flags.Flow_errors_utils.Cli_output.include_warnings in
+      let printer =
+        if json || Base.Option.is_some json_version || pretty then
+          Json { pretty; version = json_version }
+        else
+          Cli error_flags
+      in
+      format_errors ~printer ~client_include_warnings ~offset_kind options
+    in
+    let (errors, warnings) = Server.check_once options ~init_id ~shared_mem_config ~format_errors in
+    Exit.exit
+      (get_check_or_status_exit_code
+         errors
+         warnings
+         error_flags.Flow_errors_utils.Cli_output.max_warnings
+      )
+  end
 
 module CheckCommand = struct
   let spec =
@@ -172,7 +203,7 @@ module CheckCommand = struct
         );
       usage =
         Printf.sprintf
-          "Usage: %s check [OPTION]... [ROOT]\n\nDoes a full Flow check and prints the results.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n"
+          "Usage: %s check [OPTION]... [ROOT]\n\nDoes a full Flow check and prints the results.\n\nIf check_is_status=true is set in .flowconfig, this command connects to the\nFlow server (like `flow status`) instead of doing a standalone check.\n\nFlow will search upward for a .flowconfig file, beginning at ROOT.\nROOT is assumed to be the current directory if unspecified.\n"
           exe_name;
     }
 
