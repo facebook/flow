@@ -2865,6 +2865,7 @@ let keylist_of_props props reason_op =
         DefT (reason, SingletonStrT { from_annot = true; value = name }) :: acc)
     props
     []
+  |> List.rev
 
 let objt_to_obj_rest cx props_tmap ~reachable_targs ~obj_kind ~reason_op ~reason_obj xs =
   let props = Context.find_props cx props_tmap in

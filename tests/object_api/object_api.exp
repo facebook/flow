@@ -146,11 +146,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:32:2
 
-Cannot cast `Object.entries(...)` to array type because in array element: `[key: "b" | "a", value: mixed]` [1] is not
+Cannot cast `Object.entries(...)` to array type because in array element: `[key: "a" | "b", value: mixed]` [1] is not
 exactly the same as `["a" | "b", empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<[key: "b" | "a", value: mixed]>` [1] and `Array<["a" | "b", empty]>` [3] exactly the same
+- Either make `Array<[key: "a" | "b", value: mixed]>` [1] and `Array<["a" | "b", empty]>` [3] exactly the same
 - Or make array type [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 
@@ -169,11 +169,11 @@ References:
 
 Error ------------------------------------------------------------------------------------------- object_entries.js:33:2
 
-Cannot cast `Object.entries(...)` to array type because in array element: `[key: "b" | "a", value: mixed]` [1] is not
+Cannot cast `Object.entries(...)` to array type because in array element: `[key: "a" | "b", value: mixed]` [1] is not
 exactly the same as `["a" | "b", empty]` [2]. [incompatible-type]
 
 The above-mentioned two types must be the same because arrays are invariantly typed. To fix the error,
-- Either make `Array<[key: "b" | "a", value: mixed]>` [1] and `Array<["a" | "b", empty]>` [3] exactly the same
+- Either make `Array<[key: "a" | "b", value: mixed]>` [1] and `Array<["a" | "b", empty]>` [3] exactly the same
 - Or make array type [3] a `ReadonlyArray`.
 See https://flow.org/en/docs/faq/#why-cant-i-pass-an-arraystring-to-a-function-that-takes-an-arraystring-number.
 

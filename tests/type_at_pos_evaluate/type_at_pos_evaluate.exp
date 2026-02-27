@@ -70,7 +70,7 @@ test.js:29:6,29:7
 test.js:32:6
 Flags:
 type T8 = keyof {bar: number, baz: bigint, foo: string}
-= "foo" | "baz" | "bar"
+= "bar" | "baz" | "foo"
 
 'T8' defined at test.js:32:5
 

@@ -512,7 +512,7 @@ spread.js:70:6,70:10
 type-destructor.js:20:6
 Flags:
 type Country = keyof {|FR: string, IT: string, US: string|}
-= "US" | "IT" | "FR"
+= "FR" | "IT" | "US"
 
 'Country' defined at type-destructor.js:20:5
 

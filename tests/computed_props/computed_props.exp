@@ -287,12 +287,12 @@ Flow cannot track. [invalid-computed-prop]
                                            ^^ [1]
 
 References:
-   overwrite.js:3:13
-   3| const f2 = {foo: 'string', bar: '', [s1]: 3}; // error: might overwrite
-                  ^^^ [2]
    overwrite.js:3:28
    3| const f2 = {foo: 'string', bar: '', [s1]: 3}; // error: might overwrite
-                                 ^^^ [3]
+                                 ^^^ [2]
+   overwrite.js:3:13
+   3| const f2 = {foo: 'string', bar: '', [s1]: 3}; // error: might overwrite
+                  ^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ overwrite.js:7:29

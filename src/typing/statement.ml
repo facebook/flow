@@ -197,6 +197,7 @@ module Make
                    | None -> []
                    | Some (hd, tl) -> hd :: tl
                )
+            |> Base.List.rev
           in
           Flow_js_utils.add_output
             cx

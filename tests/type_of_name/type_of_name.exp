@@ -492,7 +492,7 @@ Found exact match 'UserWithoutEmail' defined at complex_types.js:25:6,25:21 with
 where
 'UserWithoutEmail' is defined at complex_types.js:25:6-21
 
-Found exact match 'UserKeys' defined at complex_types.js:28:6,28:13 with type `type UserKeys = "name" | "isAdmin" | "email" | "age"` 
+Found exact match 'UserKeys' defined at complex_types.js:28:6,28:13 with type `type UserKeys = "age" | "email" | "isAdmin" | "name"` 
 where
 'UserKeys' is defined at complex_types.js:28:6-13
 

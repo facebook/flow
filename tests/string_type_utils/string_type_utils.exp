@@ -97,12 +97,12 @@ Flow cannot track. [invalid-computed-prop]
                                           ^^^^^^^^^^^^^^^ [1]
 
 References:
-   computed.js:18:24
-   18|     const x = {abc: 0, abcdef: 1, [keyStringPrefix]: 0}; // error overlap with both
-                              ^^^^^^ [2]
    computed.js:18:16
    18|     const x = {abc: 0, abcdef: 1, [keyStringPrefix]: 0}; // error overlap with both
-                      ^^^ [3]
+                      ^^^ [2]
+   computed.js:18:24
+   18|     const x = {abc: 0, abcdef: 1, [keyStringPrefix]: 0}; // error overlap with both
+                              ^^^^^^ [3]
 
 
 Error ------------------------------------------------------------------------------------------------ computed.js:23:33
