@@ -2925,6 +2925,7 @@ let get_values_type_of_obj_t cx o reason =
     | Indexed { value; _ } -> value :: ts
     | _ -> ts
   in
+  let ts = List.rev ts in
   (* Create a union type from all our selected types. *)
   Type_mapper.union_flatten cx ts |> union_of_ts reason
 
@@ -2949,6 +2950,7 @@ let get_values_type_of_instance_t cx own_props dict reason =
     | None -> ts
     | _ -> ts
   in
+  let ts = List.rev ts in
   (* Create a union type from all our selected types. *)
   Type_mapper.union_flatten cx ts |> union_of_ts reason
 

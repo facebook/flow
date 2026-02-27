@@ -223,46 +223,46 @@ References:
 Error -------------------------------------------------------------------------------------------------- classes.js:44:3
 
 Cannot cast function to `Values` because: [incompatible-type]
- - Either function [1] is incompatible with string [2].
+ - Either function [1] is incompatible with number [2].
  - Or function [1] is incompatible with string [3].
- - Or function [1] is incompatible with number [4].
+ - Or function [1] is incompatible with string [4].
 
    classes.js:44:3
    44| ((() => {}): Values<SomeProps>); // Error: Even though there is a method,
          ^^^^^^^^ [1]
 
 References:
-   classes.js:16:6
-   16|   c: string;
+   classes.js:14:6
+   14|   a: number;
             ^^^^^^ [2]
    classes.js:15:6
    15|   b: string;
             ^^^^^^ [3]
-   classes.js:14:6
-   14|   a: number;
+   classes.js:16:6
+   16|   c: string;
             ^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------------- classes.js:46:2
 
 Cannot cast `true` to `Values` because: [incompatible-type]
- - Either boolean [1] is incompatible with string [2].
+ - Either boolean [1] is incompatible with number [2].
  - Or boolean [1] is incompatible with string [3].
- - Or boolean [1] is incompatible with number [4].
+ - Or boolean [1] is incompatible with string [4].
 
    classes.js:46:2
    46| (true: Values<SomeProps>); // Error: There is no property with the type of
         ^^^^ [1]
 
 References:
-   classes.js:16:6
-   16|   c: string;
+   classes.js:14:6
+   14|   a: number;
             ^^^^^^ [2]
    classes.js:15:6
    15|   b: string;
             ^^^^^^ [3]
-   classes.js:14:6
-   14|   a: number;
+   classes.js:16:6
+   16|   c: string;
             ^^^^^^ [4]
 
 
@@ -423,24 +423,24 @@ References:
 Error --------------------------------------------------------------------------------------------- object_types.js:18:2
 
 Cannot cast `true` to `ManyProps` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
+ - Either boolean [1] is incompatible with string [2].
  - Or boolean [1] is incompatible with string [3].
- - Or boolean [1] is incompatible with string [4].
+ - Or boolean [1] is incompatible with number [4].
 
    object_types.js:18:2
    18| (true: ManyProps); // Error: There is no property with the type of boolean.
         ^^^^ [1]
 
 References:
-   object_types.js:15:52
+   object_types.js:15:30
    15| type ManyProps = Values<{ a: string, b: string, c: number }>;
-                                                          ^^^^^^ [2]
+                                    ^^^^^^ [2]
    object_types.js:15:41
    15| type ManyProps = Values<{ a: string, b: string, c: number }>;
                                                ^^^^^^ [3]
-   object_types.js:15:30
+   object_types.js:15:52
    15| type ManyProps = Values<{ a: string, b: string, c: number }>;
-                                    ^^^^^^ [4]
+                                                          ^^^^^^ [4]
 
 
 Error -------------------------------------------------------------------------------------------- object_types.js:21:16
@@ -465,20 +465,20 @@ References:
 Error --------------------------------------------------------------------------------------------- object_types.js:25:2
 
 Cannot cast `'yo'` to `DictProps` because: [incompatible-type]
- - Either string [1] is incompatible with number [2].
- - Or string [1] is incompatible with boolean [3].
+ - Either string [1] is incompatible with boolean [2].
+ - Or string [1] is incompatible with number [3].
 
    object_types.js:25:2
    25| ('yo': DictProps); // Error: There is no property with the type of string.
         ^^^^ [1]
 
 References:
-   object_types.js:24:54
-   24| type DictProps = Values<{ a: boolean, [key: string]: number }>;
-                                                            ^^^^^^ [2]
    object_types.js:24:30
    24| type DictProps = Values<{ a: boolean, [key: string]: number }>;
-                                    ^^^^^^^ [3]
+                                    ^^^^^^^ [2]
+   object_types.js:24:54
+   24| type DictProps = Values<{ a: boolean, [key: string]: number }>;
+                                                            ^^^^^^ [3]
 
 
 Error -------------------------------------------------------------------------------------------- object_types.js:30:16
@@ -503,39 +503,39 @@ References:
 Error --------------------------------------------------------------------------------------------- object_types.js:38:2
 
 Cannot cast `true` to `Values` because: [incompatible-type]
- - Either boolean [1] is incompatible with number [2].
- - Or boolean [1] is incompatible with string [3].
+ - Either boolean [1] is incompatible with string [2].
+ - Or boolean [1] is incompatible with number [3].
 
    object_types.js:38:2
    38| (true: Values<CallableProp>); // Error: There is no property with the type of
         ^^^^ [1]
 
 References:
-   object_types.js:33:40
-   33| interface CallableProp { a: string; b: number; (): boolean }
-                                              ^^^^^^ [2]
    object_types.js:33:29
    33| interface CallableProp { a: string; b: number; (): boolean }
-                                   ^^^^^^ [3]
+                                   ^^^^^^ [2]
+   object_types.js:33:40
+   33| interface CallableProp { a: string; b: number; (): boolean }
+                                              ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- object_types.js:41:3
 
 Cannot cast function to `Values` because: [incompatible-type]
- - Either function [1] is incompatible with number [2].
- - Or function [1] is incompatible with string [3].
+ - Either function [1] is incompatible with string [2].
+ - Or function [1] is incompatible with number [3].
 
    object_types.js:41:3
    41| ((() => true): Values<CallableProp>); // Error: There is no property with a
          ^^^^^^^^^^ [1]
 
 References:
-   object_types.js:33:40
-   33| interface CallableProp { a: string; b: number; (): boolean }
-                                              ^^^^^^ [2]
    object_types.js:33:29
    33| interface CallableProp { a: string; b: number; (): boolean }
-                                   ^^^^^^ [3]
+                                   ^^^^^^ [2]
+   object_types.js:33:40
+   33| interface CallableProp { a: string; b: number; (): boolean }
+                                              ^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- object_types.js:69:2

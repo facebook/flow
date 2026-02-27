@@ -529,7 +529,7 @@ type-destructor.js:23:6,23:13
 type-destructor.js:27:6
 Flags:
 type Prop$Values = Values<Props>
-= string | number
+= number | string
 
 'Prop$Values' defined at type-destructor.js:27:5
 'Props' defined at type-destructor.js:3:5
@@ -539,7 +539,7 @@ type-destructor.js:27:6,27:16
 type-destructor.js:31:6
 Flags:
 type ValuesOfFrozenObject = Values<{|+A: "a", +B: "b"|}>
-= "b" | "a"
+= "a" | "b"
 
 'ValuesOfFrozenObject' defined at type-destructor.js:31:5
 
