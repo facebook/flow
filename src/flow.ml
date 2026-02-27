@@ -33,7 +33,6 @@ end = struct
       GraphCommand.command;
       DumpTypesCommand.command;
       FindModuleCommand.command;
-      FixCommand.command;
       ForceRecheckCommand.command;
       GetDefCommand.command;
       GleanCommand.command;

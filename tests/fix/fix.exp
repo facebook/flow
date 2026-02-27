@@ -1,4 +1,4 @@
-flow fix
+flow codemod fix-errors
 >>> upstream.js (#changes: 2)
 //@flow
 
@@ -13,7 +13,7 @@ export type T = interface {
 }
 
 >>> Launching report...
-flow fix --error-codes method-unbinding
+flow codemod fix-errors --error-codes method-unbinding
 >>> upstream.js (#changes: 1)
 //@flow
 
