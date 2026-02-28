@@ -27,6 +27,8 @@ show_help() {
   echo "        test saved state"
   echo "    -L"
   echo "        test long-lived workers"
+  echo "    -j"
+  echo "        output results as a JSON map (test_name: pass/fail boolean)"
   echo "    -v"
   echo "        verbose output (shows skipped tests)"
   echo "    -h"
@@ -48,11 +50,12 @@ record=0
 saved_state=0
 verbose=0
 quiet=0
+json_output=0
 relative="."
 check_only=0
 long_lived_workers=0
 export saved_state filter check_only long_lived_workers
-while getopts "b:d:f:clqxrsiLt:vh?" opt; do
+while getopts "b:d:f:cjlqxrsiLt:vh?" opt; do
   case "$opt" in
   b)
     FLOW="$OPTARG"
@@ -65,6 +68,10 @@ while getopts "b:d:f:clqxrsiLt:vh?" opt; do
     ;;
   c)
     check_only=1
+    ;;
+  j)
+    json_output=1
+    quiet=1
     ;;
   l)
     list_tests=1
@@ -295,35 +302,64 @@ print_result() {
     local test_to_print=$1
     code=${results[$test_to_print]}
     testname=${dirs[$test_to_print]}
+    local name=${testname%*/}
+    name=${name##*/}
     case $code in
       $RUNTEST_SUCCESS )
         (( passed++ ))
-        print_success "$testname" ;;
+        if [[ "$json_output" -eq 1 ]]; then
+          json_entries+=("\"$name\": true")
+        else
+          print_success "$testname"
+        fi
+        ;;
       $RUNTEST_FAILURE )
         (( failed++ ))
-        print_failure "$testname" ;;
+        if [[ "$json_output" -eq 1 ]]; then
+          json_entries+=("\"$name\": false")
+        else
+          print_failure "$testname"
+        fi
+        ;;
       $RUNTEST_SKIP )
         (( skipped++ ))
-        print_skip "$testname" "$verbose" ;;
+        if [[ "$json_output" -eq 0 ]]; then
+          print_skip "$testname" "$verbose"
+        fi
+        ;;
       $RUNTEST_MISSING_FILES )
         (( errored++ ))
-        print_error "$testname"
-        name=${testname%*/}
-        name=${name##*/}
-        printf "Missing %s.exp file or .flowconfig file\n" "$name" ;;
+        if [[ "$json_output" -eq 1 ]]; then
+          json_entries+=("\"$name\": false")
+        else
+          print_error "$testname"
+          printf "Missing %s.exp file or .flowconfig file\n" "$name"
+        fi
+        ;;
       $RUNTEST_MISSING_ALL_OPTION )
         (( errored++ ))
-        print_error "$testname"
-        echo 'You are required to set either `all=true` or `all=false` in your test `.flowconfig`.' ;;
+        if [[ "$json_output" -eq 1 ]]; then
+          json_entries+=("\"$name\": false")
+        else
+          print_error "$testname"
+          echo 'You are required to set either `all=true` or `all=false` in your test `.flowconfig`.'
+        fi
+        ;;
       $RUNTEST_ERROR | '')
         # '' means the parallel runner stopped before giving a result
         (( errored++ ))
-        print_error "$testname" ;;
+        if [[ "$json_output" -eq 1 ]]; then
+          json_entries+=("\"$name\": false")
+        else
+          print_error "$testname"
+        fi
+        ;;
     esac
 }
 
 # Collect the results in the order the tests finish
 next_test_to_print=0
+json_entries=()
 print_run "${dirs[$next_test_to_print]}"
 while read -ru 3 index code; do
     results[$index]=$code
@@ -345,6 +381,17 @@ while (( next_test_to_print < ${#dirs[@]} )); do
     print_result "$next_test_to_print"
     (( next_test_to_print++ ))
 done
+
+if [[ "$json_output" -eq 1 ]]; then
+  printf "{"
+  for (( i=0; i<${#json_entries[@]}; i++ )); do
+    if (( i > 0 )); then
+      printf ", "
+    fi
+    printf "%s" "${json_entries[$i]}"
+  done
+  printf "}\n"
+fi
 
 if [ "$failed" -eq 0 ]; then
   FAILED_COLOR="$COLOR_DEFAULT_BOLD"
