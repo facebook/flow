@@ -16,7 +16,6 @@ module Lex_mode : sig
     | TYPE
     | JSX_TAG
     | JSX_CHILD
-    | TEMPLATE
     | REGEXP
 
   val debug_string_of_lex_mode : t -> string
@@ -267,6 +266,8 @@ module Peek : sig
   val ith_is_identifier_name : i:int -> env -> bool
 
   val ith_is_type_identifier : i:int -> env -> bool
+
+  val lex_env : env -> Lex_env.t
 end
 
 module Eat : sig
@@ -279,6 +280,10 @@ module Eat : sig
   val pop_lex_mode : env -> unit
 
   val double_pop_lex_mode : env -> unit
+
+  val rescan_as_template : env -> unit
+
+  val rescan_as_template_from : env -> Lex_env.t -> unit
 
   val trailing_comments : env -> Loc.t Flow_ast.Comment.t list
 

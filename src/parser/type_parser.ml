@@ -566,9 +566,10 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     let rec template_parts env quasis types =
       let t = _type env in
       let types = t :: types in
+      let prev_lex_env = Parser_env.Peek.lex_env env in
       match Peek.token env with
       | T_RCURLY ->
-        Eat.push_lex_mode env Lex_mode.TEMPLATE;
+        Eat.rescan_as_template_from env prev_lex_env;
         let (loc, part, is_tail) =
           match Peek.token env with
           | T_TEMPLATE_PART (loc, cooked, raw, _, tail) ->
@@ -577,7 +578,6 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             (loc, { Element.value = { Element.cooked; raw }; tail }, tail)
           | _ -> assert false
         in
-        Eat.pop_lex_mode env;
         let quasis = (loc, part) :: quasis in
         if is_tail then
           (loc, List.rev quasis, List.rev types)

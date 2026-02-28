@@ -12,6 +12,8 @@ type t = {
   lex_comments: Loc.t Flow_ast.Comment.t list;
 }
 
+let with_comments result lex_comments = { result with lex_comments }
+
 let token result = result.lex_token
 
 let loc result = result.lex_loc

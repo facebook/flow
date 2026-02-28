@@ -13,6 +13,10 @@ val jsx_tag : Lex_env.t -> Lex_env.t * Lex_result.t
 
 val template_tail : Lex_env.t -> Lex_env.t * Lex_result.t
 
+val template_tail_start : Lex_env.t -> Lex_env.t * Lex_result.t
+
+val advance_loc_by_char : Loc.t -> Loc.t
+
 val type_token : Lex_env.t -> Lex_env.t * Lex_result.t
 
 val token : Lex_env.t -> Lex_env.t * Lex_result.t

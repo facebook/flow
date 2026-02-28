@@ -15,7 +15,6 @@ module Lex_mode = struct
     | TYPE
     | JSX_TAG
     | JSX_CHILD
-    | TEMPLATE
     | REGEXP
 
   let debug_string_of_lex_mode (mode : t) =
@@ -24,7 +23,6 @@ module Lex_mode = struct
     | TYPE -> "TYPE"
     | JSX_TAG -> "JSX_TAG"
     | JSX_CHILD -> "JSX_CHILD"
-    | TEMPLATE -> "TEMPLATE"
     | REGEXP -> "REGEXP"
 end
 
@@ -52,6 +50,10 @@ module Lookahead : sig
   val lex_env_0 : t -> Lex_env.t
 
   val junk : t -> unit
+
+  val rescan_template_part : t -> Lex_env.t -> unit
+
+  val rescan_template_part_from : t -> Lex_env.t -> Lex_env.t -> unit
 end = struct
   type la_result = (Lex_env.t * Lex_result.t) option
 
@@ -75,7 +77,6 @@ end = struct
       | Lex_mode.TYPE -> Flow_lexer.type_token lex_env
       | Lex_mode.JSX_TAG -> Flow_lexer.jsx_tag lex_env
       | Lex_mode.JSX_CHILD -> Flow_lexer.jsx_child lex_env
-      | Lex_mode.TEMPLATE -> Flow_lexer.template_tail lex_env
       | Lex_mode.REGEXP -> Flow_lexer.regexp lex_env
     in
     let cloned_env = Lex_env.clone lex_env in
@@ -115,6 +116,35 @@ end = struct
     | Some _ ->
       t.la_results_0 <- t.la_results_1;
       t.la_results_1 <- None
+
+  (* Rescan the current position using the template tail lexer.
+     This replaces push_lex_mode(TEMPLATE) by directly lexing a template
+     continuation without modifying the lex mode stack. *)
+  let rescan_template_part t lex_env =
+    t.la_lex_env <- Lex_env.clone lex_env;
+    t.la_results_0 <- None;
+    t.la_results_1 <- None;
+    let (lex_env, lex_result) = Flow_lexer.template_tail t.la_lex_env in
+    let cloned_env = Lex_env.clone lex_env in
+    t.la_lex_env <- lex_env;
+    t.la_results_0 <- Some (cloned_env, lex_result)
+
+  let rescan_template_part_from t lex_env prev_lex_env =
+    let existing_comments =
+      match t.la_results_0 with
+      | Some (_, result) -> Lex_result.comments result
+      | None -> []
+    in
+    let env = Lex_env.clone prev_lex_env in
+    let env = Lex_env.set_last_loc env (Lex_env.lex_last_loc lex_env) in
+    t.la_lex_env <- env;
+    t.la_results_0 <- None;
+    t.la_results_1 <- None;
+    let (lex_env, lex_result) = Flow_lexer.template_tail_start t.la_lex_env in
+    let lex_result = Lex_result.with_comments lex_result existing_comments in
+    let cloned_env = Lex_env.clone lex_env in
+    t.la_lex_env <- lex_env;
+    t.la_results_0 <- Some (cloned_env, lex_result)
 end
 
 type token_sink_result = {
@@ -918,7 +948,6 @@ let token_is_type_identifier env t =
   end
   | Lex_mode.JSX_TAG
   | Lex_mode.JSX_CHILD
-  | Lex_mode.TEMPLATE
   | Lex_mode.REGEXP ->
     false
 
@@ -1195,6 +1224,14 @@ module Eat = struct
     in
     env.lex_mode_stack := new_stack;
     env.lookahead := Lookahead.create !(env.lex_env) (lex_mode env)
+
+  (* Rescan the current position as a template continuation (template middle/tail).
+     This replaces the pattern of push_lex_mode(TEMPLATE) + pop_lex_mode()
+     by directly lexing a template tail without modifying the lex mode stack. *)
+  let rescan_as_template env = Lookahead.rescan_template_part !(env.lookahead) !(env.lex_env)
+
+  let rescan_as_template_from env prev_lex_env =
+    Lookahead.rescan_template_part_from !(env.lookahead) !(env.lex_env) prev_lex_env
 
   let trailing_comments env =
     let open Loc in

@@ -49,6 +49,18 @@ let clone env =
   let lex_lb = Sedlexing.lexbuf_clone env.lex_lb in
   { env with lex_lb }
 
+let set_lexbuf_pos env pos =
+  let lexbuf = env.lex_lb in
+  let start = Sedlexing.lexeme_start lexbuf in
+  Sedlexing.rollback lexbuf;
+  Sedlexing.bump lexbuf (pos - start);
+  Sedlexing.set_lexeme_start lexbuf pos;
+  env
+
+let set_last_loc env loc = { env with lex_last_loc = loc }
+
+let lex_last_loc env = env.lex_last_loc
+
 let lexbuf env = env.lex_lb
 
 let source env = env.lex_source

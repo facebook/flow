@@ -240,6 +240,10 @@ let loc_of_token env lex_token =
   | T_REGEXP (loc, _, _) -> loc
   | _ -> loc_of_lexbuf env env.lex_lb
 
+let advance_loc_by_char loc =
+  let open Loc in
+  { loc with start = loc._end; _end = { loc._end with column = loc._end.column + 1 } }
+
 let lex_error (env : Lex_env.t) loc err : Lex_env.t =
   let lex_errors_acc = (loc, err) :: env.lex_state.lex_errors_acc in
   { env with lex_state = { lex_errors_acc } }
@@ -1715,6 +1719,37 @@ let template_tail env lexbuf =
     let env = illegal env (loc_of_lexbuf env lexbuf) in
     Token (env, T_TEMPLATE_PART (loc_of_lexbuf env lexbuf, "", "", false, true))
   | _ -> failwith "unreachable template_tail"
+
+let template_tail_start env =
+  let lexbuf = env.lex_lb in
+  let start_pos = Sedlexing.lexeme_start lexbuf in
+  let end_pos = Sedlexing.lexeme_end lexbuf in
+  let start = pos_at_offset env start_pos in
+  Sedlexing.rollback lexbuf;
+  Sedlexing.bump lexbuf (end_pos - start_pos);
+  Sedlexing.set_lexeme_start lexbuf end_pos;
+  let value = Buffer.create 127 in
+  let raw = Buffer.create 127 in
+  let (env, is_tail) = template_part env value raw lexbuf in
+  let _end = end_pos_of_lexbuf env lexbuf in
+  let loc = { Loc.source = Lex_env.source env; start; _end } in
+  let lex_token =
+    T_TEMPLATE_PART (loc, Buffer.contents value, Buffer.contents raw, false, is_tail)
+  in
+  let lex_errors_acc = env.lex_state.lex_errors_acc in
+  if lex_errors_acc = [] then
+    ( { env with lex_last_loc = loc },
+      { Lex_result.lex_token; lex_loc = loc; lex_comments = []; lex_errors = [] }
+    )
+  else
+    ( { env with lex_last_loc = loc; lex_state = Lex_env.empty_lex_state },
+      {
+        Lex_result.lex_token;
+        lex_loc = loc;
+        lex_comments = [];
+        lex_errors = List.rev lex_errors_acc;
+      }
+    )
 
 (* Lexing JSX children requires a string buffer to keep track of whitespace
  * *)

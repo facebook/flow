@@ -28,7 +28,6 @@ with type t = Impl.t = struct
                 | TYPE -> "type"
                 | JSX_TAG -> "jsxTag"
                 | JSX_CHILD -> "jsxChild"
-                | TEMPLATE -> "template"
                 | REGEXP -> "regexp"
               )
           );
