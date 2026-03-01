@@ -50,3 +50,6 @@ export {type SomeType}; // ERROR
 
 // Template literal type
 type TLT = `foo ${string}`; // ERROR
+
+// Unique symbol
+declare const us: unique symbol; // ERROR

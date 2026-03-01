@@ -129,6 +129,7 @@ and ts_lib_syntax_kind =
   | DeclareVariableMultipleDeclarators
   | DeclareVariableLiteralInit
   | TemplateLiteralType
+  | UniqueSymbolType
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

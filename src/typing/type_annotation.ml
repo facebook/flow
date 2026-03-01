@@ -393,6 +393,16 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           env.cx
           (Error_message.ETSSyntax { kind = Error_message.TSUndefined; loc });
       ((loc, VoidT.at loc), t_ast)
+    | (loc, UniqueSymbol _) as t ->
+      if not (Context.tslib_syntax env.cx) then (
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.(TSLibSyntax UniqueSymbolType))
+          );
+        Tast_utils.error_mapper#type_ t
+      ) else
+        ((loc, SymbolT.at loc), snd t)
     | (loc, Nullable { Nullable.argument = t; comments }) ->
       let (((_, t), _) as t_ast) = convert env t in
       let reason = mk_annot_reason (RMaybe (desc_of_t t)) loc in

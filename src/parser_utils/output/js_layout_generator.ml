@@ -5029,6 +5029,7 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.Unknown comments -> layout_node_with_comments_opt loc comments (Atom "unknown")
       | T.Never comments -> layout_node_with_comments_opt loc comments (Atom "never")
       | T.Undefined comments -> layout_node_with_comments_opt loc comments (Atom "undefined")
+      | T.UniqueSymbol comments -> layout_node_with_comments_opt loc comments (Atom "unique symbol")
       | T.Nullable t -> type_nullable ~opts loc t
       | T.Function func -> type_function ~opts ~sep:(fuse [pretty_space; Atom "=>"]) loc func
       | T.Component comp -> type_component ~opts loc comp

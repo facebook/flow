@@ -580,7 +580,8 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
         | Exists _
         | Unknown _
         | Never _
-        | Undefined _ ->
+        | Undefined _
+        | UniqueSymbol _ ->
           this#found_empty "type literal"
         | Nullable _
         | Array _

@@ -1670,6 +1670,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Unknown comments -> Unknown (this#syntax_opt comments)
         | Never comments -> Never (this#syntax_opt comments)
         | Undefined comments -> Undefined (this#syntax_opt comments)
+        | UniqueSymbol comments -> UniqueSymbol (this#syntax_opt comments)
         | Nullable t' -> Nullable (this#nullable_type t')
         | Array t' -> Array (this#array_type t')
         | Conditional t' -> Conditional (this#conditional_type t')

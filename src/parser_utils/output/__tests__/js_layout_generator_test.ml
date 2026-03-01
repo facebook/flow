@@ -3204,6 +3204,10 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "type X = renders* number;";
            assert_statement_string ~ctxt ~pretty:false "type X=renders* number;"
          );
+         ( "unique_symbol" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "declare const x: unique symbol;";
+           assert_statement_string ~ctxt ~pretty:true "type T = unique symbol;"
+         );
          ( "records" >:: fun ctxt ->
            assert_statement_string
              ~ctxt

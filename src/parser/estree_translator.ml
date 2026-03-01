@@ -2117,6 +2117,7 @@ with type t = Impl.t = struct
         | Unknown comments -> unknown_type loc comments
         | Never comments -> never_type loc comments
         | Undefined comments -> undefined_type loc comments
+        | UniqueSymbol comments -> unique_symbol_type loc comments
       )
     and any_type loc comments = node ?comments "AnyTypeAnnotation" loc []
     and mixed_type loc comments = node ?comments "MixedTypeAnnotation" loc []
@@ -2133,6 +2134,12 @@ with type t = Impl.t = struct
     and unknown_type loc comments = node ?comments "UnknownTypeAnnotation" loc []
     and never_type loc comments = node ?comments "NeverTypeAnnotation" loc []
     and undefined_type loc comments = node ?comments "UndefinedTypeAnnotation" loc []
+    and unique_symbol_type loc comments =
+      node
+        ?comments
+        "TypeOperator"
+        loc
+        [("operator", string "unique"); ("typeAnnotation", node "SymbolTypeAnnotation" loc [])]
     and return_annotation = function
       | Ast.Type.Function.Missing _ -> null
       | Ast.Type.Function.Available t -> _type t

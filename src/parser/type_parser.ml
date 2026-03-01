@@ -454,6 +454,15 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     | T_RENDERS_QUESTION
     | T_RENDERS_STAR ->
       with_loc (fun env -> Type.Renders (render_type env)) env
+    | T_IDENTIFIER { raw = "unique"; _ } when Peek.ith_token ~i:1 env = T_SYMBOL_TYPE ->
+      with_loc
+        (fun env ->
+          let leading = Peek.comments env in
+          Eat.token env;
+          let trailing = Eat.trailing_comments env in
+          Eat.token env;
+          Type.UniqueSymbol (Flow_ast_utils.mk_comments_opt ~leading ~trailing ()))
+        env
     | T_IDENTIFIER { raw = "hook"; _ } when (parse_options env).components ->
       (match Peek.ith_token ~i:1 env with
       | T_LESS_THAN
@@ -2295,6 +2304,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       | Unknown comments -> Unknown (merge_comments comments)
       | Never comments -> Never (merge_comments comments)
       | Undefined comments -> Undefined (merge_comments comments)
+      | UniqueSymbol comments -> UniqueSymbol (merge_comments comments)
       | Nullable ({ Nullable.comments; _ } as t) ->
         Nullable { t with Nullable.comments = merge_comments comments }
       | Function ({ Function.comments; _ } as t) ->

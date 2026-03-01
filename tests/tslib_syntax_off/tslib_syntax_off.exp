@@ -149,5 +149,13 @@ Template literal type is not enabled. [unsupported-syntax]
                   ^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:55:19
 
-Found 18 errors
+`unique symbol` type is not enabled. [unsupported-syntax]
+
+   55| declare const us: unique symbol; // ERROR
+                         ^^^^^^^^^^^^^
+
+
+
+Found 19 errors

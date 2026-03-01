@@ -84,5 +84,22 @@ Destructuring is not supported in `declare` variable declarations. [unsupported-
                      ^^^
 
 
+Error --------------------------------------------------------------------------------------------- unique_symbol.js:7:1
 
-Found 7 errors
+Cannot cast `x` to empty because symbol [1] is incompatible with empty [2]. [incompatible-type]
+
+   unique_symbol.js:7:1
+   7| x as empty; // ERROR
+      ^
+
+References:
+   unique_symbol.js:1:18
+   1| declare const x: unique symbol;
+                       ^^^^^^^^^^^^^ [1]
+   unique_symbol.js:7:6
+   7| x as empty; // ERROR
+           ^^^^^ [2]
+
+
+
+Found 8 errors

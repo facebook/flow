@@ -5201,6 +5201,7 @@ let to_printable_error :
         | DeclareVariableLiteralInit -> "`declare` variable with literal initializer"
         | ExportTypeSpecifier -> "Inline `type` modifier on export specifier"
         | TemplateLiteralType -> "Template literal type"
+        | UniqueSymbolType -> "`unique symbol` type"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->
