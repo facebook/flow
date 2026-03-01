@@ -5205,6 +5205,7 @@ let to_printable_error :
         | TypeofImport -> "`typeof import(\"module\")` syntax"
         | ImplementsDottedPath -> "`implements` with dotted path"
         | OptionalClassProperty -> "Optional class property (`?:`)"
+        | OptionalShorthandMethod -> "Optional method signature"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

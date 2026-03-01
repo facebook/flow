@@ -2087,6 +2087,19 @@ and indexer opts scope tbls xs dict =
   let value = annot opts scope tbls xs v in
   ObjDict { name; polarity = polarity variance; key; value }
 
+and optional_method_as_field opts scope tbls xs id_loc fn_loc fn =
+  (* Optional method: treat as optional field with function type.
+     We must push fn_loc before id_loc because they share the same
+     start position and fn_loc has a larger end, so fn_loc must come
+     first in Packed_locs.compare_locs order. We then call
+     function_type (not annot) to avoid pushing all inner locs
+     before id_loc. *)
+  let fn_loc = push_loc tbls fn_loc in
+  let id_loc = push_loc tbls id_loc in
+  let def = function_type opts scope tbls xs fn in
+  let t = Annot (Optional (Annot (FunAnnot (fn_loc, def)))) in
+  (id_loc, t)
+
 and object_type =
   let module O = T.Object in
   let module Acc = ObjAnnotAcc in
@@ -2121,7 +2134,14 @@ and object_type =
         | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
         | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ->
           if _method then
-            add_method opts scope tbls xs acc id_loc name t
+            if optional then
+              match t with
+              | (fn_loc, T.Function f) ->
+                let (id_loc, t) = optional_method_as_field opts scope tbls xs id_loc fn_loc f in
+                Acc.add_field name id_loc (polarity variance) t acc
+              | _ -> failwith "unexpected optional method type"
+            else
+              add_method opts scope tbls xs acc id_loc name t
           else
             let id_loc = push_loc tbls id_loc in
             let loc = push_loc tbls (fst t) in
@@ -2328,10 +2348,15 @@ and interface_props =
     | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
       (match (_method, value) with
       | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
-        let fn_loc = push_loc tbls fn_loc in
-        let id_loc = push_loc tbls id_loc in
-        let def = function_type opts scope tbls xs fn in
-        Acc.append_method name id_loc fn_loc def acc
+        if optional then
+          let (id_loc, t) = optional_method_as_field opts scope tbls xs id_loc fn_loc fn in
+          let polarity = polarity variance in
+          Acc.add_field name id_loc polarity t acc
+        else
+          let fn_loc = push_loc tbls fn_loc in
+          let id_loc = push_loc tbls id_loc in
+          let def = function_type opts scope tbls xs fn in
+          Acc.append_method name id_loc fn_loc def acc
       | (true, _) -> acc (* unexpected non-function method *)
       | (false, O.Property.Init t) ->
         let id_loc = push_loc tbls id_loc in
@@ -2427,10 +2452,18 @@ and declare_class_props =
       | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
         (match (_method, value) with
         | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
-          let fn_loc = push_loc tbls fn_loc in
-          let id_loc = push_loc tbls id_loc in
-          let def = function_type ~is_constructor:(name = "constructor") opts scope tbls xs fn in
-          Acc.append_method ~static name id_loc fn_loc def acc
+          if optional then
+            let (id_loc, t) = optional_method_as_field opts scope tbls xs id_loc fn_loc fn in
+            let polarity = polarity variance in
+            if proto then
+              Acc.add_proto_field name id_loc polarity t acc
+            else
+              Acc.add_field ~static name id_loc polarity t acc
+          else
+            let fn_loc = push_loc tbls fn_loc in
+            let id_loc = push_loc tbls id_loc in
+            let def = function_type ~is_constructor:(name = "constructor") opts scope tbls xs fn in
+            Acc.append_method ~static name id_loc fn_loc def acc
         | (true, _) -> acc (* unexpected non-function method *)
         | (false, O.Property.Init t) ->
           let id_loc = push_loc tbls id_loc in

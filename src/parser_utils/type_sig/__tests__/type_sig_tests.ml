@@ -3425,6 +3425,119 @@ let%expect_test "object_annot_method" =
                     effect_ = ArbitraryEffect}} };
               proto = ObjAnnotImplicitProto})} |}]
 
+let%expect_test "object_annot_optional_method" =
+  print_sig {|
+    export type A = { m?(): void };
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"A"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-13];
+         custom_error_loc_opt = None;
+         name = "A"; tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [1:16-30];
+              obj_kind = InexactObj;
+              props =
+              { "m" ->
+                (ObjAnnotField ([1:18-19],
+                   (Annot
+                      (Optional
+                         (Annot
+                            (FunAnnot ([1:18-28],
+                               FunSig {
+                                 tparams = Mono;
+                                 params = [];
+                                 rest_param = None;
+                                 this_param = None;
+                                 return = (Annot (Void [1:24-28]));
+                                 type_guard = None;
+                                 effect_ = ArbitraryEffect}
+                               ))))),
+                   Polarity.Neutral)) };
+              proto = ObjAnnotImplicitProto})} |}]
+
+let%expect_test "interface_optional_method" =
+  print_sig {|
+    export interface I { m?(): void }
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"I"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Local defs:
+    0. Interface {id_loc = [1:17-18];
+         name = "I"; tparams = Mono;
+         def =
+         InterfaceSig {extends = [];
+           props =
+           { "m" ->
+             (InterfaceField ((Some [1:21-22]),
+                (Annot
+                   (Optional
+                      (Annot
+                         (FunAnnot ([1:21-31],
+                            FunSig {tparams = Mono;
+                              params = [];
+                              rest_param = None;
+                              this_param = None;
+                              return = (Annot (Void [1:27-31]));
+                              type_guard = None;
+                              effect_ = ArbitraryEffect}
+                            ))))),
+                Polarity.Neutral)) };
+           calls = []; dict = None}} |}]
+
+let%expect_test "declare_class_optional_method" =
+  print_sig {|
+    declare export class C { m?(): void }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"C"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. DeclareClassBinding {id_loc = [1:21-22];
+         nominal_id_loc = [1:21-22];
+         name = "C";
+         def =
+         DeclareClassSig {tparams = Mono;
+           extends = ClassImplicitExtends;
+           mixins = []; implements = [];
+           static_props = {};
+           own_props =
+           { "m" ->
+             (InterfaceField ((Some [1:25-26]),
+                (Annot
+                   (Optional
+                      (Annot
+                         (FunAnnot ([1:25-35],
+                            FunSig {tparams = Mono;
+                              params = [];
+                              rest_param = None;
+                              this_param = None;
+                              return = (Annot (Void [1:31-35]));
+                              type_guard = None;
+                              effect_ = ArbitraryEffect}
+                            ))))),
+                Polarity.Neutral)) };
+           proto_props = {}; static_calls = [];
+           calls = []; dict = None; static_dict = None}} |}]
+
 let%expect_test "object_annot_call_poly" =
   print_sig {|
     export type A = { <T>(X): X };

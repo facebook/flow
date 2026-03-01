@@ -181,5 +181,13 @@ Optional class property (`?:`) is not enabled. [unsupported-syntax]
          ^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:72:14
 
-Found 22 errors
+Optional method signature is not enabled. [unsupported-syntax]
+
+   72| type OSM = { f?(): void }; // ERROR
+                    ^^^^^^^^^^
+
+
+
+Found 23 errors

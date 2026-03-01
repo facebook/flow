@@ -133,6 +133,7 @@ and ts_lib_syntax_kind =
   | TypeofImport
   | ImplementsDottedPath
   | OptionalClassProperty
+  | OptionalShorthandMethod
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

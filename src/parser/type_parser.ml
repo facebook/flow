@@ -1274,7 +1274,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           { Type.Function.params; return; tparams; comments = None; effect_ = Function.Arbitrary })
         env
     in
-    let method_property env start_loc static abstract key ~ts_accessibility ~leading =
+    let method_property env start_loc static abstract key ~optional ~ts_accessibility ~leading =
       let key = object_key_remove_trailing env key in
       let tparams =
         type_params_remove_trailing env ~kind:Flow_ast_mapper.FunctionTypeTP (type_params env)
@@ -1287,7 +1287,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             {
               Property.key;
               value = Property.Init value;
-              optional = false;
+              optional;
               static = static <> None;
               proto = false;
               _method = true;
@@ -1923,7 +1923,33 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             | T_LPAREN ->
               error_unexpected_proto env proto;
               error_unexpected_variance env variance;
-              method_property env start_loc static abstract key ~ts_accessibility ~leading
+              method_property
+                env
+                start_loc
+                static
+                abstract
+                key
+                ~optional:false
+                ~ts_accessibility
+                ~leading
+            | T_PLING
+              when match Peek.ith_token ~i:1 env with
+                   | T_LPAREN
+                   | T_LESS_THAN ->
+                     true
+                   | _ -> false ->
+              Eat.token env;
+              error_unexpected_proto env proto;
+              error_unexpected_variance env variance;
+              method_property
+                env
+                start_loc
+                static
+                abstract
+                key
+                ~optional:true
+                ~ts_accessibility
+                ~leading
             | T_COLON
             | T_PLING ->
               init_property
@@ -1951,7 +1977,33 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             | T_LPAREN ->
               error_unexpected_proto env proto;
               error_unexpected_variance env variance;
-              method_property env start_loc static abstract key ~ts_accessibility ~leading
+              method_property
+                env
+                start_loc
+                static
+                abstract
+                key
+                ~optional:false
+                ~ts_accessibility
+                ~leading
+            | T_PLING
+              when match Peek.ith_token ~i:1 env with
+                   | T_LPAREN
+                   | T_LESS_THAN ->
+                     true
+                   | _ -> false ->
+              Eat.token env;
+              error_unexpected_proto env proto;
+              error_unexpected_variance env variance;
+              method_property
+                env
+                start_loc
+                static
+                abstract
+                key
+                ~optional:true
+                ~ts_accessibility
+                ~leading
             | _ ->
               error_invalid_property_name env is_class static key;
               init_property

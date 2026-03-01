@@ -2244,6 +2244,10 @@ let tests =
            assert_statement_string ~ctxt "type a={set a():b};";
            assert_statement_string ~ctxt ~pretty:true "type a = { set a(): b };";
            assert_statement_string ~ctxt "type a={a?:()=>a};";
+           assert_statement_string ~ctxt "type a={a?():b};";
+           assert_statement_string ~ctxt ~pretty:true "type a = { a?(): b };";
+           assert_statement_string ~ctxt "type a={a?(x:string):b};";
+           assert_statement_string ~ctxt ~pretty:true "type a = { a?(x: string): b };";
            assert_statement_string ~ctxt "type a={+a:()=>a};";
            assert_statement_string ~ctxt "type a={():a};";
            assert_statement_string ~ctxt "type a={[b]:a};";

@@ -4564,6 +4564,20 @@ and type_object_property ~opts =
                   type_function ~opts ~sep:(Atom ":") loc func;
                 ]
             )
+        (* Optional methods: key?(): Type *)
+        | (Property.Init (loc, Ast.Type.Function func), true, false, true) ->
+          source_location_with_comments
+            ( loc,
+              fuse
+                [
+                  s_accessibility;
+                  s_abstract;
+                  s_static;
+                  object_property_key ~opts key;
+                  Atom "?";
+                  type_function ~opts ~sep:(Atom ":") loc func;
+                ]
+            )
         (* Normal properties *)
         | (Property.Init (_, Ast.Type.Any None), _, _, _) when ts_accessibility <> None ->
           (* Property with accessibility modifier but no annotation, e.g. `private x` *)

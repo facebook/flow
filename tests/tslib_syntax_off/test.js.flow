@@ -67,3 +67,6 @@ declare class IDP implements ns.IFace {} // ERROR
 class OCP {
   x?: number; // ERROR
 }
+
+// Optional shorthand method
+type OSM = { f?(): void }; // ERROR

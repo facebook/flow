@@ -1999,100 +1999,110 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           Flow_js_utils.add_output
             env.cx
             (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
-        let prop_of_name ~loc name =
-          let (((_, t), _) as value_ast) = convert env value in
-          let prop_ast t =
-            {
-              prop with
-              Object.Property.key =
-                begin
-                  match key with
-                  | Ast.Expression.Object.Property.StringLiteral (_, lit) ->
-                    Ast.Expression.Object.Property.StringLiteral ((loc, t), lit)
-                  | Ast.Expression.Object.Property.NumberLiteral (_, lit) ->
-                    Ast.Expression.Object.Property.NumberLiteral ((loc, t), lit)
-                  | Ast.Expression.Object.Property.Identifier
-                      (_loc, { Ast.Identifier.name = _; comments = comments_inner }) ->
-                    Ast.Expression.Object.Property.Identifier
-                      ((loc, t), { Ast.Identifier.name; comments = comments_inner })
-                  | _ -> assert_false "branch invariant"
-                end;
-              value = Object.Property.Init value_ast;
-            }
-          in
-          if name = "__proto__" && (not (_method || optional)) && variance = None then
-            let reason = mk_reason RPrototype (fst value) in
-            let proto = ConsGen.obj_test_proto env.cx reason t in
-            let acc =
-              match Acc.add_proto (TypeUtil.typeof_annotation reason proto None) acc with
-              | Ok acc -> acc
-              | Error err ->
-                Flow_js_utils.add_output env.cx Error_message.(EUnsupportedSyntax (loc, err));
-                acc
-            in
-            (acc, prop_ast proto)
-          else
-            let t =
-              if optional then
-                TypeUtil.optional t
-              else
-                t
-            in
-            let prop =
-              if _method then
-                Properties.add_method (OrdinaryName name) (Some loc) t
-              else
-                Properties.add_field
-                  (OrdinaryName name)
-                  (polarity env.cx variance)
-                  ~key_loc:(Some loc)
-                  t
-            in
-            (Acc.add_prop prop acc, prop_ast t)
-        in
-        (match key with
-        | Ast.Expression.Object.Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ })
-        | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments = _ }) ->
-          prop_of_name ~loc name
-        | Ast.Expression.Object.Property.NumberLiteral (loc, { Ast.NumberLiteral.value; _ }) ->
-          (match variance with
-          | Some (_, Ast.Variance.{ kind = Plus; _ })
-          | Some (_, Ast.Variance.{ kind = Minus; _ }) ->
-            Flow_js_utils.add_output env.cx (Error_message.EAmbiguousNumericKeyWithVariance loc);
-            let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
-            (acc, prop_ast)
-          | _ ->
-            if Js_number.is_float_safe_integer value then
-              let name = Dtoa.ecma_string_of_float value in
-              prop_of_name ~loc name
-            else (
-              Flow_js_utils.add_output
-                env.cx
-                (Error_message.EUnsupportedKeyInObject
-                   {
-                     loc;
-                     obj_kind = `Type;
-                     key_error_kind =
-                       Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value;
-                   }
-                );
-              let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
-              (acc, prop_ast)
-            ))
-        | Ast.Expression.Object.Property.BigIntLiteral (loc, _)
-        | Ast.Expression.Object.Property.PrivateName (loc, _)
-        | Ast.Expression.Object.Property.Computed (loc, _) ->
+        if optional && _method && not (Context.tslib_syntax env.cx) then (
           Flow_js_utils.add_output
             env.cx
-            (Error_message.EUnsupportedKeyInObject
-               {
-                 loc;
-                 obj_kind = `Type;
-                 key_error_kind = Flow_intermediate_error_types.InvalidObjKey.Other;
-               }
+            (Error_message.EUnsupportedSyntax
+               (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalShorthandMethod))
             );
           let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
-          (acc, prop_ast))
+          (acc, prop_ast)
+        ) else
+          let prop_of_name ~loc name =
+            let (((_, t), _) as value_ast) = convert env value in
+            let prop_ast t =
+              {
+                prop with
+                Object.Property.key =
+                  begin
+                    match key with
+                    | Ast.Expression.Object.Property.StringLiteral (_, lit) ->
+                      Ast.Expression.Object.Property.StringLiteral ((loc, t), lit)
+                    | Ast.Expression.Object.Property.NumberLiteral (_, lit) ->
+                      Ast.Expression.Object.Property.NumberLiteral ((loc, t), lit)
+                    | Ast.Expression.Object.Property.Identifier
+                        (_loc, { Ast.Identifier.name = _; comments = comments_inner }) ->
+                      Ast.Expression.Object.Property.Identifier
+                        ((loc, t), { Ast.Identifier.name; comments = comments_inner })
+                    | _ -> assert_false "branch invariant"
+                  end;
+                value = Object.Property.Init value_ast;
+              }
+            in
+            if name = "__proto__" && (not (_method || optional)) && variance = None then
+              let reason = mk_reason RPrototype (fst value) in
+              let proto = ConsGen.obj_test_proto env.cx reason t in
+              let acc =
+                match Acc.add_proto (TypeUtil.typeof_annotation reason proto None) acc with
+                | Ok acc -> acc
+                | Error err ->
+                  Flow_js_utils.add_output env.cx Error_message.(EUnsupportedSyntax (loc, err));
+                  acc
+              in
+              (acc, prop_ast proto)
+            else
+              let t =
+                if optional then
+                  TypeUtil.optional t
+                else
+                  t
+              in
+              let prop =
+                if _method then
+                  Properties.add_method (OrdinaryName name) (Some loc) t
+                else
+                  Properties.add_field
+                    (OrdinaryName name)
+                    (polarity env.cx variance)
+                    ~key_loc:(Some loc)
+                    t
+              in
+              (Acc.add_prop prop acc, prop_ast t)
+          in
+          (match key with
+          | Ast.Expression.Object.Property.StringLiteral (loc, { Ast.StringLiteral.value = name; _ })
+          | Ast.Expression.Object.Property.Identifier (loc, { Ast.Identifier.name; comments = _ })
+            ->
+            prop_of_name ~loc name
+          | Ast.Expression.Object.Property.NumberLiteral (loc, { Ast.NumberLiteral.value; _ }) ->
+            (match variance with
+            | Some (_, Ast.Variance.{ kind = Plus; _ })
+            | Some (_, Ast.Variance.{ kind = Minus; _ }) ->
+              Flow_js_utils.add_output env.cx (Error_message.EAmbiguousNumericKeyWithVariance loc);
+              let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
+              (acc, prop_ast)
+            | _ ->
+              if Js_number.is_float_safe_integer value then
+                let name = Dtoa.ecma_string_of_float value in
+                prop_of_name ~loc name
+              else (
+                Flow_js_utils.add_output
+                  env.cx
+                  (Error_message.EUnsupportedKeyInObject
+                     {
+                       loc;
+                       obj_kind = `Type;
+                       key_error_kind =
+                         Flow_intermediate_error_types.InvalidObjKey.kind_of_num_value value;
+                     }
+                  );
+                let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
+                (acc, prop_ast)
+              ))
+          | Ast.Expression.Object.Property.BigIntLiteral (loc, _)
+          | Ast.Expression.Object.Property.PrivateName (loc, _)
+          | Ast.Expression.Object.Property.Computed (loc, _) ->
+            Flow_js_utils.add_output
+              env.cx
+              (Error_message.EUnsupportedKeyInObject
+                 {
+                   loc;
+                   obj_kind = `Type;
+                   key_error_kind = Flow_intermediate_error_types.InvalidObjKey.Other;
+                 }
+              );
+            let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
+            (acc, prop_ast))
       (* unsafe getter property *)
       | {
        Object.Property.key =
@@ -2888,8 +2898,12 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   Flow_js_utils.add_output
                     env.cx
                     (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
-                if optional && _method then
-                  Flow_js_utils.add_output env.cx Error_message.(EInternal (loc, OptionalMethod));
+                if optional && _method && not (Context.tslib_syntax env.cx) then
+                  Flow_js_utils.add_output
+                    env.cx
+                    (Error_message.EUnsupportedSyntax
+                       (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalShorthandMethod))
+                    );
                 let polarity = polarity env.cx variance in
                 let (x, prop) =
                   Ast.Expression.Object.(
