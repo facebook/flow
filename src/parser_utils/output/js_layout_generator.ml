@@ -2073,6 +2073,7 @@ and function_param ~ctxt ~opts (loc, param) : Layout.layout_node =
         value;
         annot;
         static;
+        optional;
         variance;
         ts_accessibility;
         decorators;
@@ -2089,6 +2090,7 @@ and function_param ~ctxt ~opts (loc, param) : Layout.layout_node =
       ts_accessibility
       decorators
       comments
+      ~optional
 
 and function_params_and_return
     ~opts (loc, { Ast.Function.params; predicate; return; tparams; comments; _ }) =
@@ -2554,7 +2556,7 @@ and class_abstract_property
     )
 
 and class_property_helper
-    ~opts loc key value static annot variance_ ts_accessibility decorators comments =
+    ~opts loc key value static annot variance_ ts_accessibility decorators comments ~optional =
   let (declare, value) =
     match value with
     | Ast.Class.Property.Declared -> (true, None)
@@ -2581,6 +2583,11 @@ and class_property_helper
           );
           option variance variance_;
           key;
+          ( if optional then
+            Atom "?"
+          else
+            Empty
+          );
           hint (type_annotation ~opts) annot;
           begin
             match value with
@@ -2604,6 +2611,7 @@ and class_property
         Ast.Class.Property.key;
         value;
         static;
+        optional;
         annot;
         variance;
         ts_accessibility;
@@ -2623,6 +2631,7 @@ and class_property
        ts_accessibility
        decorators
        comments
+       ~optional
     )
 
 and class_private_field
@@ -2632,6 +2641,7 @@ and class_private_field
         Ast.Class.PrivateField.key = (ident_loc, { Ast.PrivateName.name; comments = key_comments });
         value;
         static;
+        optional;
         annot;
         variance;
         ts_accessibility;
@@ -2657,6 +2667,7 @@ and class_private_field
        ts_accessibility
        decorators
        comments
+       ~optional
     )
 
 and class_static_block ~opts (loc, { Ast.Class.StaticBlock.body; comments }) =

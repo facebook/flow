@@ -222,6 +222,7 @@ let eval_property_assignment class_body =
                 Property.key = Ast.Expression.Object.Property.Identifier ((loc, _) as id);
                 value;
                 static = false;
+                optional = _;
                 annot = _;
                 variance = _;
                 ts_accessibility = _;
@@ -236,6 +237,7 @@ let eval_property_assignment class_body =
                 PrivateField.key = (loc, _) as id;
                 value;
                 static = false;
+                optional = _;
                 annot = _;
                 variance = _;
                 ts_accessibility = _;

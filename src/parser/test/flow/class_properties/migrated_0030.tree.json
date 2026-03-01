@@ -1,10 +1,4 @@
 {
-  "errors":[
-    {
-      "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":1,"column":12}},
-      "message":"Unexpected token `?`"
-    }
-  ],
   "type":"Program",
   "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":1,"column":18}},
   "range":[0,18],
@@ -60,6 +54,7 @@
             },
             "computed":false,
             "static":false,
+            "optional":true,
             "variance":{
               "type":"Variance",
               "loc":{"source":null,"start":{"line":1,"column":9},"end":{"line":1,"column":10}},

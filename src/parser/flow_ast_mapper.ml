@@ -598,7 +598,17 @@ class ['loc] mapper =
 
     method class_property _loc (prop : ('loc, 'loc) Ast.Class.Property.t') =
       let open Ast.Class.Property in
-      let { key; value; annot; static = _; variance; ts_accessibility = _; decorators; comments } =
+      let {
+        key;
+        value;
+        annot;
+        static = _;
+        optional = _;
+        variance;
+        ts_accessibility = _;
+        decorators;
+        comments;
+      } =
         prop
       in
       let key' = this#object_key key in
@@ -641,7 +651,17 @@ class ['loc] mapper =
 
     method class_private_field _loc (prop : ('loc, 'loc) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static = _; variance; ts_accessibility = _; decorators; comments } =
+      let {
+        key;
+        value;
+        annot;
+        static = _;
+        optional = _;
+        variance;
+        ts_accessibility = _;
+        decorators;
+        comments;
+      } =
         prop
       in
       let key' = this#private_name key in

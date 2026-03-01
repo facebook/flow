@@ -1583,6 +1583,7 @@ with type t = Impl.t = struct
             value;
             annot;
             static;
+            optional;
             variance = variance_;
             ts_accessibility;
             decorators;
@@ -1602,6 +1603,7 @@ with type t = Impl.t = struct
           ("typeAnnotation", hint type_annotation annot);
           ("computed", bool false);
           ("static", bool static);
+          ("optional", bool optional);
           ("variance", option variance variance_);
         ]
         @ (match ts_accessibility_to_string ts_accessibility with
@@ -1637,6 +1639,7 @@ with type t = Impl.t = struct
           value;
           annot;
           static;
+          optional;
           variance = variance_;
           ts_accessibility;
           decorators;
@@ -1656,6 +1659,7 @@ with type t = Impl.t = struct
           ("typeAnnotation", hint type_annotation annot);
           ("computed", bool computed);
           ("static", bool static);
+          ("optional", bool optional);
           ("variance", option variance variance_);
         ]
         @ (match ts_accessibility_to_string ts_accessibility with

@@ -513,7 +513,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_property (prop : ('M, 'T) Ast.Class.Property.t') : ('N, 'U) Ast.Class.Property.t' =
       let open Ast.Class.Property in
-      let { key; value; annot; static; variance; ts_accessibility; decorators; comments } = prop in
+      let { key; value; annot; static; optional; variance; ts_accessibility; decorators; comments }
+          =
+        prop
+      in
       let key' = this#class_property_key key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
@@ -528,6 +531,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         value = value';
         annot = annot';
         static;
+        optional;
         variance = variance';
         ts_accessibility = ts_accessibility';
         decorators = decorators';
@@ -546,7 +550,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
 
     method class_private_field (prop : ('M, 'T) Ast.Class.PrivateField.t') =
       let open Ast.Class.PrivateField in
-      let { key; value; annot; static; variance; ts_accessibility; decorators; comments } = prop in
+      let { key; value; annot; static; optional; variance; ts_accessibility; decorators; comments }
+          =
+        prop
+      in
       let key' = this#private_name key in
       let value' = this#class_property_value value in
       let annot' = this#type_annotation_hint annot in
@@ -561,6 +568,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         value = value';
         annot = annot';
         static;
+        optional;
         variance = variance';
         ts_accessibility = ts_accessibility';
         decorators = decorators';

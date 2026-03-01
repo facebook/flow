@@ -232,6 +232,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
         value;
         annot;
         static = false;
+        optional = false;
         variance;
         ts_accessibility;
         decorators = [];

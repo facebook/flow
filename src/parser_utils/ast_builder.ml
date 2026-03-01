@@ -391,6 +391,7 @@ module Classes = struct
           value = Ast.Class.Property.Initialized value;
           annot;
           static;
+          optional = false;
           variance;
           ts_accessibility = None;
           decorators;

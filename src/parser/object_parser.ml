@@ -736,7 +736,17 @@ module Object
         (key, annot, value, [])
     in
     let property
-        env start_loc decorators key static declare variance ts_accessibility ~abstract leading =
+        env
+        start_loc
+        decorators
+        key
+        static
+        declare
+        variance
+        ts_accessibility
+        ~abstract
+        ~optional
+        leading =
       let (loc, (key, annot, value, comments)) =
         with_loc
           ~start_loc
@@ -778,6 +788,7 @@ module Object
                 value;
                 annot;
                 static;
+                optional;
                 variance;
                 ts_accessibility;
                 decorators;
@@ -798,6 +809,7 @@ module Object
                 value;
                 annot;
                 static;
+                optional;
                 variance;
                 ts_accessibility;
                 decorators;
@@ -812,6 +824,7 @@ module Object
                 value;
                 annot;
                 static;
+                optional;
                 variance;
                 ts_accessibility;
                 decorators;
@@ -827,7 +840,7 @@ module Object
       | _ when Peek.is_implicit_semicolon env -> true
       | _ -> false
     in
-    let rec init
+    let init
         env
         start_loc
         decorators
@@ -856,23 +869,21 @@ module Object
           variance
           ts_accessibility
           ~abstract
+          ~optional:false
           leading
-      | T_PLING ->
-        (* TODO: add support for optional class properties *)
-        error_unexpected env;
+      | T_PLING when (not async) && not generator ->
         Eat.token env;
-        init
+        property
           env
           start_loc
           decorators
           key
-          ~async
-          ~generator
-          ~static
-          ~abstract
-          ~declare
+          static
+          declare
           variance
           ts_accessibility
+          ~abstract
+          ~optional:true
           leading
       | _ when is_asi env ->
         (* an uninitialized, unannotated property *)
@@ -886,6 +897,7 @@ module Object
           variance
           ts_accessibility
           ~abstract
+          ~optional:false
           leading
       | _ ->
         error_unsupported_declare env declare;
@@ -1079,6 +1091,7 @@ module Object
       | T_ASSIGN
       | T_SEMICOLON
       | T_LPAREN
+      | T_PLING
       | T_RCURLY ->
         true
       | _ -> false
@@ -1127,6 +1140,7 @@ module Object
         | T_EOF (* incomplete property *)
         | T_LESS_THAN (* static<T>() {} *)
         | T_LPAREN (* static() {} *)
+        | T_PLING (* static?: T *)
         | T_RCURLY (* end of class *)
         | T_SEMICOLON (* explicit semicolon *) ->
           false

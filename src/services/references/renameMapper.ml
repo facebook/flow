@@ -164,6 +164,7 @@ class rename_mapper
               value;
               annot;
               static;
+              optional;
               variance;
               ts_accessibility;
               decorators;
@@ -187,6 +188,7 @@ class rename_mapper
                   value;
                   annot;
                   static;
+                  optional;
                   variance;
                   ts_accessibility;
                   decorators;
@@ -205,6 +207,7 @@ class rename_mapper
                   value;
                   annot;
                   static;
+                  optional;
                   variance;
                   ts_accessibility;
                   decorators;

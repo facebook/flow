@@ -84,6 +84,40 @@ Destructuring is not supported in `declare` variable declarations. [unsupported-
                      ^^^
 
 
+Error ---------------------------------------------------------------------------------- optional_class_property.js:10:1
+
+Cannot cast `foo.a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   optional_class_property.js:10:1
+   10| foo.a as empty; // ERROR
+       ^^^^^
+
+References:
+   optional_class_property.js:2:7
+    2|   a?: string;
+             ^^^^^^ [1]
+   optional_class_property.js:10:10
+   10| foo.a as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- optional_class_property.js:10:1
+
+Cannot cast `foo.a` to empty because undefined [1] is incompatible with empty [2]. [incompatible-type]
+
+   optional_class_property.js:10:1
+   10| foo.a as empty; // ERROR
+       ^^^^^
+
+References:
+   optional_class_property.js:2:7
+    2|   a?: string;
+             ^^^^^^ [1]
+   optional_class_property.js:10:10
+   10| foo.a as empty; // ERROR
+                ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- unique_symbol.js:7:1
 
 Cannot cast `x` to empty because symbol [1] is incompatible with empty [2]. [incompatible-type]
@@ -102,4 +136,4 @@ References:
 
 
 
-Found 8 errors
+Found 10 errors

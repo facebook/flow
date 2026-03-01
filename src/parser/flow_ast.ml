@@ -2490,6 +2490,7 @@ and Class : sig
       value: ('M, 'T) value;
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
+      optional: bool;
       variance: 'M Variance.t option;
       ts_accessibility: 'M TSAccessibility.t option;
       decorators: ('M, 'T) Class.Decorator.t list;
@@ -2511,6 +2512,7 @@ and Class : sig
       value: ('M, 'T) Class.Property.value;
       annot: ('M, 'T) Type.annotation_or_hint;
       static: bool;
+      optional: bool;
       variance: 'M Variance.t option;
       ts_accessibility: 'M TSAccessibility.t option;
       decorators: ('M, 'T) Class.Decorator.t list;

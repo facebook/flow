@@ -8657,6 +8657,7 @@ module Make
                       annot;
                       value;
                       static;
+                      optional;
                       variance;
                       ts_accessibility;
                       decorators;
@@ -8664,6 +8665,12 @@ module Make
                     }
                   ) ->
                 check_ts_accessibility ts_accessibility;
+                if optional && not (Context.tslib_syntax cx) then
+                  Flow.add_output
+                    cx
+                    (Error_message.EUnsupportedSyntax
+                       (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalClassProperty))
+                    );
                 let reason = mk_reason (RPrivateProperty name) loc in
                 let polarity = Anno.polarity cx variance in
                 let decorators =
@@ -8680,6 +8687,7 @@ module Make
                         annot = annot_ast;
                         value = get_value ();
                         static;
+                        optional;
                         variance;
                         ts_accessibility;
                         decorators;
@@ -8709,6 +8717,7 @@ module Make
                       annot;
                       value;
                       static;
+                      optional;
                       variance;
                       ts_accessibility;
                       decorators;
@@ -8716,6 +8725,12 @@ module Make
                     }
                   ) ->
                 check_ts_accessibility ts_accessibility;
+                if optional && not (Context.tslib_syntax cx) then
+                  Flow.add_output
+                    cx
+                    (Error_message.EUnsupportedSyntax
+                       (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalClassProperty))
+                    );
                 let reason = mk_reason (RProperty (Some (OrdinaryName name))) loc in
                 let polarity = Anno.polarity cx variance in
                 let decorators =
@@ -8733,6 +8748,7 @@ module Make
                         annot;
                         value = get_value ();
                         static;
+                        optional;
                         variance;
                         ts_accessibility;
                         decorators;

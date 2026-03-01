@@ -5204,6 +5204,7 @@ let to_printable_error :
         | UniqueSymbolType -> "`unique symbol` type"
         | TypeofImport -> "`typeof import(\"module\")` syntax"
         | ImplementsDottedPath -> "`implements` with dotted path"
+        | OptionalClassProperty -> "Optional class property (`?:`)"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

@@ -740,6 +740,7 @@ struct
             value;
             annot;
             static = _;
+            optional = _;
             variance = _;
             ts_accessibility = _;
             decorators;
@@ -761,6 +762,7 @@ struct
             value;
             annot;
             static = _;
+            optional = _;
             variance = _;
             ts_accessibility = _;
             decorators;

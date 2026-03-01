@@ -82,6 +82,7 @@ class mapper target =
                 Property.key;
                 value;
                 static;
+                optional = false;
                 variance = None;
                 ts_accessibility = None;
                 annot = Type.Missing loc;

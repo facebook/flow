@@ -62,3 +62,8 @@ declare namespace ns {
   declare interface IFace {}
 }
 declare class IDP implements ns.IFace {} // ERROR
+
+// Optional class property
+class OCP {
+  x?: number; // ERROR
+}

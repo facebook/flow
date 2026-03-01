@@ -3991,6 +3991,7 @@ and class_def =
                 annot = t;
                 value;
                 static;
+                optional;
                 variance;
                 ts_accessibility = _;
                 decorators = _;
@@ -4022,6 +4023,12 @@ and class_def =
                       )
                 in
                 (id_loc, res)
+            in
+            let t =
+              if optional then
+                Annot (Optional t)
+              else
+                t
             in
             Acc.add_field ~static name id_loc (polarity variance) t acc
         | C.Body.PrivateField _ -> acc (* private fields are unreachable from exports *)

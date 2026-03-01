@@ -1114,6 +1114,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         value = val1;
         annot = annot1;
         static = s1;
+        optional = opt1;
         variance = var1;
         ts_accessibility = acc1;
         decorators = decorators1;
@@ -1126,6 +1127,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         value = val2;
         annot = annot2;
         static = s2;
+        optional = opt2;
         variance = var2;
         ts_accessibility = acc2;
         decorators = decorators2;
@@ -1133,7 +1135,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       } =
         prop2
       in
-      if key1 != key2 || s1 != s2 || var1 != var2 || acc1 != acc2 then
+      if key1 != key2 || s1 != s2 || opt1 != opt2 || var1 != var2 || acc1 != acc2 then
         None
       else
         let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
@@ -1450,6 +1452,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             value = val1;
             annot = annot1;
             static = s1;
+            optional = opt1;
             variance = var1;
             ts_accessibility = acc1;
             decorators = decorators1;
@@ -1464,6 +1467,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             value = val2;
             annot = annot2;
             static = s2;
+            optional = opt2;
             variance = var2;
             ts_accessibility = acc2;
             decorators = decorators2;
@@ -1472,7 +1476,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         ) =
       field2
     in
-    ( if key1 != key2 || s1 != s2 || var1 != var2 || acc1 != acc2 then
+    ( if key1 != key2 || s1 != s2 || opt1 != opt2 || var1 != var2 || acc1 != acc2 then
       None
     else
       let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
@@ -1491,6 +1495,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             value = val1;
             annot = annot1;
             static = s1;
+            optional = opt1;
             variance = var1;
             ts_accessibility = acc1;
             decorators = decorators1;
@@ -1505,6 +1510,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             value = val2;
             annot = annot2;
             static = s2;
+            optional = opt2;
             variance = var2;
             ts_accessibility = acc2;
             decorators = decorators2;
@@ -1513,7 +1519,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         ) =
       prop2
     in
-    ( if key1 != key2 || s1 != s2 || var1 != var2 || acc1 != acc2 then
+    ( if key1 != key2 || s1 != s2 || opt1 != opt2 || var1 != var2 || acc1 != acc2 then
       None
     else
       let vals = diff_if_changed_ret_opt class_property_value val1 val2 in
