@@ -94,7 +94,8 @@ let loc_of_typeof =
   let open Flow_ast.Type.Typeof.Target in
   function
   | Unqualified (loc, _)
-  | Qualified (loc, _) ->
+  | Qualified (loc, _)
+  | Import (loc, _) ->
     loc
 
 let compute_member_loc ~expr_loc ~obj_loc =

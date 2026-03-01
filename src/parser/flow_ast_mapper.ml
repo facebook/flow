@@ -1964,6 +1964,12 @@ class ['loc] mapper =
       match git with
       | Unqualified i -> id this#typeof_identifier i git (fun i -> Unqualified i)
       | Qualified i -> id this#typeof_qualified_identifier i git (fun i -> Qualified i)
+      | Import (annot, import') ->
+        let import'' = this#generic_identifier_import_type import' in
+        if import' == import'' then
+          git
+        else
+          Import (annot, import'')
 
     method typeof_identifier id = this#identifier id
 

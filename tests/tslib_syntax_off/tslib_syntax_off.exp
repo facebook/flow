@@ -157,5 +157,13 @@ Error --------------------------------------------------------------------------
                          ^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:58:18
 
-Found 19 errors
+`typeof import("module")` syntax is not enabled. [unsupported-syntax]
+
+   58| type TI = typeof import("foo"); // ERROR
+                        ^^^^^^^^^^^^^
+
+
+
+Found 20 errors

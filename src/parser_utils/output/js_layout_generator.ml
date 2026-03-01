@@ -4874,6 +4874,8 @@ and type_typeof ~opts loc { Ast.Type.Typeof.argument; targs; comments } =
     | Qualified (loc, { qualification; id }) ->
       source_location_with_comments
         (loc, fuse [generic_identifier qualification; Atom "."; identifier id])
+    | Import (_, { Ast.Type.Generic.Identifier.argument = (arg_loc, arg_lit); _ }) ->
+      fuse [Atom "import"; Atom "("; string_literal ~opts arg_loc arg_lit; Atom ")"]
   in
   layout_node_with_comments_opt
     loc

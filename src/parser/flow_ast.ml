@@ -451,6 +451,7 @@ and Type : sig
       type ('M, 'T) t =
         | Unqualified of ('M, 'T) Identifier.t
         | Qualified of ('M, 'T) qualified
+        | Import of ('M, 'T) Type.Generic.Identifier.import_type
 
       and ('M, 'T) qualified' = {
         qualification: ('M, 'T) t;

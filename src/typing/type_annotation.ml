@@ -184,6 +184,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         String.concat "." parts
       | Qualified (_, { qualification; id = (_, { Ast.Identifier.name; comments = _ }) }) ->
         loop (name :: acc) qualification
+      | Import (_, { Ast.Type.Generic.Identifier.argument = (_, { Ast.StringLiteral.value; _ }); _ })
+        ->
+        let parts = ("import(\"" ^ value ^ "\")") :: acc in
+        String.concat "." parts
     in
     loop []
 
@@ -1787,6 +1791,50 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           Type_env.get_var ~lookup_mode:ForTypeof cx name loc
       in
       (t, Unqualified ((loc, t), id_name))
+    | Import (loc, { Ast.Type.Generic.Identifier.argument = (arg_loc, arg_lit); comments }) as
+      import ->
+      if not (Context.tslib_syntax cx) then (
+        Flow.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.(TSLibSyntax TypeofImport))
+          );
+        let t = AnyT.at (AnyError None) loc in
+        (t, Tast_utils.error_mapper#typeof_expression import)
+      ) else
+        let { Ast.StringLiteral.value = module_name; _ } = arg_lit in
+        let mref = Flow_import_specifier.userland module_name in
+        let t =
+          try
+            let source_module =
+              Flow_js_utils.ImportExportUtils.get_module_type_or_any
+                cx
+                ~import_kind_for_untyped_import_validation:(Some ImportValue)
+                (arg_loc, mref)
+            in
+            let reason = mk_reason (RModule mref) loc in
+            let namespace_symbol = FlowSymbol.mk_module_symbol ~name:mref ~def_loc:loc in
+            Flow_js_utils.ImportExportUtils.get_module_namespace_type
+              cx
+              reason
+              ~namespace_symbol
+              source_module
+          with
+          | Context.Require_not_found _ ->
+            Flow.add_output
+              cx
+              (Error_message.EBuiltinModuleLookupFailed
+                 {
+                   loc;
+                   name = Flow_import_specifier.display_userland mref;
+                   potential_generator = None;
+                 }
+              );
+            Type.AnyT.at (Type.AnyError (Some Type.UnresolvedName)) loc
+        in
+        ( t,
+          Import ((loc, t), { Ast.Type.Generic.Identifier.argument = (arg_loc, arg_lit); comments })
+        )
 
   and convert_render_type env loc { Ast.Type.Renders.operator_loc; comments; argument; variant } =
     let (((_, t), _) as t_ast) = convert { env with in_renders_arg = true } argument in

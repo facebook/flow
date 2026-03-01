@@ -1853,6 +1853,15 @@ and typeof =
       let id_loc = push_loc tbls id_loc in
       let t = val_ref ~type_only:false scope id_loc name in
       finish opts scope tbls xs typeof_loc t [name] targs chain
+    | T.Typeof.Target.Import (import_loc, import_type') ->
+      let import_loc = push_loc tbls import_loc in
+      let { T.Generic.Identifier.argument = (_, { Ast.StringLiteral.value; _ }); _ } =
+        import_type'
+      in
+      let mref = Flow_import_specifier.userland value in
+      let mref = push_module_ref tbls mref in
+      let t = ImportTypeAnnot { loc = import_loc; mref } in
+      finish opts scope tbls xs typeof_loc t [value] targs chain
   in
   (fun opts scope tbls xs typeof_loc expr targs -> loop opts scope tbls xs typeof_loc targs [] expr)
 

@@ -1461,6 +1461,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       match git with
       | Unqualified i -> Unqualified (this#typeof_identifier i)
       | Qualified i -> Qualified (this#typeof_qualified_identifier i)
+      | Import (annot, import') ->
+        Import (this#on_type_annot annot, this#generic_identifier_import_type import')
 
     method typeof_identifier id = this#t_identifier id
 

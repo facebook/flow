@@ -5202,6 +5202,7 @@ let to_printable_error :
         | ExportTypeSpecifier -> "Inline `type` modifier on export specifier"
         | TemplateLiteralType -> "Template literal type"
         | UniqueSymbolType -> "`unique symbol` type"
+        | TypeofImport -> "`typeof import(\"module\")` syntax"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

@@ -53,3 +53,6 @@ type TLT = `foo ${string}`; // ERROR
 
 // Unique symbol
 declare const us: unique symbol; // ERROR
+
+// Typeof import
+type TI = typeof import("foo"); // ERROR

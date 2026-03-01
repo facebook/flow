@@ -340,8 +340,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
 
   and typeof_expr env = raw_typeof_expr_with_identifier env (Parse.identifier env)
 
-  and raw_typeof_expr_with_identifier =
-    let rec identifier env (q_loc, qualification) =
+  and typeof_qualification env start_loc initial =
+    let rec chain env (q_loc, qualification) =
       if Peek.token env = T_PERIOD && Peek.ith_is_identifier_name ~i:1 env then
         let (loc, q) =
           with_loc
@@ -353,13 +353,47 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             env
         in
         let qualification = Type.Typeof.Target.Qualified (loc, q) in
-        identifier env (loc, qualification)
+        chain env (loc, qualification)
       else
         qualification
     in
-    fun env ((loc, _) as id) ->
-      let id = Type.Typeof.Target.Unqualified id in
-      identifier env (loc, id)
+    chain env (start_loc, initial)
+
+  and raw_typeof_expr_with_identifier env ((loc, _) as id) =
+    typeof_qualification env loc (Type.Typeof.Target.Unqualified id)
+
+  and typeof_import_expr env =
+    let start_loc = Peek.loc env in
+    let leading = Peek.comments env in
+    Expect.token env T_IMPORT;
+    Expect.token env T_LPAREN;
+
+    (* Parse the module specifier string *)
+    let argument =
+      match Peek.token env with
+      | T_STRING (loc, value, raw, octal) ->
+        if octal then strict_error env Parse_error.StrictOctalLiteral;
+        Eat.token env;
+        (loc, { Ast.StringLiteral.value; raw; comments = None })
+      | _ ->
+        error_unexpected ~expected:"string literal" env;
+        (Peek.loc env, { Ast.StringLiteral.value = ""; raw = "\"\""; comments = None })
+    in
+    let rparen_loc = Peek.loc env in
+    Expect.token env T_RPAREN;
+
+    let import_loc = Loc.btwn start_loc rparen_loc in
+    let import_node =
+      Type.Typeof.Target.Import
+        ( import_loc,
+          {
+            Type.Generic.Identifier.argument;
+            comments = Flow_ast_utils.mk_comments_opt ~leading ();
+          }
+        )
+    in
+    (* Chain .member qualifications *)
+    typeof_qualification env import_loc import_node
 
   and typeof_arg env =
     Eat.push_lex_mode env Lex_mode.NORMAL;
@@ -369,7 +403,9 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         let typeof = typeof_arg env in
         Expect.token env T_RPAREN;
         typeof
-      ) else if Peek.is_identifier env then
+      ) else if Peek.token env = T_IMPORT then
+        Some (typeof_import_expr env)
+      else if Peek.is_identifier env then
         Some (typeof_expr env)
       else (
         error env Parse_error.InvalidTypeof;

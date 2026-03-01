@@ -2457,6 +2457,7 @@ with type t = Impl.t = struct
       match id with
       | Type.Typeof.Target.Unqualified id -> identifier id
       | Type.Typeof.Target.Qualified q -> typeof_qualifier q
+      | Type.Typeof.Target.Import it -> import_type it
     and typeof_qualifier (loc, { Type.Typeof.Target.id; qualification }) =
       let qualification = typeof_expr qualification in
       node "QualifiedTypeofIdentifier" loc [("qualification", qualification); ("id", identifier id)]
