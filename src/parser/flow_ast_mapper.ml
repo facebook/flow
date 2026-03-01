@@ -543,7 +543,7 @@ class ['loc] mapper =
     method class_implements_interface (interface : ('loc, 'loc) Ast.Class.Implements.Interface.t) =
       let open Ast.Class.Implements.Interface in
       let (loc, { id; targs }) = interface in
-      let id' = this#type_identifier_reference id in
+      let id' = this#generic_identifier_type id in
       let targs' = map_opt this#type_args targs in
       if id == id' && targs == targs' then
         interface

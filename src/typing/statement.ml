@@ -8232,14 +8232,24 @@ module Make
               let (implements, interfaces_ast) =
                 interfaces
                 |> Base.List.map ~f:(fun (loc, i) ->
-                       let {
-                         Ast.Class.Implements.Interface.id =
-                           (id_loc, ({ Ast.Identifier.name; comments = _ } as id));
-                         targs;
-                       } =
-                         i
+                       let { Ast.Class.Implements.Interface.id; targs } = i in
+                       (match id with
+                       | Ast.Type.Generic.Identifier.Qualified _
+                       | Ast.Type.Generic.Identifier.ImportTypeAnnot _
+                         when not (Context.tslib_syntax cx) ->
+                         Flow_js_utils.add_output
+                           cx
+                           (Error_message.EUnsupportedSyntax
+                              (loc, Flow_intermediate_error_types.(TSLibSyntax ImplementsDottedPath))
+                           )
+                       | _ -> ());
+                       let (c, id) =
+                         Anno.convert_qualification
+                           ~lookup_mode:Type_env.LookupMode.ForType
+                           cx
+                           "implements"
+                           id
                        in
-                       let c = Type_env.get_var ~lookup_mode:ForType cx name id_loc in
                        let (typeapp, targs) =
                          match targs with
                          | None -> ((loc, c, None), None)
@@ -8249,9 +8259,7 @@ module Make
                              Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                            )
                        in
-                       ( typeapp,
-                         (loc, { Ast.Class.Implements.Interface.id = ((id_loc, c), id); targs })
-                       )
+                       (typeapp, (loc, { Ast.Class.Implements.Interface.id; targs }))
                    )
                 |> List.split
               in
@@ -9010,14 +9018,24 @@ module Make
               let (implements, interfaces_ast) =
                 interfaces
                 |> Base.List.map ~f:(fun (loc, i) ->
-                       let {
-                         Ast.Class.Implements.Interface.id =
-                           (impl_id_loc, ({ Ast.Identifier.name; comments = _ } as impl_id));
-                         targs;
-                       } =
-                         i
+                       let { Ast.Class.Implements.Interface.id; targs } = i in
+                       (match id with
+                       | Ast.Type.Generic.Identifier.Qualified _
+                       | Ast.Type.Generic.Identifier.ImportTypeAnnot _
+                         when not (Context.tslib_syntax cx) ->
+                         Flow_js_utils.add_output
+                           cx
+                           (Error_message.EUnsupportedSyntax
+                              (loc, Flow_intermediate_error_types.(TSLibSyntax ImplementsDottedPath))
+                           )
+                       | _ -> ());
+                       let (c, id) =
+                         Anno.convert_qualification
+                           ~lookup_mode:Type_env.LookupMode.ForType
+                           cx
+                           "implements"
+                           id
                        in
-                       let c = Type_env.get_var ~lookup_mode:ForType cx name impl_id_loc in
                        let (typeapp, targs) =
                          match targs with
                          | None -> ((loc, c, None), None)
@@ -9027,14 +9045,7 @@ module Make
                              Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                            )
                        in
-                       ( typeapp,
-                         ( loc,
-                           {
-                             Ast.Class.Implements.Interface.id = ((impl_id_loc, c), impl_id);
-                             targs;
-                           }
-                         )
-                       )
+                       (typeapp, (loc, { Ast.Class.Implements.Interface.id; targs }))
                    )
                 |> List.split
               in

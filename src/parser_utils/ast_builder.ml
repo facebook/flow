@@ -373,7 +373,8 @@ module Classes = struct
       (loc, { method_ with Flow_ast.Class.Method.key })
   end
 
-  let implements ?targs id = (Loc.none, { Implements.Interface.id; targs })
+  let implements ?targs id =
+    (Loc.none, { Implements.Interface.id = Ast.Type.Generic.Identifier.Unqualified id; targs })
 
   let property
       ?comments

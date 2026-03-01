@@ -231,10 +231,16 @@ with type t = Impl.t = struct
             [("elements", array_of_list record_element body)]
         in
         let record_implements (loc, { Class.Implements.Interface.id; targs }) =
+          let id =
+            match id with
+            | Type.Generic.Identifier.Unqualified id -> identifier id
+            | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
+            | Type.Generic.Identifier.ImportTypeAnnot it -> import_type it
+          in
           node
             "RecordDeclarationImplements"
             loc
-            [("id", identifier id); ("typeArguments", option type_args targs)]
+            [("id", id); ("typeArguments", option type_args targs)]
         in
         let implements =
           match implements with
@@ -1437,7 +1443,13 @@ with type t = Impl.t = struct
     and class_decorator (loc, { Class.Decorator.expression = expr; comments }) =
       node ?comments "Decorator" loc [("expression", expression expr)]
     and class_implements (loc, { Class.Implements.Interface.id; targs }) =
-      node "ClassImplements" loc [("id", identifier id); ("typeParameters", option type_args targs)]
+      let id =
+        match id with
+        | Type.Generic.Identifier.Unqualified id -> identifier id
+        | Type.Generic.Identifier.Qualified q -> generic_type_qualified_identifier q
+        | Type.Generic.Identifier.ImportTypeAnnot it -> import_type it
+      in
+      node "ClassImplements" loc [("id", id); ("typeParameters", option type_args targs)]
     and class_body (loc, { Class.Body.body; comments }) =
       node ?comments "ClassBody" loc [("body", array_of_list class_element body)]
     and ts_accessibility_to_string ts_accessibility =

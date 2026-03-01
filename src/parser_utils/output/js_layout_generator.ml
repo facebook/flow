@@ -2754,7 +2754,7 @@ and class_implements ~opts implements =
                  (List.map
                     (fun (loc, { Ast.Class.Implements.Interface.id; targs }) ->
                       source_location_with_comments
-                        (loc, fuse [identifier id; option (type_args ~opts) targs]))
+                        (loc, fuse [generic_identifier ~opts id; option (type_args ~opts) targs]))
                     interfaces
                  );
              ]
@@ -3787,24 +3787,11 @@ and import_equals_declaration
     } =
   let module I = Ast.Statement.ImportDeclaration in
   let module IE = Ast.Statement.ImportEqualsDeclaration in
-  let module GI = Ast.Type.Generic.Identifier in
   let module_ref_layout =
     match module_reference with
     | IE.ExternalModuleReference (ref_loc, lit) ->
       fuse [Atom "require"; Atom "("; string_literal ~opts ref_loc lit; Atom ")"]
-    | IE.Identifier git ->
-      let rec generic_identifier = function
-        | GI.Unqualified id -> identifier id
-        | GI.Qualified (loc, { GI.qualification; id }) ->
-          source_location_with_comments
-            (loc, fuse [generic_identifier qualification; Atom "."; identifier id])
-        | GI.ImportTypeAnnot (loc, { GI.argument = (arg_loc, arg); comments }) ->
-          layout_node_with_comments_opt
-            loc
-            comments
-            (fuse [Atom "import"; Atom "("; string_literal ~opts arg_loc arg; Atom ")"])
-      in
-      generic_identifier git
+    | IE.Identifier git -> generic_identifier ~opts git
   in
   layout_node_with_comments_opt loc comments
   @@ with_semicolon
@@ -4835,10 +4822,9 @@ and interface_extends ~opts = function
           );
       ]
 
-and type_generic ~opts loc { Ast.Type.Generic.id; targs; comments } =
-  let rec generic_identifier =
-    let open Ast.Type.Generic.Identifier in
-    function
+and generic_identifier ~opts =
+  let open Ast.Type.Generic.Identifier in
+  let rec generic_identifier = function
     | Unqualified id -> identifier id
     | Qualified (loc, { qualification; id }) ->
       source_location_with_comments
@@ -4849,8 +4835,11 @@ and type_generic ~opts loc { Ast.Type.Generic.id; targs; comments } =
         comments
         (fuse [Atom "import"; Atom "("; string_literal ~opts arg_loc arg; Atom ")"])
   in
+  generic_identifier
+
+and type_generic ~opts loc { Ast.Type.Generic.id; targs; comments } =
   layout_node_with_comments_opt loc comments
-  @@ fuse [generic_identifier id; option (type_args ~opts) targs]
+  @@ fuse [generic_identifier ~opts id; option (type_args ~opts) targs]
 
 and type_indexed_access
     ?(optional = false) ~opts loc { Ast.Type.IndexedAccess._object; index; comments } =

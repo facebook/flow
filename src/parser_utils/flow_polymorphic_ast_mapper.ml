@@ -637,7 +637,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Class.Implements.Interface in
       let (annot, { id = id_; targs }) = interface in
       let annot' = this#on_loc_annot annot in
-      let id' = this#type_identifier_reference id_ in
+      let id' = this#generic_identifier_type id_ in
       let targs' = Option.map ~f:this#type_args targs in
       (annot', { id = id'; targs = targs' })
 

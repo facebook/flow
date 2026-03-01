@@ -3577,10 +3577,23 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             let (implements, interfaces_ast) =
               interfaces
               |> Base.List.map ~f:(fun (loc, i) ->
-                     let { Interface.id = (id_loc, id_name_inner); targs } = i in
-                     let { Ast.Identifier.name; comments = _ } = id_name_inner in
-                     let c =
-                       Type_env.get_var ~lookup_mode:Type_env.LookupMode.ForType cx name id_loc
+                     let { Interface.id; targs } = i in
+                     (match id with
+                     | Ast.Type.Generic.Identifier.Qualified _
+                     | Ast.Type.Generic.Identifier.ImportTypeAnnot _
+                       when not (Context.tslib_syntax cx) ->
+                       Flow.add_output
+                         cx
+                         (Error_message.EUnsupportedSyntax
+                            (loc, Flow_intermediate_error_types.(TSLibSyntax ImplementsDottedPath))
+                         )
+                     | _ -> ());
+                     let (c, id) =
+                       convert_qualification
+                         ~lookup_mode:Type_env.LookupMode.ForType
+                         cx
+                         "implements"
+                         id
                      in
                      let (typeapp, targs) =
                        match targs with
@@ -3591,7 +3604,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                            Some (targs_loc, { Ast.Type.TypeArgs.arguments = targs_ast; comments })
                          )
                      in
-                     (typeapp, (loc, { Interface.id = ((id_loc, c), id_name_inner); targs }))
+                     (typeapp, (loc, { Interface.id; targs }))
                  )
               |> List.split
             in

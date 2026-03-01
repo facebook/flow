@@ -5203,6 +5203,7 @@ let to_printable_error :
         | TemplateLiteralType -> "Template literal type"
         | UniqueSymbolType -> "`unique symbol` type"
         | TypeofImport -> "`typeof import(\"module\")` syntax"
+        | ImplementsDottedPath -> "`implements` with dotted path"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

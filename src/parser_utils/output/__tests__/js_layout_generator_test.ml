@@ -1378,6 +1378,9 @@ let tests =
            assert_statement_string ~ctxt "class a implements b<b>{}";
            assert_statement_string ~ctxt "class a implements b,c{}";
            assert_statement_string ~ctxt "class a implements b<b>,c<c>{}";
+           assert_statement_string ~ctxt "class a implements ns.IFace{}";
+           assert_statement_string ~ctxt ~pretty:true "class a implements ns.IFace {}";
+           assert_statement_string ~ctxt "class a implements ns.IFace<T>{}";
 
            begin
              let ast =

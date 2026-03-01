@@ -56,3 +56,9 @@ declare const us: unique symbol; // ERROR
 
 // Typeof import
 type TI = typeof import("foo"); // ERROR
+
+// Implements dotted path
+declare namespace ns {
+  declare interface IFace {}
+}
+declare class IDP implements ns.IFace {} // ERROR

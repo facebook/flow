@@ -165,5 +165,13 @@ Error --------------------------------------------------------------------------
                         ^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:64:30
 
-Found 20 errors
+`implements` with dotted path is not enabled. [unsupported-syntax]
+
+   64| declare class IDP implements ns.IFace {} // ERROR
+                                    ^^^^^^^^
+
+
+
+Found 21 errors

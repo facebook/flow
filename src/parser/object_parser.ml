@@ -547,15 +547,7 @@ module Object
       let interface =
         with_loc
           (fun env ->
-            let id =
-              let id = Type.type_identifier env in
-              if Peek.token env <> T_LESS_THAN then
-                id
-              else
-                let { remove_trailing; _ } = trailing_and_remover env in
-                remove_trailing id (fun remover id -> remover#identifier id)
-            in
-            let targs = Type.type_args env in
+            let (_loc, { Ast.Type.Generic.id; targs; comments = _ }) = Type.generic env in
             { Ast.Class.Implements.Interface.id; targs })
           env
       in

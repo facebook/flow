@@ -547,7 +547,7 @@ let declare_class ~with_types (visitor : 'loc #Flow_ast_mapper.mapper) ~with_bin
       ~default:[]
       ~f:(fun (_, { Ast.Class.Implements.interfaces; comments = _ }) ->
         Base.List.filter_map interfaces ~f:(fun (_, { Ast.Class.Implements.Interface.id; targs }) ->
-            ignore @@ visitor#type_identifier_reference id;
+            ignore @@ visitor#generic_identifier_type id;
             targs
         )
     )
@@ -720,7 +720,7 @@ let class_
       ~default:[]
       ~f:(fun (_, { Ast.Class.Implements.interfaces; comments = _ }) ->
         Base.List.filter_map interfaces ~f:(fun (_, { Ast.Class.Implements.Interface.id; targs }) ->
-            ignore @@ visitor#type_identifier_reference id;
+            ignore @@ visitor#generic_identifier_type id;
             targs
         )
     )
@@ -743,7 +743,7 @@ let record_declaration ~with_types (visitor : 'loc #Flow_ast_mapper.mapper) ~wit
       ~default:[]
       ~f:(fun (_, { Ast.Class.Implements.interfaces; comments = _ }) ->
         Base.List.filter_map interfaces ~f:(fun (_, { Ast.Class.Implements.Interface.id; targs }) ->
-            ignore @@ visitor#type_identifier_reference id;
+            ignore @@ visitor#generic_identifier_type id;
             targs
         )
     )

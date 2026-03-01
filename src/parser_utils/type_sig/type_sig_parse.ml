@@ -3008,12 +3008,14 @@ let class_implements =
   let rec loop opts scope tbls xs acc = function
     | [] -> List.rev acc
     | (loc, { C.Implements.Interface.id; targs }) :: rest ->
-      let (ref_loc, { Ast.Identifier.name; comments = _ }) = id in
       let loc = push_loc tbls loc in
-      let ref_loc = push_loc tbls ref_loc in
-      let name = Unqualified (Ref { ref_loc; name; scope; resolved = None }) in
-      let t = nominal_type opts scope tbls xs loc name targs in
-      loop opts scope tbls xs (t :: acc) rest
+      (match generic_id scope tbls xs [] id with
+      | Ok name ->
+        let t = nominal_type opts scope tbls xs loc name targs in
+        loop opts scope tbls xs (t :: acc) rest
+      | Error _loc ->
+        (* type param as implements target — skip *)
+        loop opts scope tbls xs acc rest)
   in
   fun opts scope tbls xs -> function
     | None -> []

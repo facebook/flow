@@ -1362,7 +1362,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let open Ast.Class.Implements.Interface in
     let { id = id1; targs = targs1 } = interface1 in
     let { id = id2; targs = targs2 } = interface2 in
-    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let id_diff = diff_if_changed_ret_opt generic_identifier_type id1 id2 in
     let targs_diff = diff_if_changed_opt type_args targs1 targs2 in
     join_diff_list [id_diff; targs_diff]
   and interface

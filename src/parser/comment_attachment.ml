@@ -134,7 +134,7 @@ class ['loc] trailing_comments_remover ~after_pos =
       let open Ast.Class.Implements.Interface in
       let (loc, { id = id_; targs }) = interface in
       if targs = None then
-        id this#identifier id_ interface (fun id' -> (loc, { id = id'; targs }))
+        id this#generic_identifier_type id_ interface (fun id' -> (loc, { id = id'; targs }))
       else
         id (map_opt this#type_args) targs interface (fun targs' ->
             (loc, { id = id_; targs = targs' })

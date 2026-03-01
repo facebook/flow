@@ -2545,7 +2545,7 @@ and Class : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
       and ('M, 'T) t' = {
-        id: ('M, 'T) Identifier.t;
+        id: ('M, 'T) Type.Generic.Identifier.t;
         targs: ('M, 'T) Type.TypeArgs.t option;
       }
       [@@deriving show]
