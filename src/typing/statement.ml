@@ -10560,9 +10560,9 @@ module Make
                Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxMultiple
                  {
                    invalid_infix_equals_loc;
-                   invalid_variance_locs;
-                   invalid_optional_locs;
-                   invalid_suffix_semicolon_locs;
+                   invalid_variance_locs = List.rev invalid_variance_locs;
+                   invalid_optional_locs = List.rev invalid_optional_locs;
+                   invalid_suffix_semicolon_locs = List.rev invalid_suffix_semicolon_locs;
                  };
            }
         )

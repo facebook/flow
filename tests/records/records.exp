@@ -796,12 +796,12 @@ Record declarations use commas `,` to separate properties. To fix, replace the `
                 ^
 
 References:
-   invalid-declaration-syntax.js:17:27
-   17|     static b: string = 's';
-                                 ^ [1]
    invalid-declaration-syntax.js:16:14
    16|     a: number;
-                    ^ [2]
+                    ^ [1]
+   invalid-declaration-syntax.js:17:27
+   17|     static b: string = 's';
+                                 ^ [2]
 
 
 Error ------------------------------------------------------------------------------- invalid-declaration-syntax.js:24:5
@@ -823,12 +823,12 @@ Record declaration properties are read-only by default, so don't allow variance 
                 ^
 
 References:
-   invalid-declaration-syntax.js:32:12
-   32|     static +b: string = 's', // ERROR
-                  ^ [1]
    invalid-declaration-syntax.js:31:5
    31|     +a: number, // ERROR
-           ^ [2]
+           ^ [1]
+   invalid-declaration-syntax.js:32:12
+   32|     static +b: string = 's', // ERROR
+                  ^ [2]
 
 
 Error ------------------------------------------------------------------------------- invalid-declaration-syntax.js:39:6
@@ -856,11 +856,11 @@ the record. To closely mimic the existing behavior of an optional property, you 
                 ^
 
 References:
-   invalid-declaration-syntax.js:47:6
-   47|     b?: string, // ERROR
-            ^ [1]
    invalid-declaration-syntax.js:46:6
    46|     a?: number, // ERROR
+            ^ [1]
+   invalid-declaration-syntax.js:47:6
+   47|     b?: string, // ERROR
             ^ [2]
 
 
@@ -893,23 +893,23 @@ References:
    invalid-declaration-syntax.js:60:12
    60|   record R = { // ERROR
                   ^ [1]
-   invalid-declaration-syntax.js:62:5
-   62|     +b?: string;
-           ^ [2]
    invalid-declaration-syntax.js:61:5
    61|     +a?: number;
-           ^ [3]
-   invalid-declaration-syntax.js:62:7
+           ^ [2]
+   invalid-declaration-syntax.js:62:5
    62|     +b?: string;
-             ^ [4]
+           ^ [3]
    invalid-declaration-syntax.js:61:7
    61|     +a?: number;
-             ^ [5]
-   invalid-declaration-syntax.js:62:16
+             ^ [4]
+   invalid-declaration-syntax.js:62:7
    62|     +b?: string;
-                      ^ [6]
+             ^ [5]
    invalid-declaration-syntax.js:61:16
    61|     +a?: number;
+                      ^ [6]
+   invalid-declaration-syntax.js:62:16
+   62|     +b?: string;
                       ^ [7]
 
 
