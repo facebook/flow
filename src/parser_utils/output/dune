@@ -6,8 +6,7 @@
   flow_common_utils
   flow_common_utils_loc_utils
   flow_parser
-  flow_parser_utils
-  flow_third_party_sourcemaps))
+  flow_parser_utils))
 
 (dirs
  (:standard __tests__))
