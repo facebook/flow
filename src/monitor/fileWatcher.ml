@@ -686,6 +686,11 @@ end = struct
             { MonitorProt.changed_mergebase = None; missed_changes = true };
         broadcast env;
         Lwt.return env
+      | Error _ when Edenfs_watcher.is_instance_destroyed () ->
+        (* The instance was destroyed by the exit hook during shutdown.
+           This is expected and not an error — treat it as a clean stop. *)
+        Logger.info "EdenFS watcher instance was destroyed (shutdown in progress)";
+        raise Lwt.Canceled
       | Error err ->
         let msg = Edenfs_watcher.show_edenfs_watcher_error err in
         let backtrace = Printexc.get_backtrace () in

@@ -29,3 +29,5 @@ let is_available () = false
 let watch_spec _options = failwith "not implemented"
 
 let hooks_upon_clean_exit : (unit -> unit) list ref = ref []
+
+let is_instance_destroyed () = false
