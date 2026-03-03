@@ -413,11 +413,9 @@ end = struct
         (try%lwt
            let watcher = new FileWatcher.edenfs ~mergebase_with server_options edenfs_options in
            watcher#start_init;
-           (* Wait briefly for initialization to begin and check for immediate errors.
-              We do a quick check here - if it fails during wait_for_init, we'll catch it
-              in the main flow and handle it there. But for NonEdenMount, it typically
-              fails immediately during start_init or shortly after. *)
-           let%lwt init_result = watcher#wait_for_init ~timeout:(Some 5.0) in
+           (* Wait for initialization, using the same file_watcher_timeout as Watchman.
+              This respects the file_watcher_timeout .flowconfig option (default 120s). *)
+           let%lwt init_result = watcher#wait_for_init ~timeout:file_watcher_timeout in
            match init_result with
            | Ok () ->
              Logger.info "EdenFS watcher initialized successfully";
