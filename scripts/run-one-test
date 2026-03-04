@@ -194,6 +194,9 @@ runtest() {
     dir=${dir%*/}
     name=${dir##*/}
     exp_file="${name}.exp"
+    if [[ "${FLOW_RUST_PORT:-0}" -eq 1 ]] && [ -f "$dir/${name}.exp.rust_port" ]; then
+        exp_file="${name}.exp.rust_port"
+    fi
 
     # On Windows we skip some tests as symlinks not available
     if [ "$OSTYPE" = "msys" ]  &&
@@ -347,6 +350,12 @@ runtest() {
             fi
 
             if [ -z "$FLOW_GIT_BINARY" ] && [ "$(awk '$1=="git:"{print $2}' .testconfig)" == "true" ]
+            then
+                return $RUNTEST_SKIP
+            fi
+
+            if [[ "${FLOW_RUST_PORT:-0}" -eq 1 ]] && \
+              [ "$(awk '$1=="skip_rust_port:"{print $2}' .testconfig)" == "true" ]
             then
                 return $RUNTEST_SKIP
             fi

@@ -183,6 +183,9 @@ print_failure() {
     fi
     # Default expected file extension is .exp
     ext=".exp"
+    if [[ "${FLOW_RUST_PORT:-0}" -eq 1 ]] && [ -f "${dir}${name}.exp.rust_port" ]; then
+        ext=".exp.rust_port"
+    fi
 
     if [[ "$record" -eq 1 ]]; then
       # Copy .out to .exp, replacing the current version, if present, with
