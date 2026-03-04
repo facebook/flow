@@ -254,6 +254,40 @@ struct
       list_iter3 f l1 l2 l3
     | _ -> assert false
 
+  let run_to_completion f =
+    try
+      f ();
+      None
+    with
+    | AbruptCompletion.Exn ac -> Some ac
+
+  let from_completion = function
+    | None -> ()
+    | Some ac -> raise (AbruptCompletion.Exn ac)
+
+  let merge_completion_states (hd, tl) =
+    match hd with
+    | None -> ()
+    | Some ac ->
+      if
+        List.for_all
+          (function
+            | None -> false
+            | Some ac' -> ac = ac')
+          tl
+      then
+        raise (AbruptCompletion.Exn ac)
+
+  let run_cf f ~finally =
+    let result =
+      try f () with
+      | AbruptCompletion.Exn _ as e ->
+        finally ();
+        raise e
+    in
+    finally ();
+    result
+
   type ssa = {
     val_ref: Val.t ref;
     havoc: Havoc.t;
@@ -368,32 +402,14 @@ struct
       method with_bindings : 'a. ?lexical:bool -> L.t -> L.t Bindings.t -> (unit -> 'a) -> 'a =
         fun ?lexical:_ _loc bindings visit ->
           let saved_state = this#push_ssa_env bindings in
-          this#run (fun () -> visit ()) ~finally:(fun () -> this#pop_ssa_env saved_state)
+          run_cf (fun () -> visit ()) ~finally:(fun () -> this#pop_ssa_env saved_state)
 
-      (* Run some computation, catching any abrupt completions; do some final work,
-         and then re-raise any abrupt completions that were caught. *)
       method run : 'a. (unit -> 'a) -> finally:(unit -> unit) -> 'a =
-        fun f ~finally ->
-          let result =
-            try f () with
-            | AbruptCompletion.Exn _ as e ->
-              finally ();
-              raise e
-          in
-          finally ();
-          result
+        (fun f ~finally -> run_cf f ~finally)
 
-      method run_to_completion f =
-        try
-          f ();
-          None
-        with
-        | AbruptCompletion.Exn abrupt_completion -> Some abrupt_completion
+      method run_to_completion f = run_to_completion f
 
-      method from_completion =
-        function
-        | None -> ()
-        | Some abrupt_completion -> raise (AbruptCompletion.Exn abrupt_completion)
+      method from_completion completion_state = from_completion completion_state
 
       (* When an abrupt completion is raised, it falls through any subsequent
          straight-line code, until it reaches a merge point in the control-flow
@@ -426,20 +442,7 @@ struct
             abrupt_completion_envs <- List.rev_append saved abrupt_completion_envs
         )
 
-      (* Given multiple completion states, (re)raise if all of them are the same
-         abrupt completion. This function is called at merge points. *)
-      method merge_completion_states (hd_completion_state, tl_completion_states) =
-        match hd_completion_state with
-        | None -> ()
-        | Some abrupt_completion ->
-          if
-            List.for_all
-              (function
-                | None -> false
-                | Some abrupt_completion' -> abrupt_completion = abrupt_completion')
-              tl_completion_states
-          then
-            raise (AbruptCompletion.Exn abrupt_completion)
+      method merge_completion_states completion_states = merge_completion_states completion_states
 
       (* Given a filter for particular abrupt completions to expect, find the saved
          environments corresponding to them, and merge those environments with the
