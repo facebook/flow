@@ -887,6 +887,13 @@ let reason_of_resolved_param = function
   | ResolvedArg (TupleElement { reason; _ }, _) ->
     reason
 
+(* Extract the property name from a key type that is a SingletonStrT,
+ * possibly wrapped in a GenericT. Returns None for non-string-literal keys. *)
+let name_of_singleton_string_type = function
+  | DefT (_, SingletonStrT { value = name; _ }) -> Some name
+  | GenericT { bound = DefT (_, SingletonStrT { value = name; _ }); _ } -> Some name
+  | _ -> None
+
 let dro_of_type t =
   match t with
   | DefT

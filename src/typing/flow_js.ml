@@ -310,6 +310,26 @@ struct
 
   module GetPropTKit = GetPropT_kit (Get_prop_helper)
 
+  (* Look up a key's value type directly in a property map. Returns Some type_ if the
+   * key is a string literal, the property exists, and is readable; None otherwise.
+   * Applies react_dro wrapping if needed. *)
+  let lookup_prop_type_direct cx ~use_op ~react_dro props key_type =
+    match TypeUtil.name_of_singleton_string_type key_type with
+    | Some name ->
+      (match NameUtils.Map.find_opt name props with
+      | Some prop ->
+        (match Property.type_ prop with
+        | OrdinaryField { type_; polarity } when Polarity.compat (polarity, Polarity.Positive) ->
+          let type_ =
+            match react_dro with
+            | Some dro -> mk_react_dro cx (Frame (ReactDeepReadOnly dro, use_op)) dro type_
+            | None -> type_
+          in
+          Some type_
+        | _ -> None)
+      | None -> None)
+    | None -> None
+
   (** NOTE: Do not call this function directly. Instead, call the wrapper
       functions `rec_flow`, `join_flow`, or `flow_opt` (described below) inside
       this module, and the function `flow` outside this module. **)
@@ -1698,18 +1718,52 @@ struct
                 action = ReadElem { id; from_annot = true; skip_optional; access_iterables; tout };
               }
           ) ->
-          let reason = update_desc_reason invalidate_rtype_alias reason in
-          let (t0, (t1, ts)) = UnionRep.members_nel rep in
-          let f t =
-            Tvar.mk_no_wrap_where cx reason (fun tvar ->
-                let action =
-                  ReadElem { id; from_annot = true; skip_optional; access_iterables; tout = tvar }
-                in
-                rec_flow cx trace (t, ElemT { use_op; reason; obj; action })
-            )
+          let distribute () =
+            let reason = update_desc_reason invalidate_rtype_alias reason in
+            let (t0, (t1, ts)) = UnionRep.members_nel rep in
+            let f t =
+              Tvar.mk_no_wrap_where cx reason (fun tvar ->
+                  let action =
+                    ReadElem { id; from_annot = true; skip_optional; access_iterables; tout = tvar }
+                  in
+                  rec_flow cx trace (t, ElemT { use_op; reason; obj; action })
+              )
+            in
+            let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
+            rec_flow_t cx trace ~use_op:unknown_use (UnionT (reason, rep), OpenT tout)
           in
-          let rep = UnionRep.make (f t0) (f t1) (Base.List.map ts ~f) in
-          rec_flow_t cx trace ~use_op:unknown_use (UnionT (reason, rep), OpenT tout)
+          (* Fast path for large Union-of-keys ~> ElemT on an ObjT without a dict.
+           * Instead of distributing the union and flowing each key through
+           * GetPropT individually (which is O(n) flows for n keys), directly
+           * look up each key in the property map (O(1) hash lookup per key)
+           * and collect the value types into a union.
+           *
+           * We only apply this for large unions (>100 members) to avoid adding
+           * overhead to the common small-union case. The semantics are equivalent:
+           * skip_optional and no_unchecked_indexed_access are irrelevant here since
+           * we require no dict and only match properties that exist in the prop map. *)
+          begin
+            match obj with
+            | DefT (_, ObjT { props_tmap; flags = { obj_kind; react_dro; _ }; _ })
+              when Obj_type.get_dict_opt obj_kind = None && List.length (UnionRep.members rep) > 100
+              ->
+              let props = Context.find_props cx props_tmap in
+              let members = UnionRep.members rep in
+              let value_types =
+                Base.List.filter_map members ~f:(lookup_prop_type_direct cx ~use_op ~react_dro props)
+              in
+              if List.length value_types = List.length members then
+                let reason = update_desc_reason invalidate_rtype_alias reason in
+                match value_types with
+                | [] -> ()
+                | [t] -> rec_flow_t cx trace ~use_op:unknown_use (t, OpenT tout)
+                | t0 :: t1 :: ts ->
+                  let rep = UnionRep.make t0 t1 ts in
+                  rec_flow_t cx trace ~use_op:unknown_use (UnionT (reason, rep), OpenT tout)
+              else
+                distribute ()
+            | _ -> distribute ()
+          end
         | (UnionT (_, rep), _)
           when match u with
                | WriteComputedObjPropCheckT _ -> false
