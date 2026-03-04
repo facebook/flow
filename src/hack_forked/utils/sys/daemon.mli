@@ -89,6 +89,16 @@ val spawn :
   'param ->
   ('output, 'input) handle
 
+(* Like [spawn], but uses fork without exec. The child process directly
+   calls the entry function in the same binary image, sharing the parent's
+   initialized memory via copy-on-write. *)
+val fork_spawn :
+  ?channel_mode:[ `pipe | `socket ] ->
+  ?name:string ->
+  ('param, 'input, 'output) entry ->
+  'param ->
+  ('output, 'input) handle
+
 (** Close the typed channels associated to a 'spawned' child,
   flushing all buffered write operations. Does nothing when applied to an
   already closed channel. May raise [Sys_error] if the operating system

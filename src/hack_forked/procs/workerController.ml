@@ -147,7 +147,13 @@ let make ~worker_mode ~channel_mode ~saved_state ~entry ~nbr_procs ~gc_control ~
 
     let state = (saved_state, gc_control, heap_handle, worker_id, worker_mode) in
     let handle =
-      Daemon.spawn ~channel_mode ~name (Daemon.null_fd (), Unix.stdout, Unix.stderr) entry state
+      if Sys.win32 then
+        Daemon.spawn ~channel_mode ~name (Daemon.null_fd (), Unix.stdout, Unix.stderr) entry state
+      else
+        (* Use fork without exec so that workers share the parent's initialized
+         * memory via copy-on-write, rather than each independently re-running
+         * all module initialization from a fresh exec of the binary. *)
+        Daemon.fork_spawn ~channel_mode ~name entry state
     in
     Unix.set_close_on_exec heap_handle;
     handle

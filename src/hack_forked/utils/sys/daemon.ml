@@ -91,12 +91,11 @@ end = struct
   let set_context entry param (ic, oc) =
     let data = (ic, oc, param) in
     Unix.putenv "HH_SERVER_DAEMON" entry;
+    (* Include the PID in the prefix so that forked processes (which share
+     * OCaml's internal Filename PRNG state) generate distinct temp names. *)
+    let prefix = Printf.sprintf "daemon_param_%d_" (Unix.getpid ()) in
     let (file, oc) =
-      Filename.open_temp_file
-        ~mode:[Open_binary]
-        ~temp_dir:Sys_utils.temp_dir_name
-        "daemon_param"
-        ".bin"
+      Filename.open_temp_file ~mode:[Open_binary] ~temp_dir:Sys_utils.temp_dir_name prefix ".bin"
     in
     Marshal.to_channel oc data [Marshal.Closures];
     close_out oc;
@@ -215,6 +214,51 @@ let spawn
 
   PidLog.log ~reason:(Entry.name_of_entry entry) ~no_fail:true pid;
   { channels = (Timeout.in_channel_of_descr parent_in, Unix.out_channel_of_descr parent_out); pid }
+
+(* Like [spawn], but uses fork without exec. The child process directly
+ * calls the entry function in the same binary image, sharing the parent's
+ * initialized memory via copy-on-write. This avoids the overhead of each
+ * child independently re-initializing the entire program. *)
+let fork_spawn
+    (type param input output)
+    ?(channel_mode = `pipe)
+    ?name:_
+    (entry : (param, input, output) entry)
+    (param : param) : (output, input) handle =
+  let ((parent_in, child_out), (child_in, parent_out)) = setup_channels channel_mode in
+  match Fork.fork () with
+  | 0 ->
+    (* Child process: re-seed RNG so temp file names are unique across
+     * forked children (they all inherit the parent's RNG state). *)
+    Random.self_init ();
+    Unix.close parent_in;
+    Unix.close parent_out;
+    let ic = Timeout.in_channel_of_descr child_in in
+    let oc = Unix.out_channel_of_descr child_out in
+    Unix.set_close_on_exec child_in;
+    Unix.set_close_on_exec child_out;
+    Stdlib.at_exit (fun () ->
+        Timeout.close_in_noerr ic;
+        close_out_noerr oc
+    );
+    let f = Entry.find entry in
+    (try
+       f param (ic, oc);
+       exit 0
+     with
+    | e ->
+      let e = Exception.wrap e in
+      prerr_endline (Exception.to_string e);
+      exit 2)
+  | pid ->
+    (* Parent process *)
+    Unix.close child_in;
+    Unix.close child_out;
+    PidLog.log ~reason:(Entry.name_of_entry entry) ~no_fail:true pid;
+    {
+      channels = (Timeout.in_channel_of_descr parent_in, Unix.out_channel_of_descr parent_out);
+      pid;
+    }
 
 (* for testing code *)
 let devnull () =
