@@ -1544,9 +1544,21 @@ let make_options
     opt_max_header_tokens = FlowConfig.max_header_tokens flowconfig;
     opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
     opt_max_workers =
-      Base.Option.first_some options_flags.max_workers (FlowConfig.max_workers flowconfig)
-      |> Base.Option.value ~default:Sys_utils.nbr_procs
-      |> min Sys_utils.nbr_procs;
+      (* Priority: CLI --max-workers > server.max_workers.full_check (non-lazy only)
+         > server.max_workers > system default (nbr_procs).
+         The result is capped at nbr_procs. *)
+      (let config_max_workers =
+         if not opt_lazy_mode then
+           Base.Option.first_some
+             (FlowConfig.max_workers_full_check flowconfig)
+             (FlowConfig.max_workers flowconfig)
+         else
+           FlowConfig.max_workers flowconfig
+       in
+       Base.Option.first_some options_flags.max_workers config_max_workers
+       |> Base.Option.value ~default:Sys_utils.nbr_procs
+       |> min Sys_utils.nbr_procs
+      );
     opt_merge_timeout;
     opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
     opt_module = FlowConfig.module_system flowconfig;

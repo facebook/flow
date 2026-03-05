@@ -194,6 +194,8 @@ val max_seconds_for_check_per_worker : config -> float
 
 val max_workers : config -> int option
 
+val max_workers_full_check : config -> int option
+
 val merge_timeout : config -> int option
 
 val missing_module_generators : config -> (Str.regexp * string) list

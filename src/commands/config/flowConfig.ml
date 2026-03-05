@@ -107,6 +107,7 @@ module Opts = struct
     max_header_tokens: int;
     max_seconds_for_check_per_worker: float;
     max_workers: int option;
+    max_workers_full_check: int option;
     merge_timeout: int option;
     missing_module_generators: (Str.regexp * string) list;
     module_declaration_dirnames: string list;
@@ -265,6 +266,7 @@ module Opts = struct
       max_header_tokens = 10;
       max_seconds_for_check_per_worker = 5.0;
       max_workers = None;
+      max_workers_full_check = None;
       merge_timeout = Some 100;
       missing_module_generators = [];
       module_declaration_dirnames = ["<PROJECT_ROOT>/@flowtyped"];
@@ -1271,6 +1273,9 @@ module Opts = struct
         boolean (fun opts v -> Ok { opts with saved_state_skip_version_check = v })
       );
       ("server.max_workers", uint (fun opts v -> Ok { opts with max_workers = Some v }));
+      ( "server.max_workers.full_check",
+        uint (fun opts v -> Ok { opts with max_workers_full_check = Some v })
+      );
       ( "server.max_workers.windows",
         uint (fun opts v ->
             if Sys.win32 then
@@ -2032,6 +2037,8 @@ let max_header_tokens c = c.options.Opts.max_header_tokens
 let max_seconds_for_check_per_worker c = c.options.Opts.max_seconds_for_check_per_worker
 
 let max_workers c = c.options.Opts.max_workers
+
+let max_workers_full_check c = c.options.Opts.max_workers_full_check
 
 let merge_timeout c = c.options.Opts.merge_timeout
 
