@@ -1545,9 +1545,8 @@ let make_options
     opt_max_seconds_for_check_per_worker = FlowConfig.max_seconds_for_check_per_worker flowconfig;
     opt_max_workers =
       Base.Option.first_some options_flags.max_workers (FlowConfig.max_workers flowconfig)
-      |> Base.Option.value
-           ~default:(Sys_utils.nbr_procs / FlowConfig.max_workers_down_scaling_factor flowconfig)
-      |> min (Sys_utils.nbr_procs / FlowConfig.max_workers_down_scaling_factor flowconfig);
+      |> Base.Option.value ~default:Sys_utils.nbr_procs
+      |> min Sys_utils.nbr_procs;
     opt_merge_timeout;
     opt_missing_module_generators = FlowConfig.missing_module_generators flowconfig;
     opt_module = FlowConfig.module_system flowconfig;
