@@ -1,3 +1,8 @@
+### 0.304.0
+
+Notable bug fixes:
+* Fixed analysis of number literal keys in object destructuring rest type computation
+
 ### 0.303.0
 
 New Features:
