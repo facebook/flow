@@ -561,6 +561,21 @@ end = struct
             ~files:(FilenameSet.elements files)
         in
         let job =
+          (* The code here looks very simple, but a lot of tricky details are left unexplained.
+           * Here are the tricky perf-sensitive bits that are not very obvious:
+           *
+           * Once `job` is evaluated, we will have a closure that contains notably two structures
+           * 1. check cache
+           * 2. builtin types partially evaluated (in Merge_js.mk_builtins)
+           *
+           * Both structures will be sent to the workers serialized:
+           * 1. the check cache sent to the worker will be empty, so it's effectively the same as
+           *    creating a new cache per batch. This is important so that the cache never gets too
+           *    crazily big.
+           * 2. the partially evaluated builtin types are sent to the worker in full. This is quite
+           *    critical for perf. Recomputing these builtins from scratch per batch will be
+           *    extremely expensive.
+           *)
           let mk_check () =
             let master_cx = Context_heaps.find_master () in
             Merge_service.mk_check options ~master_cx ~reader ~find_ref_request ()
