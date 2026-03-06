@@ -1,0 +1,38 @@
+{
+  "method": "textDocument/codeAction",
+  "result": [
+    {
+      "title": "Convert to `extends T`",
+      "kind": "quickfix",
+      "diagnostics": [],
+      "edit": {
+        "changes": {
+          "<PLACEHOLDER_PROJECT_URL>/fix-type-param-colon.js": [
+            {
+              "range": {
+                "start": {
+                  "line": 2,
+                  "character": 7
+                },
+                "end": {
+                  "line": 2,
+                  "character": 16
+                }
+              },
+              "newText": "A extends string"
+            }
+          ]
+        }
+      },
+      "command": {
+        "title": "",
+        "command": "log:org.flow:<PLACEHOLDER_PROJECT_URL>",
+        "arguments": [
+          "textDocument/codeAction",
+          "convert_type_param_colon",
+          "Convert to `extends T`"
+        ]
+      }
+    }
+  ]
+}

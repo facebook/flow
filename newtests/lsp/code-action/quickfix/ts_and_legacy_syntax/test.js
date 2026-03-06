@@ -208,6 +208,36 @@ module.exports = (suite(
         ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
       ),
     ]),
+    test('provide quickfix for deprecated `:` in type param', [
+      addFile('fix-type-param-colon.js.ignored', 'fix-type-param-colon.js'),
+      lspStartAndConnect(),
+      lspRequestAndWaitUntilResponse('textDocument/codeAction', {
+        textDocument: {
+          uri: '<PLACEHOLDER_PROJECT_URL>/fix-type-param-colon.js',
+        },
+        range: {
+          start: {
+            line: 2,
+            character: 7,
+          },
+          end: {
+            line: 2,
+            character: 21,
+          },
+        },
+        context: {
+          only: ['quickfix'],
+          diagnostics: [],
+        },
+      }).verifyLSPMessageSnapshot(
+        path.join(
+          __dirname,
+          '__snapshots__',
+          'quickfix-deprecated-colon-in-type-param.json',
+        ),
+        ['textDocument/publishDiagnostics', ...lspIgnoreStatusAndCancellation],
+      ),
+    ]).flowConfig('_flowconfig_deprecated_colon_extends'),
     test('provide quickfix for `readonly` variance', [
       addFile('fix-readonly-variance.js.ignored', 'fix-readonly-variance.js'),
       lspStartAndConnect(),
