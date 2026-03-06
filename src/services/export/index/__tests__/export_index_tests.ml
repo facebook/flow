@@ -7,6 +7,8 @@
 
 open OUnit2
 
+let () = File_key.set_project_root "/"
+
 let file_source name = Export_index.File_key (File_key.SourceFile name)
 
 let file_lib name = Export_index.File_key (File_key.LibFile name)

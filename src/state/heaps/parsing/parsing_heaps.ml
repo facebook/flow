@@ -9,9 +9,19 @@ open Utils_js
 module Heap = SharedMem.NewAPI
 module MSet = Modulename.Set
 
+(* Use File_key.suffix for SharedMem hashing — the relative path is the stable
+   identity key, independent of the project root. *)
+module FileKeyForHeap = struct
+  type t = File_key.t
+
+  let to_string = File_key.suffix
+
+  let compare = File_key.compare
+end
+
 module FileHeap =
   SharedMem.AddrHeap
-    (File_key)
+    (FileKeyForHeap)
     (struct
       type t = [ `file ]
     end)

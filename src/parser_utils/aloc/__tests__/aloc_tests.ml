@@ -7,6 +7,8 @@
 
 open OUnit2
 
+let () = File_key.set_project_root "/"
+
 let compare_tests =
   [
     ( "keyed_vs_concrete_whole_file" >:: fun _ctxt ->
@@ -23,7 +25,7 @@ let compare_tests =
       let keyed = ALoc.ALocRepresentationDoNotUse.make_keyed (Some source) 1 in
       assert_raises
         (Invalid_argument
-           "Unable to compare a keyed location with a concrete one. loc1: \"test.js\": (1, 1) to (1, 2), loc2: \"test.js\": 1"
+           "Unable to compare a keyed location with a concrete one. loc1: \"/test.js\": (1, 1) to (1, 2), loc2: \"/test.js\": 1"
         )
         (fun () -> ALoc.compare concrete keyed
       )

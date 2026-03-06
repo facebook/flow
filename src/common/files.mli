@@ -170,6 +170,8 @@ val imaginary_realpath : string -> string
 val canonicalize_filenames :
   cwd:string -> handle_imaginary:(string -> string) -> string list -> string list
 
-val expand_project_root_token : root:File_path.t -> string -> string
+val expand_project_root_token_as_absolute : root:File_path.t -> string -> string
+
+val expand_project_root_token_as_relative : string -> string
 
 val expand_builtin_root_token : flowlib_dir:File_path.t -> string -> string

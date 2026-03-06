@@ -9,6 +9,8 @@ open OUnit2
 open Export_search
 open Export_search_types
 
+let () = File_key.set_project_root "/"
+
 let default_type = Export_index.DefaultType
 
 let default = Export_index.Default

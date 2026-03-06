@@ -221,6 +221,14 @@ let on_compact () =
  * we look if env.modified changed.
  *)
 let create_program_init ~shared_mem_config ~init_id ?focus_targets options =
+  (* Initialize File_key root paths in the server process. These are set in
+     make_options in the client process, but the server is a separate daemon
+     that receives options via Marshal, so we must set them here too. *)
+  File_key.set_project_root (File_path.to_string (Options.root options));
+  (match Options.file_options options |> Files.default_lib_dir with
+  | Some (Files.Flowlib path | Files.Prelude path) ->
+    File_key.set_flowlib_root (File_path.to_string path)
+  | None -> ());
   SharedMem.on_compact := on_compact;
   let num_workers = Options.max_workers options in
   let handle =

@@ -52,9 +52,9 @@ type t = Prot.client_id list
 let cache_max_size = 10
 
 let remove_cache_entry ~autocomplete client filename =
-  (* get_def, coverage, etc. all construct a File_key.SourceFile, which is then used as a key
+  (* get_def, coverage, etc. all construct a SourceFile key, which is then used as a key
      * here. *)
-  let file_key = File_key.SourceFile filename in
+  let file_key = File_key.source_file_of_absolute filename in
   FilenameCache.remove_entry file_key client.type_parse_artifacts_cache;
   if autocomplete then FilenameCache.remove_entry file_key client.autocomplete_artifacts_cache
 
@@ -88,10 +88,10 @@ let send_errors =
       get_first_contained
         warn_map
         [
-          File_key.SourceFile filename;
-          File_key.LibFile filename;
-          File_key.JsonFile filename;
-          File_key.ResourceFile filename;
+          File_key.source_file_of_absolute filename;
+          File_key.lib_file_of_absolute filename;
+          File_key.json_file_of_absolute filename;
+          File_key.resource_file_of_absolute filename;
         ]
   in
   fun ~errors_reason ~errors ~warnings client ->

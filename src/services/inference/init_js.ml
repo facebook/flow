@@ -16,7 +16,7 @@
 open Utils_js
 module ErrorSet = Flow_error.ErrorSet
 
-(* process all lib files: parse, infer, and add the symbols they define
+(* Process all lib files: parse, infer, and add the symbols they define
    to the builtins object.
 
    Note: we support overrides of definitions found earlier in the list of
@@ -31,7 +31,7 @@ let load_lib_files ~ccx ~options ~reader files =
     files
     |> Lwt_list.fold_left_s
          (fun (ok_acc, asts_with_scoped_dir_opt_acc) (scoped_dir_opt, file) ->
-           let lib_file = File_key.LibFile file in
+           let lib_file = File_key.lib_file_of_absolute file in
            match Parsing_heaps.Mutator_reader.get_ast ~reader lib_file with
            | Some ast ->
              (* construct ast list in reverse override order *)

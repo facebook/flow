@@ -110,28 +110,6 @@ let saved_state_version () =
   assert (String.length version = saved_state_version_length);
   version
 
-let with_cache tbl key f =
-  match Hashtbl.find_opt tbl key with
-  | Some result -> result
-  | None ->
-    let result = f key in
-    Hashtbl.add tbl key result;
-    result
-
-let builtin_flow_lib_marker = "<BUILTIN_FLOW_LIB>///"
-
-let builtin_flowlib_root_of_options options =
-  options
-  |> Options.file_options
-  |> Files.default_lib_dir
-  |> Option.map (function
-         | Files.Flowlib p
-         | Files.Prelude p
-         ->
-         (* Ensure that the builtin lib path is fully real-path resolved *)
-         p |> File_path.to_string |> File_path.make |> File_path.to_string
-         )
-
 (* Saving the saved state generally consists of 3 things:
  *
  * 1. Collecting the various bits of data
@@ -153,12 +131,10 @@ module Save : sig
 end = struct
   type t = {
     root: string;
-    builtin_flowlib_root: string option;
     intern_tbl: (string, string) Hashtbl.t;
   }
 
-  let make ~root ~builtin_flowlib_root =
-    { root; builtin_flowlib_root; intern_tbl = Hashtbl.create (1 lsl 20) }
+  let make ~root = { root; intern_tbl = Hashtbl.create (1 lsl 20) }
 
   let intern t x =
     match Hashtbl.find_opt t.intern_tbl x with
@@ -180,21 +156,11 @@ end = struct
    * *)
   let normalize_path t path = intern t (Files.relative_path t.root path)
 
-  let normalize_libdef_path t p =
-    match t.builtin_flowlib_root with
-    | Some flowlib_root when String.starts_with ~prefix:flowlib_root p ->
-      intern t (builtin_flow_lib_marker ^ Files.relative_path flowlib_root p)
-    | _ -> normalize_path t p
-
-  let normalize_file_key t = function
-    | File_key.LibFile p -> File_key.LibFile (normalize_libdef_path t p)
-    | File_key.SourceFile p -> File_key.SourceFile (normalize_path t p)
-    | File_key.JsonFile p -> File_key.JsonFile (normalize_path t p)
-    | File_key.ResourceFile p -> File_key.ResourceFile (normalize_path t p)
-
-  (* A Flow_error.t is a complicated data structure with Loc.t's hidden everywhere. *)
-  let normalize_error t =
-    Flow_error.map_loc_of_error (ALoc.update_source (Base.Option.map ~f:(normalize_file_key t)))
+  (* With relative paths in File_key.t, normalization is identity.
+     LibFile values already have the flowlib marker prefix for flowlib files
+     (added by File_key.lib_file_of_absolute at construction time).
+     Non-flowlib LibFile values are already relative to the project root. *)
+  let normalize_file_key _t file_key = file_key
 
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
@@ -335,15 +301,12 @@ end = struct
       let relative_fn = normalize_file_key t fn in
       (relative_fn, relative_file_data) :: unparsed_heaps
 
-  let normalize_error_set t = Flow_error.ErrorSet.map (normalize_error t)
-
   (* Collect all the data for all the files *)
   let collect_data ~genv ~env ~profiling =
     let options = genv.ServerEnv.options in
     let reader = State_reader.create () in
     let root = Options.root options |> File_path.to_string in
-    let builtin_flowlib_root = builtin_flowlib_root_of_options options in
-    let t = make ~root ~builtin_flowlib_root in
+    let t = make ~root in
     let parsed_heaps =
       Profiling_js.with_timer profiling ~timer:"CollectParsed" ~f:(fun () ->
           FilenameSet.fold
@@ -379,15 +342,7 @@ end = struct
       |> SSet.filter (fun lib -> not (is_in_flowlib lib))
       |> SSet.map (normalize_path t)
     in
-    let local_errors =
-      FilenameMap.fold
-        (fun fn error_set acc ->
-          let normalized_fn = normalize_file_key t fn in
-          let normalized_error_set = normalize_error_set t error_set in
-          FilenameMap.add normalized_fn normalized_error_set acc)
-        env.ServerEnv.errors.ServerEnv.local_errors
-        FilenameMap.empty
-    in
+    let local_errors = env.ServerEnv.errors.ServerEnv.local_errors in
     let node_modules_containers =
       SMap.fold
         (fun key value acc -> SMap.add (normalize_path t key) value acc)
@@ -526,60 +481,6 @@ module Load : sig
 
   val denormalize_file_data : options:Options.t -> normalized_file_data -> denormalized_file_data
 end = struct
-  module FileDenormalizer : sig
-    type t
-
-    val make : root:string -> builtin_flowlib_root:string option -> t
-
-    val without_cache : t -> t
-
-    val denormalize_path : t -> string -> string
-
-    val denormalize_file_key_no_cache : t -> File_key.t -> File_key.t
-
-    val denormalize_file_key : t -> File_key.t -> File_key.t
-  end = struct
-    type t = {
-      root: string;
-      builtin_flowlib_root: string option;
-      file_key_cache: (File_key.t, File_key.t) Hashtbl.t;
-    }
-
-    let make ~root ~builtin_flowlib_root =
-      { root; builtin_flowlib_root; file_key_cache = Hashtbl.create 16 }
-
-    let without_cache t = { t with file_key_cache = Hashtbl.create 0 }
-
-    (* This could also have its own cache, but an October 2020 experiment showed that memoizing
-     * these calls does not even save a single word in the denormalized saved state object. *)
-    let denormalize_path { root; _ } path = Files.absolute_path root path
-
-    let denormalize_libdef_path t p =
-      match t.builtin_flowlib_root with
-      | Some flowlib_root ->
-        (match Base.String.chop_prefix ~prefix:builtin_flow_lib_marker p with
-        | Some p -> Files.absolute_path flowlib_root p
-        | None -> denormalize_path t p)
-      | None -> denormalize_path t p
-
-    let denormalize_file_key_no_cache t = function
-      | File_key.LibFile p -> File_key.LibFile (denormalize_libdef_path t p)
-      | File_key.SourceFile p -> File_key.SourceFile (denormalize_path t p)
-      | File_key.JsonFile p -> File_key.JsonFile (denormalize_path t p)
-      | File_key.ResourceFile p -> File_key.ResourceFile (denormalize_path t p)
-
-    let denormalize_file_key ({ file_key_cache; _ } as denormalizer) file_key =
-      with_cache file_key_cache file_key (denormalize_file_key_no_cache denormalizer)
-  end
-
-  let denormalize_dependency_graph ~denormalizer (files, impls, sigs) =
-    let files = Array.map (FileDenormalizer.denormalize_file_key denormalizer) files in
-    (files, impls, sigs)
-
-  let denormalize_error ~denormalizer =
-    Flow_error.map_loc_of_error
-      (ALoc.update_source (Base.Option.map ~f:(FileDenormalizer.denormalize_file_key denormalizer)))
-
   let verify_version =
     (* Flow_build_id should always be 16 bytes *)
     let rec read_version fd buf offset len =
@@ -623,72 +524,20 @@ end = struct
       else
         Lwt.return (assert_version version)
 
-  let denormalize_resolved_requires ~denormalizer resolved_modules phantom_dependencies =
-    let resolved_modules =
-      Array.map
-        (resolved_module_map_fn
-           ~on_file:(FileDenormalizer.denormalize_file_key_no_cache denormalizer)
-        )
-        resolved_modules
-    in
-    let phantom_dependencies =
-      Array.map
-        (modulename_map_fn ~on_file:(FileDenormalizer.denormalize_file_key_no_cache denormalizer))
-        phantom_dependencies
-    in
-    (* Sort after denormalizing because the denormalized file keys could be in a
-     * different sort order, specifically for paths outside of the root, i.e.,
-     * paths starting with `../` *)
-    Array.sort Modulename.compare phantom_dependencies;
-    (resolved_modules, phantom_dependencies)
+  (* With relative paths in File_key.t, denormalization is identity. The data
+     was already sorted on the save side, and no path transformation changes
+     the sort order. *)
+  let denormalize_file_data ~options:_ data = data
 
-  (** Turns all the relative paths in a file's data back into absolute paths. *)
-  let denormalize_file_data
-      ~options { requires; resolved_modules; phantom_dependencies; exports; hash; imports } =
-    let root = Options.root options |> File_path.to_string in
-    let builtin_flowlib_root = builtin_flowlib_root_of_options options in
-    let denormalizer = FileDenormalizer.make ~root ~builtin_flowlib_root in
-    let (resolved_modules, phantom_dependencies) =
-      denormalize_resolved_requires ~denormalizer resolved_modules phantom_dependencies
-    in
-    { requires; resolved_modules; phantom_dependencies; exports; hash; imports }
-
-  let progress_fn real_total ~total:_ ~start ~length:_ =
+  (* Validate saved state and prepare data for use.
+     With relative paths in File_key.t, the saved state's relative paths are used
+     directly — no per-file denormalization needed. Only raw string paths
+     (non_flowlib_libs, node_modules_containers) need root prepending. *)
+  let denormalize_data ~workers:_ ~options ~data =
+    (* Signal progress so the status state machine transitions to Loading_saved_state,
+       which is required before the Restoring_heaps_start event can fire. *)
     MonitorRPC.status_update
-      ~event:ServerStatus.(Load_saved_state_progress { total = Some real_total; finished = start })
-
-  (* Denormalize the data for all the parsed files. This is kind of slow :( *)
-  let denormalize_parsed_heaps ~denormalizer parsed_heaps =
-    Base.List.map
-      ~f:(fun (relative_fn, parsed_file_data) ->
-        let fn = FileDenormalizer.denormalize_file_key denormalizer relative_fn in
-        (fn, parsed_file_data))
-      parsed_heaps
-
-  (* Denormalize the data for all the unparsed files *)
-  let denormalize_unparsed_heaps ~workers ~denormalizer ~progress_fn unparsed_heaps =
-    let denormalizer = FileDenormalizer.without_cache denormalizer in
-    let next = MultiWorkerLwt.next ~progress_fn ~max_size:4000 workers unparsed_heaps in
-    let job acc (relative_fn, unparsed_file_data) =
-      let fn = FileDenormalizer.denormalize_file_key_no_cache denormalizer relative_fn in
-      (fn, unparsed_file_data) :: acc
-    in
-    MultiWorkerLwt.fold workers ~job ~neutral:[] ~merge:List.rev_append ~next
-
-  let denormalize_package_heaps ~denormalizer package_heaps =
-    Base.List.map
-      ~f:(fun (relative_fn, package) ->
-        let fn = FileDenormalizer.denormalize_file_key denormalizer relative_fn in
-        (fn, package))
-      package_heaps
-
-  let denormalize_error_set ~denormalizer = Flow_error.ErrorSet.map (denormalize_error ~denormalizer)
-
-  (* Denormalize all the data *)
-  let denormalize_data ~workers ~options ~data =
-    let root = Options.root options |> File_path.to_string in
-    let builtin_flowlib_root = builtin_flowlib_root_of_options options in
-    let denormalizer = FileDenormalizer.make ~root ~builtin_flowlib_root in
+      ~event:ServerStatus.(Load_saved_state_progress { total = None; finished = 0 });
     let {
       flowconfig_hash;
       parsed_heaps;
@@ -714,35 +563,16 @@ end = struct
       raise (Invalid_saved_state Flowconfig_mismatch)
     );
 
-    Hh_logger.info "Denormalizing the data for the package.json files";
-    let package_heaps = denormalize_package_heaps ~denormalizer package_heaps in
-    Hh_logger.info "Denormalizing the data for the parsed files";
-    let parsed_heaps = denormalize_parsed_heaps ~denormalizer parsed_heaps in
-    Hh_logger.info "Denormalizing the data for the unparsed files";
-    let%lwt unparsed_heaps =
-      let progress_fn = progress_fn (List.length unparsed_heaps) in
-      denormalize_unparsed_heaps ~workers ~denormalizer ~progress_fn unparsed_heaps
-    in
-    let non_flowlib_libs =
-      SSet.map (FileDenormalizer.denormalize_path denormalizer) non_flowlib_libs
-    in
-    let local_errors =
-      FilenameMap.fold
-        (fun normalized_fn normalized_error_set acc ->
-          let fn = FileDenormalizer.denormalize_file_key denormalizer normalized_fn in
-          let error_set = denormalize_error_set ~denormalizer normalized_error_set in
-          FilenameMap.add fn error_set acc)
-        local_errors
-        FilenameMap.empty
-    in
+    (* Raw string paths still need the root prepended *)
+    let root = Options.root options |> File_path.to_string in
+    let prepend_root path = Files.absolute_path root path in
+    let non_flowlib_libs = SSet.map prepend_root non_flowlib_libs in
     let node_modules_containers =
       SMap.fold
-        (fun key value acc ->
-          SMap.add (FileDenormalizer.denormalize_path denormalizer key) value acc)
+        (fun key value acc -> SMap.add (prepend_root key) value acc)
         node_modules_containers
         SMap.empty
     in
-    let dependency_graph = denormalize_dependency_graph ~denormalizer dependency_graph in
     Lwt.return
       {
         flowconfig_hash;

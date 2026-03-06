@@ -904,17 +904,18 @@ let absolute_path root =
 (* helper to get the full path to the "flow-typed" library dir *)
 let get_flowtyped_path root = make_path_absolute root "flow-typed"
 
-(* helper: make different kinds of File_key.t from a path string *)
+(* helper: make different kinds of File_key.t from an absolute path string,
+   stripping the root to store as a relative suffix *)
 let filename_from_string ~options ~consider_libdefs ~all_unordered_libs p =
   let resource_file_exts = options.module_resource_exts in
   match Utils_js.extension_of_filename p with
-  | Some ".json" -> File_key.JsonFile p
-  | Some ext when SSet.mem ext resource_file_exts -> File_key.ResourceFile p
+  | Some ".json" -> File_key.json_file_of_absolute p
+  | Some ext when SSet.mem ext resource_file_exts -> File_key.resource_file_of_absolute p
   | _ ->
     if consider_libdefs && SSet.mem p all_unordered_libs then
-      File_key.LibFile p
+      File_key.lib_file_of_absolute p
     else
-      File_key.SourceFile p
+      File_key.source_file_of_absolute p
 
 let mkdirp path_str perm =
   let parts = Str.split dir_sep path_str in
@@ -992,9 +993,16 @@ let canonicalize_filenames ~cwd ~handle_imaginary filenames =
       | None -> handle_imaginary filename)
     filenames
 
-let expand_project_root_token ~root =
+let expand_project_root_token_as_absolute ~root =
   let root = File_path.to_string root |> Sys_utils.normalize_filename_dir_sep in
   (fun str -> str |> Str.split_delim project_root_token |> String.concat root)
+
+let expand_project_root_token_as_relative str =
+  let s = str |> Str.split_delim project_root_token |> String.concat "" in
+  if String.length s > 0 && (s.[0] = '/' || s.[0] = '\\') then
+    String.sub s 1 (String.length s - 1)
+  else
+    s
 
 let expand_builtin_root_token ~flowlib_dir =
   let flowlib_dir_str = File_path.to_string flowlib_dir |> Sys_utils.normalize_filename_dir_sep in

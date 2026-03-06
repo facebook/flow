@@ -306,24 +306,22 @@ module Make (I : INPUT) : S = struct
     )
 
   let symbol_from_loc env sym_def_loc sym_name =
-    let open File_key in
     let symbol_source = ALoc.source sym_def_loc in
     let sym_provenance =
+      let current_source = Context.file Env.(get_cx env) in
       match symbol_source with
-      | Some (LibFile def_source) ->
-        let current_source = Context.file Env.(get_cx env) in
-        if File_key.to_string current_source = def_source then
+      | Some (File_key.LibFile _ as def_file) ->
+        if File_key.equal current_source def_file then
           Ty.Local
         else
           Ty.Library { Ty.imported_as = ALocMap.find_opt sym_def_loc (Env.imported_names env) }
-      | Some (SourceFile def_source) ->
-        let current_source = Context.file Env.(get_cx env) in
-        if File_key.to_string current_source = def_source then
+      | Some (File_key.SourceFile _ as def_file) ->
+        if File_key.equal current_source def_file then
           Ty.Local
         else
           Ty.Remote { Ty.imported_as = ALocMap.find_opt sym_def_loc (Env.imported_names env) }
-      | Some (JsonFile _)
-      | Some (ResourceFile _) ->
+      | Some (File_key.JsonFile _)
+      | Some (File_key.ResourceFile _) ->
         Ty.Local
       | None -> Ty.Local
     in

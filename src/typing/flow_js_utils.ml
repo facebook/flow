@@ -2136,7 +2136,7 @@ end = struct
       && Context.is_projects_strict_boundary_import_pattern_opt_outs cx import_specifier
     then
       let projects_options = Context.projects_options cx in
-      let file = File_key.to_string (Context.file cx) in
+      let file = File_key.suffix (Context.file cx) in
       let import_specifier = Flow_import_specifier.unwrap_userland import_specifier in
       match
         Flow_projects.projects_bitset_of_path ~opts:projects_options file

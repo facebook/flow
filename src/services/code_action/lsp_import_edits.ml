@@ -21,7 +21,7 @@ let is_available_autoimport_result cx =
     | File_key _ -> true
 
 let main_of_package ~get_package_info package_dir =
-  let file_key = File_key.JsonFile (package_dir ^ Filename.dir_sep ^ "package.json") in
+  let file_key = File_key.json_file_of_absolute (package_dir ^ Filename.dir_sep ^ "package.json") in
   match get_package_info file_key with
   | Some (Ok package) -> Package_json.main package
   | Some (Error _)
@@ -143,7 +143,9 @@ let node_path
       let package_dir_rev = package_dir :: ancestor_rev in
       (match
          get_package_info
-           (File_key.JsonFile (path_parts_rev_to_absolute ("package.json" :: package_dir_rev)))
+           (File_key.json_file_of_absolute
+              (path_parts_rev_to_absolute ("package.json" :: package_dir_rev))
+           )
        with
       | Some (Ok package_info)
         when can_import_as_node_package
@@ -167,7 +169,7 @@ let node_path
         if
           match src_prefix_opt with
           | None -> true
-          | Some prefix -> Files.is_prefix prefix src_dir
+          | Some prefix -> Files.is_prefix prefix (File_key.strip_project_root src_dir)
         then
           let root_relative_dirname_parts = Files.split_path root_relative_dirname in
           Base.Option.map

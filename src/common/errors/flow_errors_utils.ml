@@ -1114,7 +1114,8 @@ let read_lines_in_file loc filename stdin_file =
 
 let file_of_source source =
   match source with
-  | Some (File_key.LibFile filename) ->
+  | Some file_key ->
+    let filename = File_key.to_string file_key in
     let filename =
       if is_short_lib filename then
         let prefix_len = String.length lib_prefix in
@@ -1122,10 +1123,6 @@ let file_of_source source =
       else
         filename
     in
-    Some filename
-  | Some (File_key.SourceFile filename)
-  | Some (File_key.JsonFile filename)
-  | Some (File_key.ResourceFile filename) ->
     Some filename
   | None -> None
 
@@ -1454,17 +1451,16 @@ module Cli_output = struct
     let horizontal_line_length = flags.message_width - (String.length severity_name + 1) in
     let filename =
       Loc.(
-        File_key.(
-          let { source; start = { line; column; _ }; _ } = loc in
-          let pos = ":" ^ string_of_int line ^ ":" ^ string_of_int (column + 1) in
-          match source with
-          | Some (LibFile filename) -> relative_lib_path ~strip_root filename ^ pos
-          | Some (SourceFile filename)
-          | Some (JsonFile filename)
-          | Some (ResourceFile filename) ->
-            relative_path ~strip_root filename ^ pos
-          | None -> ""
-        )
+        let { source; start = { line; column; _ }; _ } = loc in
+        let pos = ":" ^ string_of_int line ^ ":" ^ string_of_int (column + 1) in
+        match source with
+        | Some (File_key.LibFile _ as fk) ->
+          relative_lib_path ~strip_root (File_key.to_string fk) ^ pos
+        | Some (File_key.SourceFile _ as fk)
+        | Some (File_key.JsonFile _ as fk)
+        | Some (File_key.ResourceFile _ as fk) ->
+          relative_path ~strip_root (File_key.to_string fk) ^ pos
+        | None -> ""
       )
     in
     (* If the filename is longer then the remaining horizontal line length we
@@ -2098,15 +2094,13 @@ module Cli_output = struct
 
   (* Prints a File_key.t to a string. *)
   let print_file_key ~strip_root file_key =
-    File_key.(
-      match file_key with
-      | Some (LibFile filename) -> relative_lib_path ~strip_root filename
-      | Some (SourceFile filename)
-      | Some (JsonFile filename)
-      | Some (ResourceFile filename) ->
-        relative_path ~strip_root filename
-      | None -> "(builtins)"
-    )
+    match file_key with
+    | Some (File_key.LibFile _ as fk) -> relative_lib_path ~strip_root (File_key.to_string fk)
+    | Some (File_key.SourceFile _ as fk)
+    | Some (File_key.JsonFile _ as fk)
+    | Some (File_key.ResourceFile _ as fk) ->
+      relative_path ~strip_root (File_key.to_string fk)
+    | None -> "(builtins)"
 
   exception Oh_no_file_contents_have_changed
 

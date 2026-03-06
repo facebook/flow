@@ -1097,6 +1097,10 @@ let () =
      )
     )
 
+(* flow.js runs without a project root — set empty root so File_key.to_string
+   works on File_key values created with raw constructors. *)
+let () = File_key.set_project_root ""
+
 let () = Js.Unsafe.set exports "initBuiltins" (Js.wrap_callback init_builtins_js)
 
 let () = Js.Unsafe.set exports "check" (Js.wrap_callback check_js)

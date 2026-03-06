@@ -10,6 +10,8 @@ open Ast_extraction_utils
 open Refactor_extract_utils
 open Loc_collections
 
+let () = File_key.set_project_root "/"
+
 let pretty_print layout =
   let source = Pretty_printer.print ~skip_endline:true layout in
   Source.contents source

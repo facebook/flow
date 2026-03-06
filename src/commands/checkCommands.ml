@@ -351,7 +351,7 @@ module FocusCheckCommand = struct
     let focus_targets =
       SSet.fold
         (fun file acc ->
-          FilenameSet.add (File_key.SourceFile File_path.(to_string (make file))) acc)
+          FilenameSet.add (File_key.source_file_of_absolute File_path.(to_string (make file))) acc)
         filenames
         FilenameSet.empty
     in

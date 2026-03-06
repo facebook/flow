@@ -31,9 +31,8 @@ let show_source = function
     extension is less important than the rest of the basename and we should suggest
     [import ... from 'Foo'] before [import ... from 'Foo.example']. *)
 let compare_file_key a b =
-  let open File_key in
-  let a = to_string a in
-  let b = to_string b in
+  let a = File_key.suffix a in
+  let b = File_key.suffix b in
   let k = String.compare (Filename.chop_extension a) (Filename.chop_extension b) in
   if k <> 0 then
     k
