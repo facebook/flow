@@ -36,6 +36,8 @@ class mapper target_loc kind =
       match tparam with
       | { bound_kind = Extends; _ } when kind = `TypeParamExtends && this#is_target loc ->
         (Loc.none, { tparam with bound_kind = Colon })
+      | { bound_kind = Colon; _ } when kind = `TypeParamColon && this#is_target loc ->
+        (Loc.none, { tparam with bound_kind = Extends })
       | { variance = Some (v_loc, Flow_ast.Variance.{ kind = InOut; _ }); _ }
         when kind = `InOutVariance && this#is_target v_loc ->
         (Loc.none, { tparam with variance = None })
@@ -85,6 +87,10 @@ let convert_keyof_type ast loc =
 
 let convert_type_param_extends ast loc =
   let mapper = new mapper loc `TypeParamExtends in
+  mapper#program ast
+
+let convert_type_param_colon ast loc =
+  let mapper = new mapper loc `TypeParamColon in
   mapper#program ast
 
 let convert_readonly_variance ast loc =

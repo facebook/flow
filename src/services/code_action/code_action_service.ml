@@ -1012,6 +1012,19 @@ let ast_transforms_of_error
       ]
     else
       []
+  | Error_message.ETSSyntax { kind = Error_message.DeprecatedTypeParamColon; loc = error_loc } ->
+    if loc_opt_intersects ~error_loc ~loc then
+      [
+        {
+          title = "Convert to `extends T`";
+          diagnostic_title = "convert_type_param_colon";
+          transform = untyped_ast_transform Autofix_ts_syntax.convert_type_param_colon;
+          target_loc = error_loc;
+          confidence = WillFixErrorAndSafeForRunningOnSave;
+        };
+      ]
+    else
+      []
   | Error_message.ETSSyntax { kind = Error_message.TSReadonlyVariance; loc = error_loc } ->
     if loc_opt_intersects ~error_loc ~loc then
       [
