@@ -32,6 +32,7 @@ let metadata =
     component_syntax = true;
     async_component_syntax = false;
     deprecated_colon_extends = [];
+    deprecated_colon_extends_excludes = [];
     deprecated_utilities = SMap.empty;
     deprecated_utilities_excludes = [];
     dev_only_refinement_info_as_errors = false;

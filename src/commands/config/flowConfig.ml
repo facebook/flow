@@ -159,6 +159,7 @@ module Opts = struct
     supported_operating_systems: Options.supported_os list;
     ts_syntax: bool;
     deprecated_colon_extends: string list;
+    deprecated_colon_extends_excludes: string list;
     ts_utility_syntax: bool;
     tslib_syntax: bool;
     type_expansion_recursion_limit: int;
@@ -318,6 +319,7 @@ module Opts = struct
       supported_operating_systems = [];
       ts_syntax = false;
       deprecated_colon_extends = [];
+      deprecated_colon_extends_excludes = [];
       ts_utility_syntax = true;
       tslib_syntax = false;
       type_expansion_recursion_limit = 3;
@@ -1186,6 +1188,17 @@ module Opts = struct
           ~multiple:true
           (fun opts v ->
             Ok { opts with deprecated_colon_extends = v :: opts.deprecated_colon_extends })
+      );
+      ( "experimental.deprecated_colon_extends.excludes",
+        string
+          ~init:(fun opts -> { opts with deprecated_colon_extends_excludes = [] })
+          ~multiple:true
+          (fun opts v ->
+            Ok
+              {
+                opts with
+                deprecated_colon_extends_excludes = v :: opts.deprecated_colon_extends_excludes;
+              })
       );
       ( "experimental.ts_utility_syntax",
         boolean (fun opts v -> Ok { opts with ts_utility_syntax = v })
@@ -2149,6 +2162,8 @@ let stylex_shorthand_prop c = c.options.Opts.stylex_shorthand_prop
 let ts_syntax c = c.options.Opts.ts_syntax
 
 let deprecated_colon_extends c = c.options.Opts.deprecated_colon_extends
+
+let deprecated_colon_extends_excludes c = c.options.Opts.deprecated_colon_extends_excludes
 
 let ts_utility_syntax c = c.options.Opts.ts_utility_syntax
 

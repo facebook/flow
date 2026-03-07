@@ -84,6 +84,7 @@ type metadata = {
   stylex_shorthand_prop: string option;
   ts_syntax: bool;
   deprecated_colon_extends: string list;
+  deprecated_colon_extends_excludes: Str.regexp list;
   ts_utility_syntax: bool;
   tslib_syntax: bool;
   type_expansion_recursion_limit: int;
@@ -345,6 +346,7 @@ let metadata_of_options options =
     stylex_shorthand_prop = Options.stylex_shorthand_prop options;
     ts_syntax = Options.ts_syntax options;
     deprecated_colon_extends = Options.deprecated_colon_extends options;
+    deprecated_colon_extends_excludes = Options.deprecated_colon_extends_excludes options;
     ts_utility_syntax = Options.ts_utility_syntax options;
     tslib_syntax = Options.tslib_syntax options;
     deprecated_utilities = Options.deprecated_utilities options;
@@ -728,7 +730,12 @@ let is_colon_extends_deprecated cx =
     | dirs ->
       let filename = File_key.to_string (file cx) in
       let normalized_filename = Sys_utils.normalize_filename_dir_sep filename in
-      List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
+      let excluded_dirs = cx.metadata.deprecated_colon_extends_excludes in
+      let is_excluded =
+        List.exists (fun r -> Str.string_match r normalized_filename 0) excluded_dirs
+      in
+      (not is_excluded)
+      && List.exists (fun prefix -> Base.String.is_prefix ~prefix normalized_filename) dirs
 
 let ts_utility_syntax cx = cx.metadata.ts_utility_syntax
 

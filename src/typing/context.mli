@@ -134,6 +134,7 @@ type metadata = {
   stylex_shorthand_prop: string option;
   ts_syntax: bool;
   deprecated_colon_extends: string list;
+  deprecated_colon_extends_excludes: Str.regexp list;
   ts_utility_syntax: bool;
   tslib_syntax: bool;
   type_expansion_recursion_limit: int;

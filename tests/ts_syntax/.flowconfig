@@ -18,3 +18,4 @@ experimental.deprecated_utilities='$Values' -> '<PROJECT_ROOT>/deprecated'
 experimental.deprecated_utilities.excludes=<PROJECT_ROOT>/deprecated/excluded_dir
 
 experimental.deprecated_colon_extends=<PROJECT_ROOT>/deprecated
+experimental.deprecated_colon_extends.excludes=<PROJECT_ROOT>/deprecated/excluded_dir
