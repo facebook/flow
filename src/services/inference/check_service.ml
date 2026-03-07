@@ -108,8 +108,10 @@ let mk_check_file ~reader ~options ~master_cx ~cache () =
           )
       | Some dep_addr ->
         (match Parsing_heaps.read_file_key dep_addr with
-        | File_key.ResourceFile f as file_key ->
-          let (reason, lazy_module) = Merge.merge_resource_module_t cx file_key f in
+        | File_key.ResourceFile _ as file_key ->
+          let (reason, lazy_module) =
+            Merge.merge_resource_module_t cx file_key (File_key.to_string file_key)
+          in
           Context.TypedModule
             (Type.Constraint.ForcingState.of_lazy_module (reason, lazy_module)
             |> ConsGen.force_module_type_thunk cx

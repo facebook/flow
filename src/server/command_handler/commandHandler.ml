@@ -266,7 +266,9 @@ let mk_module_system_info =
   let is_package_file ~options ~reader ~module_path ~module_name =
     let dependency =
       match
-        Flow_projects.projects_bitset_of_path ~opts:(Options.projects_options options) module_path
+        Flow_projects.projects_bitset_of_path
+          ~opts:(Options.projects_options options)
+          (File_key.strip_project_root module_path)
       with
       | None -> None
       | Some ns ->
@@ -1207,7 +1209,7 @@ let collect_rage ~options ~reader ~env ~files =
         List.iter
           (fun file ->
             (* TODO - this isn't exactly right. It could be something else, right? *)
-            let file_key = File_key.SourceFile file in
+            let file_key = File_key.source_file_of_absolute file in
             let file_state =
               if not (FilenameSet.mem file_key env.ServerEnv.files) then
                 "FILE NOT PARSED BY FLOW (likely ignored implicitly or explicitly)"
@@ -1345,7 +1347,7 @@ let get_cycle ~env fn types_only =
     )
 
 let find_module ~options ~reader (moduleref, filename) =
-  let file = File_key.SourceFile filename in
+  let file = File_key.source_file_of_absolute filename in
   let phantom_acc = ref Modulename.Map.empty in
   let resolved_module =
     (* debug *)
@@ -1528,7 +1530,7 @@ let provide_document_paste ~options ~reader ~profiling ~params =
   in
   let (edits, extra_data) =
     let file_key =
-      File_key.SourceFile
+      File_key.source_file_of_absolute
         (Flow_lsp_conversions.lsp_DocumentIdentifier_to_flow_path { TextDocumentIdentifier.uri })
     in
     match Type_contents.parse_contents ~options ~profiling text file_key |> fst with
@@ -1860,7 +1862,7 @@ let handle_llm_context ~options ~reader ~profiling ~env input =
   let strip_root = Some (Options.root options) in
   let typed_files =
     Base.List.filter_map files ~f:(fun file_path ->
-        let file_key = File_key.SourceFile file_path in
+        let file_key = File_key.source_file_of_absolute file_path in
         let file_input = File_input.FileName file_path in
         match of_file_input ~options ~env file_input with
         | Error _ -> None
@@ -3110,10 +3112,9 @@ let handle_persistent_signaturehelp_lsp
   | Ok (filename, contents) ->
     let path =
       match filename with
-      | Some filename -> filename
-      | None -> "-"
+      | Some filename -> File_key.source_file_of_absolute filename
+      | None -> File_key.SourceFile "-"
     in
-    let path = File_key.SourceFile path in
     let (file_artifacts_result, did_hit_cache) =
       let parse_result = lazy (Type_contents.parse_contents ~options ~profiling contents path) in
       let type_parse_artifacts_cache =
@@ -3719,7 +3720,7 @@ let handle_persistent_llm_context ~options ~reader ~id ~params ~metadata ~client
   let typed_files =
     Base.List.filter_map editedFilePaths ~f:(fun file_uri_str ->
         let file_path = File_url.parse file_uri_str in
-        let file_key = File_key.SourceFile file_path in
+        let file_key = File_key.source_file_of_absolute file_path in
         let text_document = { TextDocumentIdentifier.uri = DocumentUri.of_string file_uri_str } in
         let file_input = file_input_of_text_document_identifier ~client text_document in
         match of_file_input ~options ~env file_input with

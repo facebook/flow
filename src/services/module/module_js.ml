@@ -73,14 +73,14 @@ let choose_provider_and_warn_about_duplicates =
 let module_name_candidates ~options name =
   let mappers = Options.module_name_mappers options in
   let root = Options.root options in
-  let expand_project_root_token = Files.expand_project_root_token ~root in
+  let expand_project_root_token_as_absolute = Files.expand_project_root_token_as_absolute ~root in
   let map_name mapped_names (regexp, template) =
     let new_name =
       name
       (* First we apply the mapper *)
       |> Str.global_replace regexp template
       (* Then we replace the PROJECT_ROOT placeholder. *)
-      |> expand_project_root_token
+      |> expand_project_root_token_as_absolute
     in
     if new_name = name then
       mapped_names
@@ -233,7 +233,7 @@ module Node = struct
 
   let parse_package ~reader package_filename =
     let package_filename = resolve_symlinks package_filename in
-    let file_key = File_key.JsonFile package_filename in
+    let file_key = File_key.json_file_of_absolute package_filename in
     match Parsing_heaps.Reader_dispatcher.get_package_info ~reader file_key with
     | Some (Ok package) -> package
     | Some (Error ()) ->
@@ -364,7 +364,7 @@ module Node = struct
       ordered_allowed_implicit_platform_specific_import
         ~file_options
         ~projects_options
-        ~importing_file:(File_key.to_string importing_file)
+        ~importing_file:(File_key.suffix importing_file)
         ~explicit_available_platforms:None
     with
     | None ->
@@ -525,7 +525,7 @@ module Node = struct
         let applicable =
           Base.Option.value_map
             applicable_dirname_opt
-            ~f:(fun prefix -> Files.is_prefix prefix (File_key.to_string importing_file))
+            ~f:(fun prefix -> Files.is_prefix prefix (File_key.suffix importing_file))
             ~default:true
         in
         if applicable then
@@ -638,33 +638,36 @@ module Haste : MODULE_SYSTEM = struct
   let exported_module options =
     let haste_name_opt = Files.haste_name_opt ~options:(Options.file_options options) in
     let projects_options = Options.projects_options options in
-    let namespace_of_path path =
-      match path |> Flow_projects.projects_bitset_of_path ~opts:projects_options with
-      | None -> failwith ("Path " ^ path ^ " doesn't match any Haste namespace.")
+    let namespace_of_path file_key =
+      match
+        File_key.suffix file_key |> Flow_projects.projects_bitset_of_path ~opts:projects_options
+      with
+      | None -> failwith ("Path " ^ File_key.suffix file_key ^ " doesn't match any Haste namespace.")
       | Some bitset -> Flow_projects.to_bitset bitset
     in
     let is_within_node_modules = is_within_node_modules options in
     fun file ~package_info ->
+      let abs_path = File_key.to_string file in
       match file with
-      | File_key.SourceFile path ->
+      | File_key.SourceFile _ ->
         if is_mock file then
           Some
             (Haste_module_info.mk
                ~module_name:(short_module_name_of file)
-               ~namespace_bitset:(namespace_of_path path)
+               ~namespace_bitset:(namespace_of_path file)
             )
         else (
           match haste_name_opt file with
           | Some module_name ->
-            Some (Haste_module_info.mk ~module_name ~namespace_bitset:(namespace_of_path path))
+            Some (Haste_module_info.mk ~module_name ~namespace_bitset:(namespace_of_path file))
           | None -> None
         )
-      | File_key.JsonFile path ->
+      | File_key.JsonFile _ ->
         (match package_info with
-        | Some pkg when Package_json.haste_commonjs pkg || not (is_within_node_modules path) ->
+        | Some pkg when Package_json.haste_commonjs pkg || not (is_within_node_modules abs_path) ->
           Package_json.name pkg
           |> Option.map (fun module_name ->
-                 Haste_module_info.mk ~module_name ~namespace_bitset:(namespace_of_path path)
+                 Haste_module_info.mk ~module_name ~namespace_bitset:(namespace_of_path file)
              )
         | _ -> None)
       | _ ->
@@ -673,7 +676,7 @@ module Haste : MODULE_SYSTEM = struct
 
   let package_dir_opt ~reader addr =
     if Parsing_heaps.Reader_dispatcher.is_package_file ~reader addr then
-      Some (Parsing_heaps.read_file_name addr |> Filename.dirname)
+      Some (Parsing_heaps.read_file_key addr |> File_key.to_string |> Filename.dirname)
     else
       None
 
@@ -730,7 +733,7 @@ module Haste : MODULE_SYSTEM = struct
       | Some namespace -> [namespace]
       | None ->
         let opts = Options.projects_options options in
-        (match Flow_projects.projects_bitset_of_path ~opts (File_key.to_string importing_file) with
+        (match Flow_projects.projects_bitset_of_path ~opts (File_key.suffix importing_file) with
         | None -> []
         | Some bitset ->
           bitset
@@ -841,7 +844,7 @@ module Haste : MODULE_SYSTEM = struct
           Node.ordered_allowed_implicit_platform_specific_import
             ~file_options
             ~projects_options
-            ~importing_file:file
+            ~importing_file:(File_key.suffix importing_file)
             ~explicit_available_platforms:None
         with
         | None ->
@@ -979,7 +982,7 @@ module Haste : MODULE_SYSTEM = struct
              Node.ordered_allowed_implicit_platform_specific_import
                ~file_options:(Options.file_options options)
                ~projects_options:(Options.projects_options options)
-               ~importing_file:(File_key.to_string importing_file)
+               ~importing_file:(File_key.suffix importing_file)
                ~explicit_available_platforms:
                  (Flow_projects.multi_platform_ambient_supports_platform_for_project
                     ~opts:(Options.projects_options options)

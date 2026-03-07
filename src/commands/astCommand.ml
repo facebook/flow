@@ -171,6 +171,8 @@ let main
         let (ast, errors) =
           match file_type with
           | File_js ->
+            (* flow ast is a standalone parser — use the raw constructor
+               so paths are stored as-is without root stripping. *)
             let filekey = Base.Option.map filename ~f:(fun s -> File_key.SourceFile s) in
             let (ocaml_ast, errors) =
               Parser_flow.program_file ~fail:false ~parse_options ~token_sink content filekey

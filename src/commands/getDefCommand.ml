@@ -113,7 +113,7 @@ let main base_flags option_values json pretty root strip_root path wait_for_rech
       let file_str =
         match File_input.filename_of_file_input input with
         | "-" as s -> s
-        | s -> File_key.SourceFile s |> Reason.string_of_source ~strip_root
+        | s -> File_key.source_file_of_absolute s |> Reason.string_of_source ~strip_root
       in
       Utils_js.prerr_endlinef "Could not get definition for %s:%d:%d\n%s" file_str line char exn_msg
   | response -> failwith_bad_response ~request ~response

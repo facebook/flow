@@ -837,7 +837,7 @@ let check_haste_provider_conflict cx tast =
   | Some haste_name ->
     (match
        let opts = Context.projects_options cx in
-       Flow_projects.projects_bitset_of_path ~opts (File_key.to_string filename)
+       Flow_projects.projects_bitset_of_path ~opts (File_key.suffix filename)
        |> Base.Option.bind
             ~f:(Flow_projects.individual_projects_bitsets_from_common_project_bitset ~opts)
      with
@@ -1043,7 +1043,7 @@ let validate_strict_boundary_import_pattern_opt_outs cx =
               Platform_set.available_platforms
                 ~file_options
                 ~projects_options
-                ~filename:(File_key.to_string (Context.file cx))
+                ~filename:(File_key.suffix (Context.file cx))
                 ~explicit_available_platforms:
                   (Flow_projects.multi_platform_ambient_supports_platform_for_project
                      ~opts:projects_options
@@ -1747,7 +1747,7 @@ let mk_builtins metadata master_cx =
       let project =
         Flow_projects.projects_bitset_of_path
           ~opts:metadata.Context.projects_options
-          (File_key.to_string (Context.file dst_cx))
+          (File_key.suffix (Context.file dst_cx))
       in
       (match
          (* With the scoped libdef feature,

@@ -12,6 +12,8 @@ module ServerWorkerState = struct
     init_id: string;
     logger_level: Hh_logger.Level.t;
     log_filename: string option;
+    project_root: string;
+    flowlib_root: string;
   }
 
   let save ~init_id : t =
@@ -19,11 +21,18 @@ module ServerWorkerState = struct
       init_id;
       logger_level = Hh_logger.Level.min_level ();
       log_filename = Hh_logger.get_log_name ();
+      project_root = File_key.get_project_root ();
+      flowlib_root = File_key.get_flowlib_root ();
     }
 
-  let restore { init_id; logger_level; log_filename } ~(worker_id : int) =
+  let restore { init_id; logger_level; log_filename; project_root; flowlib_root } ~(worker_id : int)
+      =
     Hh_logger.set_id (Printf.sprintf "flow serverWorker %d" worker_id);
     Hh_logger.Level.set_min_level logger_level;
+
+    (* Restore File_key root paths in worker processes *)
+    File_key.set_project_root project_root;
+    File_key.set_flowlib_root flowlib_root;
 
     let init_id = init_id ^ "." ^ Random_id.short_string () in
     FlowEventLogger.init_worker ~init_id (Unix.gettimeofday ());

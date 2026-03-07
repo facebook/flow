@@ -26,7 +26,7 @@ let is_incompatible_package_json ~options ~reader =
    * specific extensions and files. Make sure to update the watchman_expression_terms in our
    * watchman file watcher! *)
   let is_incompatible filename_str =
-    let filename = File_key.JsonFile filename_str in
+    let filename = File_key.json_file_of_absolute filename_str in
     match Sys_utils.cat_or_failed filename_str with
     | None -> Module_js.Incompatible Module_js.Unknown (* Failed to read package.json *)
     | Some content ->
@@ -134,7 +134,7 @@ let check_for_package_json_changes ~is_incompatible_package_json ~skip_incompati
 
 (** Check if the file's hash has changed *)
 let did_content_change ~reader filename =
-  let file = File_key.LibFile filename in
+  let file = File_key.lib_file_of_absolute filename in
   match Sys_utils.cat_or_failed filename with
   | None -> true (* Failed to read lib file *)
   | Some content ->

@@ -1809,7 +1809,10 @@ let init_with_initial_state
     parse ~options ~profiling ~workers ~reader (fun () ->
         if !additional_libdef_files_not_delivered then (
           let files =
-            SSet.fold (fun name acc -> File_key.LibFile name :: acc) all_unordered_libs []
+            SSet.fold
+              (fun name acc -> File_key.lib_file_of_absolute name :: acc)
+              all_unordered_libs
+              []
           in
           additional_libdef_files_not_delivered := false;
           Bucket.of_list files
@@ -2623,7 +2626,7 @@ let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~me
 let libdef_check_for_lazy_init ~profiling ~options ~workers env =
   let parsed =
     SSet.fold
-      (fun n -> FilenameSet.add (File_key.LibFile n))
+      (fun n -> FilenameSet.add (File_key.lib_file_of_absolute n))
       env.ServerEnv.all_unordered_libs
       FilenameSet.empty
   in

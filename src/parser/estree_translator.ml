@@ -49,11 +49,7 @@ with type t = Impl.t = struct
     let source =
       if Config.include_filename then
         match Loc.source location with
-        | Some (File_key.LibFile src)
-        | Some (File_key.SourceFile src)
-        | Some (File_key.JsonFile src)
-        | Some (File_key.ResourceFile src) ->
-          string src
+        | Some file_key -> string (File_key.suffix file_key)
         | None -> null
       else
         null

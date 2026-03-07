@@ -12,10 +12,11 @@ type info = {
 
 let info_cache : info SMap.t ref = ref SMap.empty
 
-let info_of_file_key = function
-  | File_key.LibFile file
-  | File_key.SourceFile file
-  | File_key.JsonFile file ->
+let info_of_file_key file_key =
+  match file_key with
+  | File_key.ResourceFile _ -> None
+  | _ ->
+    let file = File_key.to_string file_key in
     (match SMap.find_opt file !info_cache with
     | Some info -> Some info
     | None ->
@@ -25,7 +26,6 @@ let info_of_file_key = function
       let info = { offsets; ends_in_newline } in
       info_cache := SMap.add file info !info_cache;
       Some info)
-  | File_key.ResourceFile _ -> None
 
 open Base.Option.Let_syntax
 

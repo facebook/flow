@@ -50,7 +50,9 @@ module InsertType = struct
 
   let handle_error ?(code = Exit.Unknown_error) msg = Exit.(exit ~msg code)
 
-  let rec parse_args args : Loc.t =
+  (* Returns (loc, source_path_opt). The source path is a raw absolute string;
+     File_key construction is deferred until after roots are initialized. *)
+  let rec parse_args args : Loc.t * string option =
     let parse_pos line col : Loc.position =
       let (line, column) =
         try convert_input_pos (int_of_string line, int_of_string col) with
@@ -62,13 +64,13 @@ module InsertType = struct
     | [start_line; start_col; end_line; end_col] ->
       let start = parse_pos start_line start_col in
       let _end = parse_pos end_line end_col in
-      Loc.{ source = None; start; _end }
+      (Loc.{ source = None; start; _end }, None)
     | [start_line; start_col] ->
       let start = parse_pos start_line start_col in
-      Loc.{ source = None; start; _end = start }
+      (Loc.{ source = None; start; _end = start }, None)
     | file :: (([_; _] | [_; _; _; _]) as loc) ->
-      let loc = parse_args loc in
-      Loc.{ loc with source = Some (File_key.SourceFile (expand_path file)) }
+      let (loc, _) = parse_args loc in
+      (loc, Some (expand_path file))
     | [] -> handle_error "flow autofix insert-type: No position given"
     | _ -> handle_error "flow autofix insert-type: Invalid position given"
 
@@ -108,10 +110,17 @@ module InsertType = struct
       omit_targ_defaults
       args
       () =
-    let (Loc.{ source; _ } as target) = parse_args args in
-    let source_path = Base.Option.map ~f:File_key.to_string source in
+    let (target, source_path) = parse_args args in
     let input = get_file_from_filename_or_stdin ~cmd:spec.name path source_path in
     let root = get_the_root ~base_flags ~input root_arg in
+    (* Set root before constructing File_key so the suffix is root-relative,
+       matching the server's File_key values. *)
+    File_key.set_project_root (File_path.to_string root);
+    let target =
+      match source_path with
+      | Some abs -> Loc.{ target with source = Some (File_key.source_file_of_absolute abs) }
+      | None -> target
+    in
     (* TODO Figure out how to implement root striping *)
     let _strip_root =
       if strip_root_arg then
