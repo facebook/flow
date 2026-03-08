@@ -539,7 +539,6 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
             && (not async)
             && (not generator)
             && effect_ <> Function.Hook
-            && Option.is_some id
             &&
             match return with
             | Function.ReturnAnnot.Missing _ -> false
@@ -560,11 +559,6 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
               Eat.comments_until_next_line env
             else
               []
-          in
-          let fn_id =
-            match id with
-            | Some i -> i
-            | None -> (Loc.none, { Identifier.name = ""; comments = None })
           in
           let annot_loc =
             match tparams with
@@ -600,7 +594,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
           in
           Statement.DeclareFunction
             {
-              Statement.DeclareFunction.id = fn_id;
+              Statement.DeclareFunction.id;
               annot;
               predicate = type_predicate;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();

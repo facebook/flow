@@ -1152,11 +1152,22 @@ with type t = Impl.t = struct
             implicit_declare;
           }
         ) =
-      let id_loc = Loc.btwn (fst id) (fst annot) in
+      let id_loc =
+        match id with
+        | Some id -> Loc.btwn (fst id) (fst annot)
+        | None -> fst annot
+      in
       let (name, predicate) =
         match annot with
         | (_, (_, Type.Function { Type.Function.effect_ = Function.Hook; _ })) -> ("DeclareHook", [])
         | _ -> ("DeclareFunction", [("predicate", option predicate predicate_)])
+      in
+      let annot_field =
+        (* Only output if we aren't putting the annot on the `id` *)
+        if Option.is_none id then
+          [("typeAnnotation", type_annotation annot)]
+        else
+          []
       in
       node
         ?comments
@@ -1164,12 +1175,20 @@ with type t = Impl.t = struct
         loc
         ([
            ( "id",
-             pattern_identifier
-               id_loc
-               { Pattern.Identifier.name = id; annot = Ast.Type.Available annot; optional = false }
+             match id with
+             | Some id ->
+               pattern_identifier
+                 id_loc
+                 {
+                   Pattern.Identifier.name = id;
+                   annot = Ast.Type.Available annot;
+                   optional = false;
+                 }
+             | None -> null
            );
            ("implicitDeclare", bool implicit_declare);
          ]
+        @ annot_field
         @ predicate
         )
     and declare_class

@@ -1,3 +1,37 @@
+Error ---------------------------------------------------------------------------- anonymous_default_export_usage.js:6:1
+
+Cannot cast `f(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   anonymous_default_export_usage.js:6:1
+   6| f("hello") as number; // ERROR - string is not number
+      ^^^^^^^^^^
+
+References:
+   anonymous_default_export_usage.js:6:3
+   6| f("hello") as number; // ERROR - string is not number
+        ^^^^^^^ [1]
+   anonymous_default_export_usage.js:6:15
+   6| f("hello") as number; // ERROR - string is not number
+                    ^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------- anonymous_default_export_usage.js:7:1
+
+Cannot cast `f(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   anonymous_default_export_usage.js:7:1
+   7| f(42) as string; // ERROR - number is not string
+      ^^^^^
+
+References:
+   anonymous_default_export_usage.js:7:3
+   7| f(42) as string; // ERROR - number is not string
+        ^^ [1]
+   anonymous_default_export_usage.js:7:10
+   7| f(42) as string; // ERROR - number is not string
+               ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------- declare_var_extras.js:24:1
 
 Cannot cast `s` to string literal `bar` because string literal `foo` [1] is incompatible with string literal `bar` [2].
@@ -136,4 +170,4 @@ References:
 
 
 
-Found 10 errors
+Found 12 errors

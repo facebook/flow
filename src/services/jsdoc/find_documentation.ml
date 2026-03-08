@@ -176,8 +176,8 @@ class jsdoc_documentation_searcher find =
 
     method! declare_function stmt_loc decl =
       let open Ast.Statement.DeclareFunction in
-      let { id = (id_loc, _); annot = (annot_loc, _); comments; _ } = decl in
-      find id_loc comments;
+      let { id; annot = (annot_loc, _); comments; _ } = decl in
+      Base.Option.iter id ~f:(fun (id_loc, _) -> find id_loc comments);
       find annot_loc comments;
       super#declare_function stmt_loc decl
 

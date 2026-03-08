@@ -85,7 +85,7 @@ class mapper ~use_snippets target_loc =
         | _ -> super#declare_function loc decl
       in
       match decl with
-      | { Flow_ast.Statement.DeclareFunction.id = (loc, _); comments = None; _ }
+      | { Flow_ast.Statement.DeclareFunction.id = Some (loc, _); comments = None; _ }
         when covers_target loc ->
         decl_with_stub ()
       | { Flow_ast.Statement.DeclareFunction.comments = Some { Flow_ast.Syntax.leading; _ }; _ }

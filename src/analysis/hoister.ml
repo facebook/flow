@@ -247,7 +247,7 @@ class ['loc] lexical_hoister ~(enable_enums : bool) =
       (* The first binding found wins, so we make sure add a declared function binding when
        * we come across it before attempting to transform it into a regular function *)
       let open Ast.Statement.DeclareFunction in
-      this#add_declared_function_binding decl.id;
+      Base.Option.iter decl.id ~f:this#add_declared_function_binding;
       super#declare_function loc decl
 
     method! declare_variable _ (decl : ('loc, 'loc) Ast.Statement.DeclareVariable.t) =

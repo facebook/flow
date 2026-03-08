@@ -5206,6 +5206,7 @@ let to_printable_error :
         | ImplementsDottedPath -> "`implements` with dotted path"
         | OptionalClassProperty -> "Optional class property (`?:`)"
         | OptionalShorthandMethod -> "Optional method signature"
+        | AnonymousDefaultExportFunction -> "Anonymous default export function declaration"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

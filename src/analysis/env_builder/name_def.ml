@@ -2236,36 +2236,31 @@ class def_finder ~autocomplete_hooks ~react_jsx env_info toplevel_scope =
 
     method! declare_function loc (decl : ('loc, 'loc) Ast.Statement.DeclareFunction.t) =
       let open Ast.Statement.DeclareFunction in
-      let {
-        id = (id_loc, { Ast.Identifier.name; _ });
-        annot;
-        predicate = _;
-        comments = _;
-        implicit_declare = _;
-      } =
-        decl
-      in
-      this#add_ordinary_binding
-        id_loc
-        (func_reason ~async:false ~generator:false loc)
-        (Binding
-           (this#mk_hooklike_if_necessary
-              (Flow_ast_utils.hook_name name)
-              (Root
-                 (Annotation
-                    {
-                      tparams_map = ALocMap.empty;
-                      optional = false;
-                      has_default_expression = false;
-                      react_deep_read_only = None;
-                      param_loc = None;
-                      annot;
-                      concrete = None;
-                    }
-                 )
-              )
-           )
-        );
+      let { id; annot; predicate = _; comments = _; implicit_declare = _ } = decl in
+      (match id with
+      | Some (id_loc, { Ast.Identifier.name; _ }) ->
+        this#add_ordinary_binding
+          id_loc
+          (func_reason ~async:false ~generator:false loc)
+          (Binding
+             (this#mk_hooklike_if_necessary
+                (Flow_ast_utils.hook_name name)
+                (Root
+                   (Annotation
+                      {
+                        tparams_map = ALocMap.empty;
+                        optional = false;
+                        has_default_expression = false;
+                        react_deep_read_only = None;
+                        param_loc = None;
+                        annot;
+                        concrete = None;
+                      }
+                   )
+                )
+             )
+          )
+      | None -> ());
       super#declare_function loc decl
 
     method! declare_class loc (decl : ('loc, 'loc) Ast.Statement.DeclareClass.t) =

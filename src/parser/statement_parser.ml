@@ -1424,7 +1424,7 @@ module Statement
     let annot = (fst annot, annot) in
 
     {
-      Statement.DeclareFunction.id;
+      Statement.DeclareFunction.id = Some id;
       annot;
       predicate;
       comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();

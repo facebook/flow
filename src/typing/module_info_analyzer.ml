@@ -214,7 +214,8 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
             Module_info.export_value info (OrdinaryName name) ~name_loc t
           | _ -> ())
         declarations
-  | (_, DeclareFunction { DeclareFunction.id; _ })
+  | (_, DeclareFunction { DeclareFunction.id = None; _ }) -> ()
+  | (_, DeclareFunction { DeclareFunction.id = Some id; _ })
   | (_, DeclareClass { DeclareClass.id; _ })
   | (_, DeclareComponent { DeclareComponent.id; _ })
   | (_, DeclareEnum { EnumDeclaration.id; _ })
@@ -323,7 +324,13 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
               Module_info.export_value info (OrdinaryName name) ~name_loc t
             | _ -> ())
           declarations
-      | D.Function (_, f) -> export_maybe_default_binding f.DeclareFunction.id
+      | D.Function (_, f) ->
+        (match f.DeclareFunction.id with
+        | Some id -> export_maybe_default_binding id
+        | None ->
+          let default_loc = Base.Option.value_exn default in
+          let (_, t) = fst (snd f.DeclareFunction.annot) in
+          Module_info.export_value info (OrdinaryName "default") ~name_loc:default_loc t)
       | D.Class (_, c) -> export_maybe_default_binding c.DeclareClass.id
       | D.Component (_, c) -> export_maybe_default_binding c.DeclareComponent.id
       | D.DefaultType ((_, t), _) ->

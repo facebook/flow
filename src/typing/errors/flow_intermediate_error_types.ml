@@ -134,6 +134,7 @@ and ts_lib_syntax_kind =
   | ImplementsDottedPath
   | OptionalClassProperty
   | OptionalShorthandMethod
+  | AnonymousDefaultExportFunction
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

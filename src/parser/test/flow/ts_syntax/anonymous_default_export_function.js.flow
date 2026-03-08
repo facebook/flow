@@ -1,0 +1,6 @@
+export default function (): {
+    enabled: boolean;
+};
+export default function (dir?: string): string;
+export default function (): Promise<void>;
+export default function <T>(x: T): T;

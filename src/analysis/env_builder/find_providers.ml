@@ -1020,8 +1020,10 @@ end = struct
         super#identifier ident
 
       method! declare_function stmt_loc ({ Flow_ast.Statement.DeclareFunction.id; _ } as stmt) =
-        let (loc, { Flow_ast.Identifier.name; _ }) = id in
-        this#new_entry name Bindings.DeclaredFunction Flow_ast.Variable.Let loc;
+        (match id with
+        | Some (loc, { Flow_ast.Identifier.name; _ }) ->
+          this#new_entry name Bindings.DeclaredFunction Flow_ast.Variable.Let loc
+        | None -> ());
         super#declare_function stmt_loc stmt
 
       method! for_in_left_declaration left =

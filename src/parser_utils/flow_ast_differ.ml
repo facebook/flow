@@ -3415,7 +3415,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     } =
       func2
     in
-    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let id_diff =
+      match (id1, id2) with
+      | (Some id1, Some id2) -> Some (diff_if_changed identifier id1 id2)
+      | (None, None) -> Some []
+      | _ -> None
+    in
     let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in
     let comments_diff = syntax_opt loc comments1 comments2 in
     if predicate1 != predicate2 || implicit_declare1 != implicit_declare2 then

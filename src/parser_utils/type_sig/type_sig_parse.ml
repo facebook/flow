@@ -4693,9 +4693,9 @@ let declare_variable_decl opts scope tbls decl k =
       | _ -> ())
     declarations
 
-let declare_function_decl opts scope tbls decl =
+let declare_function_decl opts scope tbls decl k =
   let {
-    Ast.Statement.DeclareFunction.id = (id_loc, { Ast.Identifier.name; comments = _ });
+    Ast.Statement.DeclareFunction.id;
     annot = (_, (fn_loc, t));
     predicate = _;
     comments = _;
@@ -4703,33 +4703,36 @@ let declare_function_decl opts scope tbls decl =
   } =
     decl
   in
-  let id_loc = push_loc tbls id_loc in
-  let fn_loc = push_loc tbls fn_loc in
-  let def =
-    lazy
-      (splice tbls fn_loc (fun tbls ->
-           let module T = Ast.Type in
-           match t with
-           | T.Function
-               {
-                 T.Function.tparams = tps;
-                 params = (_, { T.Function.Params.params = ps; rest = rp; this_; comments = _ });
-                 return = r;
-                 effect_;
-                 comments = _;
-               } ->
-             let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
-             let this_param = function_type_this_param opts scope tbls xs this_ in
-             let params = function_type_params opts scope tbls xs ps in
-             let rest_param = function_type_rest_param opts scope tbls xs rp in
-             let (return, type_guard) = return_annot ~is_constructor:false opts scope tbls xs r in
-             let effect_ = convert_effect opts effect_ None (Some name) in
-             FunSig { tparams; params; rest_param; this_param; return; type_guard; effect_ }
-           | _ -> failwith "unexpected declare function annot"
-       )
-      )
-  in
-  Scope.bind_declare_function scope tbls id_loc fn_loc name def
+  match id with
+  | Some (id_loc, { Ast.Identifier.name; comments = _ }) ->
+    let id_loc = push_loc tbls id_loc in
+    let fn_loc = push_loc tbls fn_loc in
+    let def =
+      lazy
+        (splice tbls fn_loc (fun tbls ->
+             let module T = Ast.Type in
+             match t with
+             | T.Function
+                 {
+                   T.Function.tparams = tps;
+                   params = (_, { T.Function.Params.params = ps; rest = rp; this_; comments = _ });
+                   return = r;
+                   effect_;
+                   comments = _;
+                 } ->
+               let (xs, tparams) = tparams opts scope tbls SSet.empty tps in
+               let this_param = function_type_this_param opts scope tbls xs this_ in
+               let params = function_type_params opts scope tbls xs ps in
+               let rest_param = function_type_rest_param opts scope tbls xs rp in
+               let (return, type_guard) = return_annot ~is_constructor:false opts scope tbls xs r in
+               let effect_ = convert_effect opts effect_ None (Some name) in
+               FunSig { tparams; params; rest_param; this_param; return; type_guard; effect_ }
+             | _ -> failwith "unexpected declare function annot"
+         )
+        )
+    in
+    Scope.bind_declare_function scope tbls id_loc fn_loc name def k
+  | None -> ()
 
 let declare_class_decl opts scope tbls decl =
   let (id_loc, { Ast.Identifier.name; comments = _ }) = decl.Ast.Statement.DeclareClass.id in
@@ -4953,7 +4956,13 @@ let declare_export_decl opts scope tbls ?export_comments default =
   function
   | D.Variable (_, v) ->
     declare_variable_decl opts scope tbls v (Scope.export_binding scope S.ExportValue)
-  | D.Function (_, f) -> declare_function_decl opts scope tbls f export_maybe_default_binding
+  | D.Function (_, f) ->
+    (match f.Ast.Statement.DeclareFunction.id with
+    | Some _ -> declare_function_decl opts scope tbls f export_maybe_default_binding
+    | None ->
+      let default_loc = Base.Option.value_exn default in
+      let def = annot opts scope tbls SSet.empty (snd f.Ast.Statement.DeclareFunction.annot) in
+      Scope.export_default scope default_loc def)
   | D.Class (_, c) -> declare_class_decl opts scope tbls c export_maybe_default_binding
   | D.Component (loc, c) ->
     declare_component_decl opts scope tbls loc c export_maybe_default_binding

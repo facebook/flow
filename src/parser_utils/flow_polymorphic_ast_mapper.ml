@@ -755,7 +755,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Statement.DeclareFunction.t =
       let open Ast.Statement.DeclareFunction in
       let { id = ident; annot; predicate; comments; implicit_declare } = decl in
-      let id' = this#function_identifier ident in
+      let id' = Option.map ~f:this#function_identifier ident in
       let annot' = this#type_annotation annot in
       let predicate' = Option.map ~f:this#predicate predicate in
       let comments' = this#syntax_opt comments in

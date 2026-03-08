@@ -2353,6 +2353,63 @@ let tests =
            assert_statement_string ~ctxt "declare function f(a:b):a%checks(!a);";
            assert_statement_string ~ctxt ~pretty:true "declare function f(a: b): a %checks(!a);"
          );
+         ( "anonymous_declare_export_default_function" >:: fun ctxt ->
+           (* Build AST for: export default function(dir: string): string; *)
+           let loc = Loc.none in
+           let string_annot = (loc, Ast.Type.String None) in
+           let param =
+             ( loc,
+               {
+                 Ast.Type.Function.Param.name =
+                   Some (loc, { Ast.Identifier.name = "dir"; comments = None });
+                 annot = string_annot;
+                 optional = false;
+               }
+             )
+           in
+           let func_type =
+             Ast.Type.Function
+               {
+                 Ast.Type.Function.tparams = None;
+                 params =
+                   ( loc,
+                     {
+                       Ast.Type.Function.Params.params = [param];
+                       rest = None;
+                       this_ = None;
+                       comments = None;
+                     }
+                   );
+                 return = Ast.Type.Function.Available string_annot;
+                 comments = None;
+                 effect_ = Ast.Function.Arbitrary;
+               }
+           in
+           let annot = (loc, (loc, func_type)) in
+           let decl_func =
+             {
+               Ast.Statement.DeclareFunction.id = None;
+               annot;
+               predicate = None;
+               comments = None;
+               implicit_declare = true;
+             }
+           in
+           let decl =
+             ( loc,
+               Ast.Statement.DeclareExportDeclaration
+                 {
+                   Ast.Statement.DeclareExportDeclaration.default = Some loc;
+                   declaration =
+                     Some (Ast.Statement.DeclareExportDeclaration.Function (loc, decl_func));
+                   specifiers = None;
+                   source = None;
+                   comments = None;
+                 }
+             )
+           in
+           assert_statement ~ctxt "export default function(dir:string):string;" decl
+         );
          ( "declare_var_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare var a:b;";
            assert_statement_string ~ctxt "declare let a:b;";

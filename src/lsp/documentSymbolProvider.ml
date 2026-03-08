@@ -246,7 +246,9 @@ class visitor =
       let open Ast.Statement.DeclareFunction in
       let { id; _ } = decl in
       let (name, selection) =
-        Base.Option.value ~default:("<function>", loc) (name_and_loc_of_identifier id)
+        Base.Option.value
+          ~default:("<function>", loc)
+          (Base.Option.bind id ~f:name_and_loc_of_identifier)
       in
       let kind = Lsp.SymbolInformation.Function in
       this#add_with_children ~loc ~selection ~name ~kind (super#declare_function loc) decl;

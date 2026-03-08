@@ -1218,7 +1218,7 @@ and Statement : sig
 
   module DeclareFunction : sig
     type ('M, 'T) t = {
-      id: ('M, 'T) Identifier.t;
+      id: ('M, 'T) Identifier.t option;
       annot: ('M, 'T) Type.annotation;
       predicate: ('M, 'T) Type.Predicate.t option;
       comments: ('M, unit) Syntax.t option;

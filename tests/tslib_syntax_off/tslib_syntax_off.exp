@@ -189,5 +189,13 @@ Optional method signature is not enabled. [unsupported-syntax]
                     ^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:75:16
 
-Found 23 errors
+Anonymous default export function declaration is not enabled. [unsupported-syntax]
+
+   75| export default function (): void; // ERROR
+                      ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 24 errors

@@ -1278,24 +1278,13 @@ module Make
         (fn_type, id, (loc, FunctionDeclaration func_ast))
     in
     let declare_function cx loc f =
-      let { DeclareFunction.id = (id_loc, id_name); annot; predicate; comments; implicit_declare } =
-        f
-      in
+      let { DeclareFunction.id; annot; predicate; comments; implicit_declare } = f in
       let effect_ =
         match annot with
         | (_, (_, Ast.Type.Function { Ast.Type.Function.effect_; _ })) -> effect_
         | _ -> Ast.Function.Arbitrary
       in
-      hook_check cx effect_ (id_loc, id_name);
       let (_, annot_ast) = Anno.mk_type_available_annotation cx Subst_name.Map.empty annot in
-      let t =
-        Type_env.get_var_declared_type
-          ~lookup_mode:Type_env.LookupMode.ForValue
-          ~is_declared_function:true
-          cx
-          (OrdinaryName id_name.Ast.Identifier.name)
-          id_loc
-      in
       let predicate =
         Base.Option.map predicate ~f:(fun ((loc, _) as p) ->
             Flow_js.add_output
@@ -1312,13 +1301,26 @@ module Make
           (Error_message.EUnsupportedSyntax
              (loc, Flow_intermediate_error_types.(TSLibSyntax DeclarationWithoutDeclare))
           );
-      {
-        DeclareFunction.id = ((id_loc, t), id_name);
-        annot = annot_ast;
-        predicate;
-        comments;
-        implicit_declare;
-      }
+      match id with
+      | Some (id_loc, id_name) ->
+        hook_check cx effect_ (id_loc, id_name);
+        let t =
+          Type_env.get_var_declared_type
+            ~lookup_mode:Type_env.LookupMode.ForValue
+            ~is_declared_function:true
+            cx
+            (OrdinaryName id_name.Ast.Identifier.name)
+            id_loc
+        in
+        {
+          DeclareFunction.id = Some ((id_loc, t), id_name);
+          annot = annot_ast;
+          predicate;
+          comments;
+          implicit_declare;
+        }
+      | None ->
+        { DeclareFunction.id = None; annot = annot_ast; predicate; comments; implicit_declare }
     in
     function
     | (_, Empty _) as stmt -> stmt
@@ -1817,6 +1819,8 @@ module Make
     | (loc, DeclareVariable decl) ->
       let decl_ast = declare_variable cx loc decl in
       (loc, DeclareVariable decl_ast)
+    | (_, DeclareFunction { DeclareFunction.id = None; _ }) ->
+      failwith "unexpected anonymous declare function"
     | (loc, DeclareFunction decl) ->
       let decl_ast = declare_function cx loc decl in
       (loc, DeclareFunction decl_ast)
@@ -1944,8 +1948,16 @@ module Make
             let v_ast = declare_variable cx loc v in
             D.Variable (loc, v_ast)
           | D.Function (loc, f) ->
-            let f_ast = declare_function cx loc f in
-            D.Function (loc, f_ast)
+            if f.DeclareFunction.id = None && not (Context.tslib_syntax cx) then (
+              Flow.add_output
+                cx
+                (Error_message.EUnsupportedSyntax
+                   (loc, Flow_intermediate_error_types.(TSLibSyntax AnonymousDefaultExportFunction))
+                );
+              D.Function (loc, Tast_utils.error_mapper#declare_function f)
+            ) else
+              let f_ast = declare_function cx loc f in
+              D.Function (loc, f_ast)
           | D.Class (loc, c) ->
             let (_, c_ast) = declare_class cx loc c in
             D.Class (loc, c_ast)

@@ -5330,8 +5330,9 @@ and declare_function
             );
             s_type;
             Atom "function";
-            space;
-            identifier id;
+            (match id with
+            | Some id -> fuse [space; identifier id]
+            | None -> Empty);
             source_location_with_comments
               ( annot_lot,
                 match t with

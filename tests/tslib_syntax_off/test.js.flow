@@ -70,3 +70,6 @@ class OCP {
 
 // Optional shorthand method
 type OSM = { f?(): void }; // ERROR
+
+// Anonymous default export function
+export default function (): void; // ERROR
