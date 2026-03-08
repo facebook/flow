@@ -1694,6 +1694,17 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
              (loc, Flow_intermediate_error_types.(TSLibSyntax TemplateLiteralType))
           );
       Tast_utils.error_mapper#type_ t
+    | (loc, ConstructorType _) as t ->
+      if not (Context.tslib_syntax env.cx) then
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.EUnsupportedSyntax
+             ( loc,
+               Flow_intermediate_error_types.TSLibSyntax
+                 Flow_intermediate_error_types.ConstructorType
+             )
+          );
+      Tast_utils.error_mapper#type_ t
     | (loc, (Exists _ as t_ast)) ->
       Flow_js_utils.add_output
         env.cx

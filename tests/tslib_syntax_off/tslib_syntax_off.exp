@@ -205,5 +205,21 @@ Key remapping (`as`) in mapped types is not enabled. [unsupported-syntax]
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:81:11
 
-Found 25 errors
+Constructor type expression (`new (...) => T` / `abstract new (...) => T`) is not enabled. [unsupported-syntax]
+
+   81| type CT = new () => string; // ERROR
+                 ^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:82:12
+
+Constructor type expression (`new (...) => T` / `abstract new (...) => T`) is not enabled. [unsupported-syntax]
+
+   82| type ACT = abstract new () => string; // ERROR
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 27 errors

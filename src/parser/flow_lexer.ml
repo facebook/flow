@@ -1063,6 +1063,7 @@ let token_base ~for_type_token (env : Lex_env.t) lexbuf : result =
       | "keyof" -> Token (env, T_KEYOF)
       | "mixed" -> Token (env, T_MIXED_TYPE)
       | "never" -> Token (env, T_NEVER_TYPE)
+      | "new" -> Token (env, T_NEW)
       | "null" -> Token (env, T_NULL)
       | "number" -> Token (env, T_NUMBER_TYPE)
       | "readonly" -> Token (env, T_READONLY)

@@ -129,6 +129,7 @@ and ts_lib_syntax_kind =
   | DeclareVariableMultipleDeclarators
   | DeclareVariableLiteralInit
   | TemplateLiteralType
+  | ConstructorType
   | UniqueSymbolType
   | TypeofImport
   | ImplementsDottedPath

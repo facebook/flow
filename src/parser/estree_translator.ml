@@ -2153,6 +2153,7 @@ with type t = Impl.t = struct
         | Never comments -> never_type loc comments
         | Undefined comments -> undefined_type loc comments
         | UniqueSymbol comments -> unique_symbol_type loc comments
+        | ConstructorType ct -> constructor_type (loc, ct)
       )
     and any_type loc comments = node ?comments "AnyTypeAnnotation" loc []
     and mixed_type loc comments = node ?comments "MixedTypeAnnotation" loc []
@@ -2230,6 +2231,37 @@ with type t = Impl.t = struct
         else
           [("this", option function_type_this_constraint this_)]
         )
+    and constructor_type
+        ( loc,
+          {
+            Type.ConstructorType.abstract_;
+            func =
+              {
+                Type.Function.params =
+                  (_, { Type.Function.Params.this_ = _; params; rest; comments = params_comments });
+                return;
+                tparams;
+                effect_ = _;
+                comments = func_comments;
+              };
+          }
+        ) =
+      let comments =
+        Flow_ast_utils.merge_comments
+          ~inner:(format_internal_comments params_comments)
+          ~outer:func_comments
+      in
+      node
+        ?comments
+        "ConstructorTypeAnnotation"
+        loc
+        [
+          ("abstract", bool abstract_);
+          ("params", array_of_list function_type_param params);
+          ("returnType", return_annotation return);
+          ("rest", option function_type_rest rest);
+          ("typeParameters", option type_parameter_declaration tparams);
+        ]
     and function_type_param ?comments (loc, { Type.Function.Param.name; annot; optional }) =
       node
         ?comments

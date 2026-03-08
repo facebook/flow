@@ -507,6 +507,16 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       | _ ->
         let (loc, g) = generic env in
         (loc, Type.Generic g))
+    | T_NEW ->
+      (match Peek.ith_token ~i:1 env with
+      | T_LESS_THAN
+      | T_LPAREN ->
+        constructor_type ~abstract_:false env
+      | _ ->
+        let (loc, g) = generic env in
+        (loc, Type.Generic g))
+    | T_IDENTIFIER { raw = "abstract"; _ } when Peek.ith_token ~i:1 env = T_NEW ->
+      constructor_type ~abstract_:true env
     | T_IDENTIFIER _
     | T_EXTENDS (* `extends` is reserved, but recover by treating it as an identifier *)
     | T_STATIC (* `static` is reserved, but recover by treating it as an identifier *) ->
@@ -1106,6 +1116,16 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         | T_LPAREN ->
           Type (_type env)
         | _ -> function_param_or_generic_type env)
+      | T_NEW ->
+        (match Peek.ith_token ~i:1 env with
+        | T_LESS_THAN
+        | T_LPAREN ->
+          Type (_type env)
+        | T_PLING
+        | T_COLON ->
+          ParamList (function_param_list_without_parens env [])
+        | _ -> Type (_type env))
+      | T_IDENTIFIER { raw = "abstract"; _ } when Peek.ith_token ~i:1 env = T_NEW -> Type (_type env)
       | T_IDENTIFIER _
       | T_STATIC (* `static` is reserved in strict mode, but still an identifier *) ->
         (* This could be a function parameter or a generic type *)
@@ -1212,6 +1232,33 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
     in
     let params = function_param_list env in
     function_with_params ~effect_:Function.Hook env start_loc tparams params
+
+  and constructor_type ~abstract_ env =
+    let start_loc = Peek.loc env in
+    if abstract_ then Eat.token env;
+    Eat.token env;
+    let tparams =
+      type_params_remove_trailing env ~kind:Flow_ast_mapper.FunctionTP (type_params env)
+    in
+    let params = function_param_list env in
+    (match params with
+    | (_, { Type.Function.Params.this_ = Some _; _ }) ->
+      error_at env (start_loc, Parse_error.ThisParamBannedInConstructorType)
+    | _ -> ());
+    let effect_ = Function.Arbitrary in
+    with_loc
+      ~start_loc
+      (fun env ->
+        Expect.token env T_ARROW;
+        let return = function_return_type env in
+        Type.(
+          ConstructorType
+            {
+              ConstructorType.abstract_;
+              func = { Function.params; return; tparams; comments = None; effect_ };
+            }
+        ))
+      env
 
   and function_return_type env =
     if is_start_of_type_guard env then
@@ -2456,6 +2503,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         BooleanLiteral { t with BooleanLiteral.comments = merge_comments comments }
       | TemplateLiteral ({ Type.TemplateLiteral.comments; _ } as t) ->
         TemplateLiteral { t with Type.TemplateLiteral.comments = merge_comments comments }
+      | ConstructorType ({ ConstructorType.func = { Function.comments; _ } as func; _ } as t) ->
+        ConstructorType
+          {
+            t with
+            ConstructorType.func = { func with Function.comments = merge_comments comments };
+          }
     )
 
   let predicate_checks_contents env ~leading =

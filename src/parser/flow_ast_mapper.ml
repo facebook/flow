@@ -2161,6 +2161,10 @@ class ['loc] mapper =
       | (loc, Renders t') -> id this#render_type t' t (fun t' -> (loc, Renders t'))
       | (loc, ReadOnly t') -> id this#readonly_type t' t (fun t' -> (loc, ReadOnly t'))
       | (loc, Function ft) -> id this#function_type ft t (fun ft -> (loc, Function ft))
+      | (loc, ConstructorType { ConstructorType.abstract_; func }) ->
+        id this#function_type func t (fun func ->
+            (loc, ConstructorType { ConstructorType.abstract_; func })
+        )
       | (loc, Component ct) -> id_loc this#component_type loc ct t (fun ct -> (loc, Component ct))
       | (loc, Object ot) -> id this#object_type ot t (fun ot -> (loc, Object ot))
       | (loc, Interface i) -> id_loc this#interface_type loc i t (fun i -> (loc, Interface i))

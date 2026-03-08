@@ -5201,6 +5201,8 @@ let to_printable_error :
         | DeclareVariableLiteralInit -> "`declare` variable with literal initializer"
         | ExportTypeSpecifier -> "Inline `type` modifier on export specifier"
         | TemplateLiteralType -> "Template literal type"
+        | ConstructorType ->
+          "Constructor type expression (`new (...) => T` / `abstract new (...) => T`)"
         | UniqueSymbolType -> "`unique symbol` type"
         | TypeofImport -> "`typeof import(\"module\")` syntax"
         | ImplementsDottedPath -> "`implements` with dotted path"

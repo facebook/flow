@@ -1694,6 +1694,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | Renders t' -> Renders (this#render_type t')
         | ReadOnly t' -> ReadOnly (this#readonly_type t')
         | Function ft -> Function (this#function_type ft)
+        | ConstructorType { ConstructorType.abstract_; func } ->
+          ConstructorType { ConstructorType.abstract_; func = this#function_type func }
         | Component c -> Component (this#component_type c)
         | Object ot -> Object (this#object_type ot)
         | Interface i -> Interface (this#interface_type i)

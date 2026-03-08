@@ -5059,6 +5059,15 @@ and type_ ~opts ((loc, t) : (Loc.t, Loc.t) Ast.Type.t) =
       | T.UniqueSymbol comments -> layout_node_with_comments_opt loc comments (Atom "unique symbol")
       | T.Nullable t -> type_nullable ~opts loc t
       | T.Function func -> type_function ~opts ~sep:(fuse [pretty_space; Atom "=>"]) loc func
+      | T.ConstructorType { T.ConstructorType.abstract_; func } ->
+        let prefix =
+          if abstract_ then
+            fuse [Atom "abstract"; pretty_space; Atom "new"]
+          else
+            Atom "new"
+        in
+        fuse
+          [prefix; pretty_space; type_function ~opts ~sep:(fuse [pretty_space; Atom "=>"]) loc func]
       | T.Component comp -> type_component ~opts loc comp
       | T.Object obj -> type_object ~opts loc obj
       | T.Interface i -> type_interface ~opts loc i

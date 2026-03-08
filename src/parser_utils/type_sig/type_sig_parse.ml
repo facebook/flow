@@ -1752,6 +1752,7 @@ and annot_with_loc opts scope tbls xs (loc, t) =
     | T.Null _ -> Annot (Null loc)
     | T.Symbol _ -> Annot (Symbol loc)
     | T.UniqueSymbol _ -> Annot (Symbol loc)
+    | T.ConstructorType _ -> Annot (Any loc)
     | T.Number _ -> Annot (Number loc)
     | T.BigInt _ -> Annot (BigInt loc)
     | T.String _ -> Annot (String loc)

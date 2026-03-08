@@ -601,7 +601,8 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
         | Intersection _
         | Tuple _
         | Renders _
-        | TemplateLiteral _ ->
+        | TemplateLiteral _
+        | ConstructorType _ ->
           super#type_ (annot, t)
       else
         (* it is tempting to not recurse here, but comments are not included in

@@ -162,6 +162,7 @@ type t =
   | ThisParamAnnotationRequired
   | ThisParamBannedInArrowFunctions
   | ThisParamBannedInConstructor
+  | ThisParamBannedInConstructorType
   | ThisParamMayNotBeOptional
   | ThisParamMustBeFirst
   | TrailingCommaAfterRestElement
@@ -499,6 +500,7 @@ module PP = struct
       "Arrow functions cannot have a `this` parameter; arrow functions automatically bind `this` when declared."
     | ThisParamBannedInConstructor ->
       "Constructors cannot have a `this` parameter; constructors don't bind `this` like other functions."
+    | ThisParamBannedInConstructorType -> "Constructor types cannot have a `this` parameter."
     | ThisParamMayNotBeOptional -> "The `this` parameter cannot be optional."
     | ThisParamMustBeFirst -> "The `this` parameter must be the first function parameter."
     | TrailingCommaAfterRestElement -> "A trailing comma is not permitted after the rest element"

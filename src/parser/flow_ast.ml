@@ -502,6 +502,14 @@ and Type : sig
     [@@deriving show]
   end
 
+  module ConstructorType : sig
+    type ('M, 'T) t = {
+      abstract_: bool;
+      func: ('M, 'T) Function.t;
+    }
+    [@@deriving show]
+  end
+
   module Tuple : sig
     module LabeledElement : sig
       type ('M, 'T) t = {
@@ -631,6 +639,7 @@ and Type : sig
     | Never of ('M, unit) Syntax.t option
     | Undefined of ('M, unit) Syntax.t option
     | UniqueSymbol of ('M, unit) Syntax.t option
+    | ConstructorType of ('M, 'T) ConstructorType.t
 
   (* Type.annotation is a concrete syntax node with a location that starts at
    * the colon and ends after the type. For example, "var a: number", the

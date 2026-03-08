@@ -3274,6 +3274,14 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "declare const x: unique symbol;";
            assert_statement_string ~ctxt ~pretty:true "type T = unique symbol;"
          );
+         ( "constructor_type" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "type T = new () => string;";
+           assert_statement_string ~ctxt ~pretty:true "type T = new (x: number) => Foo;";
+           assert_statement_string ~ctxt ~pretty:true "type T = abstract new () => string;";
+           assert_statement_string ~ctxt ~pretty:true "type T = abstract new (x: number) => Foo;";
+           assert_statement_string ~ctxt ~pretty:true "type T = new <T>(x: T) => T;";
+           assert_statement_string ~ctxt ~pretty:true "type T = new () => new () => string;"
+         );
          ( "records" >:: fun ctxt ->
            assert_statement_string
              ~ctxt
