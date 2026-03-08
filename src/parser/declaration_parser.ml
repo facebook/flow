@@ -531,11 +531,12 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
         in
         (* Check for implicit declare function: in ambient context with semicolon instead of body.
            We check all conversion conditions BEFORE consuming the semicolon. If conversion
-           would fail, we fall through to normal body parsing which will emit appropriate errors. *)
+           would fail, we fall through to normal body parsing which will emit appropriate errors.
+           We also accept implicit semicolons (ASI). *)
         let implicit_declare_conversion =
           if
             in_ambient_context env
-            && Peek.token env = T_SEMICOLON
+            && (Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env)
             && (not async)
             && (not generator)
             && effect_ <> Function.Hook
@@ -552,13 +553,17 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
         in
         match implicit_declare_conversion with
         | Some type_params ->
-          (* Consume the semicolon *)
+          (* Consume the semicolon if explicit, or handle ASI trailing comments *)
           let trailing =
-            Eat.token env;
-            if Peek.is_line_terminator env then
+            if Peek.token env = T_SEMICOLON then begin
+              Eat.token env;
+              if Peek.is_line_terminator env then
+                Eat.comments_until_next_line env
+              else
+                []
+            end else
+              (* Implicit semicolon (ASI): don't consume any token *)
               Eat.comments_until_next_line env
-            else
-              []
           in
           let annot_loc =
             match tparams with

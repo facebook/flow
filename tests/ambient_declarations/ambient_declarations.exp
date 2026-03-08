@@ -179,6 +179,49 @@ References:
                                 ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- use_functions_no_semi.js:6:1
+
+Cannot call `cacheLife` because: [incompatible-type]
+ - Either string literal `invalid` [1] is incompatible with string literal `default` [2].
+ - Or string literal `invalid` [1] is incompatible with string literal `seconds` [3].
+ - Or string literal `invalid` [1] is incompatible with string literal `minutes` [4].
+
+   use_functions_no_semi.js:6:1
+   6| cacheLife('invalid'); // ERROR
+      ^^^^^^^^^
+
+References:
+   use_functions_no_semi.js:6:11
+   6| cacheLife('invalid'); // ERROR
+                ^^^^^^^^^ [1]
+   functions_no_semi.js.flow:1:36
+   1| export function cacheLife(profile: 'default'): void
+                                         ^^^^^^^^^ [2]
+   functions_no_semi.js.flow:2:36
+   2| export function cacheLife(profile: 'seconds'): void
+                                         ^^^^^^^^^ [3]
+   functions_no_semi.js.flow:3:36
+   3| export function cacheLife(profile: 'minutes'): void
+                                         ^^^^^^^^^ [4]
+
+
+Error ------------------------------------------------------------------------------------- use_functions_no_semi.js:9:1
+
+Cannot cast `noSemi(...)` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   use_functions_no_semi.js:9:1
+   9| noSemi(1) as empty; // ERROR
+      ^^^^^^^^^
+
+References:
+   functions_no_semi.js.flow:5:36
+   5| export function noSemi(x: number): string
+                                         ^^^^^^ [1]
+   use_functions_no_semi.js:9:14
+   9| noSemi(1) as empty; // ERROR
+                   ^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------ use_generic_functions.js:13:1
 
 Cannot cast `identity<...>(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
@@ -505,4 +548,4 @@ References:
 
 
 
-Found 31 errors
+Found 33 errors
