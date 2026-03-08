@@ -2188,67 +2188,79 @@ and object_type =
     Acc.add_spread (annot opts scope tbls xs t) acc
   in
   let mapped_type opts scope tbls xs p =
-    let (loc, { O.MappedType.source_type; prop_type; key_tparam; variance; optional; comments = _ })
-        =
+    let ( loc,
+          {
+            O.MappedType.source_type;
+            prop_type;
+            key_tparam;
+            variance;
+            optional;
+            name_type;
+            comments = _;
+          }
+        ) =
       p
     in
     let loc = push_loc tbls loc in
-    (* The source type does not have the key_tparam in scope, but we need to parse locs in syntax
-     * order or we will violate type sig invariants. I keep track of old xs to make sure we don't
-     * accidentally shadow a tparam in source_type *)
-    match optional with
-    | Ast.Type.Object.MappedType.(
-        PlusOptional | Ast.Type.Object.MappedType.Optional | NoOptionalFlag) ->
-      let (key_loc, key_name) =
-        let ( _,
-              {
-                T.TypeParam.name = (name_loc, { Ast.Identifier.name; comments = _ });
-                bound = _;
-                bound_kind = _;
-                variance = _;
-                default = _;
-                const = _;
-              }
-            ) =
-          key_tparam
+    match name_type with
+    | Some _ -> Annot (Any loc)
+    | None ->
+      (* The source type does not have the key_tparam in scope, but we need to parse locs in syntax
+       * order or we will violate type sig invariants. I keep track of old xs to make sure we don't
+       * accidentally shadow a tparam in source_type *)
+      (match optional with
+      | Ast.Type.Object.MappedType.(
+          PlusOptional | Ast.Type.Object.MappedType.Optional | NoOptionalFlag) ->
+        let (key_loc, key_name) =
+          let ( _,
+                {
+                  T.TypeParam.name = (name_loc, { Ast.Identifier.name; comments = _ });
+                  bound = _;
+                  bound_kind = _;
+                  variance = _;
+                  default = _;
+                  const = _;
+                }
+              ) =
+            key_tparam
+          in
+          (push_loc tbls name_loc, name)
         in
-        (push_loc tbls name_loc, name)
-      in
 
-      let (source_type, inline_keyof) =
-        match source_type with
-        | (_, Ast.Type.Keyof { Ast.Type.Keyof.argument; comments = _ }) ->
-          (annot opts scope tbls xs argument, true)
-        | t -> (annot opts scope tbls xs t, false)
-      in
+        let (source_type, inline_keyof) =
+          match source_type with
+          | (_, Ast.Type.Keyof { Ast.Type.Keyof.argument; comments = _ }) ->
+            (annot opts scope tbls xs argument, true)
+          | t -> (annot opts scope tbls xs t, false)
+        in
 
-      let (key_tparam, xs) =
-        ( TParam
-            {
-              name_loc = key_loc;
-              name = key_name;
-              polarity = Polarity.Neutral;
-              bound = None;
-              default = None;
-              is_const = false;
-            },
-          SSet.add key_name xs
-        )
-      in
-      let property_type = annot opts scope tbls xs prop_type in
-      Annot
-        (MappedTypeAnnot
-           {
-             loc;
-             source_type;
-             property_type;
-             key_tparam;
-             variance = polarity variance;
-             optional;
-             inline_keyof;
-           }
-        )
-    | _ -> Annot (Any loc)
+        let (key_tparam, xs) =
+          ( TParam
+              {
+                name_loc = key_loc;
+                name = key_name;
+                polarity = Polarity.Neutral;
+                bound = None;
+                default = None;
+                is_const = false;
+              },
+            SSet.add key_name xs
+          )
+        in
+        let property_type = annot opts scope tbls xs prop_type in
+        Annot
+          (MappedTypeAnnot
+             {
+               loc;
+               source_type;
+               property_type;
+               key_tparam;
+               variance = polarity variance;
+               optional;
+               inline_keyof;
+             }
+          )
+      | _ -> Annot (Any loc))
   in
 
   let dict opts scope tbls xs acc p =

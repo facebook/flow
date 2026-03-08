@@ -1459,6 +1459,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                       Ast.Type.Object.MappedType.key_tparam;
                       prop_type;
                       source_type;
+                      name_type;
                       variance;
                       optional;
                       comments = mapped_type_comments;
@@ -1483,6 +1484,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
         Flow_js_utils.add_output
           env.cx
           Error_message.(EInvalidMappedType { loc = obj_loc; kind = ExplicitExactOrInexact });
+        Tast_utils.error_mapper#type_ ot
+      ) else if Option.is_some name_type then (
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.EUnsupportedSyntax
+             (obj_loc, Flow_intermediate_error_types.(TSLibSyntax MappedTypeKeyRemapping))
+          );
         Tast_utils.error_mapper#type_ ot
       ) else
         let mapped_type_optionality =
@@ -1582,6 +1590,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   Object.MappedType.source_type = source_ast;
                   prop_type = poly_prop_type_ast;
                   key_tparam = tparam_ast;
+                  name_type = None;
                   variance;
                   optional;
                   comments = mapped_type_comments;

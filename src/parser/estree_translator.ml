@@ -2371,6 +2371,7 @@ with type t = Impl.t = struct
             Type.Object.MappedType.key_tparam;
             prop_type;
             source_type;
+            name_type;
             variance = variance_;
             comments;
             optional;
@@ -2393,6 +2394,7 @@ with type t = Impl.t = struct
           ("keyTparam", type_param key_tparam);
           ("propType", _type prop_type);
           ("sourceType", _type source_type);
+          ("nameType", option _type name_type);
           ("variance", option variance variance_);
           ("optional", optional_flag optional);
         ]

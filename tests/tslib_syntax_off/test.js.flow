@@ -73,3 +73,6 @@ type OSM = { f?(): void }; // ERROR
 
 // Anonymous default export function
 export default function (): void; // ERROR
+
+// Mapped type key remapping
+type MKR<T> = {[K in keyof T as string]: T[K]}; // ERROR

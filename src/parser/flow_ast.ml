@@ -372,6 +372,7 @@ and Type : sig
         key_tparam: ('M, 'T) Type.TypeParam.t;
         prop_type: ('M, 'T) Type.t;
         source_type: ('M, 'T) Type.t;
+        name_type: ('M, 'T) Type.t option;
         variance: 'M Variance.t option;
         optional: optional_flag;
         comments: ('M, unit) Syntax.t option;

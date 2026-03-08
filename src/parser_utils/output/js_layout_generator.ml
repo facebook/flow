@@ -4661,7 +4661,15 @@ and type_object_property ~opts =
       )
   | MappedType
       ( loc,
-        { MappedType.key_tparam; prop_type; source_type; variance = variance_; optional; comments }
+        {
+          MappedType.key_tparam;
+          prop_type;
+          source_type;
+          name_type;
+          variance = variance_;
+          optional;
+          comments;
+        }
       ) ->
     let optional_token =
       MappedType.(
@@ -4684,6 +4692,9 @@ and type_object_property ~opts =
             Atom "in";
             space;
             type_ ~opts source_type;
+            (match name_type with
+            | Some t -> fuse [space; Atom "as"; space; type_ ~opts t]
+            | None -> Empty);
             Atom "]";
             optional_token;
             Atom ":";

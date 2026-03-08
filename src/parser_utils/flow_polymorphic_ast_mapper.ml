@@ -1249,7 +1249,9 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method object_mapped_type (omt : ('M, 'T) Ast.Type.Object.MappedType.t)
         : ('N, 'U) Ast.Type.Object.MappedType.t =
       let open Ast.Type.Object.MappedType in
-      let (annot, { key_tparam; prop_type; source_type; variance; optional; comments }) = omt in
+      let (annot, { key_tparam; prop_type; source_type; name_type; variance; optional; comments }) =
+        omt
+      in
       (* Source type does not have the tparams in scope, so we visit it first *)
       let source_type' = this#type_ source_type in
       (* We visit this with type_params_opt intentionally because this method is relied upon in
@@ -1266,6 +1268,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
             | _ -> failwith "Illegal mapped type"
           in
           let prop_type' = this#type_ prop_type in
+          let name_type' = Option.map ~f:this#type_ name_type in
           let variance' = Option.map ~f:this#variance variance in
           let comments' = Option.map ~f:this#syntax comments in
           ( this#on_loc_annot annot,
@@ -1273,6 +1276,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
               key_tparam = key_tparam';
               source_type = source_type';
               prop_type = prop_type';
+              name_type = name_type';
               variance = variance';
               optional;
               comments = comments';

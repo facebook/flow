@@ -197,5 +197,13 @@ Anonymous default export function declaration is not enabled. [unsupported-synta
                       ^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:78:15
 
-Found 24 errors
+Key remapping (`as`) in mapped types is not enabled. [unsupported-syntax]
+
+   78| type MKR<T> = {[K in keyof T as string]: T[K]}; // ERROR
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 25 errors

@@ -455,6 +455,7 @@ let type_ options =
         T.Object.MappedType.key_tparam;
         prop_type;
         source_type;
+        name_type = None;
         variance;
         optional;
         comments = None;

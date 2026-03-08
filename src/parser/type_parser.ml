@@ -1459,6 +1459,13 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
              * "in" identifier. Now we eat it. *)
             Eat.token env;
             let source_type = _type env in
+            let name_type =
+              match Peek.token env with
+              | T_IDENTIFIER { raw = "as"; _ } ->
+                Eat.token env;
+                Some (_type env)
+              | _ -> None
+            in
             Expect.token env T_RBRACKET;
             let optional =
               Type.Object.MappedType.(
@@ -1484,6 +1491,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               Type.Object.MappedType.key_tparam = (key_name_loc, key_tparam);
               source_type;
               prop_type;
+              name_type;
               variance;
               optional;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();

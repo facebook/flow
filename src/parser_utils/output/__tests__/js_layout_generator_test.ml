@@ -3295,4 +3295,8 @@ let tests =
            assert_expression_string ~ctxt ~pretty:true "R<> {}";
            assert_expression_string ~ctxt ~pretty:true "R<T, S> {}"
          );
+         ( "mapped_type_key_remapping" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "type T = { [K in S as R]: V };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { [K in S as R]?: V };"
+         );
        ]

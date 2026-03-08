@@ -391,7 +391,19 @@ let component_type ~with_types (visitor : 'loc #Flow_ast_mapper.mapper) ~with_bi
 let object_mapped_type_property
     ~with_types (visitor : 'loc #Flow_ast_mapper.mapper) ~with_bindings mt =
   let open Ast.Type.Object.MappedType in
-  let (_, { key_tparam; prop_type; source_type; variance = _; optional = _; comments = _ }) = mt in
+  let ( _,
+        {
+          key_tparam;
+          prop_type;
+          source_type;
+          name_type = _ (* TODO: visit inside tparam scope when key remapping is supported *);
+          variance = _;
+          optional = _;
+          comments = _;
+        }
+      ) =
+    mt
+  in
   let tparams =
     Some (fst key_tparam, { Ast.Type.TypeParams.params = [key_tparam]; comments = None })
   in
