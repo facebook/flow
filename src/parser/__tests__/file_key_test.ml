@@ -142,6 +142,85 @@ let root_tests =
         );
   ]
 
+(* Windows-style path tests. Since Filename.is_relative and Filename.dir_sep
+   are compile-time platform-specific, we test the underlying parameterized
+   functions via File_key.For_tests with a Windows-style is_relative and
+   dir_sep. This validates the Windows logic on any host platform. *)
+
+(* Mimics OCaml's Win32 Filename.is_relative: a path is absolute if it
+   starts with / or \, or has a drive letter like C:\ or C:/ *)
+let win_is_relative s =
+  let len = String.length s in
+  if len >= 1 && (s.[0] = '/' || s.[0] = '\\') then
+    false
+  else if len >= 3 && s.[1] = ':' && (s.[2] = '/' || s.[2] = '\\') then
+    false
+  else
+    true
+
+let win_dir_sep = "\\"
+
+let windows_path_tests =
+  let open File_key.For_tests in
+  [
+    ( "enforce_trailing_sep_recognizes_backslash" >:: fun ctxt ->
+      let result = enforce_trailing_sep ~dir_sep:win_dir_sep "C:\\Users\\project\\" in
+      assert_equal ~ctxt ~printer:Fun.id "C:\\Users\\project\\" result
+    );
+    ( "enforce_trailing_sep_adds_backslash" >:: fun ctxt ->
+      let result = enforce_trailing_sep ~dir_sep:win_dir_sep "C:\\Users\\project" in
+      assert_equal ~ctxt ~printer:Fun.id "C:\\Users\\project\\" result
+    );
+    ( "enforce_trailing_sep_recognizes_forward_slash" >:: fun ctxt ->
+      let result = enforce_trailing_sep ~dir_sep:win_dir_sep "C:\\Users\\project/" in
+      assert_equal ~ctxt ~printer:Fun.id "C:\\Users\\project/" result
+    );
+    ( "resolve_root_recognizes_drive_letter" >:: fun ctxt ->
+      let result =
+        resolve_root_with
+          ~is_relative:win_is_relative
+          (fun () -> "C:\\Users\\project\\")
+          "D:\\other\\file.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "D:\\other\\file.js" result
+    );
+    ( "resolve_root_prepends_for_relative" >:: fun ctxt ->
+      let result =
+        resolve_root_with
+          ~is_relative:win_is_relative
+          (fun () -> "C:\\Users\\project\\")
+          "src\\a.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "C:\\Users\\project\\src\\a.js" result
+    );
+    ( "resolve_root_recognizes_unc_path" >:: fun ctxt ->
+      let result =
+        resolve_root_with
+          ~is_relative:win_is_relative
+          (fun () -> "C:\\Users\\project\\")
+          "\\\\server\\share\\file.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "\\\\server\\share\\file.js" result
+    );
+    ( "in_root_round_trip" >:: fun ctxt ->
+      let root = enforce_trailing_sep ~dir_sep:win_dir_sep "C:\\Users\\project" in
+      assert_equal ~ctxt ~printer:Fun.id "C:\\Users\\project\\" root;
+      let path = "C:\\Users\\project\\src\\a.js" in
+      let sfx = File_key.strip_prefix root path in
+      assert_equal ~ctxt ~printer:Fun.id "src\\a.js" sfx;
+      let resolved = resolve_root_with ~is_relative:win_is_relative (fun () -> root) sfx in
+      assert_equal ~ctxt ~printer:Fun.id "C:\\Users\\project\\src\\a.js" resolved
+    );
+    ( "out_of_root_round_trip" >:: fun ctxt ->
+      let root = enforce_trailing_sep ~dir_sep:win_dir_sep "C:\\Users\\project\\" in
+      let path = "D:\\other\\file.js" in
+      let sfx = File_key.strip_prefix root path in
+      assert_equal ~ctxt ~printer:Fun.id "D:\\other\\file.js" sfx;
+      let resolved = resolve_root_with ~is_relative:win_is_relative (fun () -> root) sfx in
+      assert_equal ~ctxt ~printer:Fun.id "D:\\other\\file.js" resolved
+    );
+  ]
+
 let compare_tests =
   [
     "same_variant_in_root_vs_out_of_root"
@@ -174,5 +253,6 @@ let tests =
          "lib_file" >::: lib_file_tests;
          "sentinels" >::: sentinel_tests;
          "roots" >::: root_tests;
+         "windows_paths" >::: windows_path_tests;
          "compare" >::: compare_tests;
        ]
