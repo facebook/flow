@@ -396,29 +396,31 @@ let in_range loc range =
     && (line < line2 || (line = line2 && loc._end.column <= range._end.column))
   )
 
-let string_of_source ?(strip_root = None) =
-  File_key.(
-    function
-    | LibFile file -> begin
-      match strip_root with
-      | Some root ->
-        let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
-        if String.starts_with ~prefix:root_str file then
-          spf "[LIB] %s" (Files.relative_path root_str file)
-        else
-          spf "[LIB] %s" (Filename.basename file)
-      | None -> file
-    end
-    | SourceFile file
-    | JsonFile file
-    | ResourceFile file -> begin
-      match strip_root with
-      | Some root ->
-        let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
-        Files.relative_path root_str file
-      | None -> file
-    end
-  )
+(* Note: to_string does root+suffix concat, then strip_root cases undo it
+   via Files.relative_path. This is a cold path (error formatting) so the
+   extra allocation is negligible. For hot paths, use File_key.suffix. *)
+let string_of_source ?(strip_root = None) src =
+  let file = File_key.to_string src in
+  match src with
+  | File_key.LibFile _ -> begin
+    match strip_root with
+    | Some root ->
+      let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
+      if String.starts_with ~prefix:root_str file then
+        spf "[LIB] %s" (Files.relative_path root_str file)
+      else
+        spf "[LIB] %s" (Filename.basename file)
+    | None -> file
+  end
+  | File_key.SourceFile _
+  | File_key.JsonFile _
+  | File_key.ResourceFile _ -> begin
+    match strip_root with
+    | Some root ->
+      let root_str = spf "%s%s" (File_path.to_string root) Filename.dir_sep in
+      Files.relative_path root_str file
+    | None -> file
+  end
 
 let string_of_loc ?(strip_root = None) loc =
   Loc.(

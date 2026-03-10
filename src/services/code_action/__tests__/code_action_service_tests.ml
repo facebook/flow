@@ -8,6 +8,8 @@
 open OUnit2
 open Lsp_import_edits.For_tests
 
+let () = File_key.set_project_root "/"
+
 let source_modulename path = Modulename.Filename (File_key.SourceFile path)
 
 let string_opt = function
@@ -21,7 +23,7 @@ let module_declaration_dirnames = ["/path/to/root/@flowtyped"]
 let node_resolver_root_relative_dirnames =
   [
     (None, "/path/to/root/root_relative_for_all");
-    (Some "/path/to/root/some", "/path/to/root/root_relative_for_some");
+    (Some "path/to/root/some", "/path/to/root/root_relative_for_some");
   ]
 
 let resolves_to_real_path ~from:_ ~to_real_path:_ = true
@@ -47,7 +49,7 @@ let add_package mutator file_key pkg =
   ()
 
 let with_package fn pkg f =
-  let file_key = File_key.JsonFile fn in
+  let file_key = File_key.json_file_of_absolute fn in
   let file_set = Utils_js.FilenameSet.singleton file_key in
   let iter_files f = f file_key in
   let () =

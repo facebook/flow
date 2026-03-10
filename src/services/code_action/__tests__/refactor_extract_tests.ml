@@ -8,6 +8,8 @@
 open OUnit2
 open Refactor_extract_utils_tests
 
+let () = File_key.set_project_root "/"
+
 let assert_refactored
     ~ctxt ?(support_experimental_snippet_text_edit = false) expected source extract_range =
   let ast = parse source in

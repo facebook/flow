@@ -636,8 +636,8 @@ let remove_exclusion pattern =
 
 let file_options =
   let path_pattern_of_arg root pattern =
-    let expand_project_root_token = Files.expand_project_root_token ~root in
-    pattern |> remove_exclusion |> expand_project_root_token |> Str.regexp
+    let expand_project_root_token_as_absolute = Files.expand_project_root_token_as_absolute ~root in
+    pattern |> remove_exclusion |> expand_project_root_token_as_absolute |> Str.regexp
   in
   let path_patterns_of_args root patterns extras =
     let patterns = Base.List.rev_append extras patterns in
@@ -740,7 +740,10 @@ let file_options =
     in
     let module_declaration_dirnames =
       Base.List.map (FlowConfig.module_declaration_dirnames flowconfig) ~f:(fun dir ->
-          dir |> Files.expand_project_root_token ~root |> File_path.make |> File_path.to_string
+          dir
+          |> Files.expand_project_root_token_as_absolute ~root
+          |> File_path.make
+          |> File_path.to_string
       )
     in
     let module_file_exts = FlowConfig.module_file_exts flowconfig in
@@ -774,12 +777,12 @@ let file_options_of_flowconfig ~root flowconfig =
     ~implicitly_include_root:(FlowConfig.files_implicitly_include_root flowconfig)
     ~haste_paths_excludes:
       (Base.List.map
-         ~f:(fun f -> f |> Files.expand_project_root_token ~root |> Str.regexp)
+         ~f:(fun f -> f |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
          (FlowConfig.haste_paths_excludes flowconfig)
       )
     ~haste_paths_includes:
       (Base.List.map
-         ~f:(fun f -> f |> Files.expand_project_root_token ~root |> Str.regexp)
+         ~f:(fun f -> f |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
          (FlowConfig.haste_paths_includes flowconfig)
       )
     ~ignores:[]
@@ -1369,12 +1372,12 @@ let make_options
       ~includes
       ~haste_paths_excludes:
         (Base.List.map
-           ~f:(fun f -> f |> Files.expand_project_root_token ~root |> Str.regexp)
+           ~f:(fun f -> f |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
            (FlowConfig.haste_paths_excludes flowconfig)
         )
       ~haste_paths_includes:
         (Base.List.map
-           ~f:(fun f -> f |> Files.expand_project_root_token ~root |> Str.regexp)
+           ~f:(fun f -> f |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
            (FlowConfig.haste_paths_includes flowconfig)
         )
       ~ignores
@@ -1431,6 +1434,9 @@ let make_options
     | Flowlib.Prelude path -> path
     | Flowlib.Flowlib path -> path
   in
+  (* Initialize File_key root prefixes for relative path storage *)
+  File_key.set_project_root (File_path.to_string root);
+  File_key.set_flowlib_root (File_path.to_string flowlib_dir);
   let opt_log_file = server_log_file ~flowconfig_name ~tmp_dir:opt_temp_dir root in
   {
     Options.opt_abstract_classes = FlowConfig.abstract_classes flowconfig;
@@ -1454,7 +1460,8 @@ let make_options
       Base.Option.value (FlowConfig.casting_syntax flowconfig) ~default:Options.CastingSyntax.Both;
     opt_casting_syntax_only_support_as_excludes =
       Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        ~f:(fun pattern ->
+          pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
         (FlowConfig.casting_syntax_only_support_as_excludes flowconfig);
     opt_channel_mode = Base.Option.value ~default:`pipe (FlowConfig.channel_mode flowconfig);
     opt_async_component_syntax = FlowConfig.async_component_syntax flowconfig;
@@ -1464,14 +1471,15 @@ let make_options
       SMap.map
         (Base.List.map ~f:(fun s ->
              s
-             |> Files.expand_project_root_token ~root
+             |> Files.expand_project_root_token_as_absolute ~root
              |> Files.expand_builtin_root_token ~flowlib_dir
          )
         )
         (FlowConfig.deprecated_utilities flowconfig);
     opt_deprecated_utilities_excludes =
       Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        ~f:(fun pattern ->
+          pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
         (FlowConfig.deprecated_utilities_excludes flowconfig);
     opt_dev_only_refinement_info_as_errors =
       FlowConfig.dev_only_refinement_info_as_errors flowconfig;
@@ -1518,11 +1526,13 @@ let make_options
     opt_hook_compatibility = FlowConfig.hook_compatibility flowconfig;
     opt_hook_compatibility_excludes =
       Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        ~f:(fun pattern ->
+          pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
         (FlowConfig.hook_compatibility_excludes flowconfig);
     opt_hook_compatibility_includes =
       Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        ~f:(fun pattern ->
+          pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
         (FlowConfig.hook_compatibility_includes flowconfig);
     opt_ignore_non_literal_requires = FlowConfig.ignore_non_literal_requires flowconfig;
     opt_include_suppressions = options_flags.include_suppressions;
@@ -1574,19 +1584,21 @@ let make_options
       Base.List.map
         (FlowConfig.node_resolver_root_relative_dirnames flowconfig)
         ~f:(fun (applicable_dir_opt, dirname) ->
-          (Base.Option.map ~f:(Files.expand_project_root_token ~root) applicable_dir_opt, dirname)
+          ( Base.Option.map ~f:Files.expand_project_root_token_as_relative applicable_dir_opt,
+            dirname
+          )
       );
     opt_opaque_type_new_bound_syntax = FlowConfig.opaque_type_new_bound_syntax flowconfig;
     opt_records_includes =
       Base.List.map
-        ~f:(Files.expand_project_root_token ~root)
+        ~f:(Files.expand_project_root_token_as_absolute ~root)
         (FlowConfig.records_includes flowconfig);
     opt_profile = options_flags.profile;
     opt_projects_options =
       Flow_projects.mk_options
         ~projects:(FlowConfig.projects flowconfig)
         ~projects_overlap_mapping:(FlowConfig.projects_overlap_mapping flowconfig)
-        ~map_path:(fun path -> Files.expand_project_root_token ~root path |> Str.regexp)
+        ~map_path:(fun path -> Files.expand_project_root_token_as_relative path |> Str.regexp)
         ~projects_path_mapping:(FlowConfig.projects_path_mapping flowconfig)
         ~projects_strict_boundary:(FlowConfig.projects_strict_boundary flowconfig)
         ~projects_strict_boundary_validate_import_pattern_opt_outs:
@@ -1604,12 +1616,14 @@ let make_options
     opt_relay_integration_esmodules = FlowConfig.relay_integration_esmodules flowconfig;
     opt_relay_integration_excludes =
       Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        ~f:(fun pattern ->
+          pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
         (FlowConfig.relay_integration_excludes flowconfig);
     opt_relay_integration_module_prefix = FlowConfig.relay_integration_module_prefix flowconfig;
     opt_relay_integration_module_prefix_includes =
       Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        ~f:(fun pattern ->
+          pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
         (FlowConfig.relay_integration_module_prefix_includes flowconfig);
     opt_root = root;
     opt_root_name = FlowConfig.root_name flowconfig;
@@ -1631,7 +1645,9 @@ let make_options
     opt_deprecated_colon_extends =
       Base.List.map
         ~f:(fun s ->
-          s |> Files.expand_project_root_token ~root |> Files.expand_builtin_root_token ~flowlib_dir)
+          s
+          |> Files.expand_project_root_token_as_absolute ~root
+          |> Files.expand_builtin_root_token ~flowlib_dir)
         (FlowConfig.deprecated_colon_extends flowconfig);
     opt_deprecated_colon_extends_excludes =
       Base.List.map
@@ -1965,6 +1981,14 @@ let rec connect_and_make_request flowconfig_name =
 
 (* If --timeout is set, wrap connect_and_make_request in a timeout *)
 let connect_and_make_request ?retries flowconfig_name connect_flags root request =
+  (* Set File_key root paths for this client process. Server responses
+     contain File_key.t values with relative suffixes; to_string needs
+     the roots to reconstruct absolute paths. *)
+  File_key.set_project_root (File_path.to_string root);
+  let temp_dir = File_path.make (get_temp_dir connect_flags.temp_dir) in
+  (match Flowlib.libdir ~no_flowlib:false temp_dir with
+  | Flowlib.Prelude path -> File_key.set_flowlib_root (File_path.to_string path)
+  | Flowlib.Flowlib path -> File_key.set_flowlib_root (File_path.to_string path));
   match connect_flags.timeout with
   | None -> connect_and_make_request ?retries flowconfig_name connect_flags root request
   | Some timeout ->

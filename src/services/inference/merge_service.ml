@@ -25,21 +25,15 @@ type 'a merge_job =
   File_key.t Nel.t ->
   bool * 'a
 
-let sig_hash ~check_dirty_set ~root =
+let sig_hash ~check_dirty_set ~root:_ =
   let open Type_sig_collections in
   let open Type_sig_hash in
   let module P = Type_sig_pack in
   let module Bin = Type_sig_bin in
   let hash_file_key file_key =
-    let file_string =
-      match file_key with
-      | File_key.LibFile path
-      | File_key.SourceFile path
-      | File_key.JsonFile path
-      | File_key.ResourceFile path ->
-        Files.relative_path (File_path.to_string root) path
-    in
-    Xx.hash file_string 0L
+    (* Use suffix directly — it's already the relative path, avoiding a
+       to_string (root concat) followed by relative_path (root strip). *)
+    Xx.hash (File_key.suffix file_key) 0L
   in
 
   let get_type_sig_buf_unsafe file_key parse =

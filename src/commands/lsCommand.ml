@@ -142,12 +142,12 @@ let make_options ~flowconfig ~root ~ignore_flag ~include_flag ~untyped_flag ~dec
     ~temp_dir:(CommandUtils.get_temp_dir None |> File_path.make)
     ~haste_paths_excludes:
       (Base.List.map
-         ~f:(fun f -> f |> Files.expand_project_root_token ~root |> Str.regexp)
+         ~f:(fun f -> f |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
          (FlowConfig.haste_paths_excludes flowconfig)
       )
     ~haste_paths_includes:
       (Base.List.map
-         ~f:(fun f -> f |> Files.expand_project_root_token ~root |> Str.regexp)
+         ~f:(fun f -> f |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
          (FlowConfig.haste_paths_includes flowconfig)
       )
     ~ignores

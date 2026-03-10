@@ -403,7 +403,7 @@ let docblock_overrides docblock_info file_key metadata =
       Platform_set.available_platforms
         ~file_options
         ~projects_options
-        ~filename:(File_key.to_string file_key)
+        ~filename:(File_key.suffix file_key)
         ~explicit_available_platforms
     in
     {
@@ -652,7 +652,7 @@ let is_checked cx = cx.metadata.checked
 let is_projects_strict_boundary_import_pattern_opt_outs cx import_specifier =
   if Base.Option.is_some (Files.haste_name_opt ~options:cx.metadata.file_options (file cx)) then
     let projects_options = cx.metadata.projects_options in
-    let file = File_key.to_string (file cx) in
+    let file = File_key.suffix (file cx) in
     let import_specifier = Flow_import_specifier.unwrap_userland import_specifier in
     Flow_projects.is_common_code_path ~opts:projects_options file
     && Flow_projects.is_import_specifier_that_opt_out_of_strict_boundary

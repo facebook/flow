@@ -62,13 +62,8 @@ let main
   let request = ServerProt.Request.FIND_MODULE { moduleref; filename; wait_for_recheck } in
   let (resolution_result, failed_candidates) =
     match connect_and_make_request flowconfig_name option_values root request with
-    | ServerProt.Response.FIND_MODULE
-        ( ( Some (File_key.LibFile file)
-          | Some (File_key.SourceFile file)
-          | Some (File_key.JsonFile file)
-          | Some (File_key.ResourceFile file) ),
-          failed_candidates
-        ) ->
+    | ServerProt.Response.FIND_MODULE (Some file_key, failed_candidates) ->
+      let file = File_key.to_string file_key in
       if strip_root then
         (Files.relative_path (File_path.to_string root) file, failed_candidates)
       else

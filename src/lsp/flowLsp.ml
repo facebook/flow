@@ -1198,7 +1198,9 @@ let parse_and_cache (state : server_state) (uri : Lsp.DocumentUri.t) :
       try
         let content = File_input.content_of_file_input_unsafe file in
         let filename_opt = File_input.path_of_file_input file in
-        let filekey = Base.Option.map filename_opt ~f:(fun fn -> File_key.SourceFile fn) in
+        let filekey =
+          Base.Option.map filename_opt ~f:(fun fn -> File_key.source_file_of_absolute fn)
+        in
         Parser_flow.program_file ~fail:false ~parse_options ~token_sink:None content filekey
       with
       | _ ->
@@ -2433,6 +2435,20 @@ and main_handle_unsafe flowconfig_name (state : state) (event : event) :
       Client_message (RequestMessage (id, InitializeRequest i_initialize_params), metadata)
     ) ->
     let i_root = Lsp_helpers.get_root i_initialize_params |> File_path.make in
+    (* Set File_key root paths for this LSP handler process. Server responses
+       contain File_key.t values with relative suffixes; to_string needs
+       the roots to reconstruct absolute paths. *)
+    File_key.set_project_root (File_path.to_string i_root);
+    let lsp_temp_dir =
+      File_path.make
+        (Base.Option.value
+           i_connect_params.CommandUtils.temp_dir
+           ~default:Server_files_js.default_temp_dir
+        )
+    in
+    (match Flowlib.libdir ~no_flowlib:false lsp_temp_dir with
+    | Flowlib.Prelude path -> File_key.set_flowlib_root (File_path.to_string path)
+    | Flowlib.Flowlib path -> File_key.set_flowlib_root (File_path.to_string path));
     (* TODO: use FlowConfig.get directly and send errors/warnings to the client instead
         of logging to stderr and exiting. *)
     let flowconfig = read_flowconfig_from_disk flowconfig_name i_root in

@@ -216,7 +216,7 @@ class requires_calculator ~file_key ~ast ~opts =
         && Base.Option.is_some (Files.haste_name_opt ~options:opts.file_options file_key)
       then
         let opts = opts.project_options in
-        let file = File_key.to_string file_key in
+        let file = File_key.suffix file_key in
         if Flow_projects.is_common_code_path ~opts file then
           Base.List.iter this#acc ~f:(function
               | Require { source; _ }
@@ -263,7 +263,7 @@ class requires_calculator ~file_key ~ast ~opts =
       | Some haste_name ->
         (match
            let opts = opts.project_options in
-           Flow_projects.projects_bitset_of_path ~opts (File_key.to_string file_key)
+           Flow_projects.projects_bitset_of_path ~opts (File_key.suffix file_key)
            |> Base.Option.bind
                 ~f:(Flow_projects.individual_projects_bitsets_from_common_project_bitset ~opts)
          with
@@ -288,7 +288,7 @@ class requires_calculator ~file_key ~ast ~opts =
             (Platform_set.available_platforms
                ~file_options:opts.file_options
                ~projects_options:opts.project_options
-               ~filename:(File_key.to_string file_key)
+               ~filename:(File_key.suffix file_key)
                ~explicit_available_platforms:opts.explicit_available_platforms
             )
           ~file:file_key

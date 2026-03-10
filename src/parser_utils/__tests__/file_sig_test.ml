@@ -8,6 +8,8 @@
 open OUnit2
 open File_sig
 
+let () = File_key.set_project_root "/"
+
 let visit ?parse_options ?(opts = default_opts) source =
   (* allow parse errors. we still need file sigs on invalid ASTs in Type_contents. *)
   let fail = false in

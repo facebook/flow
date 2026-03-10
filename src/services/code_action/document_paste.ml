@@ -184,7 +184,7 @@ let provide_document_paste_edits ~layout_options ~module_system_info ~src_dir as
               ~module_system_info
               ~src_dir
               ( if import_source_is_resolved then
-                Export_index.File_key (File_key.SourceFile import_source)
+                Export_index.File_key (File_key.source_file_of_absolute import_source)
               else
                 Export_index.Builtin (Flow_import_specifier.userland import_source)
               )
