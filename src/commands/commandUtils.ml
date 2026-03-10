@@ -1651,7 +1651,8 @@ let make_options
         (FlowConfig.deprecated_colon_extends flowconfig);
     opt_deprecated_colon_extends_excludes =
       Base.List.map
-        ~f:(fun pattern -> pattern |> Files.expand_project_root_token ~root |> Str.regexp)
+        ~f:(fun pattern ->
+          pattern |> Files.expand_project_root_token_as_absolute ~root |> Str.regexp)
         (FlowConfig.deprecated_colon_extends_excludes flowconfig);
     opt_ts_utility_syntax = FlowConfig.ts_utility_syntax flowconfig;
     opt_tslib_syntax = FlowConfig.tslib_syntax flowconfig;
