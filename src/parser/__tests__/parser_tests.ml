@@ -9,6 +9,12 @@ open OUnit2
 
 let tests =
   "parser_utils"
-  >::: [Flow_ast_mapper_test.tests; Jsdoc_test.tests; Loc_test.tests; Offset_utils_test.tests]
+  >::: [
+         File_key_test.tests;
+         Flow_ast_mapper_test.tests;
+         Jsdoc_test.tests;
+         Loc_test.tests;
+         Offset_utils_test.tests;
+       ]
 
 let () = run_test_tt_main tests
