@@ -4,6 +4,12 @@ function* generator(): Iterable<[string, number]> {
   }
 }
 
+function* readonlyGenerator(): Iterable<[+key: string, +value: number]> {
+  while (true) {
+    yield ['foo', 123];
+  }
+}
+
 let tests = [
   // good constructors
   function() {
@@ -14,6 +20,7 @@ let tests = [
     let a: Map<string, number> = new Map();
     let b: Map<string, number> = new Map([['foo', 123]]);
     let c: Map<string, number> = new Map(generator());
+    let d: Map<string, number> = new Map(readonlyGenerator());
   },
 
   // bad constructors

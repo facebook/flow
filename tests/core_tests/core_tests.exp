@@ -62,155 +62,155 @@ References:
                                 ^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:21:21
+Error ----------------------------------------------------------------------------------------------------- map.js:28:21
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `$Iterable` [2]
     - in property `@@iterator` > the return value > type argument `Yield` [3]: string [4] is incompatible with tuple
       type [5]
 
-   map.js:21:21
-     21|     let x = new Map(['foo', 123]); // error
+   map.js:28:21
+     28|     let x = new Map(['foo', 123]); // error
                              ^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/core.js:2078:29
-   2078|     constructor(iterable?: ?Iterable<[K, V]>): void;
-                                     ^^^^^^^^^^^^^^^^ [2]
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1879:30
    1879| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
-   map.js:21:22
-     21|     let x = new Map(['foo', 123]); // error
+   map.js:28:22
+     28|     let x = new Map(['foo', 123]); // error
                               ^^^^^ [4]
    <BUILTINS>/core.js:2078:38
-   2078|     constructor(iterable?: ?Iterable<[K, V]>): void;
-                                              ^^^^^^ [5]
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+                                              ^^^^^^^^^^^^^^^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:21:21
+Error ----------------------------------------------------------------------------------------------------- map.js:28:21
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `$Iterable` [2]
     - in property `@@iterator` > the return value > type argument `Yield` [3]: number [4] is incompatible with tuple
       type [5]
 
-   map.js:21:21
-     21|     let x = new Map(['foo', 123]); // error
+   map.js:28:21
+     28|     let x = new Map(['foo', 123]); // error
                              ^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/core.js:2078:29
-   2078|     constructor(iterable?: ?Iterable<[K, V]>): void;
-                                     ^^^^^^^^^^^^^^^^ [2]
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1879:30
    1879| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
-   map.js:21:29
-     21|     let x = new Map(['foo', 123]); // error
+   map.js:28:29
+     28|     let x = new Map(['foo', 123]); // error
                                      ^^^ [4]
    <BUILTINS>/core.js:2078:38
-   2078|     constructor(iterable?: ?Iterable<[K, V]>): void;
-                                              ^^^^^^ [5]
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+                                              ^^^^^^^^^^^^^^^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:22:42
+Error ----------------------------------------------------------------------------------------------------- map.js:29:42
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `$Iterable` [2]
     - in property `@@iterator` > the return value > type argument `Yield` [3] > index `0`: string [4] is incompatible
       with number [5]
 
-   map.js:22:42
-     22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+   map.js:29:42
+     29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                   ^^^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/core.js:2078:29
-   2078|     constructor(iterable?: ?Iterable<[K, V]>): void;
-                                     ^^^^^^^^^^^^^^^^ [2]
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1879:30
    1879| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
-   map.js:22:44
-     22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+   map.js:29:44
+     29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                     ^^^^^ [4]
-   map.js:22:16
-     22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+   map.js:29:16
+     29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                         ^^^^^^ [5]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:22:42
+Error ----------------------------------------------------------------------------------------------------- map.js:29:42
 
 Cannot call `Map` with array literal bound to `iterable` because: [incompatible-type]
  - array literal [1] is incompatible with `$Iterable` [2]
     - in property `@@iterator` > the return value > type argument `Yield` [3] > index `1`: number [4] is incompatible
       with string [5]
 
-   map.js:22:42
-     22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+   map.js:29:42
+     29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                   ^^^^^^^^^^^^^^ [1]
 
 References:
    <BUILTINS>/core.js:2078:29
-   2078|     constructor(iterable?: ?Iterable<[K, V]>): void;
-                                     ^^^^^^^^^^^^^^^^ [2]
+   2078|     constructor(iterable?: ?Iterable<[+key: K, +value: V]>): void;
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [2]
    <BUILTINS>/core.js:1879:30
    1879| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
                                       ^^^^^ [3]
-   map.js:22:51
-     22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+   map.js:29:51
+     29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                                            ^^^ [4]
-   map.js:22:24
-     22|     let y: Map<number, string> = new Map([['foo', 123]]); // error
+   map.js:29:24
+     29|     let y: Map<number, string> = new Map([['foo', 123]]); // error
                                 ^^^^^^ [5]
 
 
-Error ------------------------------------------------------------------------------------------------------ map.js:27:6
+Error ------------------------------------------------------------------------------------------------------ map.js:34:6
 
 Cannot cast `x.get(...)` to boolean because undefined [1] is incompatible with boolean [2]. [incompatible-type]
 
-   map.js:27:6
-     27|     (x.get('foo'): boolean); // error, string | void
+   map.js:34:6
+     34|     (x.get('foo'): boolean); // error, string | void
               ^^^^^^^^^^^^
 
 References:
    <BUILTINS>/core.js:2086:22
    2086|     get(key: K): V | void;
                               ^^^^ [1]
-   map.js:27:20
-     27|     (x.get('foo'): boolean); // error, string | void
+   map.js:34:20
+     34|     (x.get('foo'): boolean); // error, string | void
                             ^^^^^^^ [2]
 
 
-Error ------------------------------------------------------------------------------------------------------ map.js:27:6
+Error ------------------------------------------------------------------------------------------------------ map.js:34:6
 
 Cannot cast `x.get(...)` to boolean because number [1] is incompatible with boolean [2]. [incompatible-type]
 
-   map.js:27:6
-   27|     (x.get('foo'): boolean); // error, string | void
+   map.js:34:6
+   34|     (x.get('foo'): boolean); // error, string | void
             ^^^^^^^^^^^^
 
 References:
-   map.js:26:27
-   26|   function(x: Map<string, number>) {
+   map.js:33:27
+   33|   function(x: Map<string, number>) {
                                  ^^^^^^ [1]
-   map.js:27:20
-   27|     (x.get('foo'): boolean); // error, string | void
+   map.js:34:20
+   34|     (x.get('foo'): boolean); // error, string | void
                           ^^^^^^^ [2]
 
 
-Error ----------------------------------------------------------------------------------------------------- map.js:28:11
+Error ----------------------------------------------------------------------------------------------------- map.js:35:11
 
 Cannot call `x.get` with `123` bound to `key` because number [1] is incompatible with string [2]. [incompatible-type]
 
-   map.js:28:11
-   28|     x.get(123); // error, wrong key type
+   map.js:35:11
+   35|     x.get(123); // error, wrong key type
                  ^^^ [1]
 
 References:
-   map.js:26:19
-   26|   function(x: Map<string, number>) {
+   map.js:33:19
+   33|   function(x: Map<string, number>) {
                          ^^^^^^ [2]
 
 
