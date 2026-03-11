@@ -3840,7 +3840,9 @@ let defered_in_speculation = function
   | EDuplicateComponentProp _
   | ERefComponentProp _
   | EPropNotReadable { use_op = Frame (ReactDeepReadOnly _, _); _ }
-  | EConstantCondition _ ->
+  | EConstantCondition _
+  | EBindingError (EReferencedBeforeDeclaration, _, _, _)
+  | EBuiltinNameLookupFailed _ ->
     true
   | _ -> false
 
