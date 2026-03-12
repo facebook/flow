@@ -2345,7 +2345,6 @@ with type t = Impl.t = struct
           }
         ) =
       let (key, computed, comments) = property_key ~comments key in
-      if computed then failwith "There should not be computed object type property keys";
       let (value, kind) =
         match value with
         | Type.Object.Property.Init value -> (_type value, "init")
@@ -2367,6 +2366,11 @@ with type t = Impl.t = struct
            ("variance", option variance variance_);
            ("kind", string kind);
          ]
+        @ ( if computed then
+            [("computed", bool computed)]
+          else
+            []
+          )
         @
         match ts_accessibility_to_string ts_accessibility with
         | Some v -> [("tsAccessibility", string v)]

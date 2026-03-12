@@ -1548,15 +1548,6 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       Type.Object.MappedType mapped_type
     in
 
-    let mapped_type_or_indexer env start_loc static variance ~leading =
-      let leading = leading @ Peek.comments env in
-      Expect.token env T_LBRACKET;
-      match Peek.ith_token ~i:1 env with
-      | T_IDENTIFIER { raw = "in"; _ } when static = None ->
-        mapped_type env start_loc variance ~leading
-      | _ -> indexer_property env start_loc static variance ~leading
-    in
-
     let internal_slot env start_loc static ~leading =
       let islot =
         with_loc
@@ -1648,6 +1639,97 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               { name; static = is_static; method_ = false; private_ = false }
           )
       | _ -> ()
+    in
+    let well_known_symbol_property env start_loc static variance ~leading =
+      (* We've already consumed '['. Now consume 'Symbol', '.', and the property name. *)
+      let sym_loc = Peek.loc env in
+      Eat.token env;
+      (* consume 'Symbol' *)
+      Expect.token env T_PERIOD;
+      let name_loc = Peek.loc env in
+      let name =
+        match Peek.token env with
+        | T_IDENTIFIER { raw; _ } -> raw
+        | _ ->
+          error_unexpected ~expected:"a symbol name" env;
+          ""
+      in
+      Eat.token env;
+      (* Build a Member expression AST: Symbol.X *)
+      let member_expr =
+        let _object =
+          (sym_loc, Expression.Identifier (sym_loc, { Identifier.name = "Symbol"; comments = None }))
+        in
+        let property =
+          Expression.Member.PropertyIdentifier (name_loc, { Identifier.name; comments = None })
+        in
+        ( Loc.btwn sym_loc name_loc,
+          Expression.Member { Expression.Member._object; property; comments = None }
+        )
+      in
+      let computed_loc = Loc.btwn start_loc (Peek.loc env) in
+      Expect.token env T_RBRACKET;
+      let key =
+        Expression.Object.Property.Computed
+          ( computed_loc,
+            {
+              ComputedKey.expression = member_expr;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
+          )
+      in
+      (* Dispatch to method or init property based on what follows *)
+      match Peek.token env with
+      | T_LESS_THAN
+      | T_LPAREN ->
+        error_unexpected_variance env variance;
+        method_property
+          env
+          start_loc
+          static
+          false
+          key
+          ~optional:false
+          ~ts_accessibility:None
+          ~leading:[]
+      | T_PLING
+        when match Peek.ith_token ~i:1 env with
+             | T_LPAREN
+             | T_LESS_THAN ->
+               true
+             | _ -> false ->
+        Eat.token env;
+        error_unexpected_variance env variance;
+        method_property
+          env
+          start_loc
+          static
+          false
+          key
+          ~optional:true
+          ~ts_accessibility:None
+          ~leading:[]
+      | _ ->
+        init_property
+          env
+          start_loc
+          ~variance
+          ~static
+          ~proto:None
+          ~abstract:false
+          ~ts_accessibility:None
+          ~leading:[]
+          (computed_loc, key)
+    in
+    let bracket_property env start_loc static variance ~leading =
+      let leading = leading @ Peek.comments env in
+      Expect.token env T_LBRACKET;
+      match (Peek.token env, Peek.ith_token ~i:1 env) with
+      | (_, T_IDENTIFIER { raw = "in"; _ }) when static = None ->
+        mapped_type env start_loc variance ~leading
+      | (T_IDENTIFIER { raw = "Symbol"; _ }, T_PERIOD) ->
+        well_known_symbol_property env start_loc static variance ~leading
+      | _ -> indexer_property env start_loc static variance ~leading
     in
     let rec properties
         ~is_class ~allow_inexact ~allow_spread ~exact env ((props, inexact, internal) as acc) =
@@ -1904,7 +1986,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         | T_LBRACKET ->
           error_unexpected_variance env variance;
           internal_slot env start_loc static ~leading
-        | _ -> mapped_type_or_indexer env start_loc static variance ~leading)
+        | _ -> bracket_property env start_loc static variance ~leading)
       | T_LESS_THAN
       | T_LPAREN ->
         (* Note that `static(): void` is a static callable property if we

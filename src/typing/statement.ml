@@ -8843,8 +8843,7 @@ module Make
                   ~decorators
                   ~comments
                   ~get_typed_method_key:(fun _func_t ->
-                    (* Map the expression to a typed expression *)
-                    let typed_expr = Tast_utils.error_mapper#expression expr in
+                    let typed_expr = expression cx expr in
                     Ast.Expression.Object.Property.Computed
                       ( computed_loc,
                         { Ast.ComputedKey.expression = typed_expr; comments = computed_comments }

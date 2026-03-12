@@ -2130,10 +2130,20 @@ and object_type =
     match value with
     | O.Property.Init t ->
       let module P = Ast.Expression.Object.Property in
-      begin
+      let name_and_loc =
         match key with
         | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
         | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ->
+          Some (name, id_loc)
+        | P.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ })
+          when Flow_ast_utils.well_known_symbol_name expr <> None ->
+          Some (Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr), fst expr)
+        | _ -> None
+      in
+      begin
+        match name_and_loc with
+        | None -> acc (* unsupported object keys *)
+        | Some (name, id_loc) ->
           if _method then
             if optional then
               match t with
@@ -2157,11 +2167,6 @@ and object_type =
                   t
               in
               Acc.add_field name id_loc (polarity variance) t acc
-        | P.NumberLiteral _
-        | P.BigIntLiteral _
-        | P.PrivateName _
-        | P.Computed _ ->
-          acc (* unsupported object keys *)
       end
     | O.Property.Get (_, f) ->
       let module P = Ast.Expression.Object.Property in
@@ -2351,14 +2356,17 @@ and interface_props =
       p
     in
     let module P = Ast.Expression.Object.Property in
-    match key with
-    | P.StringLiteral _
-    | P.NumberLiteral _
-    | P.BigIntLiteral _
-    | P.PrivateName _
-    | P.Computed _ ->
-      acc (* unsupported interface keys *)
-    | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
+    let name_and_loc =
+      match key with
+      | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) -> Some (name, id_loc)
+      | P.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ })
+        when Flow_ast_utils.well_known_symbol_name expr <> None ->
+        Some (Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr), fst expr)
+      | _ -> None
+    in
+    match name_and_loc with
+    | None -> acc (* unsupported interface keys *)
+    | Some (name, id_loc) ->
       (match (_method, value) with
       | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
         if optional then
@@ -2455,14 +2463,17 @@ and declare_class_props =
     | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) -> acc
     | _ ->
       let module P = Ast.Expression.Object.Property in
-      (match key with
-      | P.StringLiteral _
-      | P.NumberLiteral _
-      | P.BigIntLiteral _
-      | P.PrivateName _
-      | P.Computed _ ->
-        acc (* unsupported interface / declare class keys *)
-      | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) ->
+      let name_and_loc =
+        match key with
+        | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) -> Some (name, id_loc)
+        | P.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ })
+          when Flow_ast_utils.well_known_symbol_name expr <> None ->
+          Some (Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr), fst expr)
+        | _ -> None
+      in
+      (match name_and_loc with
+      | None -> acc (* unsupported declare class keys *)
+      | Some (name, id_loc) ->
         (match (_method, value) with
         | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
           if optional then

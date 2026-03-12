@@ -3307,4 +3307,22 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "type T = { [K in S as R]: V };";
            assert_statement_string ~ctxt ~pretty:true "type T = { [K in S as R]?: V };"
          );
+         ( "well_known_symbol_type_properties" >:: fun ctxt ->
+           assert_statement_string ~ctxt ~pretty:true "type T = { [ Symbol.iterator ](): X };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { [ Symbol.asyncIterator ](): X };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { [ Symbol.dispose ](): void };";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "type T = { [ Symbol.asyncDispose ](): void };";
+           assert_statement_string ~ctxt ~pretty:true "interface I { [ Symbol.iterator ](): X }";
+           assert_statement_string ~ctxt ~pretty:true "declare class C { [ Symbol.iterator ](): X }";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare class C { static [ Symbol.iterator ](): X }";
+           assert_statement_string ~ctxt ~pretty:true "type T = { +[ Symbol.iterator ]: () => X };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { [ Symbol.iterator ]?(): X };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { [ Symbol.xxx ](): string };"
+         );
        ]

@@ -19,3 +19,8 @@ interface I {
 declare class C {
   m?(): void; // OK
 }
+
+// Optional shorthand method with well-known symbol key
+type Iter = {
+  [Symbol.iterator]?(): Iterator<number>; // OK
+};

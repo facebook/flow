@@ -175,5 +175,129 @@ References:
                   ^^ [2]
 
 
+Error ----------------------------------------------------------------------------------- type_well_known_symbol.js:18:1
 
-Found 10 errors
+Cannot cast `bad` to `Iterable` because in property `@@iterator` > the return value > type argument `Yield` [1]:
+string [2] is incompatible with number [3]. [incompatible-type]
+
+   type_well_known_symbol.js:18:1
+     18| bad as Iterable<number>; // ERROR
+         ^^^
+
+References:
+   <BUILTINS>/core.js:1879:30
+   1879| interface $IteratorProtocol<+Yield,+Return=void,-Next=void> {
+                                      ^^^^^ [1]
+   type_well_known_symbol.js:16:44
+     16| type Bad = { [Symbol.iterator](): Iterator<string> };
+                                                    ^^^^^^ [2]
+   type_well_known_symbol.js:18:17
+     18| bad as Iterable<number>; // ERROR
+                         ^^^^^^ [3]
+
+
+Error ----------------------------------------------------------------------------------- type_well_known_symbol.js:31:1
+
+Cannot cast `new DStaticIterable()` to `Iterable` because property `@@iterator` is missing in `DStaticIterable` [1] but
+exists in `$Iterable` [2]. [incompatible-type]
+
+   type_well_known_symbol.js:31:1
+   31| new DStaticIterable() as Iterable<number>; // ERROR: no instance @@iterator
+       ^^^^^^^^^^^^^^^^^^^^^ [1]
+
+References:
+   type_well_known_symbol.js:31:26
+   31| new DStaticIterable() as Iterable<number>; // ERROR: no instance @@iterator
+                                ^^^^^^^^^^^^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:37:21
+
+Unsupported key in object type. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
+
+   37| type BadSymbol1 = { [Symbol.xxx](): string }; // ERROR: unsupported key
+                           ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:37:29
+
+Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol` [1]. [prop-missing]
+
+   type_well_known_symbol.js:37:29
+    37| type BadSymbol1 = { [Symbol.xxx](): string }; // ERROR: unsupported key
+                                    ^^^
+
+References:
+   <BUILTINS>/core.js:276:15
+   276| declare class Symbol {
+                      ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:38:21
+
+Unsupported key in object type. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
+
+   38| type BadSymbol2 = { [Symbol.xxx](x: mixed): boolean }; // ERROR: unsupported key
+                           ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:38:29
+
+Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol` [1]. [prop-missing]
+
+   type_well_known_symbol.js:38:29
+    38| type BadSymbol2 = { [Symbol.xxx](x: mixed): boolean }; // ERROR: unsupported key
+                                    ^^^
+
+References:
+   <BUILTINS>/core.js:276:15
+   276| declare class Symbol {
+                      ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:40:24
+
+Illegal name. [unsupported-syntax]
+
+   40| interface IBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
+                              ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:40:32
+
+Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol` [1]. [prop-missing]
+
+   type_well_known_symbol.js:40:32
+    40| interface IBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
+                                       ^^^
+
+References:
+   <BUILTINS>/core.js:276:15
+   276| declare class Symbol {
+                      ^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:41:28
+
+Illegal name. [unsupported-syntax]
+
+   41| declare class DBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
+                                  ^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- type_well_known_symbol.js:41:36
+
+Cannot get `Symbol.xxx` because property `xxx` is missing in statics of `Symbol` [1]. [prop-missing]
+
+   type_well_known_symbol.js:41:36
+    41| declare class DBadSymbol { [Symbol.xxx](): string } // ERROR: unsupported key
+                                           ^^^
+
+References:
+   <BUILTINS>/core.js:276:15
+   276| declare class Symbol {
+                      ^^^^^^ [1]
+
+
+
+Found 20 errors
