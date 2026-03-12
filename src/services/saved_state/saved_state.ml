@@ -156,11 +156,13 @@ end = struct
    * *)
   let normalize_path t path = intern t (Files.relative_path t.root path)
 
-  (* With relative paths in File_key.t, normalization is identity.
-     LibFile values already have the flowlib marker prefix for flowlib files
-     (added by File_key.lib_file_of_absolute at construction time).
-     Non-flowlib LibFile values are already relative to the project root. *)
-  let normalize_file_key _t file_key = file_key
+  (* With relative paths in File_key.t, no path transformation is needed.
+     However, we still intern the suffix strings to ensure physical sharing:
+     OCaml's Marshal uses pointer identity to detect shared values, and without
+     interning, identical path strings (e.g., popular resolved modules like React
+     referenced from hundreds of thousands of files) become separate heap objects,
+     inflating the marshaled size past the ~2GB LZ4 limit. *)
+  let normalize_file_key t file_key = File_key.map (intern t) file_key
 
   (* We write the Flow version at the beginning of each saved state file. It's an easy way to assert
    * upon reading the file that the writer and reader are the same version of Flow *)
