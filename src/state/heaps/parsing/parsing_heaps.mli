@@ -302,6 +302,8 @@ module Saved_state_mutator : sig
     (Package_json.t, unit) result ->
     Modulename.Set.t
 
+  val create_for_direct_serialization : Transaction.t -> master_mutator * worker_mutator
+
   val clear_not_found : worker_mutator -> File_key.t -> Modulename.Set.t
 
   val record_not_found : master_mutator -> Utils_js.FilenameSet.t -> unit

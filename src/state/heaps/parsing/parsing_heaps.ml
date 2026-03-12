@@ -2214,4 +2214,31 @@ module Saved_state_mutator = struct
     in
     Transaction.add ~commit ~rollback transaction;
     ((), ())
+
+  (** Direct serialization saved state: the heap was bulk-loaded by
+      SharedMem.load_heap, so no per-file add calls are needed. On rollback,
+      we reset the entire heap since there is no way to undo a bulk load
+      file-by-file. *)
+  let create_for_direct_serialization transaction =
+    not_found_files := FilenameSet.empty;
+    let commit () =
+      Hh_logger.info "Committing saved state";
+      Mutator_cache.clear ();
+      Reader_cache.clear ();
+      (* TODO: remove only if no dependents
+         FileHeap.remove_batch !not_found_files;
+      *)
+      not_found_files := FilenameSet.empty
+    in
+    let rollback () =
+      Hh_logger.info "Rolling back saved state";
+      Mutator_cache.clear ();
+      Reader_cache.clear ();
+      (* reset_heap wipes the entire heap, which undoes both the bulk-loaded
+         file data and any not-found marks — no per-file rollback needed *)
+      SharedMem.reset_heap ();
+      not_found_files := FilenameSet.empty
+    in
+    Transaction.add ~commit ~rollback transaction;
+    ((), ())
 end

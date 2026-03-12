@@ -38,6 +38,7 @@ type package_file_data = {
 
 type saved_state_dependency_graph
 
+(* Legacy saved state data: per-file marshalled data *)
 type saved_state_data = {
   flowconfig_hash: Xx.hash;
   parsed_heaps: (File_key.t * parsed_file_data) list;
@@ -49,6 +50,23 @@ type saved_state_data = {
   dependency_graph: saved_state_dependency_graph;
 }
 
+(* Direct serialization saved state data: env metadata alongside a heap dump *)
+type saved_state_env_data = {
+  flowconfig_hash: Xx.hash;
+  parsed_files: Utils_js.FilenameSet.t;
+  unparsed_files: Utils_js.FilenameSet.t;
+  package_json_files: Utils_js.FilenameSet.t;
+  non_flowlib_libs: SSet.t;
+  local_errors: Flow_error.ErrorSet.t Utils_js.FilenameMap.t;
+  node_modules_containers: SSet.t SMap.t;
+  dependency_info: Dependency_info.t;
+  duplicate_providers: (File_key.t * File_key.t Nel.t) SMap.t;
+}
+
+type loaded_saved_state =
+  | Legacy_saved_state of saved_state_data
+  | Direct_saved_state of saved_state_env_data
+
 type invalid_reason =
   | Bad_header
   | Build_mismatch of {
@@ -58,6 +76,7 @@ type invalid_reason =
   | Changed_files
   | Failed_to_marshal of Exception.t
   | Failed_to_decompress of Exception.t
+  | Failed_to_load_heap of string
   | File_does_not_exist
   | Flowconfig_mismatch
 
@@ -78,7 +97,9 @@ val load :
   workers:MultiWorkerLwt.worker list option ->
   saved_state_filename:File_path.t ->
   options:Options.t ->
-  (Profiling_js.finished * saved_state_data) Lwt.t
+  (Profiling_js.finished * loaded_saved_state) Lwt.t
+
+val non_flowlib_libs : loaded_saved_state -> SSet.t
 
 val denormalize_file_data : options:Options.t -> normalized_file_data -> denormalized_file_data
 

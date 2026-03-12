@@ -152,6 +152,7 @@ module Opts = struct
     relay_integration_module_prefix_includes: string list;
     root_name: string option;
     saved_state_fetcher: Options.saved_state_fetcher;
+    saved_state_direct_serialization: bool;
     saved_state_skip_version_check: bool;
     shm_hash_table_pow: int;
     shm_heap_size: int;
@@ -312,6 +313,7 @@ module Opts = struct
       relay_integration_module_prefix_includes = ["<PROJECT_ROOT>/.*"];
       root_name = None;
       saved_state_fetcher = Options.Dummy_fetcher;
+      saved_state_direct_serialization = false;
       saved_state_skip_version_check = false;
       shm_hash_table_pow = 19;
       shm_heap_size = (* 25GB *) 1024 * 1024 * 1024 * 25;
@@ -1282,6 +1284,9 @@ module Opts = struct
       ("relay_integration.module_prefix.includes", relay_integration_module_prefix_includes_parser);
       ("saved_state.allow_reinit", saved_state_allow_reinit_parser);
       ("saved_state.fetcher", saved_state_fetcher_parser);
+      ( "saved_state.direct_serialization",
+        boolean (fun opts v -> Ok { opts with saved_state_direct_serialization = v })
+      );
       ( "saved_state.skip_version_check_DO_NOT_USE_OR_YOU_WILL_BE_FIRED",
         boolean (fun opts v -> Ok { opts with saved_state_skip_version_check = v })
       );
@@ -2144,6 +2149,8 @@ let required_version c = c.version
 let root_name c = c.options.Opts.root_name
 
 let saved_state_fetcher c = c.options.Opts.saved_state_fetcher
+
+let saved_state_direct_serialization c = c.options.Opts.saved_state_direct_serialization
 
 let saved_state_skip_version_check c = c.options.Opts.saved_state_skip_version_check
 

@@ -41,6 +41,12 @@ val collect_full : unit -> unit
 
 val compact : unit -> unit
 
+val save_heap : Unix.file_descr -> unit
+
+val load_heap : Unix.file_descr -> unit
+
+val reset_heap : unit -> unit
+
 type table_stats = {
   nonempty_slots: int;
   used_slots: int;

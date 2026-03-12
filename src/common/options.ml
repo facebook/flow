@@ -187,6 +187,7 @@ type t = {
   opt_root_name: string option;
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
+  opt_saved_state_direct_serialization: bool;
   opt_saved_state_no_fallback: bool;
   opt_saved_state_skip_version_check: bool;
   opt_saved_state_verify: bool;
@@ -398,6 +399,8 @@ let root_name opts = opts.opt_root_name
 let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 
 let saved_state_force_recheck opts = opts.opt_saved_state_force_recheck
+
+let saved_state_direct_serialization opts = opts.opt_saved_state_direct_serialization
 
 let saved_state_no_fallback opts = opts.opt_saved_state_no_fallback
 

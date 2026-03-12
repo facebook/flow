@@ -77,6 +77,7 @@
 
 #include <limits.h>
 #include <lz4.h>
+#include <lz4frame.h>
 #include <stdalign.h>
 
 #include "hh_assert.h"
@@ -1929,4 +1930,461 @@ CAMLprim value hh_compare_modify_addr_byte(
     value desired_val) {
   return hh_compare_modify_addr(
       weak_val, addr_val, expected_val, Int64_val(desired_val));
+}
+
+/*****************************************************************************/
+/* Saved state: direct heap serialization */
+/*****************************************************************************/
+
+#define HEAP_MAGIC 0x464C4F5748454150ULL /* "FLOWHEAP" */
+#define HEAP_MAGIC_LZ4 0x464C4F57484C5A34ULL /* "FLOWHLZ4" */
+#define SAVE_HEAP_CHUNK_SIZE (4 * 1024 * 1024) /* 4MB chunks for LZ4 frame */
+
+/* Typed_tag = 3. See tag definition in sharedMem.ml. */
+#define Typed_tag_val 3
+
+/* Prepare the heap for saved state by nulling out lazy fields in typed parse
+ * objects and resetting leader/sig_hash entities to empty state. This makes
+ * those objects unreachable so GC can collect them, resulting in a lean dump.
+ *
+ * Typed parse layout (12 word-sized fields after header):
+ *   field 0: file_hash     -- KEEP
+ *   field 1: ast           -- NULL OUT
+ *   field 2: docblock      -- NULL OUT
+ *   field 3: aloc_table    -- NULL OUT
+ *   field 4: type_sig      -- NULL OUT
+ *   field 5: file_sig      -- NULL OUT
+ *   field 6: exports       -- KEEP
+ *   field 7: requires      -- KEEP
+ *   field 8: resolved_requires (entity addr) -- KEEP
+ *   field 9: imports       -- KEEP
+ *   field 10: leader (entity addr) -- RESET entity
+ *   field 11: sig_hash (entity addr) -- RESET entity
+ */
+static void hh_prepare_saved_state(void) {
+  assert_master();
+  addr_t ptr = info->heap_init;
+  addr_t heap_ptr = info->heap;
+  while (ptr < heap_ptr) {
+    hh_header_t hd = Deref(ptr);
+    hh_tag_t tag = Obj_tag(hd);
+    intnat whsize = Obj_whsize(hd);
+
+    if (tag == Typed_tag_val) {
+      /* Null out ast, docblock, aloc_table, type_sig, file_sig */
+      Deref(Obj_field(ptr, 1)) = NULL_ADDR;
+      Deref(Obj_field(ptr, 2)) = NULL_ADDR;
+      Deref(Obj_field(ptr, 3)) = NULL_ADDR;
+      Deref(Obj_field(ptr, 4)) = NULL_ADDR;
+      Deref(Obj_field(ptr, 5)) = NULL_ADDR;
+
+      /* Reset leader entity (field 10) */
+      addr_t leader_ent = Deref(Obj_field(ptr, 10));
+      if (leader_ent != NULL_ADDR) {
+        Deref(Obj_field(leader_ent, 0)) = NULL_ADDR;
+        Deref(Obj_field(leader_ent, 1)) = NULL_ADDR;
+        Deref(Obj_field(leader_ent, 2)) = 0; /* version = 0 */
+      }
+
+      /* Reset sig_hash entity (field 11) */
+      addr_t sig_hash_ent = Deref(Obj_field(ptr, 11));
+      if (sig_hash_ent != NULL_ADDR) {
+        Deref(Obj_field(sig_hash_ent, 0)) = NULL_ADDR;
+        Deref(Obj_field(sig_hash_ent, 1)) = NULL_ADDR;
+        Deref(Obj_field(sig_hash_ent, 2)) = 0; /* version = 0 */
+      }
+    }
+
+    ptr += Bsize_wsize(whsize);
+  }
+}
+
+/* Write loop helper to handle partial writes */
+static void write_all(int fd, const void* buf, size_t len) {
+  const char* p = (const char*)buf;
+  while (len > 0) {
+    ssize_t n = write(fd, p, len);
+    if (n < 0) {
+      if (errno == EINTR)
+        continue;
+      caml_failwith("hh_save_heap: write failed");
+    }
+    p += n;
+    len -= n;
+  }
+}
+
+/* Read loop helper to handle partial reads */
+static void read_all(int fd, void* buf, size_t len) {
+  char* p = (char*)buf;
+  while (len > 0) {
+    ssize_t n = read(fd, p, len);
+    if (n < 0) {
+      if (errno == EINTR)
+        continue;
+      caml_failwith("hh_load_heap: read failed");
+    }
+    if (n == 0) {
+      caml_failwith("hh_load_heap: unexpected end of file");
+    }
+    p += n;
+    len -= n;
+  }
+}
+
+typedef struct {
+  uint64_t magic;
+  uint64_t hashtbl_slots;
+  uint64_t hashtbl_bsize;
+  uint64_t heap_init;
+  uint64_t heap_size;
+  uint64_t hcounter;
+  uint64_t hcounter_filled;
+} heap_save_header_t;
+
+/* LZ4-compressed header: same fields plus compressed data size */
+typedef struct {
+  uint64_t magic;
+  uint64_t hashtbl_slots;
+  uint64_t hashtbl_bsize;
+  uint64_t heap_init;
+  uint64_t heap_size; /* uncompressed size of heap data */
+  uint64_t hcounter;
+  uint64_t hcounter_filled;
+  uint64_t compressed_size; /* size of the LZ4 frame (hashtbl + heap) */
+} heap_save_header_lz4_t;
+
+/* Helper: finish any in-progress GC cycle to idle state */
+static void finish_gc_cycle(void) {
+  while (info->gc_phase == Phase_mark) {
+    hh_mark_slice(Val_long(INT_MAX));
+  }
+  while (info->gc_phase == Phase_sweep) {
+    hh_sweep_slice(Val_long(INT_MAX));
+  }
+}
+
+/* Compress a memory region in chunks and write compressed output to fd */
+static void compress_and_write(
+    int fd,
+    LZ4F_cctx* cctx,
+    char* out_buf,
+    size_t out_capacity,
+    const void* src,
+    size_t len,
+    uint64_t* total_compressed) {
+  const char* p = (const char*)src;
+  size_t remaining = len;
+  while (remaining > 0) {
+    size_t chunk =
+        remaining < SAVE_HEAP_CHUNK_SIZE ? remaining : SAVE_HEAP_CHUNK_SIZE;
+    size_t n = LZ4F_compressUpdate(cctx, out_buf, out_capacity, p, chunk, NULL);
+    if (LZ4F_isError(n)) {
+      caml_failwith("hh_save_heap: LZ4F_compressUpdate failed");
+    }
+    if (n > 0) {
+      write_all(fd, out_buf, n);
+      *total_compressed += n;
+    }
+    p += chunk;
+    remaining -= chunk;
+  }
+}
+
+/* Save the heap to an fd: prepare, GC+compact, lz4-compress, write */
+CAMLprim value hh_save_heap(value fd_val) {
+  CAMLparam1(fd_val);
+  assert_master();
+  assert(info != NULL);
+
+  int fd = Handle_val(fd_val);
+
+  /* Step 1: Null out lazy fields so GC can collect them */
+  hh_prepare_saved_state();
+
+  /* Step 2: Full GC + compact to reclaim freed objects and normalize entities.
+   * Equivalent to OCaml: finish_cycle(); start_cycle(); finish_cycle();
+   * compact() */
+  finish_gc_cycle();
+  hh_start_cycle(Val_unit);
+  finish_gc_cycle();
+  hh_compact(Val_unit);
+
+  uint64_t heap_size = info->heap - info->heap_init;
+
+  /* Step 3: Write header with placeholder compressed_size */
+  heap_save_header_lz4_t header = {
+      .magic = HEAP_MAGIC_LZ4,
+      .hashtbl_slots = info->hashtbl_slots,
+      .hashtbl_bsize = info->hashtbl_bsize,
+      .heap_init = info->heap_init,
+      .heap_size = heap_size,
+      .hcounter = info->hcounter,
+      .hcounter_filled = info->hcounter_filled,
+      .compressed_size = 0,
+  };
+  off_t header_pos = lseek(fd, 0, SEEK_CUR);
+  write_all(fd, &header, sizeof(header));
+
+  /* Step 4: Compress hash table + heap data using LZ4 frame API */
+  LZ4F_cctx* cctx = NULL;
+  size_t err = LZ4F_createCompressionContext(&cctx, LZ4F_VERSION);
+  if (LZ4F_isError(err)) {
+    caml_failwith("hh_save_heap: failed to create LZ4 compression context");
+  }
+
+  LZ4F_preferences_t prefs;
+  memset(&prefs, 0, sizeof(prefs));
+  prefs.frameInfo.contentSize = info->hashtbl_bsize + heap_size;
+
+  size_t out_capacity = LZ4F_compressBound(SAVE_HEAP_CHUNK_SIZE, &prefs);
+  if (out_capacity < LZ4F_HEADER_SIZE_MAX)
+    out_capacity = LZ4F_HEADER_SIZE_MAX;
+  char* out_buf = malloc(out_capacity);
+  if (!out_buf) {
+    LZ4F_freeCompressionContext(cctx);
+    caml_failwith("hh_save_heap: malloc failed");
+  }
+
+  uint64_t total_compressed = 0;
+
+  /* Write LZ4 frame header */
+  size_t n = LZ4F_compressBegin(cctx, out_buf, out_capacity, &prefs);
+  if (LZ4F_isError(n)) {
+    free(out_buf);
+    LZ4F_freeCompressionContext(cctx);
+    caml_failwith("hh_save_heap: LZ4F_compressBegin failed");
+  }
+  write_all(fd, out_buf, n);
+  total_compressed += n;
+
+  /* Compress hash table */
+  compress_and_write(
+      fd,
+      cctx,
+      out_buf,
+      out_capacity,
+      hashtbl,
+      info->hashtbl_bsize,
+      &total_compressed);
+
+  /* Compress heap data */
+  compress_and_write(
+      fd,
+      cctx,
+      out_buf,
+      out_capacity,
+      Ptr_of_addr(info->heap_init),
+      heap_size,
+      &total_compressed);
+
+  /* Write LZ4 frame end */
+  n = LZ4F_compressEnd(cctx, out_buf, out_capacity, NULL);
+  if (LZ4F_isError(n)) {
+    free(out_buf);
+    LZ4F_freeCompressionContext(cctx);
+    caml_failwith("hh_save_heap: LZ4F_compressEnd failed");
+  }
+  write_all(fd, out_buf, n);
+  total_compressed += n;
+
+  free(out_buf);
+  LZ4F_freeCompressionContext(cctx);
+
+  /* Step 5: Seek back and update compressed_size in header */
+  off_t end_pos = lseek(fd, 0, SEEK_CUR);
+  header.compressed_size = total_compressed;
+  lseek(fd, header_pos, SEEK_SET);
+  write_all(fd, &header, sizeof(header));
+  lseek(fd, end_pos, SEEK_SET);
+
+  CAMLreturn(Val_unit);
+}
+
+/* Finalize info fields after loading heap data */
+static void finalize_loaded_heap(
+    uint64_t heap_init,
+    uint64_t heap_size,
+    uint64_t hcounter,
+    uint64_t hcounter_filled) {
+  info->heap = heap_init + heap_size;
+  info->gc_end = info->heap;
+  info->hcounter = hcounter;
+  info->hcounter_filled = hcounter_filled;
+  info->next_version = 2;
+  info->gc_phase = Phase_idle;
+  info->free_bsize = 0;
+}
+
+/* Load uncompressed heap (legacy format) */
+static void load_heap_uncompressed(int fd, heap_save_header_t* h) {
+  read_all(fd, hashtbl, h->hashtbl_bsize);
+  memfd_reserve(shared_mem, Ptr_of_addr(h->heap_init), h->heap_size);
+  read_all(fd, Ptr_of_addr(h->heap_init), h->heap_size);
+  finalize_loaded_heap(
+      h->heap_init, h->heap_size, h->hcounter, h->hcounter_filled);
+}
+
+/* Load LZ4-compressed heap: decompress into hash table then heap memory.
+ *
+ * The compressed data is a single LZ4 frame containing hashtbl_bsize bytes
+ * of hash table followed by heap_size bytes of heap data. We decompress
+ * into two separate memory regions:
+ *   region1: hashtbl (hashtbl_bsize bytes)
+ *   region2: heap at heap_init (heap_size bytes)
+ *
+ * LZ4F_decompress handles partial output naturally — we limit each call's
+ * output buffer to the remaining space in the current region. */
+static void load_heap_lz4(int fd, heap_save_header_lz4_t* h) {
+  memfd_reserve(shared_mem, Ptr_of_addr(h->heap_init), h->heap_size);
+
+  LZ4F_dctx* dctx = NULL;
+  size_t err = LZ4F_createDecompressionContext(&dctx, LZ4F_VERSION);
+  if (LZ4F_isError(err)) {
+    caml_failwith("hh_load_heap: failed to create LZ4 decompression context");
+  }
+
+  char* read_buf = malloc(SAVE_HEAP_CHUNK_SIZE);
+  if (!read_buf) {
+    LZ4F_freeDecompressionContext(dctx);
+    caml_failwith("hh_load_heap: malloc failed");
+  }
+
+  size_t compressed_remaining = h->compressed_size;
+  size_t decompressed_pos = 0;
+  size_t region1_size = h->hashtbl_bsize;
+  size_t region2_size = h->heap_size;
+  int frame_done = 0;
+
+  while (compressed_remaining > 0 && !frame_done) {
+    size_t to_read = compressed_remaining < SAVE_HEAP_CHUNK_SIZE
+        ? compressed_remaining
+        : (size_t)SAVE_HEAP_CHUNK_SIZE;
+    read_all(fd, read_buf, to_read);
+    compressed_remaining -= to_read;
+
+    const char* src = read_buf;
+    size_t src_remaining = to_read;
+
+    while (src_remaining > 0) {
+      void* dst;
+      size_t dst_cap;
+      if (decompressed_pos < region1_size) {
+        dst = (char*)hashtbl + decompressed_pos;
+        dst_cap = region1_size - decompressed_pos;
+      } else {
+        size_t offset = decompressed_pos - region1_size;
+        dst = (char*)Ptr_of_addr(h->heap_init) + offset;
+        dst_cap = region2_size - offset;
+      }
+
+      size_t src_consumed = src_remaining;
+      size_t dst_produced = dst_cap;
+      size_t ret =
+          LZ4F_decompress(dctx, dst, &dst_produced, src, &src_consumed, NULL);
+      if (LZ4F_isError(ret)) {
+        free(read_buf);
+        LZ4F_freeDecompressionContext(dctx);
+        caml_failwith("hh_load_heap: LZ4F_decompress failed");
+      }
+
+      decompressed_pos += dst_produced;
+      src += src_consumed;
+      src_remaining -= src_consumed;
+
+      if (ret == 0) {
+        frame_done = 1;
+        break;
+      }
+    }
+  }
+
+  free(read_buf);
+  LZ4F_freeDecompressionContext(dctx);
+
+  /* Skip any unread compressed bytes so fd is positioned after the heap data */
+  if (compressed_remaining > 0) {
+    lseek(fd, compressed_remaining, SEEK_CUR);
+  }
+
+  finalize_loaded_heap(
+      h->heap_init, h->heap_size, h->hcounter, h->hcounter_filled);
+}
+
+/* Load the heap from an fd, supporting both compressed and legacy formats */
+CAMLprim value hh_load_heap(value fd_val) {
+  CAMLparam1(fd_val);
+  assert(info != NULL);
+
+  int fd = Handle_val(fd_val);
+
+  /* Read magic to determine format */
+  uint64_t magic;
+  read_all(fd, &magic, sizeof(magic));
+
+  if (magic == HEAP_MAGIC) {
+    /* Legacy uncompressed format */
+    heap_save_header_t header;
+    header.magic = magic;
+    read_all(
+        fd, (char*)&header + sizeof(magic), sizeof(header) - sizeof(magic));
+
+    if (header.hashtbl_slots != info->hashtbl_slots) {
+      caml_failwith("hh_load_heap: hash table size mismatch");
+    }
+    if (header.heap_init != info->heap_init) {
+      caml_failwith("hh_load_heap: heap_init mismatch");
+    }
+    if (header.heap_init + header.heap_size > info->heap_max) {
+      caml_failwith("hh_load_heap: heap data too large");
+    }
+
+    load_heap_uncompressed(fd, &header);
+  } else if (magic == HEAP_MAGIC_LZ4) {
+    /* LZ4-compressed format */
+    heap_save_header_lz4_t header;
+    header.magic = magic;
+    read_all(
+        fd, (char*)&header + sizeof(magic), sizeof(header) - sizeof(magic));
+
+    if (header.hashtbl_slots != info->hashtbl_slots) {
+      caml_failwith("hh_load_heap: hash table size mismatch");
+    }
+    if (header.heap_init != info->heap_init) {
+      caml_failwith("hh_load_heap: heap_init mismatch");
+    }
+    if (header.heap_init + header.heap_size > info->heap_max) {
+      caml_failwith("hh_load_heap: heap data too large");
+    }
+
+    load_heap_lz4(fd, &header);
+  } else {
+    caml_failwith("hh_load_heap: invalid magic number");
+  }
+
+  CAMLreturn(Val_unit);
+}
+
+/* Reset the heap: clear all data, restore to empty state */
+CAMLprim value hh_reset_heap(value unit) {
+  CAMLparam1(unit);
+  assert(info != NULL);
+
+  /* Reset heap pointer */
+  info->heap = info->heap_init;
+  info->gc_end = info->heap_init;
+  info->hcounter = 0;
+  info->hcounter_filled = 0;
+  info->free_bsize = 0;
+  info->gc_phase = Phase_idle;
+  info->next_version = 2;
+
+  /* Clear all hash table entries */
+  size_t slots = info->hashtbl_slots;
+  for (size_t i = 0; i < slots; i++) {
+    hashtbl[i].hash = 0;
+    hashtbl[i].addr = NULL_ADDR;
+  }
+
+  CAMLreturn(Val_unit);
 }

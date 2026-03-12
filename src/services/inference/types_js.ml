@@ -1777,6 +1777,7 @@ let init_with_initial_state
     ~reader
     ~options
     ~restore_dependency_info
+    ?(saved_duplicate_providers = SMap.empty)
     env
     (parsed, unparsed, packages, dirty_modules, local_errors) =
   let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -1840,7 +1841,12 @@ let init_with_initial_state
 
   (* This will restore InfoHeap, NameHeap, & all_providers hashtable *)
   let%lwt (_changed_modules, duplicate_providers) =
-    commit_modules ~options ~profiling ~workers ~duplicate_providers:SMap.empty dirty_modules
+    commit_modules
+      ~options
+      ~profiling
+      ~workers
+      ~duplicate_providers:saved_duplicate_providers
+      dirty_modules
   in
   let%lwt () =
     resolve_requires
@@ -1906,7 +1912,7 @@ let init_with_initial_state
   in
   Lwt.return (env, libs_ok)
 
-let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options =
+let init_from_legacy_saved_state ~profiling ~workers ~saved_state ~updates ?env options =
   with_transaction "init" @@ fun transaction reader ->
   let is_init = Option.is_none env in
 
@@ -2123,6 +2129,119 @@ let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options
   in
   Lwt.return (env, libs_ok)
 
+(* Direct serialization saved state: the heap was already bulk-loaded by
+ * SharedMem.load_heap during the load step, so all file data is already in
+ * shared memory. The saved state metadata contains only FilenameSet.t (not
+ * per-file data). We just need to:
+ * 1. Handle deleted files (files in saved state that no longer exist on disk)
+ * 2. Compute dirty modules by querying the already-populated heap
+ * 3. Optionally verify file hashes *)
+let init_from_direct_saved_state ~profiling ~workers ~saved_state ~updates ?env options =
+  with_transaction "init" @@ fun transaction reader ->
+  let {
+    Saved_state.flowconfig_hash = _;
+    parsed_files;
+    unparsed_files;
+    package_json_files;
+    non_flowlib_libs = _;
+    local_errors;
+    node_modules_containers;
+    dependency_info;
+    duplicate_providers;
+  } =
+    saved_state
+  in
+
+  let (master_mutator, worker_mutator) =
+    Parsing_heaps.Saved_state_mutator.create_for_direct_serialization transaction
+  in
+
+  Files.node_modules_containers := node_modules_containers;
+
+  let verify = Options.saved_state_verify options in
+  let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
+
+  Hh_logger.info "Processing saved state file sets";
+  MonitorRPC.status_update ~event:ServerStatus.Restoring_heaps_start;
+  let%lwt (parsed_files, unparsed_files, package_json_files, dirty_modules, invalid_hashes) =
+    with_memory_timer_lwt ~options "RestoreHeaps" profiling (fun () ->
+        (* On reinit (env = Some), the old server knew about a set of files.
+         * The new saved state may not contain all of them — those missing
+         * files were deleted or excluded. We must clean them up from the
+         * heap and mark their modules dirty so commit_modules can pick new
+         * providers. On fresh init (env = None), there is no old state, so
+         * this is empty. *)
+        let deleted_heaps =
+          match env with
+          | None -> FilenameSet.empty
+          | Some { ServerEnv.files; unparsed = old_unparsed; package_json_files = old_packages; _ }
+            ->
+            let open FilenameSet in
+            let old_files = union (union files old_unparsed) old_packages in
+            diff (diff (diff old_files parsed_files) unparsed_files) package_json_files
+        in
+        Parsing_heaps.Saved_state_mutator.record_not_found master_mutator deleted_heaps;
+        let delete_unused dirty_modules fn =
+          let ms = Parsing_heaps.Saved_state_mutator.clear_not_found worker_mutator fn in
+          Modulename.Set.union ms dirty_modules
+        in
+        let%lwt dirty_modules =
+          MultiWorkerLwt.fold
+            workers
+            ~job:delete_unused
+            ~merge:Modulename.Set.union
+            ~neutral:Modulename.Set.empty
+            ~next:(MultiWorkerLwt.next workers (FilenameSet.elements deleted_heaps))
+        in
+        (* The heap already has the correct provider entities from direct
+         * serialization, and duplicate_providers errors are stored in the
+         * saved state. We skip haste dirty module collection here — only
+         * deleted files (above) and re-parsed libs (via additional_dirty_modules
+         * in init_with_initial_state) need CommitModules processing. *)
+        let invalid_hashes =
+          if verify then
+            let check_hash fn acc =
+              if not (verify_hash ~reader:abstract_reader fn) then
+                fn :: acc
+              else
+                acc
+            in
+            FilenameSet.fold check_hash parsed_files []
+            |> FilenameSet.fold check_hash unparsed_files
+            |> FilenameSet.fold check_hash package_json_files
+          else
+            []
+        in
+        Lwt.return (parsed_files, unparsed_files, package_json_files, dirty_modules, invalid_hashes)
+    )
+  in
+
+  if verify then assert_valid_hashes updates invalid_hashes;
+
+  let%lwt (env, libs_ok) =
+    init_with_initial_state
+      ~profiling
+      ~workers
+      ~transaction
+      ~reader
+      ~options
+      ~restore_dependency_info:(fun () ->
+        with_memory_timer_lwt ~options "RestoreDependencyInfo" profiling (fun () ->
+            Lwt.return dependency_info
+        ))
+      ~saved_duplicate_providers:duplicate_providers
+      env
+      (parsed_files, unparsed_files, package_json_files, dirty_modules, local_errors)
+  in
+  Lwt.return (env, libs_ok)
+
+let init_from_saved_state ~profiling ~workers ~saved_state ~updates ?env options =
+  match saved_state with
+  | Saved_state.Legacy_saved_state data ->
+    init_from_legacy_saved_state ~profiling ~workers ~saved_state:data ~updates ?env options
+  | Saved_state.Direct_saved_state data ->
+    init_from_direct_saved_state ~profiling ~workers ~saved_state:data ~updates ?env options
+
 let handle_updates_since_saved_state ~profiling ~workers ~options ~libs_ok updates env =
   let should_force_recheck = Options.saved_state_force_recheck options in
   (* We know that all the files in updates have changed since the saved state was generated. We
@@ -2328,7 +2447,7 @@ let load_saved_state ~profiling ~workers options =
        let updates =
          Recheck_updates.process_updates
            ~options
-           ~previous_all_unordered_libs:saved_state.Saved_state.non_flowlib_libs
+           ~previous_all_unordered_libs:(Saved_state.non_flowlib_libs saved_state)
            changed_files
        in
        let updates =

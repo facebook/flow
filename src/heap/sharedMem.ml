@@ -186,6 +186,12 @@ external sweep_slice : int -> int = "hh_sweep_slice"
 (*****************************************************************************)
 external hh_compact : unit -> unit = "hh_compact"
 
+external hh_save_heap : Unix.file_descr -> unit = "hh_save_heap"
+
+external hh_load_heap : Unix.file_descr -> unit = "hh_load_heap"
+
+external hh_reset_heap : unit -> unit = "hh_reset_heap"
+
 (*****************************************************************************)
 (* The total number of slots in our hashtable *)
 (*****************************************************************************)
@@ -206,6 +212,15 @@ let compact_helper () =
   let k = !on_compact () in
   hh_compact ();
   k ()
+
+let save_heap fd =
+  let k = !on_compact () in
+  hh_save_heap fd;
+  k ()
+
+let load_heap fd = hh_load_heap fd
+
+let reset_heap () = hh_reset_heap ()
 
 (* GC will attempt to keep the overhead of garbage to no more than 20%. Before
  * we actually mark and sweep, however, we don't know how much garbage there is,

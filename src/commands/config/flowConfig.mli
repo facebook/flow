@@ -285,6 +285,8 @@ val root_name : config -> string option
 
 val saved_state_fetcher : config -> Options.saved_state_fetcher
 
+val saved_state_direct_serialization : config -> bool
+
 val saved_state_skip_version_check : config -> bool
 
 val shm_hash_table_pow : config -> int
