@@ -2466,7 +2466,8 @@ and class_method
         ]
     )
 
-and class_declare_method ~opts (loc, { Ast.Class.DeclareMethod.key; annot; static; comments }) =
+and class_declare_method ~opts (loc, { Ast.Class.DeclareMethod.kind; key; annot; static; comments })
+    =
   let s_key =
     match key with
     | Ast.Expression.Object.Property.PrivateName
@@ -2477,22 +2478,31 @@ and class_declare_method ~opts (loc, { Ast.Class.DeclareMethod.key; annot; stati
         (identifier (Flow_ast_utils.ident_of_source (ident_loc, "#" ^ name)))
     | _ -> object_property_key ~opts key
   in
+  let s_static =
+    if static then
+      fuse [Atom "static"; space]
+    else
+      Empty
+  in
+  let s_annot =
+    let open Ast.Class.Method in
+    match (kind, annot) with
+    | ((Get | Set), (_, (func_loc, Ast.Type.Function func))) ->
+      type_function ~opts ~sep:(Atom ":") func_loc func
+    | _ -> type_annotation ~opts annot
+  in
+  let s_kind =
+    let open Ast.Class.Method in
+    match kind with
+    | Get -> fuse [Atom "get"; space]
+    | Set -> fuse [Atom "set"; space]
+    | Method
+    | Constructor ->
+      Empty
+  in
   source_location_with_comments
     ?comments
-    ( loc,
-      with_semicolon
-        (fuse
-           [
-             ( if static then
-               fuse [Atom "static"; space]
-             else
-               Empty
-             );
-             s_key;
-             type_annotation ~opts annot;
-           ]
-        )
-    )
+    (loc, with_semicolon (fuse [s_static; s_kind; s_key; s_annot]))
 
 and class_abstract_method
     ~opts

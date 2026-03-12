@@ -265,6 +265,151 @@ References:
                                                         ^^^^^^^^^^^^^ [4]
 
 
+Error ------------------------------------------------------------------------------------- use_getters_setters.js:15:25
+
+Cannot assign `p.name` to `badName` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   use_getters_setters.js:15:25
+   15| const badName: number = p.name; // ERROR: string ~> number
+                               ^^^^^^
+
+References:
+   use_getters_setters.js:12:10
+   12| p.name = "Alice";
+                ^^^^^^^ [1]
+   use_getters_setters.js:15:16
+   15| const badName: number = p.name; // ERROR: string ~> number
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- use_getters_setters.js:16:24
+
+Cannot assign `p.age` to `badAge` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   use_getters_setters.js:16:24
+   16| const badAge: string = p.age; // ERROR: number ~> string
+                              ^^^^^
+
+References:
+   getters_setters.js.flow:4:14
+    4|   get age(): number;
+                    ^^^^^^ [1]
+   use_getters_setters.js:16:15
+   16| const badAge: string = p.age; // ERROR: number ~> string
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- use_getters_setters.js:17:10
+
+Cannot assign `123` to `p.name` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   use_getters_setters.js:17:10
+   17| p.name = 123; // ERROR: number ~> string
+                ^^^ [1]
+
+References:
+   getters_setters.js.flow:3:19
+    3|   set name(value: string): void;
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- use_getters_setters.js:22:26
+
+Cannot assign `Person.count` to `badCount` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   use_getters_setters.js:22:26
+   22| const badCount: string = Person.count; // ERROR: number ~> string
+                                ^^^^^^^^^^^^
+
+References:
+   use_getters_setters.js:21:16
+   21| Person.count = 10;
+                      ^^ [1]
+   use_getters_setters.js:22:17
+   22| const badCount: string = Person.count; // ERROR: number ~> string
+                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- use_getters_setters.js:23:16
+
+Cannot assign `"not a number"` to `Person.count` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   use_getters_setters.js:23:16
+   23| Person.count = "not a number"; // ERROR: string ~> number
+                      ^^^^^^^^^^^^^^ [1]
+
+References:
+   getters_setters.js.flow:6:27
+    6|   static set count(value: number): void;
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- use_getters_setters.js:36:23
+
+Cannot assign `item.id` to `badId` because number [1] is incompatible with string [2]. [incompatible-type]
+
+   use_getters_setters.js:36:23
+   36| const badId: string = item.id; // ERROR: number ~> string
+                             ^^^^^^^
+
+References:
+   use_getters_setters.js:33:11
+   33| item.id = 42;
+                 ^^ [1]
+   use_getters_setters.js:36:14
+   36| const badId: string = item.id; // ERROR: number ~> string
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- use_getters_setters.js:37:26
+
+Cannot assign `item.label` to `badLabel` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   use_getters_setters.js:37:26
+   37| const badLabel: number = item.label; // ERROR: string ~> number
+                                ^^^^^^^^^^
+
+References:
+   getters_setters_namespace.js:5:18
+    5|     get label(): string;
+                        ^^^^^^ [1]
+   use_getters_setters.js:37:17
+   37| const badLabel: number = item.label; // ERROR: string ~> number
+                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- use_getters_setters.js:38:11
+
+Cannot assign `"not a number"` to `item.id` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   use_getters_setters.js:38:11
+   38| item.id = "not a number"; // ERROR: string ~> number
+                 ^^^^^^^^^^^^^^ [1]
+
+References:
+   getters_setters_namespace.js:4:19
+    4|     set id(value: number): void;
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- use_getters_setters.js:42:33
+
+Cannot assign `AccessorNS.Item.defaultLabel` to `badDefaultLabel` because string [1] is incompatible with number [2].
+[incompatible-type]
+
+   use_getters_setters.js:42:33
+   42| const badDefaultLabel: number = AccessorNS.Item.defaultLabel; // ERROR: string ~> number
+                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   getters_setters_namespace.js:6:32
+    6|     static get defaultLabel(): string;
+                                      ^^^^^^ [1]
+   use_getters_setters.js:42:24
+   42| const badDefaultLabel: number = AccessorNS.Item.defaultLabel; // ERROR: string ~> number
+                              ^^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------- use_implicit_functions.js:12:29
 
 Cannot assign `ImplicitFunctions.greet(...)` to `badGreeting` because string [1] is incompatible with number [2].
@@ -548,4 +693,4 @@ References:
 
 
 
-Found 33 errors
+Found 42 errors

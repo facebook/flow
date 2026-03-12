@@ -618,63 +618,213 @@ module Object
   (* In the ES6 draft, all elements are methods. No properties (though there
    * are getter and setters allowed *)
   let class_element =
-    let get env start_loc decorators static ts_accessibility leading =
-      let (loc, (key, value)) =
-        with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true true) env
-      in
-      (match (static, string_value_of_key key) with
-      | (false, Some (key_loc, "constructor")) ->
-        error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
-      | (true, Some (key_loc, "prototype")) ->
-        error_at
-          env
-          ( key_loc,
-            Parse_error.InvalidClassMemberName
-              { name = "prototype"; static; method_ = false; private_ = false }
-          )
-      | _ -> ());
-      let open Ast.Class in
-      Body.Method
-        ( loc,
+    let make_bodyless_declare_accessor
+        env ~start_loc ~sig_loc ~kind ~key ~tparams ~params ~return ~static ~leading =
+      match Declaration.convert_function_params_to_type_params params with
+      | Ok type_params ->
+        let return_annot =
+          match return with
+          | Function.ReturnAnnot.Available (_, (ret_loc, t)) ->
+            Ast.Type.Function.Available (ret_loc, t)
+          | Function.ReturnAnnot.TypeGuard (_, tg) -> Ast.Type.Function.TypeGuard tg
+          | Function.ReturnAnnot.Missing loc ->
+            let default_type =
+              match kind with
+              | Class.Method.Set -> Ast.Type.Void None
+              | _ -> Ast.Type.Any None
+            in
+            Ast.Type.Function.Available (loc, default_type)
+        in
+        let func =
           {
-            Method.key;
-            value;
-            kind = Method.Get;
-            static;
-            ts_accessibility;
-            decorators;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            Ast.Type.Function.tparams;
+            params = type_params;
+            return = return_annot;
+            comments = None;
+            effect_ = Function.Arbitrary;
           }
-        )
+        in
+        let annot_loc =
+          match tparams with
+          | Some (tparams_loc, _) -> tparams_loc
+          | None -> fst params
+        in
+        let annot = (annot_loc, (annot_loc, Ast.Type.Function func)) in
+        ignore (Eat.maybe env T_SEMICOLON);
+        let open Ast.Class in
+        Some
+          (Body.DeclareMethod
+             ( Loc.btwn start_loc sig_loc,
+               {
+                 DeclareMethod.kind;
+                 key;
+                 annot;
+                 static;
+                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
+               }
+             )
+          )
+      | Error _ -> None
     in
-    let set env start_loc decorators static ts_accessibility leading =
-      let (loc, (key, value)) =
-        with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true false) env
-      in
-      (match (static, string_value_of_key key) with
-      | (false, Some (key_loc, "constructor")) ->
-        error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
-      | (true, Some (key_loc, "prototype")) ->
-        error_at
-          env
-          ( key_loc,
-            Parse_error.InvalidClassMemberName
-              { name = "prototype"; static; method_ = false; private_ = false }
+    let accessor env start_loc decorators static ts_accessibility leading ~is_getter =
+      if in_ambient_context env then (
+        (* In ambient context, parse key + signature, then check for bodyless *)
+        let async = false in
+        let generator = false in
+        let (key_loc, key) = key ~class_body:true env in
+        let key = object_key_remove_trailing env key in
+        (match (static, string_value_of_key key) with
+        | (false, Some (key_loc, "constructor")) ->
+          error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
+        | (true, Some (key_loc, "prototype")) ->
+          error_at
+            env
+            ( key_loc,
+              Parse_error.InvalidClassMemberName
+                { name = "prototype"; static; method_ = false; private_ = false }
+            )
+        | _ -> ());
+        let (sig_loc, (tparams, params, return)) =
+          with_loc
+            (fun env ->
+              let tparams =
+                type_params_remove_trailing
+                  env
+                  ~kind:Flow_ast_mapper.FunctionTP
+                  (Type.type_params env)
+              in
+              let params =
+                let params = Declaration.function_params ~await:false ~yield:false env in
+                if Peek.token env = T_COLON then
+                  params
+                else
+                  function_params_remove_trailing env params
+              in
+              begin
+                match (is_getter, params) with
+                | (true, (_, { Ast.Function.Params.this_ = Some _; _ })) ->
+                  error_at env (key_loc, Parse_error.GetterMayNotHaveThisParam)
+                | (false, (_, { Ast.Function.Params.this_ = Some _; _ })) ->
+                  error_at env (key_loc, Parse_error.SetterMayNotHaveThisParam)
+                | ( true,
+                    (_, { Ast.Function.Params.params = []; rest = None; this_ = None; comments = _ })
+                  ) ->
+                  ()
+                | (false, (_, { Ast.Function.Params.rest = Some _; _ })) ->
+                  error_at env (key_loc, Parse_error.SetterArity)
+                | ( false,
+                    ( _,
+                      { Ast.Function.Params.params = [_]; rest = None; this_ = None; comments = _ }
+                    )
+                  ) ->
+                  ()
+                | (true, _) -> error_at env (key_loc, Parse_error.GetterArity)
+                | (false, _) -> error_at env (key_loc, Parse_error.SetterArity)
+              end;
+              let return =
+                return_annotation_remove_trailing env (Type.function_return_annotation_opt env)
+              in
+              (tparams, params, return))
+            env
+        in
+        let kind =
+          if is_getter then
+            Class.Method.Get
+          else
+            Class.Method.Set
+        in
+        let make_accessor_method () =
+          let value =
+            with_loc
+              ~start_loc:sig_loc
+              (fun env ->
+                let simple_params = is_simple_parameter_list params in
+                let (body, contains_use_strict) =
+                  Declaration.function_body env ~async ~generator ~expression:false ~simple_params
+                in
+                Declaration.strict_function_post_check env ~contains_use_strict None params;
+                {
+                  Function.id = None;
+                  params;
+                  body;
+                  generator;
+                  async;
+                  effect_ = Function.Arbitrary;
+                  predicate = None;
+                  return;
+                  tparams;
+                  sig_loc;
+                  comments = None;
+                })
+              env
+          in
+          let open Ast.Class in
+          Body.Method
+            ( Loc.btwn start_loc (fst value),
+              {
+                Method.key;
+                value;
+                kind;
+                static;
+                ts_accessibility;
+                decorators;
+                comments = Flow_ast_utils.mk_comments_opt ~leading ();
+              }
+            )
+        in
+        let is_bodyless = Peek.token env = T_SEMICOLON || Peek.is_implicit_semicolon env in
+        if is_bodyless then
+          match
+            make_bodyless_declare_accessor
+              env
+              ~start_loc
+              ~sig_loc
+              ~kind
+              ~key
+              ~tparams
+              ~params
+              ~return
+              ~static
+              ~leading
+          with
+          | Some decl -> decl
+          | None -> make_accessor_method ()
+        else
+          make_accessor_method ()
+      ) else
+        (* Not in ambient context - use normal getter_or_setter *)
+        let (loc, (key, value)) =
+          with_loc ~start_loc (fun env -> getter_or_setter env ~in_class_body:true is_getter) env
+        in
+        (match (static, string_value_of_key key) with
+        | (false, Some (key_loc, "constructor")) ->
+          error_at env (key_loc, Parse_error.ConstructorCannotBeAccessor)
+        | (true, Some (key_loc, "prototype")) ->
+          error_at
+            env
+            ( key_loc,
+              Parse_error.InvalidClassMemberName
+                { name = "prototype"; static; method_ = false; private_ = false }
+            )
+        | _ -> ());
+        let open Ast.Class in
+        Body.Method
+          ( loc,
+            {
+              Method.key;
+              value;
+              kind =
+                ( if is_getter then
+                  Method.Get
+                else
+                  Method.Set
+                );
+              static;
+              ts_accessibility;
+              decorators;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ();
+            }
           )
-      | _ -> ());
-      let open Ast.Class in
-      Body.Method
-        ( loc,
-          {
-            Method.key;
-            value;
-            kind = Method.Set;
-            static;
-            ts_accessibility;
-            decorators;
-            comments = Flow_ast_utils.mk_comments_opt ~leading ();
-          }
-        )
     in
     let error_unsupported_variance env = function
       | Some (loc, _) -> error_at env (loc, Parse_error.UnexpectedVariance)
@@ -987,9 +1137,12 @@ module Object
           let (annot_loc, func) = make_method_func_type type_params in
           (annot_loc, (annot_loc, Ast.Type.Function func))
         in
-        (* Check for bodyless method: semicolon instead of body *)
+        (* Check for bodyless method: semicolon instead of body.
+           Also accept implicit semicolons (ASI) in ambient contexts. *)
         let is_bodyless_method =
-          Peek.token env = T_SEMICOLON
+          (Peek.token env = T_SEMICOLON
+          || (in_ambient_context env && Peek.is_implicit_semicolon env)
+          )
           && (not async)
           && (not generator)
           && (kind <> Ast.Class.Method.Constructor || in_ambient_context env)
@@ -1037,7 +1190,7 @@ module Object
           (* Abstract method - try to convert params to type params *)
           match Declaration.convert_function_params_to_type_params params with
           | Ok type_params ->
-            Expect.token env T_SEMICOLON;
+            ignore (Eat.maybe env T_SEMICOLON);
             Class.Body.AbstractMethod
               ( Loc.btwn start_loc sig_loc,
                 {
@@ -1067,11 +1220,12 @@ module Object
           (* Implicit declare method *)
           match Declaration.convert_function_params_to_type_params params with
           | Ok type_params ->
-            Expect.token env T_SEMICOLON;
+            ignore (Eat.maybe env T_SEMICOLON);
             Class.Body.DeclareMethod
               ( Loc.btwn start_loc sig_loc,
                 {
-                  Class.DeclareMethod.key;
+                  Class.DeclareMethod.kind = Class.Method.Method;
+                  key;
                   annot = make_method_annot type_params;
                   static;
                   comments = Flow_ast_utils.mk_comments_opt ~leading ();
@@ -1248,10 +1402,17 @@ module Object
               ts_accessibility
               leading
           else (
-            error_unsupported_declare env declare;
+            if not (in_ambient_context env) then error_unsupported_declare env declare;
             error_unsupported_variance env variance;
             ignore (object_key_remove_trailing env key);
-            get env start_loc decorators static ts_accessibility (leading @ leading_get)
+            accessor
+              env
+              start_loc
+              decorators
+              static
+              ts_accessibility
+              (leading @ leading_get)
+              ~is_getter:true
           )
         | (false, false, T_IDENTIFIER { raw = "set"; _ }) ->
           let leading_set = Peek.comments env in
@@ -1271,10 +1432,17 @@ module Object
               ts_accessibility
               leading
           else (
-            error_unsupported_declare env declare;
+            if not (in_ambient_context env) then error_unsupported_declare env declare;
             error_unsupported_variance env variance;
             ignore (object_key_remove_trailing env key);
-            set env start_loc decorators static ts_accessibility (leading @ leading_set)
+            accessor
+              env
+              start_loc
+              decorators
+              static
+              ts_accessibility
+              (leading @ leading_set)
+              ~is_getter:false
           )
         | (_, _, _) ->
           let (_, key) = key ~class_body:true env in

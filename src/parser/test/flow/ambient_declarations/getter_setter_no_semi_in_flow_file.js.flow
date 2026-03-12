@@ -1,0 +1,8 @@
+class A {
+  get name(): string
+  set name(value: string): void
+  get age(): number
+  set age(value: number): void
+  static get count(): number
+  static set count(value: number): void
+}

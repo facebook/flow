@@ -2467,6 +2467,7 @@ and Class : sig
     type ('M, 'T) t = 'T * ('M, 'T) t'
 
     and ('M, 'T) t' = {
+      kind: Method.kind;
       key: ('M, 'T) Expression.Object.Property.key;
       annot: ('M, 'T) Type.annotation;
       static: bool;

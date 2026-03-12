@@ -1533,7 +1533,7 @@ with type t = Impl.t = struct
         | Some v -> [("tsAccessibility", string v)]
         | None -> []
         )
-    and class_declare_method (loc, { Class.DeclareMethod.key; annot; static; comments }) =
+    and class_declare_method (loc, { Class.DeclareMethod.kind; key; annot; static; comments }) =
       let (key, computed, comments) =
         let open Expression.Object.Property in
         match key with
@@ -1548,16 +1548,27 @@ with type t = Impl.t = struct
             Flow_ast_utils.merge_comments ~outer:comments ~inner:computed_comments
           )
       in
+      let kind_prop =
+        let open Class.Method in
+        match kind with
+        | Get -> [("kind", string "get")]
+        | Set -> [("kind", string "set")]
+        | Method
+        | Constructor ->
+          []
+      in
       node
         ?comments
         "DeclareMethodDefinition"
         loc
-        [
-          ("key", key);
-          ("value", type_annotation annot);
-          ("static", bool static);
-          ("computed", bool computed);
-        ]
+        ([
+           ("key", key);
+           ("value", type_annotation annot);
+           ("static", bool static);
+           ("computed", bool computed);
+         ]
+        @ kind_prop
+        )
     and class_abstract_method (loc, { Class.AbstractMethod.key; annot; ts_accessibility; comments })
         =
       let (key, computed, comments) = property_key ~comments key in

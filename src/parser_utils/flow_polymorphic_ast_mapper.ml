@@ -472,11 +472,11 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method class_declare_method (decl_meth : ('M, 'T) Ast.Class.DeclareMethod.t')
         : ('N, 'U) Ast.Class.DeclareMethod.t' =
       let open Ast.Class.DeclareMethod in
-      let { key; annot; static; comments } = decl_meth in
+      let { kind; key; annot; static; comments } = decl_meth in
       let key' = this#class_method_key key in
       let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in
-      { key = key'; annot = annot'; static; comments = comments' }
+      { kind; key = key'; annot = annot'; static; comments = comments' }
 
     method class_abstract_method (abs_meth : ('M, 'T) Ast.Class.AbstractMethod.t')
         : ('N, 'U) Ast.Class.AbstractMethod.t' =

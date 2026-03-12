@@ -1,0 +1,9 @@
+class Person {
+  get name(): string;
+  set name(value: string): void;
+  get age(): number;
+  static get count(): number;
+  static set count(value: number): void;
+}
+
+declare export { Person };

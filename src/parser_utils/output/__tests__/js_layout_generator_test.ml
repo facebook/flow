@@ -2348,6 +2348,22 @@ let tests =
              ~pretty:true
              ("declare class a {\n  static a: b,\n  static d(): " ^ String.make 80 'c' ^ ",\n}")
          );
+         ( "declare_method_getter_setter" >:: fun ctxt ->
+           assert_statement_string
+             ~ctxt
+             "declare namespace NS{class A{get name():string;set name(value:string):void;}}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare namespace NS {\n  class A {\n    get name(): string;\n    set name(value: string): void;\n  }\n}";
+           assert_statement_string
+             ~ctxt
+             "declare namespace NS{class A{static get count():number;static set count(value:number):void;}}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare namespace NS {\n  class A {\n    static get count(): number;\n    static set count(value: number): void;\n  }\n}"
+         );
          ( "declare_enum_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare enum E{A,}";
            assert_statement_string ~ctxt ~pretty:true "declare enum E {\n  A,\n}"

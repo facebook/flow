@@ -4133,7 +4133,8 @@ and class_def =
         | C.Body.DeclareMethod
             ( _,
               {
-                C.DeclareMethod.key = P.Identifier (id_loc, { Ast.Identifier.name; comments = _ });
+                C.DeclareMethod.kind;
+                key = P.Identifier (id_loc, { Ast.Identifier.name; comments = _ });
                 annot = (_, (fn_loc, T.Function f));
                 static;
                 comments = _;
@@ -4141,11 +4142,23 @@ and class_def =
             ) ->
           if opts.munge && Signature_utils.is_munged_property_string name then
             acc
-          else
-            let id_loc = push_loc tbls id_loc in
-            let fn_loc = push_loc tbls fn_loc in
-            let def = function_type ~is_constructor:(name = "constructor") opts scope tbls xs f in
-            Acc.add_method ~static name id_loc fn_loc ~async:false ~generator:false def acc
+          else begin
+            match kind with
+            | C.Method.Get ->
+              let id_loc = push_loc tbls id_loc in
+              let getter = getter_type opts scope tbls xs id_loc f in
+              Acc.add_accessor ~static name getter acc
+            | C.Method.Set ->
+              let id_loc = push_loc tbls id_loc in
+              let setter = setter_type opts scope tbls xs id_loc f in
+              Acc.add_accessor ~static name setter acc
+            | C.Method.Method
+            | C.Method.Constructor ->
+              let id_loc = push_loc tbls id_loc in
+              let fn_loc = push_loc tbls fn_loc in
+              let def = function_type ~is_constructor:(name = "constructor") opts scope tbls xs f in
+              Acc.add_method ~static name id_loc fn_loc ~async:false ~generator:false def acc
+          end
         | C.Body.DeclareMethod _ -> acc (* unsupported DeclareMethod key types *)
         | C.Body.Method (_, { C.Method.key = P.Computed _; _ })
         | C.Body.Property (_, { C.Property.key = P.Computed _; _ }) ->
