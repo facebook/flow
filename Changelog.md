@@ -1,3 +1,8 @@
+### 0.305.0
+
+Misc:
+* Add autofix for colon-style type parameter bounds to extends-style type parameter bounds
+
 ### 0.304.0
 
 Notable bug fixes:
