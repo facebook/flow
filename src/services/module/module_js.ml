@@ -1188,6 +1188,7 @@ let add_parsed_resolved_requires ~mutator ~reader ~options ~node_modules_contain
 let commit_modules ~workers ~options dirty_modules =
   let module Heap = SharedMem.NewAPI in
   let debug = Options.is_debug_mode options in
+  if debug then Hh_logger.info "Committing modules";
   let commit_haste (unchanged, errmap) mname haste_module_info =
     let name = Haste_module_info.module_name haste_module_info in
     let m = Parsing_heaps.get_haste_module_unsafe haste_module_info in
@@ -1311,5 +1312,5 @@ let commit_modules ~workers ~options dirty_modules =
       ~next:(MultiWorkerLwt.next workers (Modulename.Set.elements dirty_modules))
   in
   let changed_modules = Modulename.Set.diff dirty_modules unchanged in
-  if debug then prerr_endlinef "*** done committing modules ***";
+  if debug then Hh_logger.info "Committing modules Done";
   Lwt.return (changed_modules, duplicate_providers)

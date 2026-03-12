@@ -1873,7 +1873,7 @@ let init_with_initial_state
             Export_service.init ~workers ~reader ~libs:lib_exports parsed
         )
       in
-      Hh_logger.info "Finished indexing files";
+      Hh_logger.info "Indexing files Done";
       Lwt.return (Some exports)
     ) else
       Lwt.return None
@@ -2382,7 +2382,7 @@ let init_from_scratch ~profiling ~workers options =
             Export_service.init ~workers ~reader ~libs:lib_exports parsed_set
         )
       in
-      Hh_logger.info "Finished indexing files";
+      Hh_logger.info "Indexing files Done";
       Lwt.return (Some exports)
     ) else
       Lwt.return None
