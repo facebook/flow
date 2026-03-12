@@ -83,7 +83,8 @@ let format_errors
     else
       print_errors None
 
-let full_check_main
+let check_main
+    ~force_full_check
     base_flags
     error_flags
     options_flags
@@ -101,7 +102,7 @@ let full_check_main
     let flowconfig_path = Server_files_js.config_file flowconfig_name root in
     read_config_and_hash_or_exit ~enforce_warnings:(not ignore_version) flowconfig_path
   in
-  if FlowConfig.check_is_status flowconfig then begin
+  if (not force_full_check) && FlowConfig.check_is_status flowconfig then begin
     let json = json || Base.Option.is_some json_version || pretty in
     let connect_flags =
       {
@@ -110,10 +111,10 @@ let full_check_main
         no_auto_start = false;
         autostop = false;
         lazy_mode = None;
-        temp_dir = None;
-        shm_flags = { CommandUtils.shm_hash_table_pow = None; shm_heap_size = None };
+        temp_dir = options_flags.CommandUtils.Options_flags.temp_dir;
+        shm_flags;
         ignore_version;
-        quiet = json;
+        quiet = json || options_flags.CommandUtils.Options_flags.quiet;
         on_mismatch = CommandUtils.Choose_newest;
       }
     in
@@ -126,7 +127,7 @@ let full_check_main
           offset_style;
           pretty;
           error_flags;
-          strip_root = false;
+          strip_root = options_flags.CommandUtils.Options_flags.strip_root;
         }
     in
     StatusCommands.check_status flowconfig_name args connect_flags
@@ -207,7 +208,7 @@ module CheckCommand = struct
           exe_name;
     }
 
-  let command = CommandSpec.command spec full_check_main
+  let command = CommandSpec.command spec (check_main ~force_full_check:false)
 end
 
 module FullCheckCommand = struct
@@ -235,7 +236,7 @@ module FullCheckCommand = struct
           exe_name;
     }
 
-  let command = CommandSpec.command spec full_check_main
+  let command = CommandSpec.command spec (check_main ~force_full_check:true)
 end
 
 module FocusCheckCommand = struct
