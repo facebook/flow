@@ -221,5 +221,13 @@ Constructor type expression (`new (...) => T` / `abstract new (...) => T`) is no
                   ^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:85:22
 
-Found 27 errors
+Optional unlabeled tuple element is not enabled. [unsupported-syntax]
+
+   85| type OTup = [string, string?]; // ERROR
+                            ^^^^^^^
+
+
+
+Found 28 errors

@@ -836,19 +836,43 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               | _ -> None
             in
             match (Peek.is_identifier env, Peek.ith_token ~i:1 env) with
-            | (true, T_PLING)
+            | (true, T_PLING) ->
+              let name = identifier_name env in
+              Expect.token env T_PLING;
+              if Eat.maybe env T_COLON then
+                (* foo?: type — labeled optional element *)
+                let annot = _type env in
+                TupleElement
+                  (Type.Tuple.LabeledElement
+                     { Type.Tuple.LabeledElement.name; annot; variance; optional = true }
+                  )
+              else (
+                (* Foo? — optional unlabeled element with identifier type *)
+                if Option.is_some variance then error env Parse_error.InvalidTupleVariance;
+                let id = Type.Generic.Identifier.Unqualified name in
+                let (name_loc, _) = name in
+                let annot =
+                  (name_loc, Type.Generic { Type.Generic.id; targs = None; comments = None })
+                in
+                TupleElement
+                  (Type.Tuple.UnlabeledElement
+                     { Type.Tuple.UnlabeledElement.annot; optional = true }
+                  )
+              )
             | (true, T_COLON) ->
               let name = identifier_name env in
-              let optional = Eat.maybe env T_PLING in
               Expect.token env T_COLON;
               let annot = _type env in
               TupleElement
                 (Type.Tuple.LabeledElement
-                   { Type.Tuple.LabeledElement.name; annot; variance; optional }
+                   { Type.Tuple.LabeledElement.name; annot; variance; optional = false }
                 )
             | _ ->
               if Option.is_some variance then error env Parse_error.InvalidTupleVariance;
-              TupleElement (Type.Tuple.UnlabeledElement (_type env)))
+              let annot = _type env in
+              let optional = Eat.maybe env T_PLING in
+              TupleElement
+                (Type.Tuple.UnlabeledElement { Type.Tuple.UnlabeledElement.annot; optional }))
         env
     in
     let rec elements env acc =

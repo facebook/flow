@@ -2560,7 +2560,15 @@ with type t = Impl.t = struct
           ( "elementTypes",
             array_of_list
               (function
-                | (_, Type.Tuple.UnlabeledElement annot) -> _type annot
+                | (loc, Type.Tuple.UnlabeledElement { Type.Tuple.UnlabeledElement.annot; optional })
+                  ->
+                  if optional then
+                    node
+                      "TupleTypeElement"
+                      loc
+                      [("elementType", _type annot); ("optional", bool true)]
+                  else
+                    _type annot
                 | (loc, Type.Tuple.LabeledElement e) -> tuple_labeled_element loc e
                 | (loc, Type.Tuple.SpreadElement e) -> tuple_spread_element loc e)
               elements

@@ -2053,7 +2053,10 @@ class ['loc] mapper =
     method tuple_element (el : ('loc, 'loc) Ast.Type.Tuple.element) =
       let open Ast.Type.Tuple in
       match el with
-      | (loc, UnlabeledElement t) -> id this#type_ t el (fun t -> (loc, UnlabeledElement t))
+      | (loc, UnlabeledElement { UnlabeledElement.annot; optional }) ->
+        id this#type_ annot el (fun annot ->
+            (loc, UnlabeledElement { UnlabeledElement.annot; optional })
+        )
       | (loc, LabeledElement e) ->
         id this#tuple_labeled_element e el (fun e -> (loc, LabeledElement e))
       | (loc, SpreadElement e) -> id this#tuple_spread_element e el (fun e -> (loc, SpreadElement e))

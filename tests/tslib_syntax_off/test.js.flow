@@ -80,3 +80,6 @@ type MKR<T> = {[K in keyof T as string]: T[K]}; // ERROR
 // Constructor type
 type CT = new () => string; // ERROR
 type ACT = abstract new () => string; // ERROR
+
+// Optional unlabeled tuple element
+type OTup = [string, string?]; // ERROR

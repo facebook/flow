@@ -2399,11 +2399,34 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
 
   and convert_tuple_element env (loc, el) =
     match el with
-    | Ast.Type.Tuple.UnlabeledElement annot ->
-      let (((_, t), _) as annot_ast) = convert env annot in
-      let element_ast = (loc, Ast.Type.Tuple.UnlabeledElement annot_ast) in
-      let reason = mk_reason (RTupleElement { name = None }) loc in
-      (UnresolvedArg (mk_tuple_element reason t, None), element_ast)
+    | Ast.Type.Tuple.UnlabeledElement { Ast.Type.Tuple.UnlabeledElement.annot; optional } ->
+      if optional && not (Context.tslib_syntax env.cx) then (
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalUnlabeledTupleElement))
+          );
+        let element_ast = Tast_utils.error_mapper#tuple_element (loc, el) in
+        let reason = mk_reason (RTupleElement { name = None }) loc in
+        ( UnresolvedArg (mk_tuple_element ~optional reason (AnyT.at (AnyError None) loc), None),
+          element_ast
+        )
+      ) else
+        let (((_, annot_t), _) as annot_ast) = convert env annot in
+        let t =
+          if optional then
+            TypeUtil.optional annot_t
+          else
+            annot_t
+        in
+        let element_ast =
+          ( loc,
+            Ast.Type.Tuple.UnlabeledElement
+              { Ast.Type.Tuple.UnlabeledElement.annot = annot_ast; optional }
+          )
+        in
+        let reason = mk_reason (RTupleElement { name = None }) loc in
+        (UnresolvedArg (mk_tuple_element ~optional reason t, None), element_ast)
     | Ast.Type.Tuple.LabeledElement
         { Ast.Type.Tuple.LabeledElement.name; annot; variance; optional } ->
       let (((_, annot_t), _) as annot_ast) = convert env annot in

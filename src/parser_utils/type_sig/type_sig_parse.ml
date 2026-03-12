@@ -1869,9 +1869,15 @@ and typeof =
 and tuple_element opts scope tbls xs (loc, el) =
   let loc = push_loc tbls loc in
   match el with
-  | Ast.Type.Tuple.UnlabeledElement t ->
+  | Ast.Type.Tuple.UnlabeledElement { Ast.Type.Tuple.UnlabeledElement.annot = t; optional } ->
     let t = annot opts scope tbls xs t in
-    TupleElement { loc; name = None; t; polarity = Polarity.Neutral; optional = false }
+    let t =
+      if optional then
+        Annot (Optional t)
+      else
+        t
+    in
+    TupleElement { loc; name = None; t; polarity = Polarity.Neutral; optional }
   | Ast.Type.Tuple.LabeledElement
       { Ast.Type.Tuple.LabeledElement.name; annot = t; variance; optional } ->
     let t = annot opts scope tbls xs t in

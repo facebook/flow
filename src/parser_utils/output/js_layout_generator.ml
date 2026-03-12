@@ -4932,7 +4932,17 @@ and type_tuple ~opts loc { Ast.Type.Tuple.elements; inexact; comments } =
   let elements_rev =
     Base.List.rev_map
       ~f:(function
-        | (_, Ast.Type.Tuple.UnlabeledElement annot) -> type_ ~opts annot
+        | (_, Ast.Type.Tuple.UnlabeledElement { Ast.Type.Tuple.UnlabeledElement.annot; optional })
+          ->
+          fuse
+            [
+              type_ ~opts annot;
+              ( if optional then
+                Atom "?"
+              else
+                Empty
+              );
+            ]
         | (loc, Ast.Type.Tuple.LabeledElement e) -> type_tuple_labeled_element ~opts loc e
         | (loc, Ast.Type.Tuple.SpreadElement e) -> type_tuple_spread_element ~opts loc e)
       elements

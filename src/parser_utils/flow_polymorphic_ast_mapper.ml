@@ -1525,8 +1525,10 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Type.Tuple.element =
       let open Ast.Type.Tuple in
       match element with
-      | (annot, UnlabeledElement t_annot) ->
-        (this#on_loc_annot annot, UnlabeledElement (this#type_ t_annot))
+      | (annot, UnlabeledElement { UnlabeledElement.annot = t_annot; optional }) ->
+        ( this#on_loc_annot annot,
+          UnlabeledElement { UnlabeledElement.annot = this#type_ t_annot; optional }
+        )
       | (annot, LabeledElement e) ->
         (this#on_loc_annot annot, LabeledElement (this#tuple_labeled_element e))
       | (annot, SpreadElement e) ->

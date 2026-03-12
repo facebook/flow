@@ -3060,8 +3060,13 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       node change list option =
     let open Ast.Type.Tuple in
     match (e1, e2) with
-    | ((_, UnlabeledElement annot1), (_, UnlabeledElement annot2)) ->
-      Some (diff_if_changed type_ annot1 annot2)
+    | ( (_, UnlabeledElement { UnlabeledElement.annot = annot1; optional = opt1 }),
+        (_, UnlabeledElement { UnlabeledElement.annot = annot2; optional = opt2 })
+      ) ->
+      if opt1 <> opt2 then
+        None
+      else
+        Some (diff_if_changed type_ annot1 annot2)
     | ((_, LabeledElement e1), (_, LabeledElement e2)) -> tuple_labeled_element e1 e2
     | ((_, SpreadElement e1), (_, SpreadElement e2)) -> tuple_spread_element e1 e2
     | _ -> None

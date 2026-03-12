@@ -96,7 +96,8 @@ let type_ options =
                         variance = variance_ polarity;
                         optional;
                       }
-                  | (None, Neutral) -> T.Tuple.UnlabeledElement annot
+                  | (None, Neutral) ->
+                    T.Tuple.UnlabeledElement { T.Tuple.UnlabeledElement.annot; optional }
                   | _ ->
                     (* No label, but has polarity - e.g. `$ReadOnly<[string, number]>`
                        We must make up a name. *)

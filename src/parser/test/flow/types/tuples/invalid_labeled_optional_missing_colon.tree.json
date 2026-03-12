@@ -2,11 +2,7 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":21}},
-      "message":"Unexpected token `string`, expected the token `:`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":22}},
-      "message":"Unexpected token `]`, expected a type"
+      "message":"Unexpected token `string`, expected the token `,`"
     }
   ],
   "type":"Program",
@@ -32,23 +28,23 @@
         "range":[9,22],
         "elementTypes":[
           {
-            "type":"TupleTypeLabeledElement",
-            "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":21}},
-            "range":[10,21],
-            "label":{
-              "type":"Identifier",
+            "type":"TupleTypeElement",
+            "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":14}},
+            "range":[10,14],
+            "elementType":{
+              "type":"GenericTypeAnnotation",
               "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":13}},
               "range":[10,13],
-              "name":"foo",
-              "typeAnnotation":null,
-              "optional":false
+              "id":{
+                "type":"Identifier",
+                "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":13}},
+                "range":[10,13],
+                "name":"foo",
+                "typeAnnotation":null,
+                "optional":false
+              },
+              "typeParameters":null
             },
-            "elementType":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":22}},
-              "range":[21,22]
-            },
-            "variance":null,
             "optional":true
           }
         ],

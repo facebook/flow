@@ -5210,6 +5210,7 @@ let to_printable_error :
         | OptionalShorthandMethod -> "Optional method signature"
         | AnonymousDefaultExportFunction -> "Anonymous default export function declaration"
         | MappedTypeKeyRemapping -> "Key remapping (`as`) in mapped types"
+        | OptionalUnlabeledTupleElement -> "Optional unlabeled tuple element"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->
