@@ -156,6 +156,10 @@ let check_main
         ~options_flags
         ~saved_state_options_flags
     in
+    (* Auto-imports indexing is only useful for IDE/LSP features (autocomplete,
+       code actions). Foreground check commands never serve those requests, so
+       skip building the export index to save time and memory. *)
+    let options = { options with Options.opt_autoimports = false } in
     let init_id = Random_id.short_string () in
     let offset_kind = CommandUtils.offset_kind_of_offset_style offset_style in
     (* initialize loggers before doing too much, especially anything that might exit *)
@@ -317,6 +321,8 @@ module FocusCheckCommand = struct
         ~options_flags
         ~saved_state_options_flags
     in
+    (* Auto-imports indexing is only useful for IDE/LSP features. *)
+    let options = { options with Options.opt_autoimports = false } in
     let options =
       if verbose_focus then
         let open Verbose in

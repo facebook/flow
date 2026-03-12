@@ -1111,7 +1111,11 @@ let options_flags =
       |> flag "--estimate-recheck-time" (optional bool) ~doc:"" ~env:"FLOW_ESTIMATE_RECHECK_TIME"
       |> flag "--long-lived-workers" (optional bool) ~doc:"" ~env:"FLOW_LONG_LIVED_WORKERS"
       |> flag "--distributed" truthy ~doc:""
-      |> flag "--no-autoimports" truthy ~doc:"Disable auto-imports"
+      |> flag
+           "--no-autoimports"
+           truthy
+           ~doc:
+             "Disable auto-imports (always disabled for foreground commands like full-check/focus-check)"
     )
 
 let saved_state_flags =
