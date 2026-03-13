@@ -17,6 +17,14 @@ val call :
   next:'a Hh_bucket.next ->
   'c Lwt.t
 
+val call_with_worker_id :
+  worker list option ->
+  job:(worker_id:int -> 'a -> 'b) ->
+  merge:('b -> 'c -> 'c) ->
+  neutral:'c ->
+  next:'a Hh_bucket.next ->
+  'c Lwt.t
+
 val fold :
   worker list option ->
   job:('b -> 'a -> 'b) ->
