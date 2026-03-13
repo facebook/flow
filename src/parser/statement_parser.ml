@@ -1816,6 +1816,28 @@ module Statement
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             })
         env
+    | T_IDENTIFIER { raw = "as"; _ }
+      when match Peek.ith_token ~i:1 env with
+           | T_IDENTIFIER { raw = "namespace"; _ } -> true
+           | _ -> false ->
+      (* export as namespace Foo; *)
+      with_loc
+        ~start_loc
+        (fun env ->
+          Expect.identifier env "as";
+          Expect.identifier env "namespace";
+          let id = Parse.identifier env in
+          let trailing =
+            match semicolon env with
+            | Explicit trailing -> trailing
+            | Implicit { trailing; _ } -> trailing
+          in
+          Statement.NamespaceExportDeclaration
+            {
+              Statement.NamespaceExportDeclaration.id;
+              comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
+            })
+        env
     | T_IMPORT when Peek.ith_is_identifier ~i:1 env ->
       (* export import [type] Foo = ...; *)
       with_loc

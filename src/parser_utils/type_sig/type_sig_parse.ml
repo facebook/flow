@@ -5353,6 +5353,7 @@ let rec statement opts scope tbls (loc, stmt) =
   | S.ExportAssignment { S.ExportAssignment.expression = e; comments = _ } ->
     let t = expression opts scope tbls e in
     Scope.cjs_clobber scope t
+  | S.NamespaceExportDeclaration _ -> ()
   | S.ImportEqualsDeclaration
       { S.ImportEqualsDeclaration.id; module_reference; import_kind; is_export; comments = _ } ->
     let (id_loc, { Ast.Identifier.name = local; comments = _ }) = id in

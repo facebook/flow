@@ -237,5 +237,13 @@ Optional indexer (`?:`) is not enabled. [unsupported-syntax]
                       ^^^^^^^^^^^^^^^^^
 
 
+Error ------------------------------------------------------------------------------------------------ test.js.flow:91:1
 
-Found 29 errors
+`export as namespace` is not enabled. [unsupported-syntax]
+
+   91| export as namespace Foo; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 30 errors

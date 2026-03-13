@@ -59,6 +59,8 @@ let replace_comments_of_statement ~comments =
       | DeclareInterface x -> DeclareInterface Interface.{ x with comments }
       | DeclareEnum x -> DeclareEnum EnumDeclaration.{ x with comments }
       | ExportAssignment x -> ExportAssignment ExportAssignment.{ x with comments }
+      | NamespaceExportDeclaration x ->
+        NamespaceExportDeclaration NamespaceExportDeclaration.{ x with comments }
       | ImportEqualsDeclaration x ->
         ImportEqualsDeclaration ImportEqualsDeclaration.{ x with comments }
       | ( Block _ | Break _ | Continue _ | Debugger _ | DeclareExportDeclaration _ | DeclareModule _

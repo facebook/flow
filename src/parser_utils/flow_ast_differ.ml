@@ -673,6 +673,8 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       | ((loc, Match m1), (_, Match m2)) -> match_statement loc m1 m2
       | ((loc, Empty empty1), (_, Empty empty2)) -> empty_statement loc empty1 empty2
       | ((loc, ExportAssignment a1), (_, ExportAssignment a2)) -> Some (export_assignment loc a1 a2)
+      | ((loc, NamespaceExportDeclaration d1), (_, NamespaceExportDeclaration d2)) ->
+        Some (namespace_export_declaration loc d1 d2)
       | ((loc, ImportEqualsDeclaration d1), (_, ImportEqualsDeclaration d2)) ->
         import_equals_declaration loc d1 d2
       | (_, _) -> None
@@ -4181,6 +4183,16 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     in
     let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
     expr_diff @ comments_diff
+  and namespace_export_declaration
+      (loc : Loc.t)
+      (d1 : (Loc.t, Loc.t) Ast.Statement.NamespaceExportDeclaration.t)
+      (d2 : (Loc.t, Loc.t) Ast.Statement.NamespaceExportDeclaration.t) : node change list =
+    let open Ast.Statement.NamespaceExportDeclaration in
+    let { id = id1; comments = comments1 } = d1 in
+    let { id = id2; comments = comments2 } = d2 in
+    let id_diff = diff_if_changed identifier id1 id2 in
+    let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
+    id_diff @ comments_diff
   and import_equals_declaration
       (loc : Loc.t)
       (d1 : (Loc.t, Loc.t) Ast.Statement.ImportEqualsDeclaration.t)

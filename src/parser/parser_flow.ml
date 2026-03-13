@@ -144,8 +144,8 @@ let check_for_duplicate_exports =
             | DeclareExportDeclaration _ | DeclareFunction _ | DeclareInterface _ | DeclareModule _
             | DeclareModuleExports _ | DeclareNamespace _ | DeclareTypeAlias _ | DeclareOpaqueType _
             | DeclareVariable _ | DoWhile _ | Empty _ | ExportDefaultDeclaration _
-            | ExportNamedDeclaration _ | ExportAssignment _ | Expression _ | For _ | ForIn _
-            | ForOf _
+            | ExportNamedDeclaration _ | ExportAssignment _ | NamespaceExportDeclaration _
+            | Expression _ | For _ | ForIn _ | ForOf _
             | FunctionDeclaration { Function.id = None; _ }
             | If _ | ImportDeclaration _ | ImportEqualsDeclaration _ | Labeled _ | Match _
             | Return _ | Switch _ | Throw _ | Try _ | While _ | With _ ))
@@ -168,11 +168,11 @@ let check_for_duplicate_exports =
           | DeclareComponent _ | DeclareEnum _ | DeclareExportDeclaration _ | DeclareFunction _
           | DeclareInterface _ | DeclareModule _ | DeclareModuleExports _ | DeclareNamespace _
           | DeclareTypeAlias _ | DeclareOpaqueType _ | DeclareVariable _ | DoWhile _ | Empty _
-          | EnumDeclaration _ | ExportAssignment _ | Expression _ | For _ | ForIn _ | ForOf _
-          | FunctionDeclaration _ | ComponentDeclaration _ | If _ | ImportDeclaration _
-          | ImportEqualsDeclaration _ | InterfaceDeclaration _ | Labeled _ | Match _
-          | RecordDeclaration _ | Return _ | Switch _ | Throw _ | Try _ | TypeAlias _ | OpaqueType _
-          | VariableDeclaration _ | While _ | With _ ))
+          | EnumDeclaration _ | ExportAssignment _ | NamespaceExportDeclaration _ | Expression _
+          | For _ | ForIn _ | ForOf _ | FunctionDeclaration _ | ComponentDeclaration _ | If _
+          | ImportDeclaration _ | ImportEqualsDeclaration _ | InterfaceDeclaration _ | Labeled _
+          | Match _ | RecordDeclaration _ | Return _ | Switch _ | Throw _ | Try _ | TypeAlias _
+          | OpaqueType _ | VariableDeclaration _ | While _ | With _ ))
       ) ->
       seen
   in

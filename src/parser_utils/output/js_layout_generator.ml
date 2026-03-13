@@ -936,6 +936,7 @@ and statement ?(pretty_semicolon = false) ~opts (root_stmt : (Loc.t, Loc.t) Ast.
       | S.ExportNamedDeclaration export -> export_declaration ~opts loc export
       | S.ExportDefaultDeclaration export -> export_default_declaration ~opts loc export
       | S.ExportAssignment assign -> export_assignment ~opts loc assign
+      | S.NamespaceExportDeclaration decl -> namespace_export_declaration loc decl
       | S.TypeAlias typeAlias -> type_alias ~opts ~declare:false loc typeAlias
       | S.OpaqueType opaqueType -> opaque_type ~opts ~declare:false loc opaqueType
       | S.InterfaceDeclaration interface -> interface_declaration ~opts loc interface
@@ -3795,6 +3796,11 @@ and export_assignment ~opts loc { Ast.Statement.ExportAssignment.expression = ex
   layout_node_with_comments_opt loc comments
   @@ with_semicolon
        (fuse [Atom "export"; pretty_space; Atom "="; pretty_space; expression ~opts expr])
+
+and namespace_export_declaration loc { Ast.Statement.NamespaceExportDeclaration.id; comments } =
+  layout_node_with_comments_opt loc comments
+  @@ with_semicolon
+       (fuse [Atom "export"; space; Atom "as"; space; Atom "namespace"; space; identifier id])
 
 and import_equals_declaration
     ~opts

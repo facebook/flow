@@ -451,6 +451,7 @@ class lib_def_loc_mapper_and_validator cx =
       | DeclareModule _
       | DeclareModuleExports _
       | ExportAssignment _
+      | NamespaceExportDeclaration _
       | DeclareTypeAlias _
       | DeclareOpaqueType _
       | DeclareVariable _

@@ -170,6 +170,10 @@ class ['loc] mapper =
         )
       | (loc, ExportAssignment assign) ->
         id_loc this#export_assignment loc assign stmt (fun assign -> (loc, ExportAssignment assign))
+      | (loc, NamespaceExportDeclaration decl) ->
+        id_loc this#namespace_export_declaration loc decl stmt (fun decl ->
+            (loc, NamespaceExportDeclaration decl)
+        )
       | (loc, Expression expr) ->
         id_loc this#expression_statement loc expr stmt (fun expr -> (loc, Expression expr))
       | (loc, For for_stmt) ->
@@ -1390,6 +1394,17 @@ class ['loc] mapper =
         assign
       else
         { expression = expr'; comments = comments' }
+
+    method namespace_export_declaration
+        _loc (decl : ('loc, 'loc) Ast.Statement.NamespaceExportDeclaration.t) =
+      let open Ast.Statement.NamespaceExportDeclaration in
+      let { id; comments } = decl in
+      let id' = this#identifier id in
+      let comments' = this#syntax_opt comments in
+      if id == id' && comments == comments' then
+        decl
+      else
+        { id = id'; comments = comments' }
 
     method expression_statement _loc (stmt : ('loc, 'loc) Ast.Statement.Expression.t) =
       let open Ast.Statement.Expression in

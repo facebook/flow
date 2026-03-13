@@ -1290,6 +1290,14 @@ and Statement : sig
     [@@deriving show]
   end
 
+  module NamespaceExportDeclaration : sig
+    type ('M, 'T) t = {
+      id: ('M, 'T) Identifier.t;
+      comments: ('M, unit) Syntax.t option;
+    }
+    [@@deriving show]
+  end
+
   module ExportNamedDeclaration : sig
     module ExportSpecifier : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
@@ -1475,6 +1483,7 @@ and Statement : sig
     | ExportDefaultDeclaration of ('M, 'T) ExportDefaultDeclaration.t
     | ExportNamedDeclaration of ('M, 'T) ExportNamedDeclaration.t
     | ExportAssignment of ('M, 'T) ExportAssignment.t
+    | NamespaceExportDeclaration of ('M, 'T) NamespaceExportDeclaration.t
     | Expression of ('M, 'T) Expression.t
     | For of ('M, 'T) For.t
     | ForIn of ('M, 'T) ForIn.t

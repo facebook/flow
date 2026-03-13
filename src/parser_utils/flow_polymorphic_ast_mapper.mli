@@ -305,6 +305,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method export_assignment :
       ('M, 'T) Ast.Statement.ExportAssignment.t -> ('N, 'U) Ast.Statement.ExportAssignment.t
 
+    method namespace_export_declaration :
+      ('M, 'T) Ast.Statement.NamespaceExportDeclaration.t ->
+      ('N, 'U) Ast.Statement.NamespaceExportDeclaration.t
+
     method export_named_specifier :
       ('M, 'T) Ast.Statement.ExportNamedDeclaration.specifier ->
       ('N, 'U) Ast.Statement.ExportNamedDeclaration.specifier

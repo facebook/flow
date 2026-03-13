@@ -100,6 +100,7 @@ class ['loc] lexical_hoister ~(enable_enums : bool) =
       | (_, DoWhile _)
       | (_, Empty _)
       | (_, ExportAssignment _)
+      | (_, NamespaceExportDeclaration _)
       | (_, Expression _)
       | (_, For _)
       | (_, ForIn _)

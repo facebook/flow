@@ -189,6 +189,7 @@ let visit_toplevel_statement cx info ~in_declare_namespace :
   | (_, DeclareModule _)
   | (_, ImportDeclaration _)
   | (_, ImportEqualsDeclaration _)
+  | (_, NamespaceExportDeclaration _)
   | (_, DeclareNamespace { DeclareNamespace.id = DeclareNamespace.Global _; _ }) ->
     ()
   | (_, DeclareTypeAlias { TypeAlias.id; _ })

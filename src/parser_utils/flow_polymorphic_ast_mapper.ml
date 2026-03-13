@@ -68,6 +68,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         | ExportNamedDeclaration decl ->
           ExportNamedDeclaration (this#export_named_declaration annot decl)
         | ExportAssignment assign -> ExportAssignment (this#export_assignment assign)
+        | NamespaceExportDeclaration decl ->
+          NamespaceExportDeclaration (this#namespace_export_declaration decl)
         | Expression expr -> Expression (this#expression_statement expr)
         | For for_stmt -> For (this#for_statement for_stmt)
         | ForIn stuff -> ForIn (this#for_in_statement stuff)
@@ -1023,6 +1025,14 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let expression' = this#expression expr in
       let comments' = this#syntax_opt comments in
       { expression = expression'; comments = comments' }
+
+    method namespace_export_declaration (decl : ('M, 'T) Ast.Statement.NamespaceExportDeclaration.t)
+        : ('N, 'U) Ast.Statement.NamespaceExportDeclaration.t =
+      let open Ast.Statement.NamespaceExportDeclaration in
+      let { id; comments } = decl in
+      let id' = this#t_identifier id in
+      let comments' = this#syntax_opt comments in
+      { id = id'; comments = comments' }
 
     method expression_statement (stmt : ('M, 'T) Ast.Statement.Expression.t)
         : ('N, 'U) Ast.Statement.Expression.t =

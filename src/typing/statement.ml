@@ -2039,6 +2039,17 @@ module Make
     | (loc, ExportAssignment { Ast.Statement.ExportAssignment.expression = e; comments }) ->
       let expr = expression cx e in
       (loc, ExportAssignment { Ast.Statement.ExportAssignment.expression = expr; comments })
+    | (loc, NamespaceExportDeclaration _) as s when not (Context.tslib_syntax cx) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EUnsupportedSyntax
+           ( loc,
+             Flow_intermediate_error_types.TSLibSyntax
+               Flow_intermediate_error_types.NamespaceExportDeclaration
+           )
+        );
+      Tast_utils.error_mapper#statement s
+    | (_, NamespaceExportDeclaration _) as s -> Tast_utils.error_mapper#statement s
     | ( loc,
         ExportNamedDeclaration
           ( { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ } as

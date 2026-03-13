@@ -448,6 +448,7 @@ let acceptable_statement_in_declaration_context ~in_declare_namespace =
   | Empty _
   | EnumDeclaration _
   | ExportAssignment _
+  | NamespaceExportDeclaration _
   | ExportNamedDeclaration { ExportNamedDeclaration.export_kind = ExportType; _ }
   | ImportEqualsDeclaration _
   | InterfaceDeclaration _
@@ -489,6 +490,7 @@ let rec is_type_only_declaration_statement (_, stmt') =
     | DoWhile _
     | EnumDeclaration _
     | ExportAssignment _
+    | NamespaceExportDeclaration _
     | ExportDefaultDeclaration _
     | Expression _
     | For _

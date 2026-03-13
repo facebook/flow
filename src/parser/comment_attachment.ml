@@ -570,6 +570,9 @@ let statement_add_comments
       ExportNamedDeclaration { s with ExportNamedDeclaration.comments = merge_comments comments }
     | ExportAssignment ({ ExportAssignment.comments; _ } as s) ->
       ExportAssignment { s with ExportAssignment.comments = merge_comments comments }
+    | NamespaceExportDeclaration ({ NamespaceExportDeclaration.comments; _ } as s) ->
+      NamespaceExportDeclaration
+        { s with NamespaceExportDeclaration.comments = merge_comments comments }
     | Expression ({ Expression.comments; _ } as s) ->
       Expression { s with Expression.comments = merge_comments comments }
     | For ({ For.comments; _ } as s) -> For { s with For.comments = merge_comments comments }

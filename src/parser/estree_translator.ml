@@ -436,6 +436,8 @@ with type t = Impl.t = struct
           ]
       | (loc, ExportAssignment { ExportAssignment.expression = expr; comments }) ->
         node ?comments "ExportAssignment" loc [("expression", expression expr)]
+      | (loc, NamespaceExportDeclaration { NamespaceExportDeclaration.id; comments }) ->
+        node ?comments "NamespaceExportDeclaration" loc [("id", identifier id)]
       | ( loc,
           ImportDeclaration
             { ImportDeclaration.specifiers; default; import_kind; source; attributes; comments }

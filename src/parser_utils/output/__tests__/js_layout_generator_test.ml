@@ -2021,6 +2021,9 @@ let tests =
          (* TODO: Flow does not parse this but should
             assert_statement_string ~ctxt "export a,{b}from'a';";
             assert_statement_string ~ctxt "export*as foo,{bar}from'a';"; *);
+         ( "namespace_export_declaration_statement" >:: fun ctxt ->
+           assert_statement_string ~ctxt "export as namespace Foo;"
+         );
          ( "default_export_declaration_statement" >:: fun ctxt ->
            assert_statement_string ~ctxt "export default a;";
            assert_statement_string ~ctxt "export default a=b;";
