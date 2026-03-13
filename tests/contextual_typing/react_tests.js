@@ -50,3 +50,22 @@ function jsx_children_array_decomp() {
     })}
   </Parent>;
 }
+
+function jsx_fragment_array_from() {
+  // Test that Array.from inside a Fragment resolves overloads correctly.
+  // Fragment has Nominal component kind. The subtyping rule for
+  // FunT ~> AbstractComponent must only match Structural, not Nominal.
+  // Otherwise the Fragment's Renders generic param leaks as a hint
+  // and kills the correct Array.from overload.
+  const _a = <>
+    {Array.from({length: 3}, (_, index) => { // OK
+      return <div />;
+    })}
+  </>;
+  const _b = <>
+    {Array.from({length: 5}, (_, i) => i)} {/* OK */}
+  </>;
+  const arr: React.Node = <>
+    {Array.from({length: 3}, (_, index) => index)}
+  </>; // OK
+}
