@@ -2220,16 +2220,30 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       (t, { Object.CallProperty.value = (fn_loc, fn); static; comments })
     in
     let make_dict env indexer =
-      let { Object.Indexer.id; key; value; static; variance; comments } = indexer in
+      let { Object.Indexer.id; key; value; static; variance; optional; comments } = indexer in
       let (((_, key), _) as key_ast) = convert env key in
-      let (((_, value), _) as value_ast) = convert env value in
+      let (((annot_loc, value), _) as value_ast) = convert env value in
+      let value =
+        if optional then
+          TypeUtil.optional ~annot_loc value
+        else
+          value
+      in
       ( {
           Type.dict_name = Base.Option.map ~f:ident_name id;
           key;
           value;
           dict_polarity = polarity env.cx variance;
         },
-        { Object.Indexer.id; key = key_ast; value = value_ast; static; variance; comments }
+        {
+          Object.Indexer.id;
+          key = key_ast;
+          value = value_ast;
+          static;
+          variance;
+          optional;
+          comments;
+        }
       )
     in
     let property env acc =
@@ -2246,15 +2260,24 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           in
           (acc, CallProperty (loc, call))
         | Indexer (loc, i) ->
-          let (d, i) = make_dict env i in
-          let acc =
-            match Acc.add_dict d acc with
-            | Ok acc -> acc
-            | Error err ->
-              Flow_js_utils.add_output env.cx Error_message.(EUnsupportedSyntax (loc, err));
-              acc
-          in
-          (acc, Indexer (loc, i))
+          if i.Object.Indexer.optional && not (Context.tslib_syntax env.cx) then (
+            Flow_js_utils.add_output
+              env.cx
+              (Error_message.EUnsupportedSyntax
+                 (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalIndexer))
+              );
+            (acc, Tast_utils.error_mapper#object_type_property (Indexer (loc, i)))
+          ) else begin
+            let (d, i) = make_dict env i in
+            let acc =
+              match Acc.add_dict d acc with
+              | Ok acc -> acc
+              | Error err ->
+                Flow_js_utils.add_output env.cx Error_message.(EUnsupportedSyntax (loc, err));
+                acc
+            in
+            (acc, Indexer (loc, i))
+          end
         | Property (loc, p) ->
           let (acc, p) = named_property env loc acc p in
           (acc, Property (loc, p))
@@ -2923,21 +2946,39 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 );
               (x, Tast_utils.error_mapper#object_type_property indexer_prop :: rev_prop_asts)
             | Indexer (loc, indexer) ->
-              let { Indexer.id; key; value; static; variance; _ } = indexer in
-              let (((_, k), _) as key) = convert env key in
-              let (((_, v), _) as value) = convert env value in
-              let polarity = polarity env.cx variance in
-              let dict =
-                {
-                  Type.dict_name = Base.Option.map ~f:ident_name id;
-                  key = k;
-                  value = v;
-                  dict_polarity = polarity;
-                }
-              in
-              ( Class_type_sig.add_indexer ~static dict x,
-                Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
-              )
+              let { Indexer.id; key; value; static; variance; optional; _ } = indexer in
+              if optional && not (Context.tslib_syntax env.cx) then (
+                Flow_js_utils.add_output
+                  env.cx
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalIndexer))
+                  );
+                ( x,
+                  Tast_utils.error_mapper#object_type_property (Indexer (loc, indexer))
+                  :: rev_prop_asts
+                )
+              ) else begin
+                let (((_, k), _) as key) = convert env key in
+                let (((annot_loc, v), _) as value) = convert env value in
+                let polarity = polarity env.cx variance in
+                let v =
+                  if optional then
+                    TypeUtil.optional ~annot_loc v
+                  else
+                    v
+                in
+                let dict =
+                  {
+                    Type.dict_name = Base.Option.map ~f:ident_name id;
+                    key = k;
+                    value = v;
+                    dict_polarity = polarity;
+                  }
+                in
+                ( Class_type_sig.add_indexer ~static dict x,
+                  Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
+                )
+              end
             | Ast.Type.Object.MappedType (loc, _) as prop ->
               Flow_js_utils.add_output
                 env.cx

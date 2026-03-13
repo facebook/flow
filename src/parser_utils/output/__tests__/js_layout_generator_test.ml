@@ -2255,6 +2255,12 @@ let tests =
            assert_statement_string ~ctxt "type a={+[a:b]:a};";
            assert_statement_string ~ctxt ~pretty:true "type a = { +[a: b]: a };";
            assert_statement_string ~ctxt "type a={a:b,+[a:b]:a,():a,c():b};";
+           assert_statement_string ~ctxt "type a={[b]?:a};";
+           assert_statement_string ~ctxt ~pretty:true "type a = { [b]?: a };";
+           assert_statement_string ~ctxt "type a={+[b]?:a};";
+           assert_statement_string ~ctxt ~pretty:true "type a = { +[b]?: a };";
+           assert_statement_string ~ctxt "type a={[a:b]?:a};";
+           assert_statement_string ~ctxt ~pretty:true "type a = { [a: b]?: a };";
            (* TODO: the RHS should be indented *)
            assert_statement_string ~ctxt ~pretty:true "type T =\n/* foo */\n{ ... };";
            (* TODO: the RHS should be indented *)
@@ -2335,7 +2341,9 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             ("interface a {\n  a: b,\n  d(): " ^ String.make 80 'c' ^ ",\n}")
+             ("interface a {\n  a: b,\n  d(): " ^ String.make 80 'c' ^ ",\n}");
+           assert_statement_string ~ctxt "interface a{[b]?:a}";
+           assert_statement_string ~ctxt ~pretty:true "interface a { [b]?: a }"
          );
          ( "declare_class_statements" >:: fun ctxt ->
            assert_statement_string ~ctxt "declare class a{}";
@@ -2346,7 +2354,13 @@ let tests =
            assert_statement_string
              ~ctxt
              ~pretty:true
-             ("declare class a {\n  static a: b,\n  static d(): " ^ String.make 80 'c' ^ ",\n}")
+             ("declare class a {\n  static a: b,\n  static d(): " ^ String.make 80 'c' ^ ",\n}");
+           assert_statement_string ~ctxt "declare class a{[b]?:a}";
+           assert_statement_string ~ctxt ~pretty:true "declare class a { [b]?: a }";
+           assert_statement_string ~ctxt "declare class a{static [b]?:a}";
+           assert_statement_string ~ctxt ~pretty:true "declare class a { static [b]?: a }";
+           assert_statement_string ~ctxt "declare class a{static readonly [b]?:a}";
+           assert_statement_string ~ctxt ~pretty:true "declare class a { static readonly [b]?: a }"
          );
          ( "declare_method_getter_setter" >:: fun ctxt ->
            assert_statement_string

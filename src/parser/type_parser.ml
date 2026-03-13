@@ -1494,6 +1494,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             in
             let key = _type env in
             Expect.token env T_RBRACKET;
+            let optional = Eat.maybe env T_PLING in
             let trailing = Eat.trailing_comments env in
             Expect.token env T_COLON;
             let value = _type env in
@@ -1503,6 +1504,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               value;
               static = static <> None;
               variance;
+              optional;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             })
           env

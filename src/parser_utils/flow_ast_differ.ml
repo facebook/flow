@@ -2972,6 +2972,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       value = value1;
       static = static1;
       variance = variance1;
+      optional = optional1;
       comments = comments1;
     } =
       indexer1
@@ -2982,11 +2983,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       value = value2;
       static = static2;
       variance = variance2;
+      optional = optional2;
       comments = comments2;
     } =
       indexer2
     in
-    if static1 != static2 then
+    if static1 != static2 || optional1 != optional2 then
       None
     else
       let id_diff = diff_if_changed_nonopt_fn identifier id1 id2 in

@@ -229,5 +229,13 @@ Optional unlabeled tuple element is not enabled. [unsupported-syntax]
                             ^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:88:16
 
-Found 28 errors
+Optional indexer (`?:`) is not enabled. [unsupported-syntax]
+
+   88| type OptIdx = {[string]?: number}; // ERROR
+                      ^^^^^^^^^^^^^^^^^
+
+
+
+Found 29 errors

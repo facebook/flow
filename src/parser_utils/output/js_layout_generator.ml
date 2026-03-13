@@ -4644,7 +4644,7 @@ and type_object_property ~opts =
       )
   | SpreadProperty (loc, { SpreadProperty.argument; comments }) ->
     source_location_with_comments ?comments (loc, fuse [Atom "..."; type_ ~opts argument])
-  | Indexer (loc, { Indexer.id; key; value; static; variance = variance_; comments }) ->
+  | Indexer (loc, { Indexer.id; key; value; static; variance = variance_; optional; comments }) ->
     source_location_with_comments
       ?comments
       ( loc,
@@ -4664,6 +4664,11 @@ and type_object_property ~opts =
             end;
             type_ ~opts key;
             Atom "]";
+            ( if optional then
+              Atom "?"
+            else
+              Empty
+            );
             Atom ":";
             pretty_space;
             type_ ~opts value;

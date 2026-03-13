@@ -1236,14 +1236,22 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method object_indexer_property_type (oit : ('M, 'T) Ast.Type.Object.Indexer.t)
         : ('N, 'U) Ast.Type.Object.Indexer.t =
       let open Ast.Type.Object.Indexer in
-      let (annot, { id = id_; key; value; static; variance; comments }) = oit in
+      let (annot, { id = id_; key; value; static; variance; optional; comments }) = oit in
       let id' = Option.map ~f:this#identifier id_ in
       let key' = this#type_ key in
       let value' = this#type_ value in
       let variance' = this#variance_opt variance in
       let comments' = this#syntax_opt comments in
       ( this#on_loc_annot annot,
-        { id = id'; key = key'; value = value'; static; variance = variance'; comments = comments' }
+        {
+          id = id';
+          key = key';
+          value = value';
+          static;
+          variance = variance';
+          optional;
+          comments = comments';
+        }
       )
 
     method object_mapped_type (omt : ('M, 'T) Ast.Type.Object.MappedType.t)

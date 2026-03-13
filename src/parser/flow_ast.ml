@@ -353,6 +353,7 @@ and Type : sig
         value: ('M, 'T) Type.t;
         static: bool;
         variance: 'M Variance.t option;
+        optional: bool;
         comments: ('M, unit) Syntax.t option;
       }
 

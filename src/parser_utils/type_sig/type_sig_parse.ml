@@ -2084,7 +2084,9 @@ and setter_type opts scope tbls xs id_loc f =
   | _ -> failwith "unexpected setter"
 
 and indexer opts scope tbls xs dict =
-  let { T.Object.Indexer.id; key = k; value = v; static = _; variance; comments = _ } = dict in
+  let { T.Object.Indexer.id; key = k; value = v; static = _; variance; optional; comments = _ } =
+    dict
+  in
   let name =
     match id with
     | None -> None
@@ -2092,6 +2094,12 @@ and indexer opts scope tbls xs dict =
   in
   let key = annot opts scope tbls xs k in
   let value = annot opts scope tbls xs v in
+  let value =
+    if optional then
+      Annot (Optional value)
+    else
+      value
+  in
   ObjDict { name; polarity = polarity variance; key; value }
 
 and optional_method_as_field opts scope tbls xs id_loc fn_loc fn =

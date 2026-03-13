@@ -138,6 +138,7 @@ and ts_lib_syntax_kind =
   | AnonymousDefaultExportFunction
   | MappedTypeKeyRemapping
   | OptionalUnlabeledTupleElement
+  | OptionalIndexer
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

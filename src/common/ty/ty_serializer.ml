@@ -424,6 +424,7 @@ let type_ options =
       value;
       static = false;
       variance = variance_ d.dict_polarity;
+      optional = false;
       comments = None;
     }
   and obj_call_prop f =

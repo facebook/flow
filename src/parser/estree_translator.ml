@@ -2390,18 +2390,26 @@ with type t = Impl.t = struct
     and object_type_spread_property (loc, { Type.Object.SpreadProperty.argument; comments }) =
       node ?comments "ObjectTypeSpreadProperty" loc [("argument", _type argument)]
     and object_type_indexer
-        (loc, { Type.Object.Indexer.id; key; value; static; variance = variance_; comments }) =
+        ( loc,
+          { Type.Object.Indexer.id; key; value; static; variance = variance_; optional; comments }
+        ) =
       node
         ?comments
         "ObjectTypeIndexer"
         loc
-        [
-          ("id", option identifier id);
-          ("key", _type key);
-          ("value", _type value);
-          ("static", bool static);
-          ("variance", option variance variance_);
-        ]
+        ([
+           ("id", option identifier id);
+           ("key", _type key);
+           ("value", _type value);
+           ("static", bool static);
+           ("variance", option variance variance_);
+         ]
+        @
+        if optional then
+          [("optional", bool optional)]
+        else
+          []
+        )
     and object_type_call_property (loc, { Type.Object.CallProperty.value; static; comments }) =
       node
         ?comments

@@ -1632,7 +1632,7 @@ class ['loc] mapper =
 
     method object_indexer_property_type (opt : ('loc, 'loc) Ast.Type.Object.Indexer.t) =
       let open Ast.Type.Object.Indexer in
-      let (loc, { id; key; value; static; variance; comments }) = opt in
+      let (loc, { id; key; value; static; variance; optional; comments }) = opt in
       let key' = this#type_ key in
       let value' = this#type_ value in
       let variance' = this#variance_opt variance in
@@ -1640,7 +1640,17 @@ class ['loc] mapper =
       if key' == key && value' == value && variance' == variance && comments' == comments then
         opt
       else
-        (loc, { id; key = key'; value = value'; static; variance = variance'; comments = comments' })
+        ( loc,
+          {
+            id;
+            key = key';
+            value = value';
+            static;
+            variance = variance';
+            optional;
+            comments = comments';
+          }
+        )
 
     method object_internal_slot_property_type (slot : ('loc, 'loc) Ast.Type.Object.InternalSlot.t) =
       let open Ast.Type.Object.InternalSlot in
