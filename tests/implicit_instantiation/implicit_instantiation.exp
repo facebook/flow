@@ -187,6 +187,62 @@ References:
             ^^^^^^^^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------------- unbound_module_prop.js:17:29
+
+Cannot get `React.MISSING` because property `MISSING` is missing in module `react` [1]. [prop-missing]
+
+   unbound_module_prop.js:17:29
+    17| deferredLoadComponent<React.MISSING, _>(Foo); // Error: MISSING is not a property of react
+                                    ^^^^^^^
+
+References:
+   <BUILTINS>/react.js:179:16
+   179| declare module react {
+                       ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- unbound_module_prop.js:18:29
+
+Cannot get `React.MISSING` because property `MISSING` is missing in module `react` [1]. [prop-missing]
+
+   unbound_module_prop.js:18:29
+    18| deferredLoadComponent<React.MISSING<1>, _>(Foo); // Error: MISSING is not a property of react
+                                    ^^^^^^^
+
+References:
+   <BUILTINS>/react.js:179:16
+   179| declare module react {
+                       ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- unbound_module_prop.js:21:11
+
+Cannot get `React.MISSING` because property `MISSING` is missing in module `react` [1]. [prop-missing]
+
+   unbound_module_prop.js:21:11
+    21| bar<React.MISSING, _>({}, null); // Error
+                  ^^^^^^^
+
+References:
+   <BUILTINS>/react.js:179:16
+   179| declare module react {
+                       ^^^^^ [1]
+
+
+Error ------------------------------------------------------------------------------------- unbound_module_prop.js:22:14
+
+Cannot get `React.MISSING` because property `MISSING` is missing in module `react` [1]. [prop-missing]
+
+   unbound_module_prop.js:22:14
+    22| bar<_, React.MISSING>({}, null); // Error
+                     ^^^^^^^
+
+References:
+   <BUILTINS>/react.js:179:16
+   179| declare module react {
+                       ^^^^^ [1]
+
+
 Error ----------------------------------------------------------------------------- under_constrained_speculation.js:1:2
 
 Cannot cast `0` to string because number [1] is incompatible with string [2]. [incompatible-type]
@@ -346,4 +402,4 @@ References:
 
 
 
-Found 20 errors
+Found 24 errors

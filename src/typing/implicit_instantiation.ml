@@ -1184,6 +1184,12 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
   let solve_targs
       cx ~use_op ?(allow_underconstrained = false) ?(has_syntactic_hint = false) ?return_hint check
       =
+    (* Force pending lazy tvars (e.g. from qualified type lookups like React.Foo
+     * in explicit type args) so their errors are captured in init_errors below,
+     * rather than being discarded by the error filtering in the finally block. *)
+    List.iter
+      (fun s -> ignore @@ Context.force_fully_resolved_tvar cx s)
+      (Context.post_component_tvar_forcing_states cx);
     let constraint_cache = Context.constraint_cache cx in
     let preserved_constraint_cache = ref None in
     let result =
