@@ -4688,6 +4688,7 @@ and type_object_property ~opts =
           source_type;
           name_type;
           variance = variance_;
+          variance_op;
           optional;
           comments;
         }
@@ -4701,12 +4702,18 @@ and type_object_property ~opts =
         | NoOptionalFlag -> Empty
       )
     in
+    let variance_token =
+      match (variance_op, variance_) with
+      | (Some MappedType.Add, Some v) -> fuse [Atom "+"; variance v]
+      | (Some MappedType.Remove, Some v) -> fuse [Atom "-"; variance v]
+      | (_, _) -> option variance variance_
+    in
     source_location_with_comments
       ?comments
       ( loc,
         fuse
           [
-            option variance variance_;
+            variance_token;
             Atom "[";
             identifier (snd key_tparam).Ast.Type.TypeParam.name;
             space;

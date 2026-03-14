@@ -828,8 +828,7 @@ and merge_annot env file = function
                     {
                       homomorphic = Unspecialized;
                       property_type = MixedT.make reason;
-                      mapped_type_flags =
-                        { optional = KeepOptionality; variance = Polarity.Neutral };
+                      mapped_type_flags = { optional = KeepOptionality; variance = KeepVariance };
                       distributive_tparam_name = None;
                     }
                 );
@@ -1091,7 +1090,8 @@ and merge_annot env file = function
     let id = Context.make_aloc_id file.cx loc in
     merge_interface ~inline:true env file reason None id def []
   | MappedTypeAnnot
-      { loc; source_type; property_type; key_tparam; variance; optional; inline_keyof } ->
+      { loc; source_type; property_type; key_tparam; variance; variance_op; optional; inline_keyof }
+    ->
     let source_type = merge env file source_type in
     let (tp, _, env) = merge_tparam ~from_infer:false env file key_tparam in
     let property_type =
@@ -1111,6 +1111,16 @@ and merge_annot env file = function
         | MinusOptional -> Type.RemoveOptional
         | NoOptionalFlag -> Type.KeepOptionality
       )
+    in
+    let variance =
+      match variance_op with
+      | Some Flow_ast.Type.Object.MappedType.Add -> Type.OverrideVariance variance
+      | Some Flow_ast.Type.Object.MappedType.Remove -> Type.RemoveVariance variance
+      | None ->
+        if variance = Polarity.Neutral then
+          Type.KeepVariance
+        else
+          Type.OverrideVariance variance
     in
     let mapped_type_flags = { Type.variance; optional } in
     let id = eval_id_of_aloc file loc in

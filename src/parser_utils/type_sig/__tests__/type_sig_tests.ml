@@ -6111,7 +6111,7 @@ let%expect_test "mapped_types" =
                 bound = None; default = None;
                 is_const = false};
               variance = Polarity.Neutral;
-              optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
+              variance_op = None; optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
               inline_keyof = true})}
     2. TypeAlias {id_loc = [3:12-14];
          custom_error_loc_opt = None;
@@ -6131,7 +6131,7 @@ let%expect_test "mapped_types" =
                 bound = None; default = None;
                 is_const = false};
               variance = Polarity.Neutral;
-              optional = Flow_ast.Type.Object.MappedType.Optional;
+              variance_op = None; optional = Flow_ast.Type.Object.MappedType.Optional;
               inline_keyof = true})}
     3. TypeAlias {id_loc = [4:12-14];
          custom_error_loc_opt = None;
@@ -6151,7 +6151,7 @@ let%expect_test "mapped_types" =
                 bound = None; default = None;
                 is_const = false};
               variance = Polarity.Positive;
-              optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
+              variance_op = None; optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
               inline_keyof = true})}
     4. TypeAlias {id_loc = [5:12-14];
          custom_error_loc_opt = None;
@@ -6171,7 +6171,7 @@ let%expect_test "mapped_types" =
                 bound = None; default = None;
                 is_const = false};
               variance = Polarity.Negative;
-              optional = Flow_ast.Type.Object.MappedType.Optional;
+              variance_op = None; optional = Flow_ast.Type.Object.MappedType.Optional;
               inline_keyof = true})}
     5. TypeAlias {id_loc = [6:12-14];
          custom_error_loc_opt = None;
@@ -6191,7 +6191,7 @@ let%expect_test "mapped_types" =
                 bound = None; default = None;
                 is_const = false};
               variance = Polarity.Neutral;
-              optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
+              variance_op = None; optional = Flow_ast.Type.Object.MappedType.NoOptionalFlag;
               inline_keyof = false})} |}]
 
 let%expect_test "mapped_types_invalid" =

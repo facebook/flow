@@ -3884,7 +3884,7 @@ struct
           in
           let () =
             match mapped_type_variance with
-            | Polarity.Neutral -> ()
+            | KeepVariance -> ()
             | _ ->
               add_output
                 cx

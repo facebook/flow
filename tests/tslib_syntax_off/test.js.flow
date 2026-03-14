@@ -89,3 +89,7 @@ type OptIdx = {[string]?: number}; // ERROR
 
 // Export as namespace
 export as namespace Foo; // ERROR
+
+// Readonly mapped type variance op
+type MR<T> = { -readonly [P in keyof T]: T[P] }; // ERROR
+type PR<T> = { +readonly [P in keyof T]: T[P] }; // ERROR

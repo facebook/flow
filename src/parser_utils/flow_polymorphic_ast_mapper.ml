@@ -1267,7 +1267,18 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method object_mapped_type (omt : ('M, 'T) Ast.Type.Object.MappedType.t)
         : ('N, 'U) Ast.Type.Object.MappedType.t =
       let open Ast.Type.Object.MappedType in
-      let (annot, { key_tparam; prop_type; source_type; name_type; variance; optional; comments }) =
+      let ( annot,
+            {
+              key_tparam;
+              prop_type;
+              source_type;
+              name_type;
+              variance;
+              variance_op;
+              optional;
+              comments;
+            }
+          ) =
         omt
       in
       (* Source type does not have the tparams in scope, so we visit it first *)
@@ -1296,6 +1307,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
               prop_type = prop_type';
               name_type = name_type';
               variance = variance';
+              variance_op;
               optional;
               comments = comments';
             }

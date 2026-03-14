@@ -369,12 +369,18 @@ and Type : sig
         | NoOptionalFlag
       [@@deriving show]
 
+      type variance_op =
+        | Add
+        | Remove
+      [@@deriving show]
+
       type ('M, 'T) t' = {
         key_tparam: ('M, 'T) Type.TypeParam.t;
         prop_type: ('M, 'T) Type.t;
         source_type: ('M, 'T) Type.t;
         name_type: ('M, 'T) Type.t option;
         variance: 'M Variance.t option;
+        variance_op: variance_op option;
         optional: optional_flag;
         comments: ('M, unit) Syntax.t option;
       }

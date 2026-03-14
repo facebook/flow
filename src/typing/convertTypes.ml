@@ -776,9 +776,16 @@ and json_of_destructor cx depth destructor =
             [
               ( "variance",
                 match mapped_type_flags.variance with
-                | Polarity.Positive -> JSON_String "positive"
-                | Polarity.Negative -> JSON_String "negative"
-                | Polarity.Neutral -> JSON_String "neutral"
+                | OverrideVariance Polarity.Positive -> JSON_String "override_positive"
+                | OverrideVariance Polarity.Negative -> JSON_String "override_negative"
+                | OverrideVariance Polarity.Neutral ->
+                  failwith "OverrideVariance Neutral is not reachable"
+                | RemoveVariance Polarity.Positive -> JSON_String "remove_positive"
+                | RemoveVariance Polarity.Negative ->
+                  failwith "RemoveVariance Negative is not reachable"
+                | RemoveVariance Polarity.Neutral ->
+                  failwith "RemoveVariance Neutral is not reachable"
+                | KeepVariance -> JSON_String "keep"
               );
               ( "optional",
                 match mapped_type_flags.optional with

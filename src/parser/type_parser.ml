@@ -1512,7 +1512,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       Type.Object.Indexer indexer
     in
 
-    let mapped_type env start_loc variance ~leading =
+    let mapped_type env start_loc variance ~variance_op ~leading =
       let mapped_type =
         with_loc
           ~start_loc
@@ -1566,6 +1566,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
               prop_type;
               name_type;
               variance;
+              variance_op;
               optional;
               comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing ();
             })
@@ -1747,15 +1748,18 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~leading:[]
           (computed_loc, key)
     in
-    let bracket_property env start_loc static variance ~leading =
+    let bracket_property env start_loc static variance ~variance_op ~leading =
       let leading = leading @ Peek.comments env in
       Expect.token env T_LBRACKET;
       match (Peek.token env, Peek.ith_token ~i:1 env) with
       | (_, T_IDENTIFIER { raw = "in"; _ }) when static = None ->
-        mapped_type env start_loc variance ~leading
+        mapped_type env start_loc variance ~variance_op ~leading
       | (T_IDENTIFIER { raw = "Symbol"; _ }, T_PERIOD) ->
+        if Option.is_some variance_op then error_unexpected_variance env variance;
         well_known_symbol_property env start_loc static variance ~leading
-      | _ -> indexer_property env start_loc static variance ~leading
+      | _ ->
+        if Option.is_some variance_op then error_unexpected_variance env variance;
+        indexer_property env start_loc static variance ~leading
     in
     let rec properties
         ~is_class ~allow_inexact ~allow_spread ~exact env ((props, inexact, internal) as acc) =
@@ -1838,6 +1842,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
             ~allow_abstract:is_class
             ~allow_accessibility:is_class
             ~variance:None
+            ~variance_op:None
             ~static:None
             ~proto:None
             ~abstract:false
@@ -1860,6 +1865,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         ~allow_abstract
         ~allow_accessibility
         ~variance
+        ~variance_op
         ~static
         ~proto
         ~abstract
@@ -1879,6 +1885,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_abstract:false
           ~allow_accessibility:false
           ~variance
+          ~variance_op:None
           ~static
           ~proto
           ~abstract
@@ -1900,6 +1907,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_abstract
           ~allow_accessibility:false
           ~variance
+          ~variance_op:None
           ~static
           ~proto
           ~abstract
@@ -1921,6 +1929,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_abstract
           ~allow_accessibility:false
           ~variance
+          ~variance_op:None
           ~static
           ~proto
           ~abstract
@@ -1940,6 +1949,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_abstract:false
           ~allow_accessibility:false
           ~variance
+          ~variance_op:None
           ~static
           ~proto
           ~abstract:true
@@ -1973,6 +1983,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_abstract
           ~allow_accessibility:false
           ~variance
+          ~variance_op:None
           ~static
           ~proto
           ~abstract
@@ -1980,7 +1991,11 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~leading
           start_loc
       | T_READONLY
-        when variance = None
+        when (match variance with
+             | None
+             | Some (_, { Variance.kind = Variance.Plus | Variance.Minus; _ }) ->
+               true
+             | _ -> false)
              && (Peek.ith_is_identifier ~i:1 env
                 ||
                 match Peek.ith_token ~i:1 env with
@@ -1991,6 +2006,12 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                   true
                 | _ -> false
                 ) ->
+        let variance_op =
+          match variance with
+          | Some (_, { Variance.kind = Variance.Plus; _ }) -> Some Type.Object.MappedType.Add
+          | Some (_, { Variance.kind = Variance.Minus; _ }) -> Some Type.Object.MappedType.Remove
+          | _ -> None
+        in
         let variance = maybe_variance ~parse_readonly:true env in
         property
           env
@@ -2000,6 +2021,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~allow_abstract:false
           ~allow_accessibility:false
           ~variance
+          ~variance_op
           ~static
           ~proto
           ~abstract
@@ -2012,7 +2034,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         | T_LBRACKET ->
           error_unexpected_variance env variance;
           internal_slot env start_loc static ~leading
-        | _ -> bracket_property env start_loc static variance ~leading)
+        | _ -> bracket_property env start_loc static variance ~variance_op ~leading)
       | T_LESS_THAN
       | T_LPAREN ->
         (* Note that `static(): void` is a static callable property if we

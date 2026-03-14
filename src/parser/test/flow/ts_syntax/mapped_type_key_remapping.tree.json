@@ -95,6 +95,7 @@
               "range":[28,34]
             },
             "variance":null,
+            "varianceOp":null,
             "optional":null
           }
         ],
@@ -252,6 +253,7 @@
               }
             },
             "variance":null,
+            "varianceOp":null,
             "optional":null
           }
         ],
@@ -359,6 +361,7 @@
               }
             },
             "variance":null,
+            "varianceOp":null,
             "optional":"Optional"
           }
         ],
@@ -525,6 +528,7 @@
               }
             },
             "variance":null,
+            "varianceOp":null,
             "optional":null
           }
         ],

@@ -398,6 +398,7 @@ let object_mapped_type_property
           source_type;
           name_type = _ (* TODO: visit inside tparam scope when key remapping is supported *);
           variance = _;
+          variance_op = _;
           optional = _;
           comments = _;
         }

@@ -5210,6 +5210,7 @@ let to_printable_error :
         | OptionalShorthandMethod -> "Optional method signature"
         | AnonymousDefaultExportFunction -> "Anonymous default export function declaration"
         | MappedTypeKeyRemapping -> "Key remapping (`as`) in mapped types"
+        | ReadonlyMappedTypeVarianceOp -> "`+readonly`/`-readonly` mapped type modifier"
         | OptionalUnlabeledTupleElement -> "Optional unlabeled tuple element"
         | OptionalIndexer -> "Optional indexer (`?:`)"
         | NamespaceExportDeclaration -> "`export as namespace`"

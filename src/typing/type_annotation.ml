@@ -957,8 +957,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                      {
                        homomorphic = Unspecialized;
                        property_type = MixedT.make reason;
-                       mapped_type_flags =
-                         { optional = KeepOptionality; variance = Polarity.Neutral };
+                       mapped_type_flags = { optional = KeepOptionality; variance = KeepVariance };
                        distributive_tparam_name = None;
                      }
                   )
@@ -1461,6 +1460,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                       source_type;
                       name_type;
                       variance;
+                      variance_op;
                       optional;
                       comments = mapped_type_comments;
                     }
@@ -1490,6 +1490,15 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           env.cx
           (Error_message.EUnsupportedSyntax
              (obj_loc, Flow_intermediate_error_types.(TSLibSyntax MappedTypeKeyRemapping))
+          );
+        Tast_utils.error_mapper#type_ ot
+      ) else if Option.is_some variance_op && not (Context.tslib_syntax env.cx) then (
+        Flow_js_utils.add_output
+          env.cx
+          (Error_message.EUnsupportedSyntax
+             ( mapped_type_loc,
+               Flow_intermediate_error_types.(TSLibSyntax ReadonlyMappedTypeVarianceOp)
+             )
           );
         Tast_utils.error_mapper#type_ ot
       ) else
@@ -1576,7 +1585,25 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                    homomorphic;
                    property_type = poly_prop_type;
                    mapped_type_flags =
-                     { optional = mapped_type_optionality; variance = polarity cx variance };
+                     {
+                       optional = mapped_type_optionality;
+                       variance =
+                         (let open Ast.Type.Object.MappedType in
+                         match (variance, variance_op) with
+                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Readonly; _ }), Some Add)
+                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Readonly; _ }), None) ->
+                           OverrideVariance Polarity.Positive
+                         | (Some (_, { Ast.Variance.kind = Ast.Variance.Readonly; _ }), Some Remove)
+                           ->
+                           RemoveVariance Polarity.Positive
+                         | _ ->
+                           let pol = polarity cx variance in
+                           if pol = Polarity.Neutral then
+                             KeepVariance
+                           else
+                             OverrideVariance pol
+                         );
+                     };
                    distributive_tparam_name;
                  }
               )
@@ -1592,6 +1619,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   key_tparam = tparam_ast;
                   name_type = None;
                   variance;
+                  variance_op;
                   optional;
                   comments = mapped_type_comments;
                 }

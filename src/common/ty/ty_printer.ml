@@ -419,7 +419,7 @@ let layout_of_elt
               key_tparam = { tp_name; _ };
               source;
               prop;
-              flags = { polarity; optional };
+              flags = { variance; optional };
               homomorphic;
             } ->
           let optional_modifier =
@@ -428,9 +428,18 @@ let layout_of_elt
             | RemoveOptional -> Atom "-?"
             | MakeOptional -> Atom "?"
           in
+          let variance_token =
+            match variance with
+            | OverrideVariance pol -> variance_ pol
+            | RemoveVariance Positive -> fuse [Atom "-"; Atom "readonly "]
+            | RemoveVariance Negative
+            | RemoveVariance Neutral
+            | KeepVariance ->
+              Empty
+          in
           fuse
             [
-              variance_ polarity;
+              variance_token;
               Atom "[";
               Atom tp_name;
               Atom " in ";

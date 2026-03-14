@@ -75,7 +75,9 @@
                         "typeParameters":null
                       }
                     },
+                    "nameType":null,
                     "variance":null,
+                    "varianceOp":null,
                     "optional":"Optional"
                   }
                 ],

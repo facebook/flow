@@ -235,9 +235,14 @@ and mapped_type_optional_flag =
   | KeepOptionality
   | MakeOptional
 
+and mapped_type_variance =
+  | OverrideVariance of polarity
+  | RemoveVariance of polarity
+  | KeepVariance
+
 and mapped_type_flags = {
   optional: mapped_type_optional_flag;
-  polarity: polarity;
+  variance: mapped_type_variance;
 }
 
 and dict = {
@@ -554,6 +559,9 @@ class ['A] comparator_ty =
     method! private fail_mapped_type_optional_flag env x y =
       fail_gen this#tag_of_mapped_type_optional_flag env x y
 
+    method! private fail_mapped_type_variance env x y =
+      fail_gen this#tag_of_mapped_type_variance env x y
+
     (* types will show up in unions and intersections in ascending order *)
     (* No two elements of each variant can be assigned the same tag *)
     method tag_of_t _ =
@@ -737,6 +745,12 @@ class ['A] comparator_ty =
       | RemoveOptional -> 0
       | KeepOptionality -> 1
       | MakeOptional -> 2
+
+    method tag_of_mapped_type_variance _ =
+      function
+      | OverrideVariance _ -> 0
+      | RemoveVariance _ -> 1
+      | KeepVariance -> 2
   end
 
 (* Type destructors *)

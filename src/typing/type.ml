@@ -1619,8 +1619,13 @@ module rec TypeTerm : sig
     | RemoveOptional
     | KeepOptionality
 
+  and mapped_type_variance =
+    | OverrideVariance of Polarity.t
+    | RemoveVariance of Polarity.t
+    | KeepVariance
+
   and mapped_type_flags = {
-    variance: Polarity.t;
+    variance: mapped_type_variance;
     optional: mapped_type_optionality;
   }
 

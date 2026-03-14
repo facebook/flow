@@ -44,6 +44,7 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
             "kind":"init"
           },
@@ -94,7 +95,9 @@
                 "typeParameters":null
               }
             },
+            "nameType":null,
             "variance":null,
+            "varianceOp":null,
             "optional":null
           },
           {
@@ -163,7 +166,9 @@
                 "typeParameters":null
               }
             },
+            "nameType":null,
             "variance":null,
+            "varianceOp":null,
             "optional":null
           }
         ],

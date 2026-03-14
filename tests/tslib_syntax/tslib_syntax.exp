@@ -118,6 +118,39 @@ Destructuring is not supported in `declare` variable declarations. [unsupported-
                      ^^^
 
 
+Error ----------------------------------------------------------------------------------- mapped_type_variance_op.js:7:5
+
+Cannot assign `3` to `pro.foo` because property `foo` is not writable. [cannot-write]
+
+   7| pro.foo = 3; // ERROR - writing to +readonly property
+          ^^^
+
+
+Error ---------------------------------------------------------------------------------- mapped_type_variance_op.js:26:6
+
+Cannot assign `3` to `pror.foo` because property `foo` is not writable. [cannot-write]
+
+   26| pror.foo = 3; // ERROR - writing to readonly property
+            ^^^
+
+
+Error --------------------------------------------------------------------------------- mapped_type_variance_op.js:31:21
+
+Cannot instantiate `MutableFromWO` because an index signature declaring the expected key / value type is not readable.
+[cannot-read]
+
+   31| declare const mfwo: MutableFromWO<WriteOnlyO>; // ERROR - input props are not readable
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ---------------------------------------------------------------------------------- mapped_type_variance_op.js:32:6
+
+Cannot get `mfwo.foo` because property `foo` is not readable. [cannot-read]
+
+   32| mfwo.foo as number; // ERROR - still writeonly, can't read
+            ^^^
+
+
 Error ---------------------------------------------------------------------------------- optional_class_property.js:10:1
 
 Cannot cast `foo.a` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
@@ -345,4 +378,4 @@ References:
 
 
 
-Found 23 errors
+Found 27 errors

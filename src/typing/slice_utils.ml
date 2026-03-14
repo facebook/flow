@@ -1756,8 +1756,13 @@ let map_object
   let mk_prop_type = mk_mapped_prop_type ~use_op ~mapped_type_optionality ~poly_prop in
   let mk_variance variance prop_polarity =
     match variance with
-    | Polarity.Neutral -> prop_polarity
-    | _ -> variance
+    | Type.KeepVariance -> prop_polarity
+    | Type.OverrideVariance pol -> pol
+    | Type.RemoveVariance pol ->
+      if prop_polarity = pol then
+        Polarity.Neutral
+      else
+        prop_polarity
   in
   let props =
     let keys =

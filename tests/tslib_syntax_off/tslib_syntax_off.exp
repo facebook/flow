@@ -245,5 +245,21 @@ Error --------------------------------------------------------------------------
        ^^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:94:16
 
-Found 30 errors
+`+readonly`/`-readonly` mapped type modifier is not enabled. [unsupported-syntax]
+
+   94| type MR<T> = { -readonly [P in keyof T]: T[P] }; // ERROR
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:95:16
+
+`+readonly`/`-readonly` mapped type modifier is not enabled. [unsupported-syntax]
+
+   95| type PR<T> = { +readonly [P in keyof T]: T[P] }; // ERROR
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 32 errors

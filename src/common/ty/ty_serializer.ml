@@ -433,7 +433,8 @@ let type_ options =
   and obj_spread_prop t =
     let t = type_ t in
     (Loc.none, { T.Object.SpreadProperty.argument = t; comments = None })
-  and obj_mapped_type_prop key_tparam source prop { optional; polarity } homomorphic =
+  and obj_mapped_type_prop
+      key_tparam source prop { optional; variance = mapped_variance } homomorphic =
     let source_type = type_ source in
     let source_type =
       match homomorphic with
@@ -451,7 +452,12 @@ let type_ options =
         | MakeOptional -> Optional
       )
     in
-    let variance = variance_ polarity in
+    let (variance, variance_op) =
+      match mapped_variance with
+      | Ty.OverrideVariance pol -> (variance_ pol, None)
+      | Ty.RemoveVariance pol -> (variance_ pol, Some Flow_ast.Type.Object.MappedType.Remove)
+      | Ty.KeepVariance -> (None, None)
+    in
     ( Loc.none,
       {
         T.Object.MappedType.key_tparam;
@@ -459,6 +465,7 @@ let type_ options =
         source_type;
         name_type = None;
         variance;
+        variance_op;
         optional;
         comments = None;
       }

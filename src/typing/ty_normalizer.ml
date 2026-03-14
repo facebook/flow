@@ -1649,7 +1649,13 @@ module Make (I : INPUT) : S = struct
         | Type.RemoveOptional -> Ty.RemoveOptional
         | Type.KeepOptionality -> Ty.KeepOptionality
       in
-      let flags = { Ty.optional; polarity = type_polarity variance } in
+      let variance =
+        match variance with
+        | Type.OverrideVariance pol -> Ty.OverrideVariance (type_polarity pol)
+        | Type.RemoveVariance pol -> Ty.RemoveVariance (type_polarity pol)
+        | Type.KeepVariance -> Ty.KeepVariance
+      in
+      let flags = { Ty.optional; variance } in
       let%bind homomorphic =
         Type.(
           match homomorphic with

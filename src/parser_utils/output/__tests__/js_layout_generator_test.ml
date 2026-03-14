@@ -3266,6 +3266,9 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "type T = { [key in keyof O]?: T };";
            assert_statement_string ~ctxt ~pretty:true "type T = { +[key in keyof O]: T };";
            assert_statement_string ~ctxt ~pretty:true "type T = { -[key in keyof O]: T };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { -readonly [K in S]: V };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { +readonly [K in S]: V };";
+           assert_statement_string ~ctxt ~pretty:true "type T = { -readonly [K in S]-?: V };";
            assert_statement_string ~ctxt ~pretty:false "type T={[key in keyof O]:T};";
            assert_statement_string ~ctxt ~pretty:false "type T={+[key in keyof O]:T};";
            assert_statement_string ~ctxt ~pretty:false "type T={-[key in keyof O]:T};";
@@ -3273,7 +3276,9 @@ let tests =
            assert_statement_string ~ctxt ~pretty:false "type T={[key in keyof O]-?:T};";
            assert_statement_string ~ctxt ~pretty:false "type T={[key in keyof O]?:T};";
            assert_statement_string ~ctxt ~pretty:false "type T={+[key in keyof O]:T};";
-           assert_statement_string ~ctxt ~pretty:false "type T={-[key in keyof O]:T};"
+           assert_statement_string ~ctxt ~pretty:false "type T={-[key in keyof O]:T};";
+           assert_statement_string ~ctxt ~pretty:false "type T={-readonly [K in S]:V};";
+           assert_statement_string ~ctxt ~pretty:false "type T={+readonly [K in S]:V};"
          );
          ( "type_guards" >:: fun ctxt ->
            assert_expression_string ~ctxt ~pretty:true "(x: any): x is true => true";

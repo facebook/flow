@@ -2426,6 +2426,7 @@ with type t = Impl.t = struct
             source_type;
             name_type;
             variance = variance_;
+            variance_op;
             comments;
             optional;
           }
@@ -2439,6 +2440,12 @@ with type t = Impl.t = struct
           | NoOptionalFlag -> null
         )
       in
+      let variance_op =
+        match variance_op with
+        | Some Type.Object.MappedType.Add -> string "+"
+        | Some Type.Object.MappedType.Remove -> string "-"
+        | None -> null
+      in
       node
         ?comments
         "ObjectTypeMappedTypeProperty"
@@ -2449,6 +2456,7 @@ with type t = Impl.t = struct
           ("sourceType", _type source_type);
           ("nameType", option _type name_type);
           ("variance", option variance variance_);
+          ("varianceOp", variance_op);
           ("optional", optional_flag optional);
         ]
     and object_type_internal_slot

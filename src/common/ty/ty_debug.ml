@@ -259,10 +259,15 @@ struct
 
   and dump_spread ~depth t = spf "...%s" (dump_t ~depth t)
 
-  and dump_mapped_type ~depth { tp_name; _ } source prop { optional; polarity } homomorphic =
+  and dump_mapped_type_variance = function
+    | OverrideVariance pol -> dump_polarity pol
+    | RemoveVariance pol -> spf "-%s" (dump_polarity pol)
+    | KeepVariance -> ""
+
+  and dump_mapped_type ~depth { tp_name; _ } source prop { optional; variance } homomorphic =
     spf
       "%s[%s in %s%s]%s: %s"
-      (dump_polarity polarity)
+      (dump_mapped_type_variance variance)
       tp_name
       (match homomorphic with
       | Homomorphic -> "keyof "
@@ -763,7 +768,7 @@ struct
                 key_tparam = { tp_name; _ };
                 source;
                 prop;
-                flags = { optional; polarity };
+                flags = { optional; variance };
                 homomorphic;
               } ->
             let optional_str =
@@ -790,7 +795,7 @@ struct
                     ( "flags",
                       JSON_Object
                         [
-                          ("polarity", json_of_polarity polarity);
+                          ("variance", JSON_String (dump_mapped_type_variance variance));
                           ("optional", JSON_String optional_str);
                         ]
                     );

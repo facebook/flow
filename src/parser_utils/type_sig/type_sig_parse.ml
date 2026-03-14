@@ -2214,6 +2214,7 @@ and object_type =
             prop_type;
             key_tparam;
             variance;
+            variance_op;
             optional;
             name_type;
             comments = _;
@@ -2276,6 +2277,7 @@ and object_type =
                property_type;
                key_tparam;
                variance = polarity variance;
+               variance_op;
                optional;
                inline_keyof;
              }

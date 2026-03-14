@@ -1690,7 +1690,18 @@ class ['loc] mapper =
 
     method object_mapped_type_property (mt : ('loc, 'loc) Ast.Type.Object.MappedType.t) =
       let open Ast.Type.Object.MappedType in
-      let (loc, { key_tparam; prop_type; source_type; name_type; variance; comments; optional }) =
+      let ( loc,
+            {
+              key_tparam;
+              prop_type;
+              source_type;
+              name_type;
+              variance;
+              variance_op;
+              comments;
+              optional;
+            }
+          ) =
         mt
       in
       let key_tparam' = this#type_param ~kind:ObjectMappedTypeTP key_tparam in
@@ -1716,6 +1727,7 @@ class ['loc] mapper =
             source_type = source_type';
             name_type = name_type';
             variance = variance';
+            variance_op;
             comments = comments';
             optional;
           }
