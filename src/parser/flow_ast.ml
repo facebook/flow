@@ -413,6 +413,16 @@ and Type : sig
       [@@deriving show]
     end
 
+    module PrivateField : sig
+      type ('M, 'T) t = 'M * ('M, 'T) t'
+
+      and ('M, 'T) t' = {
+        key: 'M PrivateName.t;
+        comments: ('M, unit) Syntax.t option;
+      }
+      [@@deriving show]
+    end
+
     type ('M, 'T) t = {
       exact: bool;
       (* Inexact indicates the presence of ... in the object. It is more
@@ -434,6 +444,7 @@ and Type : sig
       | CallProperty of ('M, 'T) CallProperty.t
       | InternalSlot of ('M, 'T) InternalSlot.t
       | MappedType of ('M, 'T) MappedType.t
+      | PrivateField of ('M, 'T) PrivateField.t
     [@@deriving show]
   end
 

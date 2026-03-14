@@ -1632,6 +1632,10 @@ let tests =
              ~pretty:true
              "declare class C {\n  private b,\n  private readonly c,\n  protected d: T,\n}"
          );
+         ( "private_class_field_declare" >:: fun ctxt ->
+           assert_statement_string ~ctxt "declare class Foo{#private}";
+           assert_statement_string ~ctxt ~pretty:true "declare class Foo {\n  #private,\n}"
+         );
          ( "class_ts_parameter_properties" >:: fun ctxt ->
            assert_statement_string ~ctxt "class C{constructor(private x:number){}}";
            assert_statement_string ~ctxt "class C{constructor(protected x:string){}}";

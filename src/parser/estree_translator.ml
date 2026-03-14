@@ -2321,7 +2321,10 @@ with type t = Impl.t = struct
                 (props, ixs, calls, slot :: slots)
               | MappedType m ->
                 let mapped_type = object_type_mapped_type m in
-                (mapped_type :: props, ixs, calls, slots))
+                (mapped_type :: props, ixs, calls, slots)
+              | PrivateField pf ->
+                let prop = object_type_private_field pf in
+                (prop :: props, ixs, calls, slots))
             ([], [], [], [])
             properties
         in
@@ -2472,6 +2475,8 @@ with type t = Impl.t = struct
           ("method", bool _method);
           ("value", _type value);
         ]
+    and object_type_private_field (loc, { Type.Object.PrivateField.key; comments }) =
+      node ?comments "ObjectTypePrivateField" loc [("key", private_identifier key)]
     and interface_type (loc, { Type.Interface.extends; body; comments }) =
       node
         ?comments

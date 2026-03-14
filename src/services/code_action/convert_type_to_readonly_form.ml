@@ -29,6 +29,7 @@ let prop_name_contains_target_loc ~target_loc =
   | CallProperty _ -> false
   | InternalSlot _ -> false
   | MappedType _ -> false
+  | PrivateField _ -> false
 
 type conversion_kind =
   | ConversionToReadOnlyArray

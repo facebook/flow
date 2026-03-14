@@ -1342,6 +1342,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       | CallProperty prop -> CallProperty (this#object_call_property_type prop)
       | MappedType mapped_type -> MappedType (this#object_mapped_type mapped_type)
       | InternalSlot islot -> InternalSlot (this#object_internal_slot_property_type islot)
+      | PrivateField pf -> PrivateField (this#object_private_field_type pf)
+
+    method object_private_field_type (pf : ('M, 'T) Ast.Type.Object.PrivateField.t)
+        : ('N, 'U) Ast.Type.Object.PrivateField.t =
+      let open Ast.Type.Object.PrivateField in
+      let (annot, { key; comments }) = pf in
+      let annot' = this#on_loc_annot annot in
+      let key' = this#private_name key in
+      let comments' = this#syntax_opt comments in
+      (annot', { key = key'; comments = comments' })
 
     method object_spread_property_type (opt : ('M, 'T) Ast.Type.Object.SpreadProperty.t)
         : ('N, 'U) Ast.Type.Object.SpreadProperty.t =

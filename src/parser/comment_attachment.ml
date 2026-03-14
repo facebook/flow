@@ -757,6 +757,10 @@ let object_type_property_comment_bounds property =
       let collector = new comment_bounds_collector ~loc in
       ignore (collector#object_mapped_type_property p);
       collector
+    | PrivateField ((loc, _) as p) ->
+      let collector = new comment_bounds_collector ~loc in
+      ignore (collector#object_private_field_type p);
+      collector
   in
   collect_without_trailing_line_comment collector
 

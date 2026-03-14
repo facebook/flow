@@ -722,7 +722,8 @@ end = struct
         | Indexer _
         | InternalSlot _
         | MappedType _
-        | CallProperty _ ->
+        | CallProperty _
+        | PrivateField _ ->
           None
     )
 

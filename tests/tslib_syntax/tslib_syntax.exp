@@ -360,6 +360,20 @@ References:
                        ^^^^^^^ [3]
 
 
+Error --------------------------------------------------------------------------------------- private_class_field.js:8:3
+
+Cannot get `x.private` because property `private` is missing in `C` [1]. [prop-missing]
+
+   private_class_field.js:8:3
+   8| x.private; // ERROR
+        ^^^^^^^
+
+References:
+   private_class_field.js:6:18
+   6| declare const x: C;
+                       ^ [1]
+
+
 Error --------------------------------------------------------------------------------------------- unique_symbol.js:7:1
 
 Cannot cast `x` to empty because symbol [1] is incompatible with empty [2]. [incompatible-type]
@@ -378,4 +392,4 @@ References:
 
 
 
-Found 27 errors
+Found 28 errors

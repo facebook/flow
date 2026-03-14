@@ -1753,6 +1753,17 @@ class ['loc] mapper =
         id this#object_internal_slot_property_type p' p (fun p' -> InternalSlot p')
       | CallProperty p' -> id this#object_call_property_type p' p (fun p' -> CallProperty p')
       | MappedType p' -> id this#object_mapped_type_property p' p (fun p' -> MappedType p')
+      | PrivateField p' -> id this#object_private_field_type p' p (fun p' -> PrivateField p')
+
+    method object_private_field_type (pf : ('loc, 'loc) Ast.Type.Object.PrivateField.t) =
+      let open Ast.Type.Object.PrivateField in
+      let (loc, { key; comments }) = pf in
+      let key' = this#private_name key in
+      let comments' = this#syntax_opt comments in
+      if key' == key && comments' == comments then
+        pf
+      else
+        (loc, { key = key'; comments = comments' })
 
     method interface_type _loc (i : ('loc, 'loc) Ast.Type.Interface.t) =
       let open Ast.Type.Interface in

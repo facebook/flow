@@ -141,6 +141,7 @@ and ts_lib_syntax_kind =
   | OptionalUnlabeledTupleElement
   | OptionalIndexer
   | NamespaceExportDeclaration
+  | PrivateClassField
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

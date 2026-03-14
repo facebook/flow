@@ -2028,6 +2028,17 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           ~ts_accessibility
           ~leading
           start_loc
+      | T_POUND when is_class ->
+        error_unexpected_proto env proto;
+        error_unexpected_variance env variance;
+        if static <> None then error env Parse_error.UnexpectedStatic;
+        let leading = leading @ Peek.comments env in
+        let key = private_identifier env in
+        let loc = Loc.btwn start_loc (fst key) in
+        Type.Object.PrivateField
+          ( loc,
+            { Type.Object.PrivateField.key; comments = Flow_ast_utils.mk_comments_opt ~leading () }
+          )
       | T_LBRACKET ->
         error_unexpected_proto env proto;
         (match Peek.ith_token ~i:1 env with

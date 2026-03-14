@@ -2354,6 +2354,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           )
         | Object.MappedType _ ->
           failwith "Unreachable until we support mapped types with additional properties"
+        | Object.PrivateField _ ->
+          failwith "Unreachable: private fields only appear in declare class bodies"
       )
     in
     fun env loc ~exact properties ->
@@ -3319,6 +3321,15 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               )
             | SpreadProperty (loc, _) as prop ->
               Flow_js_utils.add_output env.cx Error_message.(EInternal (loc, InterfaceTypeSpread));
+              (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
+            | Ast.Type.Object.PrivateField (loc, _) as prop ->
+              if not (Context.tslib_syntax env.cx) then
+                Flow_js_utils.add_output
+                  env.cx
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.(TSLibSyntax PrivateClassField))
+                  );
+              (* #private; placeholder in declare class — skip, no type contribution *)
               (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
         )
         (s, [])

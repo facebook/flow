@@ -5214,6 +5214,7 @@ let to_printable_error :
         | OptionalUnlabeledTupleElement -> "Optional unlabeled tuple element"
         | OptionalIndexer -> "Optional indexer (`?:`)"
         | NamespaceExportDeclaration -> "`export as namespace`"
+        | PrivateClassField -> "Private class field (`#private`)"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

@@ -683,6 +683,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method object_internal_slot_property_type :
       ('M, 'T) Ast.Type.Object.InternalSlot.t -> ('N, 'U) Ast.Type.Object.InternalSlot.t
 
+    method object_private_field_type :
+      ('M, 'T) Ast.Type.Object.PrivateField.t -> ('N, 'U) Ast.Type.Object.PrivateField.t
+
     method object_call_property_type :
       ('M, 'T) Ast.Type.Object.CallProperty.t -> ('N, 'U) Ast.Type.Object.CallProperty.t
 

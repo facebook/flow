@@ -4769,6 +4769,16 @@ and type_object_property ~opts =
             type_ ~opts value;
           ]
       )
+  | PrivateField
+      ( loc,
+        {
+          PrivateField.key = (key_loc, { Ast.PrivateName.name; comments = key_comments });
+          comments;
+        }
+      ) ->
+    source_location_with_comments
+      ?comments
+      (loc, source_location_with_comments ?comments:key_comments (key_loc, Atom ("#" ^ name)))
 
 and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties; inexact; comments }
     =
@@ -4787,7 +4797,8 @@ and type_object ?(sep = Atom ",") ~opts loc { Ast.Type.Object.exact; properties;
     | Indexer (loc, _)
     | CallProperty (loc, _)
     | InternalSlot (loc, _)
-    | MappedType (loc, _) ->
+    | MappedType (loc, _)
+    | PrivateField (loc, _) ->
       loc
   in
   let num_props = List.length properties in

@@ -2334,7 +2334,8 @@ and object_type =
               | O.Indexer (_, p) -> Some (dict opts scope tbls xs acc p)
               | O.CallProperty (_, p) -> Some (call opts scope tbls xs acc p)
               | O.InternalSlot (_, p) -> Some (slot opts scope tbls xs acc p)
-              | O.MappedType _ -> None))
+              | O.MappedType _ -> None
+              | O.PrivateField _ -> Some acc))
           (Some Acc.empty)
           properties
       in
@@ -2450,8 +2451,9 @@ and interface_props =
         | O.CallProperty (_, p) -> call opts scope tbls xs acc p
         | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
         | O.SpreadProperty _
-        | O.MappedType _ ->
-          (* no spread or mapped types in interface *)
+        | O.MappedType _
+        | O.PrivateField _ ->
+          (* no spread, mapped types, or private fields in interface *)
           acc)
       acc
       properties
@@ -2564,8 +2566,9 @@ and declare_class_props =
         | O.CallProperty (_, p) -> call opts scope tbls xs acc p
         | O.InternalSlot (_, p) -> slot opts scope tbls xs acc p
         | O.SpreadProperty _
-        | O.MappedType _ ->
-          (* no spread or mapped types in interface / declare class *)
+        | O.MappedType _
+        | O.PrivateField _ ->
+          (* no spread, mapped types, or private fields in interface / declare class *)
           acc)
       acc
       properties
