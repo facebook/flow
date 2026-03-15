@@ -102,7 +102,16 @@ fn __flow_impl(
     ) {
         print_types_if_verbose(cx, &trace, None, l, u);
         return Ok(None);
-    } else if flow_typing_flow_common::flow_cache::flow_constraint::get(cx, l, u) {
+    }
+    // Fast path: if l is pointer-equal to the Type inside UseT, it's trivially l <: l.
+    // This must come after ground_subtype_use_t, which has a side effect of recording
+    // singleton literal checks needed by implicit instantiation.
+    if let UseTInner::UseT(_, t) = u.deref() {
+        if l.ptr_eq(t) {
+            return Ok(None);
+        }
+    }
+    if flow_typing_flow_common::flow_cache::flow_constraint::get(cx, l, u) {
         print_types_if_verbose(cx, &trace, Some("(cached)"), l, u);
         return Ok(None);
     }
