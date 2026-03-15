@@ -1,0 +1,6 @@
+# Session tracking files (if session logging is added)
+.skillbook_tracker
+.current_session_log.json
+
+# Temp files
+*.tmp

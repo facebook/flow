@@ -1,0 +1,222 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+//! Environment types for the type normalizer.
+//!
+//! Port of `ty_normalizer_env.ml`
+
+use std::collections::BTreeSet;
+use std::rc::Rc;
+use std::sync::Arc;
+
+use dupe::Dupe;
+use flow_aloc::ALoc;
+use flow_common_ty::ty_symbol::ALocImportedIdent;
+use flow_common_ty::ty_symbol::ALocSymbol;
+use flow_data_structure_wrapper::ord_map::FlowOrdMap;
+use flow_data_structure_wrapper::ord_set::FlowOrdSet;
+use flow_parser::ast;
+use flow_parser_utils::file_sig::FileSig;
+use flow_typing_context::Context;
+use flow_typing_type::type_::Destructor;
+use flow_typing_type::type_::Type;
+use flow_typing_type::type_::TypeParam;
+use flow_typing_type::type_::eval;
+use once_cell::unsync::Lazy;
+
+#[derive(Clone, Dupe, Default)]
+pub enum EvaluateTypeDestructorsMode {
+    #[default]
+    EvaluateNone,
+    EvaluateAll,
+    EvaluateSome,
+    EvaluateCustom(Rc<dyn Fn(&Destructor) -> bool>),
+}
+
+#[derive(Clone, Dupe)]
+pub struct Options {
+    /// If this flag is set to `true` then the normalizer will attempt to reuse the
+    /// cached results of evaluated type-destructors. If this is set to `false`, then
+    /// instead it will try to use:
+    ///  - a potentially attendant type-alias annotation, or
+    ///  - reuse the utility type that corresponds to this the specific type-destructor.
+    ///
+    /// Choosing 'false' will typically result in smaller produced types, which makes
+    /// it a more appropriate option for codemods.
+    pub evaluate_type_destructors: EvaluateTypeDestructorsMode,
+    /// Expand the signatures of built-in functions, such as:
+    /// Function.prototype.apply: (thisArg: any, argArray?: any): any
+    pub expand_internal_types: bool,
+    /// Consider all kinds of Bot and Any the same when simplifying types.
+    ///
+    /// The normalized type Ty.Bot may correspond to either the `Empty` type,
+    /// or not have any lower-bounds. These types are not easy to
+    /// normalize, but may still encode some constraint. When using normalized types
+    /// for codemods we might want to know if there might be some constraints that we
+    /// missing in the normalized type.
+    ///
+    /// Any can be due to an annotation or implicitly arising from inference.
+    pub merge_bot_and_any_kinds: bool,
+    /// Omits type params if they match the defaults, e.g:
+    ///
+    /// Given `type Foo<A, B = Baz>`, `Foo<Bar, Baz>` is reduced to `Foo<Bar>`
+    ///
+    /// WARNING: May be slow due to the structural equality checks that this necessitates.
+    // omit_targ_defaults_option: bool;
+    pub omit_targ_defaults_option: bool,
+    /// Run an optimization pass that removes duplicates from unions and intersections.
+    ///
+    /// WARNING May be slow for large types
+    pub optimize_types: bool,
+    /// Debug
+    pub verbose_normalizer: bool,
+    /// Maximum depth of recursion
+    pub max_depth: Option<u32>,
+    /// In typed AST for type references, we store the type as if it's read under the
+    /// value namespace. In some places, we might want to record the fact that it's
+    /// a type-namespace read.
+    pub toplevel_is_type_identifier_reference: bool,
+}
+
+impl Default for Options {
+    fn default() -> Self {
+        Self {
+            evaluate_type_destructors: EvaluateTypeDestructorsMode::EvaluateNone,
+            expand_internal_types: false,
+            merge_bot_and_any_kinds: true,
+            omit_targ_defaults_option: false,
+            optimize_types: true,
+            verbose_normalizer: false,
+            max_depth: Some(40),
+            toplevel_is_type_identifier_reference: false,
+        }
+    }
+}
+
+impl Options {
+    pub fn default_for_codemod() -> Self {
+        Self {
+            expand_internal_types: false,
+            evaluate_type_destructors: EvaluateTypeDestructorsMode::EvaluateSome,
+            optimize_types: false,
+            omit_targ_defaults_option: true,
+            merge_bot_and_any_kinds: false,
+            verbose_normalizer: false,
+            max_depth: None,
+            toplevel_is_type_identifier_reference: false,
+        }
+    }
+}
+
+/// Global environment that does not change during normalization
+#[derive(Clone)]
+pub struct Genv<'a> {
+    /// Full (merged) context
+    pub cx: &'a Context,
+    /// Typed AST of the current file
+    pub typed_ast_opt: Option<&'a ast::Program<ALoc, (ALoc, Type)>>,
+    /// The file_sig of the current file
+    pub file_sig: Arc<FileSig>,
+    /// In determining whether a symbol is Local, Imported, Remote, etc, it is
+    /// useful to keep a map of imported names and the corresponding
+    /// location available. We can then make this decision by comparing the
+    /// source file with the current context's file information.
+    pub imported_names: Rc<Lazy<ImportedNamesMap, Box<dyn FnOnce() -> ImportedNamesMap + 'a>>>,
+    /// Normalization parameters
+    pub options: Options,
+}
+
+type ImportedNamesMap = FlowOrdMap<ALoc, ALocImportedIdent>;
+
+pub type SymbolSet = BTreeSet<ALocSymbol>;
+
+#[derive(Clone)]
+pub struct Env<'cx> {
+    /// Does not change. Set once in the beginning.
+    pub genv: Genv<'cx>,
+    pub infer_tparams: Rc<[TypeParam]>,
+    /// For debugging purposes mostly
+    pub depth: u32,
+    pub keep_only_namespace_name: bool,
+    /// Detect recursive types
+    pub seen_tvar_ids: FlowOrdSet<i32>,
+    pub seen_eval_ids: FlowOrdSet<eval::Id>,
+    pub omit_targ_defaults: bool,
+}
+
+impl<'cx> Env<'cx> {
+    pub fn init(genv: Genv<'cx>) -> Self {
+        let omit_targ_defaults = genv.options.omit_targ_defaults_option;
+        Env {
+            genv,
+            depth: 0,
+            infer_tparams: Rc::from([]),
+            keep_only_namespace_name: false,
+            seen_tvar_ids: Self::empty_tvar_ids(),
+            seen_eval_ids: Self::empty_eval_ids(),
+            omit_targ_defaults,
+        }
+    }
+
+    pub fn descend(&mut self) {
+        self.depth += 1;
+    }
+
+    pub fn empty_tvar_ids() -> FlowOrdSet<i32> {
+        thread_local! {
+            static CACHED: FlowOrdSet<i32> = FlowOrdSet::new();
+        }
+        CACHED.with(|c| c.clone())
+    }
+
+    pub fn empty_eval_ids() -> FlowOrdSet<eval::Id> {
+        thread_local! {
+            static CACHED: FlowOrdSet<eval::Id> = FlowOrdSet::new();
+        }
+        CACHED.with(|c| c.clone())
+    }
+
+    pub fn get_cx(&self) -> &'cx Context {
+        self.genv.cx
+    }
+
+    pub fn imported_names(&self) -> &ImportedNamesMap {
+        &self.genv.imported_names
+    }
+
+    pub fn expand_internal_types(&self) -> bool {
+        self.genv.options.expand_internal_types
+    }
+
+    pub fn evaluate_type_destructors(&self) -> &EvaluateTypeDestructorsMode {
+        &self.genv.options.evaluate_type_destructors
+    }
+
+    pub fn omit_targ_defaults(&self) -> bool {
+        self.omit_targ_defaults
+    }
+
+    pub fn optimize_types(&self) -> bool {
+        self.genv.options.optimize_types
+    }
+
+    pub fn max_depth(&self) -> Option<u32> {
+        self.genv.options.max_depth
+    }
+
+    pub fn merge_bot_and_any_kinds(&self) -> bool {
+        self.genv.options.merge_bot_and_any_kinds
+    }
+
+    pub fn verbose(&self) -> bool {
+        self.genv.options.verbose_normalizer
+    }
+
+    pub fn toplevel_is_type_identifier_reference(&self) -> bool {
+        self.genv.options.toplevel_is_type_identifier_reference
+    }
+}

@@ -1,0 +1,470 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+use super::helpers::*;
+use super::*;
+
+impl flow_js_utils::GetPropHelper for FlowJs {
+    type R = Box<dyn FnOnce(Tvar) -> Result<(), FlowJsException>>;
+
+    fn error_type(
+        cx: &Context,
+        trace: DepthTrace,
+        reason: Reason,
+    ) -> Result<Self::R, FlowJsException> {
+        let cx = cx.dupe();
+        Ok(Box::new(move |tout| {
+            rec_flow_t(
+                &cx,
+                trace,
+                unknown_use(),
+                (&any_t::error(reason), &Type::new(TypeInner::OpenT(tout))),
+            )
+        }))
+    }
+
+    fn return_(
+        cx: &Context,
+        use_op: UseOp,
+        trace: DepthTrace,
+        t: Type,
+    ) -> Result<Self::R, FlowJsException> {
+        let cx = cx.dupe();
+        Ok(Box::new(move |tout| {
+            rec_flow_t(&cx, trace, use_op, (&t, &Type::new(TypeInner::OpenT(tout))))
+        }))
+    }
+
+    fn dict_read_check(
+        cx: &Context,
+        trace: DepthTrace,
+        use_op: &UseOp,
+        pair: (&Type, &Type),
+    ) -> Result<(), FlowJsException> {
+        rec_flow_t(cx, trace, use_op.dupe(), pair)
+    }
+
+    fn reposition(
+        cx: &Context,
+        trace: Option<DepthTrace>,
+        loc: ALoc,
+        t: Type,
+    ) -> Result<Type, FlowJsException> {
+        helpers::reposition(cx, trace, loc, None, None, t)
+    }
+
+    fn cg_lookup(
+        cx: &Context,
+        trace: DepthTrace,
+        obj_t: Type,
+        method_accessible: bool,
+        super_t: Type,
+        args: (Reason, LookupKind, PropRef, UseOp, properties::Set),
+    ) -> Result<Self::R, FlowJsException> {
+        let (reason_op, lookup_kind, propref, use_op, ids) = args;
+        let cx = cx.dupe();
+        Ok(Box::new(move |tout| {
+            rec_flow(
+                &cx,
+                trace,
+                (
+                    &super_t,
+                    &UseT::new(UseTInner::LookupT {
+                        reason: reason_op,
+                        lookup_kind: Box::new(lookup_kind),
+                        try_ts_on_failure: Rc::from([]),
+                        propref: Box::new(propref),
+                        lookup_action: Box::new(LookupAction::ReadProp {
+                            use_op,
+                            obj_t,
+                            tout,
+                        }),
+                        method_accessible,
+                        ids: Some(ids),
+                        ignore_dicts: false,
+                    }),
+                ),
+            )
+        }))
+    }
+
+    fn cg_get_prop(
+        cx: &Context,
+        trace: DepthTrace,
+        t: Type,
+        args: (
+            UseOp,
+            Reason,
+            Option<i32>,
+            (Reason, flow_common::reason::Name),
+        ),
+    ) -> Result<Self::R, FlowJsException> {
+        let (use_op, access_reason, id, (prop_reason, name)) = args;
+        let cx = cx.dupe();
+        Ok(Box::new(move |tout| {
+            rec_flow(
+                &cx,
+                trace,
+                (
+                    &t,
+                    &UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+                        use_op,
+                        reason: access_reason,
+                        id,
+                        from_annot: false,
+                        skip_optional: false,
+                        propref: Box::new(flow_typing_type::type_util::mk_named_prop(
+                            prop_reason,
+                            false,
+                            name,
+                        )),
+                        tout: Box::new(tout),
+                        hint: hint_unavailable(),
+                    }))),
+                ),
+            )
+        }))
+    }
+
+    fn mk_react_dro(cx: &Context, use_op: UseOp, dro: &ReactDro, t: Type) -> Type {
+        mk_react_dro(cx, use_op, dro.clone(), t)
+    }
+
+    fn prop_overlaps_with_indexer()
+    -> Option<fn(&Context, &flow_common::reason::Name, &Reason, &Type) -> bool> {
+        Some(|cx, name, reason_name, key| {
+            let name_t = flow_js_utils::type_of_key_name(cx, name.dupe(), reason_name);
+            speculative_subtyping_succeeds(cx, &name_t, key)
+        })
+    }
+}
+
+// Property lookup functions in objects and instances
+
+pub(super) fn prop_typo_suggestion(
+    cx: &Context,
+    ids: &[properties::Id],
+    name: &str,
+) -> Option<FlowSmolStr> {
+    let possible_names: Vec<_> = ids
+        .iter()
+        .flat_map(|id| {
+            cx.find_props(id.dupe())
+                .iter()
+                .map(|(k, _)| k.as_smol_str().dupe())
+                .collect::<Vec<_>>()
+        })
+        .collect();
+    let refs: Vec<&FlowSmolStr> = possible_names.iter().collect();
+    flow_common_utils::utils_js::typo_suggestion(&refs, name)
+}
+
+pub(super) fn get_private_prop(
+    cx: &Context,
+    allow_method_access: bool,
+    trace: DepthTrace,
+    l: &Type,
+    reason_c: &Reason,
+    instance: &InstType,
+    use_op: &UseOp,
+    reason_op: &Reason,
+    prop_name: &FlowSmolStr,
+    scopes: &[ClassBinding],
+    is_static: bool,
+    tout: &Tvar,
+) -> Result<(), FlowJsException> {
+    match scopes {
+        [] => flow_js_utils::add_output(
+            cx,
+            ErrorMessage::EPrivateLookupFailed(
+                (reason_op.dupe(), reason_c.dupe()),
+                Name::new(prop_name.dupe()),
+                use_op.dupe(),
+            ),
+        ),
+        [scope, rest_scopes @ ..] => {
+            if scope.class_binding_id != instance.class_id {
+                get_private_prop(
+                    cx,
+                    allow_method_access,
+                    trace,
+                    l,
+                    reason_c,
+                    instance,
+                    use_op,
+                    reason_op,
+                    prop_name,
+                    rest_scopes,
+                    is_static,
+                    tout,
+                )
+            } else {
+                let name = Name::new(prop_name.dupe());
+                let do_lookup = |p: PropertyType| -> Result<(), FlowJsException> {
+                    let action = LookupAction::ReadProp {
+                        use_op: use_op.dupe(),
+                        obj_t: l.dupe(),
+                        tout: tout.dupe(),
+                    };
+                    let propref = mk_named_prop(reason_op.dupe(), false, name.dupe());
+                    perform_lookup_action(
+                        cx,
+                        trace,
+                        &propref,
+                        &p,
+                        PropertySource::PropertyMapProperty,
+                        reason_c,
+                        reason_op,
+                        &action,
+                    )
+                };
+                let field_maps = if is_static {
+                    instance.class_private_static_fields.dupe()
+                } else {
+                    instance.class_private_fields.dupe()
+                };
+                let props = cx.find_props(field_maps);
+                match props.get(&name) {
+                    Some(p) => do_lookup(property::type_(p)),
+                    None => {
+                        let method_maps = if is_static {
+                            instance.class_private_static_methods.dupe()
+                        } else {
+                            instance.class_private_methods.dupe()
+                        };
+                        let method_props = cx.find_props(method_maps);
+                        match method_props.get(&name) {
+                            Some(p) => {
+                                if !allow_method_access {
+                                    if let PropertyInner::Method { type_: t, .. } = p.deref() {
+                                        flow_js_utils::add_output(
+                                            cx,
+                                            ErrorMessage::EMethodUnbinding {
+                                                use_op: use_op.dupe(),
+                                                reason_op: reason_op.dupe(),
+                                                reason_prop: reason_of_t(t).dupe(),
+                                            },
+                                        )?;
+                                    }
+                                }
+                                do_lookup(property::type_(p))
+                            }
+                            None => flow_js_utils::add_output(
+                                cx,
+                                ErrorMessage::EPrivateLookupFailed(
+                                    (reason_op.dupe(), reason_c.dupe()),
+                                    name,
+                                    use_op.dupe(),
+                                ),
+                            ),
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub(super) fn elem_action_on_obj(
+    cx: &Context,
+    trace: DepthTrace,
+    use_op: &UseOp,
+    l: &Type,
+    obj: &Type,
+    reason_op: &Reason,
+    action: &ElemAction,
+) -> Result<(), FlowJsException> {
+    let propref = flow_js_utils::propref_for_elem_t(cx, l);
+    match action {
+        ElemAction::ReadElem {
+            id,
+            from_annot,
+            skip_optional,
+            tout,
+            ..
+        } => rec_flow(
+            cx,
+            trace,
+            (
+                obj,
+                &UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+                    use_op: use_op.dupe(),
+                    reason: reason_op.dupe(),
+                    from_annot: *from_annot,
+                    skip_optional: *skip_optional,
+                    id: id.dupe(),
+                    propref: Box::new(propref),
+                    tout: Box::new(tout.dupe()),
+                    hint: hint_unavailable(),
+                }))),
+            ),
+        ),
+        ElemAction::WriteElem { tin, tout, mode } => {
+            rec_flow(
+                cx,
+                trace,
+                (
+                    obj,
+                    &UseT::new(UseTInner::SetPropT(
+                        use_op.dupe(),
+                        reason_op.dupe(),
+                        Box::new(propref),
+                        mode.clone(),
+                        WriteCtx::Normal,
+                        tin.dupe(),
+                        None,
+                    )),
+                ),
+            )?;
+            if let Some(t) = tout {
+                rec_flow_t(cx, trace, unknown_use(), (obj, t))?;
+            }
+            Ok(())
+        }
+        ElemAction::CallElem(reason_call, ft) => rec_flow(
+            cx,
+            trace,
+            (
+                obj,
+                &UseT::new(UseTInner::MethodT(
+                    use_op.dupe(),
+                    reason_call.dupe(),
+                    reason_op.dupe(),
+                    Box::new(propref),
+                    ft.clone(),
+                )),
+            ),
+        ),
+    }
+}
+
+pub(super) fn write_obj_prop(
+    cx: &Context,
+    trace: DepthTrace,
+    use_op: &UseOp,
+    mode: &SetMode,
+    o: &ObjType,
+    propref: &PropRef,
+    reason_obj: &Reason,
+    reason_op: &Reason,
+    tin: &Type,
+    prop_tout: &Option<Type>,
+) -> Result<(), FlowJsException> {
+    let obj_t = Type::new(TypeInner::DefT(
+        reason_obj.dupe(),
+        DefT::new(DefTInner::ObjT(Rc::new(o.clone()))),
+    ));
+    let action = LookupAction::WriteProp {
+        use_op: use_op.dupe(),
+        obj_t: obj_t.dupe(),
+        prop_tout: prop_tout.dupe(),
+        tin: tin.dupe(),
+        write_ctx: WriteCtx::Normal,
+        mode: mode.clone(),
+    };
+    match flow_js_utils::get_prop_t_kit::get_obj_prop::<FlowJs>(
+        cx, &trace, use_op, false, true, o, propref, reason_op,
+    )? {
+        Some((p, target_kind)) => perform_lookup_action(
+            cx,
+            trace,
+            propref,
+            &p,
+            target_kind,
+            reason_obj,
+            reason_op,
+            &action,
+        ),
+        None => match propref {
+            PropRef::Named { reason, name, .. } if *name == Name::new("constructor") => {
+                let reason = reason.dupe().replace_desc(VirtualReasonDesc::RFunction(
+                    flow_common::reason::ReasonDescFunction::RNormal,
+                ));
+                let rest_param = Some(FunRestParam(
+                    None,
+                    reason.loc().dupe(),
+                    empty_t::why(reason.dupe().replace_desc_new(VirtualReasonDesc::REmpty)),
+                ));
+                let funtype = mk_boundfunctiontype(
+                    global_this(reason.dupe()),
+                    None,
+                    vec![],
+                    rest_param,
+                    reason.dupe(),
+                    None,
+                    None,
+                    any_t::untyped(reason.dupe()),
+                );
+                let fn_t = Type::new(TypeInner::DefT(
+                    reason.dupe(),
+                    DefT::new(DefTInner::FunT(
+                        dummy_static(reason.dupe()),
+                        Rc::new(funtype),
+                    )),
+                ));
+                rec_flow_t(cx, trace, use_op.dupe(), (tin, &fn_t))?;
+                if let Some(t) = prop_tout {
+                    rec_flow_t(cx, trace, unknown_use(), (&fn_t, t))?;
+                }
+                Ok(())
+            }
+            PropRef::Named {
+                reason: reason_prop,
+                name,
+                ..
+            } => {
+                if obj_type::is_exact(&o.flags.obj_kind) {
+                    flow_js_utils::add_output(
+                        cx,
+                        ErrorMessage::EPropNotFoundInLookup {
+                            prop_name: Some(name.dupe()),
+                            reason_prop: reason_prop.dupe(),
+                            reason_obj: reason_obj.dupe(),
+                            use_op: use_op.dupe(),
+                            suggestion: prop_typo_suggestion(
+                                cx,
+                                &[o.props_tmap.dupe()],
+                                name.as_str(),
+                            ),
+                        },
+                    )
+                } else {
+                    rec_flow(
+                        cx,
+                        trace,
+                        (
+                            &o.proto_t,
+                            &UseT::new(UseTInner::LookupT {
+                                reason: reason_op.dupe(),
+                                lookup_kind: Box::new(LookupKind::Strict(reason_obj.dupe())),
+                                try_ts_on_failure: Rc::from([]),
+                                propref: Box::new(propref.clone()),
+                                lookup_action: Box::new(action),
+                                ids: Some([o.props_tmap.dupe()].into_iter().collect()),
+                                method_accessible: true,
+                                ignore_dicts: false,
+                            }),
+                        ),
+                    )
+                }
+            }
+            PropRef::Computed(elem_t) => rec_flow(
+                cx,
+                trace,
+                (
+                    elem_t,
+                    &UseT::new(UseTInner::WriteComputedObjPropCheckT {
+                        reason: reason_of_t(elem_t).dupe(),
+                        reason_key: None,
+                        value_t: tin.dupe(),
+                        err_on_str_key: Box::new((use_op.dupe(), reason_obj.dupe())),
+                    }),
+                ),
+            ),
+        },
+    }
+}

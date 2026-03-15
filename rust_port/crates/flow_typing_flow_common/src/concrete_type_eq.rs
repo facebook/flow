@@ -1,0 +1,193 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+use std::ops::Deref;
+use std::rc::Rc;
+
+use dupe::Dupe;
+use flow_typing_context::Context;
+use flow_typing_type::type_::NominalType;
+use flow_typing_type::type_::NominalTypeInner;
+use flow_typing_type::type_::Type;
+use flow_typing_type::type_::TypeAppTData;
+use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::constraint::Constraints;
+use flow_typing_type::type_::nominal;
+use flow_typing_type::type_util::mod_reason_of_t;
+use flow_typing_type::type_util::reason_of_t;
+
+pub fn swap_reason(t2: &Type, t1: &Type) -> Type {
+    match (t2.deref(), t1.deref()) {
+        // In reposition we also recurse and reposition some nested types. We need
+        // to make sure we swap the types for these reasons as well. Otherwise our
+        // optimized union ~> union check will not pass. *)
+        (TypeInner::MaybeT(_, inner_t2), TypeInner::MaybeT(r, inner_t1)) => {
+            Type::new(TypeInner::MaybeT(r.dupe(), swap_reason(inner_t2, inner_t1)))
+        }
+        (
+            TypeInner::OptionalT {
+                type_: inner_t2, ..
+            },
+            TypeInner::OptionalT {
+                reason,
+                type_: inner_t1,
+                use_desc,
+            },
+        ) => Type::new(TypeInner::OptionalT {
+            reason: reason.clone(),
+            type_: swap_reason(inner_t2, inner_t1),
+            use_desc: *use_desc,
+        }),
+        (
+            TypeInner::NominalT {
+                nominal_type: nt2, ..
+            },
+            TypeInner::NominalT {
+                reason: r,
+                nominal_type: nt1,
+            },
+        ) => {
+            let repr1 = &nt1.underlying_t;
+            let repr2 = &nt2.underlying_t;
+            let l1 = &nt1.lower_t;
+            let l2 = &nt2.lower_t;
+            let u1 = &nt1.upper_t;
+            let u2 = &nt2.upper_t;
+
+            let underlying_t = match (repr1, repr2) {
+                (
+                    nominal::UnderlyingT::CustomError { t: t1_inner, .. },
+                    nominal::UnderlyingT::CustomError {
+                        t: t2_inner,
+                        custom_error_loc,
+                    },
+                ) => nominal::UnderlyingT::CustomError {
+                    custom_error_loc: custom_error_loc.dupe(),
+                    t: swap_reason(t2_inner, t1_inner),
+                },
+                (
+                    nominal::UnderlyingT::OpaqueWithLocal { t: t1_inner },
+                    nominal::UnderlyingT::OpaqueWithLocal { t: t2_inner },
+                ) => nominal::UnderlyingT::OpaqueWithLocal {
+                    t: swap_reason(t2_inner, t1_inner),
+                },
+                _ => repr2.dupe(),
+            };
+            let lower_t = match (l1, l2) {
+                (Some(t1_inner), Some(t2_inner)) => Some(swap_reason(t2_inner, t1_inner)),
+                _ => l2.clone(),
+            };
+            let upper_t = match (u1, u2) {
+                (Some(t1_inner), Some(t2_inner)) => Some(swap_reason(t2_inner, t1_inner)),
+                _ => u2.clone(),
+            };
+            Type::new(TypeInner::NominalT {
+                reason: r.clone(),
+                nominal_type: Rc::new(NominalType::new(NominalTypeInner {
+                    underlying_t,
+                    lower_t,
+                    upper_t,
+                    nominal_id: nt1.nominal_id.clone(),
+                    nominal_type_args: nt1.nominal_type_args.dupe(),
+                })),
+            })
+        }
+        _ => {
+            let r1 = reason_of_t(t1);
+            mod_reason_of_t(&|_| r1.dupe(), t2)
+        }
+    }
+}
+
+/// This predicate attempts to flatten out OpenTs and AnnotTs before performing a
+/// structural reasonless equality check of two types.
+pub fn eq(cx: &Context, t1: &Type, t2: &Type) -> bool {
+    if t1.ptr_eq(t2) {
+        return true;
+    }
+
+    match (t1.deref(), t2.deref()) {
+        (TypeInner::OpenT(tvar1), TypeInner::OpenT(tvar2)) => {
+            let id1 = tvar1.id() as i32;
+            let id2 = tvar2.id() as i32;
+            let (root_id1, _) = cx.find_constraints(id1);
+            let (root_id2, _) = cx.find_constraints(id2);
+            if root_id1 == root_id2 {
+                return true;
+            }
+            t1 == &swap_reason(t2, t1)
+        }
+        (TypeInner::OpenT(tvar), _) => {
+            let id1 = tvar.id() as i32;
+            match cx.find_graph(id1) {
+                Constraints::Resolved(resolved_t1) => eq(cx, &resolved_t1, t2),
+                Constraints::FullyResolved(s1) => eq(cx, &cx.force_fully_resolved_tvar(&s1), t2),
+                Constraints::Unresolved(_) => t1 == &swap_reason(t2, t1),
+            }
+        }
+        (_, TypeInner::OpenT(tvar)) => {
+            let id2 = tvar.id() as i32;
+            match cx.find_graph(id2) {
+                Constraints::Resolved(resolved_t2) => eq(cx, t1, &resolved_t2),
+                Constraints::FullyResolved(s2) => eq(cx, t1, &cx.force_fully_resolved_tvar(&s2)),
+                Constraints::Unresolved(_) => t1 == &swap_reason(t2, t1),
+            }
+        }
+        (TypeInner::AnnotT(_, inner_t1, _), _) => eq(cx, inner_t1, t2),
+        (_, TypeInner::AnnotT(_, inner_t2, _)) => eq(cx, t1, inner_t2),
+        (TypeInner::UnionT(_, rep1), TypeInner::UnionT(_, rep2)) => {
+            let members1: Vec<_> = rep1.members_iter().collect();
+            let members2: Vec<_> = rep2.members_iter().collect();
+            if members1.len() != members2.len() {
+                return false;
+            }
+            members1
+                .iter()
+                .zip(members2.iter())
+                .all(|(m1, m2)| eq(cx, m1, m2))
+        }
+        (TypeInner::EvalT { id, .. }, _) => {
+            let evaluated = cx.evaluated();
+            match evaluated.get(id) {
+                Some(t) => eq(cx, t, t2),
+                None => t1 == &swap_reason(t2, t1),
+            }
+        }
+        (_, TypeInner::EvalT { id, .. }) => {
+            let evaluated = cx.evaluated();
+            match evaluated.get(id) {
+                Some(t) => eq(cx, t1, t),
+                None => t1 == &swap_reason(t2, t1),
+            }
+        }
+        (
+            TypeInner::TypeAppT(box TypeAppTData {
+                type_: inner_t1,
+                targs: targs1,
+                from_value: fv1,
+                ..
+            }),
+            TypeInner::TypeAppT(box TypeAppTData {
+                type_: inner_t2,
+                targs: targs2,
+                from_value: fv2,
+                ..
+            }),
+        ) => eq(cx, inner_t1, inner_t2) && fv1 == fv2 && eq_targs(cx, targs1, targs2),
+        _ => t1 == &swap_reason(t2, t1),
+    }
+}
+
+pub fn eq_targs(cx: &Context, targs1: &[Type], targs2: &[Type]) -> bool {
+    if targs1.len() != targs2.len() {
+        return false;
+    }
+    targs1
+        .iter()
+        .zip(targs2.iter())
+        .all(|(t1, t2)| eq(cx, t1, t2))
+}

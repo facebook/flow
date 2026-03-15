@@ -1,0 +1,1518 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+use std::fmt::Debug;
+use std::sync::Arc;
+
+use dupe::Dupe;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+
+use crate::ty::AnyErrorKind;
+use crate::ty::AnyKind;
+use crate::ty::ArrT;
+use crate::ty::BotKind;
+use crate::ty::BuiltinOrSymbol;
+use crate::ty::ComponentProps;
+use crate::ty::Decl;
+use crate::ty::Dict;
+use crate::ty::Elt;
+use crate::ty::FlattenedComponentProp;
+use crate::ty::FunEffect;
+use crate::ty::FunParam;
+use crate::ty::FunT;
+use crate::ty::GenericT;
+use crate::ty::InterfaceT;
+use crate::ty::MappedTypeHomomorphicFlag;
+use crate::ty::MappedTypeOptionalFlag;
+use crate::ty::MappedTypeVariance;
+use crate::ty::NamedProp;
+use crate::ty::ObjKind;
+use crate::ty::ObjT;
+use crate::ty::Polarity;
+use crate::ty::Prop;
+use crate::ty::ReturnT;
+use crate::ty::TupleElement;
+use crate::ty::Ty;
+use crate::ty::TypeParam;
+use crate::ty::UnsoundnessKind;
+use crate::ty::UpperBoundKind;
+use crate::ty::debug_string_of_generic_kind;
+use crate::ty::string_of_utility_ctor;
+use crate::ty::types_of_utility;
+use crate::ty_symbol::ImportMode;
+use crate::ty_symbol::ImportedIdent;
+use crate::ty_symbol::Provenance;
+use crate::ty_symbol::Symbol;
+
+pub fn string_of_polarity(p: Polarity) -> &'static str {
+    match p {
+        Polarity::Negative => "Negative",
+        Polarity::Neutral => "Neutral",
+        Polarity::Positive => "Positive",
+    }
+}
+
+pub fn string_of_ctor_t<L>(t: &Ty<L>) -> &'static str {
+    match t {
+        Ty::Bound(_, _) => "Bound",
+        Ty::Generic(_) => "Generic",
+        Ty::Any(AnyKind::Annotated(_)) => "Explicit Any",
+        Ty::Any(_) => "Implicit Any",
+        Ty::Top => "Top",
+        Ty::Bot(_) => "Bot",
+        Ty::Void => "Void",
+        Ty::Null => "Null",
+        Ty::Symbol => "Symbol",
+        Ty::Num => "Num",
+        Ty::Str => "Str",
+        Ty::Bool => "Bool",
+        Ty::BigInt => "BigInt",
+        Ty::NumLit(_) => "NumLit",
+        Ty::StrLit(_) => "StrLit",
+        Ty::BoolLit(_) => "BoolLit",
+        Ty::BigIntLit(_) => "BigIntLit",
+        Ty::Fun(_) => "Fun",
+        Ty::Obj(_) => "Obj",
+        Ty::Arr(_) => "Arr",
+        Ty::Tup { .. } => "Tup",
+        Ty::Union(_, _, _, _) => "Union",
+        Ty::Inter(_, _, _) => "Inter",
+        Ty::InlineInterface(_) => "InlineInterface",
+        Ty::TypeOf(_, _) => "Typeof",
+        Ty::Utility(_) => "Utility",
+        Ty::IndexedAccess { .. } => "IndexedAccess",
+        Ty::Conditional { .. } => "Conditional",
+        Ty::Infer(_, _) => "Infer",
+        Ty::Component { .. } => "Component",
+        Ty::Renders(_, _) => "Renders",
+    }
+}
+
+pub fn string_of_ctor_decl<L>(d: &Decl<L>) -> &'static str {
+    match d {
+        Decl::TypeAliasDecl { .. } => "TypeAlias",
+        Decl::ClassDecl(_, _) => "ClassDecl",
+        Decl::InterfaceDecl(_, _) => "InterfaceDecl",
+        Decl::RecordDecl(_, _) => "RecordDecl",
+        Decl::ModuleDecl { .. } => "Module",
+        Decl::NamespaceDecl { .. } => "NamespaceDecl",
+        Decl::VariableDecl(_, _) => "VariableDecl",
+        Decl::NominalComponentDecl { .. } => "NominalComponentDecl",
+        Decl::EnumDecl(_) => "EnumDecl",
+    }
+}
+
+fn dump_any_error_kind(kind: Option<AnyErrorKind>) -> &'static str {
+    match kind {
+        Some(AnyErrorKind::UnresolvedName) => "UnresolvedName",
+        Some(AnyErrorKind::MissingAnnotation) => "MissingAnnotation",
+        None => "<None>",
+    }
+}
+
+pub fn dump_any_unsoundness_kind(kind: UnsoundnessKind) -> &'static str {
+    match kind {
+        UnsoundnessKind::BoundFunctionThis => "BoundFunctionThis",
+        UnsoundnessKind::Constructor => "Constructor",
+        UnsoundnessKind::DummyStatic => "DummyStatic",
+        UnsoundnessKind::Exports => "Exports",
+        UnsoundnessKind::InferenceHooks => "InferenceHooks",
+        UnsoundnessKind::InstanceOfRefinement => "InstanceOfRefinement",
+        UnsoundnessKind::Merged => "Merged",
+        UnsoundnessKind::ResolveSpread => "ResolveSpread",
+        UnsoundnessKind::Unchecked => "Unchecked",
+        UnsoundnessKind::Unimplemented => "Unimplemented",
+        UnsoundnessKind::UnresolvedType => "UnresolvedType",
+        UnsoundnessKind::NonBindingPattern => "NonBindingPattern",
+    }
+}
+
+fn dump_any_kind<L>(kind: &AnyKind<L>) -> String {
+    match kind {
+        AnyKind::Annotated(_) => "Annotated".to_string(),
+        AnyKind::AnyError(kind) => format!("AnyError ({})", dump_any_error_kind(*kind)),
+        AnyKind::Recursive => "Recursive".to_string(),
+        AnyKind::Unsound(kind) => format!("Unsound ({})", dump_any_unsoundness_kind(*kind)),
+        AnyKind::Untyped => "Untyped".to_string(),
+        AnyKind::Placeholder => "Placeholder".to_string(),
+    }
+}
+
+const DEFAULT_DEPTH: i32 = 10;
+
+fn cut_off(s: &str, limit: usize) -> String {
+    if s.len() > limit {
+        format!("{} ...", &s[..limit - 1])
+    } else {
+        s.to_string()
+    }
+}
+
+fn dump_bot_upper_bound_kind<L>(kind: &UpperBoundKind<L>) -> String {
+    match kind {
+        UpperBoundKind::NoUpper => "NoUpper".to_string(),
+        UpperBoundKind::SomeKnownUpper(_) => "SomeKnownUpper".to_string(),
+        UpperBoundKind::SomeUnknownUpper(u) => format!("SomeUnknownUpper ({})", u),
+    }
+}
+
+fn dump_bot_kind<L>(kind: &BotKind<L>) -> String {
+    match kind {
+        BotKind::EmptyType => "EmptyType".to_string(),
+        BotKind::NoLowerWithUpper(u) => {
+            format!("NoLowerWithUpper ({})", dump_bot_upper_bound_kind(u))
+        }
+    }
+}
+
+fn dump_import_mode(mode: ImportMode) -> &'static str {
+    match mode {
+        ImportMode::ValueMode => "value",
+        ImportMode::TypeMode => "type",
+        ImportMode::TypeofMode => "typeof",
+    }
+}
+
+fn dump_import_ident<L>(ident: &ImportedIdent<L>) -> String {
+    let ImportedIdent(_, id, mode) = ident;
+    format!("`{}` ({})", id, dump_import_mode(*mode))
+}
+
+fn ctor_of_provenance<L>(p: &Provenance<L>) -> String {
+    match p {
+        Provenance::Local => "Local".to_string(),
+        Provenance::Remote(info) => match &info.imported_as {
+            Some(ii) => format!("Imported as {}", dump_import_ident(ii)),
+            None => "Remote".to_string(),
+        },
+        Provenance::Library(info) => match &info.imported_as {
+            Some(_) => "Library (Imported)".to_string(),
+            None => "Library (Remote)".to_string(),
+        },
+        Provenance::Builtin => "Builtin".to_string(),
+    }
+}
+
+fn dump_symbol<L: Debug>(sym: &Symbol<L>) -> String {
+    format!(
+        "{} ({}:{:?})",
+        sym.sym_name.as_str(),
+        ctor_of_provenance(&sym.sym_provenance),
+        sym.sym_def_loc
+    )
+}
+
+fn builtin_value<L: Debug>(v: &BuiltinOrSymbol<L>) -> String {
+    match v {
+        BuiltinOrSymbol::FunProto => "Function.prototype".to_string(),
+        BuiltinOrSymbol::ObjProto => "Object.prototype".to_string(),
+        BuiltinOrSymbol::FunProtoBind => "Function.prototype.bind".to_string(),
+        BuiltinOrSymbol::TSymbol(s) => dump_symbol(s),
+    }
+}
+
+fn dump_polarity(p: Polarity) -> &'static str {
+    match p {
+        Polarity::Positive => "+",
+        Polarity::Negative => "-",
+        Polarity::Neutral => "",
+    }
+}
+
+fn dump_param_opt(p: &FunParam) -> &'static str {
+    if p.prm_optional { "?" } else { "" }
+}
+
+fn dump_param<L: Debug + Clone + Dupe>(
+    depth: i32,
+    name: &Option<FlowSmolStr>,
+    t: &Ty<L>,
+    p: &FunParam,
+) -> String {
+    match name {
+        Some(s) => format!("{}{}: {}", s, dump_param_opt(p), dump_t(depth, t)),
+        None => format!("{}{}", dump_param_opt(p), dump_t(depth, t)),
+    }
+}
+
+fn dump_rest_params<L: Debug + Clone + Dupe>(
+    depth: i32,
+    rest: Option<&(Option<FlowSmolStr>, Arc<Ty<L>>)>,
+) -> String {
+    match rest {
+        Some((name, t)) => format!(
+            "...{}",
+            dump_param(
+                depth,
+                name,
+                t,
+                &FunParam {
+                    prm_optional: false
+                }
+            )
+        ),
+        None => String::new(),
+    }
+}
+
+fn dump_bound<L: Debug + Clone + Dupe>(depth: i32, bound: Option<&Ty<L>>) -> String {
+    match bound {
+        Some(t) => format!(" <: {}", dump_t(depth, t)),
+        None => String::new(),
+    }
+}
+
+fn dump_type_param<L: Debug + Clone + Dupe>(depth: i32, tp: &TypeParam<L>) -> String {
+    format!(
+        "TParam({}, {}, {})",
+        dump_polarity(tp.tp_polarity),
+        tp.tp_name,
+        dump_bound(depth, tp.tp_bound.as_deref())
+    )
+}
+
+fn dump_type_params<L: Debug + Clone + Dupe>(depth: i32, tps: Option<&[TypeParam<L>]>) -> String {
+    match tps {
+        Some([]) => String::new(),
+        Some(ps) => {
+            let params: Vec<String> = ps.iter().map(|tp| dump_type_param(depth, tp)).collect();
+            format!("TypeParams({})", params.join(", "))
+        }
+        None => String::new(),
+    }
+}
+
+fn dump_fun_t<L: Debug + Clone + Dupe>(depth: i32, f: &FunT<L>) -> String {
+    let params: Vec<String> = f
+        .fun_params
+        .iter()
+        .map(|(name, t, p)| dump_param(depth, name, t, p))
+        .collect();
+    format!(
+        "Fun({}, {}, {}, {}, out: {}, hook: {})",
+        dump_type_params(depth, f.fun_type_params.as_deref()),
+        params.join(", "),
+        dump_rest_params(depth, f.fun_rest_param.as_ref()),
+        dump_t(depth, &f.fun_static),
+        dump_return_t(depth, &f.fun_return),
+        f.fun_effect == FunEffect::Hook
+    )
+}
+
+fn dump_return_t<L: Debug + Clone + Dupe>(depth: i32, ret: &ReturnT<L>) -> String {
+    match ret {
+        ReturnT::ReturnType(t) => dump_t(depth, t),
+        ReturnT::TypeGuard(impl_, x, t) => {
+            let impl_str = if *impl_ { "implies " } else { "" };
+            format!("{}{} is {}", impl_str, x, dump_t(depth, t))
+        }
+    }
+}
+
+fn dump_tuple_element<L: Debug + Clone + Dupe>(
+    depth: i32,
+    i: usize,
+    name: &Option<FlowSmolStr>,
+    t: &Ty<L>,
+    polarity: Polarity,
+    optional: bool,
+) -> String {
+    if name.is_none() && polarity == Polarity::Neutral && !optional {
+        dump_t(depth, t)
+    } else {
+        let name_str = name
+            .clone()
+            .unwrap_or_else(|| FlowSmolStr::new(format!("element_{}", i)));
+        let opt_str = if optional { "?" } else { "" };
+        format!(
+            "{}{}{}: {}",
+            dump_polarity(polarity),
+            name_str,
+            opt_str,
+            dump_t(depth, t)
+        )
+    }
+}
+
+fn dump_tuple_spread<L: Debug + Clone + Dupe>(
+    depth: i32,
+    name: &Option<FlowSmolStr>,
+    t: &Ty<L>,
+) -> String {
+    let name_str = match name {
+        Some(n) => format!("{}: ", n),
+        None => String::new(),
+    };
+    format!("...{}{}", name_str, dump_t(depth, t))
+}
+
+fn dump_field<L: Debug + Clone + Dupe>(
+    depth: i32,
+    x: &str,
+    t: &Ty<L>,
+    polarity: Polarity,
+    optional: bool,
+) -> String {
+    let opt_str = if optional { "?" } else { "" };
+    format!(
+        "{}{}{}: {}",
+        dump_polarity(polarity),
+        x,
+        opt_str,
+        dump_t(depth, t)
+    )
+}
+
+fn dump_prop<L: Debug + Clone + Dupe>(depth: i32, prop: &Prop<L>) -> String {
+    match prop {
+        Prop::NamedProp { name, prop, .. } => dump_named_prop(depth, name.as_str(), prop),
+        Prop::CallProp(f) => dump_fun_t(depth, f),
+        Prop::SpreadProp(t) => dump_spread(depth, t),
+        Prop::MappedTypeProp {
+            key_tparam,
+            source,
+            prop,
+            flags,
+            homomorphic,
+        } => dump_mapped_type(depth, key_tparam, source, prop, flags, homomorphic),
+    }
+}
+
+fn dump_named_prop<L: Debug + Clone + Dupe>(depth: i32, x: &str, prop: &NamedProp<L>) -> String {
+    match prop {
+        NamedProp::Field {
+            t,
+            polarity,
+            optional,
+        } => dump_field(depth, x, t, *polarity, *optional),
+        NamedProp::Method(f) => dump_fun_t(depth, f),
+        NamedProp::Get(t) => format!("get {}", dump_t(depth, t)),
+        NamedProp::Set(t) => format!("set {}", dump_t(depth, t)),
+    }
+}
+
+fn dump_dict<L: Debug + Clone + Dupe>(depth: i32, d: &Dict<L>) -> String {
+    let name_str = match &d.dict_name {
+        Some(n) => format!("{}: ", n),
+        None => String::new(),
+    };
+    format!(
+        "{}[{}{}]: {}",
+        dump_polarity(d.dict_polarity),
+        name_str,
+        dump_t(depth, &d.dict_key),
+        dump_t(depth, &d.dict_value)
+    )
+}
+
+fn dump_spread<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
+    format!("...{}", dump_t(depth, t))
+}
+
+fn dump_mapped_type_variance(v: MappedTypeVariance) -> String {
+    match v {
+        MappedTypeVariance::OverrideVariance(pol) => dump_polarity(pol).to_string(),
+        MappedTypeVariance::RemoveVariance(pol) => format!("-{}", dump_polarity(pol)),
+        MappedTypeVariance::KeepVariance => String::new(),
+    }
+}
+
+fn dump_mapped_type<L: Debug + Clone + Dupe>(
+    depth: i32,
+    key_tparam: &TypeParam<L>,
+    source: &Ty<L>,
+    prop: &Ty<L>,
+    flags: &crate::ty::MappedTypeFlags,
+    homomorphic: &MappedTypeHomomorphicFlag<L>,
+) -> String {
+    let keyof = match homomorphic {
+        MappedTypeHomomorphicFlag::Homomorphic => "keyof ",
+        _ => "",
+    };
+    let optional_str = match flags.optional {
+        MappedTypeOptionalFlag::KeepOptionality => "",
+        MappedTypeOptionalFlag::MakeOptional => "?",
+        MappedTypeOptionalFlag::RemoveOptional => "-?",
+    };
+    format!(
+        "{}[{} in {}{}]{}: {}",
+        dump_mapped_type_variance(flags.variance),
+        key_tparam.tp_name,
+        keyof,
+        dump_t(depth, source),
+        optional_str,
+        dump_t(depth, prop)
+    )
+}
+
+fn dump_obj<L: Debug + Clone + Dupe>(depth: i32, o: &ObjT<L>) -> String {
+    let props: Vec<String> = o.obj_props.iter().map(|p| dump_prop(depth, p)).collect();
+    let props_str = props.join(", ");
+    match &o.obj_kind {
+        ObjKind::ExactObj => format!("{{|{}|}}", props_str),
+        ObjKind::InexactObj => format!("{{{}, ...}}", props_str),
+        ObjKind::IndexedObj(d) => format!("{{{}, {}}}", props_str, dump_dict(depth, d)),
+        ObjKind::MappedTypeObj => format!("{{{}}}", props_str),
+    }
+}
+
+fn dump_arr<L: Debug + Clone + Dupe>(depth: i32, a: &ArrT<L>) -> String {
+    let ctor = if a.arr_readonly {
+        "$ReadOnlyArray"
+    } else {
+        "Array"
+    };
+    format!("{}<{}>", ctor, dump_t(depth, &a.arr_elt_t))
+}
+
+fn dump_generic<L: Debug + Clone + Dupe>(depth: i32, g: &GenericT<L>) -> String {
+    let (s, kind, ts) = g;
+    format!(
+        "Generic ({}, kind= {}, params={})",
+        dump_symbol(s),
+        debug_string_of_generic_kind(*kind),
+        dump_generics(depth, ts.as_deref())
+    )
+}
+
+fn dump_generics<L: Debug + Clone + Dupe>(depth: i32, ts: Option<&[Arc<Ty<L>>]>) -> String {
+    match ts {
+        Some(ts) => {
+            let types: Vec<String> = ts.iter().map(|t| dump_t(depth, t)).collect();
+            format!("<{}>", types.join(", "))
+        }
+        None => String::new(),
+    }
+}
+
+fn dump_utility<L: Debug + Clone + Dupe>(depth: i32, u: &crate::ty::Utility<L>) -> String {
+    let ctor = string_of_utility_ctor(u);
+    let ts = types_of_utility(u);
+    match ts {
+        None => ctor.to_string(),
+        Some(ts) if ts.is_empty() => ctor.to_string(),
+        Some(ts) => {
+            let types: Vec<String> = ts.iter().map(|t| dump_t(depth, t)).collect();
+            format!("{} ({})", ctor, types.join(", "))
+        }
+    }
+}
+
+fn dump_t<L: Debug + Clone + Dupe>(depth: i32, t: &Ty<L>) -> String {
+    if depth < 0 {
+        return "...".to_string();
+    }
+    let depth = depth - 1;
+    match t {
+        Ty::Bound(_, s) => format!("Bound({})", s),
+        Ty::Generic(g) => dump_generic(depth, g),
+        Ty::Any(kind) => format!("Any ({})", dump_any_kind(kind)),
+        Ty::Top => "Top".to_string(),
+        Ty::Bot(k) => format!("Bot ({})", dump_bot_kind(k)),
+        Ty::Void => "Void".to_string(),
+        Ty::Null => "Null".to_string(),
+        Ty::Symbol => "Symbol".to_string(),
+        Ty::Num => "Num".to_string(),
+        Ty::NumLit(s) => format!("\"{}\"", s),
+        Ty::Str => "Str".to_string(),
+        Ty::StrLit(s) => format!("\"{}\"", s.as_str()),
+        Ty::Bool => "Bool".to_string(),
+        Ty::BoolLit(b) => format!("\"{}\"", b),
+        Ty::BigInt => "BigInt".to_string(),
+        Ty::BigIntLit(s) => format!("\"{}\"", s),
+        Ty::Fun(f) => dump_fun_t(depth, f),
+        Ty::Obj(o) => dump_obj(depth, o),
+        Ty::Arr(a) => dump_arr(depth, a),
+        Ty::Tup { elements, inexact } => {
+            let els: Vec<String> = elements
+                .iter()
+                .enumerate()
+                .map(|(i, el)| match el {
+                    TupleElement::TupleElement {
+                        name,
+                        t,
+                        polarity,
+                        optional,
+                    } => dump_tuple_element(depth, i, name, t, *polarity, *optional),
+                    TupleElement::TupleSpread { t, name } => dump_tuple_spread(depth, name, t),
+                })
+                .collect();
+            let inexact_str = if *inexact { ", ..." } else { "" };
+            format!("Tup ({}{})", els.join(","), inexact_str)
+        }
+        Ty::Union(_, t1, t2, rest) => {
+            let mut ts: Vec<&Ty<L>> = vec![t1.as_ref(), t2.as_ref()];
+            ts.extend(rest.iter().take(8).map(|t| t.as_ref()));
+            let types: Vec<String> = ts.iter().map(|t| dump_t(depth, t)).collect();
+            format!("Union ({})", types.join(", "))
+        }
+        Ty::Inter(t1, t2, rest) => {
+            let mut ts: Vec<&Ty<L>> = vec![t1.as_ref(), t2.as_ref()];
+            ts.extend(rest.iter().map(|t| t.as_ref()));
+            let types: Vec<String> = ts.iter().map(|t| dump_t(depth, t)).collect();
+            format!("Inter ({})", types.join(", "))
+        }
+        Ty::InlineInterface(InterfaceT {
+            if_extends,
+            if_props,
+            if_dict,
+        }) => {
+            let dict_str = match if_dict {
+                Some(d) => dump_dict(depth, d),
+                None => String::new(),
+            };
+            let extends: Vec<String> = if_extends.iter().map(|g| dump_generic(depth, g)).collect();
+            let props: Vec<String> = if_props.iter().map(|p| dump_prop(depth, p)).collect();
+            format!(
+                "InlineInterface ({}, {{ {} {} }})",
+                extends.join(", "),
+                props.join(", "),
+                dict_str
+            )
+        }
+        Ty::TypeOf(v, ts) => format!(
+            "Typeof ({}, {})",
+            builtin_value(v),
+            dump_generics(depth, ts.as_deref())
+        ),
+        Ty::Utility(u) => dump_utility(depth, u),
+        Ty::IndexedAccess {
+            _object,
+            index,
+            optional,
+        } => format!(
+            "IndexedAccess ({}) ({}) (optional={})",
+            dump_t(depth, _object),
+            dump_t(depth, index),
+            optional
+        ),
+        Ty::Conditional {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+        } => format!(
+            "Conditional ({}, {}, {}, {})",
+            dump_t(depth, check_type),
+            dump_t(depth, extends_type),
+            dump_t(depth, true_type),
+            dump_t(depth, false_type)
+        ),
+        Ty::Infer(s, b) => {
+            let bound_str = match b {
+                Some(t) => dump_t(depth, t),
+                None => "None".to_string(),
+            };
+            format!("Infer ({}, {})", dump_symbol(s), bound_str)
+        }
+        Ty::Component {
+            regular_props,
+            renders,
+        } => {
+            let props = match regular_props {
+                ComponentProps::UnflattenedComponentProps(t) => {
+                    vec![format!("...{}", dump_t(depth, t))]
+                }
+                ComponentProps::FlattenedComponentProps { props, inexact } => {
+                    let mut prop_strs: Vec<String> = props
+                        .iter()
+                        .map(|p| match p {
+                            FlattenedComponentProp::FlattenedComponentProp {
+                                name,
+                                optional,
+                                t,
+                                ..
+                            } => {
+                                let opt = if *optional { "?" } else { "" };
+                                format!("{}{}: {}", name.as_str(), opt, dump_t(depth, t))
+                            }
+                        })
+                        .collect();
+                    if *inexact {
+                        prop_strs.push("...{...}".to_string());
+                    }
+                    prop_strs
+                }
+            };
+            let renders_str = match renders {
+                Some(r) => dump_t(depth, r),
+                None => "<missing>".to_string(),
+            };
+            format!("Component({}): {}", props.join(", "), renders_str)
+        }
+        Ty::Renders(t, _) => format!("Renders ({})", dump_t(depth, t)),
+    }
+}
+
+fn dump_decl<L: Debug + Clone + Dupe>(depth: i32, d: &Decl<L>) -> String {
+    match d {
+        Decl::VariableDecl(name, t) => {
+            format!("VariableDecl ({}, {})", name.as_str(), dump_t(depth, t))
+        }
+        Decl::TypeAliasDecl {
+            import,
+            name,
+            tparams,
+            type_,
+        } => {
+            let type_str = match type_ {
+                Some(t) => cut_off(&dump_t(depth, t), 1000),
+                None => String::new(),
+            };
+            format!(
+                "TypeAlias (import={}, {}, {}, {})",
+                import,
+                dump_symbol(name),
+                dump_type_params(depth, tparams.as_deref()),
+                type_str
+            )
+        }
+        Decl::ClassDecl(s, ps) => format!(
+            "ClassDecl ({}) ({})",
+            dump_symbol(s),
+            dump_type_params(depth, ps.as_deref())
+        ),
+        Decl::InterfaceDecl(s, ps) => format!(
+            "InterfaceDecl ({}) ({})",
+            dump_symbol(s),
+            dump_type_params(depth, ps.as_deref())
+        ),
+        Decl::RecordDecl(s, ps) => format!(
+            "RecordDecl ({}) ({})",
+            dump_symbol(s),
+            dump_type_params(depth, ps.as_deref())
+        ),
+        Decl::EnumDecl(name) => format!("Enum({})", dump_symbol(name)),
+        Decl::NominalComponentDecl {
+            name,
+            tparams,
+            is_type,
+            ..
+        } => format!(
+            "NominalComponentDecl ({}, {}, {})",
+            dump_symbol(name),
+            dump_type_params(depth, tparams.as_deref()),
+            is_type
+        ),
+        Decl::NamespaceDecl { name, exports } => {
+            let name_str = match name {
+                Some(n) => dump_symbol(n),
+                None => "<no name>".to_string(),
+            };
+            let exports_str: Vec<String> = exports.iter().map(|d| dump_decl(depth, d)).collect();
+            format!("Namespace({}, {})", name_str, exports_str.join(", "))
+        }
+        Decl::ModuleDecl {
+            name,
+            exports,
+            default: _,
+        } => {
+            let name_str = match name {
+                Some(n) => dump_symbol(n),
+                None => "<no name>".to_string(),
+            };
+            let exports_str: Vec<String> = exports.iter().map(|d| dump_decl(depth, d)).collect();
+            format!("Module({}, {})", name_str, exports_str.join(", "))
+        }
+    }
+}
+
+fn dump_elt<L: Debug + Clone + Dupe>(depth: i32, elt: &Elt<L>) -> String {
+    match elt {
+        Elt::Type(t) => format!("Type ({})", dump_t(depth, t)),
+        Elt::Decl(d) => format!("Decl ({})", dump_decl(depth, d)),
+    }
+}
+
+use std::path::Path;
+
+use serde_json::Value as Json;
+use serde_json::json;
+
+pub trait ALocToLoc<L> {
+    fn loc_to_string(loc: &L, strip_root: Option<&Path>) -> String;
+}
+
+pub struct DebugLocConverter;
+
+impl<L: Debug> ALocToLoc<L> for DebugLocConverter {
+    fn loc_to_string(loc: &L, _strip_root: Option<&Path>) -> String {
+        format!("{:?}", loc)
+    }
+}
+
+fn json_of_provenance<L, C: ALocToLoc<L>>(
+    loc: &L,
+    p: &Provenance<L>,
+    strip_root: Option<&Path>,
+) -> Json {
+    json!({
+        "kind": ctor_of_provenance(p),
+        "loc": C::loc_to_string(loc, strip_root)
+    })
+}
+
+fn json_of_symbol<L, C: ALocToLoc<L>>(sym: &Symbol<L>, strip_root: Option<&Path>) -> Json {
+    json!({
+        "provenance": json_of_provenance::<L, C>(&sym.sym_def_loc, &sym.sym_provenance, strip_root),
+        "name": sym.sym_name.as_str()
+    })
+}
+
+fn json_of_builtin_value<L, C: ALocToLoc<L>>(
+    v: &BuiltinOrSymbol<L>,
+    strip_root: Option<&Path>,
+) -> Json {
+    match v {
+        BuiltinOrSymbol::FunProto => Json::String("Function.prototype".to_string()),
+        BuiltinOrSymbol::ObjProto => Json::String("Object.prototype".to_string()),
+        BuiltinOrSymbol::FunProtoBind => Json::String("Function.prototype.bind".to_string()),
+        BuiltinOrSymbol::TSymbol(s) => json_of_symbol::<L, C>(s, strip_root),
+    }
+}
+
+fn json_of_polarity(polarity: Polarity) -> Json {
+    Json::String(string_of_polarity(polarity).to_string())
+}
+
+fn json_of_mapped_type_variance(v: MappedTypeVariance) -> Json {
+    match v {
+        MappedTypeVariance::OverrideVariance(pol) => json_of_polarity(pol),
+        MappedTypeVariance::RemoveVariance(pol) => {
+            Json::String(format!("-{}", string_of_polarity(pol)))
+        }
+        MappedTypeVariance::KeepVariance => Json::String("".to_string()),
+    }
+}
+
+fn json_of_targs<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    targs_opt: Option<&[Arc<Ty<L>>]>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    match targs_opt {
+        Some(targs) => {
+            let arr: Vec<Json> = targs
+                .iter()
+                .map(|t| json_of_t::<L, C>(t, strip_root))
+                .collect();
+            vec![("typeArgs".to_string(), Json::Array(arr))]
+        }
+        None => vec![],
+    }
+}
+
+fn json_of_typeparam<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    tp: &TypeParam<L>,
+    strip_root: Option<&Path>,
+) -> Json {
+    let mut obj = vec![
+        ("name".to_string(), Json::String(tp.tp_name.to_string())),
+        (
+            "bound".to_string(),
+            tp.tp_bound
+                .as_ref()
+                .map(|b| json_of_t::<L, C>(b.as_ref(), strip_root))
+                .unwrap_or(Json::Null),
+        ),
+        ("polarity".to_string(), json_of_polarity(tp.tp_polarity)),
+        ("const".to_string(), Json::Bool(tp.tp_const)),
+    ];
+    if let Some(default) = &tp.tp_default {
+        obj.push((
+            "default".to_string(),
+            json_of_t::<L, C>(default.as_ref(), strip_root),
+        ));
+    }
+    Json::Object(obj.into_iter().collect())
+}
+
+fn json_of_type_params<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    ps: Option<&[TypeParam<L>]>,
+    strip_root: Option<&Path>,
+) -> Json {
+    match ps {
+        None => Json::Null,
+        Some(tparams) => {
+            let arr: Vec<Json> = tparams
+                .iter()
+                .map(|tp| json_of_typeparam::<L, C>(tp, strip_root))
+                .collect();
+            Json::Array(arr)
+        }
+    }
+}
+
+fn json_of_return_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    ret: &ReturnT<L>,
+    strip_root: Option<&Path>,
+) -> Json {
+    match ret {
+        ReturnT::ReturnType(t) => {
+            json!({ "type_": json_of_t::<L, C>(t, strip_root) })
+        }
+        ReturnT::TypeGuard(impl_, x, t) => {
+            json!({
+                "type_guard": {
+                    "implies": *impl_,
+                    "type_parameter": x,
+                    "type_": json_of_t::<L, C>(t, strip_root)
+                }
+            })
+        }
+    }
+}
+
+fn json_of_fun_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    f: &FunT<L>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    let param_types: Vec<Json> = f
+        .fun_params
+        .iter()
+        .map(|(_, t, _)| json_of_t::<L, C>(t, strip_root))
+        .collect();
+    let param_names: Vec<Json> = f
+        .fun_params
+        .iter()
+        .rev()
+        .map(|(name, _, _)| match name {
+            Some(n) => Json::String(n.to_string()),
+            None => Json::String("_".to_string()),
+        })
+        .collect();
+    let rest_param = match &f.fun_rest_param {
+        None => Json::Null,
+        Some((name, t)) => {
+            let mut obj = vec![(
+                "restParamType".to_string(),
+                json_of_t::<L, C>(t.as_ref(), strip_root),
+            )];
+            if let Some(n) = name {
+                obj.push(("restParamName".to_string(), Json::String(n.to_string())));
+            }
+            Json::Object(obj.into_iter().collect())
+        }
+    };
+    vec![
+        (
+            "typeParams".to_string(),
+            json_of_type_params::<L, C>(f.fun_type_params.as_deref(), strip_root),
+        ),
+        ("paramTypes".to_string(), Json::Array(param_types)),
+        ("paramNames".to_string(), Json::Array(param_names)),
+        ("restParam".to_string(), rest_param),
+        (
+            "returnType".to_string(),
+            json_of_return_t::<L, C>(&f.fun_return, strip_root),
+        ),
+        (
+            "staticType".to_string(),
+            json_of_t::<L, C>(&f.fun_static, strip_root),
+        ),
+        (
+            "functionHook".to_string(),
+            Json::Bool(f.fun_effect == FunEffect::Hook),
+        ),
+    ]
+}
+
+fn json_of_dict<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    d: &Dict<L>,
+    strip_root: Option<&Path>,
+) -> Json {
+    json!({
+        "polarity": json_of_polarity(d.dict_polarity),
+        "name": d.dict_name.as_deref().unwrap_or("_"),
+        "key": json_of_t::<L, C>(&d.dict_key, strip_root),
+        "value": json_of_t::<L, C>(&d.dict_value, strip_root)
+    })
+}
+
+fn json_of_named_prop<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    p: &NamedProp<L>,
+    strip_root: Option<&Path>,
+) -> Json {
+    match p {
+        NamedProp::Field {
+            t,
+            polarity,
+            optional,
+        } => {
+            json!({
+                "kind": "Field",
+                "type": json_of_t::<L, C>(t, strip_root),
+                "polarity": json_of_polarity(*polarity),
+                "optional": *optional
+            })
+        }
+        NamedProp::Method(f) => {
+            let fun_obj: serde_json::Map<String, Json> =
+                json_of_fun_t::<L, C>(f, strip_root).into_iter().collect();
+            json!({
+                "kind": "Method",
+                "funtype": Json::Object(fun_obj)
+            })
+        }
+        NamedProp::Get(t) => {
+            json!({
+                "kind": "Get",
+                "type": json_of_t::<L, C>(t, strip_root)
+            })
+        }
+        NamedProp::Set(t) => {
+            json!({
+                "kind": "Set",
+                "type": json_of_t::<L, C>(t, strip_root)
+            })
+        }
+    }
+}
+
+fn json_of_prop<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    prop: &Prop<L>,
+    strip_root: Option<&Path>,
+) -> Json {
+    match prop {
+        Prop::NamedProp {
+            name,
+            prop,
+            inherited,
+            source,
+            def_locs,
+        } => {
+            let def_locs_arr: Vec<Json> = def_locs
+                .iter()
+                .map(|loc| Json::String(C::loc_to_string(loc, strip_root)))
+                .collect();
+            json!({
+                "kind": "NamedProp",
+                "prop": {
+                    "name": name.as_str(),
+                    "prop": json_of_named_prop::<L, C>(prop, strip_root),
+                    "inherited": *inherited,
+                    "source": crate::ty::string_of_prop_source(source),
+                    "def_locs": def_locs_arr
+                }
+            })
+        }
+        Prop::CallProp(ft) => {
+            let fun_obj: serde_json::Map<String, Json> =
+                json_of_fun_t::<L, C>(ft, strip_root).into_iter().collect();
+            json!({
+                "kind": "CallProp",
+                "prop": Json::Object(fun_obj)
+            })
+        }
+        Prop::SpreadProp(t) => {
+            json!({
+                "kind": "SpreadProp",
+                "prop": json_of_t::<L, C>(t, strip_root)
+            })
+        }
+        Prop::MappedTypeProp {
+            key_tparam,
+            source,
+            prop,
+            flags,
+            homomorphic,
+        } => {
+            let optional_str = match flags.optional {
+                MappedTypeOptionalFlag::KeepOptionality => "KeepOptionality",
+                MappedTypeOptionalFlag::RemoveOptional => "RemoveOptional",
+                MappedTypeOptionalFlag::MakeOptional => "MakeOptional",
+            };
+            let homomorphic_str = match homomorphic {
+                MappedTypeHomomorphicFlag::Homomorphic => "Homomorphic",
+                MappedTypeHomomorphicFlag::Unspecialized => "Unspecialized",
+                MappedTypeHomomorphicFlag::SemiHomomorphic(_) => "SemiHomomorphic",
+            };
+            json!({
+                "kind": "MappedTypeProp",
+                "prop": {
+                    "key_tparam": key_tparam.tp_name,
+                    "source": json_of_t::<L, C>(source, strip_root),
+                    "homomorphic": homomorphic_str,
+                    "prop": json_of_t::<L, C>(prop, strip_root),
+                    "flags": {
+                        "variance": json_of_mapped_type_variance(flags.variance),
+                        "optional": optional_str
+                    }
+                }
+            })
+        }
+    }
+}
+
+fn json_of_obj_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    o: &ObjT<L>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    let obj_kind = match &o.obj_kind {
+        ObjKind::ExactObj => Json::String("Exact".to_string()),
+        ObjKind::InexactObj => Json::String("Inexact".to_string()),
+        ObjKind::IndexedObj(d) => json_of_dict::<L, C>(d, strip_root),
+        ObjKind::MappedTypeObj => Json::String("MappedType".to_string()),
+    };
+    let props: Vec<Json> = o
+        .obj_props
+        .iter()
+        .map(|p| json_of_prop::<L, C>(p, strip_root))
+        .collect();
+    vec![
+        (
+            "def_loc".to_string(),
+            o.obj_def_loc
+                .as_ref()
+                .map(|loc| Json::String(C::loc_to_string(loc, strip_root)))
+                .unwrap_or(Json::Null),
+        ),
+        ("obj_kind".to_string(), obj_kind),
+        ("props".to_string(), Json::Array(props)),
+    ]
+}
+
+fn json_of_generic<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    g: &GenericT<L>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    let (s, k, targs_opt) = g;
+    let mut result = json_of_targs::<L, C>(targs_opt.as_deref(), strip_root);
+    result.push(("type".to_string(), json_of_symbol::<L, C>(s, strip_root)));
+    result.push((
+        "generic_kind".to_string(),
+        Json::String(debug_string_of_generic_kind(*k).to_string()),
+    ));
+    result
+}
+
+fn json_of_component<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    regular_props: &ComponentProps<L>,
+    renders: &Option<Arc<Ty<L>>>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    let props = match regular_props {
+        ComponentProps::UnflattenedComponentProps(t) => {
+            json!({
+                "kind": "unflattened",
+                "type": json_of_t::<L, C>(t, strip_root)
+            })
+        }
+        ComponentProps::FlattenedComponentProps { props, inexact } => {
+            let props_arr: Vec<Json> = props
+                .iter()
+                .map(|p| match p {
+                    FlattenedComponentProp::FlattenedComponentProp {
+                        name, optional, t, ..
+                    } => {
+                        json!({
+                            "name": name.as_str(),
+                            "optional": *optional,
+                            "type": json_of_t::<L, C>(t, strip_root)
+                        })
+                    }
+                })
+                .collect();
+            json!({
+                "kind": "flattened",
+                "types": props_arr,
+                "inexact": *inexact
+            })
+        }
+    };
+    vec![
+        ("regularProps".to_string(), props),
+        (
+            "renders".to_string(),
+            renders
+                .as_ref()
+                .map(|r| json_of_t::<L, C>(r.as_ref(), strip_root))
+                .unwrap_or(Json::Null),
+        ),
+    ]
+}
+
+fn json_of_utility<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    u: &crate::ty::Utility<L>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    let ctor = string_of_utility_ctor(u);
+    let mut result = vec![("kind".to_string(), Json::String(ctor.to_string()))];
+    if let Some(ts) = types_of_utility(u) {
+        let targs: Vec<Json> = ts
+            .iter()
+            .map(|t| json_of_t::<L, C>(t, strip_root))
+            .collect();
+        result.push(("typeArgs".to_string(), Json::Array(targs)));
+    }
+    result
+}
+
+fn json_of_t_list<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    t: &Ty<L>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    match t {
+        Ty::Bound(_, name) => vec![("bound".to_string(), Json::String(name.clone()))],
+        Ty::Generic(g) => json_of_generic::<L, C>(g, strip_root),
+        Ty::Any(AnyKind::Annotated(_)) => {
+            vec![("any".to_string(), Json::String("explicit".to_string()))]
+        }
+        Ty::Any(_) => vec![("any".to_string(), Json::String("implicit".to_string()))],
+        Ty::Top
+        | Ty::Bot(_)
+        | Ty::Void
+        | Ty::Null
+        | Ty::Symbol
+        | Ty::Num
+        | Ty::Str
+        | Ty::Bool
+        | Ty::BigInt => {
+            vec![]
+        }
+        Ty::NumLit(s) => vec![("literal".to_string(), Json::String(s.clone()))],
+        Ty::StrLit(s) => vec![("literal".to_string(), Json::String(s.as_str().to_string()))],
+        Ty::BoolLit(b) => vec![("literal".to_string(), Json::Bool(*b))],
+        Ty::BigIntLit(s) => vec![("literal".to_string(), Json::String(s.clone()))],
+        Ty::Fun(f) => json_of_fun_t::<L, C>(f, strip_root),
+        Ty::Obj(o) => json_of_obj_t::<L, C>(o, strip_root),
+        Ty::Arr(arr) => {
+            vec![
+                ("readonly".to_string(), Json::Bool(arr.arr_readonly)),
+                (
+                    "type".to_string(),
+                    json_of_t::<L, C>(&arr.arr_elt_t, strip_root),
+                ),
+            ]
+        }
+        Ty::Tup { elements, inexact } => {
+            let elements_arr: Vec<Json> = elements
+                .iter()
+                .map(|el| match el {
+                    TupleElement::TupleElement {
+                        t,
+                        name,
+                        polarity,
+                        optional,
+                    } => {
+                        json!({
+                            "kind": "TupleElement",
+                            "name": name.as_deref().unwrap_or(""),
+                            "t": json_of_t::<L, C>(t, strip_root),
+                            "optional": *optional,
+                            "polarity": json_of_polarity(*polarity)
+                        })
+                    }
+                    TupleElement::TupleSpread { t, name } => {
+                        json!({
+                            "kind": "TupleSpread",
+                            "name": name.as_deref().unwrap_or(""),
+                            "t": json_of_t::<L, C>(t, strip_root)
+                        })
+                    }
+                })
+                .collect();
+            vec![
+                ("elements".to_string(), Json::Array(elements_arr)),
+                ("inexact".to_string(), Json::Bool(*inexact)),
+            ]
+        }
+        Ty::Union(_, t0, t1, rest) => {
+            let mut all = vec![t0.as_ref(), t1.as_ref()];
+            all.extend(rest.iter().map(|t| t.as_ref()));
+            let types: Vec<Json> = all
+                .iter()
+                .map(|t| json_of_t::<L, C>(t, strip_root))
+                .collect();
+            vec![("types".to_string(), Json::Array(types))]
+        }
+        Ty::Inter(t0, t1, rest) => {
+            let mut all = vec![t0.as_ref(), t1.as_ref()];
+            all.extend(rest.iter().map(|t| t.as_ref()));
+            let types: Vec<Json> = all
+                .iter()
+                .map(|t| json_of_t::<L, C>(t, strip_root))
+                .collect();
+            vec![("types".to_string(), Json::Array(types))]
+        }
+        Ty::InlineInterface(InterfaceT {
+            if_extends,
+            if_props,
+            if_dict,
+        }) => {
+            let extends: Vec<Json> = if_extends
+                .iter()
+                .map(|g| {
+                    let obj: serde_json::Map<String, Json> =
+                        json_of_generic::<L, C>(g, strip_root).into_iter().collect();
+                    Json::Object(obj)
+                })
+                .collect();
+            let props: Vec<Json> = if_props
+                .iter()
+                .map(|p| json_of_prop::<L, C>(p, strip_root))
+                .collect();
+            vec![
+                ("extends".to_string(), Json::Array(extends)),
+                ("body".to_string(), Json::Array(props)),
+                (
+                    "dict".to_string(),
+                    if_dict
+                        .as_ref()
+                        .map(|d| json_of_dict::<L, C>(d, strip_root))
+                        .unwrap_or(Json::Null),
+                ),
+            ]
+        }
+        Ty::TypeOf(b, targs) => {
+            let mut result = vec![(
+                "name".to_string(),
+                json_of_builtin_value::<L, C>(b, strip_root),
+            )];
+            result.extend(json_of_targs::<L, C>(targs.as_deref(), strip_root));
+            result
+        }
+        Ty::Utility(u) => json_of_utility::<L, C>(u, strip_root),
+        Ty::IndexedAccess {
+            _object,
+            index,
+            optional,
+        } => {
+            vec![
+                ("object".to_string(), json_of_t::<L, C>(_object, strip_root)),
+                ("index".to_string(), json_of_t::<L, C>(index, strip_root)),
+                ("optional".to_string(), Json::Bool(*optional)),
+            ]
+        }
+        Ty::Conditional {
+            check_type,
+            extends_type,
+            true_type,
+            false_type,
+        } => {
+            vec![
+                (
+                    "check".to_string(),
+                    json_of_t::<L, C>(check_type, strip_root),
+                ),
+                (
+                    "extends".to_string(),
+                    json_of_t::<L, C>(extends_type, strip_root),
+                ),
+                ("true".to_string(), json_of_t::<L, C>(true_type, strip_root)),
+                (
+                    "false".to_string(),
+                    json_of_t::<L, C>(false_type, strip_root),
+                ),
+            ]
+        }
+        Ty::Infer(s, b) => {
+            vec![
+                ("name".to_string(), json_of_symbol::<L, C>(s, strip_root)),
+                (
+                    "bound".to_string(),
+                    b.as_ref()
+                        .map(|t| json_of_t::<L, C>(t.as_ref(), strip_root))
+                        .unwrap_or(Json::Null),
+                ),
+            ]
+        }
+        Ty::Component {
+            regular_props,
+            renders,
+        } => json_of_component::<L, C>(regular_props, renders, strip_root),
+        Ty::Renders(t, variant) => {
+            let variant_str = match variant {
+                crate::ty::RendersKind::RendersNormal => "normal",
+                crate::ty::RendersKind::RendersMaybe => "maybe",
+                crate::ty::RendersKind::RendersStar => "star",
+            };
+            vec![
+                ("argument".to_string(), json_of_t::<L, C>(t, strip_root)),
+                ("variant".to_string(), Json::String(variant_str.to_string())),
+            ]
+        }
+    }
+}
+
+fn json_of_t<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    t: &Ty<L>,
+    strip_root: Option<&Path>,
+) -> Json {
+    let mut obj = vec![(
+        "kind".to_string(),
+        Json::String(string_of_ctor_t(t).to_string()),
+    )];
+    obj.extend(json_of_t_list::<L, C>(t, strip_root));
+    Json::Object(obj.into_iter().collect())
+}
+
+fn json_of_class_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    name: &Symbol<L>,
+    tparams: &Option<Arc<[TypeParam<L>]>>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    vec![
+        ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+        (
+            "typeParams".to_string(),
+            json_of_type_params::<L, C>(tparams.as_deref(), strip_root),
+        ),
+    ]
+}
+
+fn json_of_interface_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    name: &Symbol<L>,
+    tparams: &Option<Arc<[TypeParam<L>]>>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    vec![
+        ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+        (
+            "typeParams".to_string(),
+            json_of_type_params::<L, C>(tparams.as_deref(), strip_root),
+        ),
+    ]
+}
+
+fn json_of_record_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    name: &Symbol<L>,
+    tparams: &Option<Arc<[TypeParam<L>]>>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    vec![
+        ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+        (
+            "typeParams".to_string(),
+            json_of_type_params::<L, C>(tparams.as_deref(), strip_root),
+        ),
+    ]
+}
+
+fn json_of_nominal_component_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    name: &Symbol<L>,
+    tparams: &Option<Arc<[TypeParam<L>]>>,
+    props: &ComponentProps<L>,
+    renders: &Option<Ty<L>>,
+    is_type: bool,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    let mut result = vec![
+        ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+        (
+            "typeParams".to_string(),
+            json_of_type_params::<L, C>(tparams.as_deref(), strip_root),
+        ),
+        ("isType".to_string(), Json::Bool(is_type)),
+    ];
+    let renders_arc = renders.as_ref().map(|r| Arc::new(r.clone()));
+    result.extend(json_of_component::<L, C>(props, &renders_arc, strip_root));
+    result
+}
+
+fn json_of_namespace<L, C: ALocToLoc<L>>(
+    name: &Option<Symbol<L>>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    vec![(
+        "name".to_string(),
+        name.as_ref()
+            .map(|n| json_of_symbol::<L, C>(n, strip_root))
+            .unwrap_or(Json::Null),
+    )]
+}
+
+fn json_of_module<L, C: ALocToLoc<L>>(
+    name: &Option<Symbol<L>>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    vec![(
+        "name".to_string(),
+        name.as_ref()
+            .map(|n| json_of_symbol::<L, C>(n, strip_root))
+            .unwrap_or(Json::Null),
+    )]
+}
+
+fn json_of_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    d: &Decl<L>,
+    strip_root: Option<&Path>,
+) -> Vec<(String, Json)> {
+    match d {
+        Decl::VariableDecl(name, t) => {
+            vec![
+                ("name".to_string(), Json::String(name.as_str().to_string())),
+                ("type_".to_string(), json_of_t::<L, C>(t, strip_root)),
+            ]
+        }
+        Decl::TypeAliasDecl {
+            name,
+            tparams,
+            type_,
+            ..
+        } => {
+            vec![
+                ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+                (
+                    "typeParams".to_string(),
+                    json_of_type_params::<L, C>(tparams.as_deref(), strip_root),
+                ),
+                (
+                    "body".to_string(),
+                    type_
+                        .as_ref()
+                        .map(|t| json_of_t::<L, C>(t, strip_root))
+                        .unwrap_or(Json::Null),
+                ),
+            ]
+        }
+        Decl::ClassDecl(s, ps) => json_of_class_decl::<L, C>(s, ps, strip_root),
+        Decl::InterfaceDecl(s, ps) => json_of_interface_decl::<L, C>(s, ps, strip_root),
+        Decl::RecordDecl(s, ps) => json_of_record_decl::<L, C>(s, ps, strip_root),
+        Decl::EnumDecl(name) => {
+            vec![("name".to_string(), json_of_symbol::<L, C>(name, strip_root))]
+        }
+        Decl::NominalComponentDecl {
+            name,
+            tparams,
+            props,
+            renders,
+            is_type,
+            ..
+        } => json_of_nominal_component_decl::<L, C>(
+            name, tparams, props, renders, *is_type, strip_root,
+        ),
+        Decl::NamespaceDecl { name, .. } => json_of_namespace::<L, C>(name, strip_root),
+        Decl::ModuleDecl { name, .. } => json_of_module::<L, C>(name, strip_root),
+    }
+}
+
+pub fn json_of_elt<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
+    elt: &Elt<L>,
+    strip_root: Option<&Path>,
+) -> Json {
+    let payload = match elt {
+        Elt::Type(t) => json_of_t_list::<L, C>(t, strip_root),
+        Elt::Decl(d) => json_of_decl::<L, C>(d, strip_root),
+    };
+    let kind = match elt {
+        Elt::Type(t) => string_of_ctor_t(t),
+        Elt::Decl(d) => string_of_ctor_decl(d),
+    };
+    let mut obj = vec![("kind".to_string(), Json::String(kind.to_string()))];
+    obj.extend(payload);
+    Json::Object(obj.into_iter().collect())
+}
+
+#[allow(non_snake_case)]
+pub fn dump_t_EXPOSES_ABSTRACT_LOCS<L: Debug + Clone + Dupe>(t: &Ty<L>) -> String {
+    dump_t(DEFAULT_DEPTH, t)
+}
+
+#[allow(non_snake_case)]
+pub fn dump_elt_EXPOSES_ABSTRACT_LOCS<L: Debug + Clone + Dupe>(elt: &Elt<L>) -> String {
+    dump_elt(DEFAULT_DEPTH, elt)
+}

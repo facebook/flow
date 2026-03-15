@@ -1,0 +1,1568 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+use std::rc::Rc;
+
+use flow_typing_type::type_::GenericTData;
+use flow_typing_type::type_::TypeAppTData;
+
+// Disambiguate helpers vs mod re-exports
+use super::helpers::mk_typeapp_instance_annot;
+use super::helpers::*;
+use super::*;
+
+pub(super) fn destruct(
+    cx: &Context,
+    trace: DepthTrace,
+    reason: &Reason,
+    kind: DestructKind,
+    t: &Type,
+    selector: &Selector,
+    tout: &Tvar,
+    id: i32,
+) -> Result<(), FlowJsException> {
+    let annot = match kind {
+        DestructKind::DestructAnnot => true,
+        DestructKind::DestructInfer => false,
+    };
+    eval_selector(cx, Some(trace), annot, reason, t, selector, tout, id)
+}
+
+pub(super) fn eval_selector(
+    cx: &Context,
+    trace: Option<DepthTrace>,
+    annot: bool,
+    reason: &Reason,
+    curr_t: &Type,
+    selector: &Selector,
+    tvar: &Tvar,
+    id: i32,
+) -> Result<(), FlowJsException> {
+    use flow_common::reason::VirtualReasonDesc;
+    use flow_data_structure_wrapper::ord_set::FlowOrdSet;
+    use flow_typing_flow_common::obj_type;
+    use flow_typing_type::type_::DefT;
+    use flow_typing_type::type_::DefTInner;
+    use flow_typing_type::type_::LookupAction;
+    use flow_typing_type::type_::LookupKind;
+    use flow_typing_type::type_::hint_unavailable;
+    use flow_typing_type::type_util::mk_named_prop;
+
+    let use_t = match selector {
+        Selector::Prop(name_str, has_default) => {
+            let name = Name::new(name_str.dupe());
+            let lookup_ub = || -> Result<UseT, FlowJsException> {
+                let use_op = unknown_use();
+                let action = LookupAction::ReadProp {
+                    use_op: use_op.dupe(),
+                    obj_t: curr_t.dupe(),
+                    tout: tvar.dupe(),
+                };
+                // LookupT unifies with the default with tvar. To get around that, we can create some
+                // indirection with a fresh tvar in between to ensure that we only add a lower bound
+                let default_tout = flow_typing_tvar::mk_where_result(cx, reason.dupe(), |tout| {
+                    flow_opt(
+                        cx,
+                        trace,
+                        (
+                            tout,
+                            &UseT::new(UseTInner::UseT(
+                                use_op.dupe(),
+                                Type::new(TypeInner::OpenT(tvar.dupe())),
+                            )),
+                        ),
+                    )?;
+                    Ok::<(), FlowJsException>(())
+                })?;
+                let void_reason = tvar.reason().dupe().replace_desc(VirtualReasonDesc::RVoid);
+                let lookup_kind = LookupKind::NonstrictReturning(
+                    Some((
+                        Type::new(TypeInner::DefT(void_reason, DefT::new(DefTInner::VoidT))),
+                        default_tout,
+                    )),
+                    None,
+                );
+                Ok(UseT::new(UseTInner::LookupT {
+                    reason: reason.dupe(),
+                    lookup_kind: Box::new(lookup_kind),
+                    try_ts_on_failure: Rc::from([]),
+                    propref: Box::new(mk_named_prop(reason.dupe(), false, name.dupe())),
+                    lookup_action: Box::new(action),
+                    method_accessible: false,
+                    ids: Some(FlowOrdSet::new()),
+                    ignore_dicts: false,
+                }))
+            };
+            let getprop_ub = || -> UseT {
+                UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+                    use_op: unknown_use(),
+                    reason: reason.dupe(),
+                    id: Some(id),
+                    from_annot: annot,
+                    skip_optional: false,
+                    propref: Box::new(mk_named_prop(reason.dupe(), false, name.dupe())),
+                    tout: Box::new(tvar.dupe()),
+                    hint: hint_unavailable(),
+                })))
+            };
+            if *has_default {
+                match curr_t.deref() {
+                    TypeInner::DefT(_, def_t) if matches!(&**def_t, DefTInner::NullT) => {
+                        getprop_ub()
+                    }
+                    TypeInner::DefT(_, def_t) => {
+                        if let DefTInner::ObjT(obj) = &**def_t {
+                            if matches!(obj.proto_t.deref(), TypeInner::ObjProtoT(_))
+                                && obj_type::is_exact(&obj.flags.obj_kind)
+                            {
+                                lookup_ub()?
+                            } else {
+                                getprop_ub()
+                            }
+                        } else {
+                            getprop_ub()
+                        }
+                    }
+                    _ => getprop_ub(),
+                }
+            } else {
+                getprop_ub()
+            }
+        }
+        Selector::Elem(key_t) => UseT::new(UseTInner::GetElemT {
+            use_op: unknown_use(),
+            reason: reason.dupe(),
+            id: None,
+            from_annot: annot,
+            skip_optional: false,
+            access_iterables: false,
+            key_t: key_t.dupe(),
+            tout: Box::new(tvar.dupe()),
+        }),
+        Selector::ObjRest(xs) => UseT::new(UseTInner::ObjRestT(
+            reason.dupe(),
+            xs.iter().map(|x| x.to_string()).collect(),
+            Type::new(TypeInner::OpenT(tvar.dupe())),
+            id,
+        )),
+        Selector::ArrRest(i) => UseT::new(UseTInner::ArrRestT(
+            unknown_use(),
+            reason.dupe(),
+            *i,
+            Type::new(TypeInner::OpenT(tvar.dupe())),
+        )),
+        Selector::Default => UseT::new(UseTInner::FilterOptionalT(
+            unknown_use(),
+            Type::new(TypeInner::OpenT(tvar.dupe())),
+        )),
+    };
+    flow_opt(cx, trace, (curr_t, &use_t))
+}
+
+pub(super) fn evaluate_type_destructor(
+    cx: &Context,
+    trace: DepthTrace,
+    use_op: UseOp,
+    reason: &Reason,
+    t: &Type,
+    d: &Destructor,
+    tvar: &Tvar,
+) -> Result<(), FlowJsException> {
+    // As an optimization, unwrap resolved tvars so that they are only evaluated
+    // once to an annotation instead of a tvar that gets a bound on both sides.
+    let t = drop_resolved(cx, t);
+    match t.deref() {
+        // | OpenT _
+        TypeInner::OpenT(_) => {
+            let x = UseT::new(UseTInner::EvalTypeDestructorT {
+                destructor_use_op: use_op,
+                reason: reason.dupe(),
+                repos: None,
+                destructor: Box::new(d.clone()),
+                tout: Box::new(tvar.dupe()),
+            });
+            rec_flow(cx, trace, (&t, &x))
+        }
+        // | GenericT { bound = OpenT _; _ } ->
+        TypeInner::GenericT(box GenericTData {
+            bound,
+            reason: g_reason,
+            name,
+            id,
+            no_infer,
+        }) if matches!(bound.deref(), TypeInner::OpenT(_)) => {
+            let x = UseT::new(UseTInner::EvalTypeDestructorT {
+                destructor_use_op: use_op,
+                reason: reason.dupe(),
+                repos: None,
+                destructor: Box::new(d.clone()),
+                tout: Box::new(tvar.dupe()),
+            });
+            rec_flow(cx, trace, (&t, &x))
+        }
+        TypeInner::GenericT(box GenericTData {
+            bound,
+            reason: g_reason,
+            name,
+            id,
+            no_infer,
+        }) => {
+            if let TypeInner::AnnotT(r, inner_t, use_desc) = bound.deref() {
+                let x = UseT::new(UseTInner::EvalTypeDestructorT {
+                    destructor_use_op: use_op,
+                    reason: g_reason.dupe(),
+                    repos: Some((r.dupe(), *use_desc)),
+                    destructor: Box::new(d.clone()),
+                    tout: Box::new(tvar.dupe()),
+                });
+                let generic_t = Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                    reason: g_reason.dupe(),
+                    name: name.dupe(),
+                    id: id.clone(),
+                    bound: inner_t.dupe(),
+                    no_infer: *no_infer,
+                })));
+                rec_flow(cx, trace, (&generic_t, &x))
+            } else {
+                eval_destructor(cx, trace, use_op, reason, &t, d, tvar)
+            }
+        }
+        TypeInner::EvalT { .. } => {
+            let x = UseT::new(UseTInner::EvalTypeDestructorT {
+                destructor_use_op: use_op,
+                reason: reason.dupe(),
+                repos: None,
+                destructor: Box::new(d.clone()),
+                tout: Box::new(tvar.dupe()),
+            });
+            rec_flow(cx, trace, (&t, &x))
+        }
+        TypeInner::AnnotT(r, inner_t, use_desc) => {
+            let x = UseT::new(UseTInner::EvalTypeDestructorT {
+                destructor_use_op: use_op,
+                reason: reason.dupe(),
+                repos: Some((r.dupe(), *use_desc)),
+                destructor: Box::new(d.clone()),
+                tout: Box::new(tvar.dupe()),
+            });
+            rec_flow(cx, trace, (inner_t, &x))
+        }
+        _ => eval_destructor(cx, trace, use_op, reason, &t, d, tvar),
+    }
+}
+
+// and mk_type_destructor cx ~trace use_op reason t d id =
+pub(super) fn mk_type_destructor(
+    cx: &Context,
+    trace: DepthTrace,
+    use_op: UseOp,
+    reason: &Reason,
+    t: &Type,
+    d: &Destructor,
+    id: eval::Id,
+) -> Result<Type, FlowJsException> {
+    // let evaluated = Context.evaluated cx in
+    let evaluated = cx.evaluated();
+    if id.from_type_sig()
+        && type_subst::free_var_finder(
+            cx,
+            None,
+            &Type::new(TypeInner::EvalT {
+                type_: t.dupe(),
+                defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
+                    use_op.dupe(),
+                    reason.dupe(),
+                    Rc::new(d.clone()),
+                )),
+                id: id.dupe(),
+            }),
+        )
+        .is_empty()
+    {
+        let result = match evaluated.get(&id) {
+            Some(cached_t) => cached_t.dupe(),
+            None => {
+                let cx_clone = cx.dupe();
+                let use_op_clone = use_op.dupe();
+                let reason_clone = reason.dupe();
+                let d_clone = d.clone();
+                let trace = DepthTrace::dummy_trace();
+                flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t.dupe(), move |t| {
+                    let cx = &cx_clone;
+                    crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                        cx,
+                        reason_clone.dupe(),
+                        |tvar_reason, tvar_id| {
+                            let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
+                            let errors = cx.errors();
+                            let cache_snapshot = cx.take_cache_snapshot();
+                            evaluate_type_destructor(
+                                cx,
+                                trace,
+                                use_op_clone.dupe(),
+                                &reason_clone,
+                                &t,
+                                &d_clone,
+                                &tvar,
+                            )
+                            .expect("Should not be under speculation");
+                            cx.restore_cache_snapshot(cache_snapshot);
+                            cx.reset_errors(errors);
+                        },
+                    )
+                })
+            }
+        };
+        let mut evaluated = cx.evaluated();
+        evaluated.insert(id, result.dupe());
+        cx.set_evaluated(evaluated);
+        Ok(result)
+    } else {
+        let result = match evaluated.get(&id) {
+            Some(cached_t) => cached_t.dupe(),
+            None => {
+                let use_op_clone = use_op.dupe();
+                let reason_clone = reason.dupe();
+                let t_clone = t.dupe();
+                let d_clone = d.clone();
+                let id_clone = id.dupe();
+                flow_typing_tvar::mk_no_wrap_where_result(
+                    cx,
+                    reason.dupe(),
+                    move |tvar_reason, tvar_id| {
+                        let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
+                        let mut evaluated = cx.evaluated();
+                        evaluated.insert(id_clone, Type::new(TypeInner::OpenT(tvar.dupe())));
+                        cx.set_evaluated(evaluated);
+                        evaluate_type_destructor(
+                            cx,
+                            trace,
+                            use_op_clone,
+                            &reason_clone,
+                            &t_clone,
+                            &d_clone,
+                            &tvar,
+                        )
+                    },
+                )?
+            }
+        };
+        if !flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, t)
+            && !flow_js_utils::tvar_visitors::has_unresolved_tvars_in_destructors(cx, d)
+        {
+            crate::tvar_resolver::resolve(
+                cx,
+                crate::tvar_resolver::default_no_lowers,
+                true,
+                &result,
+            );
+        }
+        Ok(result)
+    }
+}
+
+pub(super) fn eval_destructor(
+    cx: &Context,
+    trace: DepthTrace,
+    use_op: UseOp,
+    reason: &Reason,
+    t: &Type,
+    d: &Destructor,
+    tout: &Tvar,
+) -> Result<(), FlowJsException> {
+    if let Destructor::MappedType {
+        homomorphic: MappedTypeHomomorphicFlag::Unspecialized,
+        mapped_type_flags,
+        property_type,
+        distributive_tparam_name: _,
+    } = d
+    {
+        // Non-homomorphic mapped types have their own special resolution code, so they do not fit well
+        // into the structure of the rest of this function. We handle them upfront instead.
+        let mapped_t = crate::object_kit::mapped_type_of_keys(
+            cx,
+            trace,
+            use_op.dupe(),
+            reason,
+            t,
+            property_type,
+            mapped_type_flags,
+        );
+        let mapped_t = mapped_t?;
+        // Intentional unknown_use for the tout Flow
+        return rec_flow(
+            cx,
+            trace,
+            (
+                &mapped_t,
+                &UseT::new(UseTInner::UseT(
+                    unknown_use(),
+                    Type::new(TypeInner::OpenT(tout.dupe())),
+                )),
+            ),
+        );
+    }
+
+    let destruct_union = |f: Option<Box<dyn Fn(Type) -> Type>>,
+                          r: Reason,
+                          members: Vec<Type>,
+                          upper: UseT|
+     -> Result<(), FlowJsException> {
+        let f: Box<dyn Fn(Type) -> Type> = f.unwrap_or_else(|| Box::new(|t| t));
+        let destructor = TypeDestructorT::new(TypeDestructorTInner(
+            use_op.dupe(),
+            reason.dupe(),
+            Rc::new(d.clone()),
+        ));
+        // ResolveUnionT resolves in reverse order, so rev_map here so we
+        // resolve in the original order.
+        let mut unresolved: Vec<Type> = members
+            .into_iter()
+            .rev()
+            .map(|t| flow_cache::eval::id(cx, f(t), destructor.dupe()))
+            .collect();
+        let first = unresolved.remove(0);
+        let u = UseT::new(UseTInner::ResolveUnionT {
+            reason: r,
+            unresolved: unresolved.into(),
+            resolved: Rc::from([]),
+            upper: Box::new(upper),
+            id: flow_common::reason::mk_id() as i32,
+        });
+        rec_flow(cx, trace, (&first, &u))
+    };
+
+    let destruct_maybe = |f: Option<Box<dyn Fn(Type) -> Type>>,
+                          r: Reason,
+                          inner_t: Type,
+                          upper: UseT|
+     -> Result<(), FlowJsException> {
+        let null_or_void_reason = r.dupe().replace_desc_new(VirtualReasonDesc::RNullOrVoid);
+        let null = null::make(null_or_void_reason.dupe());
+        let void = void::make(null_or_void_reason.dupe());
+        destruct_union(f, null_or_void_reason, vec![inner_t, null, void], upper)
+    };
+
+    let destruct_optional = |f: Option<Box<dyn Fn(Type) -> Type>>,
+                             r: Reason,
+                             inner_t: Type,
+                             upper: UseT|
+     -> Result<(), FlowJsException> {
+        let void_reason = r.dupe().replace_desc_new(VirtualReasonDesc::RVoid);
+        let void = void::make(void_reason.dupe());
+        destruct_union(f, void_reason, vec![inner_t, void], upper)
+    };
+
+    let destruct_and_preserve_nominal_t =
+        |r: &Reason, nominal_type: &Rc<NominalType>| -> Result<(), FlowJsException> {
+            let eval_t = |inner_t: &Type| -> Result<Type, FlowJsException> {
+                let tvar_id = flow_typing_tvar::mk_no_wrap(cx, reason);
+                // We have to eagerly evaluate these destructors when possible because
+                // various other systems, like type_filter, expect NominalT underlying_t upper_t,
+                // and lower_t to be inspectable
+                eagerly_eval_destructor_if_resolved(
+                    cx,
+                    trace,
+                    use_op.dupe(),
+                    reason,
+                    inner_t,
+                    d,
+                    tvar_id,
+                )
+            };
+
+            let underlying_t = match &nominal_type.underlying_t {
+                nominal::UnderlyingT::FullyOpaque => nominal::UnderlyingT::FullyOpaque,
+                nominal::UnderlyingT::CustomError {
+                    t: inner_t,
+                    custom_error_loc,
+                } => nominal::UnderlyingT::CustomError {
+                    t: eval_t(inner_t)?,
+                    custom_error_loc: custom_error_loc.dupe(),
+                },
+                nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } => {
+                    nominal::UnderlyingT::OpaqueWithLocal {
+                        t: eval_t(inner_t)?,
+                    }
+                }
+            };
+            let lower_t = match nominal_type.lower_t.as_ref() {
+                Some(lt) => Some(eval_t(lt)?),
+                None => None,
+            };
+            let upper_t = match nominal_type.upper_t.as_ref() {
+                Some(ut) => Some(eval_t(ut)?),
+                None => None,
+            };
+            let nominal_t = Type::new(TypeInner::NominalT {
+                reason: r.dupe(),
+                nominal_type: Rc::new(NominalType::new(NominalTypeInner {
+                    nominal_id: nominal_type.nominal_id.clone(),
+                    underlying_t,
+                    lower_t,
+                    upper_t,
+                    nominal_type_args: nominal_type.nominal_type_args.dupe(),
+                })),
+            });
+            rec_flow_t(
+                cx,
+                trace,
+                use_op.dupe(),
+                (&nominal_t, &Type::new(TypeInner::OpenT(tout.dupe()))),
+            )
+        };
+
+    let should_destruct_union = || -> bool {
+        match d {
+            Destructor::ConditionalType {
+                distributive_tparam_name,
+                ..
+            } => distributive_tparam_name.is_some(),
+            Destructor::ReactDRO(_) if let TypeInner::UnionT(_, rep) = t.deref() => {
+                if !rep.is_optimized_finally() {
+                    rep.optimize_enum_only(|members| {
+                        flow_typing_visitors::type_mapper::union_flatten(cx, members.duped())
+                    });
+                }
+                rep.check_enum().is_none()
+            }
+            _ => true,
+        }
+    };
+
+    match (t.deref(), d) {
+        (
+            TypeInner::GenericT(box GenericTData {
+                bound,
+                reason: r,
+                id: g_id,
+                name,
+                no_infer,
+            }),
+            _,
+        ) if let TypeInner::NominalT { nominal_type, .. } = bound.deref()
+            && let nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } =
+                &nominal_type.underlying_t
+            && matches!(&nominal_type.nominal_id, nominal::Id::UserDefinedOpaqueTypeId(aloc_id, _)
+                if aloc_id.0.source() == Some(cx.file())) =>
+        {
+            let new_generic = Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                bound: inner_t.dupe(),
+                reason: r.dupe(),
+                id: g_id.clone(),
+                name: name.dupe(),
+                no_infer: *no_infer,
+            })));
+            eval_destructor(cx, trace, use_op, reason, &new_generic, d, tout)
+        }
+        (
+            TypeInner::GenericT(box GenericTData {
+                bound,
+                reason: r,
+                id: g_id,
+                name,
+                no_infer,
+            }),
+            _,
+        ) if let TypeInner::NominalT { nominal_type, .. } = bound.deref()
+            && let nominal::UnderlyingT::CustomError {
+                t: inner_t,
+                custom_error_loc: _,
+            } = &nominal_type.underlying_t =>
+        {
+            let new_generic = Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                bound: inner_t.dupe(),
+                reason: r.dupe(),
+                id: g_id.clone(),
+                name: name.dupe(),
+                no_infer: *no_infer,
+            })));
+            eval_destructor(cx, trace, use_op, reason, &new_generic, d, tout)
+        }
+        (
+            TypeInner::NominalT {
+                reason: r,
+                nominal_type,
+            },
+            Destructor::ReactDRO(_),
+        ) => destruct_and_preserve_nominal_t(r, nominal_type),
+        (
+            TypeInner::NominalT {
+                reason: _,
+                nominal_type,
+            },
+            _,
+        ) if matches!(&nominal_type.nominal_id, nominal::Id::UserDefinedOpaqueTypeId(aloc_id, _)
+                    if aloc_id.0.source() == Some(cx.file()))
+            && let nominal::UnderlyingT::OpaqueWithLocal { t: inner_t } =
+                &nominal_type.underlying_t =>
+        {
+            eval_destructor(cx, trace, use_op, reason, inner_t, d, tout)
+        }
+        (
+            TypeInner::NominalT {
+                reason: _,
+                nominal_type,
+            },
+            _,
+        ) if matches!(
+            &nominal_type.nominal_id,
+            nominal::Id::UserDefinedOpaqueTypeId(_, _)
+        ) && let nominal::UnderlyingT::CustomError {
+            t: inner_t,
+            custom_error_loc: _,
+        } = &nominal_type.underlying_t =>
+        {
+            eval_destructor(cx, trace, use_op, reason, inner_t, d, tout)
+        }
+        // Specialize TypeAppTs before evaluating them so that we can handle special
+        // cases. Like the union case below. mk_typeapp_instance will return an AnnotT
+        // which will be fully resolved using the AnnotT case above.
+        (
+            TypeInner::GenericT(box GenericTData {
+                bound,
+                reason: reason_tapp,
+                id: g_id,
+                name,
+                no_infer,
+            }),
+            _,
+        ) if let TypeInner::TypeAppT(box TypeAppTData {
+            reason: _,
+            use_op: use_op_tapp,
+            type_: c,
+            targs,
+            from_value,
+            use_desc: _,
+        }) = bound.deref() =>
+        {
+            let destructor = TypeDestructorT::new(TypeDestructorTInner(
+                use_op.dupe(),
+                reason.dupe(),
+                Rc::new(d.clone()),
+            ));
+            let specialized_t = mk_typeapp_instance_annot(
+                cx,
+                Some(trace),
+                use_op_tapp.dupe(),
+                reason,
+                reason_tapp,
+                *from_value,
+                None,
+                c,
+                targs.dupe(),
+            )?;
+            let generic_t = Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                bound: specialized_t,
+                name: name.dupe(),
+                id: g_id.clone(),
+                reason: reason_tapp.dupe(),
+                no_infer: *no_infer,
+            })));
+            let eval_t = flow_cache::eval::id(cx, generic_t, destructor);
+            rec_flow(
+                cx,
+                trace,
+                (
+                    &eval_t,
+                    &UseT::new(UseTInner::UseT(
+                        use_op.dupe(),
+                        Type::new(TypeInner::OpenT(tout.dupe())),
+                    )),
+                ),
+            )
+        }
+        (
+            TypeInner::TypeAppT(box TypeAppTData {
+                reason: reason_tapp,
+                use_op: use_op_tapp,
+                type_: c,
+                targs,
+                from_value,
+                use_desc: _,
+            }),
+            _,
+        ) => {
+            let destructor = TypeDestructorT::new(TypeDestructorTInner(
+                use_op.dupe(),
+                reason.dupe(),
+                Rc::new(d.clone()),
+            ));
+            let specialized_t = mk_typeapp_instance_annot(
+                cx,
+                Some(trace),
+                use_op_tapp.dupe(),
+                reason,
+                reason_tapp,
+                *from_value,
+                None,
+                c,
+                targs.dupe(),
+            )?;
+            let eval_t = flow_cache::eval::id(cx, specialized_t, destructor);
+            rec_flow_t(
+                cx,
+                trace,
+                unknown_use(),
+                (&eval_t, &Type::new(TypeInner::OpenT(tout.dupe()))),
+            )
+        }
+
+        // If we are destructuring a union, evaluating the destructor on the union
+        // itself may have the effect of splitting the union into separate lower
+        // bounds, which prevents the speculative match process from working.
+        // Instead, we preserve the union by pushing down the destructor onto the
+        // branches of the unions.
+        (TypeInner::UnionT(_, rep), _) if should_destruct_union() => {
+            let members: Vec<Type> = rep.members_iter().duped().collect();
+            destruct_union(
+                None,
+                reason.dupe(),
+                members,
+                UseT::new(UseTInner::UseT(
+                    unknown_use(),
+                    Type::new(TypeInner::OpenT(tout.dupe())),
+                )),
+            )
+        }
+        (
+            TypeInner::GenericT(box GenericTData {
+                reason: _,
+                bound,
+                id: g_id,
+                name,
+                no_infer,
+            }),
+            _,
+        ) if let TypeInner::UnionT(_, rep) = bound.deref()
+            && should_destruct_union() =>
+        {
+            let g_id = g_id.clone();
+            let name = name.dupe();
+            let no_infer = *no_infer;
+            let members: Vec<Type> = rep.members_iter().duped().collect();
+            destruct_union(
+                Some(Box::new(move |bound: Type| {
+                    Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                        reason: reason_of_t(&bound).dupe(),
+                        bound,
+                        id: g_id.clone(),
+                        name: name.dupe(),
+                        no_infer,
+                    })))
+                })),
+                reason.dupe(),
+                members,
+                UseT::new(UseTInner::UseT(
+                    use_op.dupe(),
+                    Type::new(TypeInner::OpenT(tout.dupe())),
+                )),
+            )
+        }
+        (TypeInner::MaybeT(r, inner_t), _) if should_destruct_union() => destruct_maybe(
+            None,
+            r.dupe(),
+            inner_t.dupe(),
+            UseT::new(UseTInner::UseT(
+                unknown_use(),
+                Type::new(TypeInner::OpenT(tout.dupe())),
+            )),
+        ),
+        (
+            TypeInner::GenericT(box GenericTData {
+                reason: g_reason,
+                bound,
+                id: g_id,
+                name,
+                no_infer,
+            }),
+            _,
+        ) if let TypeInner::MaybeT(_, inner_t) = bound.deref()
+            && should_destruct_union() =>
+        {
+            let g_id = g_id.clone();
+            let name = name.dupe();
+            let no_infer = *no_infer;
+            destruct_maybe(
+                Some(Box::new(move |bound: Type| {
+                    Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                        reason: reason_of_t(&bound).dupe(),
+                        bound,
+                        id: g_id.clone(),
+                        name: name.dupe(),
+                        no_infer,
+                    })))
+                })),
+                g_reason.dupe(),
+                inner_t.dupe(),
+                UseT::new(UseTInner::UseT(
+                    use_op.dupe(),
+                    Type::new(TypeInner::OpenT(tout.dupe())),
+                )),
+            )
+        }
+        (
+            TypeInner::OptionalT {
+                reason: r,
+                type_: inner_t,
+                use_desc: _,
+            },
+            _,
+        ) if should_destruct_union() => destruct_optional(
+            None,
+            r.dupe(),
+            inner_t.dupe(),
+            UseT::new(UseTInner::UseT(
+                unknown_use(),
+                Type::new(TypeInner::OpenT(tout.dupe())),
+            )),
+        ),
+        (
+            TypeInner::GenericT(box GenericTData {
+                reason: g_reason,
+                bound,
+                id: g_id,
+                name,
+                no_infer,
+            }),
+            _,
+        ) if let TypeInner::OptionalT {
+            reason: _,
+            type_: inner_t,
+            use_desc: _,
+        } = bound.deref()
+            && should_destruct_union() =>
+        {
+            let g_id = g_id.clone();
+            let name = name.dupe();
+            let no_infer = *no_infer;
+            destruct_optional(
+                Some(Box::new(move |bound: Type| {
+                    Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                        reason: reason_of_t(&bound).dupe(),
+                        bound,
+                        id: g_id.clone(),
+                        name: name.dupe(),
+                        no_infer,
+                    })))
+                })),
+                g_reason.dupe(),
+                inner_t.dupe(),
+                UseT::new(UseTInner::UseT(
+                    use_op.dupe(),
+                    Type::new(TypeInner::OpenT(tout.dupe())),
+                )),
+            )
+        }
+        (TypeInner::AnnotT(r, inner_t, use_desc), _) => {
+            let repos_t = helpers::reposition_reason(cx, Some(trace), r, *use_desc, inner_t)?;
+            let destructor = TypeDestructorT::new(TypeDestructorTInner(
+                use_op.dupe(),
+                reason.dupe(),
+                Rc::new(d.clone()),
+            ));
+            let eval_t = flow_cache::eval::id(cx, repos_t, destructor);
+            rec_flow_t(
+                cx,
+                trace,
+                unknown_use(),
+                (&eval_t, &Type::new(TypeInner::OpenT(tout.dupe()))),
+            )
+        }
+        (
+            TypeInner::GenericT(box GenericTData {
+                bound,
+                reason: r,
+                id: g_id,
+                name,
+                no_infer,
+            }),
+            _,
+        ) if let TypeInner::AnnotT(_, inner_t, use_desc) = bound.deref() => {
+            let repos_t = helpers::reposition_reason(cx, Some(trace), r, *use_desc, inner_t)?;
+            let destructor = TypeDestructorT::new(TypeDestructorTInner(
+                use_op.dupe(),
+                reason.dupe(),
+                Rc::new(d.clone()),
+            ));
+            let generic_t = Type::new(TypeInner::GenericT(Box::new(GenericTData {
+                reason: r.dupe(),
+                id: g_id.clone(),
+                name: name.dupe(),
+                bound: repos_t,
+                no_infer: *no_infer,
+            })));
+            let eval_t = flow_cache::eval::id(cx, generic_t, destructor);
+            rec_flow_t(
+                cx,
+                trace,
+                use_op.dupe(),
+                (&eval_t, &Type::new(TypeInner::OpenT(tout.dupe()))),
+            )
+        }
+        _ => {
+            match d {
+                Destructor::NonMaybeType => {
+                    // We intentionally use `unknown_use` here! When we flow to a tout we never
+                    // want to carry a `use_op`. We want whatever `use_op` the tout is used with
+                    // to win.
+                    rec_flow(
+                        cx,
+                        trace,
+                        (
+                            t,
+                            &UseT::new(UseTInner::FilterMaybeT(
+                                unknown_use(),
+                                Type::new(TypeInner::OpenT(tout.dupe())),
+                            )),
+                        ),
+                    )
+                }
+                Destructor::PropertyType { name } => {
+                    let reason_op = reason
+                        .dupe()
+                        .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
+                    let u = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+                        use_op: use_op.dupe(),
+                        reason: reason.dupe(),
+                        id: None,
+                        from_annot: true,
+                        skip_optional: false,
+                        propref: Box::new(flow_typing_type::type_util::mk_named_prop(
+                            reason_op,
+                            false,
+                            name.dupe(),
+                        )),
+                        tout: Box::new(tout.dupe()),
+                        hint: hint_unavailable(),
+                    })));
+                    rec_flow(cx, trace, (t, &u))
+                }
+                Destructor::ElementType { index_type } => {
+                    let u = UseT::new(UseTInner::GetElemT {
+                        use_op: use_op.dupe(),
+                        reason: reason.dupe(),
+                        id: None,
+                        from_annot: true,
+                        skip_optional: false,
+                        access_iterables: false,
+                        key_t: index_type.dupe(),
+                        tout: Box::new(tout.dupe()),
+                    });
+                    rec_flow(cx, trace, (t, &u))
+                }
+                Destructor::OptionalIndexedAccessNonMaybeType { index } => rec_flow(
+                    cx,
+                    trace,
+                    (
+                        t,
+                        &UseT::new(UseTInner::OptionalIndexedAccessT {
+                            use_op: use_op.dupe(),
+                            reason: reason.dupe(),
+                            index: index.dupe(),
+                            tout_tvar: Box::new(tout.dupe()),
+                        }),
+                    ),
+                ),
+                Destructor::OptionalIndexedAccessResultType { void_reason } => {
+                    let void = void::why(void_reason.dupe());
+                    let u = UseT::new(UseTInner::ResolveUnionT {
+                        reason: reason.dupe(),
+                        resolved: vec![void].into(),
+                        unresolved: Rc::from([]),
+                        upper: Box::new(UseT::new(UseTInner::UseT(
+                            unknown_use(),
+                            Type::new(TypeInner::OpenT(tout.dupe())),
+                        ))),
+                        id: flow_common::reason::mk_id() as i32,
+                    });
+                    rec_flow(cx, trace, (t, &u))
+                }
+                Destructor::SpreadType(options, todo_rev, head_slice) => {
+                    use flow_typing_type::type_::object;
+                    let tool = object::ResolveTool::Resolve(object::Resolve::Next);
+                    let acc: Rc<[object::spread::AccElement]> = match head_slice {
+                        Some(x) => vec![object::spread::AccElement::InlineSlice(x.clone())].into(),
+                        None => Rc::from([]),
+                    };
+                    let state = object::spread::State {
+                        todo_rev: todo_rev.clone(),
+                        acc,
+                        spread_id: flow_common::reason::mk_id() as i32,
+                        union_reason: None,
+                        curr_resolve_idx: 0,
+                    };
+                    let u = UseT::new(UseTInner::ObjKitT(
+                        use_op.dupe(),
+                        reason.dupe(),
+                        Box::new(tool),
+                        Box::new(object::Tool::Spread(options.clone(), state)),
+                        Type::new(TypeInner::OpenT(tout.dupe())),
+                    ));
+                    rec_flow(cx, trace, (t, &u))
+                }
+                Destructor::SpreadTupleType {
+                    reason_tuple,
+                    reason_spread: _,
+                    inexact,
+                    resolved: resolved_rev,
+                    unresolved,
+                } => {
+                    let elem_t = flow_typing_tvar::mk(cx, reason_tuple.dupe());
+                    let u = UseT::new(UseTInner::ResolveSpreadT(
+                        use_op.dupe(),
+                        reason_tuple.dupe(),
+                        Box::new(ResolveSpreadType {
+                            rrt_resolved: resolved_rev.clone(),
+                            rrt_unresolved: unresolved.clone(),
+                            rrt_resolve_to: SpreadResolve::ResolveSpreadsToTupleType {
+                                id: flow_common::reason::mk_id() as i32,
+                                inexact: *inexact,
+                                elem_t,
+                                tout: Type::new(TypeInner::OpenT(tout.dupe())),
+                            },
+                        }),
+                    ));
+                    rec_flow(cx, trace, (t, &u))
+                }
+                Destructor::ReactCheckComponentConfig {
+                    props,
+                    allow_ref_in_spread,
+                } => {
+                    use flow_typing_type::type_::object;
+                    let tool = object::ResolveTool::Resolve(object::Resolve::Next);
+                    let u = UseT::new(UseTInner::ObjKitT(
+                        use_op.dupe(),
+                        reason.dupe(),
+                        Box::new(tool),
+                        Box::new(object::Tool::ReactCheckComponentConfig {
+                            props: props.clone(),
+                            allow_ref_in_spread: *allow_ref_in_spread,
+                        }),
+                        Type::new(TypeInner::OpenT(tout.dupe())),
+                    ));
+                    rec_flow(cx, trace, (t, &u))
+                }
+                Destructor::RestType(options, t_prime) => {
+                    use flow_typing_type::type_::object;
+                    let tool = object::ResolveTool::Resolve(object::Resolve::Next);
+                    let state = object::rest::State::One(t_prime.dupe());
+                    let u = UseT::new(UseTInner::ObjKitT(
+                        use_op.dupe(),
+                        reason.dupe(),
+                        Box::new(tool),
+                        Box::new(object::Tool::Rest(options.clone(), state)),
+                        Type::new(TypeInner::OpenT(tout.dupe())),
+                    ));
+                    rec_flow(cx, trace, (t, &u))
+                }
+                Destructor::ExactType => {
+                    use flow_typing_type::type_::object;
+                    rec_flow(
+                        cx,
+                        trace,
+                        (
+                            t,
+                            &UseT::new(UseTInner::ObjKitT(
+                                use_op.dupe(),
+                                reason.dupe(),
+                                Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
+                                Box::new(object::Tool::MakeExact),
+                                Type::new(TypeInner::OpenT(tout.dupe())),
+                            )),
+                        ),
+                    )
+                }
+                Destructor::ReadOnlyType => {
+                    use flow_typing_type::type_::object;
+                    rec_flow(
+                        cx,
+                        trace,
+                        (
+                            t,
+                            &UseT::new(UseTInner::ObjKitT(
+                                use_op.dupe(),
+                                reason.dupe(),
+                                Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
+                                Box::new(object::Tool::ReadOnly),
+                                Type::new(TypeInner::OpenT(tout.dupe())),
+                            )),
+                        ),
+                    )
+                }
+                Destructor::ReactDRO(react_dro) => rec_flow(
+                    cx,
+                    trace,
+                    (
+                        t,
+                        &UseT::new(UseTInner::DeepReadOnlyT(
+                            Box::new(tout.dupe()),
+                            react_dro.clone(),
+                        )),
+                    ),
+                ),
+                Destructor::PartialType => {
+                    use flow_typing_type::type_::object;
+                    rec_flow(
+                        cx,
+                        trace,
+                        (
+                            t,
+                            &UseT::new(UseTInner::ObjKitT(
+                                use_op.dupe(),
+                                reason.dupe(),
+                                Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
+                                Box::new(object::Tool::Partial),
+                                Type::new(TypeInner::OpenT(tout.dupe())),
+                            )),
+                        ),
+                    )
+                }
+                Destructor::RequiredType => {
+                    use flow_typing_type::type_::object;
+                    rec_flow(
+                        cx,
+                        trace,
+                        (
+                            t,
+                            &UseT::new(UseTInner::ObjKitT(
+                                use_op.dupe(),
+                                reason.dupe(),
+                                Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
+                                Box::new(object::Tool::Required),
+                                Type::new(TypeInner::OpenT(tout.dupe())),
+                            )),
+                        ),
+                    )
+                }
+                Destructor::ValuesType => rec_flow(
+                    cx,
+                    trace,
+                    (
+                        t,
+                        &UseT::new(UseTInner::GetValuesT(
+                            reason.dupe(),
+                            Type::new(TypeInner::OpenT(tout.dupe())),
+                        )),
+                    ),
+                ),
+                Destructor::ConditionalType {
+                    distributive_tparam_name,
+                    infer_tparams,
+                    extends_t,
+                    true_t,
+                    false_t,
+                } => {
+                    let u = UseT::new(UseTInner::ConditionalT {
+                        use_op: use_op.dupe(),
+                        reason: reason.dupe(),
+                        distributive_tparam_name: distributive_tparam_name.clone(),
+                        infer_tparams: infer_tparams.dupe(),
+                        extends_t: extends_t.dupe(),
+                        true_t: true_t.dupe(),
+                        false_t: false_t.dupe(),
+                        tout: Box::new(tout.dupe()),
+                    });
+                    rec_flow(cx, trace, (t, &u))
+                }
+                Destructor::TypeMap(tmap) => rec_flow(
+                    cx,
+                    trace,
+                    (
+                        t,
+                        &UseT::new(UseTInner::MapTypeT(
+                            use_op.dupe(),
+                            reason.dupe(),
+                            *tmap,
+                            Type::new(TypeInner::OpenT(tout.dupe())),
+                        )),
+                    ),
+                ),
+                Destructor::ReactElementConfigType => rec_flow(
+                    cx,
+                    trace,
+                    (
+                        t,
+                        &UseT::new(UseTInner::ReactKitT(
+                            use_op.dupe(),
+                            reason.dupe(),
+                            Box::new(react::Tool::GetConfig {
+                                tout: Type::new(TypeInner::OpenT(tout.dupe())),
+                            }),
+                        )),
+                    ),
+                ),
+                Destructor::MappedType {
+                    property_type,
+                    mapped_type_flags,
+                    homomorphic,
+                    distributive_tparam_name,
+                } => {
+                    let (property_type, homomorphic) =
+                        flow_js_utils::substitute_mapped_type_distributive_tparams(
+                            cx,
+                            Some(use_op.dupe()),
+                            distributive_tparam_name.clone(),
+                            property_type.dupe(),
+                            homomorphic.dupe(),
+                            t.dupe(),
+                        );
+                    let selected_keys_opt = match &homomorphic {
+                        MappedTypeHomomorphicFlag::SemiHomomorphic(t) => Some(t.dupe()),
+                        _ => None,
+                    };
+                    use flow_typing_type::type_::object;
+                    let u = UseT::new(UseTInner::ObjKitT(
+                        use_op.dupe(),
+                        reason.dupe(),
+                        Box::new(object::ResolveTool::Resolve(object::Resolve::Next)),
+                        Box::new(object::Tool::ObjectMap {
+                            prop_type: property_type,
+                            mapped_type_flags: *mapped_type_flags,
+                            selected_keys_opt,
+                        }),
+                        Type::new(TypeInner::OpenT(tout.dupe())),
+                    ));
+                    rec_flow(cx, trace, (t, &u))
+                }
+                Destructor::EnumType => {
+                    let u = UseT::new(UseTInner::GetEnumT {
+                        use_op: use_op.dupe(),
+                        reason: reason.dupe(),
+                        orig_t: Some(t.dupe()),
+                        kind: GetEnumKind::GetEnumObject,
+                        tout: Type::new(TypeInner::OpenT(tout.dupe())),
+                    });
+                    rec_flow(cx, trace, (t, &u))
+                }
+            }
+        }
+    }
+}
+
+pub(super) fn eagerly_eval_destructor_if_resolved(
+    cx: &Context,
+    trace: DepthTrace,
+    use_op: UseOp,
+    reason: &Reason,
+    t: &Type,
+    d: &Destructor,
+    tvar: i32,
+) -> Result<Type, FlowJsException> {
+    let tvar_obj = Tvar::new(reason.dupe(), tvar as u32);
+    eval_destructor(cx, trace, use_op.dupe(), reason, t, d, &tvar_obj)?;
+    let result = Type::new(TypeInner::OpenT(Tvar::new(reason.dupe(), tvar as u32)));
+    // Check has_unresolved_tvars first: these use exception-based early exit
+    // and are cheaper than free_var_finder which traverses the entire type.
+    // Due to short-circuit evaluation, if unresolved tvars are found, the
+    // more expensive free_var_finder calls are skipped entirely.
+    if flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, t)
+        || flow_js_utils::tvar_visitors::has_unresolved_tvars_in_destructors(cx, d)
+        || !type_subst::free_var_finder(cx, None, t).is_empty()
+        || !type_subst::free_var_finder_in_destructor(cx, None, d).is_empty()
+    {
+        Ok(result)
+    } else {
+        crate::tvar_resolver::resolve(cx, crate::tvar_resolver::default_no_lowers, true, &result);
+        let t = singleton_concrete_type_for_inspection(cx, reason, &result)?;
+        Ok(match t.deref() {
+            TypeInner::OpenT(inner_tvar) => {
+                let id = inner_tvar.id() as i32;
+                let (_, constraints) = cx.find_constraints(id);
+                match constraints {
+                    constraint::Constraints::FullyResolved(s) => cx.force_fully_resolved_tvar(&s),
+                    _ => t,
+                }
+            }
+            _ => t,
+        })
+    }
+}
+
+pub(super) fn mk_possibly_evaluated_destructor_for_annotations(
+    cx: &Context,
+    use_op: UseOp,
+    reason: &Reason,
+    t: &Type,
+    d: &Destructor,
+    id: eval::Id,
+) -> Result<Type, FlowJsException> {
+    let eval_t = Type::new(TypeInner::EvalT {
+        type_: t.dupe(),
+        defer_use_t: TypeDestructorT::new(TypeDestructorTInner(
+            use_op.dupe(),
+            reason.dupe(),
+            Rc::new(d.clone()),
+        )),
+        id: id.dupe(),
+    });
+    let evaluated = cx.evaluated();
+    if evaluated.get(&id).is_none() {
+        if flow_js_utils::tvar_visitors::has_unresolved_tvars(cx, &eval_t) {
+            panic!(
+                "There are unresolved tvars in the evaluated type from annotations: {}",
+                flow_typing_debug::dump_t(Some(3), cx, &eval_t)
+            );
+        } else if flow_js_utils::tvar_visitors::has_placeholders(cx, &eval_t) {
+            panic!(
+                "There are placeholders in the evaluated type from annotations: {}",
+                flow_typing_debug::dump_t(Some(3), cx, &eval_t)
+            );
+        }
+
+        if type_subst::free_var_finder(cx, None, &eval_t).is_empty() {
+            let trace = DepthTrace::dummy_trace();
+            let cx_clone = cx.dupe();
+            let use_op_clone = use_op.dupe();
+            let reason_clone = reason.dupe();
+            let d_clone = d.clone();
+            let result =
+                flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t.dupe(), move |t| {
+                    let cx = &cx_clone;
+                    crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                        cx,
+                        reason_clone.dupe(),
+                        |tvar_reason, tvar_id| {
+                            let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
+                            evaluate_type_destructor(
+                                cx,
+                                trace,
+                                use_op_clone.dupe(),
+                                &reason_clone,
+                                &t,
+                                &d_clone,
+                                &tvar,
+                            )
+                            .expect("Should not be under speculation")
+                        },
+                    )
+                });
+            let mut evaluated = cx.evaluated();
+            evaluated.insert(id, result);
+            cx.set_evaluated(evaluated);
+        } else {
+            let try_evaluate = |stuck_eval_kind: nominal::StuckEvalKind,
+                                stuck_eval_targs: Vec<Type>,
+                                upper_t: Option<Type>| {
+                let trace = DepthTrace::dummy_trace();
+                let cx_for_map = cx.dupe();
+                let use_op_for_map = use_op.dupe();
+                let reason_for_map = reason.dupe();
+                let d_for_map = d.clone();
+                let stuck_eval_kind_for_map = stuck_eval_kind.clone();
+                let stuck_eval_targs_for_map = stuck_eval_targs.clone();
+                let upper_t_for_map = upper_t.clone();
+                let result = flow_js_utils::map_on_resolved_type(
+                    cx,
+                    reason.dupe(),
+                    t.dupe(),
+                    move |t_resolved| {
+                        let cx = &cx_for_map;
+                        let use_op = use_op_for_map.dupe();
+                        let reason = reason_for_map.dupe();
+                        let d = d_for_map.clone();
+                        let stuck_eval_kind = stuck_eval_kind_for_map.clone();
+                        let stuck_eval_targs = stuck_eval_targs_for_map.clone();
+                        let upper_t = upper_t_for_map.clone();
+                        crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                            cx,
+                            reason.dupe(),
+                            |tvar_reason, tvar_id| {
+                                let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
+                                let cx_for_spec = cx.dupe();
+                                let use_op_spec = use_op.dupe();
+                                let reason_spec = reason.dupe();
+                                let t_spec = t_resolved.dupe();
+                                let d_spec = d.clone();
+                                let tvar_spec = tvar.dupe();
+                                let result =
+                                    crate::speculation_kit::try_singleton_custom_throw_on_failure(
+                                        cx,
+                                        Box::new(move || {
+                                            evaluate_type_destructor(
+                                                &cx_for_spec,
+                                                trace,
+                                                use_op_spec,
+                                                &reason_spec,
+                                                &t_spec,
+                                                &d_spec,
+                                                &tvar_spec,
+                                            )?;
+                                            Ok(())
+                                        }),
+                                    );
+                                match result {
+                                    Ok(()) => {}
+                                    Err(_) => {
+                                        let nominal_type_args: Rc<
+                                            [(SubstName, Reason, Type, Polarity)],
+                                        > = stuck_eval_targs
+                                            .iter()
+                                            .enumerate()
+                                            .map(|(i, t_arg)| {
+                                                (
+                                                    SubstName::synthetic(
+                                                        i.to_string().into(),
+                                                        None,
+                                                        vec![],
+                                                    ),
+                                                    reason_of_t(t_arg).dupe(),
+                                                    t_arg.dupe(),
+                                                    Polarity::Neutral,
+                                                )
+                                            })
+                                            .collect();
+                                        let stuck = Type::new(TypeInner::NominalT {
+                                            reason: reason.dupe(),
+                                            nominal_type: Rc::new(NominalType::new(
+                                                NominalTypeInner {
+                                                    nominal_id: nominal::Id::StuckEval(
+                                                        stuck_eval_kind.clone(),
+                                                    ),
+                                                    underlying_t: nominal::UnderlyingT::FullyOpaque,
+                                                    lower_t: None,
+                                                    upper_t: upper_t.dupe(),
+                                                    nominal_type_args,
+                                                },
+                                            )),
+                                        });
+                                        rec_flow_t(
+                                            cx,
+                                            trace,
+                                            unknown_use(),
+                                            (&stuck, &Type::new(TypeInner::OpenT(tvar.dupe()))),
+                                        )
+                                        .expect("Should not be under speculation")
+                                    }
+                                }
+                            },
+                        )
+                    },
+                );
+                let mut evaluated = cx.evaluated();
+                evaluated.insert(id.dupe(), result);
+                cx.set_evaluated(evaluated);
+            };
+
+            match d {
+                // For the following generic EvalTs, if they can be successfully
+                // evaluated, then we will take that as the eval result. While it's certainly unsafe
+                // (See https://fburl.com/flow-generic-indexed-access-unsafe), TS has the same issue, and
+                // too much code already depends on the broken behavior.
+                //
+                //  However, if they cannot be successfully evaluated, we should turn them into the stuck form
+                // (e.g. `T['foo']`) where `T` has no upper bound)
+                Destructor::NonMaybeType => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForNonMaybeType,
+                        vec![t.dupe()],
+                        Some(t.dupe()),
+                    );
+                }
+                Destructor::PropertyType { name } => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForPropertyType { name: name.dupe() },
+                        vec![t.dupe()],
+                        None,
+                    );
+                }
+                Destructor::ElementType { index_type } => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForElementType,
+                        vec![t.dupe(), index_type.dupe()],
+                        None,
+                    );
+                }
+                Destructor::OptionalIndexedAccessNonMaybeType {
+                    index: OptionalIndexedAccessIndex::OptionalIndexedAccessStrLitIndex(name),
+                } => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType {
+                            name: name.dupe(),
+                        },
+                        vec![t.dupe()],
+                        None,
+                    );
+                }
+                Destructor::OptionalIndexedAccessNonMaybeType {
+                    index: OptionalIndexedAccessIndex::OptionalIndexedAccessTypeIndex(index),
+                } => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType,
+                        vec![t.dupe(), index.dupe()],
+                        None,
+                    );
+                }
+                Destructor::OptionalIndexedAccessResultType { void_reason: _ } => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForOptionalIndexedAccessResultType,
+                        vec![t.dupe()],
+                        None,
+                    );
+                }
+                Destructor::ExactType => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForExactType,
+                        vec![t.dupe()],
+                        None,
+                    );
+                }
+                Destructor::ReadOnlyType => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForReadOnlyType,
+                        vec![t.dupe()],
+                        Some(t.dupe()),
+                    );
+                }
+                Destructor::PartialType => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForPartialType,
+                        vec![t.dupe()],
+                        None,
+                    );
+                }
+                Destructor::RequiredType => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForRequiredType,
+                        vec![t.dupe()],
+                        None,
+                    );
+                }
+                Destructor::ValuesType => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForValuesType,
+                        vec![t.dupe()],
+                        None,
+                    );
+                }
+                Destructor::TypeMap(TypeMap::ObjectKeyMirror) => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForKeyMirrorType,
+                        vec![t.dupe()],
+                        None,
+                    );
+                }
+                Destructor::ReactDRO(ReactDro(_loc, dro_type)) => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForReactDRO(dro_type.clone()),
+                        vec![t.dupe()],
+                        Some(t.dupe()),
+                    );
+                }
+                Destructor::EnumType => {
+                    try_evaluate(
+                        nominal::StuckEvalKind::StuckEvalForEnumType,
+                        vec![t.dupe()],
+                        None,
+                    );
+                }
+                _ => {}
+            }
+        }
+    }
+    Ok(eval_t)
+}

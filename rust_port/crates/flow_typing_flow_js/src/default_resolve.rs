@@ -1,0 +1,233 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+use std::ops::Deref;
+use std::rc::Rc;
+
+use dupe::Dupe;
+use dupe::IterDupedExt;
+use flow_aloc::ALoc;
+use flow_common::reason::Reason;
+use flow_typing_context::Context;
+use flow_typing_flow_common::flow_js_utils::FlowJsException;
+use flow_typing_flow_common::flow_js_utils::callee_recorder;
+use flow_typing_type::type_::AnySource;
+use flow_typing_type::type_::CallAction;
+use flow_typing_type::type_::Cont;
+use flow_typing_type::type_::DefT;
+use flow_typing_type::type_::DefTInner;
+use flow_typing_type::type_::ElemAction;
+use flow_typing_type::type_::LookupAction;
+use flow_typing_type::type_::MethodAction;
+use flow_typing_type::type_::MixedFlavor;
+use flow_typing_type::type_::SpecializedCallee;
+use flow_typing_type::type_::SpreadResolve;
+use flow_typing_type::type_::Tvar;
+use flow_typing_type::type_::Type;
+use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::UseT;
+use flow_typing_type::type_::UseTInner;
+use flow_typing_type::type_::any_t;
+use flow_typing_type::type_::inter_rep;
+use flow_typing_type::type_::react;
+
+pub fn default_resolve_touts(
+    flow: &dyn Fn(Type, Type) -> Result<(), FlowJsException>,
+    resolve_callee: Option<&(Reason, Vec<Type>)>,
+    cx: &Context,
+    loc: ALoc,
+    u: &UseT,
+) -> Result<(), FlowJsException> {
+    let any = any_t::at(AnySource::AnyError(None), loc.dupe());
+    let resolve = |t: Type| flow(any.dupe(), t);
+    let resolve_tvar = |t: &Tvar| flow(any.dupe(), Type::new(TypeInner::OpenT(t.dupe())));
+    let map_opt = |t: &Option<Type>| -> Result<(), FlowJsException> {
+        if let Some(t) = t {
+            flow(any.dupe(), t.dupe())?;
+        }
+        Ok(())
+    };
+    let resolve_specialized_callee = |specialized_callee: &Option<SpecializedCallee>| {
+        let resolve_callee_t = match resolve_callee {
+            None => any.dupe(),
+            Some((r, ts)) if ts.is_empty() => Type::new(TypeInner::DefT(
+                r.dupe(),
+                DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
+            )),
+            Some((_, ts)) if ts.len() == 1 => ts[0].dupe(),
+            Some((r, ts)) => {
+                let mut iter = ts.iter();
+                let t1 = iter.next().unwrap().dupe();
+                let t2 = iter.next().unwrap().dupe();
+                let rest: Rc<[Type]> = iter.duped().collect();
+                Type::new(TypeInner::IntersectionT(
+                    r.dupe(),
+                    inter_rep::make(t1, t2, rest),
+                ))
+            }
+        };
+        callee_recorder::add_callee(
+            cx,
+            callee_recorder::Kind::All,
+            resolve_callee_t,
+            specialized_callee.as_ref(),
+        );
+    };
+    let resolve_method_action = |action: &MethodAction| -> Result<(), FlowJsException> {
+        match action {
+            MethodAction::ChainM {
+                exp_reason: _,
+                lhs_reason: _,
+                methodcalltype,
+                voided_out_collector: _,
+                return_hint: _,
+                specialized_callee,
+            } => {
+                resolve_tvar(&methodcalltype.meth_tout)?;
+                resolve_specialized_callee(specialized_callee);
+                Ok(())
+            }
+            MethodAction::CallM {
+                methodcalltype,
+                return_hint: _,
+                specialized_callee,
+            } => {
+                resolve_tvar(&methodcalltype.meth_tout)?;
+                resolve_specialized_callee(specialized_callee);
+                Ok(())
+            }
+            MethodAction::NoMethodAction(tout) => resolve(tout.dupe()),
+        }
+    };
+    let resolve_lookup_action = |action: &LookupAction| -> Result<(), FlowJsException> {
+        match action {
+            LookupAction::ReadProp { tout, .. } => resolve_tvar(tout),
+            LookupAction::WriteProp { prop_tout, .. } => map_opt(prop_tout),
+            LookupAction::LookupPropForTvarPopulation { .. }
+            | LookupAction::LookupPropForSubtyping { .. }
+            | LookupAction::SuperProp(..)
+            | LookupAction::MatchProp { .. } => Ok(()),
+        }
+    };
+    let resolve_elem_action = |action: &ElemAction| -> Result<(), FlowJsException> {
+        match action {
+            ElemAction::ReadElem { tout, .. } => resolve_tvar(tout),
+            ElemAction::WriteElem { tout, .. } => map_opt(tout),
+            ElemAction::CallElem(_, action) => resolve_method_action(action),
+        }
+    };
+    let resolve_react_tool = |tool: &react::Tool| -> Result<(), FlowJsException> {
+        match tool {
+            react::Tool::CreateElement { tout, .. } => resolve_tvar(tout),
+            react::Tool::ConfigCheck { props } => resolve(props.dupe()),
+            react::Tool::GetConfig { tout } => resolve(tout.dupe()),
+        }
+    };
+    let resolve_spread_resolve = |resolve_tool: &SpreadResolve| -> Result<(), FlowJsException> {
+        match resolve_tool {
+            SpreadResolve::ResolveSpreadsToTupleType { tout, .. } => resolve(tout.dupe()),
+            SpreadResolve::ResolveSpreadsToArrayLiteral { tout, .. } => resolve(tout.dupe()),
+            SpreadResolve::ResolveSpreadsToArray(_, t) => resolve(t.dupe()),
+            SpreadResolve::ResolveSpreadsToMultiflowCallFull(..) => Ok(()),
+            SpreadResolve::ResolveSpreadsToMultiflowPartial(_, _, _, t) => resolve(t.dupe()),
+            SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(..) => Ok(()),
+        }
+    };
+    let resolve_cont = |cont: &Cont| -> Result<(), FlowJsException> {
+        match cont {
+            Cont::Upper(use_) => default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), use_),
+            Cont::Lower(..) => Ok(()),
+        }
+    };
+    match u.deref() {
+        UseTInner::UseT(..) => Ok(()),
+        UseTInner::BindT(_, _, funcalltype) => resolve_tvar(&funcalltype.call_tout),
+        UseTInner::CallT {
+            use_op: _,
+            reason: _,
+            call_action: box CallAction::Funcalltype(funcalltype),
+            return_hint: _,
+        } => {
+            resolve_tvar(&funcalltype.call_tout)?;
+            resolve_specialized_callee(&funcalltype.call_specialized_callee);
+            Ok(())
+        }
+        UseTInner::CallT {
+            use_op: _,
+            reason: _,
+            call_action: box CallAction::ConcretizeCallee(tout),
+            return_hint: _,
+        } => resolve_tvar(tout),
+        UseTInner::ConditionalT { tout, .. } => resolve_tvar(tout),
+        UseTInner::MethodT(_, _, _, _, action) => resolve_method_action(action),
+        UseTInner::PrivateMethodT(data) => resolve_method_action(&data.method_action),
+        UseTInner::SetPropT(_, _, _, _, _, _, topt) => map_opt(topt),
+        UseTInner::SetPrivatePropT(data) => map_opt(&data.tout),
+        UseTInner::GetTypeFromNamespaceT { tout: tvar, .. }
+        | UseTInner::TestPropT { tout: tvar, .. } => resolve_tvar(tvar),
+        UseTInner::GetPrivatePropT(data) => resolve_tvar(&data.tout),
+        UseTInner::GetPropT(data) => resolve_tvar(&data.tout),
+        UseTInner::SetElemT(_, _, _, _, _, topt) => map_opt(topt),
+        UseTInner::GetElemT { tout, .. } => resolve_tvar(tout),
+        UseTInner::CallElemT(_, _, _, _, action) => resolve_method_action(action),
+        UseTInner::GetStaticsT(tvar) | UseTInner::GetProtoT(_, tvar) => resolve_tvar(tvar),
+        UseTInner::SetProtoT(..) => Ok(()),
+        UseTInner::ReposLowerT { .. } | UseTInner::ReposUseT(..) => Ok(()),
+        UseTInner::ConstructorT(data) => resolve(data.tout.dupe()),
+        UseTInner::SuperT(..) => Ok(()),
+        UseTInner::ImplementsT(..) => Ok(()),
+        UseTInner::MixinT(_, t) => resolve(t.dupe()),
+        UseTInner::ToStringT { t_out, .. } => {
+            default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), t_out)
+        }
+        UseTInner::SpecializeT(_, _, _, _, tout) => resolve(tout.dupe()),
+        UseTInner::ThisSpecializeT(_, _, k) => resolve_cont(k),
+        UseTInner::ValueToTypeReferenceT(_, _, _, tvar) => resolve_tvar(tvar),
+        UseTInner::ConcretizeTypeAppsT(..) => Ok(()),
+        UseTInner::LookupT { lookup_action, .. } => resolve_lookup_action(lookup_action),
+        UseTInner::ObjRestT(_, _, t, _)
+        | UseTInner::ObjTestT(_, _, t)
+        | UseTInner::ArrRestT(_, _, _, t) => resolve(t.dupe()),
+        UseTInner::ObjTestProtoT(_, t) => resolve(t.dupe()),
+        UseTInner::GetDictValuesT(_, use_) => {
+            default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), use_)
+        }
+        UseTInner::GetKeysT(_, use_) => {
+            default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), use_)
+        }
+        UseTInner::HasOwnPropT(..) => Ok(()),
+        UseTInner::GetValuesT(_, t) => resolve(t.dupe()),
+        UseTInner::ElemT { action, .. } => resolve_elem_action(action),
+        UseTInner::MapTypeT(_, _, _, t) | UseTInner::ObjKitT(_, _, _, _, t) => resolve(t.dupe()),
+        UseTInner::ReactKitT(_, _, tool) => resolve_react_tool(tool),
+        UseTInner::ConcretizeT { .. } => Ok(()),
+        UseTInner::ResolveSpreadT(_, _, resolve_spread_type) => {
+            resolve_spread_resolve(&resolve_spread_type.rrt_resolve_to)
+        }
+        UseTInner::CondT(_, _, _, t) => resolve(t.dupe()),
+        UseTInner::ExtendsUseT(..) => Ok(()),
+        UseTInner::DestructuringT(_, _, _, tvar, _) => resolve_tvar(tvar),
+        UseTInner::ResolveUnionT { upper, .. } => {
+            default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), upper)
+        }
+        UseTInner::TypeCastT(_, t) => resolve(t.dupe()),
+        UseTInner::GetEnumT { tout, .. } => resolve(tout.dupe()),
+        UseTInner::EnumCastT { .. } | UseTInner::EnumExhaustiveCheckT { .. } => Ok(()),
+        UseTInner::HooklikeT(tvar) | UseTInner::DeepReadOnlyT(tvar, _) => resolve_tvar(tvar),
+        UseTInner::FilterOptionalT(_, t) | UseTInner::FilterMaybeT(_, t) => resolve(t.dupe()),
+        UseTInner::SealGenericT { cont, .. } => resolve_cont(cont),
+        UseTInner::OptionalIndexedAccessT { tout_tvar, .. } => resolve_tvar(tout_tvar),
+        UseTInner::CheckUnusedPromiseT { .. } => Ok(()),
+        UseTInner::WriteComputedObjPropCheckT { .. } => Ok(()),
+        UseTInner::ConvertEmptyPropsToMixedT(_, tout) => resolve(tout.dupe()),
+        UseTInner::ExitRendersT {
+            renders_reason: _,
+            u,
+        } => default_resolve_touts(flow, resolve_callee, cx, loc, u),
+        UseTInner::EvalTypeDestructorT { .. } => Ok(()),
+    }
+}

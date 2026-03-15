@@ -1,0 +1,297 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+use std::sync::Arc;
+
+use dupe::Dupe;
+use flow_aloc::PackedALocTable;
+use flow_common::docblock::Docblock;
+use flow_common::flow_import_specifier::FlowImportSpecifier;
+use flow_common_modulename::HasteModuleInfo;
+use flow_imports_exports::exports::Exports;
+use flow_imports_exports::imports::Imports;
+use flow_parser::ast::Program;
+use flow_parser::file_key::FileKey;
+use flow_parser::loc::Loc;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::package_json::PackageJson;
+use flow_type_sig::packed_type_sig::Module;
+use flow_type_sig::signature_error::TolerableError;
+use parking_lot::RwLock;
+
+use crate::entity::Entity;
+use crate::entity::ResolvedRequires;
+
+#[derive(Clone, Debug, Dupe)]
+pub struct FileEntry {
+    pub(crate) parse: Arc<Entity<Parse>>,
+    pub(crate) haste_info: Arc<Entity<HasteModuleInfo>>,
+    pub(crate) dependents: Arc<RwLock<Option<Vec<FileKey>>>>,
+    pub(crate) alternate_file: Arc<RwLock<Option<FileKey>>>,
+}
+
+impl FileEntry {
+    pub(crate) fn new(
+        parse: Parse,
+        haste_info: Option<HasteModuleInfo>,
+        has_dependents: bool,
+    ) -> Self {
+        Self {
+            parse: Arc::new(Entity::new(parse)),
+            haste_info: Arc::new(if let Some(info) = haste_info {
+                Entity::new(info)
+            } else {
+                Entity::empty()
+            }),
+            dependents: Arc::new(RwLock::new(if has_dependents {
+                Some(Vec::new())
+            } else {
+                None
+            })),
+            alternate_file: Arc::new(RwLock::new(None)),
+        }
+    }
+
+    pub(crate) fn parse(&self) -> &Arc<Entity<Parse>> {
+        &self.parse
+    }
+
+    pub(crate) fn parse_latest(&self) -> Option<Parse> {
+        self.parse.read_latest()
+    }
+
+    pub(crate) fn parse_committed(&self) -> Option<Parse> {
+        self.parse.read_committed()
+    }
+
+    pub(crate) fn haste_info_entity(&self) -> &Entity<HasteModuleInfo> {
+        &self.haste_info
+    }
+
+    #[expect(dead_code)]
+    pub(crate) fn get_haste_info_latest(&self) -> Option<HasteModuleInfo> {
+        self.haste_info.read_latest_clone()
+    }
+
+    pub(crate) fn get_haste_info_committed(&self) -> Option<HasteModuleInfo> {
+        self.haste_info.read_committed_clone()
+    }
+
+    #[expect(dead_code)]
+    pub(crate) fn set_haste_info(&self, info: Option<HasteModuleInfo>) {
+        self.haste_info.advance(info);
+    }
+
+    #[expect(dead_code)]
+    pub(crate) fn add_dependent(&self, dependent: FileKey) {
+        if let Some(deps) = self.dependents.write().as_mut() {
+            if !deps.contains(&dependent) {
+                deps.push(dependent);
+            }
+        }
+    }
+
+    #[expect(dead_code)]
+    pub(crate) fn remove_dependent(&self, dependent: &FileKey) {
+        if let Some(deps) = self.dependents.write().as_mut() {
+            deps.retain(|f| f != dependent);
+        }
+    }
+
+    pub(crate) fn get_dependents(&self) -> Option<Vec<FileKey>> {
+        self.dependents.read().clone()
+    }
+
+    pub(crate) fn get_alternate_file(&self) -> Option<FileKey> {
+        self.alternate_file.read().clone()
+    }
+
+    pub(crate) fn set_alternate_file(&self, alternate: Option<FileKey>) {
+        *self.alternate_file.write() = alternate;
+    }
+}
+
+#[derive(Debug, Clone, Dupe)]
+pub struct TypedParse {
+    pub(crate) file_hash: u64,
+    pub ast: Option<Arc<Program<Loc, Loc>>>,
+    pub docblock: Option<Arc<Docblock>>,
+    pub(crate) aloc_table: Option<Arc<PackedALocTable>>,
+    pub(crate) type_sig: Option<Arc<Module<Loc>>>,
+    pub(crate) file_sig: Option<(Arc<FileSig>, Arc<[TolerableError<Loc>]>)>,
+    pub(crate) exports: Arc<Exports>,
+    pub(crate) requires: Arc<[FlowImportSpecifier]>,
+    pub(crate) resolved_requires: Arc<Entity<ResolvedRequires>>,
+    pub(crate) imports: Arc<Imports>,
+    pub(crate) leader: Arc<Entity<FileKey>>,
+    pub(crate) sig_hash: Arc<Entity<u64>>,
+}
+
+impl TypedParse {
+    #[allow(clippy::too_many_arguments)]
+    pub(crate) fn new(
+        file_hash: u64,
+        ast: Option<Arc<Program<Loc, Loc>>>,
+        docblock: Option<Arc<Docblock>>,
+        aloc_table: Option<Arc<PackedALocTable>>,
+        type_sig: Option<Arc<Module<Loc>>>,
+        file_sig: Option<(Arc<FileSig>, Arc<[TolerableError<Loc>]>)>,
+        exports: Arc<Exports>,
+        requires: Arc<[FlowImportSpecifier]>,
+        resolved_requires: Arc<Entity<ResolvedRequires>>,
+        imports: Arc<Imports>,
+        leader: Arc<Entity<FileKey>>,
+        sig_hash: Arc<Entity<u64>>,
+    ) -> Self {
+        Self {
+            file_hash,
+            ast,
+            docblock,
+            aloc_table,
+            type_sig,
+            file_sig,
+            exports,
+            requires,
+            resolved_requires,
+            imports,
+            leader,
+            sig_hash,
+        }
+    }
+
+    /// Equivalent to OCaml's Parsing_heaps.read_ast_unsafe file_key parse
+    pub fn ast_unsafe(&self, file: &FileKey) -> Arc<Program<Loc, Loc>> {
+        self.ast
+            .as_ref()
+            .unwrap_or_else(|| panic!("AST not found for file: {}", file.as_str()))
+            .dupe()
+    }
+
+    /// Equivalent to OCaml's Parsing_heaps.read_tolerable_file_sig_unsafe file_key parse
+    pub fn tolerable_file_sig_unsafe(
+        &self,
+        file: &FileKey,
+    ) -> (Arc<FileSig>, Arc<[TolerableError<Loc>]>) {
+        self.file_sig
+            .as_ref()
+            .unwrap_or_else(|| panic!("File sig not found for file: {}", file.as_str()))
+            .dupe()
+    }
+
+    /// Equivalent to OCaml's Parsing_heaps.read_aloc_table_unsafe file_key parse
+    pub fn aloc_table_unsafe(&self, file: &FileKey) -> Arc<PackedALocTable> {
+        self.aloc_table
+            .as_ref()
+            .unwrap_or_else(|| panic!("ALocTable not found for file: {}", file.as_str()))
+            .dupe()
+    }
+
+    /// Equivalent to OCaml's Heap.get_type_sig parse
+    pub fn type_sig_unsafe(&self, file: &FileKey) -> Arc<Module<Loc>> {
+        self.type_sig
+            .as_ref()
+            .unwrap_or_else(|| panic!("Type signature not found for file: {}", file.as_str()))
+            .dupe()
+    }
+
+    /// Equivalent to OCaml's accessing requires from parse
+    pub fn requires(&self) -> Arc<[FlowImportSpecifier]> {
+        self.requires.dupe()
+    }
+
+    /// Equivalent to OCaml's Parsing_heaps.Reader_dispatcher.get_resolved_modules_unsafe
+    pub fn resolved_requires_unsafe(&self) -> ResolvedRequires {
+        self.resolved_requires
+            .read_latest_clone()
+            .expect("ResolvedRequires should be set")
+    }
+
+    /// Equivalent to OCaml's Parsing_heaps.Reader_dispatcher.get_leader_unsafe
+    pub fn leader_unsafe(&self) -> FileKey {
+        self.leader.get()
+    }
+
+    /// Equivalent to OCaml's Parsing_heaps.read_docblock_unsafe file_key parse
+    pub fn docblock_unsafe(&self, file: &FileKey) -> Arc<Docblock> {
+        self.docblock
+            .as_ref()
+            .unwrap_or_else(|| panic!("Docblock not found for file: {}", file.as_str()))
+            .dupe()
+    }
+}
+
+#[derive(Debug, Clone, Dupe)]
+pub struct UntypedParse {
+    pub(crate) file_hash: u64,
+}
+
+impl UntypedParse {
+    pub(crate) fn new(file_hash: u64) -> Self {
+        Self { file_hash }
+    }
+}
+
+#[derive(Clone, Debug, Dupe)]
+pub struct PackageParse {
+    pub(crate) file_hash: u64,
+    pub(crate) package_info: Arc<PackageJson>,
+}
+
+impl PackageParse {
+    pub(crate) fn new(file_hash: u64, package_info: Arc<PackageJson>) -> Self {
+        Self {
+            file_hash,
+            package_info,
+        }
+    }
+}
+
+#[derive(Clone, Debug, Dupe)]
+pub enum Parse {
+    Typed(TypedParse),
+    Untyped(UntypedParse),
+    Package(PackageParse),
+}
+
+impl Parse {
+    pub(crate) fn is_typed(&self) -> bool {
+        matches!(self, Parse::Typed(_))
+    }
+
+    #[expect(dead_code)]
+    pub(crate) fn is_untyped(&self) -> bool {
+        matches!(self, Parse::Untyped(_))
+    }
+
+    pub(crate) fn is_package(&self) -> bool {
+        matches!(self, Parse::Package(_))
+    }
+
+    #[expect(dead_code)]
+    pub(crate) fn as_typed(&self) -> Option<&TypedParse> {
+        match self {
+            Parse::Typed(typed) => Some(typed),
+            _ => None,
+        }
+    }
+
+    #[expect(dead_code)]
+    pub(crate) fn as_package(&self) -> Option<&PackageParse> {
+        match self {
+            Parse::Package(pkg) => Some(pkg),
+            _ => None,
+        }
+    }
+
+    pub(crate) fn get_file_hash(&self) -> u64 {
+        match self {
+            Parse::Typed(typed) => typed.file_hash,
+            Parse::Untyped(untyped) => untyped.file_hash,
+            Parse::Package(pkg) => pkg.file_hash,
+        }
+    }
+}

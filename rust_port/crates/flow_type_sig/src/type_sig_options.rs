@@ -1,0 +1,103 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+use dupe::Dupe;
+use flow_common::options::Options;
+use flow_common::relay_options;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_parser::file_key::FileKey;
+use flow_parser::loc::Loc;
+
+pub struct TypeSigOptions {
+    pub munge: bool,
+    pub facebook_key_mirror: bool,
+    pub facebook_fbt: Option<FlowSmolStr>,
+    pub exact_by_default: bool,
+    pub enable_custom_error: bool,
+    pub enable_enums: bool,
+    pub enable_component_syntax: bool,
+    pub component_syntax_enabled_in_config: bool,
+    pub enable_ts_syntax: bool,
+    pub enable_ts_utility_syntax: bool,
+    pub hook_compatibility: bool,
+    pub enable_records: bool,
+    pub enable_relay_integration: bool,
+    pub relay_integration_module_prefix: Option<String>,
+    pub for_builtins: bool,
+    pub locs_to_dirtify: Vec<Loc>,
+}
+
+impl TypeSigOptions {
+    pub fn of_options(
+        options: &Options,
+        prevent_munge: bool,
+        locs_to_dirtify: Vec<Loc>,
+        file: &FileKey,
+    ) -> Self {
+        let munge = options.munge_underscores && !prevent_munge;
+        let enable_component_syntax = options.component_syntax || file.is_lib_file();
+        // NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
+        // recognize and process a custom `keyMirror` function that makes an enum out of the keys
+        // of an object.
+        let facebook_key_mirror = true;
+        let enable_relay_integration = options.enable_relay_integration;
+        let relay_integration_excludes = &options.relay_integration_excludes;
+        let relay_integration_module_prefix = options.relay_integration_module_prefix.dupe();
+        let relay_integration_module_prefix_includes =
+            &options.relay_integration_module_prefix_includes;
+        let enable_relay_integration = enable_relay_integration
+            && relay_options::enabled_for_file(relay_integration_excludes, file);
+        let relay_integration_module_prefix = relay_options::module_prefix_for_file(
+            relay_integration_module_prefix_includes,
+            file,
+            relay_integration_module_prefix.as_deref(),
+        );
+        Self {
+            munge,
+            facebook_key_mirror,
+            enable_relay_integration,
+            relay_integration_module_prefix,
+            locs_to_dirtify,
+            hook_compatibility: options.hook_compatibility_in_file(file),
+            facebook_fbt: options.facebook_fbt.dupe(),
+            exact_by_default: options.exact_by_default,
+            enable_custom_error: options.enable_custom_error,
+            enable_enums: options.enums,
+            enable_component_syntax,
+            component_syntax_enabled_in_config: options.component_syntax,
+            enable_ts_syntax: options.ts_syntax,
+            enable_ts_utility_syntax: options.ts_utility_syntax,
+            enable_records: options.enable_records,
+            for_builtins: false,
+        }
+    }
+
+    pub fn builtin_options(options: &Options) -> Self {
+        // NOTE: This is a Facebook-specific hack that makes the signature verifier and generator
+        // recognize and process a custom `keyMirror` function that makes an enum out of the keys
+        // of an object.
+        let facebook_key_mirror = true;
+        Self {
+            munge: false,
+            facebook_key_mirror,
+            enable_relay_integration: false,
+            relay_integration_module_prefix: None,
+            facebook_fbt: options.facebook_fbt.dupe(),
+            exact_by_default: options.exact_by_default,
+            enable_custom_error: options.enable_custom_error,
+            enable_enums: options.enums,
+            enable_component_syntax: true,
+            component_syntax_enabled_in_config: options.component_syntax,
+            enable_ts_syntax: false,
+            enable_ts_utility_syntax: true,
+            hook_compatibility: options.hook_compatibility,
+            enable_records: options.enable_records,
+            for_builtins: true,
+            locs_to_dirtify: Vec::new(),
+        }
+    }
+}

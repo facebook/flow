@@ -1,0 +1,196 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+use std::ops::Deref;
+
+use dupe::Dupe;
+use flow_common::reason::VirtualReasonDesc;
+use flow_typing_context::Context;
+use flow_typing_flow_common::flow_js_utils::FlowJsException;
+use flow_typing_flow_common::flow_js_utils::callee_recorder;
+use flow_typing_type::type_::AnySource;
+use flow_typing_type::type_::DefT;
+use flow_typing_type::type_::DefTInner;
+use flow_typing_type::type_::DepthTrace;
+use flow_typing_type::type_::GetPropTData;
+use flow_typing_type::type_::Type;
+use flow_typing_type::type_::TypeInner;
+use flow_typing_type::type_::UseT;
+use flow_typing_type::type_::UseTInner;
+use flow_typing_type::type_::type_collector::TypeCollector;
+
+use crate::default_resolve;
+use crate::flow_js::FlowJs;
+use crate::speculation_kit;
+
+fn run_on_concretized(
+    cx: &Context,
+    trace: DepthTrace,
+    l: &Type,
+    reason: &flow_common::reason::Reason,
+    lhs_reason: &flow_common::reason::Reason,
+    upper: &UseT,
+    voided_out_collector: &Option<TypeCollector>,
+) -> Result<(), FlowJsException> {
+    match l.deref() {
+        TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::VoidT) => {
+            callee_recorder::add_callee_use(cx, callee_recorder::Kind::Tast, l.dupe(), upper);
+            cx.mark_optional_chain(reason.loc().dupe(), lhs_reason.dupe(), true);
+            if let Some(c) = voided_out_collector {
+                c.add(l.dupe());
+            }
+            return Ok(());
+        }
+        TypeInner::DefT(r, def_t) if matches!(def_t.deref(), DefTInner::NullT) => {
+            callee_recorder::add_callee_use(cx, callee_recorder::Kind::Tast, l.dupe(), upper);
+            let void = {
+                match r.desc(true) {
+                    VirtualReasonDesc::RNull => Type::new(TypeInner::DefT(
+                        r.dupe().replace_desc(VirtualReasonDesc::RVoidedNull),
+                        DefT::new(DefTInner::VoidT),
+                    )),
+                    _ => Type::new(TypeInner::DefT(r.dupe(), DefT::new(DefTInner::VoidT))),
+                }
+            };
+            cx.mark_optional_chain(reason.loc().dupe(), lhs_reason.dupe(), true);
+            if let Some(c) = voided_out_collector {
+                c.add(void);
+            }
+            return Ok(());
+        }
+        TypeInner::IntersectionT(r, rep) => {
+            let upper = match upper.deref() {
+                UseTInner::GetPropT(data) if data.id.is_some() => {
+                    UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+                        use_op: data.use_op.dupe(),
+                        reason: data.reason.dupe(),
+                        id: None,
+                        from_annot: data.from_annot,
+                        skip_optional: data.skip_optional,
+                        propref: data.propref.clone(),
+                        tout: data.tout.clone(),
+                        hint: data.hint.clone(),
+                    })))
+                }
+                UseTInner::TestPropT {
+                    use_op,
+                    reason: test_reason,
+                    id: _,
+                    propref,
+                    tout,
+                    hint,
+                } => UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+                    use_op: use_op.dupe(),
+                    reason: test_reason.dupe(),
+                    id: None,
+                    from_annot: false,
+                    skip_optional: false,
+                    propref: propref.clone(),
+                    tout: tout.clone(),
+                    hint: hint.clone(),
+                }))),
+                _ => upper.dupe(),
+            };
+            // We only call CalleeRecorder here for sig-help information. As far as
+            // the typed AST is concerned when dealing with intersections we record
+            // the specific branch that was selected. Therefore, we do not record
+            // intersections when they hit a CallT constraint. The only time when an
+            // intersection is allowed is when we have exhausted the branches of a
+            // speculation job (this is a Flow error) and fall back to the
+            // intersection as the type for the callee node. (This happens in
+            // Default_resolver.)
+            callee_recorder::add_callee_use(cx, callee_recorder::Kind::SigHelp, l.dupe(), &upper);
+            let r_loc = r.loc().dupe();
+            let upper_for_default = upper.dupe();
+            let default_resolve_fn: Box<dyn FnOnce() -> Result<(), FlowJsException>> = {
+                let cx_clone = cx.dupe();
+                let r_loc_clone = r_loc.dupe();
+                let upper_clone = upper_for_default.dupe();
+                Box::new(move || {
+                    let flow_fn = |t1: Type, t2: Type| {
+                        FlowJs::flow_t(&cx_clone, &t1, &t2)?;
+                        Ok(())
+                    };
+                    default_resolve::default_resolve_touts(
+                        &flow_fn,
+                        None,
+                        &cx_clone,
+                        r_loc_clone,
+                        &upper_clone,
+                    )?;
+                    Ok(())
+                })
+            };
+            let cases: Vec<Box<dyn FnOnce() -> Result<(), FlowJsException>>> = rep
+                .members_iter()
+                .map(|t| {
+                    let cx_clone = cx.dupe();
+                    let t = t.dupe();
+                    let reason = reason.dupe();
+                    let lhs_reason = lhs_reason.dupe();
+                    let upper = upper.dupe();
+                    let voided_out_collector_clone = voided_out_collector.clone();
+                    let f: Box<dyn FnOnce() -> Result<(), FlowJsException>> = Box::new(move || {
+                        run(
+                            &cx_clone,
+                            trace,
+                            &t,
+                            &reason,
+                            &lhs_reason,
+                            &upper,
+                            &voided_out_collector_clone,
+                        )
+                    });
+                    f
+                })
+                .collect();
+            speculation_kit::try_custom(
+                cx,
+                None,
+                Some(upper.dupe()),
+                Some(default_resolve_fn),
+                r_loc,
+                cases,
+            )?;
+            return Ok(());
+        }
+        _ => {}
+    }
+    let useful = match l.deref() {
+        TypeInner::AnyT(_, AnySource::AnyError(_)) => false,
+        TypeInner::DefT(_, def_t) if matches!(def_t.deref(), DefTInner::MixedT(_)) => true,
+        TypeInner::AnyT(_, _) => true,
+        _ => false,
+    };
+    cx.mark_optional_chain(reason.loc().dupe(), lhs_reason.dupe(), useful);
+    FlowJs::flow(cx, l, upper)?;
+    Ok(())
+}
+
+pub fn run(
+    cx: &Context,
+    trace: DepthTrace,
+    lhs: &Type,
+    reason: &flow_common::reason::Reason,
+    lhs_reason: &flow_common::reason::Reason,
+    upper: &UseT,
+    voided_out_collector: &Option<TypeCollector>,
+) -> Result<(), FlowJsException> {
+    let concrete_types = FlowJs::possible_concrete_types_for_optional_chain(cx, lhs_reason, lhs)?;
+    for t in &concrete_types {
+        run_on_concretized(
+            cx,
+            trace,
+            t,
+            reason,
+            lhs_reason,
+            upper,
+            voided_out_collector,
+        )?;
+    }
+    Ok(())
+}

@@ -1,0 +1,653 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+use std::collections::BTreeMap;
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use super::helpers::*;
+use super::*;
+
+// Bounds Manipulation
+//
+// The following general considerations apply when manipulating bounds.
+//
+// 1. All type variables start out as roots, but some of them eventually become
+// goto nodes. As such, bounds of roots may contain goto nodes. However, we
+// never perform operations directly on goto nodes; instead, we perform those
+// operations on their roots. It is tempting to replace goto nodes proactively
+// with their roots to avoid this issue, but doing so may be expensive, whereas
+// the union-find data structure amortizes the cost of looking up roots.
+//
+// 2. Another issue is that while the bounds of a type variable start out
+// empty, and in particular do not contain the type variable itself, eventually
+// other type variables in the bounds may be unified with the type variable. We
+// do not remove these type variables proactively, but instead filter them out
+// when considering the bounds. In the future we might consider amortizing the
+// cost of this filtering.
+//
+// 3. When roots are resolved, they act like the corresponding concrete
+// types. We maintain the invariant that whenever lower bounds or upper bounds
+// contain resolved roots, they also contain the corresponding concrete types.
+//
+// 4. When roots are unresolved (they have lower bounds and upper bounds,
+// possibly consisting of concrete types as well as type variables), we
+// maintain the invarant that every lower bound has already been propagated to
+// every upper bound. We also maintain the invariant that the bounds are
+// transitively closed modulo equivalence: for every type variable in the
+// bounds, all the bounds of its root are also included.
+
+/// for each l in ls: l => u
+pub(super) fn flows_to_t(
+    cx: &Context,
+    trace: DepthTrace,
+    ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
+    u: &UseT,
+) -> Result<(), FlowJsException> {
+    for (l, (trace_l, use_op)) in ls.iter() {
+        let u = flow_use_op(cx, use_op.dupe(), u.dupe());
+        join_flow(cx, &[*trace_l, trace], (l, &u))?;
+    }
+    Ok(())
+}
+
+/// for each u in us: l => u
+pub(super) fn flows_from_t(
+    cx: &Context,
+    trace: DepthTrace,
+    new_use_op: &UseOp,
+    l: &Type,
+    us: &BTreeMap<constraint::UseTypeKey, DepthTrace>,
+) -> Result<(), FlowJsException> {
+    for (use_type_key, trace_u) in us.iter() {
+        let u = flow_use_op(cx, new_use_op.dupe(), use_type_key.use_t.dupe());
+        join_flow(cx, &[trace, *trace_u], (l, &u))?;
+    }
+    Ok(())
+}
+
+// for each l in ls, u in us: l => u
+pub(super) fn flows_across(
+    cx: &Context,
+    trace: DepthTrace,
+    use_op: UseOp,
+    ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
+    us: &BTreeMap<constraint::UseTypeKey, DepthTrace>,
+) -> Result<(), FlowJsException> {
+    for (l, (trace_l, use_op_prime)) in ls.iter() {
+        for (use_type_key, trace_u) in us.iter() {
+            let u = flow_use_op(
+                cx,
+                use_op_prime.dupe(),
+                flow_use_op(cx, use_op.dupe(), use_type_key.use_t.dupe()),
+            );
+            join_flow(cx, &[*trace_l, trace, *trace_u], (l, &u))?;
+        }
+    }
+    Ok(())
+}
+
+/// bounds.upper += u
+pub(super) fn add_upper(cx: &Context, id: i32, u: &UseT, trace: DepthTrace) {
+    let key = constraint::UseTypeKey {
+        use_t: u.dupe(),
+        assoc: cx.speculation_id().map(|s| (s.speculation_id, s.case_id)),
+    };
+    cx.modify_constraints(id, |_root_id, constraints| {
+        if let constraint::Constraints::Unresolved(bounds) = constraints {
+            bounds.upper.insert(key, trace);
+        }
+    });
+}
+
+/// bounds.lower += l
+pub(super) fn add_lower(id: i32, l: &Type, trace: DepthTrace, use_op: UseOp, cx: &Context) {
+    cx.modify_constraints(id, |_root_id, constraints| {
+        if let constraint::Constraints::Unresolved(bounds) = constraints {
+            bounds.lower.insert(l.dupe(), (trace, use_op));
+        }
+    });
+}
+
+/// Given a map of bindings from tvars to traces, a tvar to skip, and an `each`
+/// function taking a tvar and its associated trace, apply `each` to all
+/// unresolved root constraints reached from the bound tvars, except those of
+/// skip_tvar. (Typically skip_tvar is a tvar that will be processed separately,
+/// so we don't want to redo that work. We also don't want to consider any tvar
+/// that has already been resolved, because the resolved type will be processed
+/// separately, too, as part of the bounds of skip_tvar.
+pub(super) fn iter_with_filter<F>(
+    cx: &Context,
+    bindings: &HashMap<i32, (DepthTrace, UseOp)>,
+    skip_id: i32,
+    each: F,
+) where
+    F: Fn(i32, &DepthTrace, &UseOp),
+{
+    for (id, (trace, use_op)) in bindings.iter() {
+        let (root_id, constraints) = cx.find_constraints(*id);
+        match constraints {
+            constraint::Constraints::Unresolved(_) if root_id != skip_id => {
+                each(root_id, trace, use_op);
+            }
+            _ => {}
+        }
+    }
+}
+
+/// Given [edges_to_t (id1, bounds1) t2], for each [id] in [id1] + [bounds1.lowertvars],
+/// [id.bounds.upper += t2]. When going through [bounds1.lowertvars], filter out [id1].
+///
+/// As an optimization, skip [id1] when it will become either a resolved root or a
+/// goto node (so that updating its bounds is unnecessary).
+pub(super) fn edges_to_t(
+    cx: &Context,
+    trace: DepthTrace,
+    opt: bool,
+    (id1, bounds1): (i32, &constraint::Bounds),
+    t2: &UseT,
+) {
+    if !opt {
+        add_upper(cx, id1, t2, trace);
+    }
+    let lowertvars = bounds1.lowertvars.clone();
+    iter_with_filter(cx, &lowertvars, id1, |root_id, trace_l, use_op| {
+        let t2 = flow_use_op(cx, use_op.dupe(), t2.dupe());
+        add_upper(
+            cx,
+            root_id,
+            &t2,
+            DepthTrace::concat_trace(&[*trace_l, trace]),
+        );
+    });
+}
+
+/// Given [edges_from_t t1 (id2, bounds2)], for each [id] in [id2] + [bounds2.uppertvars],
+/// id.bounds.lower += t1]. When going through [bounds2.uppertvars], filter out [id2].
+///
+/// As an optimization, skip [id2] when it will become either a resolved root or a
+/// goto node (so that updating its bounds is unnecessary).
+pub(super) fn edges_from_t(
+    cx: &Context,
+    trace: DepthTrace,
+    new_use_op: &UseOp,
+    opt: bool,
+    t1: &Type,
+    (id2, bounds2): (i32, &constraint::Bounds),
+) {
+    if !opt {
+        add_lower(id2, t1, trace, new_use_op.dupe(), cx);
+    }
+    let uppertvars = bounds2.uppertvars.clone();
+    iter_with_filter(cx, &uppertvars, id2, |root_id, trace_u, use_op| {
+        let use_op = pick_use_op(cx, new_use_op, use_op);
+        add_lower(
+            root_id,
+            t1,
+            DepthTrace::concat_trace(&[trace, *trace_u]),
+            use_op,
+            cx,
+        );
+    });
+}
+
+/// for each [id'] in [id] + [bounds.lowertvars], [id'.bounds.upper += us]
+pub(super) fn edges_to_ts(
+    cx: &Context,
+    trace: DepthTrace,
+    new_use_op: &UseOp,
+    opt: bool,
+    (id, bounds): (i32, &constraint::Bounds),
+    us: &BTreeMap<constraint::UseTypeKey, DepthTrace>,
+) {
+    for (use_type_key, trace_u) in us.iter() {
+        let u = flow_use_op(cx, new_use_op.dupe(), use_type_key.use_t.dupe());
+        edges_to_t(
+            cx,
+            DepthTrace::concat_trace(&[trace, *trace_u]),
+            opt,
+            (id, bounds),
+            &u,
+        );
+    }
+}
+
+/// for each [id'] in [id] + [bounds.uppertvars], [id'.bounds.lower += ls]
+pub(super) fn edges_from_ts(
+    cx: &Context,
+    trace: DepthTrace,
+    new_use_op: &UseOp,
+    opt: bool,
+    ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
+    (id, bounds): (i32, &constraint::Bounds),
+) {
+    for (l, (trace_l, use_op)) in ls.iter() {
+        let new_use_op = pick_use_op(cx, use_op, new_use_op);
+        edges_from_t(
+            cx,
+            DepthTrace::concat_trace(&[*trace_l, trace]),
+            &new_use_op,
+            opt,
+            l,
+            (id, bounds),
+        );
+    }
+}
+
+/// for each [id] in [id1] + [bounds1.lowertvars]:
+///       id.bounds.upper += t2
+///       for each l in bounds1.lower: l => t2
+///
+///   As an invariant, [bounds1.lower] should already contain [id.bounds.lower] for
+///   each id in [bounds1.lowertvars].
+pub(super) fn edges_and_flows_to_t(
+    cx: &Context,
+    trace: DepthTrace,
+    opt: bool,
+    (id1, bounds1): (i32, &constraint::Bounds),
+    t2: &UseT,
+) -> Result<(), FlowJsException> {
+    // Skip iff edge exists as part of the speculation path to the current branch
+    let skip = {
+        let state = cx.speculation_state();
+        state.0.iter().any(|branch| {
+            let speculation_id = branch.speculation_id;
+            let case_id = branch.case.case_id;
+            bounds1.upper.contains_key(&constraint::UseTypeKey {
+                use_t: t2.dupe(),
+                assoc: Some((speculation_id, case_id)),
+            })
+        })
+    } || bounds1.upper.contains_key(&constraint::UseTypeKey {
+        use_t: t2.dupe(),
+        assoc: None,
+    });
+    if !skip {
+        edges_to_t(cx, trace, opt, (id1, bounds1), t2);
+        flows_to_t(cx, trace, &bounds1.lower, t2)?;
+    }
+    Ok(())
+}
+
+/// for each [id] in [id2] + [bounds2.uppertvars]:
+///       id.bounds.lower += t1
+///       for each u in bounds2.upper: t1 => u
+///
+/// As an invariant, [bounds2.upper] should already contain [id.bounds.upper] for
+/// each id in [bounds2.uppertvars].
+pub(super) fn edges_and_flows_from_t(
+    cx: &Context,
+    trace: DepthTrace,
+    new_use_op: UseOp,
+    opt: bool,
+    t1: &Type,
+    (id2, bounds2): (i32, &constraint::Bounds),
+) -> Result<(), FlowJsException> {
+    if !bounds2.lower.contains_key(t1) {
+        edges_from_t(cx, trace, &new_use_op, opt, t1, (id2, bounds2));
+        flows_from_t(cx, trace, &new_use_op, t1, &bounds2.upper)?;
+    }
+    Ok(())
+}
+
+/// bounds.uppertvars += id
+pub(super) fn add_uppertvar(
+    cx: &Context,
+    bounds_id: i32,
+    id: i32,
+    trace: DepthTrace,
+    use_op: UseOp,
+) {
+    cx.modify_constraints(bounds_id, |_root_id, constraints| {
+        if let constraint::Constraints::Unresolved(bounds) = constraints {
+            bounds.uppertvars.insert(id, (trace, use_op));
+        }
+    });
+}
+
+/// bounds.lowertvars += id
+pub(super) fn add_lowertvar(
+    cx: &Context,
+    bounds_id: i32,
+    id: i32,
+    trace: DepthTrace,
+    use_op: UseOp,
+) {
+    cx.modify_constraints(bounds_id, |_root_id, constraints| {
+        if let constraint::Constraints::Unresolved(bounds) = constraints {
+            bounds.lowertvars.insert(id, (trace, use_op));
+        }
+    });
+}
+
+/// for each [id] in [id1] + [bounds1.lowertvars]:
+///       id.bounds.uppertvars += id2
+///
+/// When going through [bounds1.lowertvars], filter out [id1].
+///
+/// As an optimization, skip id1 when it will become either a resolved root or a
+/// goto node (so that updating its bounds is unnecessary).
+pub(super) fn edges_to_tvar(
+    cx: &Context,
+    trace: DepthTrace,
+    new_use_op: &UseOp,
+    opt: bool,
+    (id1, bounds1): (i32, &constraint::Bounds),
+    id2: i32,
+) {
+    if !opt {
+        add_uppertvar(cx, id1, id2, trace, new_use_op.dupe());
+    }
+    let lowertvars = bounds1.lowertvars.clone();
+    iter_with_filter(cx, &lowertvars, id1, |root_id, trace_l, use_op| {
+        let use_op = pick_use_op(cx, use_op, new_use_op);
+        add_uppertvar(
+            cx,
+            root_id,
+            id2,
+            DepthTrace::concat_trace(&[*trace_l, trace]),
+            use_op,
+        );
+    });
+}
+
+/// for each id in id2 + bounds2.uppertvars:
+///       id.bounds.lowertvars += id1
+///
+/// When going through bounds2.uppertvars, filter out id2.
+///
+/// As an optimization, skip id2 when it will become either a resolved root or a
+/// goto node (so that updating its bounds is unnecessary).
+pub(super) fn edges_from_tvar(
+    cx: &Context,
+    trace: DepthTrace,
+    new_use_op: &UseOp,
+    opt: bool,
+    id1: i32,
+    (id2, bounds2): (i32, &constraint::Bounds),
+) {
+    if !opt {
+        add_lowertvar(cx, id2, id1, trace, new_use_op.dupe());
+    }
+    let uppertvars = bounds2.uppertvars.clone();
+    iter_with_filter(cx, &uppertvars, id2, |root_id, trace_u, use_op| {
+        let use_op = pick_use_op(cx, new_use_op, use_op);
+        add_lowertvar(
+            cx,
+            root_id,
+            id1,
+            DepthTrace::concat_trace(&[trace, *trace_u]),
+            use_op,
+        );
+    });
+}
+
+/// for each id in id1 + bounds1.lowertvars:
+///       id.bounds.upper += bounds2.upper
+///       id.bounds.uppertvars += id2
+///       id.bounds.uppertvars += bounds2.uppertvars
+pub(super) fn add_upper_edges(
+    cx: &Context,
+    trace: DepthTrace,
+    new_use_op: UseOp,
+    opt: bool,
+    (id1, bounds1): (i32, &constraint::Bounds),
+    (id2, bounds2): (i32, &constraint::Bounds),
+) {
+    edges_to_ts(cx, trace, &new_use_op, opt, (id1, bounds1), &bounds2.upper);
+    edges_to_tvar(cx, trace, &new_use_op, opt, (id1, bounds1), id2);
+    let uppertvars = bounds2.uppertvars.clone();
+    iter_with_filter(cx, &uppertvars, id2, |tvar, trace_u, use_op| {
+        let new_use_op = pick_use_op(cx, &new_use_op, use_op);
+        let trace = DepthTrace::concat_trace(&[trace, *trace_u]);
+        edges_to_tvar(cx, trace, &new_use_op, opt, (id1, bounds1), tvar);
+    });
+}
+
+/// for each id in id2 + bounds2.uppertvars:
+///       id.bounds.lower += bounds1.lower
+///       id.bounds.lowertvars += id1
+///       id.bounds.lowertvars += bounds1.lowertvars
+pub(super) fn add_lower_edges(
+    cx: &Context,
+    trace: DepthTrace,
+    new_use_op: UseOp,
+    opt: bool,
+    (id1, bounds1): (i32, &constraint::Bounds),
+    (id2, bounds2): (i32, &constraint::Bounds),
+) {
+    edges_from_ts(cx, trace, &new_use_op, opt, &bounds1.lower, (id2, bounds2));
+    edges_from_tvar(cx, trace, &new_use_op, opt, id1, (id2, bounds2));
+    let lowertvars = bounds1.lowertvars.clone();
+    iter_with_filter(cx, &lowertvars, id1, |tvar, trace_l, use_op| {
+        let use_op = pick_use_op(cx, use_op, &new_use_op);
+        let trace = DepthTrace::concat_trace(&[*trace_l, trace]);
+        edges_from_tvar(cx, trace, &use_op, opt, tvar, (id2, bounds2));
+    });
+}
+
+// (***************)
+// (* unification *)
+// (***************)
+
+pub(super) fn unify_flip(use_op: UseOp) -> UseOp {
+    UseOp::Frame(Arc::new(VirtualFrameUseOp::UnifyFlip), Arc::new(use_op))
+}
+
+/// Chain a root to another root. If both roots are unresolved, this amounts to
+/// copying over the bounds of one root to another, and adding all the
+/// connections necessary when two non-unifiers flow to each other. If one or
+/// both of the roots are resolved, they effectively act like the corresponding
+/// concrete types.
+pub(super) fn goto(
+    cx: &Context,
+    trace: DepthTrace,
+    use_op: UseOp,
+    (id1, root1): (i32, flow_utils_union_find::Root<constraint::Constraints>),
+    (id2, root2): (i32, flow_utils_union_find::Root<constraint::Constraints>),
+) -> Result<(), FlowJsException> {
+    //   match (root1.constraints, root2.constraints) with
+    match (root1.constraints, root2.constraints) {
+        //   | (Unresolved bounds1, Unresolved bounds2) ->
+        (
+            constraint::Constraints::Unresolved(bounds1),
+            constraint::Constraints::Unresolved(bounds2),
+        ) => {
+            let cond1 = not_linked((id1, &bounds1), (id2, &bounds2));
+            let cond2 = not_linked((id2, &bounds2), (id1, &bounds1));
+            if cond1 {
+                flows_across(cx, trace, use_op.dupe(), &bounds1.lower, &bounds2.upper)?;
+            }
+            if cond2 {
+                flows_across(
+                    cx,
+                    trace,
+                    unify_flip(use_op.dupe()),
+                    &bounds2.lower,
+                    &bounds1.upper,
+                )?;
+            }
+            if cond1 {
+                add_upper_edges(
+                    cx,
+                    trace,
+                    use_op.dupe(),
+                    true,
+                    (id1, &bounds1),
+                    (id2, &bounds2),
+                );
+                add_lower_edges(
+                    cx,
+                    trace,
+                    use_op.dupe(),
+                    false,
+                    (id1, &bounds1),
+                    (id2, &bounds2),
+                );
+            }
+            if cond2 {
+                add_upper_edges(
+                    cx,
+                    trace,
+                    unify_flip(use_op.dupe()),
+                    false,
+                    (id2, &bounds2),
+                    (id1, &bounds1),
+                );
+                add_lower_edges(
+                    cx,
+                    trace,
+                    unify_flip(use_op.dupe()),
+                    true,
+                    (id2, &bounds2),
+                    (id1, &bounds1),
+                );
+            }
+            cx.add_tvar(id1, Node::create_goto(id2));
+            Ok(())
+        }
+        (constraint::Constraints::Unresolved(bounds1), constraint::Constraints::Resolved(t2)) => {
+            let t2_use = UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe()));
+            edges_and_flows_to_t(cx, trace, true, (id1, &bounds1), &t2_use)?;
+            edges_and_flows_from_t(
+                cx,
+                trace,
+                unify_flip(use_op.dupe()),
+                true,
+                &t2,
+                (id1, &bounds1),
+            )?;
+            cx.add_tvar(id1, Node::create_goto(id2));
+            Ok(())
+        }
+        (
+            constraint::Constraints::Unresolved(bounds1),
+            constraint::Constraints::FullyResolved(s2),
+        ) => {
+            let t2 = cx.force_fully_resolved_tvar(&s2);
+            let t2_use = UseT::new(UseTInner::UseT(use_op.dupe(), t2.dupe()));
+            edges_and_flows_to_t(cx, trace, true, (id1, &bounds1), &t2_use)?;
+            edges_and_flows_from_t(
+                cx,
+                trace,
+                unify_flip(use_op.dupe()),
+                true,
+                &t2,
+                (id1, &bounds1),
+            )?;
+            cx.add_tvar(id1, Node::create_goto(id2));
+            Ok(())
+        }
+        (constraint::Constraints::Resolved(t1), constraint::Constraints::Unresolved(bounds2)) => {
+            let t1_use = UseT::new(UseTInner::UseT(unify_flip(use_op.dupe()), t1.dupe()));
+            edges_and_flows_to_t(cx, trace, true, (id2, &bounds2), &t1_use)?;
+            edges_and_flows_from_t(cx, trace, use_op.dupe(), true, &t1, (id2, &bounds2))?;
+            cx.set_root_constraints(id2, constraint::Constraints::Resolved(t1));
+            cx.add_tvar(id1, Node::create_goto(id2));
+            Ok(())
+        }
+        (
+            constraint::Constraints::FullyResolved(s1),
+            constraint::Constraints::Unresolved(bounds2),
+        ) => {
+            let t1 = cx.force_fully_resolved_tvar(&s1);
+            let t1_use = UseT::new(UseTInner::UseT(unify_flip(use_op.dupe()), t1.dupe()));
+            edges_and_flows_to_t(cx, trace, true, (id2, &bounds2), &t1_use)?;
+            edges_and_flows_from_t(cx, trace, use_op.dupe(), true, &t1, (id2, &bounds2))?;
+            cx.set_root_constraints(id2, constraint::Constraints::FullyResolved(s1));
+            cx.add_tvar(id1, Node::create_goto(id2));
+            Ok(())
+        }
+        (constraint::Constraints::Resolved(t1), constraint::Constraints::Resolved(t2)) => {
+            // replace node first, in case rec_unify recurses back to these tvars
+            cx.add_tvar(id1, Node::create_goto(id2));
+            rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t1, &t2)
+        }
+        (constraint::Constraints::Resolved(t1), constraint::Constraints::FullyResolved(s2)) => {
+            let t2 = cx.force_fully_resolved_tvar(&s2);
+            // replace node first, in case rec_unify recurses back to these tvars
+            cx.add_tvar(id1, Node::create_goto(id2));
+            rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t1, &t2)
+        }
+        (
+            constraint::Constraints::FullyResolved(s1),
+            constraint::Constraints::FullyResolved(s2),
+        ) => {
+            let t1 = cx.force_fully_resolved_tvar(&s1);
+            let t2 = cx.force_fully_resolved_tvar(&s2);
+            // replace node first, in case rec_unify recurses back to these tvars
+            cx.add_tvar(id1, Node::create_goto(id2));
+            rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t1, &t2)
+        }
+        (constraint::Constraints::FullyResolved(s1), constraint::Constraints::Resolved(t2)) => {
+            let t1 = cx.force_fully_resolved_tvar(&s1);
+            // prefer fully resolved roots to resolved roots
+            cx.set_root_constraints(id2, constraint::Constraints::FullyResolved(s1));
+            // replace node first, in case rec_unify recurses back to these tvars
+            cx.add_tvar(id1, Node::create_goto(id2));
+            rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t1, &t2)
+        }
+    }
+}
+
+/// Unify two type variables. This involves finding their roots, and making one
+/// point to the other. Ranks are used to keep chains short.
+pub(super) fn merge_ids(
+    cx: &Context,
+    trace: DepthTrace,
+    use_op: UseOp,
+    id1: i32,
+    id2: i32,
+) -> Result<(), FlowJsException> {
+    let (id1, root1) = cx.find_root(id1);
+    let (id2, root2) = cx.find_root(id2);
+    if id1 == id2 {
+        return Ok(());
+    }
+    if root1.rank < root2.rank {
+        goto(cx, trace, use_op, (id1, root1), (id2, root2))
+    } else if root2.rank < root1.rank {
+        goto(cx, trace, unify_flip(use_op), (id2, root2), (id1, root1))
+    } else {
+        cx.set_root_rank(id2, root1.rank + 1);
+        goto(cx, trace, use_op, (id1, root1), (id2, root2))
+    }
+}
+
+/// Resolve a type variable to a type. This involves finding its root,
+/// and resolving to that type.
+pub(super) fn resolve_id(
+    cx: &Context,
+    trace: DepthTrace,
+    use_op: UseOp,
+    id: i32,
+    t: &Type,
+) -> Result<(), FlowJsException> {
+    let (id, root) = cx.find_root(id);
+    match root.constraints {
+        constraint::Constraints::Unresolved(bounds) => {
+            cx.set_root_constraints(id, constraint::Constraints::Resolved(t.dupe()));
+            let use_t = UseT::new(UseTInner::UseT(use_op.dupe(), t.dupe()));
+            edges_and_flows_to_t(cx, trace, true, (id, &bounds), &use_t)?;
+            edges_and_flows_from_t(cx, trace, use_op, true, t, (id, &bounds))
+        }
+        constraint::Constraints::Resolved(t_) => {
+            rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, &t_, t)
+        }
+        constraint::Constraints::FullyResolved(s) => {
+            let forced = cx.force_fully_resolved_tvar(&s);
+            rec_unify(
+                cx,
+                trace,
+                use_op,
+                UnifyCause::Uncategorized,
+                None,
+                &forced,
+                t,
+            )
+        }
+    }
+}

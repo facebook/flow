@@ -1,0 +1,7700 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+// Some types represent definitions. These include numbers, strings, booleans,
+// functions, classes, objects, arrays, and such. The shape of these types
+// should be fairly obvious.
+// Other types represent uses. These include function applications, class
+// instantiations, property accesses, element accesses, operations such as
+// addition, predicate refinements, etc. The shape of these types is somewhat
+// trickier, but do follow a pattern. Typically, such a type consists of the
+// arguments to the operation, and a type variable capturing the result of the
+// operation. A full understanding of the semantics of such types requires a
+// look at the subtyping relation, described in the module Flow_js.
+
+// Every type has (or should have, if not already) a "reason" for its
+// existence. This information is captured in the type itself for now, but
+// should be separated out in the future.
+// Types that represent definitions point to the positions of such
+// definitions (or values). Types that represent uses point to the positions of
+// such uses (or operations). These reasons are logged, chained, etc. by the
+// implementation of the subtyping algorithm, that effectively constructs a
+// proof of the typing derivation based on these reasons as axioms.
+
+use std::borrow::Cow;
+use std::cell::RefCell;
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use std::collections::HashMap;
+use std::collections::HashSet;
+use std::collections::VecDeque;
+use std::hash::Hash;
+use std::hash::Hasher;
+use std::ops::Deref;
+use std::rc::Rc;
+use std::sync::Arc;
+
+use dupe::Dupe;
+use flow_aloc::ALoc;
+use flow_aloc::ALocId;
+use flow_common::flow_symbol::Symbol;
+use flow_common::hint::HintKind;
+use flow_common::platform_set::PlatformSet;
+use flow_common::polarity::Polarity;
+use flow_common::reason::Name;
+use flow_common::reason::Reason;
+use flow_common::reason::VirtualReason;
+use flow_common::reason::VirtualReasonDesc;
+use flow_common::subst_name::SubstName;
+use flow_data_structure_wrapper::multi_level_map::MultiLevelMap;
+use flow_data_structure_wrapper::ord_map::FlowOrdMap;
+use flow_data_structure_wrapper::ord_set::FlowOrdSet;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use vec1::Vec1;
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Tvar(Reason, u32);
+
+impl Tvar {
+    pub fn new(reason: Reason, id: u32) -> Self {
+        Self(reason, id)
+    }
+
+    pub fn reason(&self) -> &Reason {
+        &self.0
+    }
+
+    pub fn id(&self) -> u32 {
+        self.1
+    }
+}
+
+/// A set that emulates OCaml's immutable set semantics for tvar cycle detection.
+///
+/// In OCaml, `ISet.add id seen` creates a new set without modifying the original.
+/// This wrapper provides `with_added` to temporarily add an element during a
+/// recursive call and automatically restore the set afterward, preventing bugs
+/// where the caller forgets to remove the element.
+pub struct TvarSeenSet<T: Hash>(HashSet<T>);
+
+impl<T: Hash + Eq + Copy> TvarSeenSet<T> {
+    pub fn new() -> Self {
+        Self(HashSet::new())
+    }
+
+    pub fn contains(&self, value: &T) -> bool {
+        self.0.contains(value)
+    }
+
+    /// Temporarily adds `value` to the set, calls `f`, and restores the set
+    /// afterward. If `value` was already in the set, the closure still runs
+    /// but no removal occurs (the set is unchanged).
+    pub fn with_added<R>(&mut self, value: T, f: impl FnOnce(&mut Self) -> R) -> R {
+        let inserted = self.0.insert(value);
+        let result = f(self);
+        if inserted {
+            self.0.remove(&value);
+        }
+        result
+    }
+}
+
+#[derive(Debug, Clone, Dupe)]
+pub struct NumberLiteral(pub f64, pub FlowSmolStr);
+
+impl PartialEq for NumberLiteral {
+    fn eq(&self, other: &Self) -> bool {
+        self.0.to_bits() == other.0.to_bits() && self.1 == other.1
+    }
+}
+
+impl Eq for NumberLiteral {}
+
+impl PartialOrd for NumberLiteral {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for NumberLiteral {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match self.0.total_cmp(&other.0) {
+            std::cmp::Ordering::Equal => self.1.cmp(&other.1),
+            ord => ord,
+        }
+    }
+}
+
+impl std::hash::Hash for NumberLiteral {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.to_bits().hash(state);
+        self.1.hash(state);
+    }
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct BigIntLiteral(pub Option<i64>, pub FlowSmolStr);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TypeAppTData {
+    pub reason: Reason,
+    pub use_op: UseOp,
+    pub type_: Type,
+    pub targs: Rc<[Type]>,
+    pub from_value: bool,
+    pub use_desc: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct GenericTData {
+    pub reason: Reason,
+    pub name: SubstName,
+    pub bound: Type,
+    pub no_infer: bool,
+    pub id: flow_typing_generics::GenericId,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ThisInstanceTData {
+    pub reason: Reason,
+    pub instance: InstanceT,
+    pub is_this: bool,
+    pub subst_name: SubstName,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ThisTypeAppTData {
+    pub reason: Reason,
+    pub this_t: Type,
+    pub type_: Type,
+    pub targs: Option<Rc<[Type]>>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TypeInner {
+    /// open type variable
+    /// A type variable (tvar) is an OpenT(reason, id) where id is an int index
+    /// into a context's graph: a context's graph is a map from tvar ids to nodes
+    /// (see below).
+    ///
+    /// Note: ids are globally unique. tvars are "owned" by a single context,
+    /// but that context and its tvars may later be merged into other contexts.
+    OpenT(Tvar),
+    /// def types
+    DefT(Reason, DefT),
+    /// type expression whose evaluation is deferred
+    /// Usually a type expression is evaluated by splitting it into a def type
+    /// and a use type, and flowing the former to the latter: the def type is the
+    /// "main" argument, and the use type contains the type operation, other
+    /// arguments, and a tvar to hold the result. However, sometimes a type
+    /// expression may need to be kept in explicit form, with the type operation
+    /// and other arguments split out into a "deferred" use type `defer_use_t`,
+    /// whose evaluation state is tracked in the context by an identifier id:
+    /// When defer_use_t is evaluated, id points to a tvar containing the result
+    /// of evaluation. The explicit form simplifies other tasks, like
+    /// substitution, but otherwise works in much the same way as usual.
+    EvalT {
+        type_: Type,
+        defer_use_t: TypeDestructorT,
+        id: eval::Id,
+    },
+    /// bound type variable
+    GenericT(Box<GenericTData>),
+    /// this-abstracted instance. If `is_this` is true, then this literally comes from
+    /// `this` as an annotation or expression, and should be fixed to an internal
+    /// view of the class, which is a generic whose upper bound is the class.
+    ThisInstanceT(Box<ThisInstanceTData>),
+    /// this instantiation
+    ThisTypeAppT(Box<ThisTypeAppTData>),
+    /// type application
+    TypeAppT(Box<TypeAppTData>),
+    FunProtoT(Reason), //  Function.prototype
+    ObjProtoT(Reason), //  Object.prototype
+    /// Signifies the end of the prototype chain. Distinct from NullT when it
+    /// appears as an upper bound of an object type, otherwise the same.
+    NullProtoT(Reason),
+    FunProtoBindT(Reason), //  Function.prototype.bind
+    /// & types
+    IntersectionT(Reason, inter_rep::InterRep),
+    /// | types
+    UnionT(Reason, union_rep::UnionRep),
+    /// ? types
+    MaybeT(Reason, Type),
+    /// type of an optional parameter
+    OptionalT {
+        reason: Reason,
+        type_: Type,
+        use_desc: bool,
+    },
+    /// collects the keys of an object
+    KeysT(Reason, Type),
+    /// advanced string types
+    StrUtilT {
+        reason: Reason,
+        op: StrUtilOp,
+        remainder: Option<Type>,
+    },
+    /// annotations
+    /// A type that annotates a storage location performs two functions:
+    ///
+    /// - it constrains the types of values stored into the location
+    ///
+    /// - it masks the actual type of values retrieved from the location, giving
+    ///   instead a pro forma type which all such values are considered as having.
+    ///
+    /// In the former role, the annotated type behaves as an upper bound
+    /// interacting with inflowing lower bounds - these interactions may
+    /// occur e.g. as a result of values being stored to type-annotated
+    /// variables, or arguments flowing to type-annotated parameters.
+    ///
+    /// In the latter role, the annotated type behaves as a lower bound,
+    /// flowing to sites where values stored in the annotated location are
+    /// used (such as users of a variable, or users of a parameter within
+    /// a function body).
+    ///
+    /// When a type annotation resolves immediately to a concrete type
+    /// (say, number = NumT or string = StrT), this single type would
+    /// suffice to perform both roles. However, when an annotation has
+    /// not yet been resolved, we can't simply use a type variable as a
+    /// placeholder as we can elsewhere.
+    ///
+    /// TL;DR type variables are conductors; annotated types are insulators. :)
+    ///
+    /// For an annotated type, we must collect incoming lower bounds and
+    /// downstream upper bounds without allowing them to interact with each
+    /// other. If we did, the annotation would be "translucent", leaking
+    /// type information about incoming values - failing to perform the
+    /// second of the two roles noted above.
+    ///
+    /// We accomplish the insulation by wrapping a tvar with AnnotT, and using a
+    /// "slingshot" trick to grab lowers bounds, wait for the wrapped tvar to
+    /// resolve to a type, then release the lower bounds to the resolved
+    /// type. Meanwhile, the tvar itself flows to its upper bounds as usual.
+    ///
+    /// Note on usage: AnnotT can be used as a general wrapper for tvars as long
+    /// as the wrapped tvars are 0->1. If instead the possible types of a
+    /// wrapped tvar are T1 and T2, then the current rules would flow T1 | T2 to
+    /// upper bounds, and would flow lower bounds to T1 & T2.
+    AnnotT(Reason, Type, bool),
+    /// Nominal type aliases. The nominal_type.nominal_id is its unique id, nominal_type.underlying_t is
+    /// the underlying type, which we only allow access to when inside the file the opaque type
+    /// was defined, and nominal_type.super_t is the super type, which we use when a NominalT is
+    /// an upperbound in a file in which it was not defined. We also have
+    /// nominal_type.nominal_arg_polarities and nominal_type.nominal_type_args to compare polymorphic
+    /// opaque types. We need to keep track of these because underlying_t can be None if the opaque
+    /// type is defined in a libdef. We also keep track of the name of the opaque type in
+    /// nominal_type.name for pretty printing.
+    NominalT {
+        reason: Reason,
+        nominal_type: Rc<NominalType>,
+    },
+    /// Stores both values and types in the same namespace
+    NamespaceT(Rc<NamespaceType>),
+    /// Here's to the crazy ones. The misfits. The rebels. The troublemakers.
+    /// The round pegs in the square holes.
+    AnyT(Reason, AnySource),
+}
+
+#[derive(Clone, Dupe)]
+pub struct Type(Rc<TypeInner>);
+
+impl Hash for Type {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl PartialEq for Type {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.0, &other.0) || self.0 == other.0
+    }
+}
+
+impl Eq for Type {}
+
+impl PartialOrd for Type {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Type {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if Rc::ptr_eq(&self.0, &other.0) {
+            std::cmp::Ordering::Equal
+        } else {
+            self.0.cmp(&other.0)
+        }
+    }
+}
+
+impl Deref for Type {
+    type Target = TypeInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::fmt::Debug for Type {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl Type {
+    pub fn new(inner: TypeInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &Type) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum DefTInner {
+    BoolGeneralT,
+    EmptyT,
+    NullT,
+    VoidT,
+    SymbolT,
+    NumGeneralT(Literal),
+    StrGeneralT(Literal),
+    BigIntGeneralT(Literal),
+    MixedT(MixedFlavor),
+    FunT(Type, Rc<FunType>),
+    ObjT(Rc<ObjType>),
+    ArrT(Rc<ArrType>),
+    /// type of a class
+    ClassT(Type),
+    /// type of an instance of a class
+    InstanceT(Rc<InstanceT>),
+    /// singleton string, matches exactly a given string literal
+    SingletonStrT {
+        from_annot: bool,
+        /// TODO SingletonStrT should not include internal names
+        value: Name,
+    },
+    /// This type is only to be used to represent numeric-like object keys in the
+    /// context of object-to-object subtyping. It allows numeric-like object keys
+    /// to be a subtype of both `number` and `string`, so that `{1: true}` can be
+    /// a subtyped of `{[number]: boolean}`. Do not use outside of this context!
+    ///
+    /// The second element of the `number_literal` tuple, which is the `string`
+    /// representation, is the key name.
+    NumericStrKeyT(NumberLiteral),
+    /// matches exactly a given number literal, for some definition of "exactly"
+    /// when it comes to floats...
+    SingletonNumT {
+        from_annot: bool,
+        value: NumberLiteral,
+    },
+    /// singleton bool, matches exactly a given boolean literal
+    SingletonBoolT {
+        from_annot: bool,
+        value: bool,
+    },
+    SingletonBigIntT {
+        from_annot: bool,
+        value: BigIntLiteral,
+    },
+    /// type aliases
+    TypeT(TypeTKind, Type),
+    /// A polymorphic type is like a type-level "function" that, when applied to
+    /// lists of type arguments, generates types. Just like a function, a
+    /// polymorphic type has a list of type parameters, represented as bound
+    /// type variables. We say that type parameters are "universally quantified"
+    /// (or "universal"): every substitution of type arguments for type
+    /// parameters generates a type. Universal type parameters may specify subtype
+    /// constraints ("bounds"), which must be satisfied by any types they may be
+    /// substituted by.
+    PolyT {
+        tparams_loc: ALoc,
+        tparams: Rc<[TypeParam]>,
+        t_out: Type,
+        id: poly::Id,
+    },
+    ReactAbstractComponentT {
+        config: Type,
+        renders: Type,
+        component_kind: ComponentKind,
+    },
+    RendersT(Rc<CanonicalRendersForm>),
+    EnumValueT(Rc<EnumInfo>),
+    EnumObjectT {
+        enum_value_t: Type,
+        enum_info: Rc<EnumInfo>,
+    },
+}
+
+#[derive(Debug, Clone, Dupe)]
+pub struct DefT(Rc<DefTInner>);
+
+impl Hash for DefT {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl PartialEq for DefT {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.0, &other.0) || self.0 == other.0
+    }
+}
+
+impl Eq for DefT {}
+
+impl PartialOrd for DefT {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for DefT {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if Rc::ptr_eq(&self.0, &other.0) {
+            std::cmp::Ordering::Equal
+        } else {
+            self.0.cmp(&other.0)
+        }
+    }
+}
+
+impl Deref for DefT {
+    type Target = DefTInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl DefT {
+    pub fn new(inner: DefTInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &DefT) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+/// A syntactic render type "renders T" uses an EvalT to be translated into a canonical form.
+/// The subtyping rules are much simpler to understand in these forms, so we use the render type
+/// normalization logic defined in flow_js_utils to take a syntactic render type and turn it
+/// into a RendersT (it will ALWAYS return a RendersT) of one of the canonical forms.
+///
+/// The Structural (t) form guarantees that if you evaluate t you will not
+/// get back a RendersT. If the argument is a UnionT, none of the members of that UnionT
+/// will be Strcutrual RendersTs, but there may be nominal RendersTs in the union.
+///
+/// Nominal render types make no guarantees about their super and they can be any type.
+/// In practice, the only way to introduce Nominal render types is component syntax, and
+/// components always use a render type as the `super`.
+///
+/// Given component Foo:
+///  * Omitting render declaration would produce DefaultRenders
+///  * renders Foo would produce NominalRenders
+///  * renders (Foo | Foo) would produce a Structural UnionT with two Nominal elements
+///  * renders (Foo | number) would produce a Structural UnionT with number and Nominal Foo
+///  * renders number would produce a Structural number
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum CanonicalRendersForm {
+    DefaultRenders,
+    IntrinsicRenders(FlowSmolStr),
+    NominalRenders {
+        renders_id: ALocId,
+        renders_name: FlowSmolStr,
+        renders_super: Type,
+    },
+    StructuralRenders {
+        renders_variant: RendersVariant,
+        renders_structural_type: Type,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum RendersVariant {
+    RendersNormal,
+    RendersMaybe,
+    RendersStar,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ComponentKind {
+    Structural,
+    Nominal(ALocId, FlowSmolStr, Option<Rc<[Type]>>),
+}
+
+#[derive(Debug, Clone, PartialEq)]
+pub enum HintEvalResult {
+    HintAvailable(Type, HintKind),
+    NoHint,
+    EncounteredPlaceholder,
+    DecompositionError,
+}
+
+pub type LazyHintCompute = Rc<
+    dyn Fn(
+        /* expected_only */ bool,
+        /* skip_optional */ Option<bool>,
+        /* reason */ Reason,
+    ) -> HintEvalResult,
+>;
+
+impl std::fmt::Debug for LazyHintT {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_tuple("LazyHintT")
+            .field(&self.0)
+            .field(&"<lazy_hint_compute>")
+            .finish()
+    }
+}
+
+#[derive(Clone)]
+pub struct LazyHintT(pub bool, pub LazyHintCompute);
+
+impl PartialEq for LazyHintT {
+    fn eq(&self, other: &Self) -> bool {
+        self.0 == other.0 && Rc::ptr_eq(&self.1, &other.1)
+    }
+}
+
+impl Eq for LazyHintT {}
+
+impl PartialOrd for LazyHintT {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for LazyHintT {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match self.0.cmp(&other.0) {
+            std::cmp::Ordering::Equal => {
+                let self_ptr = Rc::as_ptr(&self.1) as *const () as usize;
+                let other_ptr = Rc::as_ptr(&other.1) as *const () as usize;
+                self_ptr.cmp(&other_ptr)
+            }
+            ordering => ordering,
+        }
+    }
+}
+
+impl std::hash::Hash for LazyHintT {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+        let ptr = Rc::as_ptr(&self.1) as *const () as usize;
+        ptr.hash(state);
+    }
+}
+
+/// destructors that extract parts of various kinds of types
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TypeDestructorT(Rc<TypeDestructorTInner>);
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TypeDestructorTInner(pub UseOp, pub Reason, pub Rc<Destructor>);
+
+impl Deref for TypeDestructorT {
+    type Target = TypeDestructorTInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl TypeDestructorT {
+    pub fn new(inner: TypeDestructorTInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &TypeDestructorT) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum StrUtilOp {
+    StrPrefix(FlowSmolStr),
+    StrSuffix(FlowSmolStr),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EnumConcreteInfoInner {
+    pub enum_name: FlowSmolStr,
+    // enum_id: ALoc.id;
+    pub enum_id: ALocId,
+    pub members: FlowOrdMap<FlowSmolStr, ALoc>,
+    pub representation_t: Type,
+    pub has_unknown_members: bool,
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EnumConcreteInfo(Rc<EnumConcreteInfoInner>);
+
+impl Deref for EnumConcreteInfo {
+    type Target = EnumConcreteInfoInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl EnumConcreteInfo {
+    pub fn new(inner: EnumConcreteInfoInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &EnumConcreteInfo) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum EnumInfoInner {
+    ConcreteEnum(EnumConcreteInfo),
+    AbstractEnum { representation_t: Type },
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EnumInfo(Rc<EnumInfoInner>);
+
+impl std::ops::Deref for EnumInfo {
+    type Target = EnumInfoInner;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl EnumInfo {
+    pub fn new(inner: EnumInfoInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &EnumInfo) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum VirtualRootUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    UnknownUse,
+    ObjectAddComputedProperty {
+        op: VirtualReason<L>,
+    },
+    ObjectSpread {
+        op: VirtualReason<L>,
+    },
+    ObjectRest {
+        op: VirtualReason<L>,
+    },
+    ObjectChain {
+        op: VirtualReason<L>,
+    },
+    AssignVar {
+        var: Option<VirtualReason<L>>,
+        init: VirtualReason<L>,
+    },
+    Cast {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+    ClassExtendsCheck {
+        def: VirtualReason<L>,
+        extends: VirtualReason<L>,
+    },
+    ClassImplementsCheck {
+        def: VirtualReason<L>,
+        name: VirtualReason<L>,
+        implements: VirtualReason<L>,
+    },
+    ClassOwnProtoCheck {
+        prop: Name,
+        own_loc: Option<L>,
+        proto_loc: Option<L>,
+    },
+    ClassMethodDefinition {
+        def: VirtualReason<L>,
+        name: VirtualReason<L>,
+    },
+    Coercion {
+        from: VirtualReason<L>,
+        target: VirtualReason<L>,
+    },
+    ConformToCommonInterface {
+        self_sig_loc: L,
+        self_module_loc: L,
+        originate_from_import: bool,
+    },
+    DeclareComponentRef {
+        op: VirtualReason<L>,
+    },
+    DeleteProperty {
+        lhs: VirtualReason<L>,
+        prop: VirtualReason<L>,
+    },
+    DeleteVar {
+        var: VirtualReason<L>,
+    },
+    FunCall {
+        op: VirtualReason<L>,
+        fn_: VirtualReason<L>,
+        args: Arc<[VirtualReason<L>]>,
+        local: bool,
+    },
+    FunCallMethod {
+        op: VirtualReason<L>,
+        fn_: VirtualReason<L>,
+        prop: VirtualReason<L>,
+        args: Arc<[VirtualReason<L>]>,
+        local: bool,
+    },
+    FunReturnStatement {
+        value: VirtualReason<L>,
+    },
+    FunImplicitReturn {
+        fn_: VirtualReason<L>,
+        upper: VirtualReason<L>,
+        type_guard: bool,
+    },
+    GeneratorYield {
+        value: VirtualReason<L>,
+    },
+    GetExport(VirtualReason<L>),
+    GetProperty(VirtualReason<L>),
+    IndexedTypeAccess {
+        object: VirtualReason<L>,
+        index: VirtualReason<L>,
+    },
+    InitField {
+        op: VirtualReason<L>,
+        body: VirtualReason<L>,
+    },
+    InferBoundCompatibilityCheck {
+        bound: VirtualReason<L>,
+        infer: VirtualReason<L>,
+    },
+    JSXCreateElement {
+        op: VirtualReason<L>,
+        component: VirtualReason<L>,
+    },
+    ReactCreateElementCall {
+        op: VirtualReason<L>,
+        component: VirtualReason<L>,
+        children: L,
+    },
+    ReactGetIntrinsic {
+        literal: VirtualReason<L>,
+    },
+    RecordCreate {
+        op: VirtualReason<L>,
+        constructor: VirtualReason<L>,
+        properties: L,
+    },
+    Speculation(Arc<VirtualUseOp<L>>),
+    TypeApplication {
+        type_: VirtualReason<L>,
+    },
+    SetProperty {
+        lhs: VirtualReason<L>,
+        prop: VirtualReason<L>,
+        value: VirtualReason<L>,
+    },
+    UpdateProperty {
+        lhs: VirtualReason<L>,
+        prop: VirtualReason<L>,
+    },
+    RefinementCheck {
+        test: VirtualReason<L>,
+        discriminant: VirtualReason<L>,
+    },
+    SwitchRefinementCheck {
+        test: L,
+        discriminant: L,
+    },
+    EvalMappedType {
+        mapped_type: VirtualReason<L>,
+    },
+    TypeGuardIncompatibility {
+        guard_type: VirtualReason<L>,
+        param_name: FlowSmolStr,
+    },
+    RenderTypeInstantiation {
+        render_type: VirtualReason<L>,
+    },
+    ComponentRestParamCompatibility {
+        rest_param: VirtualReason<L>,
+    },
+    PositiveTypeGuardConsistency {
+        reason: VirtualReason<L>,
+        return_reason: VirtualReason<L>,
+        param_reason: VirtualReason<L>,
+        guard_type_reason: VirtualReason<L>,
+        is_return_false_statement: bool,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    ImplicitTypeParam,
+    ReactConfigCheck,
+    TypeGuardCompatibility,
+    RendersCompatibility,
+    UnifyFlip,
+    ConstrainedAssignment {
+        name: FlowSmolStr,
+        declaration: L,
+        providers: Arc<[L]>,
+    },
+    ReactDeepReadOnly(L, DroType),
+    ArrayElementCompatibility {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+    FunCompatibility {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+    FunMissingArg {
+        n: i32,
+        op: VirtualReason<L>,
+        def: VirtualReason<L>,
+    },
+    FunParam {
+        n: i32,
+        name: Option<FlowSmolStr>,
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+    FunRestParam {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+    FunReturn {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+    IndexerKeyCompatibility {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+    OpaqueTypeLowerBoundCompatibility {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+    OpaqueTypeUpperBoundCompatibility {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+    OpaqueTypeCustomErrorCompatibility {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+        lower_t: type_or_type_desc::TypeOrTypeDescT<L>,
+        upper_t: type_or_type_desc::TypeOrTypeDescT<L>,
+        custom_error_loc: L,
+        name: FlowSmolStr,
+    },
+    MappedTypeKeyCompatibility {
+        source_type: VirtualReason<L>,
+        mapped_type: VirtualReason<L>,
+    },
+    PropertyCompatibility {
+        prop: Option<Name>,
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+    ReactGetConfig {
+        polarity: Polarity,
+    },
+    TupleElementCompatibility {
+        n: i32,
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+        lower_optional: bool,
+        upper_optional: bool,
+    },
+    TupleAssignment {
+        upper_optional: bool,
+    },
+    TypeArgCompatibility {
+        name: SubstName,
+        targ: VirtualReason<L>,
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+        polarity: Polarity,
+    },
+    TypeParamBound {
+        name: SubstName,
+    },
+    OpaqueTypeLowerBound {
+        opaque_t_reason: VirtualReason<L>,
+    },
+    OpaqueTypeUpperBound {
+        opaque_t_reason: VirtualReason<L>,
+    },
+    EnumRepresentationTypeCompatibility {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum VirtualUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
+    Op(Arc<VirtualRootUseOp<L>>),
+    Frame(Arc<VirtualFrameUseOp<L>>, Arc<VirtualUseOp<L>>),
+}
+
+pub type UseOp = VirtualUseOp<ALoc>;
+
+pub type RootUseOp = VirtualRootUseOp<ALoc>;
+
+pub type FrameUseOp = VirtualFrameUseOp<ALoc>;
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PrivateMethodTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub prop_reason: Reason,
+    pub name: FlowSmolStr,
+    pub class_bindings: Rc<[ClassBinding]>,
+    pub static_: bool,
+    pub method_action: Box<MethodAction>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SetPrivatePropTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub name: FlowSmolStr,
+    pub set_mode: SetMode,
+    pub class_bindings: Rc<[ClassBinding]>,
+    pub static_: bool,
+    pub write_ctx: WriteCtx,
+    pub tin: Type,
+    pub tout: Option<Type>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct GetPropTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub id: Option<i32>,
+    pub from_annot: bool,
+    pub skip_optional: bool,
+    pub propref: Box<PropRef>,
+    pub tout: Box<Tvar>,
+    pub hint: LazyHintT,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct GetPrivatePropTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub name: FlowSmolStr,
+    pub class_bindings: Rc<[ClassBinding]>,
+    pub static_: bool,
+    pub tout: Box<Tvar>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ConstructorTData {
+    pub use_op: UseOp,
+    pub reason: Reason,
+    pub targs: Option<Rc<[Targ]>>,
+    pub args: Rc<[CallArg]>,
+    pub tout: Type,
+    pub return_hint: LazyHintT,
+    pub specialized_ctor: Option<SpecializedCallee>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum UseTInner {
+    /// Use a definition type as an upper bound
+    UseT(UseOp, Type),
+
+    // Operations on runtime values
+    BindT(UseOp, Reason, Box<FuncallType>),
+    CallT {
+        use_op: UseOp,
+        reason: Reason,
+        call_action: Box<CallAction>,
+        return_hint: LazyHintT,
+    },
+    ConditionalT {
+        use_op: UseOp,
+        reason: Reason,
+        distributive_tparam_name: Option<SubstName>,
+        infer_tparams: Rc<[TypeParam]>,
+        extends_t: Type,
+        true_t: Type,
+        false_t: Type,
+        tout: Box<Tvar>,
+    },
+    MethodT(UseOp, Reason, Reason, Box<PropRef>, Box<MethodAction>),
+    PrivateMethodT(Box<PrivateMethodTData>),
+    SetPropT(
+        UseOp,
+        Reason,
+        Box<PropRef>,
+        SetMode,
+        WriteCtx,
+        Type,
+        Option<Type>,
+    ),
+    SetPrivatePropT(Box<SetPrivatePropTData>),
+    GetTypeFromNamespaceT {
+        use_op: UseOp,
+        reason: Reason,
+        prop_ref: (Reason, Name),
+        tout: Box<Tvar>,
+    },
+    GetPropT(Box<GetPropTData>),
+    GetPrivatePropT(Box<GetPrivatePropTData>),
+    TestPropT {
+        use_op: UseOp,
+        reason: Reason,
+        id: i32,
+        propref: Box<PropRef>,
+        tout: Box<Tvar>,
+        hint: LazyHintT,
+    },
+    SetElemT(UseOp, Reason, Type, SetMode, Type, Option<Type>),
+    GetElemT {
+        use_op: UseOp,
+        reason: Reason,
+        id: Option<i32>,
+        from_annot: bool,
+        skip_optional: bool,
+        access_iterables: bool,
+        key_t: Type,
+        tout: Box<Tvar>,
+    },
+    CallElemT(UseOp, Reason, Reason, Type, Box<MethodAction>),
+    GetStaticsT(Box<Tvar>),
+    GetProtoT(Reason, Box<Tvar>),
+    SetProtoT(Reason, Type),
+
+    // Repositioning
+    ReposLowerT {
+        reason: Reason,
+        use_desc: bool,
+        use_t: Box<UseT>,
+    },
+    ReposUseT(Reason, bool, UseOp, Type),
+
+    // Operations on runtime types
+    ConstructorT(Box<ConstructorTData>),
+    SuperT(UseOp, Reason, DerivedType),
+    ImplementsT(UseOp, Type),
+    MixinT(Reason, Type),
+    ToStringT {
+        orig_t: Option<Type>,
+        reason: Reason,
+        t_out: Box<UseT>,
+    },
+
+    // Operation on polymorphic types
+    SpecializeT(UseOp, Reason, Reason, Option<Rc<[Type]>>, Type),
+    ThisSpecializeT(Reason, Type, Box<Cont>),
+    ValueToTypeReferenceT(UseOp, Reason, TypeTKind, Box<Tvar>),
+    ConcretizeTypeAppsT(
+        UseOp,
+        Box<(Rc<[Type]>, bool, UseOp, Reason)>,
+        Box<(Type, Rc<[Type]>, bool, UseOp, Reason)>,
+        bool,
+    ),
+
+    // Operation on prototypes
+    LookupT {
+        reason: Reason,
+        lookup_kind: Box<LookupKind>,
+        try_ts_on_failure: Rc<[Type]>,
+        propref: Box<PropRef>,
+        lookup_action: Box<LookupAction>,
+        ids: Option<properties::Set>,
+        method_accessible: bool,
+        ignore_dicts: bool,
+    },
+
+    // Operations on objects
+    ObjRestT(Reason, Rc<[String]>, Type, i32),
+    ObjTestProtoT(Reason, Type),
+    ObjTestT(Reason, Type, Type),
+    ArrRestT(UseOp, Reason, i32, Type),
+    GetKeysT(Reason, Box<UseT>),
+    HasOwnPropT(UseOp, Reason, Type),
+    GetValuesT(Reason, Type),
+    GetDictValuesT(Reason, Box<UseT>),
+    ElemT {
+        use_op: UseOp,
+        reason: Reason,
+        obj: Type,
+        action: Box<ElemAction>,
+    },
+    MapTypeT(UseOp, Reason, TypeMap, Type),
+    ObjKitT(
+        UseOp,
+        Reason,
+        Box<object::ResolveTool>,
+        Box<object::Tool>,
+        Type,
+    ),
+    ReactKitT(UseOp, Reason, Box<react::Tool>),
+
+    // Tools for preprocessing types
+    ConcretizeT {
+        reason: Reason,
+        kind: ConcretizationKind,
+        seen: concretize_seen::ConcretizeSeen,
+        collector: type_collector::TypeCollector,
+    },
+    ResolveSpreadT(UseOp, Reason, Box<ResolveSpreadType>),
+    CondT(Reason, Option<Type>, Type, Type),
+    ExtendsUseT(UseOp, Reason, Rc<[Type]>, Type, Type),
+    DestructuringT(Reason, DestructKind, Selector, Box<Tvar>, i32),
+    ResolveUnionT {
+        reason: Reason,
+        unresolved: Rc<[Type]>,
+        resolved: Rc<[Type]>,
+        upper: Box<UseT>,
+        id: i32,
+    },
+    TypeCastT(UseOp, Type),
+    EnumCastT {
+        use_op: UseOp,
+        enum_: (Reason, EnumInfo),
+    },
+    EnumExhaustiveCheckT {
+        reason: Reason,
+        check: Box<EnumPossibleExhaustiveCheckT>,
+        incomplete_out: Type,
+        discriminant_after_check: Option<Type>,
+    },
+    GetEnumT {
+        use_op: UseOp,
+        reason: Reason,
+        orig_t: Option<Type>,
+        kind: GetEnumKind,
+        tout: Type,
+    },
+    FilterOptionalT(UseOp, Type),
+    FilterMaybeT(UseOp, Type),
+    DeepReadOnlyT(Box<Tvar>, ReactDro),
+    HooklikeT(Box<Tvar>),
+    SealGenericT {
+        reason: Reason,
+        id: flow_typing_generics::GenericId,
+        name: SubstName,
+        no_infer: bool,
+        cont: Cont,
+    },
+    OptionalIndexedAccessT {
+        use_op: UseOp,
+        reason: Reason,
+        index: OptionalIndexedAccessIndex,
+        tout_tvar: Box<Tvar>,
+    },
+    CheckUnusedPromiseT {
+        reason: Reason,
+        async_: bool,
+    },
+    WriteComputedObjPropCheckT {
+        reason: Reason,
+        reason_key: Option<Reason>,
+        value_t: Type,
+        err_on_str_key: Box<(UseOp, Reason)>,
+    },
+    ConvertEmptyPropsToMixedT(Reason, Type),
+    ExitRendersT {
+        renders_reason: Reason,
+        u: Box<UseT>,
+    },
+    EvalTypeDestructorT {
+        destructor_use_op: UseOp,
+        reason: Reason,
+        repos: Option<(Reason, bool)>,
+        destructor: Box<Destructor>,
+        tout: Box<Tvar>,
+    },
+}
+
+#[derive(Clone, Dupe)]
+pub struct UseT(Rc<UseTInner>);
+
+impl Hash for UseT {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl PartialEq for UseT {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.0, &other.0) || self.0 == other.0
+    }
+}
+
+impl Eq for UseT {}
+
+impl PartialOrd for UseT {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for UseT {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if Rc::ptr_eq(&self.0, &other.0) {
+            std::cmp::Ordering::Equal
+        } else {
+            self.0.cmp(&other.0)
+        }
+    }
+}
+
+impl std::fmt::Debug for UseT {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl Deref for UseT {
+    type Target = UseTInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl UseT {
+    pub fn new(inner: UseTInner) -> Self {
+        UseT(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &UseT) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+impl From<UseTInner> for UseT {
+    fn from(inner: UseTInner) -> Self {
+        UseT::new(inner)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct EnumCheck {
+    pub case_test_loc: ALoc,
+    pub member_name: FlowSmolStr,
+}
+// Valid state transitions are:
+// EnumResolveDiscriminant -> EnumResolveCaseTest (with discriminant info populated)
+// EnumResolveCaseTest -> EnumResolveCaseTest
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum EnumExhaustiveCheckToolT {
+    EnumResolveDiscriminant,
+    EnumResolveCaseTest {
+        discriminant_enum: EnumConcreteInfo,
+        discriminant_reason: Reason,
+        check: EnumCheck,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum EnumPossibleExhaustiveCheckT {
+    EnumExhaustiveCheckPossiblyValid {
+        tool: EnumExhaustiveCheckToolT,
+        // We only convert a "possible check" into a "check" if it has the same
+        // enum type as the discriminant.
+        possible_checks: VecDeque<(Type, EnumCheck)>,
+        checks: Rc<[EnumCheck]>,
+        default_case_loc: Option<ALoc>,
+    },
+    EnumExhaustiveCheckInvalid(Rc<[ALoc]>),
+}
+
+/// Bindings created from destructuring annotations should themselves act like
+/// annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
+/// because `p` should behave like a `string` annotation.
+///
+/// We accomplish this by wrapping the binding itself in an AnnotT type. *)
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum DestructKind {
+    DestructAnnot,
+    DestructInfer,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum CallAction {
+    Funcalltype(FuncallType),
+    ConcretizeCallee(Tvar),
+}
+
+// opt_use_t: use_ts which can be part of an optional chain
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum OptUseT {
+    OptCallT {
+        use_op: UseOp,
+        reason: Reason,
+        opt_funcalltype: OptFuncallType,
+        return_hint: LazyHintT,
+    },
+    OptMethodT(UseOp, Reason, Reason, PropRef, OptMethodAction),
+    OptPrivateMethodT(
+        UseOp,
+        Reason,
+        Reason,
+        FlowSmolStr,
+        Rc<[ClassBinding]>,
+        bool,
+        OptMethodAction,
+    ),
+    OptGetPropT {
+        use_op: UseOp,
+        reason: Reason,
+        id: Option<i32>,
+        propref: PropRef,
+        hint: LazyHintT,
+    },
+    OptGetPrivatePropT(UseOp, Reason, FlowSmolStr, Rc<[ClassBinding]>, bool),
+    OptTestPropT(UseOp, Reason, i32, PropRef, LazyHintT),
+    OptGetElemT(UseOp, Reason, Option<i32>, bool, Type),
+    OptCallElemT(UseOp, Reason, Reason, Type, OptMethodAction),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum OptState {
+    NonOptional,
+    NewChain,
+    ContinueChain,
+    AssertChain,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum MethodAction {
+    CallM {
+        methodcalltype: MethodCallType,
+        return_hint: LazyHintT,
+        specialized_callee: Option<SpecializedCallee>,
+    },
+    ChainM {
+        exp_reason: Reason,
+        lhs_reason: Reason,
+        methodcalltype: MethodCallType,
+        voided_out_collector: Option<type_collector::TypeCollector>,
+        return_hint: LazyHintT,
+        specialized_callee: Option<SpecializedCallee>,
+    },
+    NoMethodAction(Type),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum OptMethodAction {
+    OptCallM {
+        opt_methodcalltype: OptMethodCallType,
+        return_hint: LazyHintT,
+        specialized_callee: Option<SpecializedCallee>,
+    },
+    OptChainM {
+        exp_reason: Reason,
+        lhs_reason: Reason,
+        opt_methodcalltype: OptMethodCallType,
+        voided_out_collector: Option<type_collector::TypeCollector>,
+        return_hint: LazyHintT,
+        specialized_callee: Option<SpecializedCallee>,
+    },
+    OptNoMethodAction(Type),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PredicateInner {
+    AndP(Predicate, Predicate),
+    OrP(Predicate, Predicate),
+    NotP(Predicate),
+    BinaryP(BinaryTest, Type),
+    TruthyP,
+    NullP,
+    MaybeP,
+    SingletonBoolP(ALoc, bool),
+    SingletonStrP(ALoc, bool, String),
+    SingletonNumP(ALoc, bool, NumberLiteral),
+    SingletonBigIntP(ALoc, bool, BigIntLiteral),
+    BoolP(ALoc),
+    FunP,
+    NumP(ALoc),
+    BigIntP(ALoc),
+    ObjP,
+    StrP(ALoc),
+    SymbolP(ALoc),
+    VoidP,
+    ArrP,
+    ArrLenP {
+        op: ArrayLengthOp,
+        n: i32,
+    },
+    PropExistsP {
+        propname: FlowSmolStr,
+        reason: Reason,
+    },
+    // `if (a.b)` yields `flow (a, PredicateT(PropTruthyP ("b"), tout))`
+    PropTruthyP(FlowSmolStr, Reason),
+    // `if (a?.b === null)` yields `flow (a, PredicateT(PropIsExactlyNullP ("b"), tout))`
+    PropIsExactlyNullP(FlowSmolStr, Reason),
+    // `if (a?.b !== undefined)` yields `flow (a, PredicateT(PropNonVoidP ("b"), tout))`
+    PropNonVoidP(FlowSmolStr, Reason),
+    // `if (a.b?.c)` yields `flow (a, PredicateT(PropNonMaybeP ("b"), tout))`
+    PropNonMaybeP(FlowSmolStr, Reason),
+    // Encondes the latent predicate associated with the [index]-th parameter
+    // of the function in type [t]. We also include information for all type arguments
+    // and argument types of the call, to enable polymorphic calls.
+    LatentP(Box<PredFuncallInfo>, Rc<[i32]>),
+    LatentThisP(Box<PredFuncallInfo>),
+    ImpossibleP,
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Predicate(Rc<PredicateInner>);
+
+impl std::ops::Deref for Predicate {
+    type Target = PredicateInner;
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl Predicate {
+    pub fn new(inner: PredicateInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &Predicate) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PredicateConcretetizerVariant {
+    ConcretizeForGeneralPredicateTest,
+    ConcretizeKeepOptimizedUnions,
+    ConcretizeRHSForInstanceOfPredicateTest,
+    ConcretizeRHSForLiteralPredicateTest,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum BinaryTest {
+    // e1 instanceof e2
+    InstanceofTest,
+    // e1.key === e2
+    SentinelProp(FlowSmolStr),
+    // e1 === e2
+    EqTest,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ArrayLengthOp {
+    ArrLenEqual,
+    ArrLenGreaterThanEqual,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Literal {
+    Truthy,
+    AnyLiteral,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum MixedFlavor {
+    MixedEverything,
+    MixedTruthy,
+    MixedNonMaybe,
+    MixedNonNull,
+    MixedNonVoid,
+    MixedFunction,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum AnySource {
+    CatchAny,
+    AnnotatedAny,
+    Untyped,
+    Placeholder,
+    AnyError(Option<AnyErrorKind>),
+    Unsound(UnsoundnessKind),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum AnyErrorKind {
+    UnresolvedName,
+    MissingAnnotation,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum UnsoundnessKind {
+    BoundFunctionThis,
+    Constructor,
+    DummyStatic,
+    Exports,
+    InferenceHooks,
+    InstanceOfRefinement,
+    Merged,
+    ResolveSpread,
+    Unchecked,
+    Unimplemented,
+    UnresolvedType,
+    NonBindingPattern,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FunParam(pub Option<FlowSmolStr>, pub Type);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FunRestParam(pub Option<FlowSmolStr>, pub ALoc, pub Type);
+
+// used by FunT
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct FunType {
+    pub this_t: (Type, ThisStatus),
+    pub params: Rc<[FunParam]>,
+    pub rest_param: Option<FunRestParam>,
+    pub return_t: Type,
+    pub type_guard: Option<TypeGuard>,
+    pub def_reason: Reason,
+    pub effect_: ReactEffectType,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ReactEffectType {
+    HookDecl(ALocId),
+    HookAnnot,
+    ArbitraryEffect,
+    AnyEffect,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TypeGuardInner {
+    pub inferred: bool,
+    pub reason: Reason,
+    pub param_name: (ALoc, FlowSmolStr),
+    pub type_guard: Type,
+    pub one_sided: bool,
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TypeGuard(Rc<TypeGuardInner>);
+
+impl Deref for TypeGuard {
+    type Target = TypeGuardInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl TypeGuard {
+    pub fn new(inner: TypeGuardInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &TypeGuard) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+/// FunTs carry around two `this` types, one to be used during subtyping and
+/// one to be treated as the param when the function is called. This is to allow
+/// more lenient subtyping between class methods without sacrificing soundness
+/// when calling functions.  
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ThisStatus {
+    ThisMethod { unbound: bool },
+    ThisFunction,
+}
+
+/// A CallT constructor can be used to compute hints in calls to IntersectionTs.
+/// (See `synthesis_speculation_call` in type_hint.ml.) We use speculation_hint_state
+/// to keep track of the various states of hint computation during speculation.
+/// The state is initialized to the "unset" phase. If an overload succeeds, it is
+/// recorded along with the speculation path (list of speculation_ids that led
+/// to this choice) in the "set" constructor. For each subsequent success there
+/// are two cases:
+/// (i) The successful speculation id belongs to the "set" speculation path (we
+/// are basically popping off a long speculation path). In this case, the state
+/// remains the same.
+/// (ii) The successful speculation id has not been recorded in "set". This choice
+/// is a sibling of the currently "set" choice. This is possible thanks to the
+/// special behavior of ConcretizeT with union-like types. In this case, we
+/// will only accept the overload if all sibling branches agree on the result.
+/// Otherwise the result is deemed "invalid".
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum SpeculationHintState {
+    SpeculationHintUnset,
+    SpeculationHintInvalid,
+    SpeculationHintSet(Rc<[i32]>, Type),
+}
+
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct SpecState {
+    pub speculation_id: i32,
+    pub case_id: i32,
+}
+
+/// This mutable structure will collect information on the specialized form of the
+/// callee type of a function call. For example, when calling a function with type
+/// `<X>(x: Array<X>) => X`, with `[""]`, it will collect `(x: Array<string>) => string`.
+/// This type will be used to populate the TAST for the callee expression.
+///
+/// When recording types not under speculation, then the results will be appended
+/// to the [finalized] list.
+///
+/// Under speculation we can't really commit to the specialized function we are
+/// calling during a speculative branch. We record the type as a "speculative
+/// candidate", and include the speculative state under which this addition was
+/// made. After speculation is done (at the "fire action" part of Speculation_kit)
+/// we determine if the branch was successful, and if so, we promote the type to
+/// the finalized list.
+///
+/// Note that for signature-help results we do not record types under speculation
+/// so we only need a simple list to record signatures.
+#[derive(Debug, Clone)]
+pub struct SpecializedCallee {
+    pub finalized: Rc<RefCell<Vec<Type>>>,
+    pub speculative_candidates: Rc<RefCell<Vec<(Type, SpecState)>>>,
+    pub init_speculation_state: Option<SpecState>,
+    pub sig_help: Rc<RefCell<Vec<Type>>>,
+}
+
+impl PartialEq for SpecializedCallee {
+    fn eq(&self, other: &Self) -> bool {
+        self.cmp(other) == std::cmp::Ordering::Equal
+    }
+}
+impl Eq for SpecializedCallee {}
+
+impl PartialOrd for SpecializedCallee {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for SpecializedCallee {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.finalized
+            .borrow()
+            .cmp(&*other.finalized.borrow())
+            .then_with(|| {
+                self.speculative_candidates
+                    .borrow()
+                    .cmp(&*other.speculative_candidates.borrow())
+            })
+            .then_with(|| {
+                self.init_speculation_state
+                    .cmp(&other.init_speculation_state)
+            })
+            .then_with(|| self.sig_help.borrow().cmp(&*other.sig_help.borrow()))
+    }
+}
+
+impl std::hash::Hash for SpecializedCallee {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.finalized.borrow().hash(state);
+        self.speculative_candidates.borrow().hash(state);
+        self.init_speculation_state.hash(state);
+        self.sig_help.borrow().hash(state);
+    }
+}
+
+// Used by CallT and similar constructors
+#[derive(Debug, Clone, PartialEq, Eq)]
+pub struct FuncallType {
+    pub call_this_t: Type,
+    pub call_targs: Option<Rc<[Targ]>>,
+    pub call_args_tlist: Rc<[CallArg]>,
+    pub call_tout: Tvar,
+    pub call_strict_arity: bool,
+    pub call_speculation_hint_state: Option<Rc<RefCell<SpeculationHintState>>>,
+    pub call_specialized_callee: Option<SpecializedCallee>,
+}
+
+impl PartialOrd for FuncallType {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for FuncallType {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.call_this_t
+            .cmp(&other.call_this_t)
+            .then_with(|| self.call_targs.cmp(&other.call_targs))
+            .then_with(|| self.call_args_tlist.cmp(&other.call_args_tlist))
+            .then_with(|| self.call_tout.cmp(&other.call_tout))
+            .then_with(|| self.call_strict_arity.cmp(&other.call_strict_arity))
+            .then_with(|| {
+                match (
+                    &self.call_speculation_hint_state,
+                    &other.call_speculation_hint_state,
+                ) {
+                    (None, None) => std::cmp::Ordering::Equal,
+                    (None, Some(_)) => std::cmp::Ordering::Less,
+                    (Some(_), None) => std::cmp::Ordering::Greater,
+                    (Some(a), Some(b)) => a.borrow().cmp(&*b.borrow()),
+                }
+            })
+            .then_with(|| {
+                self.call_specialized_callee
+                    .cmp(&other.call_specialized_callee)
+            })
+    }
+}
+
+impl std::hash::Hash for FuncallType {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.call_this_t.hash(state);
+        self.call_targs.hash(state);
+        self.call_args_tlist.hash(state);
+        self.call_tout.hash(state);
+        self.call_strict_arity.hash(state);
+        self.call_speculation_hint_state
+            .as_ref()
+            .map(|r| r.borrow().clone())
+            .hash(state);
+        self.call_specialized_callee.hash(state);
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct MethodCallType {
+    pub meth_generic_this: Option<Type>,
+    pub meth_targs: Option<Rc<[Targ]>>,
+    pub meth_args_tlist: Rc<[CallArg]>,
+    pub meth_tout: Tvar,
+    pub meth_strict_arity: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Targ {
+    /// This tvar gets lower bounds from the instantiations of _. It is used to power type-services
+    /// like type-at-pos and should not be used for type checking
+    ImplicitArg(Tvar),
+    ExplicitArg(Type),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct OptFuncallType(
+    pub Type,
+    pub Option<Rc<[Targ]>>,
+    pub Rc<[CallArg]>,
+    pub bool,
+    pub Option<SpecializedCallee>,
+);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct OptMethodCallType {
+    pub opt_meth_generic_this: Option<Type>,
+    pub opt_meth_targs: Option<Rc<[Targ]>>,
+    pub opt_meth_args_tlist: Rc<[CallArg]>,
+    pub opt_meth_strict_arity: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum CallArgInner {
+    Arg(Type),
+    SpreadArg(Type),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct CallArg(Rc<CallArgInner>);
+
+impl Deref for CallArg {
+    type Target = CallArgInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl CallArg {
+    pub fn new(inner: CallArgInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn arg(t: Type) -> Self {
+        Self::new(CallArgInner::Arg(t))
+    }
+
+    pub fn spread_arg(t: Type) -> Self {
+        Self::new(CallArgInner::SpreadArg(t))
+    }
+
+    pub fn ptr_eq(&self, other: &CallArg) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct PredFuncallInfo(
+    pub UseOp,
+    pub ALoc,
+    pub Type,
+    pub Option<Rc<[Targ]>>,
+    pub Rc<[CallArg]>,
+);
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum DroType {
+    HookReturn,
+    HookArg,
+    Props,
+    DebugAnnot,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ReactDro(pub ALoc, pub DroType);
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TupleView {
+    pub elements: Rc<[TupleElement]>,
+    pub arity: (i32, i32),
+    pub inexact: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ArrType {
+    ArrayAT {
+        ///Should elements of this array be treated as propagating read-only, and if so, what location is responsible  
+        react_dro: Option<ReactDro>,
+        elem_t: Type,
+        tuple_view: Option<TupleView>,
+    },
+    /// TupleAT of elemt * tuple_types. Why do tuples carry around elemt? Well, so
+    /// that they don't need to recompute their general type when you do
+    /// `myTuple[expr]`
+    TupleAT {
+        react_dro: Option<ReactDro>,
+        elem_t: Type,
+        elements: Rc<[TupleElement]>,
+        /// Arity represents the range of valid arities, considering optional elements.
+        /// It ranges from the number of required elements, to the total number of elements.
+        arity: (i32, i32),
+        inexact: bool,
+    },
+    /// ROArrayAT(elemt) is the super type for all tuples and arrays for which
+    /// elemt is a supertype of every element type
+    ROArrayAT(Type, Option<ReactDro>),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TupleElement {
+    pub reason: Reason,
+    pub name: Option<FlowSmolStr>,
+    pub t: Type,
+    pub polarity: Polarity,
+    pub optional: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ObjType {
+    pub flags: Flags,
+    pub props_tmap: properties::Id,
+    pub proto_t: Type,
+    pub call_t: Option<i32>,
+    /// reachable_targs is populated during substitution. We use those reachable
+    /// targs to avoid traversing the full objtype structure during any-propagation
+    /// and instead pollute the reachable_targs directly. *)
+    pub reachable_targs: Rc<[(Type, Polarity)]>,
+}
+
+/// Object.assign(target, source1, ...source2) first resolves target then the sources.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ObjAssignKind {
+    /// Obj.assign(target, source) with flag indicating whether source must be exact
+    ObjAssign { assert_exact: bool },
+    /// Obj.assign(target, ...source)
+    ObjSpreadAssign,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NamespaceType {
+    pub namespace_symbol: Symbol,
+    pub values_type: Type,
+    pub types_tmap: properties::Id,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Cont {
+    Lower(UseOp, Type),
+    Upper(Box<UseT>),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DerivedType {
+    pub own: FlowOrdMap<Name, Property>,
+    pub proto: FlowOrdMap<Name, Property>,
+    pub static_: FlowOrdMap<Name, Property>,
+}
+
+/// LookupT is a general-purpose tool for traversing prototype chains in search
+/// of properties. In all cases, if the property is found somewhere along the
+/// prototype chain, the property type will unify with the output tvar. Lookup
+/// kinds control what happens when a property is not found.
+///
+/// Strict
+///   If the property is not found, emit an error. The reason should point to
+///   the original lookup location.
+///
+/// NonstrictReturning None
+///   If the property is not found, do nothing. Note that lookups of this kind
+///   will not add any constraints to the output tvar.
+///
+/// NonstrictReturning (Some (default, tout))
+///   If the property is not found, unify a default type with the *original*
+///   tvar from the lookup. *)
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum LookupKind {
+    Strict(Reason),
+    NonstrictReturning(Option<(Type, Type)>, Option<(i32, (Reason, Reason))>),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum LookupAction {
+    ReadProp {
+        use_op: UseOp,
+        obj_t: Type,
+        tout: Tvar,
+    },
+    WriteProp {
+        use_op: UseOp,
+        obj_t: Type,
+        prop_tout: Option<Type>,
+        tin: Type,
+        write_ctx: WriteCtx,
+        mode: SetMode,
+    },
+    LookupPropForTvarPopulation {
+        polarity: Polarity,
+        tout: Type,
+    },
+    LookupPropForSubtyping {
+        use_op: UseOp,
+        prop: PropertyType,
+        prop_name: Name,
+        reason_lower: Reason,
+        reason_upper: Reason,
+    },
+    SuperProp(UseOp, PropertyType),
+    MatchProp {
+        use_op: UseOp,
+        drop_generic: bool,
+        prop_t: Type,
+    },
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum WriteCtx {
+    ThisInCtor,
+    Normal,
+}
+
+/// Property writes can either be assignments (from `a.x = e`) or deletions
+/// (from `delete a.x`). For the most part, we can treat these the same
+/// (flowing void into `a.x` in a deletion), but if the property being deleted
+/// originates in an indexer, we need to know not to flow `void` into the
+/// indexer's type, which would cause an error. The `set_mode` type records
+/// whether a property write is an assignment or a deletion, to help handle
+/// this special case.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum SetMode {
+    Delete,
+    Assign,
+}
+
+/// See the above comment on `set_mode`--this type is the other half, which
+/// records whether a property originates in an indexer or from a property
+/// map. This is relevant when the property is being deleted--we should flow
+/// `void` to the property's type if it originates in a property map (to ensure
+/// that its type is nullable and raise an error if it's not) but not if it's
+/// from an indexer, where our current semantics are intentionally unsound with
+/// respect to undefined anyways.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PropertySource {
+    DynamicProperty,
+    PropertyMapProperty,
+    IndexerProperty,
+}
+
+/// WriteElem has a `tout` parameter to serve as a trigger for ordering
+/// operations. We only need this in one place: object literal initialization.
+/// In particular, a computed property in the object initializer users SetElemT
+/// to initialize the property value, but in order to avoid race conditions we
+/// need to ensure that reads happen after writes.
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ElemAction {
+    ReadElem {
+        id: Option<i32>,
+        from_annot: bool,
+        skip_optional: bool,
+        access_iterables: bool,
+        tout: Tvar,
+    },
+    WriteElem {
+        tin: Type,
+        tout: Option<Type>,
+        mode: SetMode,
+    },
+    CallElem(Reason, Box<MethodAction>),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PropRef {
+    Named {
+        reason: Reason,
+        name: Name,
+        from_indexed_access: bool,
+    },
+    Computed(Type),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ObjKind {
+    Exact,
+    Inexact,
+    Indexed(DictType),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Flags {
+    pub react_dro: Option<ReactDro>,
+    pub obj_kind: ObjKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DictType {
+    pub dict_name: Option<FlowSmolStr>,
+    pub key: Type,
+    pub value: Type,
+    pub dict_polarity: Polarity,
+}
+
+/// key_loc refer to the location of the identifier, if one exists,
+/// preferred_def_locs refer to the (potentially multiple) def_loc that go-to-definition should
+/// jump to. If the field is None, go-to-definition will jump to key_loc. The field should only
+/// be populated if multiple def_locs make sense, or if we want to track fields where we want to
+/// make an extra go-to-def jump for better UX.
+#[derive(Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct Property(Rc<PropertyInner>);
+
+impl Deref for Property {
+    type Target = PropertyInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::fmt::Debug for Property {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        self.0.fmt(f)
+    }
+}
+
+impl Property {
+    pub fn new(inner: PropertyInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &Property) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PropertyInner {
+    Field {
+        preferred_def_locs: Option<Vec1<ALoc>>,
+        key_loc: Option<ALoc>,
+        type_: Type,
+        polarity: Polarity,
+    },
+    Get {
+        key_loc: Option<ALoc>,
+        type_: Type,
+    },
+    Set {
+        key_loc: Option<ALoc>,
+        type_: Type,
+    },
+    GetSet {
+        get_key_loc: Option<ALoc>,
+        get_type: Type,
+        set_key_loc: Option<ALoc>,
+        set_type: Type,
+    },
+    Method {
+        key_loc: Option<ALoc>,
+        type_: Type,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum PropertyType {
+    /// A field that is defined in the source file as a field.
+    OrdinaryField { type_: Type, polarity: Polarity },
+    /// Some properties that are normalized to a field.
+    SyntheticField {
+        get_type: Option<Type>,
+        set_type: Option<Type>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NamedSymbolInner {
+    pub name_loc: Option<ALoc>,
+    pub preferred_def_locs: Option<Vec1<ALoc>>,
+    pub type_: Type,
+}
+
+/// Rc-wrapped NamedSymbol for smaller B-tree entries (8 bytes vs 64 bytes).
+/// Implements Deref to NamedSymbolInner so field access works transparently.
+#[derive(Debug, Clone)]
+pub struct NamedSymbol(Rc<NamedSymbolInner>);
+
+impl NamedSymbol {
+    pub fn new(
+        name_loc: Option<ALoc>,
+        preferred_def_locs: Option<Vec1<ALoc>>,
+        type_: Type,
+    ) -> Self {
+        NamedSymbol(Rc::new(NamedSymbolInner {
+            name_loc,
+            preferred_def_locs,
+            type_,
+        }))
+    }
+}
+
+impl Dupe for NamedSymbol {}
+
+impl std::ops::Deref for NamedSymbol {
+    type Target = NamedSymbolInner;
+    fn deref(&self) -> &NamedSymbolInner {
+        &self.0
+    }
+}
+
+impl PartialEq for NamedSymbol {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.0, &other.0) || self.0 == other.0
+    }
+}
+
+impl Eq for NamedSymbol {}
+
+impl PartialOrd for NamedSymbol {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for NamedSymbol {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if Rc::ptr_eq(&self.0, &other.0) {
+            std::cmp::Ordering::Equal
+        } else {
+            self.0.cmp(&other.0)
+        }
+    }
+}
+
+impl std::hash::Hash for NamedSymbol {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+// This has to go here so that Type doesn't depend on Scope
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ClassBinding {
+    pub class_binding_id: ALocId,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct InstTypeInner {
+    pub class_name: Option<FlowSmolStr>,
+    pub class_id: ALocId,
+    pub type_args: Rc<[(SubstName, Reason, Type, Polarity)]>,
+    pub own_props: properties::Id,
+    pub proto_props: properties::Id,
+    pub inst_call_t: Option<i32>,
+    pub initialized_fields: FlowOrdSet<FlowSmolStr>,
+    pub initialized_static_fields: FlowOrdSet<FlowSmolStr>,
+    pub inst_kind: InstanceKind,
+    pub inst_dict: object::Dict,
+    pub class_private_fields: properties::Id,
+    pub class_private_static_fields: properties::Id,
+    pub class_private_methods: properties::Id,
+    pub class_private_static_methods: properties::Id,
+    pub inst_react_dro: Option<ReactDro>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct InstType(Rc<InstTypeInner>);
+
+impl Deref for InstType {
+    type Target = InstTypeInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl InstType {
+    pub fn new(inner: InstTypeInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &InstType) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum InstanceKind {
+    ClassKind,
+    InterfaceKind {
+        inline: bool,
+    },
+    RecordKind {
+        defaulted_props: FlowOrdSet<FlowSmolStr>,
+    },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct InstanceTInner {
+    pub inst: InstType,
+    pub static_: Type,
+    pub super_: Type,
+    pub implements: Rc<[Type]>,
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct InstanceT(Rc<InstanceTInner>);
+
+impl Deref for InstanceT {
+    type Target = InstanceTInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl InstanceT {
+    pub fn new(inner: InstanceTInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &InstanceT) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NominalTypeInner {
+    pub nominal_id: nominal::Id,
+    pub underlying_t: nominal::UnderlyingT,
+    pub lower_t: Option<Type>,
+    pub upper_t: Option<Type>,
+    pub nominal_type_args: Rc<[(SubstName, Reason, Type, Polarity)]>,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct NominalType(Rc<NominalTypeInner>);
+
+impl Deref for NominalType {
+    type Target = NominalTypeInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl NominalType {
+    pub fn new(inner: NominalTypeInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &NominalType) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ExportTypes {
+    /// tmap used to store individual, named ES exports as generated by `export`
+    /// statements in a module.
+    pub value_exports_tmap: exports::Id,
+    /// Note that CommonJS modules may also populate this tmap if their export
+    /// type is an object (that object's properties become named exports) or if
+    /// it has any "type" exports via `export type ...`
+    pub type_exports_tmap: exports::Id,
+    /// This stores the CommonJS export type when applicable and is used as the
+    /// exact return type for calls to require(). This slot doesn't apply to pure
+    /// ES modules.
+    pub cjs_export: Option<(Option<ALoc>, Type)>,
+    /// Sometimes we claim the module exports any or Object, implying that it
+    ///has every named export
+    pub has_every_named_export: bool,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ImportKind {
+    ImportType,
+    ImportTypeof,
+    ImportValue,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ExportKind {
+    DirectExport,
+    ReExport,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TypeParamInner {
+    pub reason: Reason,
+    pub name: SubstName,
+    pub bound: Type,
+    pub polarity: Polarity,
+    pub default: Option<Type>,
+    pub is_this: bool,
+    pub is_const: bool,
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct TypeParam(Rc<TypeParamInner>);
+
+impl Deref for TypeParam {
+    type Target = TypeParamInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl TypeParam {
+    pub fn new(inner: TypeParamInner) -> Self {
+        Self(Rc::new(inner))
+    }
+
+    pub fn ptr_eq(&self, other: &TypeParam) -> bool {
+        Rc::ptr_eq(&self.0, &other.0)
+    }
+}
+
+pub type TypeParams = Option<(ALoc, Vec1<TypeParam>)>;
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ModuleTypeInner {
+    pub module_reason: Reason,
+    pub module_export_types: ExportTypes,
+    pub module_is_strict: bool,
+    pub module_available_platforms: Option<PlatformSet>,
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ModuleType(Rc<ModuleTypeInner>);
+
+impl Deref for ModuleType {
+    type Target = ModuleTypeInner;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl ModuleType {
+    pub fn new(inner: ModuleTypeInner) -> Self {
+        Self(Rc::new(inner))
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Selector {
+    Prop(FlowSmolStr, bool),
+    Elem(Type),
+    ObjRest(Rc<[FlowSmolStr]>),
+    ArrRest(i32),
+    Default,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum Destructor {
+    NonMaybeType,
+    ExactType,
+    ReadOnlyType,
+    PartialType,
+    RequiredType,
+    ValuesType,
+    ReactElementConfigType,
+    EnumType,
+    PropertyType {
+        name: Name,
+    },
+    ElementType {
+        index_type: Type,
+    },
+    OptionalIndexedAccessNonMaybeType {
+        index: OptionalIndexedAccessIndex,
+    },
+    OptionalIndexedAccessResultType {
+        void_reason: Reason,
+    },
+    SpreadType(
+        object::spread::Target,
+        Rc<[object::spread::Operand]>,
+        Option<object::spread::OperandSlice>,
+    ),
+    SpreadTupleType {
+        reason_tuple: Reason,
+        reason_spread: Reason,
+        inexact: bool,
+        resolved: Rc<[ResolvedParam]>,
+        unresolved: Rc<[UnresolvedParam]>,
+    },
+    RestType(object::rest::MergeMode, Type),
+    ConditionalType {
+        distributive_tparam_name: Option<SubstName>,
+        infer_tparams: Rc<[TypeParam]>,
+        extends_t: Type,
+        true_t: Type,
+        false_t: Type,
+    },
+    TypeMap(TypeMap),
+    ReactCheckComponentConfig {
+        props: FlowOrdMap<Name, Property>,
+        allow_ref_in_spread: bool,
+    },
+    ReactDRO(ReactDro),
+    MappedType {
+        /// Homomorphic mapped types use an inline keyof: {[key in keyof O]: T} or a type parameter
+        /// bound by $Keys/keyof: type Homomorphic<Keys: $Keys<O>> = {[key in O]: T}
+        homomorphic: MappedTypeHomomorphicFlag,
+        distributive_tparam_name: Option<SubstName>,
+        property_type: Type,
+        mapped_type_flags: MappedTypeFlags,
+    },
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum MappedTypeHomomorphicFlag {
+    Homomorphic,
+    Unspecialized,
+    SemiHomomorphic(Type),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum MappedTypeOptionality {
+    MakeOptional,
+    RemoveOptional,
+    KeepOptionality,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum MappedTypeVariance {
+    OverrideVariance(Polarity),
+    RemoveVariance(Polarity),
+    KeepVariance,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct MappedTypeFlags {
+    pub variance: MappedTypeVariance,
+    pub optional: MappedTypeOptionality,
+}
+
+#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum OptionalIndexedAccessIndex {
+    OptionalIndexedAccessStrLitIndex(Name),
+    OptionalIndexedAccessTypeIndex(Type),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TypeMap {
+    ObjectKeyMirror,
+}
+
+/// Concretizers of resolved types: simplify types like EvalT, OpenT, TypeAppT,
+/// etc. The order of the constructors below denotes the order in which the
+/// respective catch-all cases appears in flow_js.ml. *)
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ConcretizationKind {
+    ConcretizeForCJSExtractNamedExportsAndTypeExports,
+    ConcretizeForOptionalChain,
+    ConcretizeForImportsExports,
+    ConcretizeForInspection,
+    ConcretizeForPredicate(PredicateConcretetizerVariant),
+    ConcretizeForOperatorsChecking,
+    ConcretizeForComputedObjectKeys,
+    ConcretizeForObjectAssign,
+    ConcretizeForSentinelPropTest,
+    ConcretizeForMatchArg { keep_unions: bool },
+    ConcretizeAll,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct ResolveSpreadType {
+    /// This is the list of elements that are already resolved (that is have no
+    /// more unresolved spread elements  
+    pub rrt_resolved: Rc<[ResolvedParam]>,
+    /// This is the list of elements that we have yet to resolve
+    pub rrt_unresolved: Rc<[UnresolvedParam]>,
+    /// Once all the elements have been resolved, this tells us what type to construct
+    pub rrt_resolve_to: SpreadResolve,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum UnresolvedParam {
+    UnresolvedArg(TupleElement, Option<flow_typing_generics::GenericId>),
+    UnresolvedSpreadArg(Type),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum ResolvedParam {
+    ResolvedArg(TupleElement, Option<flow_typing_generics::GenericId>),
+    ResolvedSpreadArg(Reason, ArrType, Option<flow_typing_generics::GenericId>),
+    ResolvedAnySpreadArg(Reason, AnySource),
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum SpreadResolve {
+    ResolveSpreadsToTupleType {
+        id: i32,
+        elem_t: Type,
+        inexact: bool,
+        tout: Type,
+    },
+    /// Once we've finished resolving spreads, try to construct an array with known element types
+    ResolveSpreadsToArrayLiteral {
+        id: i32,
+        as_const: bool,
+        elem_t: Type,
+        tout: Type,
+    },
+    /// Once we've finished resolving spreads, try to construct a non-tuple array
+    ResolveSpreadsToArray(Type, Type), // elem type, array type
+    /// Once we've finished resolving spreads for a function's arguments, call the
+    /// function with those arguments *)
+    ResolveSpreadsToMultiflowCallFull(i32, FunType),
+    ResolveSpreadsToMultiflowSubtypeFull(i32, FunType),
+    /// Once we've finished resolving spreads for a function's arguments,
+    /// partially apply the arguments to the function and return the resulting
+    /// function (basically what func.bind(that, ...args) does)
+    ResolveSpreadsToMultiflowPartial(i32, FunType, Reason, Type),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum SpreadArrayResolveTo {
+    ResolveToArrayLiteral { as_const: bool },
+    ResolveToArray,
+    ResolveToTupleType { inexact: bool },
+}
+
+/// Add some flavor to the TypeT constructor. For now this information is only
+/// used by the type normalizer.
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum TypeTKind {
+    TypeAliasKind,
+    TypeParamKind,
+    OpaqueKind,
+    ImportTypeofKind,
+    ImportClassKind,
+    ImportEnumKind,
+    InstanceKind,
+    // T/U in renders T/renders (T | U). Render types do not require type arguments for polymorphic components
+    RenderTypeKind,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum FrozenKind {
+    NotFrozen,
+    FrozenProp,
+    FrozenDirect,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum GetEnumKind {
+    GetEnumObject,
+    GetEnumValue,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub struct DepthTrace(u32);
+
+impl DepthTrace {
+    pub fn depth(&self) -> u32 {
+        self.0
+    }
+
+    pub fn dummy_trace() -> Self {
+        Self(0)
+    }
+
+    pub fn unit_trace() -> Self {
+        Self(1)
+    }
+
+    pub fn rec_trace(parent_depth: Self) -> Self {
+        Self(parent_depth.0 + 1)
+    }
+
+    pub fn concat_trace(traces: &[Self]) -> Self {
+        Self(traces.iter().map(|t| t.0).max().unwrap_or(0))
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum UnionEnum {
+    Void,
+    Null,
+    Str(Name),
+    Num(NumberLiteral),
+    Bool(bool),
+    BigInt(BigIntLiteral),
+}
+
+impl PartialEq for UnionEnum {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Str(a), Self::Str(b)) => a == b,
+            // compare numeric literals based on float representation
+            (Self::Num(NumberLiteral(a, _)), Self::Num(NumberLiteral(b, _))) => {
+                a.to_bits() == b.to_bits()
+            }
+            (Self::Bool(a), Self::Bool(b)) => a == b,
+            (Self::BigInt(a), Self::BigInt(b)) => a == b,
+            (Self::Void, Self::Void) | (Self::Null, Self::Null) => true,
+            _ => false,
+        }
+    }
+}
+
+impl Eq for UnionEnum {}
+
+impl PartialOrd for UnionEnum {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for UnionEnum {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        fn discriminant(v: &UnionEnum) -> u8 {
+            match v {
+                UnionEnum::Str(_) => 0,
+                UnionEnum::Num(_) => 1,
+                UnionEnum::Bool(_) => 2,
+                UnionEnum::BigInt(_) => 3,
+                UnionEnum::Void => 4,
+                UnionEnum::Null => 5,
+            }
+        }
+        match (self, other) {
+            (Self::Str(a), Self::Str(b)) => a.cmp(b),
+            // compare numeric literals based on float representation
+            (Self::Num(NumberLiteral(a, _)), Self::Num(NumberLiteral(b, _))) => a.total_cmp(b),
+            (Self::Bool(a), Self::Bool(b)) => a.cmp(b),
+            (Self::BigInt(a), Self::BigInt(b)) => a.cmp(b),
+            _ => discriminant(self).cmp(&discriminant(other)),
+        }
+    }
+}
+
+impl std::hash::Hash for UnionEnum {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            Self::Str(s) => s.hash(state),
+            Self::Num(NumberLiteral(f, _)) => f.to_bits().hash(state),
+            Self::Bool(b) => b.hash(state),
+            Self::BigInt(b) => b.hash(state),
+            Self::Void | Self::Null => {}
+        }
+    }
+}
+
+impl std::fmt::Display for UnionEnum {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Str(s) => write!(f, "{}", s),
+            Self::Num(NumberLiteral(_, s)) => write!(f, "{}", s),
+            Self::Bool(b) => write!(f, "{}", b),
+            Self::BigInt(BigIntLiteral(_, s)) => write!(f, "{}", s),
+            Self::Void => write!(f, "undefined"),
+            Self::Null => write!(f, "null"),
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum UnionEnumStar {
+    One(UnionEnum),
+    Many(UnionEnumSet),
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum UnionEnumTag {
+    SingletonStr,
+    Str,
+    NumericStrKey,
+    SingletonNum,
+    Num,
+    SingletonBigInt,
+    BigInt,
+    SingletonBool,
+    Bool,
+    Void,
+    Null,
+}
+
+pub type UnionEnumSet = FlowOrdSet<UnionEnum>;
+
+pub mod property {
+    use super::*;
+
+    pub fn type_(p: &Property) -> PropertyType {
+        match p.deref() {
+            PropertyInner::Field {
+                type_, polarity, ..
+            } => PropertyType::OrdinaryField {
+                type_: type_.dupe(),
+                polarity: *polarity,
+            },
+            PropertyInner::Get { type_, .. } | PropertyInner::Method { type_, .. } => {
+                PropertyType::SyntheticField {
+                    get_type: Some(type_.dupe()),
+                    set_type: None,
+                }
+            }
+            PropertyInner::Set { type_, .. } => PropertyType::SyntheticField {
+                get_type: None,
+                set_type: Some(type_.dupe()),
+            },
+            PropertyInner::GetSet {
+                get_type, set_type, ..
+            } => PropertyType::SyntheticField {
+                get_type: Some(get_type.dupe()),
+                set_type: Some(set_type.dupe()),
+            },
+        }
+    }
+
+    pub fn polarity(p: &Property) -> Polarity {
+        match p.deref() {
+            PropertyInner::Field { polarity, .. } => *polarity,
+            PropertyInner::Get { .. } => Polarity::Positive,
+            PropertyInner::Set { .. } => Polarity::Negative,
+            PropertyInner::GetSet { .. } => Polarity::Neutral,
+            PropertyInner::Method { .. } => Polarity::Positive,
+        }
+    }
+
+    pub fn polarity_of_property_type(pt: &PropertyType) -> Polarity {
+        match pt {
+            PropertyType::OrdinaryField { polarity, .. } => *polarity,
+            PropertyType::SyntheticField {
+                get_type: None,
+                set_type: None,
+            } => {
+                panic!("Illegal property_type: both get_type and set_type are None")
+            }
+            PropertyType::SyntheticField {
+                get_type: Some(_),
+                set_type: None,
+            } => Polarity::Positive,
+            PropertyType::SyntheticField {
+                get_type: None,
+                set_type: Some(_),
+            } => Polarity::Negative,
+            PropertyType::SyntheticField {
+                get_type: Some(_),
+                set_type: Some(_),
+            } => Polarity::Neutral,
+        }
+    }
+
+    pub fn read_t_of_property_type(pt: &PropertyType) -> Option<Type> {
+        match pt {
+            PropertyType::OrdinaryField { type_, polarity } => {
+                if Polarity::compat(*polarity, Polarity::Positive) {
+                    Some(type_.dupe())
+                } else {
+                    None
+                }
+            }
+            PropertyType::SyntheticField { get_type, .. } => get_type.as_ref().map(|t| t.dupe()),
+        }
+    }
+
+    pub fn read_t(p: &Property) -> Option<Type> {
+        read_t_of_property_type(&type_(p))
+    }
+
+    pub fn write_t_of_property_type(pt: &PropertyType, ctx: Option<WriteCtx>) -> Option<Type> {
+        let ctx = ctx.unwrap_or(WriteCtx::Normal);
+        match pt {
+            PropertyType::OrdinaryField { type_, polarity } => {
+                if matches!(ctx, WriteCtx::ThisInCtor)
+                    || Polarity::compat(*polarity, Polarity::Negative)
+                {
+                    Some(type_.dupe())
+                } else {
+                    None
+                }
+            }
+            PropertyType::SyntheticField { set_type, .. } => set_type.as_ref().map(|t| t.dupe()),
+        }
+    }
+
+    pub fn write_t(p: &Property) -> Option<Type> {
+        write_t_of_property_type(&type_(p), None)
+    }
+
+    pub fn read_loc(p: &Property) -> Option<ALoc> {
+        match p.deref() {
+            PropertyInner::Field { key_loc, .. }
+            | PropertyInner::Get { key_loc, .. }
+            | PropertyInner::Method { key_loc, .. } => key_loc.dupe(),
+            PropertyInner::GetSet { get_key_loc, .. } => get_key_loc.dupe(),
+            PropertyInner::Set { .. } => None,
+        }
+    }
+
+    pub fn write_loc(p: &Property) -> Option<ALoc> {
+        match p.deref() {
+            PropertyInner::Field { key_loc, .. } | PropertyInner::Set { key_loc, .. } => {
+                key_loc.dupe()
+            }
+            PropertyInner::GetSet { set_key_loc, .. } => set_key_loc.dupe(),
+            PropertyInner::Method { .. } | PropertyInner::Get { .. } => None,
+        }
+    }
+
+    pub fn first_loc(p: &Property) -> Option<ALoc> {
+        match p.deref() {
+            PropertyInner::Field { key_loc, .. }
+            | PropertyInner::Get { key_loc, .. }
+            | PropertyInner::Set { key_loc, .. }
+            | PropertyInner::Method { key_loc, .. } => key_loc.dupe(),
+            PropertyInner::GetSet {
+                get_key_loc,
+                set_key_loc,
+                ..
+            } => match (get_key_loc, set_key_loc) {
+                (None, None) => None,
+                (Some(loc), None) | (None, Some(loc)) => Some(loc.dupe()),
+                (Some(loc1), Some(loc2)) => {
+                    if loc1 <= loc2 {
+                        Some(loc1.dupe())
+                    } else {
+                        Some(loc2.dupe())
+                    }
+                }
+            },
+        }
+    }
+
+    pub fn def_locs(p: &Property) -> Option<Vec1<ALoc>> {
+        match p.deref() {
+            PropertyInner::Field {
+                preferred_def_locs: Some(locs),
+                ..
+            } => Some(locs.clone()),
+            PropertyInner::Field {
+                preferred_def_locs: None,
+                key_loc,
+                ..
+            }
+            | PropertyInner::Get { key_loc, .. }
+            | PropertyInner::Set { key_loc, .. }
+            | PropertyInner::Method { key_loc, .. } => {
+                key_loc.as_ref().map(|loc| Vec1::new(loc.dupe()))
+            }
+            PropertyInner::GetSet {
+                get_key_loc,
+                set_key_loc,
+                ..
+            } => match (get_key_loc, set_key_loc) {
+                (None, None) => None,
+                (Some(loc), None) | (None, Some(loc)) => Some(Vec1::new(loc.dupe())),
+                (Some(loc1), Some(loc2)) => {
+                    let mut nel = Vec1::new(loc1.dupe());
+                    nel.push(loc2.dupe());
+                    Some(nel)
+                }
+            },
+        }
+    }
+
+    pub fn iter_t<F>(mut f: F, p: &Property)
+    where
+        F: FnMut(&Type),
+    {
+        match p.deref() {
+            PropertyInner::Field { type_, .. }
+            | PropertyInner::Get { type_, .. }
+            | PropertyInner::Set { type_, .. }
+            | PropertyInner::Method { type_, .. } => f(type_),
+            PropertyInner::GetSet {
+                get_type, set_type, ..
+            } => {
+                f(get_type);
+                f(set_type);
+            }
+        }
+    }
+
+    pub fn fold_t<A, F>(f: F, acc: A, p: &Property) -> A
+    where
+        F: Fn(A, &Type) -> A,
+    {
+        match p.deref() {
+            PropertyInner::Field { type_, .. }
+            | PropertyInner::Get { type_, .. }
+            | PropertyInner::Set { type_, .. }
+            | PropertyInner::Method { type_, .. } => f(acc, type_),
+            PropertyInner::GetSet {
+                get_type, set_type, ..
+            } => f(f(acc, get_type), set_type),
+        }
+    }
+
+    pub fn map_t<F>(f: F, p: &Property) -> Property
+    where
+        F: Fn(&Type) -> Type,
+    {
+        match p.deref() {
+            PropertyInner::Field {
+                preferred_def_locs,
+                key_loc,
+                type_,
+                polarity,
+            } => Property::new(PropertyInner::Field {
+                preferred_def_locs: preferred_def_locs.clone(),
+                key_loc: key_loc.dupe(),
+                type_: f(type_),
+                polarity: *polarity,
+            }),
+            PropertyInner::Get { key_loc, type_ } => Property::new(PropertyInner::Get {
+                key_loc: key_loc.dupe(),
+                type_: f(type_),
+            }),
+            PropertyInner::Set { key_loc, type_ } => Property::new(PropertyInner::Set {
+                key_loc: key_loc.dupe(),
+                type_: f(type_),
+            }),
+            PropertyInner::GetSet {
+                get_key_loc,
+                get_type,
+                set_key_loc,
+                set_type,
+            } => Property::new(PropertyInner::GetSet {
+                get_key_loc: get_key_loc.dupe(),
+                get_type: f(get_type),
+                set_key_loc: set_key_loc.dupe(),
+                set_type: f(set_type),
+            }),
+            PropertyInner::Method { key_loc, type_ } => Property::new(PropertyInner::Method {
+                key_loc: key_loc.dupe(),
+                type_: f(type_),
+            }),
+        }
+    }
+
+    pub fn ident_map_t<F>(f: F, p: &Property) -> Cow<'_, Property>
+    where
+        F: Fn(&Type) -> Type,
+    {
+        match p.deref() {
+            PropertyInner::Field {
+                preferred_def_locs,
+                key_loc,
+                type_,
+                polarity,
+            } => {
+                let type_prime = f(type_);
+                if Rc::ptr_eq(&type_prime.0, &type_.0) {
+                    Cow::Borrowed(p)
+                } else {
+                    Cow::Owned(Property::new(PropertyInner::Field {
+                        preferred_def_locs: preferred_def_locs.clone(),
+                        key_loc: key_loc.dupe(),
+                        type_: type_prime,
+                        polarity: *polarity,
+                    }))
+                }
+            }
+            PropertyInner::Get { key_loc, type_ } => {
+                let type_prime = f(type_);
+                if Rc::ptr_eq(&type_prime.0, &type_.0) {
+                    Cow::Borrowed(p)
+                } else {
+                    Cow::Owned(Property::new(PropertyInner::Get {
+                        key_loc: key_loc.dupe(),
+                        type_: type_prime,
+                    }))
+                }
+            }
+            PropertyInner::Set { key_loc, type_ } => {
+                let type_prime = f(type_);
+                if Rc::ptr_eq(&type_prime.0, &type_.0) {
+                    Cow::Borrowed(p)
+                } else {
+                    Cow::Owned(Property::new(PropertyInner::Set {
+                        key_loc: key_loc.dupe(),
+                        type_: type_prime,
+                    }))
+                }
+            }
+            PropertyInner::GetSet {
+                get_key_loc,
+                get_type,
+                set_key_loc,
+                set_type,
+            } => {
+                let get_type_prime = f(get_type);
+                let set_type_prime = f(set_type);
+                if Rc::ptr_eq(&get_type_prime.0, &get_type.0)
+                    && Rc::ptr_eq(&set_type_prime.0, &set_type.0)
+                {
+                    Cow::Borrowed(p)
+                } else {
+                    Cow::Owned(Property::new(PropertyInner::GetSet {
+                        get_key_loc: get_key_loc.dupe(),
+                        get_type: get_type_prime,
+                        set_key_loc: set_key_loc.dupe(),
+                        set_type: set_type_prime,
+                    }))
+                }
+            }
+            PropertyInner::Method { key_loc, type_ } => {
+                let type_prime = f(type_);
+                if Rc::ptr_eq(&type_prime.0, &type_.0) {
+                    Cow::Borrowed(p)
+                } else {
+                    Cow::Owned(Property::new(PropertyInner::Method {
+                        key_loc: key_loc.dupe(),
+                        type_: type_prime,
+                    }))
+                }
+            }
+        }
+    }
+
+    pub fn forall_t<F>(f: F, p: &Property) -> bool
+    where
+        F: Fn(&Type) -> bool,
+    {
+        fold_t(|acc, t| acc && f(t), true, p)
+    }
+
+    pub fn assert_field(p: &Property) -> Type {
+        match p.deref() {
+            PropertyInner::Field { type_, .. } => type_.dupe(),
+            _ => panic!("Unexpected field type"),
+        }
+    }
+}
+
+pub mod properties {
+    use super::*;
+    use crate::source_or_generated_id;
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Dupe)]
+    pub struct Id(source_or_generated_id::Id);
+
+    impl Id {
+        pub fn generate_id() -> Self {
+            Self(source_or_generated_id::Id::generate_id())
+        }
+
+        pub fn of_aloc_id(type_sig: bool, aloc_id: flow_aloc::ALocId) -> Self {
+            Self(source_or_generated_id::Id::of_aloc_id(type_sig, aloc_id))
+        }
+
+        pub fn from_type_sig(&self) -> bool {
+            self.0.from_type_sig()
+        }
+
+        pub fn debug_string(&self) -> String {
+            self.0.debug_string()
+        }
+
+        pub fn stable_string(&self) -> String {
+            self.0.stable_string()
+        }
+    }
+
+    #[derive(Debug, Clone, Default, Dupe)]
+    pub struct PropertiesMap(FlowOrdMap<Name, Property>);
+
+    impl PropertiesMap {
+        pub fn new() -> Self {
+            Self(FlowOrdMap::new())
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.0.is_empty()
+        }
+
+        pub fn get(&self, name: &Name) -> Option<&Property> {
+            self.0.get(name)
+        }
+
+        pub fn contains_key(&self, name: &Name) -> bool {
+            self.0.contains_key(name)
+        }
+
+        pub fn insert(&mut self, name: Name, prop: Property) -> Option<Property> {
+            self.0.insert(name, prop)
+        }
+
+        pub fn remove(&mut self, name: &Name) -> Option<Property> {
+            self.0.remove(name)
+        }
+
+        pub fn iter(&self) -> impl Iterator<Item = (&Name, &Property)> {
+            self.0.iter()
+        }
+
+        pub fn values(&self) -> impl Iterator<Item = &Property> {
+            self.0.values()
+        }
+
+        pub fn add_field(
+            &mut self,
+            name: Name,
+            polarity: Polarity,
+            preferred_def_locs: Option<Vec1<ALoc>>,
+            key_loc: Option<ALoc>,
+            type_: Type,
+        ) {
+            self.insert(
+                name,
+                Property::new(PropertyInner::Field {
+                    preferred_def_locs,
+                    key_loc,
+                    type_,
+                    polarity,
+                }),
+            );
+        }
+
+        pub fn add_getter(&mut self, name: Name, get_key_loc: Option<ALoc>, get_type: Type) {
+            let new_prop = match self.get(&name).map(|p| p.deref()) {
+                Some(PropertyInner::Set {
+                    key_loc: set_key_loc,
+                    type_: set_type,
+                }) => Property::new(PropertyInner::GetSet {
+                    get_key_loc,
+                    get_type,
+                    set_key_loc: set_key_loc.dupe(),
+                    set_type: set_type.dupe(),
+                }),
+                _ => Property::new(PropertyInner::Get {
+                    key_loc: get_key_loc,
+                    type_: get_type,
+                }),
+            };
+            self.insert(name, new_prop);
+        }
+
+        pub fn add_setter(&mut self, name: Name, set_key_loc: Option<ALoc>, set_type: Type) {
+            let new_prop = match self.get(&name).map(|p| p.deref()) {
+                Some(PropertyInner::Get {
+                    key_loc: get_key_loc,
+                    type_: get_type,
+                }) => Property::new(PropertyInner::GetSet {
+                    get_key_loc: get_key_loc.dupe(),
+                    get_type: get_type.dupe(),
+                    set_key_loc,
+                    set_type,
+                }),
+                _ => Property::new(PropertyInner::Set {
+                    key_loc: set_key_loc,
+                    type_: set_type,
+                }),
+            };
+            self.insert(name, new_prop);
+        }
+
+        pub fn add_method(&mut self, name: Name, key_loc: Option<ALoc>, type_: Type) {
+            self.insert(
+                name,
+                Property::new(PropertyInner::Method { key_loc, type_ }),
+            );
+        }
+
+        pub fn extract_named_exports(&self) -> BTreeMap<Name, NamedSymbol> {
+            let mut tmap = BTreeMap::new();
+            for (name, prop) in self.iter() {
+                if let Some(mut type_) = property::read_t(prop) {
+                    let preferred_def_locs = match prop.deref() {
+                        PropertyInner::Field {
+                            preferred_def_locs, ..
+                        } => preferred_def_locs.clone(),
+                        _ => None,
+                    };
+
+                    if matches!(prop.deref(), PropertyInner::Method { .. }) {
+                        type_ = unbind_this_method(&type_);
+                    }
+
+                    tmap.insert(
+                        name.dupe(),
+                        NamedSymbol::new(property::read_loc(prop), preferred_def_locs, type_),
+                    );
+                }
+            }
+            tmap
+        }
+
+        pub fn iter_t<F>(&self, mut f: F)
+        where
+            F: FnMut(&Type),
+        {
+            for prop in self.values() {
+                property::iter_t(&mut f, prop);
+            }
+        }
+
+        pub fn map_t<F>(&self, f: F) -> Self
+        where
+            F: Fn(&Type) -> Type,
+        {
+            Self(
+                self.iter()
+                    .map(|(name, prop)| (name.dupe(), property::map_t(&f, prop)))
+                    .collect(),
+            )
+        }
+
+        pub fn map_fields<F>(&self, f: F) -> Self
+        where
+            F: Fn(&Type) -> Type,
+        {
+            Self(
+                self.iter()
+                    .map(|(name, prop)| {
+                        let new_prop = match prop.deref() {
+                            PropertyInner::Field {
+                                preferred_def_locs,
+                                key_loc,
+                                type_,
+                                polarity,
+                            } => Property::new(PropertyInner::Field {
+                                preferred_def_locs: preferred_def_locs.clone(),
+                                key_loc: key_loc.dupe(),
+                                type_: f(type_),
+                                polarity: *polarity,
+                            }),
+                            _ => prop.dupe(),
+                        };
+                        (name.dupe(), new_prop)
+                    })
+                    .collect(),
+            )
+        }
+
+        pub fn mapi_fields<F>(&self, f: F) -> Self
+        where
+            F: Fn(&Name, &Type) -> Type,
+        {
+            Self(
+                self.iter()
+                    .map(|(name, prop)| {
+                        let new_prop = match prop.deref() {
+                            PropertyInner::Field {
+                                preferred_def_locs,
+                                key_loc,
+                                type_,
+                                polarity,
+                            } => Property::new(PropertyInner::Field {
+                                preferred_def_locs: preferred_def_locs.clone(),
+                                key_loc: key_loc.dupe(),
+                                type_: f(name, type_),
+                                polarity: *polarity,
+                            }),
+                            _ => prop.dupe(),
+                        };
+                        (name.dupe(), new_prop)
+                    })
+                    .collect(),
+            )
+        }
+
+        pub fn inner(&self) -> FlowOrdMap<Name, Property> {
+            self.0.dupe()
+        }
+    }
+
+    pub type Set = FlowOrdSet<Id>;
+
+    pub type Map = FlowOrdMap<Id, PropertiesMap>;
+
+    pub fn unbind_this_method(t: &Type) -> Type {
+        match &**t {
+            TypeInner::DefT(r, def_t) => match &**def_t {
+                DefTInner::FunT(static_, ft)
+                    if matches!(&ft.this_t, (_, ThisStatus::ThisMethod { unbound: false })) =>
+                {
+                    let any_this_t = any_t::error(r.dupe());
+                    let mut new_ft = (**ft).clone();
+                    new_ft.this_t = (any_this_t, ThisStatus::ThisMethod { unbound: true });
+                    Type::new(TypeInner::DefT(
+                        r.dupe(),
+                        DefT::new(DefTInner::FunT(static_.dupe(), Rc::new(new_ft))),
+                    ))
+                }
+                DefTInner::PolyT {
+                    tparams_loc,
+                    tparams,
+                    t_out,
+                    id,
+                } => {
+                    let new_t_out = unbind_this_method(t_out);
+                    if Rc::ptr_eq(&new_t_out.0, &t_out.0) {
+                        t.dupe()
+                    } else {
+                        Type::new(TypeInner::DefT(
+                            r.dupe(),
+                            DefT::new(DefTInner::PolyT {
+                                tparams_loc: tparams_loc.dupe(),
+                                tparams: tparams.dupe(),
+                                t_out: new_t_out,
+                                id: id.dupe(),
+                            }),
+                        ))
+                    }
+                }
+                _ => t.dupe(),
+            },
+            TypeInner::IntersectionT(r, rep) => {
+                let new_rep = rep.map(unbind_this_method);
+                if new_rep
+                    .members_iter()
+                    .zip(rep.members_iter())
+                    .all(|(t1, t2)| Rc::ptr_eq(&t1.0, &t2.0))
+                {
+                    t.dupe()
+                } else {
+                    Type::new(TypeInner::IntersectionT(r.dupe(), new_rep))
+                }
+            }
+            _ => t.dupe(),
+        }
+    }
+}
+
+pub mod nominal {
+    use super::*;
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum StuckEvalKind {
+        StuckEvalForNonMaybeType,
+        StuckEvalForElementType,
+        StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType,
+        StuckEvalForOptionalIndexedAccessResultType,
+        StuckEvalForExactType,
+        StuckEvalForReadOnlyType,
+        StuckEvalForPartialType,
+        StuckEvalForRequiredType,
+        StuckEvalForValuesType,
+        StuckEvalForConditionalType,
+        StuckEvalForKeyMirrorType,
+        StuckEvalForEnumType,
+        StuckEvalForPropertyType { name: Name },
+        StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType { name: Name },
+        StuckEvalForGenericallyMappedObject(SubstName),
+        StuckEvalForReactDRO(DroType),
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum Id {
+        /// Special nominal type to test t ~> union optimization
+        InternalEnforceUnionOptimized,
+        /// We also track the name so that we can do common interface conformance check, where we check
+        /// the structural subtyping for nominal constructs defined in impl and interface files.
+        UserDefinedOpaqueTypeId(ALocId, FlowSmolStr),
+        /// Stuck evaluation with kind
+        StuckEval(StuckEvalKind),
+    }
+
+    impl std::fmt::Display for Id {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Id::UserDefinedOpaqueTypeId(aloc_id, name) => {
+                    write!(f, "user-defined {} ({})", name, aloc_id)
+                }
+                Id::InternalEnforceUnionOptimized => write!(f, "InternalEnforceUnionOptimized"),
+                Id::StuckEval(kind) => match kind {
+                    StuckEvalKind::StuckEvalForNonMaybeType => write!(f, "StuckEvalForNonMaybeType"),
+                    StuckEvalKind::StuckEvalForPropertyType { name } => {
+                        write!(f, "StuckEvalForPropertyType {}", name.as_str())
+                    }
+                    StuckEvalKind::StuckEvalForElementType => write!(f, "StuckEvalForElementType"),
+                    StuckEvalKind::StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType {
+                        name,
+                    } => write!(
+                        f,
+                        "StuckEvalForOptionalIndexedAccessWithStrLitIndexNonMaybeType {}",
+                        name.as_str()
+                    ),
+                    StuckEvalKind::StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType => {
+                        write!(f, "StuckEvalForOptionalIndexedAccessWithTypeIndexNonMaybeType")
+                    }
+                    StuckEvalKind::StuckEvalForOptionalIndexedAccessResultType => {
+                        write!(f, "StuckEvalForOptionalIndexedAccessResultType")
+                    }
+                    StuckEvalKind::StuckEvalForExactType => write!(f, "StuckEvalForExactType"),
+                    StuckEvalKind::StuckEvalForReadOnlyType => write!(f, "StuckEvalForReadOnlyType"),
+                    StuckEvalKind::StuckEvalForPartialType => write!(f, "StuckEvalForPartialType"),
+                    StuckEvalKind::StuckEvalForRequiredType => write!(f, "StuckEvalForRequiredType"),
+                    StuckEvalKind::StuckEvalForValuesType => write!(f, "StuckEvalForValuesType"),
+                    StuckEvalKind::StuckEvalForConditionalType => {
+                        write!(f, "StuckEvalForConditionalType")
+                    }
+                    StuckEvalKind::StuckEvalForGenericallyMappedObject(n) => {
+                        write!(f, "StuckEvalForGenericMappedType {}", n)
+                    }
+                    StuckEvalKind::StuckEvalForKeyMirrorType => write!(f, "StuckEvalForKeyMirrorType"),
+                    StuckEvalKind::StuckEvalForReactDRO(_) => write!(f, "StuckEvalForReactDRO"),
+                    StuckEvalKind::StuckEvalForEnumType => write!(f, "StuckEvalForEnumType"),
+                },
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum UnderlyingT {
+        /// Fully opaque type with no underlying representation
+        FullyOpaque,
+        /// Opaque with local underlying type
+        OpaqueWithLocal { t: Type },
+        /// Custom error with location and underlying type
+        CustomError { custom_error_loc: ALoc, t: Type },
+    }
+}
+
+pub mod eval {
+    use std::collections::BTreeSet;
+
+    use dupe::Dupe;
+    use flow_data_structure_wrapper::ord_map::FlowOrdMap;
+
+    use crate::source_or_generated_id;
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Dupe)]
+    pub struct Id(source_or_generated_id::Id);
+
+    impl Id {
+        pub fn generate_id() -> Self {
+            Self(source_or_generated_id::Id::generate_id())
+        }
+
+        pub fn of_aloc_id(type_sig: bool, aloc_id: flow_aloc::ALocId) -> Self {
+            Self(source_or_generated_id::Id::of_aloc_id(type_sig, aloc_id))
+        }
+
+        pub fn from_type_sig(&self) -> bool {
+            self.0.from_type_sig()
+        }
+
+        pub fn debug_string(&self) -> String {
+            self.0.debug_string()
+        }
+
+        pub fn stable_string(&self) -> String {
+            self.0.stable_string()
+        }
+    }
+
+    pub type Map<T> = FlowOrdMap<Id, T>;
+
+    pub type Set = BTreeSet<Id>;
+}
+
+pub mod poly {
+    use std::collections::BTreeSet;
+
+    use dupe::Dupe;
+
+    use crate::source_or_generated_id;
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Dupe)]
+    pub struct Id(source_or_generated_id::Id);
+
+    impl Id {
+        pub fn generate_id() -> Self {
+            Self(source_or_generated_id::Id::generate_id())
+        }
+
+        pub fn of_aloc_id(type_sig: bool, aloc_id: flow_aloc::ALocId) -> Self {
+            Self(source_or_generated_id::Id::of_aloc_id(type_sig, aloc_id))
+        }
+
+        pub fn from_type_sig(&self) -> bool {
+            self.0.from_type_sig()
+        }
+
+        pub fn debug_string(&self) -> String {
+            self.0.debug_string()
+        }
+
+        pub fn stable_string(&self) -> String {
+            self.0.stable_string()
+        }
+    }
+
+    pub type Set = BTreeSet<Id>;
+}
+
+pub mod exports {
+    use dupe::Dupe;
+    use flow_common::reason;
+    use flow_data_structure_wrapper::ord_map::FlowOrdMap;
+
+    use super::*;
+
+    /// Sorted-Vec-backed export map. O(n) construction from sorted data
+    /// (Rust's sort detects pre-sorted input in linear time), O(log n) lookup
+    /// via binary search, O(1) dupe via Rc sharing.
+    #[derive(Debug, Clone)]
+    pub struct T(Rc<Vec<(Name, NamedSymbol)>>);
+
+    impl Dupe for T {}
+
+    impl Default for T {
+        fn default() -> Self {
+            T::new()
+        }
+    }
+
+    impl PartialEq for T {
+        fn eq(&self, other: &Self) -> bool {
+            Rc::ptr_eq(&self.0, &other.0) || self.0 == other.0
+        }
+    }
+
+    impl Eq for T {}
+
+    impl PartialOrd for T {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl Ord for T {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            if Rc::ptr_eq(&self.0, &other.0) {
+                std::cmp::Ordering::Equal
+            } else {
+                self.0.cmp(&other.0)
+            }
+        }
+    }
+
+    impl std::hash::Hash for T {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            self.0.hash(state);
+        }
+    }
+
+    impl T {
+        pub fn new() -> Self {
+            T(Rc::new(Vec::new()))
+        }
+
+        pub fn get(&self, key: &Name) -> Option<&NamedSymbol> {
+            self.0
+                .binary_search_by(|(k, _)| k.cmp(key))
+                .ok()
+                .map(|i| &self.0[i].1)
+        }
+
+        pub fn contains_key(&self, key: &Name) -> bool {
+            self.0.binary_search_by(|(k, _)| k.cmp(key)).is_ok()
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.0.is_empty()
+        }
+
+        pub fn len(&self) -> usize {
+            self.0.len()
+        }
+
+        pub fn insert(&mut self, key: Name, value: NamedSymbol) {
+            let inner = Rc::make_mut(&mut self.0);
+            match inner.binary_search_by(|(k, _)| k.cmp(&key)) {
+                Ok(i) => inner[i].1 = value,
+                Err(i) => inner.insert(i, (key, value)),
+            }
+        }
+
+        /// Insert if key not present, return mutable ref to value
+        pub fn entry_or_insert(&mut self, key: Name, value: NamedSymbol) {
+            let inner = Rc::make_mut(&mut self.0);
+            match inner.binary_search_by(|(k, _)| k.cmp(&key)) {
+                Ok(_) => {} // already present
+                Err(i) => inner.insert(i, (key, value)),
+            }
+        }
+
+        pub fn iter(&self) -> std::slice::Iter<'_, (Name, NamedSymbol)> {
+            self.0.iter()
+        }
+
+        pub fn keys(&self) -> impl Iterator<Item = &Name> {
+            self.0.iter().map(|(k, _)| k)
+        }
+
+        pub fn values(&self) -> impl Iterator<Item = &NamedSymbol> {
+            self.0.iter().map(|(_, v)| v)
+        }
+
+        pub fn into_ord_map(self) -> FlowOrdMap<Name, NamedSymbol> {
+            self.0.iter().map(|(k, v)| (k.dupe(), v.clone())).collect()
+        }
+
+        /// Merge two sorted export maps, preferring entries from `other` on key collision.
+        /// Both inputs are already sorted, so this is O(n+m).
+        pub fn union(self, other: T) -> T {
+            if self.is_empty() {
+                return other;
+            }
+            if other.is_empty() {
+                return self;
+            }
+            let a = &*self.0;
+            let b = &*other.0;
+            let mut result = Vec::with_capacity(a.len() + b.len());
+            let mut i = 0;
+            let mut j = 0;
+            while i < a.len() && j < b.len() {
+                match a[i].0.cmp(&b[j].0) {
+                    std::cmp::Ordering::Less => {
+                        result.push(a[i].clone());
+                        i += 1;
+                    }
+                    std::cmp::Ordering::Greater => {
+                        result.push(b[j].clone());
+                        j += 1;
+                    }
+                    std::cmp::Ordering::Equal => {
+                        // other wins on collision (like im::OrdMap::union)
+                        result.push(b[j].clone());
+                        i += 1;
+                        j += 1;
+                    }
+                }
+            }
+            while i < a.len() {
+                result.push(a[i].clone());
+                i += 1;
+            }
+            while j < b.len() {
+                result.push(b[j].clone());
+                j += 1;
+            }
+            T(Rc::new(result))
+        }
+    }
+
+    impl FromIterator<(Name, NamedSymbol)> for T {
+        fn from_iter<I: IntoIterator<Item = (Name, NamedSymbol)>>(iter: I) -> Self {
+            let mut pairs: Vec<(Name, NamedSymbol)> = iter.into_iter().collect();
+            pairs.sort_by(|(a, _), (b, _)| a.cmp(b));
+            pairs.dedup_by(|(a, _), (b, _)| a == b);
+            T(Rc::new(pairs))
+        }
+    }
+
+    impl IntoIterator for T {
+        type Item = (Name, NamedSymbol);
+        type IntoIter = std::vec::IntoIter<(Name, NamedSymbol)>;
+
+        fn into_iter(self) -> Self::IntoIter {
+            match Rc::try_unwrap(self.0) {
+                Ok(vec) => vec.into_iter(),
+                Err(rc) => rc.as_ref().clone().into_iter(),
+            }
+        }
+    }
+
+    impl<'a> IntoIterator for &'a T {
+        type Item = &'a (Name, NamedSymbol);
+        type IntoIter = std::slice::Iter<'a, (Name, NamedSymbol)>;
+
+        fn into_iter(self) -> Self::IntoIter {
+            self.0.iter()
+        }
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Dupe)]
+    pub struct Id(usize);
+
+    impl Id {
+        pub fn new(id: usize) -> Self {
+            Self(id)
+        }
+
+        pub fn mk_id() -> Self {
+            Self(reason::mk_id())
+        }
+    }
+
+    impl std::fmt::Display for Id {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            write!(f, "{}", self.0)
+        }
+    }
+
+    pub type Map = FlowOrdMap<Id, T>;
+
+    pub type ExportsMap = BTreeMap<Name, Type>;
+    pub type ExportsIdMap = std::collections::HashMap<Id, ExportsMap>;
+}
+
+// check here
+
+/// We encapsulate UnionT's internal structure
+/// so we can use specialized representations for
+/// unions with exploitable regularity and/or
+/// simplicity properties, e.g. enums.
+///
+/// Representations are opaque. `make` chooses a
+/// representation internally, and client code which
+/// needs to interact with member types directly
+/// can do so via `members`, which provides access
+/// via the standard list representation.
+pub mod union_rep {
+    use std::cell::RefCell;
+    use std::collections::BTreeMap;
+
+    use properties::PropertiesMap;
+
+    use super::*;
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum UnionKind {
+        ProvidersKind,
+        ConditionalKind,
+        ImplicitInstantiationKind,
+        ResolvedKind,
+        LogicalKind,
+        UnknownKind,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    pub enum FinallyOptimizedRep {
+        /// [None] in the position of tag means that the values used to create this
+        /// enum union were not of the same tag.
+        EnumUnion(UnionEnumSet, Option<UnionEnumTag>),
+        PartiallyOptimizedUnionEnum(UnionEnumSet),
+        AlmostDisjointUnionWithPossiblyNonUniqueKeys(
+            BTreeMap<Name, BTreeMap<UnionEnum, Vec1<Type>>>,
+        ),
+        PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(
+            BTreeMap<Name, BTreeMap<UnionEnum, Vec1<Type>>>,
+        ),
+        Empty,
+        Singleton(Type),
+    }
+
+    // Manual Hash impl because BTreeMap does not implement Hash in std.
+    // OCaml's generic compare/hash traverses all fields structurally,
+    // including through ref cells. We match that behavior here.
+    impl std::hash::Hash for FinallyOptimizedRep {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            std::mem::discriminant(self).hash(state);
+            match self {
+                FinallyOptimizedRep::EnumUnion(set, tag) => {
+                    set.hash(state);
+                    tag.hash(state);
+                }
+                FinallyOptimizedRep::PartiallyOptimizedUnionEnum(set) => {
+                    set.hash(state);
+                }
+                FinallyOptimizedRep::AlmostDisjointUnionWithPossiblyNonUniqueKeys(map) => {
+                    for (k, v) in map {
+                        k.hash(state);
+                        for (k2, v2) in v {
+                            k2.hash(state);
+                            v2.hash(state);
+                        }
+                    }
+                }
+                FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(map) => {
+                    for (k, v) in map {
+                        k.hash(state);
+                        for (k2, v2) in v {
+                            k2.hash(state);
+                            v2.hash(state);
+                        }
+                    }
+                }
+                FinallyOptimizedRep::Empty => {}
+                FinallyOptimizedRep::Singleton(t) => {
+                    t.hash(state);
+                }
+            }
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum OptimizedError<L: Dupe> {
+        NoCandidateMembers,
+        NoCommonKeys,
+        ContainsUnresolved(VirtualReason<L>),
+    }
+
+    /// quick membership tests for enums and disjoint unions
+    #[derive(Debug, Clone)]
+    pub enum QuickMemResult {
+        Yes,
+        No,
+        Conditional(Type),
+        Unknown,
+    }
+
+    #[derive(Debug)]
+    struct Specialization(RefCell<Option<FinallyOptimizedRep>>);
+
+    impl Specialization {
+        fn new(value: Option<FinallyOptimizedRep>) -> Self {
+            Self(RefCell::new(value))
+        }
+
+        fn borrow(&self) -> std::cell::Ref<'_, Option<FinallyOptimizedRep>> {
+            self.0.borrow()
+        }
+
+        fn borrow_mut(&self) -> std::cell::RefMut<'_, Option<FinallyOptimizedRep>> {
+            self.0.borrow_mut()
+        }
+    }
+
+    impl PartialEq for Specialization {
+        fn eq(&self, other: &Self) -> bool {
+            std::ptr::eq(self.0.as_ptr(), other.0.as_ptr()) || *self.0.borrow() == *other.0.borrow()
+        }
+    }
+
+    impl Eq for Specialization {}
+
+    impl PartialOrd for Specialization {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl Ord for Specialization {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            if std::ptr::eq(self.0.as_ptr(), other.0.as_ptr()) {
+                std::cmp::Ordering::Equal
+            } else {
+                self.0.borrow().cmp(&other.0.borrow())
+            }
+        }
+    }
+
+    impl std::hash::Hash for Specialization {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            self.0.borrow().hash(state)
+        }
+    }
+
+    #[derive(Debug, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct UnionRepInner {
+        t0: Type,
+        t1: Type,
+        ts: Rc<[Type]>,
+        /// optional source location of the union,
+        /// used as identity of the union for fast-path check.
+        source_aloc: Option<ALocId>,
+        /// if union is an enum (set of singletons over a common base) then Some (base, set)
+        /// (additional specializations probably to come)
+        specialization: Specialization,
+        /// A union is synthetic roughly when it does not emerge from an annotation,
+        /// e.g. when it emerges as the collection of lower bounds during implicit
+        /// instantiation.
+        kind: UnionKind,
+    }
+
+    #[derive(Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct UnionRep(Rc<UnionRepInner>);
+
+    impl std::fmt::Debug for UnionRep {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    impl UnionRep {
+        pub fn ptr_eq(&self, other: &UnionRep) -> bool {
+            Rc::ptr_eq(&self.0, &other.0)
+        }
+
+        pub fn same_source(&self, other: &UnionRep) -> bool {
+            match (&self.0.source_aloc, &other.0.source_aloc) {
+                (Some(id1), Some(id2)) => id1 == id2,
+                _ => false,
+            }
+        }
+
+        pub fn same_structure(&self, other: &UnionRep) -> bool {
+            self.0.t0 == other.0.t0 && self.0.t1 == other.0.t1 && self.0.ts == other.0.ts
+        }
+
+        pub fn is_synthetic(&self) -> bool {
+            !matches!(self.0.kind, UnionKind::UnknownKind)
+        }
+
+        pub fn union_kind(&self) -> UnionKind {
+            self.0.kind
+        }
+
+        pub fn disjoint_object_union_props(&self) -> Option<BTreeSet<Name>> {
+            match self.0.specialization.borrow().as_ref() {
+                Some(
+                    FinallyOptimizedRep::AlmostDisjointUnionWithPossiblyNonUniqueKeys(prop_map)
+                    | FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(
+                        prop_map,
+                    ),
+                ) => Some(prop_map.keys().cloned().collect()),
+                _ => None,
+            }
+        }
+
+        pub fn is_optimized_finally(&self) -> bool {
+            self.0.specialization.borrow().is_some()
+        }
+
+        pub fn optimize_enum_only<F>(&self, flatten: F)
+        where
+            F: Fn(&mut dyn Iterator<Item = &Type>) -> Vec<Type>,
+        {
+            let mut members = self.members_iter();
+            let ts = flatten(&mut members);
+            if has_unflattened_types(&ts).is_none() {
+                if let Ok(opt @ FinallyOptimizedRep::EnumUnion(_, _)) = enum_optimize(&ts) {
+                    *self.0.specialization.borrow_mut() = Some(opt);
+                }
+            }
+        }
+
+        pub fn optimize_<F1, F2, F3, F4, F5>(
+            &self,
+            reason_of_t: F1,
+            reasonless_eq: F2,
+            flatten: F3,
+            find_resolved: F4,
+            find_props: F5,
+        ) -> Result<FinallyOptimizedRep, OptimizedError<ALoc>>
+        where
+            F1: Fn(&Type) -> Reason,
+            F2: Fn(&Type, &Type) -> bool,
+            F3: Fn(&mut dyn Iterator<Item = &Type>) -> Vec<Type>,
+            F4: Fn(&Type) -> Option<Type>,
+            F5: Fn(properties::Id) -> PropertiesMap,
+        {
+            let mut members = self.members_iter();
+            let ts = flatten(&mut members);
+            match has_unflattened_types(&ts) {
+                None => {
+                    let opt = enum_optimize(&ts);
+                    match opt {
+                        Err(_) => {
+                            disjoint_union_optimize(reasonless_eq, find_resolved, find_props, &ts)
+                        }
+                        _ => opt,
+                    }
+                }
+                Some(t) => Err(OptimizedError::ContainsUnresolved(reason_of_t(&t))),
+            }
+        }
+
+        pub fn set_optimize(&self, opt: Result<FinallyOptimizedRep, OptimizedError<ALoc>>) {
+            if let Ok(opt) = opt {
+                *self.0.specialization.borrow_mut() = Some(opt);
+            }
+        }
+
+        pub fn optimize<F1, F2, F3, F4, F5>(
+            &self,
+            reason_of_t: F1,
+            reasonless_eq: F2,
+            flatten: F3,
+            find_resolved: F4,
+            find_props: F5,
+        ) where
+            F1: Fn(&Type) -> Reason,
+            F2: Fn(&Type, &Type) -> bool,
+            F3: Fn(&mut dyn Iterator<Item = &Type>) -> Vec<Type>,
+            F4: Fn(&Type) -> Option<Type>,
+            F5: Fn(properties::Id) -> PropertiesMap,
+        {
+            let opt = self.optimize_(
+                reason_of_t,
+                reasonless_eq,
+                flatten,
+                find_resolved,
+                find_props,
+            );
+            self.set_optimize(opt);
+        }
+
+        pub fn check_enum(&self) -> Option<UnionEnumSet> {
+            match self.0.specialization.borrow().as_ref() {
+                Some(FinallyOptimizedRep::EnumUnion(enums, _)) => Some(enums.dupe()),
+                _ => None,
+            }
+        }
+
+        pub fn check_enum_with_tag(&self) -> Option<(UnionEnumSet, Option<UnionEnumTag>)> {
+            match self.0.specialization.borrow().as_ref() {
+                Some(FinallyOptimizedRep::EnumUnion(enums, tag)) => Some((enums.dupe(), *tag)),
+                _ => None,
+            }
+        }
+
+        pub fn string_of_specialization(&self) -> &'static str {
+            string_of_specialization_(self.0.specialization.borrow().as_ref())
+        }
+
+        pub fn members_iter(&self) -> impl Iterator<Item = &Type> {
+            std::iter::once(&self.0.t0)
+                .chain(std::iter::once(&self.0.t1))
+                .chain(self.0.ts.iter())
+        }
+
+        /// map rep r to rep r' along type mapping f. if nothing would be changed,
+        /// returns the physically-identical rep.
+        pub fn ident_map<F>(&self, always_keep_source: bool, f: F) -> UnionRep
+        where
+            F: Fn(&Type) -> Type,
+        {
+            let t0_prime = f(&self.0.t0);
+            let t1_prime = f(&self.0.t1);
+
+            let mut changed =
+                !Rc::ptr_eq(&t0_prime.0, &self.0.t0.0) || !Rc::ptr_eq(&t1_prime.0, &self.0.t1.0);
+            let mut ts_prime = Vec::new();
+
+            for t in self.0.ts.iter() {
+                let t_prime = f(t);
+                changed = changed || !Rc::ptr_eq(&t_prime.0, &t.0);
+                ts_prime.push(t_prime);
+            }
+
+            if changed {
+                let source_aloc = if always_keep_source {
+                    self.0.source_aloc.dupe()
+                } else {
+                    None
+                };
+                make(
+                    source_aloc,
+                    self.0.kind,
+                    t0_prime,
+                    t1_prime,
+                    ts_prime.into(),
+                )
+            } else {
+                self.dupe()
+            }
+        }
+
+        pub fn try_ident_map<F, E>(&self, always_keep_source: bool, mut f: F) -> Result<UnionRep, E>
+        where
+            F: FnMut(&Type) -> Result<Type, E>,
+        {
+            let t0_prime = f(&self.0.t0)?;
+            let t1_prime = f(&self.0.t1)?;
+
+            let mut changed =
+                !Rc::ptr_eq(&t0_prime.0, &self.0.t0.0) || !Rc::ptr_eq(&t1_prime.0, &self.0.t1.0);
+            let mut ts_prime = Vec::new();
+
+            for t in self.0.ts.iter() {
+                let t_prime = f(t)?;
+                changed = changed || !Rc::ptr_eq(&t_prime.0, &t.0);
+                ts_prime.push(t_prime);
+            }
+
+            if changed {
+                let source_aloc = if always_keep_source {
+                    self.0.source_aloc.dupe()
+                } else {
+                    None
+                };
+                Ok(make(
+                    source_aloc,
+                    self.0.kind,
+                    t0_prime,
+                    t1_prime,
+                    ts_prime.into(),
+                ))
+            } else {
+                Ok(self.dupe())
+            }
+        }
+    }
+
+    // canonicalize a type w.r.t. enum membership
+    fn canon(t: &Type) -> Option<UnionEnum> {
+        match t.0.as_ref() {
+            TypeInner::DefT(_, def_t) => match &**def_t {
+                DefTInner::SingletonStrT { value, .. } => Some(UnionEnum::Str(value.dupe())),
+                DefTInner::NumericStrKeyT(num_lit) => {
+                    Some(UnionEnum::Str(Name::new(num_lit.1.to_string())))
+                }
+                DefTInner::SingletonNumT { value, .. } => Some(UnionEnum::Num(value.clone())),
+                DefTInner::SingletonBigIntT { value, .. } => Some(UnionEnum::BigInt(value.clone())),
+                DefTInner::SingletonBoolT { value, .. } => Some(UnionEnum::Bool(*value)),
+                DefTInner::VoidT => Some(UnionEnum::Void),
+                DefTInner::NullT => Some(UnionEnum::Null),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    fn is_base(t: &Type) -> bool {
+        match t.0.as_ref() {
+            TypeInner::DefT(_, def_t) => matches!(
+                &**def_t,
+                DefTInner::NumericStrKeyT(_)
+                    | DefTInner::SingletonStrT {
+                        from_annot: true,
+                        ..
+                    }
+                    | DefTInner::SingletonNumT {
+                        from_annot: true,
+                        ..
+                    }
+                    | DefTInner::SingletonBigIntT {
+                        from_annot: true,
+                        ..
+                    }
+                    | DefTInner::SingletonBoolT {
+                        from_annot: true,
+                        ..
+                    }
+                    | DefTInner::VoidT
+                    | DefTInner::NullT
+            ),
+            _ => false,
+        }
+    }
+
+    // disjoint unions are stored as singleton type maps
+    pub type UnionEnumMap = BTreeMap<UnionEnum, Vec1<Type>>;
+
+    pub fn tag_of_member(t: &Type) -> Option<UnionEnumTag> {
+        match t.0.as_ref() {
+            TypeInner::DefT(_, def_t) => match &**def_t {
+                DefTInner::SingletonStrT { .. } => Some(UnionEnumTag::SingletonStr),
+                DefTInner::StrGeneralT { .. } => Some(UnionEnumTag::Str),
+                DefTInner::NumericStrKeyT(_) => Some(UnionEnumTag::NumericStrKey),
+                DefTInner::SingletonNumT { .. } => Some(UnionEnumTag::SingletonNum),
+                DefTInner::NumGeneralT(_) => Some(UnionEnumTag::Num),
+                DefTInner::SingletonBigIntT { .. } => Some(UnionEnumTag::SingletonBigInt),
+                DefTInner::BigIntGeneralT(_) => Some(UnionEnumTag::BigInt),
+                DefTInner::SingletonBoolT { .. } => Some(UnionEnumTag::SingletonBool),
+                DefTInner::BoolGeneralT => Some(UnionEnumTag::Bool),
+                DefTInner::VoidT => Some(UnionEnumTag::Void),
+                DefTInner::NullT => Some(UnionEnumTag::Null),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    /// given a list of members, build a rep.
+    /// specialized reps are used on compatible type lists
+    pub fn make(
+        source_aloc: Option<ALocId>,
+        kind: UnionKind,
+        t0: Type,
+        t1: Type,
+        ts: Rc<[Type]>,
+    ) -> UnionRep {
+        fn mk_enum(
+            mut tset: UnionEnumSet,
+            mut tag: Option<UnionEnumTag>,
+            types: &[Type],
+        ) -> Option<(UnionEnumSet, Option<UnionEnumTag>)> {
+            for t in types {
+                match canon(t) {
+                    Some(tcanon) if is_base(t) => {
+                        let t_tag = tag_of_member(t);
+                        tag = if tag == t_tag { tag } else { None };
+                        tset.insert(tcanon);
+                    }
+                    _ => return None,
+                }
+            }
+            Some((tset, tag))
+        }
+
+        let mut all_members = vec![t0.dupe(), t1.dupe()];
+        all_members.extend(ts.iter().map(|t| t.dupe()));
+
+        let enum_opt = mk_enum(FlowOrdSet::new(), tag_of_member(&t0), &all_members)
+            .map(|(tset, tag)| FinallyOptimizedRep::EnumUnion(tset, tag));
+
+        UnionRep(Rc::new(UnionRepInner {
+            t0,
+            t1,
+            ts,
+            source_aloc,
+            specialization: Specialization::new(enum_opt),
+            kind,
+        }))
+    }
+
+    /********** Optimizations **********/
+
+    fn has_unflattened_types(ts: &[Type]) -> Option<Type> {
+        for t in ts {
+            match &**t {
+                TypeInner::OpenT(_)
+                | TypeInner::EvalT { .. }
+                | TypeInner::TypeAppT(..)
+                | TypeInner::KeysT(_, _)
+                | TypeInner::IntersectionT(_, _)
+                | TypeInner::NominalT { .. } => {
+                    return Some(t.dupe());
+                }
+                TypeInner::DefT(_, def_t)
+                    if matches!(&**def_t, DefTInner::InstanceT(_) | DefTInner::PolyT { .. }) =>
+                {
+                    return Some(t.dupe());
+                }
+                _ => {}
+            }
+        }
+        None
+    }
+
+    fn enum_optimize(ts: &[Type]) -> Result<FinallyOptimizedRep, OptimizedError<ALoc>> {
+        fn split_enum(ts: &[Type]) -> (UnionEnumSet, Option<UnionEnumTag>, bool) {
+            if ts.is_empty() {
+                return (FlowOrdSet::new(), None, false);
+            }
+
+            let mut tset = FlowOrdSet::new();
+            let mut acc_tag = tag_of_member(&ts[0]);
+            let mut partial = false;
+
+            for t in ts {
+                match canon(t) {
+                    Some(tcanon) if is_base(t) => {
+                        let t_tag = tag_of_member(t);
+                        acc_tag = if acc_tag == t_tag { acc_tag } else { None };
+                        tset.insert(tcanon);
+                    }
+                    _ => {
+                        acc_tag = None;
+                        partial = true;
+                    }
+                }
+            }
+
+            (tset, acc_tag, partial)
+        }
+        match ts.len() {
+            0 => Ok(FinallyOptimizedRep::Empty),
+            1 => Ok(FinallyOptimizedRep::Singleton(ts[0].dupe())),
+            _ => {
+                let (tset, tag, partial) = split_enum(ts);
+                if partial {
+                    if tset.is_empty() {
+                        Err(OptimizedError::NoCandidateMembers)
+                    } else {
+                        Ok(FinallyOptimizedRep::PartiallyOptimizedUnionEnum(tset))
+                    }
+                } else {
+                    Ok(FinallyOptimizedRep::EnumUnion(tset, tag))
+                }
+            }
+        }
+    }
+
+    fn canon_prop<F>(find_resolved: F, p: &Property) -> Option<UnionEnum>
+    where
+        F: Fn(&Type) -> Option<Type>,
+    {
+        property::read_t(p)
+            .and_then(|t| find_resolved(&t))
+            .and_then(|t| canon(&t))
+    }
+
+    fn base_prop<F>(find_resolved: F, p: &Property) -> Option<UnionEnum>
+    where
+        F: Fn(&Type) -> Option<Type>,
+    {
+        property::read_t(p)
+            .and_then(|t| find_resolved(&t))
+            .and_then(|t| if is_base(&t) { canon(&t) } else { None })
+    }
+
+    fn props_of<F>(find_props: F, t: &Type) -> Option<PropertiesMap>
+    where
+        F: Fn(properties::Id) -> PropertiesMap,
+    {
+        match &**t {
+            TypeInner::DefT(_, def_t) => match &**def_t {
+                DefTInner::ObjT(obj) => Some(find_props(obj.props_tmap.dupe())),
+                _ => None,
+            },
+            _ => None,
+        }
+    }
+
+    fn disjoint_union_optimize<ReasonlessEq, FindResolved, FindProps>(
+        reasonless_eq: ReasonlessEq,
+        find_resolved: FindResolved,
+        find_props: FindProps,
+        ts: &[Type],
+    ) -> Result<FinallyOptimizedRep, OptimizedError<ALoc>>
+    where
+        ReasonlessEq: Fn(&Type, &Type) -> bool,
+        FindResolved: Fn(&Type) -> Option<Type>,
+        FindProps: Fn(properties::Id) -> PropertiesMap,
+    {
+        fn base_props_of<F2, F3>(
+            find_resolved: &F2,
+            find_props: &F3,
+            t: &Type,
+        ) -> Option<BTreeMap<Name, (UnionEnum, Type)>>
+        where
+            F2: Fn(&Type) -> Option<Type>,
+            F3: Fn(properties::Id) -> PropertiesMap,
+        {
+            props_of(find_props, t).map(|prop_map: PropertiesMap| {
+                let mut result = BTreeMap::new();
+                for (key, p) in prop_map.iter() {
+                    if let Some(enum_val) = base_prop(find_resolved, p) {
+                        result.insert(key.dupe(), (enum_val, t.dupe()));
+                    }
+                }
+                result
+            })
+        }
+
+        // Returns a tuple of (candidates, partial):
+        //  - [candidates] is a list that contains a candidate for each union member.
+        //    A candidate is a mapping from keys in that object to a UnionEnum value.
+        //    Properties that do not have a UnionEnum representation are ignored.
+        //  - [partial] is true iff there exist non-object-like members in the union
+        fn split_disjoint_union<F2, F3>(
+            find_resolved: &F2,
+            find_props: &F3,
+            ts: &[Type],
+        ) -> (Vec<BTreeMap<Name, (UnionEnum, Type)>>, bool)
+        where
+            F2: Fn(&Type) -> Option<Type>,
+            F3: Fn(properties::Id) -> PropertiesMap,
+        {
+            let mut candidates = Vec::new();
+            let mut partial = false;
+
+            for t in ts {
+                match base_props_of(find_resolved, find_props, t) {
+                    None => partial = true,
+                    Some(base_props) => candidates.push(base_props),
+                }
+            }
+
+            (candidates, partial)
+        }
+
+        fn almost_unique_values<F1>(
+            reasonless_eq: &F1,
+            mut hybrid_idx: UnionEnumMap,
+            values: Vec<(UnionEnum, Type)>,
+        ) -> UnionEnumMap
+        where
+            F1: Fn(&Type, &Type) -> bool,
+        {
+            for (enum_val, t) in values {
+                hybrid_idx
+                    .entry(enum_val)
+                    .and_modify(|existing: &mut Vec1<Type>| {
+                        let exists = existing
+                            .iter()
+                            .any(|existing_t| reasonless_eq(&t, existing_t));
+                        if exists {
+                            // This corresponds to the case
+                            // type T = { f: "a" };
+                            // type Union = T | T;
+                            // Don't add duplicate
+                        } else {
+                            existing.insert(0, t.dupe());
+                        }
+                    })
+                    .or_insert_with(|| Vec1::new(t.dupe()));
+            }
+            hybrid_idx
+        }
+
+        fn almost_unique<F1>(
+            reasonless_eq: &F1,
+            idx: BTreeMap<Name, Vec<(UnionEnum, Type)>>,
+        ) -> BTreeMap<Name, UnionEnumMap>
+        where
+            F1: Fn(&Type, &Type) -> bool,
+        {
+            let mut result = BTreeMap::new();
+            for (key, values) in idx.into_iter() {
+                let hybrid_idx = almost_unique_values(reasonless_eq, BTreeMap::new(), values);
+                result.insert(key, hybrid_idx);
+            }
+            result
+        }
+
+        // Compute the intersection of properties of objects that have singleton types
+        fn intersect_props(
+            base_props: BTreeMap<Name, (UnionEnum, Type)>,
+            candidates: &[BTreeMap<Name, (UnionEnum, Type)>],
+        ) -> BTreeMap<Name, Vec<(UnionEnum, Type)>> {
+            // Initialize with first candidate
+            let mut init = BTreeMap::new();
+            for (key, enum_t) in base_props.iter() {
+                init.insert(key.dupe(), vec![enum_t.clone()]);
+            }
+
+            // Merge with remaining candidates
+            for candidate in candidates {
+                init.retain(|key, values| {
+                    if let Some(enum_t) = candidate.get(key) {
+                        values.push(enum_t.clone());
+                        true
+                    } else {
+                        false
+                    }
+                });
+            }
+
+            init
+        }
+
+        match ts.len() {
+            0 => Ok(FinallyOptimizedRep::Empty),
+            1 => Ok(FinallyOptimizedRep::Singleton(ts[0].dupe())),
+            _ => {
+                let (candidates, partial) = split_disjoint_union(&find_resolved, &find_props, ts);
+
+                match candidates.split_first() {
+                    None => Err(OptimizedError::NoCandidateMembers),
+                    Some((first, rest)) => {
+                        let idx = intersect_props(first.clone(), rest);
+                        if idx.is_empty() {
+                            Err(OptimizedError::NoCommonKeys)
+                        } else {
+                            let hybrid_map = almost_unique(&reasonless_eq, idx);
+                            if partial {
+                                Ok(FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(hybrid_map))
+                            } else {
+                                Ok(FinallyOptimizedRep::AlmostDisjointUnionWithPossiblyNonUniqueKeys(hybrid_map))
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    /********** Quick matching **********/
+
+    pub fn join_quick_mem_results(results: (QuickMemResult, QuickMemResult)) -> QuickMemResult {
+        match results {
+            (QuickMemResult::Yes, _) | (_, QuickMemResult::Yes) => QuickMemResult::Yes,
+            (QuickMemResult::Unknown, _) | (_, QuickMemResult::Unknown) => QuickMemResult::Unknown,
+            (QuickMemResult::Conditional(_), _) | (_, QuickMemResult::Conditional(_)) => {
+                QuickMemResult::Unknown
+            }
+            (QuickMemResult::No, QuickMemResult::No) => QuickMemResult::No,
+        }
+    }
+
+    // assume we know that l is a canonizable type
+    pub fn quick_mem_enum<F>(quick_subtype: F, l: &Type, rep: &UnionRep) -> QuickMemResult
+    where
+        F: Fn(&Type, &Type) -> bool,
+    {
+        match canon(l) {
+            Some(tcanon) => {
+                match &*rep.0.specialization.borrow() {
+                    None => QuickMemResult::Unknown,
+                    Some(FinallyOptimizedRep::Empty) => QuickMemResult::No,
+                    Some(FinallyOptimizedRep::Singleton(t)) => {
+                        if quick_subtype(l, t) {
+                            QuickMemResult::Yes
+                        } else {
+                            QuickMemResult::Conditional(t.dupe())
+                        }
+                    }
+                    Some(FinallyOptimizedRep::AlmostDisjointUnionWithPossiblyNonUniqueKeys(_)) => {
+                        QuickMemResult::No
+                    }
+                    Some(FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(_)) => {
+                        QuickMemResult::Unknown
+                    }
+                    Some(FinallyOptimizedRep::EnumUnion(tset, _)) => {
+                        if tset.contains(&tcanon) {
+                            QuickMemResult::Yes
+                        } else {
+                            QuickMemResult::No
+                        }
+                    }
+                    Some(FinallyOptimizedRep::PartiallyOptimizedUnionEnum(tset)) => {
+                        if tset.contains(&tcanon) {
+                            QuickMemResult::Yes
+                        } else {
+                            QuickMemResult::Unknown
+                        }
+                    }
+                }
+            }
+            None => {
+                QuickMemResult::Unknown
+            }
+        }
+    }
+
+    fn lookup_almost_disjoint_union<F>(
+        find_resolved: F,
+        prop_map: &PropertiesMap,
+        partial: bool,
+        map: &BTreeMap<Name, UnionEnumMap>,
+    ) -> QuickMemResult
+    where
+        F: Fn(&Type) -> Option<Type>,
+    {
+        let mut acc = QuickMemResult::Unknown;
+        for (key, idx) in map.iter() {
+            if !matches!(acc, QuickMemResult::Unknown) {
+                break;
+            }
+            acc = match prop_map.get(key) {
+                Some(p) => match canon_prop(&find_resolved, p) {
+                    Some(enum_val) => match idx.get(&enum_val) {
+                        Some(types) if types.len() == 1 => {
+                            QuickMemResult::Conditional(types[0].dupe())
+                        }
+                        Some(_) => {
+                            // Multiple types for this enum value
+                            QuickMemResult::Unknown
+                        }
+                        None => {
+                            if partial {
+                                QuickMemResult::Unknown
+                            } else {
+                                QuickMemResult::No
+                            }
+                        }
+                    },
+                    None => QuickMemResult::Unknown,
+                },
+                None => {
+                    if partial {
+                        QuickMemResult::Unknown
+                    } else {
+                        QuickMemResult::No
+                    }
+                }
+            };
+        }
+
+        acc
+    }
+
+    // we know that l is an object type or exact object type
+    pub fn quick_mem_disjoint_union(
+        find_resolved: impl Fn(&Type) -> Option<Type>,
+        find_props: impl Fn(properties::Id) -> PropertiesMap,
+        quick_subtype: impl Fn(&Type, &Type) -> bool,
+        l: &Type,
+        rep: &UnionRep,
+    ) -> QuickMemResult {
+        match props_of(find_props, l) {
+            Some(prop_map) => {
+                match rep.0.specialization.borrow().as_ref() {
+                    None => QuickMemResult::Unknown,
+                    Some(FinallyOptimizedRep::Empty) => QuickMemResult::No,
+                    Some(FinallyOptimizedRep::Singleton(t)) => {
+                        if quick_subtype(l, t) {
+                            QuickMemResult::Yes
+                        } else {
+                            QuickMemResult::Conditional(t.dupe())
+                        }
+                    }
+                    Some(FinallyOptimizedRep::AlmostDisjointUnionWithPossiblyNonUniqueKeys(map)) => {
+                        lookup_almost_disjoint_union(find_resolved, &prop_map, false, map)
+                    }
+                    Some(FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(map)) => {
+                        lookup_almost_disjoint_union(find_resolved, &prop_map, true, map)
+                    }
+                    Some(FinallyOptimizedRep::EnumUnion(_, _)) => QuickMemResult::No,
+                    Some(FinallyOptimizedRep::PartiallyOptimizedUnionEnum(_)) => QuickMemResult::Unknown,
+                }
+            }
+            None => panic!("quick_mem_disjoint_union is defined only on object / exact object types"),
+        }
+    }
+
+    pub fn string_of_specialization_(opt: Option<&FinallyOptimizedRep>) -> &'static str {
+        match opt {
+            Some(FinallyOptimizedRep::EnumUnion(_, _)) => "Enum",
+            Some(FinallyOptimizedRep::Empty) => "Empty",
+            Some(FinallyOptimizedRep::Singleton(_)) => "Singleton",
+            Some(
+                FinallyOptimizedRep::PartiallyOptimizedAlmostDisjointUnionWithPossiblyNonUniqueKeys(
+                    _,
+                ),
+            ) => "Partially Optimized Almost Disjoint Union with possibly non-unique keys",
+            Some(FinallyOptimizedRep::AlmostDisjointUnionWithPossiblyNonUniqueKeys(_)) => {
+                "Almost Disjoint Union with possibly non-unique keys"
+            }
+            Some(FinallyOptimizedRep::PartiallyOptimizedUnionEnum(_)) => "Partially Optimized Enum",
+            None => "No Specialization",
+        }
+    }
+}
+
+pub mod inter_rep {
+    use super::*;
+
+    /// intersection rep is:
+    /// - member list in declaration order
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    struct InterRepInner {
+        t0: Type,
+        t1: Type,
+        ts: Rc<[Type]>,
+    }
+
+    #[derive(Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct InterRep(Rc<InterRepInner>);
+
+    impl std::fmt::Debug for InterRep {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            self.0.fmt(f)
+        }
+    }
+
+    /// build rep from list of members
+    pub fn make(t0: Type, t1: Type, ts: Rc<[Type]>) -> InterRep {
+        InterRep(Rc::new(InterRepInner { t0, t1, ts }))
+    }
+
+    impl InterRep {
+        pub fn ptr_eq(&self, other: &InterRep) -> bool {
+            Rc::ptr_eq(&self.0, &other.0)
+        }
+
+        /// members in declaration order (as iterator)
+        pub fn members_iter(&self) -> impl Iterator<Item = &Type> {
+            std::iter::once(&self.0.t0)
+                .chain(std::iter::once(&self.0.t1))
+                .chain(self.0.ts.iter())
+        }
+
+        /// map rep r to rep r' along type mapping f. drops history
+        pub fn map<F>(&self, f: F) -> InterRep
+        where
+            F: Fn(&Type) -> Type,
+        {
+            make(
+                f(&self.0.t0),
+                f(&self.0.t1),
+                self.0.ts.iter().map(f).collect(),
+            )
+        }
+
+        /// map rep r to rep r' along type mapping f. drops history. if nothing would
+        /// be changed, returns the physically-identical rep.
+        pub fn ident_map<F>(&self, f: F) -> InterRep
+        where
+            F: Fn(&Type) -> Type,
+        {
+            let t0_ = f(&self.0.t0);
+            let t1_ = f(&self.0.t1);
+            let mut changed =
+                !Rc::ptr_eq(&t0_.0, &self.0.t0.0) || !Rc::ptr_eq(&t1_.0, &self.0.t1.0);
+
+            let mut ts_prime = Vec::new();
+            for member in self.0.ts.iter() {
+                let member_ = f(member);
+                changed = changed || !Rc::ptr_eq(&member_.0, &member.0);
+                ts_prime.push(member_);
+            }
+
+            if changed {
+                make(t0_, t1_, ts_prime.into())
+            } else {
+                self.dupe()
+            }
+        }
+    }
+}
+
+pub mod object {
+    use super::*;
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum ResolveTool {
+        // Each part of a spread must be resolved in order to compute the result
+        Resolve(Resolve),
+        // In order to resolve an InstanceT, all supers must also be resolved to
+        // collect class properties, which are own.
+        Super(Slice, Rc<Resolve>),
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum Resolve {
+        Next,
+        // Resolve each element of a union or intersection
+        List0(Vec1<Type>, Join),
+        List(Rc<[Type]>, Vec1<Resolved>, Join),
+    }
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum JoinOp {
+        And,
+        Or,
+    }
+
+    // This location is that of the entire intersection/union, not just the location of the &/| symbol
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct Join(pub ALoc, pub JoinOp);
+    // A union type resolves to a resolved spread with more than one element
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct Resolved(pub Vec1<Slice>);
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct Slice {
+        pub reason: Reason,
+        pub props: Props,
+        pub flags: Flags,
+        pub frozen: bool,
+        pub generics: GenericSpreadId,
+        pub interface: Option<(Type, InstType)>,
+        pub reachable_targs: Rc<[(Type, Polarity)]>,
+    }
+
+    pub type Props = FlowOrdMap<Name, Prop>;
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct Prop {
+        pub prop_t: Type,
+        pub is_own: bool,
+        pub is_method: bool,
+        pub polarity: Polarity,
+        pub key_loc: Option<ALoc>,
+    }
+
+    pub type Dict = Option<DictType>;
+
+    pub mod spread {
+        use super::*;
+
+        // This is the type we feed into SpreadType to be processed by object_kit. It's different
+        // than slice because object_kit processes the properties in ways that do not need to
+        // be exposed to other files.
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub struct OperandSliceInner {
+            pub reason: Reason,
+            pub prop_map: FlowOrdMap<Name, Property>,
+            pub generics: GenericSpreadId,
+            pub dict: Dict,
+            pub reachable_targs: Rc<[(Type, Polarity)]>,
+        }
+
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub struct OperandSlice(Rc<OperandSliceInner>);
+
+        impl std::ops::Deref for OperandSlice {
+            type Target = OperandSliceInner;
+
+            fn deref(&self) -> &Self::Target {
+                &self.0
+            }
+        }
+
+        impl OperandSlice {
+            pub fn new(inner: OperandSliceInner) -> Self {
+                Self(Rc::new(inner))
+            }
+
+            pub fn ptr_eq(&self, other: &OperandSlice) -> bool {
+                Rc::ptr_eq(&self.0, &other.0)
+            }
+        }
+
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum Operand {
+            Slice(OperandSlice),
+            Type(Type),
+        }
+
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum AccElement {
+            ResolvedSlice(Resolved),
+            InlineSlice(OperandSlice),
+        }
+
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub struct State {
+            pub todo_rev: Rc<[Operand]>,
+            pub acc: Rc<[AccElement]>,
+            pub spread_id: i32,
+            pub union_reason: Option<Reason>,
+            pub curr_resolve_idx: i32,
+        }
+
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum SealType {
+            Sealed,
+            Frozen,
+            AsConst,
+        }
+
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum Target {
+            // When spreading values, the result is exact if all of the input types are
+            // also exact. If any input type is inexact, the output is inexact.
+            Value { make_seal: SealType },
+            // It's more flexible to allow annotations to specify whether they should be
+            // exact or not. If the spread type is annotated to be exact, any inexact
+            // input types will cause a type error.
+            Annot { make_exact: bool },
+        }
+    }
+
+    pub mod rest {
+        use super::*;
+
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum State {
+            One(Type),
+            Done(Resolved),
+        }
+
+        #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum MergeMode {
+            SpreadReversal,
+            ReactConfigMerge(Polarity),
+            Omit,
+        }
+    }
+
+    pub mod react_config {
+        use super::*;
+
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum State {
+            Config {
+                component_default_props: Option<Type>,
+            },
+            Defaults {
+                config: Resolved,
+            },
+        }
+
+        #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+        pub enum RefManipulation {
+            KeepRef,
+            AddRef(Type),
+        }
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum Tool {
+        MakeExact,
+        ReadOnly,
+        Partial,
+        Required,
+        Spread(spread::Target, spread::State),
+        Rest(rest::MergeMode, rest::State),
+        ReactConfig {
+            state: react_config::State,
+            ref_manipulation: react_config::RefManipulation,
+        },
+        ReactCheckComponentConfig {
+            props: FlowOrdMap<Name, Property>,
+            allow_ref_in_spread: bool,
+        },
+        ObjectRep,
+        ObjectMap {
+            prop_type: Type,
+            mapped_type_flags: MappedTypeFlags,
+            selected_keys_opt: Option<Type>,
+        },
+    }
+
+    pub type GenericSpreadId = flow_typing_generics::SpreadId;
+}
+
+pub mod react {
+    use super::*;
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum Tool {
+        CreateElement {
+            component: Type,
+            jsx_props: Type,
+            tout: Tvar,
+            targs: Option<Rc<[Targ]>>,
+            should_generalize: bool,
+            return_hint: LazyHintT,
+            record_monomorphized_result: bool,
+            inferred_targs: Option<Rc<[(Type, SubstName)]>>,
+            specialized_component: Option<SpecializedCallee>,
+        },
+        ConfigCheck {
+            props: Type,
+        },
+        GetConfig {
+            tout: Type,
+        },
+    }
+}
+
+pub mod arith_kind {
+    use flow_parser::ast::expression::AssignmentOperator;
+    use flow_parser::ast::expression::BinaryOperator;
+
+    use super::*;
+
+    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum ArithKindInner {
+        Plus,
+        RShift3,
+        Other,
+    }
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub struct ArithKind(pub FlowSmolStr, pub ArithKindInner);
+
+    impl ArithKind {
+        pub fn of_binary_operator(op: BinaryOperator) -> ArithKind {
+            let s = FlowSmolStr::from(op.as_str());
+            let kind = match op {
+                BinaryOperator::Plus => ArithKindInner::Plus,
+                BinaryOperator::RShift3 => ArithKindInner::RShift3,
+                _ => ArithKindInner::Other,
+            };
+            ArithKind(s, kind)
+        }
+
+        pub fn of_assignment_operator(op: AssignmentOperator) -> ArithKind {
+            let s = FlowSmolStr::from(op.as_str());
+            let kind = match op {
+                AssignmentOperator::PlusAssign => ArithKindInner::Plus,
+                AssignmentOperator::RShift3Assign => ArithKindInner::RShift3,
+                _ => ArithKindInner::Other,
+            };
+            ArithKind(s, kind)
+        }
+
+        pub fn to_string(&self) -> &str {
+            &self.0
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum UnaryArithKind {
+    Plus,
+    Minus,
+    BitNot,
+    Update,
+}
+
+pub mod type_collector {
+    use std::cell::RefCell;
+
+    use super::*;
+
+    #[derive(Debug, Clone, Dupe)]
+    pub struct TypeCollector {
+        types: Rc<RefCell<FlowOrdSet<Type>>>,
+    }
+
+    impl PartialEq for TypeCollector {
+        fn eq(&self, other: &Self) -> bool {
+            std::ptr::eq(self.types.as_ptr(), other.types.as_ptr())
+        }
+    }
+
+    impl Eq for TypeCollector {}
+
+    impl PartialOrd for TypeCollector {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl Ord for TypeCollector {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            (self.types.as_ptr() as usize).cmp(&(other.types.as_ptr() as usize))
+        }
+    }
+
+    impl std::hash::Hash for TypeCollector {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            std::ptr::hash(self.types.as_ptr(), state)
+        }
+    }
+
+    impl TypeCollector {
+        pub fn create() -> Self {
+            thread_local! {
+                static CACHED: FlowOrdSet<Type> = FlowOrdSet::new();
+            }
+            TypeCollector {
+                types: Rc::new(RefCell::new(CACHED.with(|c| c.clone()))),
+            }
+        }
+
+        pub fn add(&self, t: Type) {
+            let is_empty =
+                matches!(&*t, TypeInner::DefT(_, def_t) if matches!(&**def_t, DefTInner::EmptyT));
+            if !is_empty {
+                self.types.borrow_mut().insert(t);
+            }
+        }
+
+        pub fn collect(&self) -> FlowOrdSet<Type> {
+            self.types.borrow().dupe()
+        }
+
+        pub fn collect_to_vec(&self) -> Vec<Type> {
+            self.types.borrow().iter().map(|t| t.dupe()).collect()
+        }
+
+        pub fn iter<F>(&self, mut f: F)
+        where
+            F: FnMut(&Type),
+        {
+            for t in self.types.borrow().iter() {
+                f(t);
+            }
+        }
+    }
+}
+
+pub mod concretize_seen {
+    use std::cell::RefCell;
+    use std::collections::BTreeSet;
+
+    #[derive(Debug, Clone)]
+    pub struct ConcretizeSeen {
+        seen: RefCell<BTreeSet<i32>>,
+    }
+
+    impl PartialEq for ConcretizeSeen {
+        fn eq(&self, other: &Self) -> bool {
+            std::ptr::eq(self.seen.as_ptr(), other.seen.as_ptr())
+        }
+    }
+
+    impl Eq for ConcretizeSeen {}
+
+    impl PartialOrd for ConcretizeSeen {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl Ord for ConcretizeSeen {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            (self.seen.as_ptr() as usize).cmp(&(other.seen.as_ptr() as usize))
+        }
+    }
+
+    impl std::hash::Hash for ConcretizeSeen {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            std::ptr::hash(self.seen.as_ptr(), state)
+        }
+    }
+
+    impl ConcretizeSeen {
+        pub fn new() -> Self {
+            ConcretizeSeen {
+                seen: RefCell::new(BTreeSet::new()),
+            }
+        }
+
+        pub fn contains(&self, tvar: &i32) -> bool {
+            self.seen.borrow().contains(tvar)
+        }
+
+        pub fn insert(&self, tvar: i32) {
+            self.seen.borrow_mut().insert(tvar);
+        }
+    }
+}
+
+/// We need to record type description in error messages.
+/// However, we cannot generate type descriptions during inference.
+/// We also cannot make it lazy because we cannot compare lazy values.
+/// Therefore, we create a variant for this. During inference, we will always
+/// have Type. After inference, we turn it into `TypeDesc`  
+pub mod type_or_type_desc {
+    use flow_common_ty::ty::ALocTy;
+
+    use super::*;
+
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    pub enum TypeOrTypeDescT<L: Dupe> {
+        Type(Type),
+        TypeDesc(Result<ALocTy, VirtualReasonDesc<L>>),
+    }
+
+    // SAFETY: TypeOrTypeDesc is only accessed under a Mutex in map_reduce::call
+    // (one thread at a time). The only non-Send/Sync field is Type(Rc<TypeInner>),
+    // which is never concurrently accessed. This mirrors OCaml's MultiWorkerLwt
+    // which uses multi-process parallelism where marshalling handles isolation.
+    unsafe impl<L: Dupe + Send> Send for TypeOrTypeDescT<L> {}
+    unsafe impl<L: Dupe + Sync> Sync for TypeOrTypeDescT<L> {}
+
+    pub fn map_loc<F, A, B>(f: F, t: TypeOrTypeDescT<A>) -> TypeOrTypeDescT<B>
+    where
+        F: Fn(&A) -> B,
+        A: Dupe,
+        B: Dupe,
+    {
+        match t {
+            TypeOrTypeDescT::Type(ty) => TypeOrTypeDescT::Type(ty),
+            TypeOrTypeDescT::TypeDesc(Ok(ty)) => TypeOrTypeDescT::TypeDesc(Ok(ty)),
+            TypeOrTypeDescT::TypeDesc(Err(desc)) => {
+                TypeOrTypeDescT::TypeDesc(Err(desc.map_locs(&f)))
+            }
+        }
+    }
+}
+
+pub fn unknown_use() -> UseOp {
+    VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))
+}
+
+pub fn name_of_propref(propref: &PropRef) -> Option<Name> {
+    match propref {
+        PropRef::Named { name, .. } => Some(name.dupe()),
+        PropRef::Computed(_) => None,
+    }
+}
+
+pub mod constraint {
+    use super::*;
+
+    pub type SpeculationId = i32;
+    pub type CaseId = i32;
+
+    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+    pub struct UseTypeKey {
+        pub use_t: UseT,
+        pub assoc: Option<(SpeculationId, CaseId)>,
+    }
+
+    impl PartialOrd for UseTypeKey {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl Ord for UseTypeKey {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            match self.assoc.cmp(&other.assoc) {
+                std::cmp::Ordering::Equal => self.use_t.cmp(&other.use_t),
+                other_ord => other_ord,
+            }
+        }
+    }
+
+    pub mod forcing_state {
+        use std::cell::UnsafeCell;
+
+        use super::*;
+
+        enum ForcingStateInner<A> {
+            Lazy(Box<dyn FnOnce() -> A>),
+            Forcing,
+            Forced(A),
+            ForcedWithCyclicError(A),
+        }
+
+        pub struct State<A, B> {
+            inner: Rc<UnsafeCell<ForcingStateInner<A>>>,
+            error_reason: Option<B>,
+        }
+
+        impl<A: Clone + std::fmt::Debug, B: Clone + std::fmt::Debug> std::fmt::Debug for State<A, B> {
+            fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+                // SAFETY: single-threaded, just reading for debug
+                let status_str = match unsafe { &*self.inner.get() } {
+                    ForcingStateInner::Lazy(_) => "Lazy",
+                    ForcingStateInner::Forcing => "Forcing",
+                    ForcingStateInner::Forced(_) => "Forced",
+                    ForcingStateInner::ForcedWithCyclicError(_) => "ForcedWithCyclicError",
+                };
+                f.debug_struct("State")
+                    .field("status", &status_str)
+                    .field("error_reason", &self.error_reason)
+                    .finish()
+            }
+        }
+
+        pub type ForcingState = State<Type, Reason>;
+        pub type ModuleTypeForcingState = State<Result<ModuleType, Type>, Reason>;
+
+        impl<A: Dupe + 'static, B: Clone> State<A, B> {
+            pub fn of_lazy_t<F>(error_reason: B, f: F) -> Self
+            where
+                F: FnOnce() -> A + 'static,
+            {
+                State {
+                    inner: Rc::new(UnsafeCell::new(ForcingStateInner::Lazy(Box::new(f)))),
+                    error_reason: Some(error_reason),
+                }
+            }
+
+            pub fn of_non_lazy_t(t: A) -> Self {
+                State {
+                    inner: Rc::new(UnsafeCell::new(ForcingStateInner::Forced(t))),
+                    error_reason: None,
+                }
+            }
+
+            pub fn force<F>(&self, on_error: F) -> A
+            where
+                F: Fn(&B) -> A,
+            {
+                // SAFETY: single-threaded, no concurrent access to the same State
+                let inner = unsafe { &mut *self.inner.get() };
+
+                match inner {
+                    ForcingStateInner::Lazy(_) => {
+                        let old = std::mem::replace(inner, ForcingStateInner::Forcing);
+                        let ForcingStateInner::Lazy(f) = old else {
+                            unreachable!()
+                        };
+
+                        let t = f();
+
+                        match inner {
+                            ForcingStateInner::Forcing => {
+                                *inner = ForcingStateInner::Forced(t.dupe());
+                                t
+                            }
+                            ForcingStateInner::ForcedWithCyclicError(err_val) => err_val.dupe(),
+                            _ => panic!("Invalid state after forcing"),
+                        }
+                    }
+                    ForcingStateInner::Forcing => {
+                        let t = on_error(self.error_reason.as_ref().expect("No error reason"));
+                        *inner = ForcingStateInner::ForcedWithCyclicError(t.dupe());
+                        t
+                    }
+                    ForcingStateInner::Forced(t) => t.dupe(),
+                    ForcingStateInner::ForcedWithCyclicError(t) => t.dupe(),
+                }
+            }
+
+            pub fn already_forced_with_cyclic_error(&self) -> bool {
+                matches!(
+                    unsafe { &*self.inner.get() },
+                    ForcingStateInner::ForcedWithCyclicError(_)
+                )
+            }
+
+            pub fn get_forced_for_debugging(&self) -> Option<A> {
+                match unsafe { &*self.inner.get() } {
+                    ForcingStateInner::Lazy(_) | ForcingStateInner::Forcing => None,
+                    ForcingStateInner::Forced(t) => Some(t.dupe()),
+                    ForcingStateInner::ForcedWithCyclicError(t) => Some(t.dupe()),
+                }
+            }
+
+            /// Drop the lazy closure if it hasn't been forced yet, replacing it with a default value.
+            /// This is used to break Rc cycles after inference is complete.
+            pub fn drop_if_lazy(&self, default: A) {
+                // SAFETY: single-threaded, no concurrent access to the same State
+                let inner = unsafe { &mut *self.inner.get() };
+                if matches!(inner, ForcingStateInner::Lazy(_)) {
+                    *inner = ForcingStateInner::Forced(default);
+                }
+            }
+
+            pub fn copy<F, G>(&self, on_error: F, visit_for_copier: G) -> Self
+            where
+                B: 'static,
+                F: Fn(&B) -> A + 'static,
+                G: FnOnce(&A) + 'static,
+            {
+                let src_inner = self.inner.dupe();
+                let src_error_reason = self.error_reason.clone();
+                State {
+                    inner: Rc::new(UnsafeCell::new(ForcingStateInner::Lazy(Box::new(
+                        move || {
+                            let src_state = State {
+                                inner: src_inner,
+                                error_reason: src_error_reason,
+                            };
+                            let t = src_state.force(&on_error);
+                            visit_for_copier(&t);
+                            t
+                        },
+                    )))),
+                    error_reason: self.error_reason.clone(),
+                }
+            }
+        }
+
+        impl State<Result<ModuleType, Type>, Reason> {
+            pub fn of_lazy_module<F>(reason: Reason, f: F) -> Self
+            where
+                F: FnOnce() -> ModuleType + 'static,
+            {
+                State {
+                    inner: Rc::new(UnsafeCell::new(ForcingStateInner::Lazy(Box::new(
+                        move || Ok(f()),
+                    )))),
+                    error_reason: Some(reason),
+                }
+            }
+
+            pub fn of_error_module(t: Type) -> Self {
+                State {
+                    inner: Rc::new(UnsafeCell::new(ForcingStateInner::Forced(Err(t)))),
+                    error_reason: None,
+                }
+            }
+        }
+
+        impl<A: Clone, B: Clone> Clone for State<A, B> {
+            fn clone(&self) -> Self {
+                State {
+                    inner: self.inner.clone(),
+                    error_reason: self.error_reason.clone(),
+                }
+            }
+        }
+
+        #[cfg(test)]
+        mod tests {
+            use std::cell::RefCell;
+            use std::rc::Rc;
+
+            use flow_common::reason::locationless_reason;
+
+            use super::*;
+            use crate::type_::any_t;
+
+            fn assert_forced_to_any(s: &ForcingState) {
+                match &*s.force(|r| any_t::error(r.dupe())) {
+                    TypeInner::AnyT(_, _) => {}
+                    _ => panic!("Invalid type"),
+                }
+            }
+
+            #[test]
+            fn invalid_self_recursive() {
+                let s: Rc<RefCell<Option<ForcingState>>> = Rc::new(RefCell::new(None));
+                let s_clone = s.clone();
+                let state = ForcingState::of_lazy_t(
+                    locationless_reason(VirtualReasonDesc::RNull),
+                    move || {
+                        let s_ref = s_clone.borrow();
+                        let inner_state = s_ref.as_ref().unwrap();
+                        inner_state.force(|r| any_t::error(r.dupe()))
+                    },
+                );
+                *s.borrow_mut() = Some(state);
+                let s_ref = s.borrow();
+                let state = s_ref.as_ref().unwrap();
+                assert_forced_to_any(state);
+            }
+
+            #[test]
+            fn invalid_mutually_recursive() {
+                let s1: Rc<RefCell<Option<ForcingState>>> = Rc::new(RefCell::new(None));
+                let s2: Rc<RefCell<Option<ForcingState>>> = Rc::new(RefCell::new(None));
+
+                let s2_for_s1 = s2.clone();
+                let state1 = ForcingState::of_lazy_t(
+                    locationless_reason(VirtualReasonDesc::RNull),
+                    move || {
+                        let s2_ref = s2_for_s1.borrow();
+                        let inner_state = s2_ref.as_ref().unwrap();
+                        inner_state.force(|r| any_t::error(r.dupe()))
+                    },
+                );
+
+                let s1_for_s2 = s1.clone();
+                let state2 = ForcingState::of_lazy_t(
+                    locationless_reason(VirtualReasonDesc::RNull),
+                    move || {
+                        let s1_ref = s1_for_s2.borrow();
+                        let inner_state = s1_ref.as_ref().unwrap();
+                        inner_state.force(|r| any_t::error(r.dupe()))
+                    },
+                );
+
+                *s1.borrow_mut() = Some(state1);
+                *s2.borrow_mut() = Some(state2);
+
+                let s1_ref = s1.borrow();
+                let s2_ref = s2.borrow();
+                assert_forced_to_any(s1_ref.as_ref().unwrap());
+                assert_forced_to_any(s2_ref.as_ref().unwrap());
+            }
+
+            #[test]
+            fn invalid_self_recursive_mapped() {
+                let s: Rc<RefCell<Option<ForcingState>>> = Rc::new(RefCell::new(None));
+                let s_clone = s.clone();
+                let state = ForcingState::of_lazy_t(
+                    locationless_reason(VirtualReasonDesc::RNull),
+                    move || {
+                        let s_ref = s_clone.borrow();
+                        let inner_state = s_ref.as_ref().unwrap();
+                        inner_state.force(|r| any_t::error(r.dupe()))
+                    },
+                );
+                *s.borrow_mut() = Some(state);
+
+                let s_ref = s.borrow();
+                let state = s_ref.as_ref().unwrap();
+                let state_copy = state.copy(|r| any_t::error(r.dupe()), |_| {});
+                assert_forced_to_any(&state_copy);
+            }
+
+            #[test]
+            fn invalid_self_recursive_force_twice() {
+                let s: Rc<RefCell<Option<ForcingState>>> = Rc::new(RefCell::new(None));
+                let s_clone = s.clone();
+                let state = ForcingState::of_lazy_t(
+                    locationless_reason(VirtualReasonDesc::RNull),
+                    move || {
+                        let s_ref = s_clone.borrow();
+                        let inner_state = s_ref.as_ref().unwrap();
+                        let _ = inner_state.force(|r| any_t::error(r.dupe()));
+                        inner_state.force(|r| any_t::error(r.dupe()))
+                    },
+                );
+                *s.borrow_mut() = Some(state);
+
+                let s_ref = s.borrow();
+                let state = s_ref.as_ref().unwrap();
+                let state_copy = state.copy(|r| any_t::error(r.dupe()), |_| {});
+                assert_forced_to_any(&state_copy);
+            }
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    pub enum Constraints {
+        Resolved(Type),
+        Unresolved(Box<Bounds>),
+        FullyResolved(forcing_state::ForcingState),
+    }
+
+    impl Default for Constraints {
+        fn default() -> Self {
+            Constraints::Unresolved(Box::default())
+        }
+    }
+
+    #[derive(Debug, Clone)]
+    pub struct Bounds {
+        pub lower: BTreeMap<Type, (DepthTrace, UseOp)>,
+        pub upper: BTreeMap<UseTypeKey, DepthTrace>,
+        pub lowertvars: HashMap<i32, (DepthTrace, UseOp)>,
+        pub uppertvars: HashMap<i32, (DepthTrace, UseOp)>,
+    }
+
+    impl Default for Bounds {
+        fn default() -> Self {
+            Self::empty()
+        }
+    }
+
+    impl Bounds {
+        pub fn empty() -> Self {
+            Bounds {
+                lower: BTreeMap::new(),
+                upper: BTreeMap::new(),
+                lowertvars: HashMap::new(),
+                uppertvars: HashMap::new(),
+            }
+        }
+    }
+}
+
+pub mod aconstraint {
+    use std::cell::RefCell;
+    use std::ops::Deref;
+
+    use super::*;
+
+    #[derive(Clone)]
+    pub enum OpInner {
+        AnnotConcretizeForImportsExports {
+            reason: Reason,
+            transform: Rc<dyn Fn(Type) -> Type + Send + Sync>,
+        },
+        AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(Reason),
+        AnnotConcretizeForInspection {
+            reason: Reason,
+            collector: type_collector::TypeCollector,
+        },
+        AnnotImportTypeofT {
+            reason: Reason,
+            name: FlowSmolStr,
+        },
+        AnnotAssertExportIsTypeT {
+            reason: Reason,
+            name: Name,
+        },
+        AnnotSpecializeT {
+            use_op: UseOp,
+            reason: Reason,
+            reason2: Reason,
+            types: Option<Rc<[Type]>>,
+        },
+        AnnotThisSpecializeT {
+            reason: Reason,
+            type_: Type,
+        },
+        AnnotUseTTypeT {
+            reason: Reason,
+            kind: TypeTKind,
+        },
+        AnnotGetTypeFromNamespaceT {
+            use_op: UseOp,
+            reason: Reason,
+            prop_ref: (Reason, Name),
+        },
+        AnnotGetEnumT(Reason),
+        AnnotGetPropT {
+            reason: Reason,
+            use_op: UseOp,
+            from_annot: bool,
+            prop_ref: PropRef,
+        },
+        AnnotGetElemT {
+            reason: Reason,
+            use_op: UseOp,
+            key: Type,
+        },
+        AnnotElemT {
+            reason: Reason,
+            use_op: UseOp,
+            from_annot: bool,
+            source: Type,
+        },
+        AnnotGetStaticsT(Reason),
+        AnnotLookupT {
+            reason: Reason,
+            use_op: UseOp,
+            prop_ref: PropRef,
+            type_: Type,
+        },
+        AnnotObjKitT {
+            reason: Reason,
+            use_op: UseOp,
+            resolve_tool: object::ResolveTool,
+            tool: object::Tool,
+        },
+        AnnotObjTestProtoT(Reason),
+        AnnotMixinT(Reason),
+        AnnotArithT {
+            reason: Reason,
+            flip: bool,
+            rhs_t: Type,
+            kind: arith_kind::ArithKind,
+        },
+        AnnotUnaryArithT {
+            reason: Reason,
+            kind: UnaryArithKind,
+        },
+        AnnotNotT(Reason),
+        AnnotObjKeyMirror(Reason),
+        AnnotDeepReadOnlyT {
+            reason: Reason,
+            loc: ALoc,
+            dro_type: DroType,
+        },
+        AnnotGetKeysT(Reason),
+        AnnotToStringT {
+            orig_t: Option<Type>,
+            reason: Reason,
+        },
+        AnnotObjRestT {
+            reason: Reason,
+            keys: Rc<[FlowSmolStr]>,
+        },
+        AnnotGetValuesT(Reason),
+    }
+
+    #[derive(Clone, Dupe)]
+    pub struct Op(Rc<OpInner>);
+
+    impl Op {
+        pub fn new(inner: OpInner) -> Self {
+            Op(Rc::new(inner))
+        }
+    }
+
+    impl Deref for Op {
+        type Target = OpInner;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    /// This kind of constraint is meant to represent type annotations. Unlike the
+    /// constraints described above that may gradually evolve towards the solution
+    /// of an unresolved tvar, annotation constraints are resolved immediately.
+    ///
+    /// There are three kinds of constraints:
+    ///
+    /// - `Annot_unresolved` is a constraint for which we have no information yet.
+    ///   This state is associated, for example, with a type variable representing
+    ///   a type alias that we have just started visiting, and so do not have a
+    ///   type for its body yet.
+    ///
+    /// - `Annot_op { op, id, .. }` expresses the fact that the current variable is the
+    ///   result of applying the operation `op` on the type that another annotation
+    ///   variable `id` will resolve to.
+    ///
+    /// An annotation variable starts off in the Annot_unresolved or Annot_op state
+    /// and is resolved in one step by removing it.
+    ///
+    /// As inference proceeds other types can depend on the current annotation variable
+    /// through an Annot_op constraint. This fact is recorded in the `dependents` set
+    /// that is maintained for every unresolved annotation variable. It is important
+    /// to keep this information around, so we can force these dependents into
+    /// evaluation when the current variable becomes resolved (see resolve_id in
+    /// annotation_inference.ml). An implied invariant is that all variables in the
+    /// dependent set are of the Annot_op kind.
+    ///
+    /// While in one of the two initial states the respective annotation variable
+    /// ids are only present in the annotation graph. Once resolved, the resolved
+    /// type is immediately stored in the main type graph as FullyResolved constraint.
+    ///
+    /// In rare cases like
+    ///
+    /// ```javascript
+    /// // file rec-export.js
+    /// import {p} from './rec-export';
+    /// export {p};
+    /// ```
+    ///
+    /// it is possible for a variable to never become resolved. This is the equivalent
+    /// of a type variable (from above) to never accumulate any lower bounds. When
+    /// such constraints get detected, the result is immediately replaced with 'any',
+    /// which is similar to how we handle the above constraints, when that type
+    /// variable is exported.
+    #[derive(Clone)]
+    pub enum AConstraintInner {
+        AnnotUnresolved {
+            reason: Reason,
+            dependents: Rc<RefCell<FlowOrdSet<i32>>>,
+        },
+        AnnotOp {
+            op: Op,
+            id: i32,
+            dependents: Rc<RefCell<FlowOrdSet<i32>>>,
+        },
+    }
+
+    #[derive(Clone, Dupe)]
+    pub struct AConstraint(Rc<AConstraintInner>);
+
+    impl AConstraint {
+        pub fn new(inner: AConstraintInner) -> Self {
+            AConstraint(Rc::new(inner))
+        }
+    }
+
+    impl Deref for AConstraint {
+        type Target = AConstraintInner;
+
+        fn deref(&self) -> &Self::Target {
+            &self.0
+        }
+    }
+
+    impl Op {
+        pub fn reason(&self) -> Reason {
+            match &**self {
+                OpInner::AnnotConcretizeForImportsExports { reason, .. }
+                | OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(reason)
+                | OpInner::AnnotConcretizeForInspection { reason, .. }
+                | OpInner::AnnotImportTypeofT { reason, .. }
+                | OpInner::AnnotAssertExportIsTypeT { reason, .. }
+                | OpInner::AnnotSpecializeT { reason, .. }
+                | OpInner::AnnotThisSpecializeT { reason, .. }
+                | OpInner::AnnotUseTTypeT { reason, .. }
+                | OpInner::AnnotGetTypeFromNamespaceT { reason, .. }
+                | OpInner::AnnotGetEnumT(reason)
+                | OpInner::AnnotGetPropT { reason, .. }
+                | OpInner::AnnotGetElemT { reason, .. }
+                | OpInner::AnnotElemT { reason, .. }
+                | OpInner::AnnotGetStaticsT(reason)
+                | OpInner::AnnotLookupT { reason, .. }
+                | OpInner::AnnotObjKitT { reason, .. }
+                | OpInner::AnnotObjTestProtoT(reason)
+                | OpInner::AnnotMixinT(reason)
+                | OpInner::AnnotArithT { reason, .. }
+                | OpInner::AnnotUnaryArithT { reason, .. }
+                | OpInner::AnnotNotT(reason)
+                | OpInner::AnnotObjKeyMirror(reason)
+                | OpInner::AnnotDeepReadOnlyT { reason, .. }
+                | OpInner::AnnotGetKeysT(reason)
+                | OpInner::AnnotToStringT { reason, .. }
+                | OpInner::AnnotObjRestT { reason, .. }
+                | OpInner::AnnotGetValuesT(reason) => reason.dupe(),
+            }
+        }
+
+        pub fn use_op(&self) -> Option<UseOp> {
+            match &**self {
+                OpInner::AnnotSpecializeT { use_op, .. }
+                | OpInner::AnnotGetTypeFromNamespaceT { use_op, .. }
+                | OpInner::AnnotGetPropT { use_op, .. }
+                | OpInner::AnnotGetElemT { use_op, .. }
+                | OpInner::AnnotElemT { use_op, .. }
+                | OpInner::AnnotLookupT { use_op, .. }
+                | OpInner::AnnotObjKitT { use_op, .. } => Some(use_op.dupe()),
+                _ => None,
+            }
+        }
+    }
+
+    impl AConstraint {
+        pub fn deps(&self) -> &RefCell<FlowOrdSet<i32>> {
+            match &**self {
+                AConstraintInner::AnnotUnresolved { dependents, .. } => dependents,
+                AConstraintInner::AnnotOp { dependents, .. } => dependents,
+            }
+        }
+
+        pub fn to_annot_op_exn(&self) -> &Op {
+            match &**self {
+                AConstraintInner::AnnotUnresolved { .. } => panic!("to_annot_op_exn on unresolved"),
+                AConstraintInner::AnnotOp { op, .. } => op,
+            }
+        }
+
+        pub fn update_deps<F>(&self, f: F)
+        where
+            F: FnOnce(FlowOrdSet<i32>) -> FlowOrdSet<i32>,
+        {
+            let deps = self.deps();
+            let old_deps = deps.borrow().dupe();
+            *deps.borrow_mut() = f(old_deps);
+        }
+    }
+
+    impl Op {
+        pub fn string_of_operation(&self) -> &'static str {
+            match &**self {
+                OpInner::AnnotSpecializeT { .. } => "Annot_SpecializeT",
+                OpInner::AnnotDeepReadOnlyT { .. } => "Annot_DeepReadOnlyT",
+                OpInner::AnnotThisSpecializeT { .. } => "Annot_ThisSpecializeT",
+                OpInner::AnnotUseTTypeT { .. } => "Annot_UseT_TypeT",
+                OpInner::AnnotConcretizeForImportsExports { .. } => {
+                    "Annot_ConcretizeForImportsExports"
+                }
+                OpInner::AnnotConcretizeForCJSExtractNamedExportsAndTypeExports(_) => {
+                    "Annot_ConcretizeForCJSExtractNamedExportsAndTypeExports"
+                }
+                OpInner::AnnotConcretizeForInspection { .. } => "Annot_ConcretizeForInspection",
+                OpInner::AnnotImportTypeofT { .. } => "Annot_ImportTypeofT",
+                OpInner::AnnotAssertExportIsTypeT { .. } => "Annot_AssertExportIsTypeT",
+                OpInner::AnnotGetTypeFromNamespaceT { .. } => "Annot_GetTypeFromNamespaceT",
+                OpInner::AnnotGetPropT { .. } => "Annot_GetPropT",
+                OpInner::AnnotGetElemT { .. } => "Annot_GetElemT",
+                OpInner::AnnotGetEnumT(_) => "Annot_GetEnumT",
+                OpInner::AnnotElemT { .. } => "Annot_ElemT",
+                OpInner::AnnotGetStaticsT(_) => "Annot_GetStaticsT",
+                OpInner::AnnotLookupT { .. } => "Annot_LookupT",
+                OpInner::AnnotObjKitT { .. } => "Annot_ObjKitT",
+                OpInner::AnnotObjTestProtoT(_) => "Annot_ObjTestProtoT",
+                OpInner::AnnotMixinT(_) => "Annot_MixinT",
+                OpInner::AnnotArithT { .. } => "Annot_ArithT",
+                OpInner::AnnotUnaryArithT { .. } => "Annot_UnaryArithT",
+                OpInner::AnnotNotT(_) => "Annot_NotT",
+                OpInner::AnnotObjKeyMirror(_) => "Annot_ObjKeyMirror",
+                OpInner::AnnotGetKeysT(_) => "Annot_GetKeysT",
+                OpInner::AnnotToStringT { .. } => "Annot_ToStringT",
+                OpInner::AnnotObjRestT { .. } => "Annot_ObjRestT",
+                OpInner::AnnotGetValuesT(_) => "Annot_GetValuesT",
+            }
+        }
+
+        pub fn display_reason(&self) -> Reason {
+            use flow_common::reason::VirtualReasonDesc::*;
+            match &**self {
+                OpInner::AnnotObjKitT { reason, tool, .. } => {
+                    let desc = match tool {
+                        object::Tool::MakeExact => RCustom("exact".into()),
+                        object::Tool::ReactCheckComponentConfig { .. } => {
+                            RCustom("react check component config".into())
+                        }
+                        object::Tool::ReadOnly => RCustom("readonly".into()),
+                        object::Tool::Partial => RCustom("partial".into()),
+                        object::Tool::Required => RCustom("required".into()),
+                        object::Tool::Spread { .. } => RCustom("spread".into()),
+                        object::Tool::Rest { .. } => RCustom("rest".into()),
+                        object::Tool::ReactConfig { .. } => RCustom("react config".into()),
+                        object::Tool::ObjectRep => RCustom("object".into()),
+                        object::Tool::ObjectMap { .. } => RCustom("mapped type".into()),
+                    };
+                    reason.dupe().replace_desc(desc)
+                }
+                OpInner::AnnotGetStaticsT(r) => r.dupe().replace_desc(RCustom("statics".into())),
+                OpInner::AnnotMixinT(r) => r.dupe().replace_desc(RMixins),
+                OpInner::AnnotUnaryArithT { reason, .. } => reason.dupe().replace_desc(RUnaryMinus),
+                OpInner::AnnotNotT(r) => r.dupe().replace_desc(RUnaryNot),
+                OpInner::AnnotGetPropT {
+                    reason, prop_ref, ..
+                } => reason
+                    .dupe()
+                    .replace_desc(RProperty(name_of_propref(prop_ref))),
+                OpInner::AnnotObjRestT { reason, .. } => reason.dupe().replace_desc(RRest),
+                _ => self.reason(),
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
+pub enum UnifyCause {
+    MutableArray {
+        lower_array_t: Type,
+        upper_array_t: Type,
+        upper_array_reason: Reason,
+    },
+    MutableProperty {
+        lower_obj_t: Type,
+        upper_obj_t: Type,
+        upper_object_reason: Reason,
+        property_name: Option<FlowSmolStr>,
+    },
+    Uncategorized,
+}
+
+#[derive(Debug, Default, Clone)]
+pub struct TypeContext {
+    /// map from tvar ids to nodes (type info structures)
+    pub graph: Rc<RefCell<flow_utils_union_find::Graph<constraint::Constraints>>>,
+    /// obj types point to mutable property maps
+    pub property_maps: std::collections::HashMap<properties::Id, properties::PropertiesMap>,
+    /// indirection to support context opt
+    pub call_props: std::collections::HashMap<i32, Type>,
+    /// modules point to mutable export maps
+    pub export_maps: std::collections::HashMap<exports::Id, exports::T>,
+    /// map from evaluation ids to types
+    pub evaluated: eval::Map<Type>,
+}
+
+impl TypeContext {
+    /// Walk the graph and drop all unforced ForcingState closures, and clear
+    /// Unresolved bounds that may contain UseT values with LazyHintT closures.
+    /// Used to break Rc cycles after inference is complete.
+    pub fn drop_lazy_forcing_states(&self) {
+        use flow_common::reason::locationless_reason;
+        use flow_utils_union_find::Node;
+
+        let mut graph = self.graph.borrow_mut();
+        // Create the dummy error type once, outside the loop.
+        // It's cheap to dupe (Rc clone) but expensive to create (Arc + Rc allocations).
+        let default = any_t::error(locationless_reason(VirtualReasonDesc::RAnyImplicit));
+        for node in graph.values_mut() {
+            if let Node::Root(root) = node {
+                match &mut root.constraints {
+                    constraint::Constraints::FullyResolved(fs) => {
+                        fs.drop_if_lazy(default.dupe());
+                    }
+                    constraint::Constraints::Unresolved(bounds) => {
+                        // Unresolved bounds may contain UseT values (in upper)
+                        // with LazyHintT(Rc<dyn Fn>) closures that capture cx.
+                        // Clear them to break: Context → graph → Bounds → UseT
+                        // → LazyHintT → cx → Context.
+                        **bounds = Default::default();
+                    }
+                    constraint::Constraints::Resolved(_) => {
+                        // Resolved contains a plain Type (no closures).
+                    }
+                }
+            }
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct FlowSet {
+    // Stack of BTreeMap layers. Bottom = oldest, top = newest.
+    // add() checks all layers, inserts into top.
+    // Snapshot = push empty layer. Restore = pop top layer.
+    levels: Vec<BTreeMap<Type, BTreeSet<UseT>>>,
+}
+
+impl Default for FlowSet {
+    fn default() -> Self {
+        Self {
+            levels: vec![BTreeMap::new()],
+        }
+    }
+}
+
+impl FlowSet {
+    /// Returns whether the pair is inserted into the set.
+    pub fn add(&mut self, l: Type, u: UseT) -> bool {
+        for level in self.levels.iter().rev() {
+            if let Some(set) = level.get(&l) {
+                if set.contains(&u) {
+                    return false;
+                }
+            }
+        }
+        let top = self.levels.last_mut().expect("FlowSet has no levels");
+        top.entry(l).or_default().insert(u);
+        true
+    }
+
+    pub fn fold<F, R>(&self, mut f: F, init: R) -> R
+    where
+        F: FnMut(R, (&Type, &UseT)) -> R,
+    {
+        self.levels.iter().fold(init, |acc, level| {
+            level.iter().fold(acc, |acc, (l, us)| {
+                us.iter().fold(acc, |acc, u| f(acc, (l, u)))
+            })
+        })
+    }
+
+    pub fn level_count(&self) -> usize {
+        self.levels.len()
+    }
+
+    pub fn push_level(&mut self) {
+        self.levels.push(BTreeMap::new());
+    }
+
+    pub fn pop_level(&mut self) {
+        self.levels.pop();
+        if self.levels.is_empty() {
+            self.levels.push(BTreeMap::new());
+        }
+    }
+
+    /// Truncate to the given number of levels, discarding all above.
+    pub fn truncate_to(&mut self, n: usize) {
+        self.levels.truncate(n);
+        if self.levels.is_empty() {
+            self.levels.push(BTreeMap::new());
+        }
+    }
+
+    /// Move entries from the top level into a specific target level (zero clone).
+    /// The top level is left empty but remains on the stack.
+    pub fn move_top_entries_to_level(&mut self, target: usize) {
+        let top_idx = self.levels.len() - 1;
+        if top_idx == target {
+            return;
+        }
+        let entries = std::mem::take(&mut self.levels[top_idx]);
+        let dest = &mut self.levels[target];
+        for (l, us) in entries {
+            dest.entry(l).or_default().extend(us);
+        }
+    }
+
+    /// Clear a specific level's entries without removing it from the stack.
+    pub fn clear_level(&mut self, index: usize) {
+        self.levels[index].clear();
+    }
+
+    pub fn clear(&mut self) {
+        self.levels.clear();
+        self.levels.push(BTreeMap::new());
+    }
+}
+
+pub type SubstCacheMap<T> = MultiLevelMap<(poly::Id, Rc<[Type]>), T>;
+
+pub type EvalIdCacheMap = MultiLevelMap<eval::Id, Type>;
+
+pub type EvalIdSet = BTreeSet<eval::Id>;
+
+pub type IdCacheMap = MultiLevelMap<(Type, TypeDestructorT), eval::Id>;
+
+pub type EvalReposCacheMap = MultiLevelMap<(Type, TypeDestructorT, eval::Id), Type>;
+
+pub type FixCacheMap = MultiLevelMap<(bool, Type), Type>;
+
+pub type ConstFoldMap = MultiLevelMap<(i32, Reason, i32), i32>;
+
+// ********************************************************* //
+
+pub fn open_tvar(tvar: &Type) -> &Tvar {
+    match &**tvar {
+        TypeInner::OpenT(tvar) => tvar,
+        _ => panic!("open_tvar called on non-OpenT"),
+    }
+}
+
+pub mod num_module_t {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::RNumber
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::DefT(
+            reason,
+            DefT::new(DefTInner::NumGeneralT(Literal::AnyLiteral)),
+        ))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+pub mod str_module_t {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::RString
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::DefT(
+            reason,
+            DefT::new(DefTInner::StrGeneralT(Literal::AnyLiteral)),
+        ))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+pub mod bool_module_t {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::RBoolean
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::BoolGeneralT)))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+pub mod bigint_module_t {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::RBigInt
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::DefT(
+            reason,
+            DefT::new(DefTInner::BigIntGeneralT(Literal::AnyLiteral)),
+        ))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+pub mod symbol_t {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::RSymbol
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::SymbolT)))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+pub mod mixed_t {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::RMixed
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::DefT(
+            reason,
+            DefT::new(DefTInner::MixedT(MixedFlavor::MixedEverything)),
+        ))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+pub mod empty_t {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::REmpty
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::EmptyT)))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+pub mod any_t {
+    use super::*;
+
+    pub fn desc(source: &AnySource) -> flow_common::reason::ReasonDesc {
+        match source {
+            AnySource::AnnotatedAny => flow_common::reason::VirtualReasonDesc::RAnyExplicit,
+            _ => flow_common::reason::VirtualReasonDesc::RAnyImplicit,
+        }
+    }
+
+    pub fn make(source: AnySource, r: Reason) -> Type {
+        Type::new(TypeInner::AnyT(r, source))
+    }
+
+    pub fn at(source: AnySource, tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(&source), tok);
+        make(source, reason)
+    }
+
+    pub fn why(source: AnySource, reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc(&source));
+        make(source, reason)
+    }
+
+    pub fn annot(reason: Reason) -> Type {
+        why(AnySource::AnnotatedAny, reason)
+    }
+
+    pub fn error(reason: Reason) -> Type {
+        why(AnySource::AnyError(None), reason)
+    }
+
+    pub fn error_of_kind(kind: AnyErrorKind, reason: Reason) -> Type {
+        why(AnySource::AnyError(Some(kind)), reason)
+    }
+
+    pub fn untyped(reason: Reason) -> Type {
+        why(AnySource::Untyped, reason)
+    }
+
+    pub fn placeholder(reason: Reason) -> Type {
+        why(AnySource::Placeholder, reason)
+    }
+
+    pub fn locationless(source: AnySource) -> Type {
+        let reason = flow_common::reason::locationless_reason(desc(&source));
+        make(source, reason)
+    }
+}
+
+pub mod unsoundness {
+    use super::*;
+
+    pub fn constructor() -> AnySource {
+        AnySource::Unsound(UnsoundnessKind::Constructor)
+    }
+
+    pub fn merged() -> AnySource {
+        AnySource::Unsound(UnsoundnessKind::Merged)
+    }
+
+    pub fn instance_of_refi() -> AnySource {
+        AnySource::Unsound(UnsoundnessKind::InstanceOfRefinement)
+    }
+
+    pub fn unresolved() -> AnySource {
+        AnySource::Unsound(UnsoundnessKind::UnresolvedType)
+    }
+
+    pub fn resolve_spread() -> AnySource {
+        AnySource::Unsound(UnsoundnessKind::ResolveSpread)
+    }
+
+    pub fn unimplemented() -> AnySource {
+        AnySource::Unsound(UnsoundnessKind::Unimplemented)
+    }
+
+    pub fn inference_hooks() -> AnySource {
+        AnySource::Unsound(UnsoundnessKind::InferenceHooks)
+    }
+
+    pub fn exports() -> AnySource {
+        AnySource::Unsound(UnsoundnessKind::Exports)
+    }
+
+    pub fn bound_fn_this() -> AnySource {
+        AnySource::Unsound(UnsoundnessKind::BoundFunctionThis)
+    }
+
+    pub fn dummy_static() -> AnySource {
+        AnySource::Unsound(UnsoundnessKind::DummyStatic)
+    }
+
+    // Convenience functions that create AnyT with unsound sources
+    pub fn merged_any(r: Reason) -> Type {
+        any_t::make(merged(), r)
+    }
+
+    pub fn instance_of_refi_any(r: Reason) -> Type {
+        any_t::make(instance_of_refi(), r)
+    }
+
+    pub fn unresolved_any(r: Reason) -> Type {
+        any_t::make(unresolved(), r)
+    }
+
+    pub fn resolve_spread_any(r: Reason) -> Type {
+        any_t::make(resolve_spread(), r)
+    }
+
+    pub fn constructor_any(r: Reason) -> Type {
+        any_t::make(constructor(), r)
+    }
+
+    pub fn unimplemented_any(r: Reason) -> Type {
+        any_t::make(unimplemented(), r)
+    }
+
+    pub fn inference_hooks_any(r: Reason) -> Type {
+        any_t::make(inference_hooks(), r)
+    }
+
+    pub fn exports_any(r: Reason) -> Type {
+        any_t::make(exports(), r)
+    }
+
+    pub fn bound_fn_this_any(r: Reason) -> Type {
+        any_t::make(bound_fn_this(), r)
+    }
+
+    pub fn dummy_static_any(r: Reason) -> Type {
+        any_t::make(dummy_static(), r)
+    }
+
+    pub fn why(kind: UnsoundnessKind, reason: Reason) -> Type {
+        any_t::why(AnySource::Unsound(kind), reason)
+    }
+
+    pub fn at(kind: UnsoundnessKind, tok: ALoc) -> Type {
+        any_t::at(AnySource::Unsound(kind), tok)
+    }
+}
+
+pub mod void {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::RVoid
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::VoidT)))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+pub mod null {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::RNull
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::NullT)))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+pub mod obj_proto {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::RDummyPrototype
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::ObjProtoT(reason))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+pub mod null_proto {
+    use super::*;
+
+    pub fn desc() -> flow_common::reason::ReasonDesc {
+        flow_common::reason::VirtualReasonDesc::RNull
+    }
+
+    pub fn make(reason: Reason) -> Type {
+        Type::new(TypeInner::NullProtoT(reason))
+    }
+
+    pub fn at(tok: ALoc) -> Type {
+        let reason = flow_common::reason::mk_annot_reason(desc(), tok);
+        make(reason)
+    }
+
+    pub fn why(reason: Reason) -> Type {
+        let reason = reason.replace_desc(desc());
+        make(reason)
+    }
+
+    pub fn why_with_use_desc(use_desc: bool, r: Reason) -> Type {
+        let r = if use_desc { r } else { r.replace_desc(desc()) };
+        make(r)
+    }
+}
+
+/// USE WITH CAUTION!!! Locationless types should not leak to errors, otherwise
+/// they will cause error printing to crash.
+///
+/// We use locationless reasons legitimately for normalizing. Also, because `any`
+/// doesn't cause errors, locationless `AnyT` is OK.
+pub mod locationless {
+    use super::*;
+
+    pub mod num_module_t {
+        use super::*;
+
+        pub fn t() -> Type {
+            let reason =
+                flow_common::reason::locationless_reason(super::super::num_module_t::desc());
+            super::super::num_module_t::make(reason)
+        }
+    }
+
+    pub mod str_module_t {
+        use super::*;
+
+        pub fn t() -> Type {
+            let reason =
+                flow_common::reason::locationless_reason(super::super::str_module_t::desc());
+            super::super::str_module_t::make(reason)
+        }
+    }
+
+    pub mod bool_module_t {
+        use super::*;
+
+        pub fn t() -> Type {
+            let reason =
+                flow_common::reason::locationless_reason(super::super::bool_module_t::desc());
+            super::super::bool_module_t::make(reason)
+        }
+    }
+
+    pub mod mixed_t {
+        use super::*;
+
+        pub fn t() -> Type {
+            let reason = flow_common::reason::locationless_reason(super::super::mixed_t::desc());
+            super::super::mixed_t::make(reason)
+        }
+    }
+
+    pub mod empty_t {
+        use super::*;
+
+        pub fn t() -> Type {
+            let reason = flow_common::reason::locationless_reason(super::super::empty_t::desc());
+            super::super::empty_t::make(reason)
+        }
+    }
+
+    pub mod void_t {
+        use super::*;
+
+        pub fn t() -> Type {
+            let reason = flow_common::reason::locationless_reason(super::super::void::desc());
+            super::super::void::make(reason)
+        }
+    }
+
+    pub mod null_t {
+        use super::*;
+
+        pub fn t() -> Type {
+            let reason = flow_common::reason::locationless_reason(super::super::null::desc());
+            super::super::null::make(reason)
+        }
+    }
+}
+
+pub fn hint_unavailable() -> LazyHintT {
+    LazyHintT(
+        false,
+        Rc::new(|_expected_only, _skip_optional, _reason| HintEvalResult::NoHint),
+    )
+}
+
+/* convenience */
+
+pub fn drop_generic(t: Type) -> Type {
+    match &*t {
+        TypeInner::GenericT(box GenericTData { bound, .. }) => bound.dupe(),
+        _ => t,
+    }
+}
+
+// Primitives, like string, will be promoted to their wrapper object types for
+// certain operations, like GetPropT, but not for others, like `UseT _`.
+pub fn primitive_promoting_use_t(use_t: &UseT) -> bool {
+    match use_t.deref() {
+        UseTInner::CallElemT(..)
+        | UseTInner::GetElemT { .. }
+        | UseTInner::GetPropT(..)
+        | UseTInner::GetPrivatePropT(..)
+        | UseTInner::GetProtoT(..)
+        | UseTInner::MethodT(..)
+        | UseTInner::TestPropT { .. } => true,
+        // "internal" use types, which should not be called directly on primitives,
+        // but it's OK if they are in practice. TODO: consider making this an internal
+        // error
+        UseTInner::LookupT { .. } => true,
+        // TODO: enumerate all use types
+        _ => false,
+    }
+}
+
+pub fn fold_virtual_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord, F1, F2, T>(
+    op: &VirtualUseOp<L>,
+    f1: F1,
+    f2: &F2,
+) -> T
+where
+    F1: Fn(&VirtualRootUseOp<L>) -> T,
+    F2: Fn(T, &VirtualFrameUseOp<L>) -> T,
+{
+    match op {
+        VirtualUseOp::Op(root) => f1(root),
+        VirtualUseOp::Frame(frame, inner_op) => {
+            let acc = fold_virtual_use_op(inner_op, f1, f2);
+            f2(acc, frame)
+        }
+    }
+}
+
+pub fn fold_use_op<F1, F2, T>(op: &UseOp, f1: F1, f2: &F2) -> T
+where
+    F1: Fn(&RootUseOp) -> T,
+    F2: Fn(T, &FrameUseOp) -> T,
+{
+    fold_virtual_use_op(op, f1, f2)
+}
+
+pub fn root_of_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+    op: &VirtualUseOp<L>,
+) -> &VirtualRootUseOp<L> {
+    match op {
+        VirtualUseOp::Op(root) => root,
+        VirtualUseOp::Frame(_, inner_op) => root_of_use_op(inner_op),
+    }
+}
+
+/* Printing some types in parseable form relies on particular formats in
+corresponding reason descriptions. The following module formalizes the
+relevant conventions.
+
+TODO: Encoding formats in strings instead of ADTs is not ideal, obviously. */
+pub mod desc_format {
+    use super::*;
+
+    // InstanceT reasons have desc = name
+    pub fn instance_reason(name: Name, loc: ALoc) -> Reason {
+        flow_common::reason::mk_reason(flow_common::reason::VirtualReasonDesc::RType(name), loc)
+    }
+
+    pub fn name_of_instance_reason(r: &Reason) -> String {
+        let desc = r.desc.unwrap();
+        match desc {
+            VirtualReasonDesc::RType(name) => name.to_string(),
+            _ => flow_common::reason::string_of_desc(desc),
+        }
+    }
+
+    // TypeT reasons have desc = type `name`
+    pub fn type_reason(name: Name, loc: ALoc) -> Reason {
+        flow_common::reason::mk_reason(flow_common::reason::VirtualReasonDesc::RType(name), loc)
+    }
+
+    pub fn name_of_type_reason(r: &Reason) -> Name {
+        let desc = r.desc.unwrap();
+        match desc {
+            VirtualReasonDesc::RType(name) => name.dupe(),
+            _ => panic!("not a type reason"),
+        }
+    }
+}
+
+/* printing */
+
+pub fn string_of_def_ctor(def: &DefT) -> &'static str {
+    match &**def {
+        DefTInner::ArrT(_) => "ArrT",
+        DefTInner::BigIntGeneralT(_) => "BigIntT",
+        DefTInner::BoolGeneralT => "BoolT",
+        DefTInner::ClassT(_) => "ClassT",
+        DefTInner::EmptyT => "EmptyT",
+        DefTInner::EnumValueT(_) => "EnumValueT",
+        DefTInner::EnumObjectT { .. } => "EnumObjectT",
+        DefTInner::FunT(_, _) => "FunT",
+        DefTInner::InstanceT(_) => "InstanceT",
+        DefTInner::MixedT(_) => "MixedT",
+        DefTInner::NullT => "NullT",
+        DefTInner::NumGeneralT(_) => "NumT",
+        DefTInner::ObjT(_) => "ObjT",
+        DefTInner::PolyT { .. } => "PolyT",
+        DefTInner::ReactAbstractComponentT { .. } => "ReactAbstractComponentT",
+        DefTInner::RendersT(_) => "RendersT",
+        DefTInner::NumericStrKeyT(_) => "NumericStrKeyT",
+        DefTInner::SingletonBoolT { .. } => "SingletonBoolT",
+        DefTInner::SingletonNumT { .. } => "SingletonNumT",
+        DefTInner::SingletonStrT { .. } => "SingletonStrT",
+        DefTInner::SingletonBigIntT { .. } => "SingletonBigIntT",
+        DefTInner::StrGeneralT { .. } => "StrT",
+        DefTInner::SymbolT => "SymbolT",
+        DefTInner::TypeT { .. } => "TypeT",
+        DefTInner::VoidT => "VoidT",
+    }
+}
+
+pub fn string_of_ctor(t: &Type) -> &'static str {
+    match &**t {
+        TypeInner::OpenT(_) => "OpenT",
+        TypeInner::AnyT(_, AnySource::CatchAny) => "AnyT (catch)",
+        TypeInner::AnyT(_, AnySource::AnnotatedAny) => "AnyT (annotated)",
+        TypeInner::AnyT(_, AnySource::AnyError(_)) => "AnyT (error)",
+        TypeInner::AnyT(_, AnySource::Unsound(_)) => "AnyT (unsound)",
+        TypeInner::AnyT(_, AnySource::Untyped) => "AnyT (untyped)",
+        TypeInner::AnyT(_, AnySource::Placeholder) => "AnyT (placeholder)",
+        TypeInner::AnnotT(_, _, _) => "AnnotT",
+        TypeInner::DefT(_, def) => string_of_def_ctor(def),
+        TypeInner::EvalT { .. } => "EvalT",
+        TypeInner::FunProtoT(_) => "FunProtoT",
+        TypeInner::FunProtoBindT(_) => "FunProtoBindT",
+        TypeInner::GenericT(..) => "GenericT",
+        TypeInner::KeysT(_, _) => "KeysT",
+        TypeInner::StrUtilT { .. } => "StrUtilT",
+        TypeInner::NamespaceT(_) => "NamespaceT",
+        TypeInner::NullProtoT(_) => "NullProtoT",
+        TypeInner::ObjProtoT(_) => "ObjProtoT",
+        TypeInner::NominalT { .. } => "NominalT",
+        TypeInner::ThisInstanceT(..) => "ThisInstanceT",
+        TypeInner::ThisTypeAppT(..) => "ThisTypeAppT",
+        TypeInner::TypeAppT(..) => "TypeAppT",
+        TypeInner::UnionT(_, _) => "UnionT",
+        TypeInner::IntersectionT(_, _) => "IntersectionT",
+        TypeInner::OptionalT { .. } => "OptionalT",
+        TypeInner::MaybeT(_, _) => "MaybeT",
+    }
+}
+
+pub fn string_of_root_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+    op: &VirtualRootUseOp<L>,
+) -> &'static str {
+    match op {
+        VirtualRootUseOp::InitField { .. } => "InitField",
+        VirtualRootUseOp::ObjectAddComputedProperty { .. } => "ObjectAddComputedProperty",
+        VirtualRootUseOp::ObjectSpread { .. } => "ObjectSpread",
+        VirtualRootUseOp::ObjectRest { .. } => "ObjectRest",
+        VirtualRootUseOp::ObjectChain { .. } => "ObjectChain",
+        VirtualRootUseOp::AssignVar { .. } => "AssignVar",
+        VirtualRootUseOp::Cast { .. } => "Cast",
+        VirtualRootUseOp::ClassExtendsCheck { .. } => "ClassExtendsCheck",
+        VirtualRootUseOp::ClassImplementsCheck { .. } => "ClassImplementsCheck",
+        VirtualRootUseOp::ClassOwnProtoCheck { .. } => "ClassOwnProtoCheck",
+        VirtualRootUseOp::ClassMethodDefinition { .. } => "ClassMethodDefinition",
+        VirtualRootUseOp::Coercion { .. } => "Coercion",
+        VirtualRootUseOp::ConformToCommonInterface { .. } => "ConformToCommonInterface",
+        VirtualRootUseOp::DeclareComponentRef { .. } => "DeclareComponentRef",
+        VirtualRootUseOp::DeleteProperty { .. } => "DeleteProperty",
+        VirtualRootUseOp::DeleteVar { .. } => "DeleteVar",
+        VirtualRootUseOp::FunCall { .. } => "FunCall",
+        VirtualRootUseOp::FunCallMethod { .. } => "FunCallMethod",
+        VirtualRootUseOp::FunImplicitReturn { .. } => "FunImplicitReturn",
+        VirtualRootUseOp::FunReturnStatement { .. } => "FunReturnStatement",
+        VirtualRootUseOp::GeneratorYield { .. } => "GeneratorYield",
+        VirtualRootUseOp::GetExport { .. } => "GetExport",
+        VirtualRootUseOp::GetProperty { .. } => "GetProperty",
+        VirtualRootUseOp::IndexedTypeAccess { .. } => "IndexedTypeAccess",
+        VirtualRootUseOp::InferBoundCompatibilityCheck { .. } => "InferBoundCompatibilityCheck",
+        VirtualRootUseOp::JSXCreateElement { .. } => "JSXCreateElement",
+        VirtualRootUseOp::ReactCreateElementCall { .. } => "ReactCreateElementCall",
+        VirtualRootUseOp::ReactGetIntrinsic { .. } => "ReactGetIntrinsic",
+        VirtualRootUseOp::RecordCreate { .. } => "RecordCreate",
+        VirtualRootUseOp::Speculation { .. } => "Speculation",
+        VirtualRootUseOp::TypeApplication { .. } => "TypeApplication",
+        VirtualRootUseOp::SetProperty { .. } => "SetProperty",
+        VirtualRootUseOp::UpdateProperty { .. } => "UpdateProperty",
+        VirtualRootUseOp::RefinementCheck { .. } => "RefinementCheck",
+        VirtualRootUseOp::SwitchRefinementCheck { .. } => "SwitchRefinementCheck",
+        VirtualRootUseOp::EvalMappedType { .. } => "EvalMappedType",
+        VirtualRootUseOp::TypeGuardIncompatibility { .. } => "TypeGuardIncompatibility",
+        VirtualRootUseOp::RenderTypeInstantiation { .. } => "RenderTypeInstantiation",
+        VirtualRootUseOp::ComponentRestParamCompatibility { .. } => {
+            "ComponentRestParamCompatibility"
+        }
+        VirtualRootUseOp::PositiveTypeGuardConsistency { .. } => "PositiveTypeGuardConsistency",
+        VirtualRootUseOp::UnknownUse => "UnknownUse",
+    }
+}
+
+pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+    op: &VirtualFrameUseOp<L>,
+) -> &'static str {
+    match op {
+        VirtualFrameUseOp::ConstrainedAssignment { .. } => "ConstrainedAssignment",
+        VirtualFrameUseOp::ReactDeepReadOnly { .. } => "ReactDeepReadOnly",
+        VirtualFrameUseOp::ArrayElementCompatibility { .. } => "ArrayElementCompatibility",
+        VirtualFrameUseOp::FunCompatibility { .. } => "FunCompatibility",
+        VirtualFrameUseOp::FunMissingArg { .. } => "FunMissingArg",
+        VirtualFrameUseOp::FunParam { .. } => "FunParam",
+        VirtualFrameUseOp::FunRestParam { .. } => "FunRestParam",
+        VirtualFrameUseOp::FunReturn { .. } => "FunReturn",
+        VirtualFrameUseOp::ImplicitTypeParam => "ImplicitTypeParam",
+        VirtualFrameUseOp::IndexerKeyCompatibility { .. } => "IndexerKeyCompatibility",
+        VirtualFrameUseOp::OpaqueTypeLowerBoundCompatibility { .. } => {
+            "OpaqueTypeLowerBoundCompatibility"
+        }
+        VirtualFrameUseOp::OpaqueTypeUpperBoundCompatibility { .. } => {
+            "OpaqueTypeUpperBoundCompatibility"
+        }
+        VirtualFrameUseOp::OpaqueTypeCustomErrorCompatibility { .. } => {
+            "OpaqueTypeCustomErrorCompatibility"
+        }
+        VirtualFrameUseOp::MappedTypeKeyCompatibility { .. } => "MappedTypeKeyCompatibility",
+        VirtualFrameUseOp::PropertyCompatibility { .. } => "PropertyCompatibility",
+        VirtualFrameUseOp::ReactConfigCheck => "ReactConfigCheck",
+        VirtualFrameUseOp::ReactGetConfig { .. } => "ReactGetConfig",
+        VirtualFrameUseOp::TupleElementCompatibility { .. } => "TupleElementCompatibility",
+        VirtualFrameUseOp::TupleAssignment { .. } => "TupleAssignment",
+        VirtualFrameUseOp::TypeArgCompatibility { .. } => "TypeArgCompatibility",
+        VirtualFrameUseOp::TypeParamBound { .. } => "TypeParamBound",
+        VirtualFrameUseOp::OpaqueTypeLowerBound { .. } => "OpaqueTypeLowerBound",
+        VirtualFrameUseOp::OpaqueTypeUpperBound { .. } => "OpaqueTypeUpperBound",
+        VirtualFrameUseOp::UnifyFlip => "UnifyFlip",
+        VirtualFrameUseOp::TypeGuardCompatibility => "TypeGuardCompatibility",
+        VirtualFrameUseOp::RendersCompatibility => "RendersCompatibility",
+        VirtualFrameUseOp::EnumRepresentationTypeCompatibility { .. } => {
+            "EnumRepresentationTypeCompatibility"
+        }
+    }
+}
+
+pub fn string_of_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
+    op: &VirtualUseOp<L>,
+) -> String {
+    match op {
+        VirtualUseOp::Op(root) => string_of_root_use_op(root).to_string(),
+        VirtualUseOp::Frame(frame, _) => string_of_frame_use_op(frame).to_string(),
+    }
+}
+
+pub fn string_of_use_op_rec(op: &UseOp) -> String {
+    fold_use_op(
+        op,
+        |root| string_of_root_use_op(root).to_string(),
+        &|acc, frame| format!("{}({})", string_of_frame_use_op(frame), acc),
+    )
+}
+
+pub fn string_of_predicate_concretizer_variant(
+    variant: &PredicateConcretetizerVariant,
+) -> &'static str {
+    match variant {
+        PredicateConcretetizerVariant::ConcretizeForGeneralPredicateTest => {
+            "ConcretizeForGeneralPredicateTest"
+        }
+        PredicateConcretetizerVariant::ConcretizeKeepOptimizedUnions => {
+            "ConcretizeKeepOptimizedUnions"
+        }
+        PredicateConcretetizerVariant::ConcretizeRHSForInstanceOfPredicateTest => {
+            "ConcretizeRHSForInstanceOfPredicateTest"
+        }
+        PredicateConcretetizerVariant::ConcretizeRHSForLiteralPredicateTest => {
+            "ConcretizeRHSForLiteralPredicateTest"
+        }
+    }
+}
+
+pub fn string_of_use_ctor(use_t: &UseT) -> String {
+    match use_t.deref() {
+        UseTInner::UseT(op, t) => format!("UseT({}, {})", string_of_use_op(op), string_of_ctor(t)),
+        UseTInner::ArrRestT { .. } => "ArrRestT".to_string(),
+        UseTInner::BindT { .. } => "BindT".to_string(),
+        UseTInner::CallElemT { .. } => "CallElemT".to_string(),
+        UseTInner::CallT { .. } => "CallT".to_string(),
+        UseTInner::ConstructorT(..) => "ConstructorT".to_string(),
+        UseTInner::ElemT { .. } => "ElemT".to_string(),
+        UseTInner::EnumCastT { .. } => "EnumCastT".to_string(),
+        UseTInner::EnumExhaustiveCheckT { .. } => "EnumExhaustiveCheckT".to_string(),
+        UseTInner::GetEnumT { .. } => "GetEnumT".to_string(),
+        UseTInner::ConditionalT { .. } => "ConditionalT".to_string(),
+        UseTInner::ExtendsUseT { .. } => "ExtendsUseT".to_string(),
+        UseTInner::GetElemT { .. } => "GetElemT".to_string(),
+        UseTInner::GetKeysT { .. } => "GetKeysT".to_string(),
+        UseTInner::GetValuesT { .. } => "GetValuesT".to_string(),
+        UseTInner::GetDictValuesT { .. } => "GetDictValuesT".to_string(),
+        UseTInner::GetTypeFromNamespaceT { .. } => "GetTypeFromNamespaceT".to_string(),
+        UseTInner::GetPropT(..) => "GetPropT".to_string(),
+        UseTInner::GetPrivatePropT(..) => "GetPrivatePropT".to_string(),
+        UseTInner::GetProtoT { .. } => "GetProtoT".to_string(),
+        UseTInner::GetStaticsT { .. } => "GetStaticsT".to_string(),
+        UseTInner::HasOwnPropT { .. } => "HasOwnPropT".to_string(),
+        UseTInner::ImplementsT { .. } => "ImplementsT".to_string(),
+        UseTInner::ConcretizeT { kind, .. } => match kind {
+            ConcretizationKind::ConcretizeForImportsExports => {
+                "ConcretizeT ConcretizeForImportsExports".to_string()
+            }
+            ConcretizationKind::ConcretizeForCJSExtractNamedExportsAndTypeExports => {
+                "ConcretizeT ConcretizeForCJSExtractNamedExportsAndTypeExports".to_string()
+            }
+            ConcretizationKind::ConcretizeForOptionalChain => {
+                "ConcretizeT ConcretizeForOptionalChain".to_string()
+            }
+            ConcretizationKind::ConcretizeForInspection => {
+                "ConcretizeT ConcretizeForInspection".to_string()
+            }
+            ConcretizationKind::ConcretizeForPredicate(v) => {
+                format!(
+                    "ConcretizeT ConcretizeForPredicate({})",
+                    string_of_predicate_concretizer_variant(v)
+                )
+            }
+            ConcretizationKind::ConcretizeForSentinelPropTest => {
+                "ConcretizeT ConcretizeForPredicate".to_string()
+            }
+            ConcretizationKind::ConcretizeAll => "ConcretizeT ConcretizeAll".to_string(),
+            ConcretizationKind::ConcretizeForOperatorsChecking => {
+                "ConcretizeT ConcretizeForOperatorsChecking".to_string()
+            }
+            ConcretizationKind::ConcretizeForComputedObjectKeys => {
+                "ConcretizeT ConcretizeForComputedObjectKeys".to_string()
+            }
+            ConcretizationKind::ConcretizeForObjectAssign => {
+                "ConcretizeT ConcretizeForObjectAssign".to_string()
+            }
+            ConcretizationKind::ConcretizeForMatchArg { keep_unions } => {
+                format!(
+                    "ConcretizeT ConcretizeForMatchArg {{keep_unions={}}}",
+                    keep_unions
+                )
+            }
+        },
+        UseTInner::LookupT { .. } => "LookupT".to_string(),
+        UseTInner::MapTypeT { .. } => "MapTypeT".to_string(),
+        UseTInner::MethodT { .. } => "MethodT".to_string(),
+        UseTInner::PrivateMethodT(..) => "PrivateMethodT".to_string(),
+        UseTInner::MixinT { .. } => "MixinT".to_string(),
+        UseTInner::ObjRestT { .. } => "ObjRestT".to_string(),
+        UseTInner::ObjTestProtoT { .. } => "ObjTestProtoT".to_string(),
+        UseTInner::ObjTestT { .. } => "ObjTestT".to_string(),
+        UseTInner::ReactKitT { .. } => "ReactKitT".to_string(),
+        UseTInner::ReposLowerT { .. } => "ReposLowerT".to_string(),
+        UseTInner::ReposUseT { .. } => "ReposUseT".to_string(),
+        UseTInner::ResolveSpreadT(_, _, resolve_spread_type) => {
+            match &resolve_spread_type.rrt_resolve_to {
+                SpreadResolve::ResolveSpreadsToArray { .. } => {
+                    "ResolveSpreadT(ResolveSpreadsToArray)".to_string()
+                }
+                SpreadResolve::ResolveSpreadsToTupleType { id, .. } => {
+                    format!("ResolveSpreadT(ResolveSpreadsToTupleType ({}))", id)
+                }
+                SpreadResolve::ResolveSpreadsToArrayLiteral { id, .. } => {
+                    format!("ResolveSpreadT(ResolveSpreadsToArrayLiteral ({}))", id)
+                }
+                SpreadResolve::ResolveSpreadsToMultiflowCallFull { .. } => {
+                    "ResolveSpreadT(ResolveSpreadsToMultiflowCallFull)".to_string()
+                }
+                SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull { .. } => {
+                    "ResolveSpreadT(ResolveSpreadsToMultiflowSubtypeFull)".to_string()
+                }
+                SpreadResolve::ResolveSpreadsToMultiflowPartial { .. } => {
+                    "ResolveSpreadT(ResolveSpreadsToMultiflowPartial)".to_string()
+                }
+            }
+        }
+        UseTInner::SetElemT { .. } => "SetElemT".to_string(),
+        UseTInner::SetPropT { .. } => "SetPropT".to_string(),
+        UseTInner::SetPrivatePropT(..) => "SetPrivatePropT".to_string(),
+        UseTInner::SetProtoT { .. } => "SetProtoT".to_string(),
+        UseTInner::SpecializeT { .. } => "SpecializeT".to_string(),
+        UseTInner::ObjKitT { .. } => "ObjKitT".to_string(),
+        UseTInner::SuperT { .. } => "SuperT".to_string(),
+        UseTInner::TestPropT { .. } => "TestPropT".to_string(),
+        UseTInner::ThisSpecializeT { .. } => "ThisSpecializeT".to_string(),
+        UseTInner::ToStringT { .. } => "ToStringT".to_string(),
+        UseTInner::ValueToTypeReferenceT { .. } => "ValueToTypeReferenceT".to_string(),
+        UseTInner::TypeCastT { .. } => "TypeCastT".to_string(),
+        UseTInner::ConcretizeTypeAppsT { .. } => "ConcretizeTypeAppsT".to_string(),
+        UseTInner::CondT { .. } => "CondT".to_string(),
+        UseTInner::DestructuringT { .. } => "DestructuringT".to_string(),
+        UseTInner::ResolveUnionT { .. } => "ResolveUnionT".to_string(),
+        UseTInner::FilterOptionalT { .. } => "FilterOptionalT".to_string(),
+        UseTInner::FilterMaybeT { .. } => "FilterMaybeT".to_string(),
+        UseTInner::DeepReadOnlyT { .. } => "DeepReadOnlyT".to_string(),
+        UseTInner::HooklikeT { .. } => "HooklikeT".to_string(),
+        UseTInner::SealGenericT { .. } => "SealGenericT".to_string(),
+        UseTInner::OptionalIndexedAccessT { .. } => "OptionalIndexedAccessT".to_string(),
+        UseTInner::CheckUnusedPromiseT { .. } => "CheckUnusedPromiseT".to_string(),
+        UseTInner::WriteComputedObjPropCheckT { .. } => "WriteComputedObjPropCheckT".to_string(),
+        UseTInner::ConvertEmptyPropsToMixedT { .. } => "ConvertEmptyPropsToMixedT".to_string(),
+        UseTInner::ExitRendersT { .. } => "ExitRendersT".to_string(),
+        UseTInner::EvalTypeDestructorT { .. } => "EvalTypeDestructorT".to_string(),
+    }
+}
+
+pub fn string_of_binary_test(test: &BinaryTest) -> String {
+    match test {
+        BinaryTest::InstanceofTest => "instanceof".to_string(),
+        BinaryTest::SentinelProp(key) => format!("sentinel prop {}", key),
+        BinaryTest::EqTest => "===".to_string(),
+    }
+}
+
+pub fn string_of_predicate(pred: &Predicate) -> String {
+    match &**pred {
+        PredicateInner::AndP(p1, p2) => {
+            format!("{} && {}", string_of_predicate(p1), string_of_predicate(p2))
+        }
+        PredicateInner::OrP(p1, p2) => {
+            format!("{} || {}", string_of_predicate(p1), string_of_predicate(p2))
+        }
+        PredicateInner::NotP(p) => format!("not {}", string_of_predicate(p)),
+        PredicateInner::BinaryP(b, t) => match &**t {
+            TypeInner::OpenT(tvar) => {
+                format!(
+                    "left operand of {} with right operand = OpenT({})",
+                    string_of_binary_test(b),
+                    tvar.1
+                )
+            }
+            _ => {
+                format!(
+                    "left operand of {} with right operand = {}",
+                    string_of_binary_test(b),
+                    string_of_ctor(t)
+                )
+            }
+        },
+        PredicateInner::TruthyP => "truthy".to_string(),
+        PredicateInner::NullP => "null".to_string(),
+        PredicateInner::MaybeP => "null or undefined".to_string(),
+        PredicateInner::SingletonBoolP(_, false) => "false".to_string(),
+        PredicateInner::SingletonBoolP(_, true) => "true".to_string(),
+        PredicateInner::SingletonStrP(_, _, value) => format!("string `{}`", value),
+        PredicateInner::SingletonNumP(_, _, NumberLiteral(_, raw)) => format!("number `{}`", raw),
+        PredicateInner::SingletonBigIntP(_, _, BigIntLiteral(_, raw)) => {
+            format!("bigint `{}`", raw)
+        }
+        PredicateInner::VoidP => "undefined".to_string(),
+        PredicateInner::BoolP { .. } => "boolean".to_string(),
+        PredicateInner::StrP { .. } => "string".to_string(),
+        PredicateInner::NumP { .. } => "number".to_string(),
+        PredicateInner::BigIntP { .. } => "bigint".to_string(),
+        PredicateInner::FunP => "function".to_string(),
+        PredicateInner::ObjP => "object".to_string(),
+        PredicateInner::SymbolP { .. } => "symbol".to_string(),
+        PredicateInner::ArrP => "array".to_string(),
+        PredicateInner::ArrLenP { op, n } => {
+            let op_str = match op {
+                ArrayLengthOp::ArrLenEqual => "===",
+                ArrayLengthOp::ArrLenGreaterThanEqual => ">=",
+            };
+            format!("array length {} {}", op_str, n)
+        }
+        PredicateInner::PropExistsP { propname, .. } => format!("prop `{}` exists", propname),
+        PredicateInner::PropTruthyP(key, _) => format!("prop `{}` is truthy", key),
+        PredicateInner::PropIsExactlyNullP(key, _) => format!("prop `{}` is exactly null", key),
+        PredicateInner::PropNonVoidP(key, _) => format!("prop `{}` is not undefined", key),
+        PredicateInner::PropNonMaybeP(key, _) => format!("prop `{}` is not null or undefined", key),
+        PredicateInner::LatentP(lazy_pred, indices) => {
+            // Access lazy value (assuming it's already forced)
+            match &*lazy_pred.2 {
+                TypeInner::OpenT(tvar) => {
+                    let indices: Vec<String> = indices.iter().map(|i| i.to_string()).collect();
+                    format!("LatentPred(TYPE_{}, {})", tvar.1, indices.join(", "))
+                }
+                _ => {
+                    let indices: Vec<String> = indices.iter().map(|i| i.to_string()).collect();
+                    format!(
+                        "LatentPred({}, {})",
+                        string_of_ctor(&lazy_pred.2),
+                        indices.join(", ")
+                    )
+                }
+            }
+        }
+        PredicateInner::LatentThisP(lazy_pred) => match &*lazy_pred.2 {
+            TypeInner::OpenT(tvar) => {
+                format!("LatentThisPred(TYPE_{})", tvar.1)
+            }
+            _ => {
+                format!("LatentThisPred({})", string_of_ctor(&lazy_pred.2))
+            }
+        },
+        PredicateInner::ImpossibleP => "impossible".to_string(),
+    }
+}
+
+pub fn string_of_type_t_kind(kind: &TypeTKind) -> &'static str {
+    match kind {
+        TypeTKind::TypeAliasKind => "TypeAliasKind",
+        TypeTKind::TypeParamKind => "TypeParamKind",
+        TypeTKind::OpaqueKind => "OpaqueKind",
+        TypeTKind::ImportTypeofKind => "ImportTypeofKind",
+        TypeTKind::ImportClassKind => "ImportClassKind",
+        TypeTKind::ImportEnumKind => "ImportEnumKind",
+        TypeTKind::InstanceKind => "InstanceKind",
+        TypeTKind::RenderTypeKind => "RenderTypeKind",
+    }
+}
+
+/// A setter's type is determined by its sole parameter.
+///
+/// If it has more than one param, returns the type of the first param;
+/// if it has no params, returns `any`. If it isn't even a function,
+/// raises an exception because this is a Flow bug.
+pub fn extract_setter_type(t: &Type) -> Type {
+    match &**t {
+        TypeInner::DefT(reason, def_t) => match &**def_t {
+            DefTInner::FunT(_, ft) if !ft.params.is_empty() => ft.params[0].1.dupe(),
+            DefTInner::FunT(..) => any_t::error(reason.dupe()),
+            _ => panic!("Setter property with unexpected type"),
+        },
+        _ => panic!("Setter property with unexpected type"),
+    }
+}
+
+pub fn extract_getter_type(t: &Type) -> Type {
+    match &**t {
+        TypeInner::DefT(_, def_t) => match &**def_t {
+            DefTInner::FunT(_, ft) => ft.return_t.dupe(),
+            _ => panic!("Getter property with unexpected type"),
+        },
+        _ => panic!("Getter property with unexpected type"),
+    }
+}
+
+pub fn elemt_of_arrtype(arrtype: &ArrType) -> Type {
+    match arrtype {
+        ArrType::ArrayAT { elem_t, .. }
+        | ArrType::ROArrayAT(elem_t, _)
+        | ArrType::TupleAT { elem_t, .. } => elem_t.dupe(),
+    }
+}
+
+pub fn ro_of_arrtype(arrtype: &ArrType) -> flow_typing_generics::array_spread::RoStatus {
+    match arrtype {
+        ArrType::ArrayAT { .. } => flow_typing_generics::array_spread::RoStatus::NonROSpread,
+        _ => flow_typing_generics::array_spread::RoStatus::ROSpread,
+    }
+}
+
+pub fn annot(in_implicit_instantiation: bool, use_desc: bool, t: &Type) -> Type {
+    match &**t {
+        TypeInner::OpenT(tvar) => {
+            if !(flow_common::reason::is_instantiable_reason(&tvar.0) && in_implicit_instantiation)
+            {
+                let reason = tvar.0.dupe();
+                Type(Rc::new(TypeInner::AnnotT(reason, t.dupe(), use_desc)))
+            } else {
+                t.dupe()
+            }
+        }
+        _ => t.dupe(),
+    }
+}
+
+/* The following functions are used as constructors for function types and
+object types, which unfortunately have many fields, not all of which are
+meaningful in all contexts. This part of the design should be revisited:
+perhaps the data types can be refactored to make them more specialized. */
+
+/* Methods may use a dummy statics object type to carry properties. We do not
+want to encourage this pattern, but we also don't want to block uses of this
+pattern. Thus, we compromise by not tracking the property types. */
+pub fn dummy_static(reason: Reason) -> Type {
+    let r =
+        reason.update_desc(|desc| flow_common::reason::VirtualReasonDesc::RStatics(Arc::new(desc)));
+    unsoundness::dummy_static_any(r)
+}
+
+pub fn dummy_prototype() -> Type {
+    use flow_common::reason::locationless_reason;
+    Type::new(TypeInner::ObjProtoT(locationless_reason(
+        VirtualReasonDesc::RDummyPrototype,
+    )))
+}
+
+pub fn bound_function_dummy_this(loc: ALoc) -> Type {
+    use flow_common::reason::mk_reason;
+    let r = mk_reason(VirtualReasonDesc::RDummyThis, loc);
+    unsoundness::bound_fn_this_any(r)
+}
+
+pub fn dummy_this(loc: ALoc) -> Type {
+    use flow_common::reason::mk_reason;
+    let r = mk_reason(VirtualReasonDesc::RDummyThis, loc);
+    mixed_t::make(r)
+}
+
+pub fn implicit_mixed_this(reason: Reason) -> Type {
+    let r = reason.update_desc(|desc| VirtualReasonDesc::RImplicitThis(Arc::new(desc)));
+    mixed_t::make(r)
+}
+
+pub fn global_this(reason: Reason) -> Type {
+    let reason = reason.replace_desc(VirtualReasonDesc::RGlobalObject);
+    Type::new(TypeInner::ObjProtoT(reason))
+}
+
+pub fn default_obj_assign_kind() -> ObjAssignKind {
+    ObjAssignKind::ObjAssign {
+        assert_exact: false,
+    }
+}
+
+/* A method type is a function type with `this` specified. */
+pub fn mk_methodtype(
+    this_t: Type,
+    subtyping: Option<ThisStatus>,
+    effect_: Option<ReactEffectType>,
+    tins: Vec<Type>,
+    rest_param: Option<FunRestParam>,
+    def_reason: Reason,
+    params_names: Option<Vec<Option<Name>>>,
+    type_guard: Option<TypeGuard>,
+    tout: Type,
+) -> FunType {
+    let subtyping = subtyping.unwrap_or(ThisStatus::ThisFunction);
+    let effect_ = effect_.unwrap_or(ReactEffectType::ArbitraryEffect);
+
+    let params = match params_names {
+        None => tins.into_iter().map(|t| FunParam(None, t)).collect(),
+        Some(names) => names
+            .into_iter()
+            .zip(tins)
+            .map(|(name_opt, t)| FunParam(name_opt.map(|n| n.to_string().into()), t))
+            .collect(),
+    };
+
+    FunType {
+        this_t: (this_t, subtyping),
+        params,
+        rest_param,
+        return_t: tout,
+        type_guard,
+        def_reason,
+        effect_,
+    }
+}
+
+pub fn mk_methodcalltype(
+    targs: Option<Rc<[Targ]>>,
+    args: Rc<[CallArg]>,
+    meth_generic_this: Option<Type>,
+    meth_strict_arity: bool,
+    tout: Tvar,
+) -> MethodCallType {
+    MethodCallType {
+        meth_generic_this,
+        meth_targs: targs,
+        meth_args_tlist: args,
+        meth_tout: tout,
+        meth_strict_arity,
+    }
+}
+
+/// A bound function type is a method type whose `this` parameter has been
+/// bound to some type. Currently, if the function's `this` parameter is not
+/// explicitly annotated we model this unsoundly using `any`, but if it is
+/// then we create a methodtype with a specific `this` type.
+pub fn mk_boundfunctiontype(
+    this: Type,
+    effect_: Option<ReactEffectType>,
+    tins: Vec<Type>,
+    rest_param: Option<FunRestParam>,
+    def_reason: Reason,
+    params_names: Option<Vec<Option<Name>>>,
+    type_guard: Option<TypeGuard>,
+    tout: Type,
+) -> FunType {
+    mk_methodtype(
+        this,
+        Some(ThisStatus::ThisMethod { unbound: false }),
+        effect_,
+        tins,
+        rest_param,
+        def_reason,
+        params_names,
+        type_guard,
+        tout,
+    )
+}
+
+/// A function type is a method type whose `this` parameter has been
+/// bound to to the global object. Currently, if the function's `this` parameter is not
+/// explicitly annotated we model this using `mixed`, but if it is
+/// then we create a methodtype with a specific `this` type.  
+pub fn mk_functiontype(
+    reason: Reason,
+    this: Option<Type>,
+    effect_: Option<ReactEffectType>,
+    tins: Vec<Type>,
+    rest_param: Option<FunRestParam>,
+    def_reason: Reason,
+    params_names: Option<Vec<Option<Name>>>,
+    type_guard: Option<TypeGuard>,
+    tout: Type,
+) -> FunType {
+    let this = this.unwrap_or_else(|| global_this(reason));
+    mk_methodtype(
+        this,
+        None,
+        effect_,
+        tins,
+        rest_param,
+        def_reason,
+        params_names,
+        type_guard,
+        tout,
+    )
+}
+
+pub fn mk_boundfunctioncalltype(
+    this: Type,
+    targs: Option<Rc<[Targ]>>,
+    args: Rc<[CallArg]>,
+    call_strict_arity: bool,
+    tout: Tvar,
+) -> FuncallType {
+    FuncallType {
+        call_this_t: this,
+        call_targs: targs,
+        call_args_tlist: args,
+        call_tout: tout,
+        call_strict_arity,
+        call_speculation_hint_state: None,
+        call_specialized_callee: None,
+    }
+}
+
+pub fn mk_functioncalltype(
+    reason: Reason,
+    targs: Option<Rc<[Targ]>>,
+    args: Rc<[CallArg]>,
+    call_strict_arity: bool,
+    tout: Tvar,
+) -> FuncallType {
+    mk_boundfunctioncalltype(global_this(reason), targs, args, call_strict_arity, tout)
+}
+
+pub fn mk_opt_functioncalltype(
+    reason: Reason,
+    targs: Option<Rc<[Targ]>>,
+    args: Rc<[CallArg]>,
+    strict: bool,
+    instantiation_probe: Option<SpecializedCallee>,
+) -> OptFuncallType {
+    OptFuncallType(
+        global_this(reason),
+        targs,
+        args,
+        strict,
+        instantiation_probe,
+    )
+}
+
+pub fn mk_opt_boundfunctioncalltype(
+    this: Type,
+    targs: Option<Rc<[Targ]>>,
+    args: Rc<[CallArg]>,
+    strict: bool,
+) -> (Type, Option<Rc<[Targ]>>, Rc<[CallArg]>, bool) {
+    (this, targs, args, strict)
+}
+
+pub fn mk_opt_methodcalltype(
+    opt_meth_generic_this: Option<Type>,
+    opt_meth_targs: Option<Rc<[Targ]>>,
+    opt_meth_args_tlist: Rc<[CallArg]>,
+    opt_meth_strict_arity: bool,
+) -> OptMethodCallType {
+    OptMethodCallType {
+        opt_meth_generic_this,
+        opt_meth_targs,
+        opt_meth_args_tlist,
+        opt_meth_strict_arity,
+    }
+}
+
+pub fn default_flags() -> Flags {
+    Flags {
+        obj_kind: ObjKind::Exact,
+        react_dro: None,
+    }
+}
+
+pub fn mk_objecttype(
+    flags: Option<Flags>,
+    reachable_targs: Option<Rc<[(Type, Polarity)]>>,
+    call: Option<i32>,
+    pmap: properties::Id,
+    proto: Type,
+) -> ObjType {
+    ObjType {
+        flags: flags.unwrap_or_else(default_flags),
+        proto_t: proto,
+        props_tmap: pmap,
+        call_t: call,
+        reachable_targs: reachable_targs.unwrap_or_else(|| Rc::from([])),
+    }
+}
+
+pub fn mk_object_def_type(
+    reason: Reason,
+    flags: Option<Flags>,
+    call: Option<i32>,
+    pmap: properties::Id,
+    proto: Type,
+) -> TypeInner {
+    let reason = reason.update_desc(|desc| desc.invalidate_rtype_alias());
+    TypeInner::DefT(
+        reason,
+        DefT::new(DefTInner::ObjT(Rc::new(mk_objecttype(
+            flags, None, call, pmap, proto,
+        )))),
+    )
+}
+
+pub fn apply_opt_funcalltype(
+    opt: (
+        Type,
+        Option<Rc<[Targ]>>,
+        Rc<[CallArg]>,
+        bool,
+        Option<SpecializedCallee>,
+    ),
+    t_out: Tvar,
+) -> CallAction {
+    let (this, targs, args, strict, t_callee) = opt;
+    CallAction::Funcalltype(FuncallType {
+        call_this_t: this,
+        call_targs: targs,
+        call_args_tlist: args,
+        call_tout: t_out,
+        call_strict_arity: strict,
+        call_speculation_hint_state: None,
+        call_specialized_callee: t_callee,
+    })
+}
+
+pub fn apply_opt_methodcalltype(opt: OptMethodCallType, meth_tout: Tvar) -> MethodCallType {
+    MethodCallType {
+        meth_generic_this: opt.opt_meth_generic_this,
+        meth_targs: opt.opt_meth_targs,
+        meth_args_tlist: opt.opt_meth_args_tlist,
+        meth_tout,
+        meth_strict_arity: opt.opt_meth_strict_arity,
+    }
+}
+
+pub fn create_intersection(rep: inter_rep::InterRep) -> Type {
+    use flow_common::reason::locationless_reason;
+    Type::new(TypeInner::IntersectionT(
+        locationless_reason(flow_common::reason::VirtualReasonDesc::RIntersectionType),
+        rep,
+    ))
+}
+
+pub fn apply_opt_action(action: OptMethodAction, t_out: Tvar) -> MethodAction {
+    match action {
+        OptMethodAction::OptCallM {
+            opt_methodcalltype,
+            return_hint,
+            specialized_callee,
+        } => MethodAction::CallM {
+            methodcalltype: apply_opt_methodcalltype(opt_methodcalltype, t_out),
+            return_hint,
+            specialized_callee,
+        },
+        OptMethodAction::OptChainM {
+            exp_reason,
+            lhs_reason,
+            opt_methodcalltype,
+            voided_out_collector,
+            return_hint,
+            specialized_callee,
+        } => MethodAction::ChainM {
+            exp_reason,
+            lhs_reason,
+            methodcalltype: apply_opt_methodcalltype(opt_methodcalltype, t_out),
+            voided_out_collector,
+            return_hint,
+            specialized_callee,
+        },
+        OptMethodAction::OptNoMethodAction(t) => MethodAction::NoMethodAction(t),
+    }
+}
+
+pub fn apply_opt_use(opt_use: OptUseT, t_out: Tvar) -> UseT {
+    match opt_use {
+        OptUseT::OptMethodT(op, r1, r2, propref, action) => UseT::new(UseTInner::MethodT(
+            op,
+            r1,
+            r2,
+            Box::new(propref),
+            Box::new(apply_opt_action(action, t_out)),
+        )),
+        OptUseT::OptPrivateMethodT(op, r1, r2, p, scopes, is_static, action) => {
+            UseT::new(UseTInner::PrivateMethodT(Box::new(PrivateMethodTData {
+                use_op: op,
+                reason: r1,
+                prop_reason: r2,
+                name: p,
+                class_bindings: scopes,
+                static_: is_static,
+                method_action: Box::new(apply_opt_action(action, t_out)),
+            })))
+        }
+        OptUseT::OptCallT {
+            use_op,
+            reason,
+            opt_funcalltype,
+            return_hint,
+        } => UseT::new(UseTInner::CallT {
+            use_op,
+            reason,
+            call_action: Box::new(apply_opt_funcalltype(
+                (
+                    opt_funcalltype.0,
+                    opt_funcalltype.1,
+                    opt_funcalltype.2,
+                    opt_funcalltype.3,
+                    opt_funcalltype.4,
+                ),
+                t_out,
+            )),
+            return_hint,
+        }),
+        OptUseT::OptGetPropT {
+            use_op,
+            reason,
+            id,
+            propref,
+            hint,
+        } => UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
+            use_op,
+            reason,
+            id,
+            from_annot: false,
+            skip_optional: false,
+            propref: Box::new(propref),
+            tout: Box::new(t_out),
+            hint,
+        }))),
+        OptUseT::OptGetPrivatePropT(u, r, s, cbs, b) => {
+            UseT::new(UseTInner::GetPrivatePropT(Box::new(GetPrivatePropTData {
+                use_op: u,
+                reason: r,
+                name: s,
+                class_bindings: cbs,
+                static_: b,
+                tout: Box::new(t_out),
+            })))
+        }
+        OptUseT::OptTestPropT(use_op, reason, id, propref, hint) => {
+            UseT::new(UseTInner::TestPropT {
+                use_op,
+                reason,
+                id,
+                propref: Box::new(propref),
+                tout: Box::new(t_out),
+                hint,
+            })
+        }
+        OptUseT::OptGetElemT(use_op, reason, id, from_annot, key_t) => {
+            UseT::new(UseTInner::GetElemT {
+                use_op,
+                reason,
+                id,
+                from_annot,
+                skip_optional: false,
+                access_iterables: false,
+                key_t,
+                tout: Box::new(t_out),
+            })
+        }
+        OptUseT::OptCallElemT(u, r1, r2, elt, call) => UseT::new(UseTInner::CallElemT(
+            u,
+            r1,
+            r2,
+            elt,
+            Box::new(apply_opt_action(call, t_out)),
+        )),
+    }
+}
+
+pub fn mk_enum_type(reason: Reason, enum_info: Rc<EnumInfo>) -> Type {
+    let reason = reason.update_desc(|desc| match &desc {
+        VirtualReasonDesc::REnum { name } => {
+            if let Some(name_str) = name {
+                VirtualReasonDesc::RType(Name::new(name_str.dupe()))
+            } else {
+                desc.clone()
+            }
+        }
+        _ => desc.clone(),
+    });
+    Type::new(TypeInner::DefT(
+        reason,
+        DefT::new(DefTInner::EnumValueT(enum_info)),
+    ))
+}
+
+pub fn mk_enum_object_type(reason: Reason, enum_info: Rc<EnumInfo>) -> Type {
+    let enum_value_t = mk_enum_type(reason.dupe(), enum_info.dupe());
+    Type::new(TypeInner::DefT(
+        reason,
+        DefT::new(DefTInner::EnumObjectT {
+            enum_value_t,
+            enum_info,
+        }),
+    ))
+}
+
+pub fn call_of_method_app(
+    call_this_t: Type,
+    call_specialized_callee: Option<SpecializedCallee>,
+    methodcalltype: MethodCallType,
+) -> FuncallType {
+    FuncallType {
+        call_this_t: methodcalltype.meth_generic_this.unwrap_or(call_this_t),
+        call_targs: methodcalltype.meth_targs,
+        call_args_tlist: methodcalltype.meth_args_tlist,
+        call_tout: methodcalltype.meth_tout,
+        call_strict_arity: methodcalltype.meth_strict_arity,
+        call_speculation_hint_state: None,
+        call_specialized_callee,
+    }
+}
+
+pub mod type_params {
+    use super::*;
+
+    pub fn to_list(tparams: &Option<(ALoc, Vec1<TypeParam>)>) -> Vec<TypeParam> {
+        match tparams {
+            None => Vec::new(),
+            Some((_loc, params)) => params.clone().into_vec(),
+        }
+    }
+
+    pub fn of_list(tparams_loc: ALoc, tparams: Vec<TypeParam>) -> Option<(ALoc, Vec1<TypeParam>)> {
+        Vec1::try_from_vec(tparams)
+            .ok()
+            .map(|params| (tparams_loc, params))
+    }
+
+    pub fn map<F>(
+        f: F,
+        tparams: &Option<(ALoc, Vec1<TypeParam>)>,
+    ) -> Option<(ALoc, Vec1<TypeParam>)>
+    where
+        F: Fn(&TypeParam) -> TypeParam,
+    {
+        tparams.as_ref().map(|(loc, params)| {
+            let mapped = params.iter().map(f).collect::<Vec<_>>();
+            (loc.dupe(), Vec1::try_from_vec(mapped).unwrap())
+        })
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum AnnotatedOrInferred {
+    Annotated(Type),
+    Inferred(Type),
+}
+
+pub fn empty_tuple_view() -> TupleView {
+    TupleView {
+        elements: Rc::from([]),
+        arity: (0, 0),
+        inexact: false,
+    }
+}
