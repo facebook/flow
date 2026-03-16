@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -361,7 +362,7 @@ impl<F: Fn(&ALoc) -> SingletonAction> TypeMapper<LiteralMapCx> for LiteralTypeMa
     fn props(&mut self, cx: &Context, map_cx: &LiteralMapCx, id: properties::Id) -> properties::Id {
         let props_map = cx.find_props(id.dupe());
         let mut changed = false;
-        let mut props_map_prime = properties::PropertiesMap::new();
+        let mut props_map_prime = BTreeMap::new();
         for (name, prop) in props_map.iter() {
             let new_prop = match prop.deref() {
                 PropertyInner::Field {
@@ -445,7 +446,7 @@ impl<F: Fn(&ALoc) -> SingletonAction> TypeMapper<LiteralMapCx> for LiteralTypeMa
         if !changed {
             id
         } else {
-            cx.generate_property_map(props_map_prime)
+            cx.generate_property_map(props_map_prime.into())
         }
     }
 
@@ -705,7 +706,7 @@ impl TypeMapper<LiteralMapCx> for ConvertLiteralTypeToConstMapper {
     fn props(&mut self, cx: &Context, map_cx: &LiteralMapCx, id: properties::Id) -> properties::Id {
         let props_map = cx.find_props(id.dupe());
         let mut changed = false;
-        let mut props_map_prime = properties::PropertiesMap::new();
+        let mut props_map_prime = BTreeMap::new();
         for (name, p) in props_map.iter() {
             let p_prime = match p.deref() {
                 PropertyInner::Field {
@@ -730,7 +731,7 @@ impl TypeMapper<LiteralMapCx> for ConvertLiteralTypeToConstMapper {
         if !changed {
             id
         } else {
-            cx.generate_property_map(props_map_prime)
+            cx.generate_property_map(props_map_prime.into())
         }
     }
 }

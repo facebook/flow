@@ -2011,11 +2011,13 @@ fn merge_annot(env: &MergeEnv, file: &File, annot: &Pack::PackedAnnot<ALoc>) -> 
                     type_::ObjKind::Indexed(merge_dict(env, file, dict, false))
                 }
             };
-            let mut props_map = type_::properties::PropertiesMap::new();
-            for (key, prop) in props {
-                let p = merge_obj_annot_prop(env, file, prop);
-                props_map.insert(Name::new(key.dupe()), p);
-            }
+            let props_map: type_::properties::PropertiesMap = props
+                .iter()
+                .map(|(key, prop)| {
+                    let p = merge_obj_annot_prop(env, file, prop);
+                    (Name::new(key.dupe()), p)
+                })
+                .collect();
             let mk_object = |call: Option<Type>, proto: Type| {
                 let id = type_::properties::Id::of_aloc_id(true, file.cx.make_aloc_id(loc));
                 let flags = type_::Flags {
@@ -2556,11 +2558,13 @@ fn merge_declare_module_implicitly_exported_object(
 
     let reason = reason::mk_reason(RModule(module_name.dupe()), loc);
     let proto = Type::new(type_::TypeInner::ObjProtoT(reason.dupe()));
-    let mut props_map = type_::properties::PropertiesMap::new();
-    for (key, prop) in props {
-        let p = merge_obj_value_prop(env, file, key, prop, true, false, false);
-        props_map.insert(Name::new(key.dupe()), p);
-    }
+    let props_map: type_::properties::PropertiesMap = props
+        .iter()
+        .map(|(key, prop)| {
+            let p = merge_obj_value_prop(env, file, key, prop, true, false, false);
+            (Name::new(key.dupe()), p)
+        })
+        .collect();
     obj_type::mk_with_proto(
         &file.cx,
         reason,
@@ -2598,11 +2602,13 @@ fn merge_object_lit(
             type_util::typeof_annotation(proto_reason, proto, None)
         }
     };
-    let mut props_map = type_::properties::PropertiesMap::new();
-    for (key, prop) in props {
-        let p = merge_obj_value_prop(env, file, key, prop, for_export, as_const, frozen);
-        props_map.insert(Name::new(key.dupe()), p);
-    }
+    let props_map: type_::properties::PropertiesMap = props
+        .iter()
+        .map(|(key, prop)| {
+            let p = merge_obj_value_prop(env, file, key, prop, for_export, as_const, frozen);
+            (Name::new(key.dupe()), p)
+        })
+        .collect();
     obj_type::mk_with_proto(
         &file.cx,
         reason,
@@ -3090,8 +3096,8 @@ fn merge_interface(
         )
     };
     let (own_props, proto_props) = {
-        let mut own = type_::properties::PropertiesMap::new();
-        let mut proto = type_::properties::PropertiesMap::new();
+        let mut own = BTreeMap::new();
+        let mut proto = BTreeMap::new();
         for (k, prop) in props {
             let t = merge_interface_prop(env, file, prop, false);
             let name = Name::new(k.dupe());
@@ -3104,7 +3110,7 @@ fn merge_interface(
                 }
             }
         }
-        (own, proto)
+        (own.into(), proto.into())
     };
     let inst_call_t = {
         let ts: Vec<Type> = calls
@@ -3361,16 +3367,16 @@ fn merge_this_class_t(
             ),
             _ => {}
         };
-        let mut own_props_pmap = type_::properties::PropertiesMap::new();
-        for (k, v) in own_props_map {
-            own_props_pmap.insert(Name::new(k), v);
-        }
+        let own_props_pmap: type_::properties::PropertiesMap = own_props_map
+            .into_iter()
+            .map(|(k, v)| (Name::new(k), v))
+            .collect();
         let own_props = file.cx.generate_property_map(own_props_pmap);
         add_default_constructor(reason.dupe(), &extends, &mut proto_props_map);
-        let mut proto_props_pmap = type_::properties::PropertiesMap::new();
-        for (k, v) in proto_props_map {
-            proto_props_pmap.insert(Name::new(k), v);
-        }
+        let proto_props_pmap: type_::properties::PropertiesMap = proto_props_map
+            .into_iter()
+            .map(|(k, v)| (Name::new(k), v))
+            .collect();
         let proto_props = file.cx.generate_property_map(proto_props_pmap);
         let inst = type_::InstType::new(type_::InstTypeInner {
             class_id: id.dupe(),
@@ -3523,17 +3529,19 @@ fn merge_fun_statics(
     reason: Reason,
     statics: &BTreeMap<FlowSmolStr, (ALoc, Pack::Packed<ALoc>)>,
 ) -> Type {
-    let mut props = type_::properties::PropertiesMap::new();
-    for (key, (id_loc, t)) in statics {
-        let t = merge_impl(env, file, t, false, false);
-        let prop = type_::Property::new(type_::PropertyInner::Field {
-            preferred_def_locs: None,
-            key_loc: Some(id_loc.dupe()),
-            type_: t,
-            polarity: Polarity::Neutral,
-        });
-        props.insert(Name::new(key.dupe()), prop);
-    }
+    let props: type_::properties::PropertiesMap = statics
+        .iter()
+        .map(|(key, (id_loc, t))| {
+            let t = merge_impl(env, file, t, false, false);
+            let prop = type_::Property::new(type_::PropertyInner::Field {
+                preferred_def_locs: None,
+                key_loc: Some(id_loc.dupe()),
+                type_: t,
+                polarity: Polarity::Neutral,
+            });
+            (Name::new(key.dupe()), prop)
+        })
+        .collect();
     let reason = reason.update_desc(|d| reason::VirtualReasonDesc::RStatics(Arc::new(d)));
     obj_type::mk_with_proto(
         &file.cx,
@@ -3661,20 +3669,23 @@ fn merge_component(
     // let t (env, _) =
     let reason2 = reason.dupe();
     let t = |env: &MergeEnv, _: Vec<(SubstName, Reason, Type, Polarity)>| -> Type {
-        let mut pmap = FlowOrdMap::<Name, type_::Property>::new();
-        for param in &def.params {
-            let ComponentParam { name, name_loc, t } = param;
-            let t = merge_impl(env, file, t, false, false);
-            pmap.insert(
-                Name::new(name.dupe()),
-                type_::Property::new(type_::PropertyInner::Field {
-                    preferred_def_locs: None,
-                    key_loc: Some(name_loc.dupe()),
-                    type_: t,
-                    polarity: Polarity::Positive,
-                }),
-            );
-        }
+        let pmap: type_::properties::PropertiesMap = def
+            .params
+            .iter()
+            .map(|param| {
+                let ComponentParam { name, name_loc, t } = param;
+                let t = merge_impl(env, file, t, false, false);
+                (
+                    Name::new(name.dupe()),
+                    type_::Property::new(type_::PropertyInner::Field {
+                        preferred_def_locs: None,
+                        key_loc: Some(name_loc.dupe()),
+                        type_: t,
+                        polarity: Polarity::Positive,
+                    }),
+                )
+            })
+            .collect();
         let config_reason = reason::mk_reason(
             RPropsOfComponent(Arc::new(reason2.desc(false).clone())),
             def.params_loc.dupe(),
@@ -3944,11 +3955,13 @@ fn merge_declare_class(
                 )
             };
             let own_props = {
-                let mut pmap = type_::properties::PropertiesMap::new();
-                for (k, prop) in own_props {
-                    let p = merge_interface_prop(&env, file, &prop, false);
-                    pmap.insert(Name::new(k.dupe()), p);
-                }
+                let pmap: type_::properties::PropertiesMap = own_props
+                    .iter()
+                    .map(|(k, prop)| {
+                        let p = merge_interface_prop(&env, file, &prop, false);
+                        (Name::new(k.dupe()), p)
+                    })
+                    .collect();
                 file.cx.generate_property_map(pmap)
             };
             let proto_props = {
@@ -3958,10 +3971,10 @@ fn merge_declare_class(
                     proto_map.insert(k.dupe(), p);
                 }
                 add_default_constructor(reason_c.dupe(), &extends, &mut proto_map);
-                let mut pmap = type_::properties::PropertiesMap::new();
-                for (k, v) in proto_map {
-                    pmap.insert(Name::new(k), v);
-                }
+                let pmap: type_::properties::PropertiesMap = proto_map
+                    .into_iter()
+                    .map(|(k, v)| (Name::new(k), v))
+                    .collect();
                 file.cx.generate_property_map(pmap)
             };
             let inst_call_t = {

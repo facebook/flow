@@ -354,6 +354,13 @@ impl Type {
     pub fn ptr_eq(&self, other: &Type) -> bool {
         Rc::ptr_eq(&self.0, &other.0)
     }
+
+    /// Returns a mutable reference to the inner TypeInner.
+    /// If this Type's Rc has refcount == 1, mutates in place (no allocation).
+    /// If refcount > 1, clones the inner value first (copy-on-write).
+    pub(crate) fn make_mut(&mut self) -> &mut TypeInner {
+        Rc::make_mut(&mut self.0)
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -2474,7 +2481,7 @@ pub enum Destructor {
     },
     TypeMap(TypeMap),
     ReactCheckComponentConfig {
-        props: FlowOrdMap<Name, Property>,
+        props: properties::PropertiesMap,
         allow_ref_in_spread: bool,
     },
     ReactDRO(ReactDro),
@@ -3137,12 +3144,26 @@ pub mod properties {
         }
     }
 
-    #[derive(Debug, Clone, Default, Dupe)]
-    pub struct PropertiesMap(FlowOrdMap<Name, Property>);
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Dupe)]
+    pub struct PropertiesMap(Rc<BTreeMap<Name, Property>>);
+
+    impl std::hash::Hash for PropertiesMap {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            for entry in self.0.iter() {
+                entry.hash(state);
+            }
+        }
+    }
+
+    impl Default for PropertiesMap {
+        fn default() -> Self {
+            Self(Rc::new(BTreeMap::new()))
+        }
+    }
 
     impl PropertiesMap {
         pub fn new() -> Self {
-            Self(FlowOrdMap::new())
+            Self(Rc::new(BTreeMap::new()))
         }
 
         pub fn is_empty(&self) -> bool {
@@ -3158,11 +3179,11 @@ pub mod properties {
         }
 
         pub fn insert(&mut self, name: Name, prop: Property) -> Option<Property> {
-            self.0.insert(name, prop)
+            Rc::make_mut(&mut self.0).insert(name, prop)
         }
 
         pub fn remove(&mut self, name: &Name) -> Option<Property> {
-            self.0.remove(name)
+            Rc::make_mut(&mut self.0).remove(name)
         }
 
         pub fn iter(&self) -> impl Iterator<Item = (&Name, &Property)> {
@@ -3171,6 +3192,10 @@ pub mod properties {
 
         pub fn values(&self) -> impl Iterator<Item = &Property> {
             self.0.values()
+        }
+
+        pub fn keys(&self) -> impl Iterator<Item = &Name> {
+            self.0.keys()
         }
 
         pub fn add_field(
@@ -3274,18 +3299,18 @@ pub mod properties {
         where
             F: Fn(&Type) -> Type,
         {
-            Self(
+            Self(Rc::new(
                 self.iter()
                     .map(|(name, prop)| (name.dupe(), property::map_t(&f, prop)))
                     .collect(),
-            )
+            ))
         }
 
         pub fn map_fields<F>(&self, f: F) -> Self
         where
             F: Fn(&Type) -> Type,
         {
-            Self(
+            Self(Rc::new(
                 self.iter()
                     .map(|(name, prop)| {
                         let new_prop = match prop.deref() {
@@ -3305,14 +3330,14 @@ pub mod properties {
                         (name.dupe(), new_prop)
                     })
                     .collect(),
-            )
+            ))
         }
 
         pub fn mapi_fields<F>(&self, f: F) -> Self
         where
             F: Fn(&Name, &Type) -> Type,
         {
-            Self(
+            Self(Rc::new(
                 self.iter()
                     .map(|(name, prop)| {
                         let new_prop = match prop.deref() {
@@ -3332,11 +3357,19 @@ pub mod properties {
                         (name.dupe(), new_prop)
                     })
                     .collect(),
-            )
+            ))
         }
+    }
 
-        pub fn inner(&self) -> FlowOrdMap<Name, Property> {
-            self.0.dupe()
+    impl From<BTreeMap<Name, Property>> for PropertiesMap {
+        fn from(map: BTreeMap<Name, Property>) -> Self {
+            Self(Rc::new(map))
+        }
+    }
+
+    impl std::iter::FromIterator<(Name, Property)> for PropertiesMap {
+        fn from_iter<I: IntoIterator<Item = (Name, Property)>>(iter: I) -> Self {
+            Self(Rc::new(iter.into_iter().collect()))
         }
     }
 
@@ -4799,7 +4832,89 @@ pub mod object {
         pub reachable_targs: Rc<[(Type, Polarity)]>,
     }
 
-    pub type Props = FlowOrdMap<Name, Prop>;
+    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord)]
+    pub struct Props(Rc<BTreeMap<Name, Prop>>);
+
+    impl std::hash::Hash for Props {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            for entry in self.0.iter() {
+                entry.hash(state);
+            }
+        }
+    }
+
+    impl Default for Props {
+        fn default() -> Self {
+            Self(Rc::new(BTreeMap::new()))
+        }
+    }
+
+    impl Props {
+        pub fn new() -> Self {
+            Self(Rc::new(BTreeMap::new()))
+        }
+
+        pub fn insert(&mut self, k: Name, v: Prop) -> Option<Prop> {
+            Rc::make_mut(&mut self.0).insert(k, v)
+        }
+
+        pub fn get(&self, k: &Name) -> Option<&Prop> {
+            self.0.get(k)
+        }
+
+        pub fn remove(&mut self, k: &Name) -> Option<Prop> {
+            Rc::make_mut(&mut self.0).remove(k)
+        }
+
+        pub fn iter(&self) -> impl Iterator<Item = (&Name, &Prop)> {
+            self.0.iter()
+        }
+
+        pub fn keys(&self) -> impl Iterator<Item = &Name> {
+            self.0.keys()
+        }
+
+        pub fn len(&self) -> usize {
+            self.0.len()
+        }
+
+        pub fn is_empty(&self) -> bool {
+            self.0.is_empty()
+        }
+    }
+
+    impl From<BTreeMap<Name, Prop>> for Props {
+        fn from(map: BTreeMap<Name, Prop>) -> Self {
+            Self(Rc::new(map))
+        }
+    }
+
+    impl std::iter::FromIterator<(Name, Prop)> for Props {
+        fn from_iter<I: IntoIterator<Item = (Name, Prop)>>(iter: I) -> Self {
+            Self(Rc::new(iter.into_iter().collect()))
+        }
+    }
+
+    impl IntoIterator for Props {
+        type Item = (Name, Prop);
+        type IntoIter = std::collections::btree_map::IntoIter<Name, Prop>;
+
+        fn into_iter(self) -> Self::IntoIter {
+            match Rc::try_unwrap(self.0) {
+                Ok(m) => m.into_iter(),
+                Err(rc) => (*rc).clone().into_iter(),
+            }
+        }
+    }
+
+    impl<'a> IntoIterator for &'a Props {
+        type Item = (&'a Name, &'a Prop);
+        type IntoIter = std::collections::btree_map::Iter<'a, Name, Prop>;
+
+        fn into_iter(self) -> Self::IntoIter {
+            self.0.iter()
+        }
+    }
 
     #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
     pub struct Prop {
@@ -4938,7 +5053,7 @@ pub mod object {
             ref_manipulation: react_config::RefManipulation,
         },
         ReactCheckComponentConfig {
-            props: FlowOrdMap<Name, Property>,
+            props: properties::PropertiesMap,
             allow_ref_in_spread: bool,
         },
         ObjectRep,

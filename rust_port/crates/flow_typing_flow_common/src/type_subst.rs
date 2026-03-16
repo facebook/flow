@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -388,7 +389,7 @@ pub fn props<MapCx, M: TypeMapper<MapCx>>(
 ) -> properties::Id {
     let props_map = cx.find_props(id.dupe());
     let mut props_changed = false;
-    let mut props_map_prime = properties::PropertiesMap::new();
+    let mut props_map_prime = BTreeMap::new();
     for (name, prop) in props_map.iter() {
         let new_prop = match prop.deref() {
             PropertyInner::Field {
@@ -476,7 +477,7 @@ pub fn props<MapCx, M: TypeMapper<MapCx>>(
         // generated id, rather than a location from source. The substituted
         // object will have the same location as the generic version, meaning
         // that this location will not serve as a unique identifier.
-        cx.generate_property_map(props_map_prime)
+        cx.generate_property_map(props_map_prime.into())
     }
 }
 

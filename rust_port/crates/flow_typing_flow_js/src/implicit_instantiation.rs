@@ -678,7 +678,7 @@ fn t_of_use_t(
                     UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
                     UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
                     UseTResult::UpperT(t) => {
-                        let mut pmap = FlowOrdMap::new();
+                        let mut pmap = properties::PropertiesMap::new();
                         pmap.insert(
                             flow_common::reason::Name::new("ref"),
                             Property::new(PropertyInner::Field {
@@ -787,31 +787,33 @@ fn reverse_obj_spread(
             obj_kind,
             Some(s.reachable_targs.dupe()),
             None,
-            Some({
-                let mut pm = properties::PropertiesMap::new();
-                for (k, v) in s.prop_map.iter() {
-                    pm.insert(k.dupe(), v.dupe());
-                }
-                pm
-            }),
+            Some(
+                s.prop_map
+                    .iter()
+                    .map(|(k, v)| (k.dupe(), v.dupe()))
+                    .collect(),
+            ),
             None,
             Type::new(TypeInner::ObjProtoT(r.dupe())),
         )
     };
 
     let slice_to_t = |s: &object::Slice| -> Type {
-        let mut props = properties::PropertiesMap::new();
-        for (k, prop) in s.props.iter() {
-            props.insert(
-                k.dupe(),
-                Property::new(PropertyInner::Field {
-                    preferred_def_locs: None,
-                    key_loc: prop.key_loc.dupe(),
-                    type_: prop.prop_t.dupe(),
-                    polarity: Polarity::Neutral,
-                }),
-            );
-        }
+        let props: properties::PropertiesMap = s
+            .props
+            .iter()
+            .map(|(k, prop)| {
+                (
+                    k.dupe(),
+                    Property::new(PropertyInner::Field {
+                        preferred_def_locs: None,
+                        key_loc: prop.key_loc.dupe(),
+                        type_: prop.prop_t.dupe(),
+                        polarity: Polarity::Neutral,
+                    }),
+                )
+            })
+            .collect();
         obj_type::mk_with_proto(
             cx,
             r.dupe(),
@@ -875,7 +877,7 @@ fn reverse_obj_spread(
 fn reverse_component_check_config(
     cx: &Context,
     reason: &Reason,
-    pmap: &FlowOrdMap<flow_common::reason::Name, Property>,
+    pmap: &properties::PropertiesMap,
     tout: &Type,
 ) -> Result<Type, FlowJsException> {
     if pmap.is_empty() {
@@ -888,13 +890,7 @@ fn reverse_component_check_config(
             ObjKind::Exact,
             None,
             None,
-            Some({
-                let mut pm = properties::PropertiesMap::new();
-                for (k, v) in pmap.iter() {
-                    pm.insert(k.dupe(), v.dupe());
-                }
-                pm
-            }),
+            Some(pmap.iter().map(|(k, v)| (k.dupe(), v.dupe())).collect()),
             None,
             Type::new(TypeInner::ObjProtoT(reason.dupe())),
         );

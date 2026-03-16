@@ -4625,12 +4625,11 @@ pub fn rec_sub_t(
                 && matches!(inst_t.inst.inst_kind, InstanceKind::InterfaceKind { .. }) =>
         {
             let own_props = cx.find_props(inst_t.inst.own_props.dupe());
-            let mut filtered = properties::PropertiesMap::new();
-            for (x, v) in own_props.iter() {
-                if *x != Name::new("constructor") {
-                    filtered.insert(x.dupe(), v.clone());
-                }
-            }
+            let filtered: properties::PropertiesMap = own_props
+                .iter()
+                .filter(|(x, _)| **x != Name::new("constructor"))
+                .map(|(x, v)| (x.dupe(), v.clone()))
+                .collect();
             if !flow_js_utils::quick_error_fun_as_obj(
                 cx,
                 &use_op,

@@ -1245,7 +1245,7 @@ pub fn destructor_default<A, M: TypeMapper<A> + ?Sized>(
             allow_ref_in_spread,
         } => {
             let mut props_changed = false;
-            let props_prime: FlowOrdMap<Name, Property> = props
+            let props_prime: properties::PropertiesMap = props
                 .iter()
                 .map(|(name, prop)| {
                     let prop_prime = mapper.prop(cx, map_cx, prop.dupe());

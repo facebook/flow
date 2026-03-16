@@ -1478,7 +1478,7 @@ pub fn quick_error_fun_as_obj(
 
     match statics_own_props {
         Some(statics_own_props) => {
-            let mut props_not_found = PropertiesMap::new();
+            let mut props_not_found = BTreeMap::new();
             for (x, p) in props.iter() {
                 let optional = match p.deref() {
                     PropertyInner::Field { type_, .. } => {
@@ -1949,7 +1949,7 @@ pub fn obj_key_mirror(
     };
 
     let props = cx.find_props(o.props_tmap.dupe());
-    let mut new_props = PropertiesMap::new();
+    let mut new_props = BTreeMap::new();
     for (name, prop) in props.iter() {
         match prop.deref() {
             PropertyInner::Field {
@@ -1974,7 +1974,7 @@ pub fn obj_key_mirror(
             }
         }
     }
-    let props_tmap = cx.generate_property_map(new_props);
+    let props_tmap = cx.generate_property_map(new_props.into());
     let obj_kind = match &o.flags.obj_kind {
         ObjKind::Indexed(dict) => {
             let value = map_t(dict.key.dupe(), &dict.value);
@@ -3209,20 +3209,14 @@ pub mod cjs_require_t_kit {
                         }
                     };
 
-                    let value_props = {
-                        let mut m = PropertiesMap::new();
-                        for (k, v) in value_exports_tmap.iter() {
-                            m.insert(k.dupe(), Property::new(named_symbol_to_field(v)));
-                        }
-                        m
-                    };
-                    let type_props = {
-                        let mut m = PropertiesMap::new();
-                        for (k, v) in type_exports_tmap.iter() {
-                            m.insert(k.dupe(), Property::new(named_symbol_to_field(v)));
-                        }
-                        m
-                    };
+                    let value_props: PropertiesMap = value_exports_tmap
+                        .iter()
+                        .map(|(k, v)| (k.dupe(), Property::new(named_symbol_to_field(v))))
+                        .collect();
+                    let type_props: PropertiesMap = type_exports_tmap
+                        .iter()
+                        .map(|(k, v)| (k.dupe(), Property::new(named_symbol_to_field(v))))
+                        .collect();
                     let values_type = crate::obj_type::mk_with_proto(
                         cx,
                         reason.dupe(),
@@ -3358,20 +3352,14 @@ pub mod import_module_ns_t_kit {
                 polarity: Polarity::Positive,
             })
         };
-        let mut value_props = {
-            let mut m = properties::PropertiesMap::new();
-            for (name, ns) in value_exports_tmap.iter() {
-                m.insert(name.dupe(), named_symbol_to_field(ns));
-            }
-            m
-        };
-        let type_props = {
-            let mut m = properties::PropertiesMap::new();
-            for (name, ns) in type_exports_tmap.iter() {
-                m.insert(name.dupe(), named_symbol_to_field(ns));
-            }
-            m
-        };
+        let mut value_props: properties::PropertiesMap = value_exports_tmap
+            .iter()
+            .map(|(name, ns)| (name.dupe(), named_symbol_to_field(ns)))
+            .collect();
+        let type_props: properties::PropertiesMap = type_exports_tmap
+            .iter()
+            .map(|(name, ns)| (name.dupe(), named_symbol_to_field(ns)))
+            .collect();
         let value_props = if cx.facebook_module_interop() {
             value_props
         } else {
@@ -5920,7 +5908,7 @@ pub fn objt_to_obj_rest(
     }));
 
     let props = {
-        let mut new_props = flow_typing_type::type_::properties::PropertiesMap::new();
+        let mut new_props = BTreeMap::new();
         for (name, p) in props.iter() {
             let new_prop = match p.deref() {
                 PropertyInner::Field {
@@ -5961,7 +5949,7 @@ pub fn objt_to_obj_rest(
             };
             new_props.insert(name.dupe(), new_prop);
         }
-        new_props
+        flow_typing_type::type_::properties::PropertiesMap::from(new_props)
     };
 
     let proto = Type::new(TypeInner::ObjProtoT(reason_op.dupe()));

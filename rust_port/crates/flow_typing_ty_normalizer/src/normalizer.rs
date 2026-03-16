@@ -2761,10 +2761,7 @@ mod type_converter {
         env: &mut Env<'_>,
         state: &mut State,
         ty: ALocTy,
-        pmap: &flow_data_structure_wrapper::ord_map::FlowOrdMap<
-            Name,
-            flow_typing_type::type_::Property,
-        >,
+        pmap: &flow_typing_type::type_::properties::PropertiesMap,
     ) -> Result<ALocTy, Error> {
         let mut map_props = Vec::new();
         for (name, prop) in pmap.iter() {

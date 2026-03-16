@@ -208,7 +208,7 @@ pub fn config<C: Config>(
         ReactRefAsProp::FullSupport => true,
     };
     let destructor = Destructor::ReactCheckComponentConfig {
-        props: pmap.inner(),
+        props: pmap,
         allow_ref_in_spread,
     };
     flow_typing_flow_js::flow_js::FlowJs::mk_possibly_evaluated_destructor_for_annotations(

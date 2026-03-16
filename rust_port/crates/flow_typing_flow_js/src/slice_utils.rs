@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -536,7 +537,7 @@ fn spread2(
     };
     let props: Result<object::Props, Box<ErrorMessage<ALoc>>> = {
         let all_keys: BTreeSet<Name> = props1.keys().chain(props2.keys()).duped().collect();
-        let mut result: object::Props = FlowOrdMap::new();
+        let mut result: BTreeMap<Name, object::Prop> = BTreeMap::new();
         for x in all_keys.into_iter().rev() {
             let p1 = props1.get(&x);
             let p2 = props2.get(&x);
@@ -628,7 +629,7 @@ fn spread2(
                 result.insert(x, prop);
             }
         }
-        Ok(result)
+        Ok(result.into())
     };
     let obj_kind = match &dict {
         Some(d) => ObjKind::Indexed(d.clone()),
@@ -793,23 +794,25 @@ pub fn spread_mk_object(
         react_dro: None,
     };
     let positive_polarity = as_const || frozen_seal;
-    let mut props_map = properties::PropertiesMap::new();
-    for (k, p) in props.iter() {
-        let prop = if p.is_method {
-            Property::new(PropertyInner::Method {
-                key_loc: p.key_loc.dupe(),
-                type_: mk_dro(p.prop_t.dupe()),
-            })
-        } else {
-            Property::new(PropertyInner::Field {
-                preferred_def_locs: None,
-                key_loc: p.key_loc.dupe(),
-                type_: mk_dro(p.prop_t.dupe()),
-                polarity: Polarity::object_literal_polarity(positive_polarity),
-            })
-        };
-        props_map.insert(k.dupe(), prop);
-    }
+    let props_map: properties::PropertiesMap = props
+        .iter()
+        .map(|(k, p)| {
+            let prop = if p.is_method {
+                Property::new(PropertyInner::Method {
+                    key_loc: p.key_loc.dupe(),
+                    type_: mk_dro(p.prop_t.dupe()),
+                })
+            } else {
+                Property::new(PropertyInner::Field {
+                    preferred_def_locs: None,
+                    key_loc: p.key_loc.dupe(),
+                    type_: mk_dro(p.prop_t.dupe()),
+                    polarity: Polarity::object_literal_polarity(positive_polarity),
+                })
+            };
+            (k.dupe(), prop)
+        })
+        .collect();
     let id = cx.generate_property_map(props_map);
     let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
     let call = None;
@@ -984,7 +987,7 @@ pub fn object_spread<A>(
 fn check_config2(
     cx: &Context,
     allow_ref_in_spread: bool,
-    pmap: &FlowOrdMap<Name, Property>,
+    pmap: &properties::PropertiesMap,
     slice: &object::Slice,
 ) -> (Type, Vec<(ALoc, Name, ALoc)>, Option<ALoc>) {
     let reason = &slice.reason;
@@ -995,7 +998,7 @@ fn check_config2(
     let dict = obj_type::get_dict_opt(&flags.obj_kind);
     let mut duplicate_props_in_spread: Vec<(ALoc, Name, ALoc)> = vec![];
     let mut ref_prop_in_spread: Option<ALoc> = None;
-    let mut merged_props: object::Props = FlowOrdMap::new();
+    let mut merged_props: BTreeMap<Name, object::Prop> = BTreeMap::new();
     let all_keys: BTreeSet<Name> = pmap.keys().chain(props.keys()).duped().collect();
     for x in all_keys {
         let p1 = pmap.get(&x);
@@ -1043,23 +1046,25 @@ fn check_config2(
         obj_kind,
         react_dro: flags.react_dro.clone(),
     };
-    let mut props_map = properties::PropertiesMap::new();
-    for (k, p) in merged_props.iter() {
-        let prop = if p.is_method {
-            Property::new(PropertyInner::Method {
-                key_loc: p.key_loc.dupe(),
-                type_: p.prop_t.dupe(),
-            })
-        } else {
-            Property::new(PropertyInner::Field {
-                preferred_def_locs: None,
-                key_loc: p.key_loc.dupe(),
-                type_: p.prop_t.dupe(),
-                polarity: Polarity::Positive,
-            })
-        };
-        props_map.insert(k.dupe(), prop);
-    }
+    let props_map: properties::PropertiesMap = merged_props
+        .iter()
+        .map(|(k, p)| {
+            let prop = if p.is_method {
+                Property::new(PropertyInner::Method {
+                    key_loc: p.key_loc.dupe(),
+                    type_: p.prop_t.dupe(),
+                })
+            } else {
+                Property::new(PropertyInner::Field {
+                    preferred_def_locs: None,
+                    key_loc: p.key_loc.dupe(),
+                    type_: p.prop_t.dupe(),
+                    polarity: Polarity::Positive,
+                })
+            };
+            (k.dupe(), prop)
+        })
+        .collect();
     let id = cx.generate_property_map(props_map);
     let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
     let call = None;
@@ -1084,7 +1089,7 @@ pub fn check_component_config<A>(
     add_output: &dyn Fn(&Context, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
     return_: &dyn Fn(&Context, UseOp, Type) -> Result<A, FlowJsException>,
     allow_ref_in_spread: bool,
-    pmap: &FlowOrdMap<Name, Property>,
+    pmap: &properties::PropertiesMap,
     cx: &Context,
     use_op: UseOp,
     reason: &Reason,
@@ -1212,7 +1217,7 @@ pub fn object_rest<A>(
         let dict1 = obj_type::get_dict_opt(&flags1.obj_kind);
         let dict2 = obj_type::get_dict_opt(&flags2.obj_kind);
         let all_keys: BTreeSet<Name> = props1.keys().chain(props2.keys()).duped().collect();
-        let mut props: properties::PropertiesMap = properties::PropertiesMap::new();
+        let mut props: BTreeMap<Name, Property> = BTreeMap::new();
         for k in &all_keys {
             let p1 = props1.get(k);
             let p2 = props2.get(k);
@@ -1368,7 +1373,7 @@ pub fn object_rest<A>(
                 }
             };
             if let Some(prop) = result {
-                props.insert(k.clone(), prop);
+                props.insert(k.dupe(), prop);
             }
         }
         let dict = match (dict1, dict2) {
@@ -1399,7 +1404,7 @@ pub fn object_rest<A>(
             react_dro: flags1.react_dro.clone(),
         };
         let generics = flow_typing_generics::spread_subtract(generics1, generics2);
-        let id = cx.generate_property_map(props);
+        let id = cx.generate_property_map(props.into());
         let proto = Type::new(TypeInner::ObjProtoT(r1.dupe()));
         let call = None;
         let (rest_reason, rest_interface) = match merge_mode {
@@ -1490,23 +1495,25 @@ pub fn object_make_exact(
                 Ok(any_t::error(reason.dupe()))
             }
             None => {
-                let mut props_map = properties::PropertiesMap::new();
-                for (k, p) in props.iter() {
-                    let prop = if p.is_method {
-                        Property::new(PropertyInner::Method {
-                            key_loc: p.key_loc.dupe(),
-                            type_: p.prop_t.dupe(),
-                        })
-                    } else {
-                        Property::new(PropertyInner::Field {
-                            preferred_def_locs: None,
-                            key_loc: p.key_loc.dupe(),
-                            type_: p.prop_t.dupe(),
-                            polarity: p.polarity,
-                        })
-                    };
-                    props_map.insert(k.dupe(), prop);
-                }
+                let props_map: properties::PropertiesMap = props
+                    .iter()
+                    .map(|(k, p)| {
+                        let prop = if p.is_method {
+                            Property::new(PropertyInner::Method {
+                                key_loc: p.key_loc.dupe(),
+                                type_: p.prop_t.dupe(),
+                            })
+                        } else {
+                            Property::new(PropertyInner::Field {
+                                preferred_def_locs: None,
+                                key_loc: p.key_loc.dupe(),
+                                type_: p.prop_t.dupe(),
+                                polarity: p.polarity,
+                            })
+                        };
+                        (k.dupe(), prop)
+                    })
+                    .collect();
                 // This case analysis aims at recovering a potential type alias associated
                 // with an $Exact<> constructor.
                 let reason_obj = match reason.desc(false) {
@@ -1592,23 +1599,25 @@ pub fn object_read_only(cx: &Context, reason: &Reason, x: Vec1<object::Slice>) -
                                    reachable_targs,
                                }: &object::Slice|
      -> Type {
-        let mut props_map = properties::PropertiesMap::new();
-        for (k, p) in props.iter() {
-            let prop = if p.is_method {
-                Property::new(PropertyInner::Method {
-                    key_loc: p.key_loc.dupe(),
-                    type_: p.prop_t.dupe(),
-                })
-            } else {
-                Property::new(PropertyInner::Field {
-                    preferred_def_locs: None,
-                    key_loc: p.key_loc.dupe(),
-                    type_: p.prop_t.dupe(),
-                    polarity,
-                })
-            };
-            props_map.insert(k.dupe(), prop);
-        }
+        let props_map: properties::PropertiesMap = props
+            .iter()
+            .map(|(k, p)| {
+                let prop = if p.is_method {
+                    Property::new(PropertyInner::Method {
+                        key_loc: p.key_loc.dupe(),
+                        type_: p.prop_t.dupe(),
+                    })
+                } else {
+                    Property::new(PropertyInner::Field {
+                        preferred_def_locs: None,
+                        key_loc: p.key_loc.dupe(),
+                        type_: p.prop_t.dupe(),
+                        polarity,
+                    })
+                };
+                (k.dupe(), prop)
+            })
+            .collect();
         let flags = Flags {
             obj_kind: obj_type::map_dict(
                 |mut dict| {
@@ -1681,68 +1690,70 @@ pub fn object_update_optionality(
                          reachable_targs,
                      }: &object::Slice|
      -> Type {
-        let mut props_map = properties::PropertiesMap::new();
-        for (k, p) in props.iter() {
-            let prop_polarity = if *frozen {
-                Polarity::Positive
-            } else {
-                p.polarity
-            };
-            let prop = if p.is_method {
-                Property::new(PropertyInner::Method {
-                    key_loc: p.key_loc.dupe(),
-                    type_: p.prop_t.dupe(),
-                })
-            } else {
-                match (&p.prop_t, kind) {
-                    (t, ObjectUpdateOptionalityKind::Partial)
-                        if matches!(t.deref(), TypeInner::OptionalT { .. }) =>
-                    {
-                        Property::new(PropertyInner::Field {
-                            preferred_def_locs: None,
-                            key_loc: p.key_loc.dupe(),
-                            type_: p.prop_t.dupe(),
-                            polarity: prop_polarity,
-                        })
-                    }
-                    (_, ObjectUpdateOptionalityKind::Partial) => {
-                        Property::new(PropertyInner::Field {
-                            preferred_def_locs: None,
-                            key_loc: p.key_loc.dupe(),
-                            type_: Type::new(TypeInner::OptionalT {
-                                reason: type_util::reason_of_t(&p.prop_t).dupe(),
+        let props_map: properties::PropertiesMap = props
+            .iter()
+            .map(|(k, p)| {
+                let prop_polarity = if *frozen {
+                    Polarity::Positive
+                } else {
+                    p.polarity
+                };
+                let prop = if p.is_method {
+                    Property::new(PropertyInner::Method {
+                        key_loc: p.key_loc.dupe(),
+                        type_: p.prop_t.dupe(),
+                    })
+                } else {
+                    match (&p.prop_t, kind) {
+                        (t, ObjectUpdateOptionalityKind::Partial)
+                            if matches!(t.deref(), TypeInner::OptionalT { .. }) =>
+                        {
+                            Property::new(PropertyInner::Field {
+                                preferred_def_locs: None,
+                                key_loc: p.key_loc.dupe(),
                                 type_: p.prop_t.dupe(),
-                                use_desc: false,
-                            }),
-                            polarity: prop_polarity,
-                        })
+                                polarity: prop_polarity,
+                            })
+                        }
+                        (_, ObjectUpdateOptionalityKind::Partial) => {
+                            Property::new(PropertyInner::Field {
+                                preferred_def_locs: None,
+                                key_loc: p.key_loc.dupe(),
+                                type_: Type::new(TypeInner::OptionalT {
+                                    reason: type_util::reason_of_t(&p.prop_t).dupe(),
+                                    type_: p.prop_t.dupe(),
+                                    use_desc: false,
+                                }),
+                                polarity: prop_polarity,
+                            })
+                        }
+                        (t, ObjectUpdateOptionalityKind::Required)
+                            if matches!(t.deref(), TypeInner::OptionalT { .. }) =>
+                        {
+                            let inner_type = match t.deref() {
+                                TypeInner::OptionalT { type_, .. } => type_.dupe(),
+                                _ => unreachable!(),
+                            };
+                            Property::new(PropertyInner::Field {
+                                preferred_def_locs: None,
+                                key_loc: p.key_loc.dupe(),
+                                type_: inner_type,
+                                polarity: prop_polarity,
+                            })
+                        }
+                        (_, ObjectUpdateOptionalityKind::Required) => {
+                            Property::new(PropertyInner::Field {
+                                preferred_def_locs: None,
+                                key_loc: p.key_loc.dupe(),
+                                type_: p.prop_t.dupe(),
+                                polarity: prop_polarity,
+                            })
+                        }
                     }
-                    (t, ObjectUpdateOptionalityKind::Required)
-                        if matches!(t.deref(), TypeInner::OptionalT { .. }) =>
-                    {
-                        let inner_type = match t.deref() {
-                            TypeInner::OptionalT { type_, .. } => type_.dupe(),
-                            _ => unreachable!(),
-                        };
-                        Property::new(PropertyInner::Field {
-                            preferred_def_locs: None,
-                            key_loc: p.key_loc.dupe(),
-                            type_: inner_type,
-                            polarity: prop_polarity,
-                        })
-                    }
-                    (_, ObjectUpdateOptionalityKind::Required) => {
-                        Property::new(PropertyInner::Field {
-                            preferred_def_locs: None,
-                            key_loc: p.key_loc.dupe(),
-                            type_: p.prop_t.dupe(),
-                            polarity: prop_polarity,
-                        })
-                    }
-                }
-            };
-            props_map.insert(k.dupe(), prop);
-        }
+                };
+                (k.dupe(), prop)
+            })
+            .collect();
         let call = None;
         let id = cx.generate_property_map(props_map);
         let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
@@ -1884,7 +1895,7 @@ pub fn intersect2(
             key_loc: Some(type_util::loc_of_t(&d.key).dupe()),
         }
     };
-    let mut props: object::Props = FlowOrdMap::new();
+    let mut props: BTreeMap<Name, object::Prop> = BTreeMap::new();
     let all_keys: BTreeSet<Name> = props1.keys().chain(props2.keys()).duped().collect();
     for k in all_keys {
         let p1 = props1.get(&k);
@@ -1932,7 +1943,13 @@ pub fn intersect2(
     let generics = flow_typing_generics::spread_append(generics1, generics2);
     let mut reachable_targs = targs1.to_vec();
     reachable_targs.extend_from_slice(targs2);
-    (props, flags, frozen, generics, reachable_targs.into())
+    (
+        props.into(),
+        flags,
+        frozen,
+        generics,
+        reachable_targs.into(),
+    )
 }
 
 pub fn intersect2_with_reason(
@@ -2208,7 +2225,7 @@ pub fn resolve<A>(
                 };
                 let x = Vec1::new(object::Slice {
                     reason: reason.dupe(),
-                    props: FlowOrdMap::new(),
+                    props: object::Props::new(),
                     flags,
                     frozen: true,
                     generics: t_generic_id,
@@ -2231,7 +2248,7 @@ pub fn resolve<A>(
                 };
                 let x = Vec1::new(object::Slice {
                     reason: reason.dupe(),
-                    props: FlowOrdMap::new(),
+                    props: object::Props::new(),
                     flags,
                     frozen: true,
                     generics: t_generic_id,
@@ -2257,7 +2274,7 @@ pub fn resolve<A>(
                     | object::Tool::ObjectRep
                     | object::Tool::ReactConfig { .. } => Vec1::new(object::Slice {
                         reason: reason.dupe(),
-                        props: FlowOrdMap::new(),
+                        props: object::Props::new(),
                         flags,
                         frozen: true,
                         generics: t_generic_id.clone(),
@@ -2276,7 +2293,7 @@ pub fn resolve<A>(
                         };
                         Vec1::new(object::Slice {
                             reason: reason.dupe(),
-                            props: FlowOrdMap::new(),
+                            props: object::Props::new(),
                             flags,
                             frozen: true,
                             generics: t_generic_id.clone(),
@@ -2649,7 +2666,7 @@ pub fn map_object(
         Some((keys_with_reason, _)) => keys_with_reason.iter().map(|(k, _)| k.clone()).collect(),
         None => props.keys().duped().collect(),
     };
-    let mut props_map = properties::PropertiesMap::new();
+    let mut props_map = BTreeMap::new();
     for key in &keys {
         match props.get(key) {
             None => {
@@ -2743,7 +2760,7 @@ pub fn map_object(
         (None, _) => flags.obj_kind.clone(),
     };
     let call = None;
-    let id = cx.generate_property_map(props_map);
+    let id = cx.generate_property_map(props_map.into());
     let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
     let flags = Flags {
         obj_kind,

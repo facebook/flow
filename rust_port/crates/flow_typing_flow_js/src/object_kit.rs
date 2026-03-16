@@ -268,7 +268,7 @@ pub fn run(
     // * Check component config *
     // **************************
     let check_component_config = |allow_ref_in_spread: bool,
-                                  pmap: &FlowOrdMap<Name, Property>,
+                                  pmap: &properties::PropertiesMap,
                                   cx: &Context,
                                   use_op: UseOp,
                                   reason: &Reason,
@@ -483,30 +483,32 @@ pub fn run(
             } = slice;
             // TODO(jmbrown): Add polarity information to props
             let polarity = Polarity::Neutral;
-            let mut pmap = properties::PropertiesMap::new();
-            for (name, prop) in props {
-                let object::Prop {
-                    prop_t: t,
-                    is_own: _,
-                    is_method,
-                    polarity: _,
-                    key_loc,
-                } = prop;
-                let p = if *is_method {
-                    Property::new(PropertyInner::Method {
-                        key_loc: key_loc.dupe(),
-                        type_: t.dupe(),
-                    })
-                } else {
-                    Property::new(PropertyInner::Field {
-                        preferred_def_locs: None,
-                        key_loc: key_loc.dupe(),
-                        type_: t.dupe(),
-                        polarity,
-                    })
-                };
-                pmap.insert(name.dupe(), p);
-            }
+            let pmap: properties::PropertiesMap = props
+                .iter()
+                .map(|(name, prop)| {
+                    let object::Prop {
+                        prop_t: t,
+                        is_own: _,
+                        is_method,
+                        polarity: _,
+                        key_loc,
+                    } = prop;
+                    let p = if *is_method {
+                        Property::new(PropertyInner::Method {
+                            key_loc: key_loc.dupe(),
+                            type_: t.dupe(),
+                        })
+                    } else {
+                        Property::new(PropertyInner::Field {
+                            preferred_def_locs: None,
+                            key_loc: key_loc.dupe(),
+                            type_: t.dupe(),
+                            polarity,
+                        })
+                    };
+                    (name.dupe(), p)
+                })
+                .collect();
             let new_flags = Flags {
                 obj_kind: obj_type::map_dict(
                     |mut dict| {
@@ -826,23 +828,25 @@ pub fn run(
             };
             let call = None;
             // Finish creating our props object.
-            let mut pmap = properties::PropertiesMap::new();
-            for (name, (key_loc, type_, is_method)) in &props_map {
-                let p = if *is_method {
-                    Property::new(PropertyInner::Method {
-                        key_loc: key_loc.dupe(),
-                        type_: type_.dupe(),
-                    })
-                } else {
-                    Property::new(PropertyInner::Field {
-                        preferred_def_locs: None,
-                        key_loc: key_loc.dupe(),
-                        type_: type_.dupe(),
-                        polarity: prop_polarity,
-                    })
-                };
-                pmap.insert(name.dupe(), p);
-            }
+            let pmap: properties::PropertiesMap = props_map
+                .iter()
+                .map(|(name, (key_loc, type_, is_method))| {
+                    let p = if *is_method {
+                        Property::new(PropertyInner::Method {
+                            key_loc: key_loc.dupe(),
+                            type_: type_.dupe(),
+                        })
+                    } else {
+                        Property::new(PropertyInner::Field {
+                            preferred_def_locs: None,
+                            key_loc: key_loc.dupe(),
+                            type_: type_.dupe(),
+                            polarity: prop_polarity,
+                        })
+                    };
+                    (name.dupe(), p)
+                })
+                .collect();
             let id = cx.generate_property_map(pmap);
             let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
             Ok(slice_utils::mk_object_type(

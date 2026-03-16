@@ -748,8 +748,7 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
             use type_::property::first_loc;
             use type_::property::read_t;
             use type_::property::write_t;
-            let mut props: type_::object::Props =
-                <type_::object::Props as std::default::Default>::default();
+            let mut props: type_::object::Props = type_::object::Props::new();
             for (k, p) in prop_map {
                 match (read_t(p), write_t(p)) {
                     (Some(t), _) | (_, Some(t)) => {
