@@ -50,7 +50,7 @@ type Foo =
   & TypeN
 ```
 
-Each of the members of a intersection type can be any type, even another
+Each of the members of an intersection type can be any type, even another
 intersection type.
 
 ```js

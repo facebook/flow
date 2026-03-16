@@ -202,7 +202,7 @@ Like [React.PropsOf](#toc-react-propsof), this utility gets the type of the obje
 component in order to instantiate it via `createElement()` or `jsx()`. While `PropsOf` takes in an element of
 a component, which is convenient when using [Component Syntax](../component-syntax), `ElementConfig` takes in the type of a component
 instead. `typeof Component` must be the type *of* a React component so you need to use `typeof` as in
-`React.ElementConfig<typoef Component>`.
+`React.ElementConfig<typeof Component>`.
 
 Importantly, props with defaults are optional in the resulting type.
 
@@ -357,6 +357,7 @@ You can create your own equivalent type with
 type ReactConfigShim<Props, DefaultProps> = Readonly<{
   ...Omit<Props, keyof DefaultProps>, ...Partial<DefaultProps>
 }>;
+```
 :::
 
 Calculates a config object from props and default props.

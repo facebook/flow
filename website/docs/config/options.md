@@ -103,7 +103,7 @@ type O3 = {foo: number, ...}; // inexact
 - From version 0.202, the default value is `true`.
 
 You can read more about this change in our blog post about making
-[exact by object types by default, by default](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69).
+[exact object types by default, by default](https://medium.com/flow-type/exact-object-types-by-default-by-default-cc559af6f69).
 
 ### experimental.const_params {#toc-experimental-const-params}
 

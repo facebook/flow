@@ -81,7 +81,7 @@ type MyObject<A, B, C> = {
   baz: C,
 };
 
-var val: MyObject<number, boolean, string> = {
+const val: MyObject<number, boolean, string> = {
   foo: 1,
   bar: true,
   baz: 'three',

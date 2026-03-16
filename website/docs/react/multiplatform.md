@@ -85,7 +85,7 @@ import * as React from 'react';
 
 type Props = { src: string, lazyLoading: boolean };
 
-export default class Image extends React.Components<Props> {
+export default class Image extends React.Component<Props> {
   static defaultProps: { lazyLoading: boolean } = { lazyLoading: false };
   render(): React.Node { /* ... */ }
 }

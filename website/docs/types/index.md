@@ -6,7 +6,7 @@ description: "Learn how to add Flow type annotations to your code: Primitives, O
 
 Adding type annotations is an important part of your interaction with Flow.
 
-Flow has a powerful ability to infer the types of your programs. The majority
+Flow has a powerful ability to infer the types of your programs. The majority of your code can be understood by Flow without annotations.
 For example, you don't have to produce annotations for common patterns like `Array.map`:
 
 ```js flow-check

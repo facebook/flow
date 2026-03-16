@@ -2,7 +2,7 @@
 title: Documentation
 description: Guides and references for all you need to know about Flow
 displayed_sidebar: docsSidebar
-spug: /
+slug: /
 ---
 
 Guides and references for all you need to know about Flow.

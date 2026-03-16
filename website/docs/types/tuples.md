@@ -217,7 +217,7 @@ type AllOptional = [a?: number, b?: string];
 [] as Required<AllOptional>; // ERROR: like `[a: number, b: string]` now
 ```
 
-Tuples with optional elements have an arity (length) that is a range rather than a single number. For example, `[number, b?: string]` has an length of 1-2.
+Tuples with optional elements have an arity (length) that is a range rather than a single number. For example, `[number, b?: string]` has a length of 1-2.
 
 ## Tuple spread
 

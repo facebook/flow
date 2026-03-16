@@ -150,7 +150,7 @@ func(1, 2, 3); // Works.
 ```
 
 > Note: If you add a type annotation to a rest parameter, it must always
-> explicitly be an `Array` of `ReadonlyArray` type.
+> explicitly be an `Array` or `ReadonlyArray` type.
 
 ### `this` parameter
 

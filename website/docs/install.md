@@ -55,12 +55,12 @@ You can add this to your `package.json` scripts easily, alongside your `"devDepe
   "main": "lib/index.js",
   "scripts": {
     "build": "babel src/ -d lib/",
-    "prepublish": "yarn run build"
+    "prepublishOnly": "yarn run build"
   }
 }
 ```
 
-> **Note:** You'll probably want to add a `prepublish` script that runs this
+> **Note:** You'll probably want to add a `prepublishOnly` script that runs this
 > transform as well, so that it runs before you publish your code to the npm
 > registry.
 
@@ -93,12 +93,12 @@ You can add this to your `package.json` scripts easily, alongside your `"devDepe
   "main": "lib/index.js",
   "scripts": {
     "build": "flow-remove-types src/ -d lib/",
-    "prepublish": "yarn run build"
+    "prepublishOnly": "yarn run build"
   }
 }
 ```
 
-> **Note:** You'll probably want to add a `prepublish` script that runs this
+> **Note:** You'll probably want to add a `prepublishOnly` script that runs this
 > transform as well, so that it runs before you publish your code to the npm
 > registry.
 

@@ -11,9 +11,7 @@ Using the command `flow` will type-check your current directory if the
 needed.
 
 The CLI tool also provides several other options and commands that allow you to
-control the server and build tools that integrate with Flow. For example, this
-is how the [Nuclide](https://nuclide.io/) editor integrates with Flow to
-provide autocompletion, type errors, etc. in its UI.
+control the server and build tools that integrate with Flow.
 
 To find out more about the CLI just type:
 

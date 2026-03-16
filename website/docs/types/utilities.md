@@ -166,7 +166,7 @@ const a: PartialPerson = {}; // OK
 const b: PartialPerson = {name: 'George'}; // OK
 const c: PartialPerson = {name: 'George', age: 123}; // OK
 
-c as Person; // ERROR: `PersonDetails` is not a `Person` (unlike with `$Shape`)
+c as Person; // ERROR: `PartialPerson` is not a `Person` (unlike with `$Shape`)
 ```
 
 For tuples:
@@ -365,7 +365,7 @@ const a: ExactUser = user;
 const b: {name: string} = user;
 ```
 
-This is an utility type to avoid, as it's clearer and more concinse to start off with an exact object type and make it inexact using [object type spread](../objects/#object-type-spread)
+This is a utility type to avoid, as it's clearer and more concise to start off with an exact object type and make it inexact using [object type spread](../objects/#object-type-spread)
 (if you wish to have both inexact and exact variants of one object type):
 
 ```js flow-check

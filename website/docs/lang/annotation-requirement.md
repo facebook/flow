@@ -96,7 +96,7 @@ const arr = [0, 1, 2];
 const arrPlusOne = arr.find(x => x % 2 === 1);
 ```
 Flow infers that the type of `arr` is `Array<number>`. Combining this with the builtin
-information for `Array.find`, Flow can determine that the type of `x => x % 2 + 1`
+information for `Array.find`, Flow can determine that the type of `x => x % 2 === 1`
 needs to be `number => unknown`. This type acts as a *hint* for Flow and provides enough
 information to determine the type of `x` as `number`.
 
@@ -114,7 +114,6 @@ extract a candidate type for `x`.
 
 Flow can infer the types for unannotated parameters even when they are nested within
 other expressions like objects. For example in
-in
 ```js flow-check
 const fn3: {f: (number) => void} = {f: (x) => {x as string}};
 ```

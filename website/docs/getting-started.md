@@ -5,8 +5,8 @@ description: Never used a type system before or just new to Flow? Let's get you 
 ---
 
 Flow is a static type checker for your JavaScript code. It does a lot of work
-to make you more productive. Making you code faster, smarter, more confidently,
-and to a bigger scale.
+to make you more productive. It helps you code faster, smarter, more confidently,
+and at a bigger scale.
 
 Flow checks your code for errors through **static type annotations**. These
 _types_ allow you to tell Flow how you want your code to work, and Flow will
