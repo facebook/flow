@@ -52,14 +52,81 @@ let enforce_trailing_sep ~dir_sep s =
   else
     s
 
-let resolve_root_with ~is_relative get_root suffix =
+(* Normalize a path's directory separators to '/'. The dir_sep_char
+   parameter specifies which character to treat as a directory separator
+   (in addition to '/' which is always recognized). On Unix this is '/'
+   (making this a no-op); on Windows it is '\\'. *)
+let normalize_dir_sep_with ~dir_sep_char s =
+  if Char.equal dir_sep_char '/' then
+    s
+  else if String.contains s dir_sep_char then
+    String.map
+      (fun c ->
+        if Char.equal c dir_sep_char then
+          '/'
+        else
+          c)
+      s
+  else
+    s
+
+let normalize_dir_sep = normalize_dir_sep_with ~dir_sep_char:Filename.dir_sep.[0]
+
+(* dirname that works with '/' on any platform. Filename.dirname is
+   platform-specific and won't split on '/' on Windows. *)
+let dirname_slash s =
+  match String.rindex_opt s '/' with
+  | Some 0 -> "/"
+  | Some i -> String.sub s 0 i
+  | None -> s
+
+(* Resolve a relative suffix against a root directory, handling ".." and "."
+   segments. Same approach as Files.normalize_path, which can't be used
+   directly due to parser -> common circular dep.
+   ~dir_sep controls which character is treated as a directory separator
+   for normalization (defaults to the platform separator). *)
+let resolve_root_with ~is_relative ?(dir_sep = Filename.dir_sep) get_root suffix =
   let len = String.length suffix in
   if len = 0 || suffix = "-" then
     suffix
   else if not (is_relative suffix) then
     suffix
   else
-    get_root () ^ suffix
+    let normalized = normalize_dir_sep_with ~dir_sep_char:dir_sep.[0] suffix in
+    let parts = String.split_on_char '/' normalized in
+    let has_dots = List.exists (fun s -> s = "." || s = "..") parts in
+    if not has_dots then
+      (* No ".." or "." segments — simple concatenation preserves the
+         original separators, important for cross-platform round-trips. *)
+      get_root () ^ suffix
+    else
+      let rec resolve dir = function
+        | [] -> dir
+        | "." :: rest -> resolve dir rest
+        | ".." :: rest -> resolve (dirname_slash dir) rest
+        | remaining ->
+          let sep =
+            if String.length dir > 0 && dir.[String.length dir - 1] = '/' then
+              ""
+            else
+              "/"
+          in
+          dir ^ sep ^ String.concat "/" remaining
+      in
+      (* Normalize root separators so dirname_slash (which only splits on '/')
+         can traverse up correctly on Windows where roots use backslashes. *)
+      let root = normalize_dir_sep_with ~dir_sep_char:dir_sep.[0] (get_root ()) in
+      (* Strip trailing separator — get_root() returns roots with enforced
+         trailing slashes, but dirname_slash "/foo/" just strips the slash
+         instead of going up a directory. *)
+      let rlen = String.length root in
+      let root =
+        if rlen > 1 && root.[rlen - 1] = '/' then
+          String.sub root 0 (rlen - 1)
+        else
+          root
+      in
+      resolve root parts
 
 let enforce_trailing_slash s = enforce_trailing_sep ~dir_sep:Filename.dir_sep s
 
@@ -93,11 +160,9 @@ let suffix = function
 (* Resolves a stored suffix back to an absolute path.
    - Empty suffix ("") and the stdin sentinel ("-") are returned unchanged.
    - Suffixes that are already absolute (Filename.is_relative returns false)
-     are returned unchanged — this handles out-of-root files whose absolute
-     path is stored directly as the suffix.
-   - Relative suffixes are prepended with get_root (). The root must have a
-     trailing separator (enforced by set_project_root/set_flowlib_root) so
-     concatenation produces a valid path. *)
+     are returned unchanged.
+   - Relative suffixes (including those with leading ".." for out-of-root
+     files) are resolved against get_root () via resolve_root_with. *)
 let resolve_root get_root suffix =
   resolve_root_with ~is_relative:Filename.is_relative get_root suffix
 
@@ -184,12 +249,39 @@ let strip_prefix prefix path =
   else
     path
 
-(* Strip the project root from an absolute path. If the root has not been
-   set yet, returns the path unchanged — the suffix will be an absolute
-   path, and resolve_root handles that case correctly. *)
+(* Compute the relative path from [root] to [path]. Both must be absolute.
+   Normalizes directory separators to forward slashes, splits on '/', finds
+   the common prefix, adds ".." for each remaining root component, then
+   appends the remaining path components. *)
+let relative_path_from ?(dir_sep = Filename.dir_sep) root path =
+  let split s =
+    String.split_on_char '/' (normalize_dir_sep_with ~dir_sep_char:dir_sep.[0] s)
+    |> List.filter (fun x -> x <> "")
+  in
+  let rec drop_common = function
+    | (r :: rs, p :: ps) when r = p -> drop_common (rs, ps)
+    | (rs, ps) -> (rs, ps)
+  in
+  let (remaining_root, remaining_path) = drop_common (split root, split path) in
+  let ups = List.map (fun _ -> "..") remaining_root in
+  String.concat "/" (ups @ remaining_path)
+
+(* Strip the project root from an absolute path. If the path is under the
+   root, the root prefix is stripped to produce a relative suffix. If the path
+   is NOT under the root (e.g., out-of-root includes like ../../arvr/js/),
+   compute a relative path from the root — this ensures all suffixes are
+   portable relative paths, which is critical for saved state portability
+   across machines with different root paths.
+   If the root has not been set yet, returns the path unchanged. *)
 let strip_project_root path =
   match !project_root with
-  | Some root -> strip_prefix root path
+  | Some root ->
+    if String.starts_with ~prefix:root path then
+      String.sub path (String.length root) (String.length path - String.length root)
+    else if not (Filename.is_relative path) then
+      relative_path_from root path
+    else
+      path
   | None -> path
 
 (* Create File_key values from absolute paths, stripping the appropriate root.
@@ -211,4 +303,6 @@ module For_tests = struct
   let enforce_trailing_sep = enforce_trailing_sep
 
   let resolve_root_with = resolve_root_with
+
+  let relative_path_from = relative_path_from
 end
