@@ -90,10 +90,10 @@ let product = Math.sqrt(x) + y;
 let Component = ({prop}: Props): React.Node => {
   return <div />;
 };
-// `Component` has type`React.ComponentType<Props>`
+// `Component` has type `component(prop: string)`
 
 let element = <Component {...props} />;
-// `element` has type `React.Element<React.ComponentType<Props>>`
+// `element` has type `React.MixedElement`
 
 /* Let's define a new component */
 

@@ -122,7 +122,7 @@ This is an alias for `component(...Props)`. See [Component Types](../component-t
 
 ## `React.ElementType` {#toc-react-elementtype}
 
-Similar to [`React.AbstractComponent<Props>`](#toc-react-abstractcomponent) except it also
+Similar to [Component Types](../component-types) except it also
 includes JSX intrinsics (strings).
 
 The definition for `React.ElementType` is roughly:
@@ -226,9 +226,8 @@ class MyComponent extends React.Component<{foo: number}> {
 ({}) as React.ElementConfig<typeof MyComponent>;
 ```
 
-Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
-type *of* a React component so you need to use `typeof` as in
-`React.ElementProps<typeof MyComponent>`.
+Note that `typeof Component` must be the type *of* a React component so you need to use
+`typeof` as in `React.ElementConfig<typeof MyComponent>`.
 
 
 ## `React.ElementProps<typeof Component>` <UntilVersion version="0.287" /> {#toc-react-elementprops}
@@ -240,11 +239,10 @@ Therefore, this type was removed in 0.288.0.
 
 Gets the props for a React element type, *without* preserving the optionality of `defaultProps`.
 `typeof Component` could be the type of a React class component, a function component, or a JSX intrinsic string.
-This type is used for the `props` property on [`React.Element<typeof Component>`](#toc-react-element).
+This type is used for the `props` property on [`ExactReactElement_DEPRECATED<typeof Component>`](#toc-react-element).
 
-Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
-type *of* a React component so you need to use `typeof` as in
-`React.ElementProps<typeof MyComponent>`.
+Note that `typeof Component` must be the type *of* a React component so you need to use
+`typeof` as in `React.ElementProps<typeof MyComponent>`.
 ## `React.RefOf<Component>` {#toc-react-refof}
 
 When using [Component Syntax](../component-syntax), `React.RefOf<Component>` will give you
@@ -267,9 +265,8 @@ various component types:
   `React.ElementRef<'div'>` that would be `HTMLDivElement`. For
   `React.ElementRef<'input'>` that would be `HTMLInputElement`.
 
-Like [`React.Element<typeof Component>`](#toc-react-element), `typeof Component` must be the
-type *of* a React component so you need to use `typeof` as in
-`React.ElementRef<typeof MyComponent>`.
+Note that `typeof Component` must be the type *of* a React component so you need to use
+`typeof` as in `React.ElementRef<typeof MyComponent>`.
 
 ## `ExactReactElement_DEPRECATED<typeof Component>` {#toc-react-element}
 
