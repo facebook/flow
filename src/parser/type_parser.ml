@@ -1328,6 +1328,22 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
 
   and type_guard_annotation env ~start_loc = with_loc ~start_loc type_guard env
 
+  and ith_is_object_key ~i ~is_class env =
+    let open Token in
+    Eat.push_lex_mode env Lex_mode.NORMAL;
+    let result =
+      match Peek.ith_token ~i env with
+      | T_STRING _
+      | T_NUMBER _
+      | T_BIGINT _
+      | T_LBRACKET ->
+        true
+      | T_POUND when is_class -> true
+      | _ -> Peek.ith_is_identifier_name ~i env
+    in
+    Eat.pop_lex_mode env;
+    result
+
   and _object =
     let methodish env start_loc tparams =
       with_loc
@@ -1996,16 +2012,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
              | Some (_, { Variance.kind = Variance.Plus | Variance.Minus; _ }) ->
                true
              | _ -> false)
-             && (Peek.ith_is_identifier ~i:1 env
-                ||
-                match Peek.ith_token ~i:1 env with
-                | T_LBRACKET
-                | T_STRING _
-                | T_NUMBER_SINGLETON_TYPE _
-                | T_BIGINT_SINGLETON_TYPE _ ->
-                  true
-                | _ -> false
-                ) ->
+             && ith_is_object_key ~i:1 ~is_class env ->
         let variance_op =
           match variance with
           | Some (_, { Variance.kind = Variance.Plus; _ }) -> Some Type.Object.MappedType.Add

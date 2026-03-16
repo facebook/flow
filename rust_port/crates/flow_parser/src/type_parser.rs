@@ -2068,6 +2068,20 @@ fn type_guard_annotation(
     Ok(types::TypeGuardAnnotation { loc, guard })
 }
 
+fn ith_is_object_key(env: &mut ParserEnv, i: usize, is_class: bool) -> bool {
+    eat::push_lex_mode(env, LexMode::Normal);
+    let result = match peek::ith_token(env, i) {
+        TokenKind::TString { .. }
+        | TokenKind::TNumber { .. }
+        | TokenKind::TBigint { .. }
+        | TokenKind::TLbracket => true,
+        TokenKind::TPound if is_class => true,
+        _ => peek::ith_is_identifier_name(env, i),
+    };
+    eat::pop_lex_mode(env);
+    result
+}
+
 fn object_type(
     env: &mut ParserEnv,
     _is_class: bool,
@@ -2843,17 +2857,7 @@ fn object_type(
                             matches!(v.kind, VarianceKind::Plus | VarianceKind::Minus)
                         }
                     };
-                    if variance_allows && {
-                        let token = peek::ith_token(env, 1);
-                        peek::token_kind_is_identifier(token)
-                            || matches!(
-                                token,
-                                TokenKind::TLbracket
-                                    | TokenKind::TString { .. }
-                                    | TokenKind::TNumberSingletonType { .. }
-                                    | TokenKind::TBigintSingletonType { .. }
-                            )
-                    } {
+                    if variance_allows && ith_is_object_key(env, 1, is_class) {
                         let variance_op = match &variance {
                             Some(v) if v.kind == VarianceKind::Plus => {
                                 Some(types::object::MappedTypeVarianceOp::Add)
