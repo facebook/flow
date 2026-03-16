@@ -2005,8 +2005,9 @@ static void write_all(int fd, const void* buf, size_t len) {
   while (len > 0) {
     ssize_t n = write(fd, p, len);
     if (n < 0) {
-      if (errno == EINTR)
+      if (errno == EINTR) {
         continue;
+      }
       caml_failwith("hh_save_heap: write failed");
     }
     p += n;
@@ -2020,8 +2021,9 @@ static void read_all(int fd, void* buf, size_t len) {
   while (len > 0) {
     ssize_t n = read(fd, p, len);
     if (n < 0) {
-      if (errno == EINTR)
+      if (errno == EINTR) {
         continue;
+      }
       caml_failwith("hh_load_heap: read failed");
     }
     if (n == 0) {
@@ -2138,8 +2140,9 @@ CAMLprim value hh_save_heap(value fd_val) {
   prefs.frameInfo.contentSize = info->hashtbl_bsize + heap_size;
 
   size_t out_capacity = LZ4F_compressBound(SAVE_HEAP_CHUNK_SIZE, &prefs);
-  if (out_capacity < LZ4F_HEADER_SIZE_MAX)
+  if (out_capacity < LZ4F_HEADER_SIZE_MAX) {
     out_capacity = LZ4F_HEADER_SIZE_MAX;
+  }
   char* out_buf = malloc(out_capacity);
   if (!out_buf) {
     LZ4F_freeCompressionContext(cctx);
