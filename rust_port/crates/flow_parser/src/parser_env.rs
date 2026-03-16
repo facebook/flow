@@ -978,7 +978,7 @@ pub(crate) fn is_reserved_type(str_val: &str) -> bool {
         "any" | "bigint" | "bool" | "boolean" | "const" | "empty" | "extends" | "false"
         | "function" | "interface" | "keyof" | "mixed" | "never" | "null" | "number"
         | "readonly" | "static" | "string" | "symbol" | "true" | "typeof" | "undefined"
-        | "unknown" | "void" | "_" => true,
+        | "unknown" | "void" => true,
         _ => false,
     }
 }

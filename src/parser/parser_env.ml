@@ -736,8 +736,7 @@ let is_reserved_type str_val =
   | "typeof"
   | "undefined"
   | "unknown"
-  | "void"
-  | "_" ->
+  | "void" ->
     true
   | _ -> false
 

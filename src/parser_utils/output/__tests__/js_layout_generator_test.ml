@@ -3373,4 +3373,5 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "type T = { [ Symbol.iterator ]?(): X };";
            assert_statement_string ~ctxt ~pretty:true "type T = { [ Symbol.xxx ](): string };"
          );
+         ("underscore_type" >:: fun ctxt -> assert_statement_string ~ctxt "type T=_;");
        ]
