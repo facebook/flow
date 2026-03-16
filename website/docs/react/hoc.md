@@ -52,8 +52,8 @@ import * as React from 'react';
 type InjectedProps = {foo: number}
 
 function injectProp<Config>(
-  Component: component(...{...$Exact<Config>, ...InjectedProps})
-): component(...$Exact<Config>) {
+  Component: component(...{...Config, ...InjectedProps})
+): component(...Config) {
   return function WrapperComponent(
     props: Config,
   ) {
@@ -88,8 +88,8 @@ import * as React from 'react';
 type InjectedProps = {foo: number}
 
 function injectProp<Config>(
-  Component: component(...{...$Exact<Config>, ...InjectedProps})
-): component(...$Exact<Config>) {
+  Component: component(...{...Config, ...InjectedProps})
+): component(...Config) {
   return function WrapperComponent(
     props: Config,
   ) {
@@ -124,9 +124,9 @@ import * as React from 'react';
 type InjectedProps = {foo: number}
 
 function injectAndPreserveInstance<Config: {...}, Instance>(
-  Component: component(ref?: React.RefSetter<Instance>, ...{...$Exact<Config>, ...InjectedProps})
-): component(ref?: React.RefSetter<Instance>, ...$Exact<Config>) {
-  return React.forwardRef<$Exact<Config>, Instance>((props, ref) =>
+  Component: component(ref?: React.RefSetter<Instance>, ...{...Config, ...InjectedProps})
+): component(ref?: React.RefSetter<Instance>, ...Config) {
+  return React.forwardRef<Config, Instance>((props, ref) =>
       <Component ref={ref} foo={3} {...props} />
   );
 }

@@ -80,9 +80,9 @@ import * as React from 'react';
 
 type Props = Readonly<{prop: string}>;
 
-declare var x: number;
-declare var y: number;
-declare var props: Props;
+declare const x: number;
+declare const y: number;
+declare const props: Props;
 
 let product = Math.sqrt(x) + y;
 // `product` has type `number`
@@ -98,8 +98,8 @@ let element = <Component {...props} />;
 /* Let's define a new component */
 
 type OtherProps = Readonly<{...Props, extra_prop: number}>;
-declare var OtherComponent: OtherProps => React.Node;
-declare var other_props: OtherProps;
+declare const OtherComponent: OtherProps => React.Node;
+declare const other_props: OtherProps;
 
 /* Any subsequent assignments to `product`, `Component`, or `element` will be
  * checked against the types that Flow infers for the initializers, and if
@@ -146,7 +146,7 @@ will still infer unions for variable types:
 
 ```js flow-check
 let myNumberOrString;
-declare var condition: boolean;
+declare const condition: boolean;
 if (condition) {
   myNumberOrString = 42; // Determines type
 } else {
@@ -164,7 +164,7 @@ definitely initialized):
 
 ```js flow-check
 let oneBranchAssigned;
-declare var condition: boolean;
+declare const condition: boolean;
 if (condition) {
   oneBranchAssigned = 'Hello world!';
 }

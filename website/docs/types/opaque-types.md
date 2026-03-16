@@ -140,7 +140,7 @@ opaque type MyObject<A, B, C>: {foo: A, bar: B, ...} = {
   baz: C,
 };
 
-var val: MyObject<number, boolean, string> = {
+const val: MyObject<number, boolean, string> = {
   foo: 1,
   bar: true,
   baz: 'three',

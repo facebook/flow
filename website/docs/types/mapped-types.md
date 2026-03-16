@@ -75,7 +75,7 @@ type MappedFooAndBarWithIndexer = MappedTypeFromKeys<'foo' | 'bar' | string>;
 
 ## Distributive Mapped Types {#toc-distributive-mapped-types}
 
-When the mapped type uses an inline `keyof` or a type parameter bound by a `$Keys`
+When the mapped type uses an inline `keyof` or a type parameter bound by `keyof`
 Flow will distribute the mapped type over unions of object types.
 
 For example:
@@ -90,8 +90,8 @@ type DistributedMappedType = MakeAllValuesNumber<
   | ObjWithBar
 >; // = {foo: number} | {bar: number};
 
-// This mapped type uses a type parameter bound by $Keys
-type Pick<O: {...}, Keys: $Keys<O>> = {[key in Keys]: O[key]};
+// This mapped type uses a type parameter bound by keyof
+type Pick<O: {...}, Keys: keyof O> = {[key in Keys]: O[key]};
 type O1 = {foo: number, bar: number};
 type O2 = {bar: string, baz: number};
 type PickBar = Pick<O1 | O2, 'bar'>; // = {bar: number} | {bar: string};
