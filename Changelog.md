@@ -1,3 +1,7 @@
+### 0.305.1
+
+* Fix in saved state on projects including files outside the project root.
+
 ### 0.305.0
 
 Misc:
