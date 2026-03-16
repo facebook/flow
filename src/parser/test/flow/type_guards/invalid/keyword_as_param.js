@@ -1,1 +1,1 @@
-type T = (in_: any) => in is number;
+type T = (x: any) => void is number;

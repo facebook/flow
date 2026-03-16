@@ -528,15 +528,19 @@ let is_start_of_type_guard env =
   (* Parse the identifier part as normal code, since this can be any name that
    * a parameter can be. *)
   Eat.push_lex_mode env Lex_mode.NORMAL;
+  let token_1_is_identifier_name = Peek.ith_is_identifier_name ~i:0 env in
   let token_1 = Peek.token env in
   Eat.pop_lex_mode env;
-  let token_2 = Peek.ith_token ~i:1 env in
-  match (token_1, token_2) with
-  | (T_IDENTIFIER { raw = "asserts"; _ }, (T_IDENTIFIER _ | T_THIS))
-  | (T_IDENTIFIER { raw = "implies"; _ }, (T_IDENTIFIER _ | T_THIS))
-  | ((T_IDENTIFIER _ | T_THIS), (T_IS | T_IDENTIFIER { raw = "is"; _ })) ->
-    true
-  | _ -> false
+  if not token_1_is_identifier_name then
+    false
+  else
+    let token_2 = Peek.ith_token ~i:1 env in
+    match (token_1, token_2) with
+    | (T_IDENTIFIER { raw = "asserts"; _ }, (T_IDENTIFIER _ | T_THIS))
+    | (T_IDENTIFIER { raw = "implies"; _ }, (T_IDENTIFIER _ | T_THIS))
+    | (_, (T_IS | T_IDENTIFIER { raw = "is"; _ })) ->
+      true
+    | _ -> false
 
 let reparse_arguments_as_match_argument env (args_loc, args) =
   let { Expression.ArgList.arguments; _ } = args in

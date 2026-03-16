@@ -33,41 +33,32 @@
         "params":[
           {
             "type":"FunctionTypeParam",
-            "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":18}},
-            "range":[10,18],
+            "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":16}},
+            "range":[10,16],
             "name":{
               "type":"Identifier",
-              "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":13}},
-              "range":[10,13],
-              "name":"in_",
+              "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":1,"column":11}},
+              "range":[10,11],
+              "name":"x",
               "typeAnnotation":null,
               "optional":false
             },
             "typeAnnotation":{
               "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":15},"end":{"line":1,"column":18}},
-              "range":[15,18]
+              "loc":{"source":null,"start":{"line":1,"column":13},"end":{"line":1,"column":16}},
+              "range":[13,16]
             },
             "optional":false
           }
         ],
-        "this":null,
         "returnType":{
-          "type":"GenericTypeAnnotation",
-          "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":25}},
-          "range":[23,25],
-          "id":{
-            "type":"Identifier",
-            "loc":{"source":null,"start":{"line":1,"column":23},"end":{"line":1,"column":25}},
-            "range":[23,25],
-            "name":"in",
-            "typeAnnotation":null,
-            "optional":false
-          },
-          "typeParameters":null
+          "type":"VoidTypeAnnotation",
+          "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":1,"column":25}},
+          "range":[21,25]
         },
         "rest":null,
-        "typeParameters":null
+        "typeParameters":null,
+        "this":null
       }
     },
     {

@@ -290,22 +290,26 @@ pub(super) fn is_start_of_type_guard(env: &mut ParserEnv) -> bool {
     /* Parse the identifier part as normal code, since this can be any name that
      * a parameter can be. */
     eat::push_lex_mode(env, LexMode::Normal);
+    let token_1_is_identifier_name = peek::ith_is_identifier_name(env, 0);
     let token_1 = peek::token(env).clone();
     eat::pop_lex_mode(env);
+    if !token_1_is_identifier_name {
+        return false;
+    }
     let token_2 = peek::ith_token(env, 1).clone();
     match (token_1, token_2) {
-        (TokenKind::TIdentifier { raw, .. }, TokenKind::TIdentifier { .. }) if raw == "asserts" => {
+        (TokenKind::TIdentifier { raw, .. }, TokenKind::TIdentifier { .. } | TokenKind::TThis)
+            if raw == "asserts" =>
+        {
             true
         }
-        (TokenKind::TIdentifier { raw, .. }, TokenKind::TThis) if raw == "asserts" => true,
-        (TokenKind::TIdentifier { raw, .. }, TokenKind::TIdentifier { .. }) if raw == "implies" => {
+        (TokenKind::TIdentifier { raw, .. }, TokenKind::TIdentifier { .. } | TokenKind::TThis)
+            if raw == "implies" =>
+        {
             true
         }
-        (TokenKind::TIdentifier { raw, .. }, TokenKind::TThis) if raw == "implies" => true,
-        (TokenKind::TIdentifier { .. }, TokenKind::TIs) => true,
-        (TokenKind::TIdentifier { .. }, TokenKind::TIdentifier { raw, .. }) if raw == "is" => true,
-        (TokenKind::TThis, TokenKind::TIs) => true,
-        (TokenKind::TThis, TokenKind::TIdentifier { raw, .. }) if raw == "is" => true,
+        (_, TokenKind::TIs) => true,
+        (_, TokenKind::TIdentifier { raw, .. }) if raw == "is" => true,
         _ => false,
     }
 }
