@@ -38,10 +38,12 @@ let source_file_tests =
             let fk = File_key.source_file_of_absolute "/data/project/src/a.js" in
             assert_equal ~ctxt ~printer:Fun.id "/data/project/src/a.js" (File_key.to_string fk)
         );
-    "out_of_root_suffix_is_absolute"
+    "out_of_root_suffix_is_relative"
     >:: with_roots (fun ctxt ->
+            (* Out-of-root files get relative suffixes for saved state portability.
+               /other/place/foo.js relative to /data/project/ = ../../other/place/foo.js *)
             let fk = File_key.source_file_of_absolute "/other/place/foo.js" in
-            assert_equal ~ctxt ~printer:Fun.id "/other/place/foo.js" (File_key.suffix fk)
+            assert_equal ~ctxt ~printer:Fun.id "../../other/place/foo.js" (File_key.suffix fk)
         );
     "out_of_root_to_string_round_trip"
     >:: with_roots (fun ctxt ->
@@ -52,26 +54,30 @@ let source_file_tests =
     >:: with_roots ~project:"/data/foo/" (fun ctxt ->
             (* /data/foo/ must NOT strip from /data/foobar/x.js *)
             let fk = File_key.source_file_of_absolute "/data/foobar/x.js" in
-            assert_equal ~ctxt ~printer:Fun.id "/data/foobar/x.js" (File_key.suffix fk);
+            assert_equal ~ctxt ~printer:Fun.id "../foobar/x.js" (File_key.suffix fk);
             assert_equal ~ctxt ~printer:Fun.id "/data/foobar/x.js" (File_key.to_string fk)
         );
     "root_string_at_non_prefix_position"
     >:: with_roots (fun ctxt ->
             (* Path contains root string but not at the start *)
             let fk = File_key.source_file_of_absolute "/other/data/project/file.js" in
-            assert_equal ~ctxt ~printer:Fun.id "/other/data/project/file.js" (File_key.suffix fk);
+            assert_equal
+              ~ctxt
+              ~printer:Fun.id
+              "../../other/data/project/file.js"
+              (File_key.suffix fk);
             assert_equal ~ctxt ~printer:Fun.id "/other/data/project/file.js" (File_key.to_string fk)
         );
     "json_file_out_of_root"
     >:: with_roots (fun ctxt ->
             let fk = File_key.json_file_of_absolute "/other/package.json" in
-            assert_equal ~ctxt ~printer:Fun.id "/other/package.json" (File_key.suffix fk);
+            assert_equal ~ctxt ~printer:Fun.id "../../other/package.json" (File_key.suffix fk);
             assert_equal ~ctxt ~printer:Fun.id "/other/package.json" (File_key.to_string fk)
         );
     "resource_file_out_of_root"
     >:: with_roots (fun ctxt ->
             let fk = File_key.resource_file_of_absolute "/other/image.png" in
-            assert_equal ~ctxt ~printer:Fun.id "/other/image.png" (File_key.suffix fk);
+            assert_equal ~ctxt ~printer:Fun.id "../../other/image.png" (File_key.suffix fk);
             assert_equal ~ctxt ~printer:Fun.id "/other/image.png" (File_key.to_string fk)
         );
   ]
@@ -99,7 +105,7 @@ let lib_file_tests =
     "lib_outside_both_roots"
     >:: with_roots (fun ctxt ->
             let fk = File_key.lib_file_of_absolute "/somewhere/else/lib.js" in
-            assert_equal ~ctxt ~printer:Fun.id "/somewhere/else/lib.js" (File_key.suffix fk);
+            assert_equal ~ctxt ~printer:Fun.id "../../somewhere/else/lib.js" (File_key.suffix fk);
             assert_equal ~ctxt ~printer:Fun.id "/somewhere/else/lib.js" (File_key.to_string fk)
         );
   ]
@@ -219,6 +225,101 @@ let windows_path_tests =
       let resolved = resolve_root_with ~is_relative:win_is_relative (fun () -> root) sfx in
       assert_equal ~ctxt ~printer:Fun.id "D:\\other\\file.js" resolved
     );
+    (* relative_path_from tests with Windows paths *)
+    (* resolve_root_with tests with ".." segments *)
+    ( "resolve_root_dotdot_unix" >:: fun ctxt ->
+      let result =
+        resolve_root_with
+          ~is_relative:Filename.is_relative
+          (fun () -> "/data/project/")
+          "../../other/file.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "/other/file.js" result
+    );
+    ( "resolve_root_dotdot_deep" >:: fun ctxt ->
+      let result =
+        resolve_root_with
+          ~is_relative:Filename.is_relative
+          (fun () -> "/a/b/c/d/")
+          "../../../x/y.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "/a/x/y.js" result
+    );
+    ( "resolve_root_dotdot_with_leading_dot" >:: fun ctxt ->
+      let result =
+        resolve_root_with
+          ~is_relative:Filename.is_relative
+          (fun () -> "/data/project/")
+          "./../other/file.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "/data/other/file.js" result
+    );
+    (* Tests that exercise normalize_dir_sep and dirname pass ~dir_sep to
+       simulate Windows backslash handling on any host platform, matching
+       the pattern used by the other Windows tests above. *)
+    ( "resolve_root_dotdot_windows" >:: fun ctxt ->
+      let result =
+        resolve_root_with
+          ~is_relative:win_is_relative
+          ~dir_sep:win_dir_sep
+          (fun () -> "C:\\Users\\repo\\xplat\\js\\")
+          "../../arvr/js/app.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "C:/Users/repo/arvr/js/app.js" result
+    );
+    ( "resolve_root_dotdot_backslash_suffix" >:: fun ctxt ->
+      let result =
+        resolve_root_with
+          ~is_relative:win_is_relative
+          ~dir_sep:win_dir_sep
+          (fun () -> "C:\\Users\\repo\\xplat\\js\\")
+          "..\\..\\arvr\\js\\app.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "C:/Users/repo/arvr/js/app.js" result
+    );
+    ( "relative_path_from_windows_out_of_root" >:: fun ctxt ->
+      let result =
+        relative_path_from
+          ~dir_sep:win_dir_sep
+          "C:\\Users\\dev\\project\\"
+          "D:\\other\\repo\\file.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "../../../../D:/other/repo/file.js" result
+    );
+    ( "relative_path_from_windows_in_root" >:: fun ctxt ->
+      let result =
+        relative_path_from
+          ~dir_sep:win_dir_sep
+          "C:\\Users\\dev\\project\\"
+          "C:\\Users\\dev\\project\\src\\file.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "src/file.js" result
+    );
+    ( "relative_path_from_mixed_separators" >:: fun ctxt ->
+      let result =
+        relative_path_from
+          ~dir_sep:win_dir_sep
+          "C:/Users/dev\\project/"
+          "C:/Users/dev\\project/src\\file.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "src/file.js" result
+    );
+    ( "relative_path_from_windows_portability" >:: fun ctxt ->
+      let suffix_a =
+        relative_path_from
+          ~dir_sep:win_dir_sep
+          "C:\\Users\\alice\\repo\\xplat\\js\\"
+          "C:\\Users\\alice\\repo\\arvr\\js\\app.js"
+      in
+      let suffix_b =
+        relative_path_from
+          ~dir_sep:win_dir_sep
+          "C:\\Users\\bob\\repo\\xplat\\js\\"
+          "C:\\Users\\bob\\repo\\arvr\\js\\app.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id suffix_a suffix_b;
+      assert_equal ~ctxt ~printer:Fun.id "../../arvr/js/app.js" suffix_a
+    );
   ]
 
 let compare_tests =
@@ -227,8 +328,8 @@ let compare_tests =
     >:: with_roots (fun _ctxt ->
             let in_root = File_key.source_file_of_absolute "/data/project/src/a.js" in
             let out_root = File_key.source_file_of_absolute "/other/b.js" in
-            (* out-of-root suffix starts with '/', which sorts before relative
-               suffixes in ASCII ('/' = 47 < 'a'..'z' = 97..122) *)
+            (* out-of-root suffix is now relative (../../other/b.js) which
+               sorts before in-root suffix (src/a.js) in ASCII since '.' < 's' *)
             assert_bool
               "out-of-root should sort before in-root"
               (File_key.compare out_root in_root < 0)
@@ -246,6 +347,61 @@ let compare_tests =
     );
   ]
 
+(* S634538 regression: saved state portability for out-of-root files.
+   When saved state is created on machine A (root /machine_a/project/) and
+   loaded on machine B (root /machine_b/project/), File_key values for
+   out-of-root files must compare equal. This requires suffixes to be
+   portable relative paths (../../sibling/file.js), NOT absolute paths
+   that embed the machine-specific root. *)
+let saved_state_portability_tests =
+  [
+    ( "out_of_root_suffix_is_portable_across_machines" >:: fun ctxt ->
+      (* Machine A creates a File_key for an out-of-root file *)
+      File_key.set_project_root "/machine_a/repo/xplat/js/";
+      File_key.set_flowlib_root "/machine_a/flowlib/";
+      let fk_a = File_key.source_file_of_absolute "/machine_a/repo/arvr/js/app.js" in
+      let suffix_a = File_key.suffix fk_a in
+
+      (* Machine B creates a File_key for the same logical file *)
+      File_key.set_project_root "/machine_b/repo/xplat/js/";
+      File_key.set_flowlib_root "/machine_b/flowlib/";
+      let fk_b = File_key.source_file_of_absolute "/machine_b/repo/arvr/js/app.js" in
+      let suffix_b = File_key.suffix fk_b in
+
+      (* Suffixes must be identical — this is what makes saved state portable *)
+      assert_equal ~ctxt ~printer:Fun.id suffix_a suffix_b;
+
+      (* Both must be relative paths, not absolute *)
+      assert_bool "suffix should be relative" (Filename.is_relative suffix_a);
+
+      (* Both must resolve to the correct absolute path on their machine *)
+      assert_equal ~ctxt ~printer:Fun.id "/machine_b/repo/arvr/js/app.js" (File_key.to_string fk_b);
+
+      (* Restore defaults *)
+      File_key.set_project_root "/project/";
+      File_key.set_flowlib_root "/flowlib/"
+    );
+    ( "out_of_root_sibling_directory" >:: fun ctxt ->
+      (* Simulates xplat/js including files from ../../www/html/ *)
+      File_key.set_project_root "/data/sandcastle/boxes/fbsource/xplat/js/";
+      File_key.set_flowlib_root "/tmp/flowlib/";
+      let fk =
+        File_key.source_file_of_absolute
+          "/data/sandcastle/boxes/fbsource/www/html/xplat-react/foo.js"
+      in
+      assert_equal ~ctxt ~printer:Fun.id "../../www/html/xplat-react/foo.js" (File_key.suffix fk);
+      assert_equal
+        ~ctxt
+        ~printer:Fun.id
+        "/data/sandcastle/boxes/fbsource/www/html/xplat-react/foo.js"
+        (File_key.to_string fk);
+
+      (* Restore defaults *)
+      File_key.set_project_root "/project/";
+      File_key.set_flowlib_root "/flowlib/"
+    );
+  ]
+
 let tests =
   "file_key"
   >::: [
@@ -255,4 +411,5 @@ let tests =
          "roots" >::: root_tests;
          "windows_paths" >::: windows_path_tests;
          "compare" >::: compare_tests;
+         "saved_state_portability" >::: saved_state_portability_tests;
        ]

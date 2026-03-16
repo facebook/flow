@@ -1,0 +1,21 @@
+Generate saved-state
+Use saved state in a different root
+Error ----------------------------------------------------------------------------------------------------- main.js:4:21
+
+Cannot assign `greet(...)` to `msg` because string [1] is incompatible with number [2]. [incompatible-type]
+
+   main.js:4:21
+   4| const msg: number = greet("world");
+                          ^^^^^^^^^^^^^^
+
+References:
+   ../outside/helper.js:2:38
+   2| export function greet(name: string): string {
+                                           ^^^^^^ [1]
+   main.js:4:12
+   4| const msg: number = greet("world");
+                 ^^^^^^ [2]
+
+
+
+Found 1 error
