@@ -348,12 +348,12 @@ assert-plus@^1.0.0:
   resolved "https://registry.yarnpkg.com/assert-plus/-/assert-plus-1.0.0.tgz#f12e0f3c5d77b0b1cdd9146942e4e96c1e4dd525"
   integrity sha512-NfJ4UzBCcQGLDlQq7nHxH+tv3kyZ0hHQqF5BO6J7tNJeP5do1llPr8dZ8zHonfhAu0PHAdMkSo+8o0wxg9lZWw==
 
-babel-plugin-syntax-hermes-parser@^0.33.1:
-  version "0.33.1"
-  resolved "https://registry.yarnpkg.com/babel-plugin-syntax-hermes-parser/-/babel-plugin-syntax-hermes-parser-0.33.1.tgz#aec6c3c3ebd24586d3a81c0dabf7b5721401f235"
-  integrity sha512-6vhXYvpM6VArRhFnIGC6Svbb396togQn/3Ks4Vd4CqrN7OUFUAFRoc4A6GPJKHFEWMVNY/lNjgAMuWtD/aO2fg==
+babel-plugin-syntax-hermes-parser@0.34.0:
+  version "0.34.0"
+  resolved "https://registry.yarnpkg.com/babel-plugin-syntax-hermes-parser/-/babel-plugin-syntax-hermes-parser-0.34.0.tgz#db28f1cd8c07e35d843660e80dd85e17684e264e"
+  integrity sha512-q4xeAymMrot/21MHA3+fd5mcFF7stx6ntKFO/Of5ldyDpgTBcK1l0NiHAh4NdHHdb4aHqHgQOy7r6yk0IIlz8Q==
   dependencies:
-    hermes-parser "0.33.1"
+    hermes-parser "0.34.0"
 
 balanced-match@^1.0.0:
   version "1.0.2"
@@ -540,29 +540,17 @@ has-flag@^4.0.0:
   resolved "https://registry.yarnpkg.com/has-flag/-/has-flag-4.0.0.tgz#944771fd9c81c81265c4d6941860da06bb59479b"
   integrity sha512-EykJT/Q1KjTWctppgIAgfSO0tKVuZUjhgMr17kqTumMl6Afv3EISleU7qZUzoXDFTAHTDC4NOoG/ZxU3EvlMPQ==
 
-hermes-estree@0.33.1:
-  version "0.33.1"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.33.1.tgz#851ad240a5fad8b993448128d398e2b9dc7585e3"
-  integrity sha512-7h7PID47RDJ3yBxrIhh7MZUpLm+mmxOg9LQG8fSFhl9pkl9SU1WrPLOfBn5MNLwjWTqKFBXJ1Z9H4SvaI7NOtQ==
+hermes-estree@0.34.0:
+  version "0.34.0"
+  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.34.0.tgz#a6e1aa55d0ef06136158991869b97166ce62d328"
+  integrity sha512-6qLylexjmuKa/YYhMiNn/3VejBsdzwmYUGmNpc693/pJzymmbufhkRW/2K6GqFgu0ApRWoqF0NbM6u82jFcOXA==
 
-hermes-estree@0.33.3:
-  version "0.33.3"
-  resolved "https://registry.yarnpkg.com/hermes-estree/-/hermes-estree-0.33.3.tgz#6d6b593d4b471119772c82bdb0212dfadabb6f17"
-  integrity sha512-6kzYZHCk8Fy1Uc+t3HGYyJn3OL4aeqKLTyina4UFtWl8I0kSL7OmKThaiX+Uh2f8nGw3mo4Ifxg0M5Zk3/Oeqg==
-
-hermes-parser@0.33.1:
-  version "0.33.1"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.33.1.tgz#b793a76fa9a73f47164a203115d64a3d0297c1d1"
-  integrity sha512-oScC+VJhdSmhxC1kOTcQnzb+rb0VeYmUDTNvj7RQP5RLwt/AQWgvJRc1cJvQJ2s5armOWbQ3VXJObIlQdX9Fbg==
+hermes-parser@0.34.0:
+  version "0.34.0"
+  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.34.0.tgz#f6050c7b1a5e978af551be9faf19bc7d7c050a82"
+  integrity sha512-tcgan5UNZvu3WwmR3jDAlmwEAR2CMv8cwQVMe5j0NrLQkstf0l3ULbYPuTZWbXxbPa0PyZPiq5LYEcFVmhM9LQ==
   dependencies:
-    hermes-estree "0.33.1"
-
-hermes-parser@0.33.3:
-  version "0.33.3"
-  resolved "https://registry.yarnpkg.com/hermes-parser/-/hermes-parser-0.33.3.tgz#da50ababb7a5ab636d339e7b2f6e3848e217e09d"
-  integrity sha512-Yg3HgaG4CqgyowtYjX/FsnPAuZdHOqSMtnbpylbptsQ9nwwSKsy6uRWcGO5RK0EqiX12q8HvDWKgeAVajRO5DA==
-  dependencies:
-    hermes-estree "0.33.3"
+    hermes-estree "0.34.0"
 
 inflight@^1.0.4:
   version "1.0.6"
