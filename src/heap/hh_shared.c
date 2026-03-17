@@ -552,12 +552,13 @@ static void memfd_init(size_t shared_mem_size) {
 static int memfd = -1;
 
 /**************************************************************************
- * The memdfd_init function creates a anonymous memory file that might
- * be inherited by `Daemon.spawned` processus (contrary to a simple
+ * The memfd_init function creates an anonymous memory file that might
+ * be inherited by `Daemon.spawned` processes (contrary to a simple
  * anonymous mmap).
  *
- * The preferred mechanism is memfd_create(2) (see the upper
- * description). Then we try shm_open(3).
+ * The preferred mechanism is memfd_create(2) (Linux only).
+ * Then we try shm_open(3). If that also fails (e.g. in a macOS sandbox
+ * that blocks POSIX shared memory), we fall back to mkstemp + unlink.
  *
  * The resulting file descriptor should be mmaped with the memfd_map
  * function (see below).
@@ -577,22 +578,28 @@ static void memfd_init(size_t shared_mem_size) {
     // http://stackoverflow.com/questions/25502229/ftruncate-not-working-on-posix-shared-memory-in-mac-os-x
     shm_unlink(memname);
     memfd = shm_open(memname, O_CREAT | O_RDWR, 0666);
+  }
+  if (memfd < 0) {
+    // shm_open failed (e.g. sandboxed environment). Fall back to a temp
+    // file which is unlinked immediately to create an anonymous fd.
+    char template[] = "/tmp/fb_heap-XXXXXX";
+    memfd = mkstemp(template);
     if (memfd < 0) {
       raise_failed_memfd_init(errno);
     }
-
-    // shm_open sets FD_CLOEXEC automatically. This is undesirable, because
-    // we want this fd to be open for other processes, so that they can
-    // reconnect to the shared memory.
-    int flags = fcntl(memfd, F_GETFD);
-    if (flags == -1) {
-      raise_failed_memfd_init(errno);
-    }
-    // Unset close-on-exec
-    if (fcntl(memfd, F_SETFD, flags & ~FD_CLOEXEC) == -1) {
-      raise_failed_memfd_init(errno);
-    };
+    unlink(template);
   }
+
+  // shm_open and mkstemp may set FD_CLOEXEC. Clear it so that child
+  // processes can inherit the fd and reconnect to shared memory.
+  int flags = fcntl(memfd, F_GETFD);
+  if (flags == -1) {
+    raise_failed_memfd_init(errno);
+  }
+  if (fcntl(memfd, F_SETFD, flags & ~FD_CLOEXEC) == -1) {
+    raise_failed_memfd_init(errno);
+  }
+
   if (ftruncate(memfd, shared_mem_size) == -1) {
     raise_failed_memfd_init(errno);
   }
