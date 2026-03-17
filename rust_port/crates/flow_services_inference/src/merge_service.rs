@@ -223,7 +223,7 @@ fn mk_check_file(
             }
         }
         let duration = start_time.elapsed().as_secs_f64();
-        if duration > 0.5 {
+        if duration > 5.0 {
             eprintln!("[SLOW-CHECK] {:>8.3}s  {}", duration, file.as_str());
         }
         Some((
