@@ -593,9 +593,36 @@ mod check_files {
                 merge_service::mk_check(shared_mem.dupe(), options.dupe(), master_cx.dupe())
             })
         };
-        let ret = flow_utils_concurrency::map_reduce::call(
+        // Create per-worker deques for intra-batch work stealing.
+        // When a worker hits a slow file, idle workers can steal remaining
+        // files from its deque instead of waiting for the next batch.
+        let num_workers = pool.num_workers();
+        let (deque_slots, stealers) = {
+            let deques: Vec<crossbeam::deque::Worker<FileKey>> = (0..num_workers)
+                .map(|_| crossbeam::deque::Worker::new_fifo())
+                .collect();
+            let stealers: Vec<crossbeam::deque::Stealer<FileKey>> =
+                deques.iter().map(|d| d.stealer()).collect();
+            let slots: Vec<Option<crossbeam::deque::Worker<FileKey>>> =
+                deques.into_iter().map(Some).collect();
+            (
+                Arc::new(flow_utils_concurrency::lock::Mutex::new(slots)),
+                Arc::new(stealers),
+            )
+        };
+        thread_local! {
+            static WORKER_DEQUE: RefCell<Option<crossbeam::deque::Worker<FileKey>>> =
+                const { RefCell::new(None) };
+        }
+
+        let deque_slots_for_job = deque_slots.dupe();
+        let mk_check_for_steal = mk_check.dupe();
+        let stealers_for_steal = stealers.dupe();
+
+        let ret = flow_utils_concurrency::map_reduce::call_with_stealing(
             pool,
             next,
+            // job: push batch files onto the worker's stealable deque, process via mk_job_stealing
             move |acc: &mut Vec<_>, batch| {
                 WORKER_CHECK.with(|cell: &RefCell<Option<WorkerState>>| {
                     let mut opt = cell.borrow_mut();
@@ -609,8 +636,26 @@ mod check_files {
                     // Reuses existing HashMap/LinkedHashMap allocations instead of
                     // creating a brand new cache each batch.
                     cache.borrow_mut().clear();
-                    let (results, unfinished) = job_utils::mk_job(&mut **check, &options, batch);
-                    mk_next_merge(acc, (results, unfinished));
+
+                    WORKER_DEQUE.with(|deque_cell| {
+                        let mut deque_opt = deque_cell.borrow_mut();
+                        if deque_opt.is_none() {
+                            let mut slots = deque_slots_for_job.lock();
+                            *deque_opt = slots.iter_mut().find_map(|s| s.take());
+                        }
+                        let deque = deque_opt.as_ref().unwrap();
+
+                        // Push batch files onto the stealable deque
+                        for file in batch {
+                            deque.push(file);
+                        }
+
+                        // Process files from deque — other workers can steal the rest
+                        let (results, unfinished) =
+                            job_utils::mk_job_stealing(&mut **check, &options, deque);
+                        mk_next_merge(acc, (results, unfinished));
+                    });
+
                     // Break Rc cycles AND free cached dependency files after each batch.
                     // Without this, the last batch's cached files (each containing a
                     // Context with full type graph, property maps, export maps, etc.)
@@ -619,8 +664,32 @@ mod check_files {
                     cache.borrow_mut().clear();
                 });
             },
+            // merge: same as before
             |a: &mut Vec<_>, b: Vec<_>| {
                 a.extend(b);
+            },
+            // steal: called when this worker is idle (between batches)
+            move |acc: &mut Vec<_>| -> bool {
+                for stealer in stealers_for_steal.iter() {
+                    if let crossbeam::deque::Steal::Success(file) = stealer.steal() {
+                        WORKER_CHECK.with(|cell: &RefCell<Option<WorkerState>>| {
+                            let mut opt = cell.borrow_mut();
+                            if opt.is_none() {
+                                *opt = Some(mk_check_for_steal());
+                            }
+                            let (check, _cache) = opt.as_mut().unwrap();
+                            let result = check(file.dupe());
+                            let mapped = match result {
+                                Ok(Some((_, r))) => Ok(Some(r)),
+                                Ok(None) => Ok(None),
+                                Err(e) => Err(e),
+                            };
+                            acc.push((file, mapped));
+                        });
+                        return true;
+                    }
+                }
+                false
             },
         );
         let ret = ret;
@@ -630,6 +699,9 @@ mod check_files {
         // next recheck cycle to start fresh.
         pool.broadcast(|_| {
             WORKER_CHECK.with(|cell| {
+                *cell.borrow_mut() = None;
+            });
+            WORKER_DEQUE.with(|cell| {
                 *cell.borrow_mut() = None;
             });
             flow_typing_utils::annotation_inference::clear_dst_cx();

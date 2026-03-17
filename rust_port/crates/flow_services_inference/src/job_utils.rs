@@ -60,6 +60,56 @@ pub fn mk_job<A, B, C>(
     job_helper(check, options, start_time, vec![], &files)
 }
 
+/// Like `job_helper`, but pops from a work-stealing deque instead of
+/// iterating a slice. Files remaining in the deque can be stolen by
+/// idle workers via the deque's Stealer handle.
+fn job_helper_stealing<A, B, C>(
+    check: &mut dyn FnMut(FileKey) -> Result<Option<(A, B)>, C>,
+    options: &Options,
+    start_time: Instant,
+    mut acc: Vec<(FileKey, Result<Option<B>, C>)>,
+    deque: &crossbeam::deque::Worker<FileKey>,
+) -> (Vec<(FileKey, Result<Option<B>, C>)>, Vec<FileKey>) {
+    loop {
+        if out_of_time(options, start_time) {
+            // Drain remaining from deque as unfinished
+            // (files already stolen by others are gone — not double-counted)
+            let mut unfinished = Vec::new();
+            while let Some(f) = deque.pop() {
+                unfinished.push(f);
+            }
+            eprintln!(
+                "Bucket timed out! {} files finished, {} files unfinished",
+                acc.len(),
+                unfinished.len()
+            );
+            return (acc, unfinished);
+        }
+        let Some(file) = deque.pop() else {
+            // Deque empty — either all processed locally or some were stolen
+            return (acc, vec![]);
+        };
+        let result = match check(file.dupe()) {
+            Ok(Some((_, acc))) => Ok(Some(acc)),
+            Ok(None) => Ok(None),
+            Err(e) => Err(e),
+        };
+        acc.push((file.dupe(), result));
+    }
+}
+
+/// Like `mk_job`, but uses a work-stealing deque. The caller pushes
+/// files onto the deque before calling this. Other workers can steal
+/// from the deque via its Stealer handle while this worker processes.
+pub fn mk_job_stealing<A, B, C>(
+    check: &mut dyn FnMut(FileKey) -> Result<Option<(A, B)>, C>,
+    options: &Options,
+    deque: &crossbeam::deque::Worker<FileKey>,
+) -> (Vec<(FileKey, Result<Option<B>, C>)>, Vec<FileKey>) {
+    let start_time = Instant::now();
+    job_helper_stealing(check, options, start_time, vec![], deque)
+}
+
 /// A stateful (next, merge) pair. This lets us re-queue unfinished files which are returned
 /// when a bucket times out
 pub fn mk_next<R>(

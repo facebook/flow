@@ -349,6 +349,137 @@ where
         .into_inner()
 }
 
+/// Like `call()`, but with work stealing between batches.
+///
+/// When a worker's channel is empty (no batches available), instead of
+/// just waiting, it calls `steal(&mut acc)`. If steal returns true
+/// (it did useful work), the worker loops back immediately. If false,
+/// the worker waits for new batches as usual.
+///
+/// This enables intra-batch work stealing: the `job` closure can push
+/// batch items onto a shared stealable structure (e.g., crossbeam deque),
+/// and the `steal` closure can pop from other workers' structures.
+pub fn call_with_stealing<W, A, J, M, N, S>(
+    pool: &ThreadPool,
+    next: N,
+    job: J,
+    merge: M,
+    steal: S,
+) -> A
+where
+    W: Send + 'static,
+    A: Send + Sync + Default + std::fmt::Debug,
+    J: Fn(&mut A, Vec<W>) + Send + Sync,
+    M: Fn(&mut A, A) + Send + Sync,
+    N: Next<W> + 'static,
+    S: Fn(&mut A) -> bool + Send + Sync,
+{
+    let (sender, receiver) = channel::unbounded::<Vec<W>>();
+    let receiver = Arc::new(receiver);
+    let results_mutex = Arc::new(Mutex::new(Default::default()));
+    let job = Arc::new(job);
+    let merge = Arc::new(merge);
+    let next = Arc::new(next);
+    let steal = Arc::new(steal);
+    let done = Arc::new(AtomicBool::new(false));
+    let wait_signal = Arc::new(Condvar::new());
+    let wait_mutex = Arc::new(Mutex::new(()));
+
+    // Producer thread: calls next() and sends batches to workers
+    let done_producer = done.dupe();
+    let next_producer = next.dupe();
+    let sender_clone = sender.clone();
+    let wait_signal_producer = wait_signal.dupe();
+    let wait_mutex_producer = wait_mutex.dupe();
+    std::thread::spawn(move || {
+        loop {
+            match next_producer.next() {
+                Bucket::Job(batch) => {
+                    if sender_clone.send(batch).is_err() {
+                        break;
+                    }
+                    // Wake up workers waiting for new work
+                    wait_signal_producer.notify_all();
+                }
+                Bucket::Wait => {
+                    // Wait for workers to complete, which may generate new work
+                    let guard = wait_mutex_producer.lock();
+                    let _ = wait_signal_producer
+                        .wait_timeout(guard, std::time::Duration::from_millis(10));
+                }
+                Bucket::Done => {
+                    done_producer.store(true, Ordering::Release);
+                    // Wake all workers so they can exit
+                    wait_signal_producer.notify_all();
+                    break;
+                }
+            }
+        }
+    });
+
+    // Spawn worker threads
+    pool.spawn_many(|| {
+        let receiver = receiver.dupe();
+        let results_mutex = results_mutex.dupe();
+        let job = job.dupe();
+        let merge = merge.dupe();
+        let steal = steal.dupe();
+        let done = done.dupe();
+        let wait_signal = wait_signal.dupe();
+        let wait_mutex = wait_mutex.dupe();
+
+        // Each worker has a local accumulator (created once per worker thread)
+        let mut local_acc = Default::default();
+
+        loop {
+            match receiver.try_recv() {
+                Ok(batch) => {
+                    job(&mut local_acc, batch);
+
+                    // Merge local accumulator into global, then reset local
+                    let mut results = results_mutex.lock();
+                    let acc_to_merge = std::mem::take(&mut local_acc);
+                    merge(&mut *results, acc_to_merge);
+                    drop(results);
+
+                    // Notify producer in case it's waiting
+                    wait_signal.notify_all();
+                }
+                Err(channel::TryRecvError::Empty) => {
+                    // Try stealing before waiting
+                    if steal(&mut local_acc) {
+                        // Did useful work — merge and loop back
+                        let mut results = results_mutex.lock();
+                        let acc_to_merge = std::mem::take(&mut local_acc);
+                        merge(&mut *results, acc_to_merge);
+                        drop(results);
+
+                        wait_signal.notify_all();
+                        continue;
+                    }
+                    if done.load(Ordering::Acquire) {
+                        // Producer is done and channel is empty
+                        break;
+                    }
+                    // Wait for producer to signal new work or completion
+                    let guard = wait_mutex.lock();
+                    let _ = wait_signal.wait_timeout(guard, std::time::Duration::from_millis(10));
+                }
+                Err(channel::TryRecvError::Disconnected) => {
+                    break;
+                }
+            }
+        }
+    });
+
+    drop(sender);
+    drop(receiver);
+
+    Arc::try_unwrap(results_mutex)
+        .expect("All workers should be done")
+        .into_inner()
+}
+
 // ============================================================================
 // Helper functions to create Next implementations
 // ============================================================================
