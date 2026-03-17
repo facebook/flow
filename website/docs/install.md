@@ -160,6 +160,24 @@ npm run flow
 No errors!
 ```
 
+## Setup Library Definitions
+
+Since version 0.263.0, most library definitions are no longer bundled with Flow.
+Instead, they are managed by [flow-typed](https://github.com/flow-typed/flow-typed).
+
+You should have a `flow-typed.config.json` in the root of your project with the
+following content:
+
+```json
+{
+  "env": ["node", "dom", "bom", "intl", "cssom", "indexeddb", "serviceworkers", "webassembly", "jsx"]
+}
+```
+
+This tells [flow-typed](https://github.com/flow-typed/flow-typed) which environment
+definitions to include. You can adjust the list based on which environments your
+project targets.
+
 ## Setup ESLint
 
 If you use ESLint, you can read [our page on ESLint](../tools/eslint) to set it up to support Flow.
