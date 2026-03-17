@@ -1908,9 +1908,11 @@ impl Context {
 
 pub struct CacheSnapshot {
     constraint_cache_level_count: usize,
-    // subst_cache, eval_id_cache, id_cache, eval_repos_cache, fix_cache,
+    // eval_id_cache, id_cache, eval_repos_cache, fix_cache,
     // const_fold_cache use MultiLevelMap — their state is tracked internally
     // via push_level/pop_level, not stored here.
+    // subst_cache: snapshot_subst_cache = !(cx.ccx.subst_cache);
+    snapshot_subst_cache: type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)>,
     snapshot_spread_cache: SpreadCache,
     snapshot_evaluated: type_::eval::Map<Type>,
     snapshot_instantiation_stack: FlowVector<type_app_expansion::Entry>,
@@ -1918,7 +1920,8 @@ pub struct CacheSnapshot {
 
 impl Context {
     pub fn take_cache_snapshot(&self) -> CacheSnapshot {
-        self.0.ccx.subst_cache.borrow_mut().push_level();
+        // snapshot_subst_cache = !(cx.ccx.subst_cache);
+        let snapshot_subst_cache = self.0.ccx.subst_cache.borrow().dupe();
         self.0.ccx.eval_id_cache.borrow_mut().push_level();
         self.0.ccx.id_cache.borrow_mut().push_level();
         self.0.ccx.eval_repos_cache.borrow_mut().push_level();
@@ -1930,6 +1933,7 @@ impl Context {
         drop(cc);
         CacheSnapshot {
             constraint_cache_level_count,
+            snapshot_subst_cache,
             snapshot_spread_cache: self.0.ccx.spread_cache.borrow().dupe(),
             snapshot_evaluated: self.0.ccx.sig_cx.borrow().evaluated.dupe(),
             snapshot_instantiation_stack: self.0.ccx.instantiation_stack.borrow().dupe(),
@@ -1939,6 +1943,7 @@ impl Context {
     pub fn restore_cache_snapshot(&self, snapshot: CacheSnapshot) {
         let CacheSnapshot {
             constraint_cache_level_count,
+            snapshot_subst_cache,
             snapshot_spread_cache,
             snapshot_evaluated,
             snapshot_instantiation_stack,
@@ -1948,7 +1953,8 @@ impl Context {
             .constraint_cache
             .borrow_mut()
             .truncate_to(constraint_cache_level_count);
-        self.0.ccx.subst_cache.borrow_mut().pop_level();
+        // cx.ccx.subst_cache := snapshot_subst_cache;
+        *self.0.ccx.subst_cache.borrow_mut() = snapshot_subst_cache;
         self.0.ccx.eval_id_cache.borrow_mut().pop_level();
         self.0.ccx.id_cache.borrow_mut().pop_level();
         self.0.ccx.eval_repos_cache.borrow_mut().pop_level();

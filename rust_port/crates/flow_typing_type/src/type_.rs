@@ -6160,7 +6160,7 @@ impl FlowSet {
     }
 }
 
-pub type SubstCacheMap<T> = MultiLevelMap<(poly::Id, Rc<[Type]>), T>;
+pub type SubstCacheMap<T> = FlowOrdMap<(poly::Id, Rc<[Type]>), T>;
 
 pub type EvalIdCacheMap = MultiLevelMap<eval::Id, Type>;
 
