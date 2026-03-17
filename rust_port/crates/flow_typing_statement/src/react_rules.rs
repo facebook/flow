@@ -6,6 +6,7 @@
  */
 
 use std::ops::Deref;
+use std::rc::Rc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
@@ -49,6 +50,7 @@ use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::nominal;
 use flow_typing_utils::type_env;
 use flow_typing_utils::typed_ast_utils;
+use once_cell::unsync::Lazy;
 
 use crate::type_annotation;
 
@@ -1301,7 +1303,7 @@ fn emit_effect_errors(cx: &Context, errors: Vec<ErrorMessage<ALoc>>) {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq)]
 enum HookCallContext {
     /// e.g. Calling hooks in things like `function fetchData(...) {...}`
     HookCallDefinitelyNotAllowed,
@@ -1324,7 +1326,7 @@ struct WholeAstVisitor<'a> {
     under_function_or_class_body: bool,
     cx: &'a Context,
     rrid: Option<&'a type_::nominal::Id>,
-    hook_call_context: HookCallContext,
+    hook_call_context: Rc<Lazy<HookCallContext, Box<dyn FnOnce() -> HookCallContext + 'a>>>,
     in_context_possibly_expecting_fn_component_or_hook: bool,
 }
 
@@ -1341,7 +1343,7 @@ impl<'a> WholeAstVisitor<'a> {
             under_function_or_class_body,
             cx,
             rrid,
-            hook_call_context: initial_hook_call_context,
+            hook_call_context: Rc::new(Lazy::new(Box::new(move || initial_hook_call_context))),
             in_context_possibly_expecting_fn_component_or_hook: false,
         }
     }
@@ -1389,7 +1391,7 @@ impl<'a> WholeAstVisitor<'a> {
                 let Ok(()) = cav.predicate(predicate);
             }
         } else {
-            let cur_hook_call_context = self.hook_call_context;
+            let cur_hook_call_context = self.hook_call_context.dupe();
             let is_probably_function_component = id
                 .as_ref()
                 .map(|ident| componentlike_name(ident.name.as_str()))
@@ -1397,126 +1399,131 @@ impl<'a> WholeAstVisitor<'a> {
                 && params_list.len() <= 2
                 && rest.is_none();
 
-            let is_definitely_non_component_due_to_typing = || -> bool {
-                // Not returning `React.Node`
-                let ret_check = match return_ {
-                    ast::function::ReturnAnnot::Missing((_, t)) => {
-                        let reason = flow_typing_type::type_util::reason_of_t(t);
-                        let react_node_t = flow_js::get_builtin_react_type_non_speculating(
-                            self.cx,
-                            reason,
-                            None,
-                            intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactNodeType,
-                        );
-                        !flow_js::FlowJs::speculative_subtyping_succeeds(self.cx, t, &react_node_t)
-                    }
-                    ast::function::ReturnAnnot::Available(annot) => {
-                        let t = &annot.annotation.loc().1;
-                        let reason = flow_typing_type::type_util::reason_of_t(t);
-                        let react_node_t = flow_js::get_builtin_react_type_non_speculating(
-                            self.cx,
-                            reason,
-                            None,
-                            intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactNodeType,
-                        );
-                        !flow_js::FlowJs::speculative_subtyping_succeeds(self.cx, t, &react_node_t)
-                    }
-                    ast::function::ReturnAnnot::TypeGuard(_) => true,
-                };
-                ret_check
-                    || match params_list.deref() {
-                        // function Component() {...}
-                        [] => false,
-                        // function Component(props: {...})
-                        // forwardRef(props: {...}, ref: ...)
-                        [props_param] | [props_param, _] => match props_param {
-                            ast::function::Param::RegularParam { argument, .. } => {
-                                let (ref props_loc, ref props_t) = *argument.loc();
-                                let empty_iface = type_annotation::mk_empty_interface_type(
-                                    self.cx,
-                                    props_loc.dupe(),
-                                );
-                                !flow_js::FlowJs::speculative_subtyping_succeeds(
-                                    self.cx,
-                                    props_t,
-                                    &empty_iface,
-                                )
-                            }
-                            ast::function::Param::ParamProperty { .. } => true,
-                        },
-                        _ => true,
-                    }
-            };
-
-            let is_definitely_component_due_to_hint = || -> bool {
-                match loc_for_hint {
-                    None => false,
-                    Some(hint_loc) => {
-                        let lazy_hint = type_env::get_hint(self.cx, hint_loc.dupe());
-                        let reason = flow_common::reason::mk_reason(
-                            VirtualReasonDesc::RFunctionType,
-                            hint_loc,
-                        );
-                        match (lazy_hint.1)(true, Some(true), reason.dupe()) {
-                            type_::HintEvalResult::NoHint
-                            | type_::HintEvalResult::EncounteredPlaceholder
-                            | type_::HintEvalResult::DecompositionError => false,
-                            type_::HintEvalResult::HintAvailable(hint_t, _) => {
-                                match flow_js::FlowJs::singleton_concrete_type_for_inspection(
-                                    self.cx, &reason, &hint_t,
-                                ) {
-                                    Ok(t) => matches!(
-                                        t.deref(),
-                                        TypeInner::DefT(_, def_t) if matches!(
-                                            def_t.deref(),
-                                            flow_typing_type::type_::DefTInner::ReactAbstractComponentT { .. }
-                                        )
-                                    ),
-                                    Err(_) => false,
-                                }
-                            }
-                        }
-                    }
-                }
-            };
-
             let possibly_in_context_allow_hook_call = self
                 .in_context_possibly_expecting_fn_component_or_hook
                 || is_probably_function_component
                 || ast_utils::hook_function(fn_).is_some();
             let saved_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
             // Above, we pull out some reads of mutable class fields out of lazy block.
-            let next_hook_call_context = {
-                if possibly_in_context_allow_hook_call {
-                    if self.cx.hook_compatibility() || is_definitely_component_due_to_hint() {
-                        HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode
-                    } else if match id {
-                        None => false,
-                        Some(ident) => {
-                            ast_utils::hook_function(fn_).is_none()
-                                && componentlike_name(ident.name.as_str())
-                                && is_definitely_non_component_due_to_typing()
+
+            // Pre-extract owned data for lazy closure
+            let cx = self.cx;
+            let id_name = id.as_ref().map(|ident| ident.name.dupe());
+            let is_hook_function = ast_utils::hook_function(fn_).is_some();
+            // Return type data: None means TypeGuard (ret_check = true)
+            let return_t = match return_ {
+                ast::function::ReturnAnnot::Missing((_, t)) => Some(t.dupe()),
+                ast::function::ReturnAnnot::Available(annot) => {
+                    Some(annot.annotation.loc().1.dupe())
+                }
+                ast::function::ReturnAnnot::TypeGuard(_) => None,
+            };
+            // Params data for is_definitely_non_component_due_to_typing
+            let params_definitely_not_component = match params_list.deref() {
+                [] => false,
+                [p] | [p, _] => matches!(p, ast::function::Param::ParamProperty { .. }),
+                _ => true,
+            };
+            let props_data = match params_list.deref() {
+                [p] | [p, _] => match p {
+                    ast::function::Param::RegularParam { argument, .. } => {
+                        let (ref props_loc, ref props_t) = *argument.loc();
+                        Some((props_loc.dupe(), props_t.dupe()))
+                    }
+                    _ => None,
+                },
+                _ => None,
+            };
+
+            self.hook_call_context = Rc::new(Lazy::new(Box::new(move || {
+                let is_definitely_non_component_due_to_typing = || -> bool {
+                    // Not returning `React.Node`
+                    let ret_check = match &return_t {
+                        Some(t) => {
+                            let reason = flow_typing_type::type_util::reason_of_t(t);
+                            let react_node_t = flow_js::get_builtin_react_type_non_speculating(
+                                cx,
+                                reason,
+                                None,
+                                intermediate_error_types::ExpectedModulePurpose::ReactModuleForReactNodeType,
+                            );
+                            !flow_js::FlowJs::speculative_subtyping_succeeds(cx, t, &react_node_t)
                         }
-                    } {
+                        None => true, // TypeGuard
+                    };
+                    ret_check
+                        || params_definitely_not_component
+                        || match &props_data {
+                            // function Component(props: {...})
+                            // forwardRef(props: {...}, ref: ...)
+                            Some((props_loc, props_t)) => {
+                                let empty_iface =
+                                    type_annotation::mk_empty_interface_type(cx, props_loc.dupe());
+                                !flow_js::FlowJs::speculative_subtyping_succeeds(
+                                    cx,
+                                    props_t,
+                                    &empty_iface,
+                                )
+                            }
+                            None => false,
+                        }
+                };
+
+                let is_definitely_component_due_to_hint = || -> bool {
+                    match &loc_for_hint {
+                        None => false,
+                        Some(hint_loc) => {
+                            let lazy_hint = type_env::get_hint(cx, hint_loc.dupe());
+                            let reason = flow_common::reason::mk_reason(
+                                VirtualReasonDesc::RFunctionType,
+                                hint_loc.dupe(),
+                            );
+                            match (lazy_hint.1)(true, Some(true), reason.dupe()) {
+                                type_::HintEvalResult::NoHint
+                                | type_::HintEvalResult::EncounteredPlaceholder
+                                | type_::HintEvalResult::DecompositionError => false,
+                                type_::HintEvalResult::HintAvailable(hint_t, _) => {
+                                    match flow_js::FlowJs::singleton_concrete_type_for_inspection(
+                                        cx, &reason, &hint_t,
+                                    ) {
+                                        Ok(t) => matches!(
+                                            t.deref(),
+                                            TypeInner::DefT(_, def_t) if matches!(
+                                                def_t.deref(),
+                                                flow_typing_type::type_::DefTInner::ReactAbstractComponentT { .. }
+                                            )
+                                        ),
+                                        Err(_) => false,
+                                    }
+                                }
+                            }
+                        }
+                    }
+                };
+
+                if possibly_in_context_allow_hook_call {
+                    if cx.hook_compatibility() || is_definitely_component_due_to_hint() {
+                        HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode
+                    } else if id_name.as_ref().map_or(false, |name| {
+                        !is_hook_function
+                            && componentlike_name(name.as_str())
+                            && is_definitely_non_component_due_to_typing()
+                    }) {
                         HookCallContext::HookCallDefinitelyNotAllowed
                     } else {
                         HookCallContext::HookCallStrictlyDisallowedWithoutCompatibilityMode
                     }
-                } else if match id {
-                    None => false,
-                    Some(ident) => {
-                        !saved_in_context
-                            && ast_utils::hook_function(fn_).is_none()
-                            && (!componentlike_name(ident.name.as_str())
-                                || is_definitely_non_component_due_to_typing())
-                    }
-                } {
+                } else if id_name.as_ref().map_or(false, |name| {
+                    !saved_in_context
+                        && !is_hook_function
+                        && (!componentlike_name(name.as_str())
+                            || is_definitely_non_component_due_to_typing())
+                }) {
                     HookCallContext::HookCallDefinitelyNotAllowed
                 } else {
                     HookCallContext::HookCallNotAllowedUnderUnknownContext
                 }
-            };
-            self.hook_call_context = next_hook_call_context;
+            })));
             let Ok(()) = ast_visitor::function_default(self, &fn_.sig_loc, fn_);
             self.hook_call_context = cur_hook_call_context;
         }
@@ -1620,7 +1627,7 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
                     && bare_use(expr)
                     && self.under_function_or_class_body)
                 {
-                    match self.hook_call_context {
+                    match **self.hook_call_context {
                         HookCallContext::HookCallDefinitelyNotAllowed => {
                             hook_error(
                                 self.cx,
