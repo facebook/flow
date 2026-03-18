@@ -1478,100 +1478,87 @@ fn elab_t_concrete(cx: &Context, seen: FlowOrdSet<i32>, t: Type, op: Op) -> Type
         // ********************
         //  Type specialization
         // ********************
-        (TypeInner::AnyT(_, _), OpInner::AnnotSpecializeT { .. }) => t,
-        (TypeInner::DefT(_, def_t), OpInner::AnnotSpecializeT { types: None, .. })
-            if matches!(def_t.deref(), DefTInner::ClassT(_)) =>
-        {
-            t
-        }
         (
-            _,
+            TypeInner::DefT(_, def_t),
             OpInner::AnnotSpecializeT {
                 use_op,
                 reason,
                 reason2: reason_tapp,
                 types,
             },
-        ) => {
-            if let TypeInner::DefT(_, def_t) = t.deref() {
-                if let DefTInner::PolyT {
-                    tparams_loc,
-                    tparams: xs,
-                    t_out,
-                    id,
-                } = def_t.deref()
-                {
-                    let ts: Rc<[Type]> = types
-                        .as_ref()
-                        .map(|rc| rc.dupe())
-                        .unwrap_or_else(|| Rc::from([]));
-                    mk_typeapp_of_poly(
-                        cx,
-                        use_op.dupe(),
-                        reason.dupe(),
-                        reason_tapp.dupe(),
-                        id.clone(),
-                        tparams_loc.dupe(),
-                        xs.to_vec(),
-                        t_out.dupe(),
-                        ts,
-                    )
-                } else {
-                    error_unsupported(None, cx, type_util::reason_of_t(&t).dupe(), &op)
-                }
-            } else {
-                error_unsupported(None, cx, type_util::reason_of_t(&t).dupe(), &op)
-            }
+        ) if let DefTInner::PolyT {
+            tparams_loc,
+            tparams: xs,
+            t_out,
+            id,
+        } = def_t.deref() =>
+        {
+            let ts: Rc<[Type]> = types
+                .as_ref()
+                .map(|rc| rc.dupe())
+                .unwrap_or_else(|| Rc::from([]));
+            mk_typeapp_of_poly(
+                cx,
+                use_op.dupe(),
+                reason.dupe(),
+                reason_tapp.dupe(),
+                id.clone(),
+                tparams_loc.dupe(),
+                xs.to_vec(),
+                t_out.dupe(),
+                ts,
+            )
         }
-        (TypeInner::AnyT(_, _), OpInner::AnnotThisSpecializeT { reason, .. }) => {
-            reposition(cx, reason.loc().dupe(), t)
+        (TypeInner::DefT(_, def_t), OpInner::AnnotSpecializeT { types: None, .. })
+            if matches!(def_t.deref(), DefTInner::ClassT(_)) =>
+        {
+            t
         }
+        (TypeInner::AnyT(_, _), OpInner::AnnotSpecializeT { .. }) => t,
         (
-            _,
+            TypeInner::DefT(_, def_t),
             OpInner::AnnotThisSpecializeT {
                 reason,
                 type_: this,
             },
-        ) => {
-            if let TypeInner::DefT(_, def_t) = t.deref() {
-                if let DefTInner::ClassT(instance) = def_t.deref() {
-                    if let TypeInner::ThisInstanceT(box ThisInstanceTData {
-                        reason: r,
-                        instance: i,
-                        is_this: _,
-                        subst_name,
-                    }) = instance.deref()
-                    {
-                        let this_type = this.dupe();
-                        let map = flow_data_structure_wrapper::ord_map::FlowOrdMap::from_iter(
-                            std::iter::once((subst_name.clone(), this_type)),
-                        );
-                        let i = flow_typing_flow_common::type_subst::subst_instance_type(
-                            cx,
-                            None,
-                            false,
-                            false,
-                            flow_typing_flow_common::type_subst::Purpose::Normal,
-                            &map,
-                            i,
-                        );
-                        reposition(
-                            cx,
-                            reason.loc().dupe(),
-                            Type::new(TypeInner::DefT(
-                                r.dupe(),
-                                type_::DefT::new(DefTInner::InstanceT(Rc::new(i))),
-                            )),
-                        )
-                    } else {
-                        reposition(cx, reason.loc().dupe(), instance.dupe())
-                    }
-                } else {
-                    error_unsupported(None, cx, type_util::reason_of_t(&t).dupe(), &op)
-                }
-            } else {
-                error_unsupported(None, cx, type_util::reason_of_t(&t).dupe(), &op)
-            }
+        ) if let DefTInner::ClassT(instance) = def_t.deref()
+            && let TypeInner::ThisInstanceT(box ThisInstanceTData {
+                reason: r,
+                instance: i,
+                is_this: _,
+                subst_name,
+            }) = instance.deref() =>
+        {
+            let this_type = this.dupe();
+            let map = flow_data_structure_wrapper::ord_map::FlowOrdMap::from_iter(std::iter::once(
+                (subst_name.clone(), this_type),
+            ));
+            let i = flow_typing_flow_common::type_subst::subst_instance_type(
+                cx,
+                None,
+                false,
+                false,
+                flow_typing_flow_common::type_subst::Purpose::Normal,
+                &map,
+                i,
+            );
+            reposition(
+                cx,
+                reason.loc().dupe(),
+                Type::new(TypeInner::DefT(
+                    r.dupe(),
+                    type_::DefT::new(DefTInner::InstanceT(Rc::new(i))),
+                )),
+            )
+        }
+        // this-specialization of non-this-abstracted classes is a no-op
+        (TypeInner::DefT(_, def_t), OpInner::AnnotThisSpecializeT { reason, .. })
+            if let DefTInner::ClassT(instance) = def_t.deref() =>
+        {
+            reposition(cx, reason.loc().dupe(), instance.dupe())
+        }
+        (TypeInner::AnyT(_, _), OpInner::AnnotThisSpecializeT { reason, .. }) => {
+            reposition(cx, reason.loc().dupe(), t)
         }
 
         // *********************
@@ -1967,6 +1954,9 @@ fn elab_t_concrete(cx: &Context, seen: FlowOrdSet<i32>, t: Type, op: Op) -> Type
                         reason_op.dupe(),
                     )
                 }
+                // | (NamespaceT { namespace_symbol = _; values_type; types_tmap = _ }, _) ->
+                //     elab_t cx ~seen values_type op
+                TypeInner::NamespaceT(ns) => elab_t(cx, Some(seen), ns.values_type.dupe(), op),
                 _ => {
                     let reason_op_catch = op.reason();
                     let lower = (

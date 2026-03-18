@@ -107,6 +107,138 @@ where
     }
 }
 
+/// Read-only check: does the type contain any unconstrained tvars (tvars with no lower bounds)?
+///
+/// This mirrors the OCaml behavior where `fully_resolve_final_result` uses
+/// `raise UnconstrainedTvarException` in `no_lowers` to abort resolution immediately.
+/// In Rust we can't use exceptions, so we do a non-mutating pre-check instead.
+/// This prevents `resolved_t` from permanently mutating tvars to `FullyResolved(EmptyT)`
+/// when the result will be discarded anyway (DecompositionError).
+struct UnconstrainedChecker;
+
+impl TypeVisitor<(BTreeMap<i32, ()>, bool)> for UnconstrainedChecker {
+    fn type_(
+        &mut self,
+        cx: &Context,
+        pole: Polarity,
+        seen: (BTreeMap<i32, ()>, bool),
+        t: &Type,
+    ) -> (BTreeMap<i32, ()>, bool) {
+        if seen.1 {
+            return seen;
+        }
+        type_visitor::type_default(self, cx, pole, seen, t)
+    }
+
+    fn tvar(
+        &mut self,
+        cx: &Context,
+        pole: Polarity,
+        seen: (BTreeMap<i32, ()>, bool),
+        r: &Reason,
+        id: u32,
+    ) -> (BTreeMap<i32, ()>, bool) {
+        if seen.1 {
+            return seen;
+        }
+        let id = id as i32;
+        let (root_id, root) = cx.find_root(id);
+        match &root.constraints {
+            Constraints::FullyResolved(_) => seen,
+            Constraints::Unresolved(_) | Constraints::Resolved(_) => {
+                let (mut seen_tvars, _) = seen;
+                if seen_tvars.contains_key(&root_id) {
+                    return (seen_tvars, false);
+                }
+                seen_tvars.insert(root_id, ());
+                match flow_js_utils::merge_tvar_opt(cx, false, UnionKind::ResolvedKind, r, root_id)
+                {
+                    Some(t) => self.type_(cx, pole, (seen_tvars, false), &t),
+                    None => (seen_tvars, true),
+                }
+            }
+        }
+    }
+}
+
+pub fn has_unconstrained_tvars(cx: &Context, t: &Type) -> bool {
+    let mut checker = UnconstrainedChecker;
+    let (_, found) = checker.type_(cx, Polarity::Positive, (BTreeMap::new(), false), t);
+    found
+}
+
+/// Like `has_unconstrained_tvars`, but allows exempting certain unconstrained tvars
+/// based on their reason. This mirrors OCaml's `in_sandbox_cx` where `no_lowers` only
+/// raises `UnconstrainedTvarException` for non-exempt tvars (e.g., tvars whose reason
+/// is `RInferredUnionElemArray { is_empty = true }` are exempt and silently resolved
+/// to empty).
+struct UnconstrainedCheckerExcept<F: Fn(&Reason) -> bool> {
+    exempt: F,
+}
+
+impl<F: Fn(&Reason) -> bool> TypeVisitor<(BTreeMap<i32, ()>, bool)>
+    for UnconstrainedCheckerExcept<F>
+{
+    fn type_(
+        &mut self,
+        cx: &Context,
+        pole: Polarity,
+        seen: (BTreeMap<i32, ()>, bool),
+        t: &Type,
+    ) -> (BTreeMap<i32, ()>, bool) {
+        if seen.1 {
+            return seen;
+        }
+        type_visitor::type_default(self, cx, pole, seen, t)
+    }
+
+    fn tvar(
+        &mut self,
+        cx: &Context,
+        pole: Polarity,
+        seen: (BTreeMap<i32, ()>, bool),
+        r: &Reason,
+        id: u32,
+    ) -> (BTreeMap<i32, ()>, bool) {
+        if seen.1 {
+            return seen;
+        }
+        let id = id as i32;
+        let (root_id, root) = cx.find_root(id);
+        match &root.constraints {
+            Constraints::FullyResolved(_) => seen,
+            Constraints::Unresolved(_) | Constraints::Resolved(_) => {
+                let (mut seen_tvars, _) = seen;
+                if seen_tvars.contains_key(&root_id) {
+                    return (seen_tvars, false);
+                }
+                seen_tvars.insert(root_id, ());
+                match flow_js_utils::merge_tvar_opt(cx, false, UnionKind::ResolvedKind, r, root_id)
+                {
+                    Some(t) => self.type_(cx, pole, (seen_tvars, false), &t),
+                    None => {
+                        if (self.exempt)(r) {
+                            (seen_tvars, false)
+                        } else {
+                            (seen_tvars, true)
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub fn has_unconstrained_tvars_except(
+    cx: &Context,
+    t: &Type,
+    exempt: impl Fn(&Reason) -> bool,
+) -> bool {
+    let mut checker = UnconstrainedCheckerExcept { exempt };
+    let (_, found) = checker.type_(cx, Polarity::Positive, (BTreeMap::new(), false), t);
+    found
+}
+
 pub fn resolve<F>(cx: &Context, no_lowers: F, filter_empty: bool, t: &Type)
 where
     F: Fn(&Reason) -> Type,

@@ -396,7 +396,13 @@ fn __unify_inner(
                         for (k, _) in upmap.iter() {
                             all_keys.insert(k.dupe());
                         }
-                        for x in all_keys {
+                        // OCaml's Map.merge uses concat_or_join whose arguments are
+                        // evaluated right-to-left (ocamlopt), processing the right
+                        // (larger) subtree before the left (smaller) subtree. During
+                        // speculation, the first failing property raises an exception
+                        // and exits. To match OCaml's de facto behavior, iterate in
+                        // reverse (descending) order.
+                        for x in all_keys.into_iter().rev() {
                             if !flow_js_utils::is_dictionary_exempt(&x) {
                                 let lp = lpmap.get(&x);
                                 let up = upmap.get(&x);

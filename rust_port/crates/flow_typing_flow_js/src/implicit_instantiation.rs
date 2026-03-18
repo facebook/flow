@@ -125,7 +125,8 @@ fn generalize_singletons(
         t
     } else {
         let singleton_action = |loc: &flow_aloc::ALoc| {
-            if cx.is_primitive_literal_checked(loc) {
+            let checked = cx.is_primitive_literal_checked(loc);
+            if checked {
                 natural_inference::SingletonAction::KeepAsIs
             } else {
                 natural_inference::SingletonAction::DoNotKeep

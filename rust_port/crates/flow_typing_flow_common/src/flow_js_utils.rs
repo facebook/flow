@@ -464,9 +464,15 @@ pub fn update_lit_type_from_annot(cx: &Context, t: &Type) {
     match t.deref() {
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             DefTInner::SingletonStrT {
-                from_annot: false, ..
+                from_annot: false,
+                value: _,
+                ..
+            } => {
+                if cx.in_implicit_instantiation() {
+                    cx.record_primitive_literal_check(r.loc().dupe());
+                }
             }
-            | DefTInner::SingletonNumT {
+            DefTInner::SingletonNumT {
                 from_annot: false, ..
             }
             | DefTInner::SingletonBoolT {
