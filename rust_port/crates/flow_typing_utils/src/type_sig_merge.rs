@@ -3958,7 +3958,7 @@ fn merge_declare_class(
                 let pmap: type_::properties::PropertiesMap = own_props
                     .iter()
                     .map(|(k, prop)| {
-                        let p = merge_interface_prop(&env, file, &prop, false);
+                        let p = merge_interface_prop(&env, file, prop, false);
                         (Name::new(k.dupe()), p)
                     })
                     .collect();

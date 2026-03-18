@@ -160,7 +160,9 @@ fn is_var_kind(cx: &Context, k: ScopeKind) -> bool {
 }
 
 pub fn in_async_scope(cx: &Context) -> bool {
-    is_var_kind(cx, ScopeKind::Async) || is_var_kind(cx, ScopeKind::AsyncGenerator)
+    is_var_kind(cx, ScopeKind::Async)
+        || is_var_kind(cx, ScopeKind::AsyncGenerator)
+        || is_var_kind(cx, ScopeKind::AsyncComponentOrHookBody)
 }
 
 pub fn var_scope_kind(cx: &Context) -> ScopeKind {

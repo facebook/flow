@@ -1,0 +1,5 @@
+[options]
+component_syntax=true
+experimental.async_component_syntax=true
+all=true
+no_flowlib=false

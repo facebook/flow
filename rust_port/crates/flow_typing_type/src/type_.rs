@@ -358,6 +358,7 @@ impl Type {
     /// Returns a mutable reference to the inner TypeInner.
     /// If this Type's Rc has refcount == 1, mutates in place (no allocation).
     /// If refcount > 1, clones the inner value first (copy-on-write).
+    #[allow(dead_code)]
     pub(crate) fn make_mut(&mut self) -> &mut TypeInner {
         Rc::make_mut(&mut self.0)
     }
@@ -6142,6 +6143,13 @@ impl FlowSet {
         if top_idx == target {
             return;
         }
+        if target >= self.levels.len() {
+            // The cache was externally reset (e.g., via clear()) during
+            // speculation, destroying levels that callers still reference.
+            // The target level no longer exists; discard the top entries.
+            self.levels[top_idx].clear();
+            return;
+        }
         let entries = std::mem::take(&mut self.levels[top_idx]);
         let dest = &mut self.levels[target];
         for (l, us) in entries {
@@ -6151,12 +6159,15 @@ impl FlowSet {
 
     /// Clear a specific level's entries without removing it from the stack.
     pub fn clear_level(&mut self, index: usize) {
-        self.levels[index].clear();
+        if index < self.levels.len() {
+            self.levels[index].clear();
+        }
     }
 
     pub fn clear(&mut self) {
-        self.levels.clear();
-        self.levels.push(BTreeMap::new());
+        for level in &mut self.levels {
+            level.clear();
+        }
     }
 }
 

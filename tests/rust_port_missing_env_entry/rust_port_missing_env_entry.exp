@@ -1,0 +1,38 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:22:27
+
+Cannot call `[].concat` because property `concat` is missing in `Array` [1]. [prop-missing]
+
+   test.js:22:27
+   22|     this.#items[key] = [].concat(this.#getItems(key), values);
+                                 ^^^^^^
+
+References:
+   <BUILTINS>/prelude.js:30:15
+   30| declare class Array<T> extends $ReadOnlyArray<T> {
+                     ^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------------------------------- test.js:35:8
+
+Cannot call `this.#getItems(...).filter` because property `filter` is missing in `$ReadOnlyArray` [1]. [prop-missing]
+
+   test.js:35:8
+   35|       .filter(item => item.isAvailable?.(...context) ?? true)
+              ^^^^^^
+
+References:
+   test.js:41:6
+   41|   ): ReadonlyArray<TItems[TKey]> {
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:35:15
+
+An annotation on `item` is required because Flow cannot infer its type from local context. [missing-local-annot]
+
+   35|       .filter(item => item.isAvailable?.(...context) ?? true)
+                     ^^^^
+
+
+
+Found 3 errors

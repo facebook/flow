@@ -18,7 +18,6 @@ use flow_common::polarity::Polarity;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
-use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::intermediate_error_types;

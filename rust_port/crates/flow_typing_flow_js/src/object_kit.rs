@@ -18,7 +18,6 @@ use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_common::subst_name;
-use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_typing_context::Context;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;

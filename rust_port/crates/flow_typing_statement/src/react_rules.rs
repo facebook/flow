@@ -1504,7 +1504,7 @@ impl<'a> WholeAstVisitor<'a> {
                 if possibly_in_context_allow_hook_call {
                     if cx.hook_compatibility() || is_definitely_component_due_to_hint() {
                         HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode
-                    } else if id_name.as_ref().map_or(false, |name| {
+                    } else if id_name.as_ref().is_some_and(|name| {
                         !is_hook_function
                             && componentlike_name(name.as_str())
                             && is_definitely_non_component_due_to_typing()
@@ -1513,7 +1513,7 @@ impl<'a> WholeAstVisitor<'a> {
                     } else {
                         HookCallContext::HookCallStrictlyDisallowedWithoutCompatibilityMode
                     }
-                } else if id_name.as_ref().map_or(false, |name| {
+                } else if id_name.as_ref().is_some_and(|name| {
                     !saved_in_context
                         && !is_hook_function
                         && (!componentlike_name(name.as_str())

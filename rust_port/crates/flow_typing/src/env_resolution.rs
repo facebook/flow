@@ -2835,7 +2835,7 @@ pub fn resolve_component(
     graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
     component: &name_def_ordering::OrderingResult,
 ) {
-    *cx.constraint_cache_mut() = Default::default();
+    cx.constraint_cache_mut().clear();
     cx.eval_repos_cache_mut().clear();
 
     let resolve_illegal = |entries: &env_api::EnvSet<ALoc>| {

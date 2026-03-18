@@ -1,0 +1,40 @@
+Error ---------------------------------------------------------------------------------------------------- test.js:49:22
+
+Cannot assign object literal to `node` because property `children` is extra in object literal [1] but missing in
+`Node` [2]. Exact objects do not accept extra props. [incompatible-type]
+
+   test.js:49:22
+                            v
+   49|   const node: Node = {
+   50|     value: choose("a", "b"),
+   51|     children: [], // ERROR: property not in Node
+   52|   };
+         ^ [1]
+
+References:
+   test.js:49:15
+   49|   const node: Node = {
+                     ^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------------- test.js:49:22
+
+Cannot assign object literal to `node` because property `next` is missing in object literal [1] but exists in
+`Node` [2]. [incompatible-type]
+
+   test.js:49:22
+                            v
+   49|   const node: Node = {
+   50|     value: choose("a", "b"),
+   51|     children: [], // ERROR: property not in Node
+   52|   };
+         ^ [1]
+
+References:
+   test.js:49:15
+   49|   const node: Node = {
+                     ^^^^ [2]
+
+
+
+Found 2 errors

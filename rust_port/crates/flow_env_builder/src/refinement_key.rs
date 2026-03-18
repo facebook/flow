@@ -228,7 +228,7 @@ impl<L: Dupe> RefinementKey<L> {
     }
 
     pub fn reason_desc<DescL: Dupe>(&self) -> VirtualReasonDesc<DescL> {
-        let inner = if self.lookup.projections.is_empty() {
+        if self.lookup.projections.is_empty() {
             VirtualReasonDesc::RIdentifier(Name::new(self.lookup.base.dupe()))
         } else {
             // Get the last projection
@@ -242,8 +242,7 @@ impl<L: Dupe> RefinementKey<L> {
                     VirtualReasonDesc::RIdentifier(Name::new(self.lookup.base.dupe()))
                 }
             }
-        };
-        inner
+        }
     }
 }
 

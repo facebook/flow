@@ -1841,6 +1841,7 @@ impl<'a> DefFinder<'a> {
         };
 
         self.add_destructure_bindings(source, &(argument.loc().dupe(), argument.clone()));
+        let Ok(()) = ast_visitor::function_rest_param_default(self, rest_param);
     }
 
     fn visit_component_declaration(

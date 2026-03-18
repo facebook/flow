@@ -1923,7 +1923,6 @@ pub fn obj_key_mirror(
     use flow_typing_type::type_::ObjType;
     use flow_typing_type::type_::Property;
     use flow_typing_type::type_::PropertyInner;
-    use flow_typing_type::type_::properties::PropertiesMap;
     use flow_typing_type::type_util::optional;
 
     let map_t = |key: Type, t: &Type| -> Type {
