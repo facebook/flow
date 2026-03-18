@@ -31,7 +31,13 @@ module FlowConstraint = struct
       false
     | ( _,
         ( BindT _ | CallT _ | MethodT _ | PrivateMethodT _ | ConstructorT _ | LookupT _ | GetPropT _
-        | ObjRestT _ | ObjTestT _ | ArrRestT _ )
+        | ObjRestT _ | ObjTestT _ | ArrRestT _
+        (* The following use_t constructors have near-0% hit rate across a large
+         * codebase. Caching them wastes insertions with negligible benefit. *)
+        | ValueToTypeReferenceT _ | SpecializeT _ | EvalTypeDestructorT _ | ConcretizeTypeAppsT _
+        | ExtendsUseT _ | ResolveUnionT _ | ConditionalT _ | DeepReadOnlyT _ | ElemT _
+        (* Very low hit rate *)
+        | ReposLowerT _ | ObjKitT _ | HasOwnPropT _ )
       ) ->
       false
     | _ ->
