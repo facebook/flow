@@ -23,6 +23,14 @@ function getTestsDir(explicitlyProvided: ?string): string {
   }
 }
 
+function getCheckTestsDir(explicitlyProvided: ?string): string {
+  if (explicitlyProvided != null) {
+    return resolve(explicitlyProvided);
+  } else {
+    return join(FLOW_ROOT, 'tests');
+  }
+}
+
 const binOptions: Array<string> = [
   resolve(FLOW_ROOT, '../../buck-out/v2/gen/fbcode/flow/out/flow'), // Buck
   resolve(FLOW_ROOT, 'bin/flow'), // Open source build
@@ -34,6 +42,7 @@ const defaultFlowConfigName = '_flowconfig';
 module.exports = {
   defaultTestsDirName,
   getTestsDir,
+  getCheckTestsDir,
   binOptions,
   defaultFlowConfigName,
 };

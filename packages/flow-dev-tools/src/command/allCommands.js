@@ -12,6 +12,7 @@ import typeof Base from './Base';
 
 module.exports = ({
   'add-comments': () => require('../comment/add-commentsCommand'),
+  'check-test': () => require('../check-test/checkTestCommand'),
   'error-summary': () => require('../error-summary/error-summaryCommand'),
   help: () => require('../help/helpCommand'),
   'new-test': () => require('../new-test/new-testCommand'),

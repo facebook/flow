@@ -14,6 +14,7 @@ const Module = require("module");
 const packageRoot = path.resolve(__dirname, "..");
 const srcDir = path.resolve(packageRoot, "src");
 const newtestsDir = path.resolve(packageRoot, "..", "..", "newtests");
+const testsDir = path.resolve(packageRoot, "..", "..", "tests");
 
 // Resolve modules relative to this package, not the cwd
 const babel = require(require.resolve("@babel/core", { paths: [packageRoot] }));
@@ -22,7 +23,7 @@ const hermesParserPlugin = require.resolve("babel-plugin-syntax-hermes-parser", 
 
 const originalCompile = Module.prototype._compile;
 Module.prototype._compile = function (code, filename) {
-  if ((filename.startsWith(srcDir) || filename.startsWith(newtestsDir)) && filename.endsWith(".js")) {
+  if ((filename.startsWith(srcDir) || filename.startsWith(newtestsDir) || filename.startsWith(testsDir)) && filename.endsWith(".js")) {
     const result = babel.transformSync(code, {
       filename,
       presets: [presetFlow],
