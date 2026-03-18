@@ -1784,10 +1784,13 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
                     function_param_or_generic_type(env)
                 }
             }
-            TokenKind::TNew => match peek::ith_token(env, 1) {
-                TokenKind::TLessThan | TokenKind::TLparen => {
-                    Ok(ParamListOrType::Type(type_inner(env)?))
-                }
+            TokenKind::TNew
+            | TokenKind::TReadonly
+            | TokenKind::TKeyof
+            | TokenKind::TInfer
+            | TokenKind::TAsserts
+            | TokenKind::TIs
+            | TokenKind::TImplies => match peek::ith_token(env, 1) {
                 TokenKind::TPling | TokenKind::TColon => Ok(ParamListOrType::ParamList(
                     function_param_list_without_parens(env, Vec::new())?,
                 )),

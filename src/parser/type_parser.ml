@@ -1140,11 +1140,14 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         | T_LPAREN ->
           Type (_type env)
         | _ -> function_param_or_generic_type env)
-      | T_NEW ->
+      | T_NEW
+      | T_READONLY
+      | T_KEYOF
+      | T_INFER
+      | T_ASSERTS
+      | T_IS
+      | T_IMPLIES ->
         (match Peek.ith_token ~i:1 env with
-        | T_LESS_THAN
-        | T_LPAREN ->
-          Type (_type env)
         | T_PLING
         | T_COLON ->
           ParamList (function_param_list_without_parens env [])
