@@ -1831,14 +1831,23 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       in
       let t = ConsGen.get_prop cx use_op id_reason (OrdinaryName name) m in
       (t, Qualified ((loc, t), { qualification; id = ((id_loc, t), id_name) }))
-    | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) ->
-      let t =
-        if Type_inference_hooks_js.dispatch_id_hook cx name loc then
-          Unsoundness.at InferenceHooks loc
-        else
-          Type_env.get_var ~lookup_mode:ForTypeof cx name loc
-      in
-      (t, Unqualified ((loc, t), id_name))
+    | Unqualified (loc, ({ Ast.Identifier.name; comments = _ } as id_name)) as unqualified ->
+      if name = "this" && not (Context.tslib_syntax cx) then (
+        Flow.add_output
+          cx
+          (Error_message.EUnsupportedSyntax
+             (loc, Flow_intermediate_error_types.(TSLibSyntax TypeofThis))
+          );
+        let t = AnyT.at (AnyError None) loc in
+        (t, Tast_utils.error_mapper#typeof_expression unqualified)
+      ) else
+        let t =
+          if Type_inference_hooks_js.dispatch_id_hook cx name loc then
+            Unsoundness.at InferenceHooks loc
+          else
+            Type_env.get_var ~lookup_mode:ForTypeof cx name loc
+        in
+        (t, Unqualified ((loc, t), id_name))
     | Import (loc, { Ast.Type.Generic.Identifier.argument = (arg_loc, arg_lit); comments }) as
       import ->
       if not (Context.tslib_syntax cx) then (

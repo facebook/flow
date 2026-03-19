@@ -3401,28 +3401,46 @@ fn convert_typeof(
             (t, final_ast)
         }
         Target::Unqualified(ident) => {
-            let t = if flow_typing_flow_js::type_inference_hooks_js::dispatch_id_hook(
-                cx,
-                &ident.name,
-                ident.loc.dupe(),
-            ) {
-                type_::unsoundness::at(type_::UnsoundnessKind::InferenceHooks, ident.loc.dupe())
+            if ident.name == "this" && !cx.tslib_syntax() {
+                flow_js_utils::add_output_non_speculating(
+                    cx,
+                    ErrorMessage::EUnsupportedSyntax(
+                        ident.loc.dupe(),
+                        intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                            TsLibSyntaxKind::TypeofThis,
+                        ),
+                    ),
+                );
+                let t = type_::any_t::at(type_::AnySource::AnyError(None), ident.loc.dupe());
+                let Ok(mapped) = polymorphic_ast_mapper::typeof_expression(
+                    &mut typed_ast_utils::ErrorMapper,
+                    target,
+                );
+                (t, mapped)
             } else {
-                type_env::get_var(
-                    Some(type_env::LookupMode::ForTypeof),
+                let t = if flow_typing_flow_js::type_inference_hooks_js::dispatch_id_hook(
                     cx,
                     &ident.name,
                     ident.loc.dupe(),
+                ) {
+                    type_::unsoundness::at(type_::UnsoundnessKind::InferenceHooks, ident.loc.dupe())
+                } else {
+                    type_env::get_var(
+                        Some(type_env::LookupMode::ForTypeof),
+                        cx,
+                        &ident.name,
+                        ident.loc.dupe(),
+                    )
+                };
+                (
+                    t.dupe(),
+                    Target::Unqualified(ast::Identifier::new(ast::IdentifierInner {
+                        loc: (ident.loc.dupe(), t),
+                        name: ident.name.dupe(),
+                        comments: ident.comments.dupe(),
+                    })),
                 )
-            };
-            (
-                t.dupe(),
-                Target::Unqualified(ast::Identifier::new(ast::IdentifierInner {
-                    loc: (ident.loc.dupe(), t),
-                    name: ident.name.dupe(),
-                    comments: ident.comments.dupe(),
-                })),
-            )
+            }
         }
         Target::Import(import) => {
             if !cx.tslib_syntax() {

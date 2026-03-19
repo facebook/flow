@@ -195,6 +195,7 @@ pub enum TsLibSyntaxKind {
     NamespaceExportDeclaration,
     PrivateClassField,
     GenericTaggedTemplate,
+    TypeofThis,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

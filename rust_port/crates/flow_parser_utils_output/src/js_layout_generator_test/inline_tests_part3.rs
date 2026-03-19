@@ -889,6 +889,8 @@ fn type_() {
     assert_statement_string(false, None, "type a=typeof a;");
     assert_statement_string(true, None, "type a = typeof import(\"foo\");");
     assert_statement_string(true, None, "type a = typeof import(\"bar\").baz;");
+    assert_statement_string(true, None, "type a = typeof this;");
+    assert_statement_string(true, None, "type a = typeof this.property;");
     assert_statement_string(false, None, "type a=[a,b];");
     assert_statement_string(true, None, "type a = [a, b];");
     assert_statement_string(

@@ -595,18 +595,23 @@ fn typeof_import_expr(env: &mut ParserEnv) -> Result<types::typeof_::Target<Loc,
 
 fn typeof_arg(env: &mut ParserEnv) -> Result<Option<types::typeof_::Target<Loc, Loc>>, Rollback> {
     eat::push_lex_mode(env, LexMode::Normal);
-    let result = if peek::token(env) == &TokenKind::TLparen {
-        eat::token(env)?;
-        let typeof_result = typeof_arg(env)?;
-        expect::token(env, TokenKind::TRparen)?;
-        typeof_result
-    } else if peek::token(env) == &TokenKind::TImport {
-        Some(typeof_import_expr(env)?)
-    } else if peek::is_identifier(env) {
-        Some(typeof_expr(env)?)
-    } else {
-        env.error(ParseError::InvalidTypeof)?;
-        None
+    let result = match peek::token(env).clone() {
+        TokenKind::TLparen => {
+            eat::token(env)?;
+            let typeof_result = typeof_arg(env)?;
+            expect::token(env, TokenKind::TRparen)?;
+            typeof_result
+        }
+        TokenKind::TImport => Some(typeof_import_expr(env)?),
+        TokenKind::TThis => {
+            let id = parser_common::identifier_name(env)?;
+            Some(raw_typeof_expr_with_identifier(env, id)?)
+        }
+        _ if peek::is_identifier(env) => Some(typeof_expr(env)?),
+        _ => {
+            env.error(ParseError::InvalidTypeof)?;
+            None
+        }
     };
     eat::pop_lex_mode(env);
     Ok(result)

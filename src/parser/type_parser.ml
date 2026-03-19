@@ -398,19 +398,18 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
   and typeof_arg env =
     Eat.push_lex_mode env Lex_mode.NORMAL;
     let result =
-      if Peek.token env = T_LPAREN then (
+      match Peek.token env with
+      | T_LPAREN ->
         Eat.token env;
         let typeof = typeof_arg env in
         Expect.token env T_RPAREN;
         typeof
-      ) else if Peek.token env = T_IMPORT then
-        Some (typeof_import_expr env)
-      else if Peek.is_identifier env then
-        Some (typeof_expr env)
-      else (
+      | T_IMPORT -> Some (typeof_import_expr env)
+      | T_THIS -> Some (raw_typeof_expr_with_identifier env (identifier_name env))
+      | _ when Peek.is_identifier env -> Some (typeof_expr env)
+      | _ ->
         error env Parse_error.InvalidTypeof;
         None
-      )
     in
     Eat.pop_lex_mode env;
     result

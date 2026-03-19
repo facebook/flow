@@ -102,3 +102,7 @@ declare class PCF {
 // Generic tagged template
 declare const tag: any;
 tag<string>`hello`; // ERROR
+
+// Typeof this
+type TT = typeof this; // ERROR
+type TTP = typeof this.property; // ERROR

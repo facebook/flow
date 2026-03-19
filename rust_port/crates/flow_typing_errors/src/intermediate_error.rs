@@ -8467,6 +8467,7 @@ where
                             GenericTaggedTemplate => {
                                 "Type arguments for tagged template expression"
                             }
+                            TypeofThis => "`typeof this` syntax",
                         };
                         friendly::Message(vec![text(kind_str), text(" is not enabled.")])
                     }

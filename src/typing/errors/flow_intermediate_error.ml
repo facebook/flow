@@ -5216,6 +5216,7 @@ let to_printable_error :
         | NamespaceExportDeclaration -> "`export as namespace`"
         | PrivateClassField -> "Private class field (`#private`)"
         | GenericTaggedTemplate -> "Type arguments for tagged template expression"
+        | TypeofThis -> "`typeof this` syntax"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

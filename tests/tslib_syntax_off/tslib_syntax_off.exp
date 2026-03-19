@@ -277,5 +277,21 @@ Type arguments for tagged template expression is not enabled. [unsupported-synta
         ^^^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------------- test.js.flow:107:18
 
-Found 34 errors
+`typeof this` syntax is not enabled. [unsupported-syntax]
+
+   107| type TT = typeof this; // ERROR
+                         ^^^^
+
+
+Error ---------------------------------------------------------------------------------------------- test.js.flow:108:19
+
+`typeof this` syntax is not enabled. [unsupported-syntax]
+
+   108| type TTP = typeof this.property; // ERROR
+                          ^^^^
+
+
+
+Found 36 errors

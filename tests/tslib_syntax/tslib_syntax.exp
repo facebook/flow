@@ -391,6 +391,40 @@ References:
                        ^ [1]
 
 
+Error ---------------------------------------------------------------------------------------------- typeof_this.js:15:1
+
+Cannot cast `obj.method()` to empty because `MyClass` [1] is incompatible with empty [2]. [incompatible-type]
+
+   typeof_this.js:15:1
+   15| obj.method() as empty; // ERROR
+       ^^^^^^^^^^^^
+
+References:
+   typeof_this.js:5:13
+    5|   method(): typeof this {
+                   ^^^^^^^^^^^ [1]
+   typeof_this.js:15:17
+   15| obj.method() as empty; // ERROR
+                       ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------------- typeof_this.js:16:1
+
+Cannot cast `obj.getX()` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   typeof_this.js:16:1
+   16| obj.getX() as empty; // ERROR
+       ^^^^^^^^^^
+
+References:
+   typeof_this.js:9:11
+    9|   getX(): typeof this.x {
+                 ^^^^^^^^^^^^^ [1]
+   typeof_this.js:16:15
+   16| obj.getX() as empty; // ERROR
+                     ^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------------- unique_symbol.js:7:1
 
 Cannot cast `x` to empty because symbol [1] is incompatible with empty [2]. [incompatible-type]
@@ -409,4 +443,4 @@ References:
 
 
 
-Found 29 errors
+Found 31 errors
