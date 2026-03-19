@@ -189,7 +189,7 @@ pub mod layout_builder {
                     if is_program_loc(loc) {
                         PrinterPos::Phrase(format!("program {}", helper(i, child)))
                     } else {
-                        let loc_str = if loc.to_loc_exn() == LOC_NONE {
+                        let loc_str = if *loc.to_loc_exn() == LOC_NONE {
                             String::new()
                         } else {
                             format!(" ~loc:{}", string_of_loc(loc))
@@ -241,7 +241,7 @@ pub mod layout_builder {
                 Atom(s) if s == " " => PrinterPos::Word("space".to_string()),
                 Atom(s) => PrinterPos::Phrase(format!("atom {:?}", s)),
                 Identifier(loc, s) => {
-                    let loc_str = if loc.to_loc_exn() == LOC_NONE {
+                    let loc_str = if *loc.to_loc_exn() == LOC_NONE {
                         String::new()
                     } else {
                         format!(" ~loc:{}", string_of_loc(loc))

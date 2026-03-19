@@ -12989,7 +12989,7 @@ fn jsx_body(
 }
 
 fn jsx_trim_text(loc: ALoc, value: &str) -> Option<Type> {
-    flow_common_utils::utils_jsx::trim_jsx_text(loc.to_loc_exn(), value).map(
+    flow_common_utils::utils_jsx::trim_jsx_text(loc.to_loc_exn().dupe(), value).map(
         |(trimmed_loc, trimmed)| {
             Type::new(TypeInner::DefT(
                 mk_reason(VirtualReasonDesc::RJSXText, ALoc::of_loc(trimmed_loc)),

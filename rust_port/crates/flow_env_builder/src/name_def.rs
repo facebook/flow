@@ -3420,8 +3420,11 @@ impl<'a> DefFinder<'a> {
             .iter()
             .filter(|child| match child {
                 ast::jsx::Child::Text { loc, inner } => {
-                    flow_common_utils::utils_jsx::trim_jsx_text(loc.to_loc_exn(), &inner.value)
-                        .is_some()
+                    flow_common_utils::utils_jsx::trim_jsx_text(
+                        loc.to_loc_exn().dupe(),
+                        &inner.value,
+                    )
+                    .is_some()
                 }
                 _ => true,
             })

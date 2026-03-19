@@ -241,7 +241,7 @@ impl SharedMem {
             Some(s) => s.dupe(),
             // Concrete ALocs (from ALoc::of_loc) may not have a source.
             // Fall back to to_loc_exn which handles concrete ALocs directly.
-            None => return aloc.to_loc_exn(),
+            None => return aloc.to_loc_exn().dupe(),
         };
         // Try to get the aloc table. For files that failed parsing (e.g., parse errors),
         // there may be no typed parse and hence no aloc table. In that case, the ALoc
@@ -254,7 +254,7 @@ impl SharedMem {
                     as Box<dyn FnOnce() -> Rc<ALocTable>>));
                 aloc.to_loc(&lazy_table)
             }
-            None => aloc.to_loc_exn(),
+            None => aloc.to_loc_exn().dupe(),
         }
     }
 

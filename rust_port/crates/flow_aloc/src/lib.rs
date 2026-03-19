@@ -185,11 +185,11 @@ impl ALoc {
         }
     }
 
-    pub fn to_loc_exn(&self) -> Loc {
+    pub fn to_loc_exn(&self) -> &Loc {
         if self.is_keyed() {
             panic!("loc must be concrete")
         } else {
-            self.0.dupe()
+            &self.0
         }
     }
 
@@ -205,13 +205,11 @@ impl ALoc {
                 panic!("to_loc_safe: File mismatch between location and table")
             }
         } else {
-            self.to_loc_exn()
+            self.to_loc_exn().dupe()
         }
     }
 
     pub fn to_loc_with_tables(&self, tables: &HashMap<FileKey, LazyALocTable>) -> Loc {
-        // OCaml: let aloc_table = lazy (... Lazy.force (FilenameMap.find source tables)) in
-        //        to_loc aloc_table loc
         if self.is_keyed() {
             let source = self
                 .source()
@@ -219,7 +217,7 @@ impl ALoc {
             let table = tables.get(source).expect("Table not found for source");
             self.to_loc(table)
         } else {
-            self.to_loc_exn()
+            self.to_loc_exn().dupe()
         }
     }
 
@@ -382,7 +380,7 @@ impl LocSig for ALoc {
             format!("{}{}", source_str, key)
         } else {
             let loc = self.to_loc_exn();
-            LocSig::debug_to_string(&loc, include_source)
+            LocSig::debug_to_string(loc, include_source)
         }
     }
 }
@@ -406,7 +404,7 @@ impl ALocId {
                 let loc = aloc.to_loc_exn();
                 match table
                     .locs
-                    .binary_search_by(|probe| packed_locs::compare_locs(probe, &loc))
+                    .binary_search_by(|probe| packed_locs::compare_locs(probe, loc))
                 {
                     Ok(key) => match aloc.source() {
                         Some(_) => ALocId(ALoc::of_key(loc.source.dupe(), Key(key as u32))),

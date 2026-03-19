@@ -482,7 +482,7 @@ pub fn covered_types(
         }
     };
     let step = |loc: &ALoc, t: &FlowType, acc: &mut Vec<(Loc, Kind)>| {
-        acc.push((loc.to_loc_exn(), compute_cov(t)));
+        acc.push((loc.to_loc_exn().dupe(), compute_cov(t)));
     };
     let mut result = coverage_fold_tast(step, Vec::new(), tast);
     result.sort_by(|(a, _), (b, _)| a.cmp(b));
