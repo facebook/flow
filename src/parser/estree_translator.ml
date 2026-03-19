@@ -2094,12 +2094,16 @@ with type t = Impl.t = struct
         ) =
       let value = obj [("raw", string raw); ("cooked", string cooked)] in
       node "TemplateElement" loc [("value", value); ("tail", bool tail)]
-    and tagged_template (loc, { Expression.TaggedTemplate.tag; quasi; comments }) =
+    and tagged_template (loc, { Expression.TaggedTemplate.tag; targs; quasi; comments }) =
       node
         ?comments
         "TaggedTemplateExpression"
         loc
-        [("tag", expression tag); ("quasi", template_literal quasi)]
+        [
+          ("tag", expression tag);
+          ("typeArguments", option call_type_args targs);
+          ("quasi", template_literal quasi);
+        ]
     and variable_declaration (loc, { Statement.VariableDeclaration.kind; declarations; comments }) =
       let kind = Flow_ast_utils.string_of_variable_kind kind in
       node

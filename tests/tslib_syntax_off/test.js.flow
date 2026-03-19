@@ -98,3 +98,7 @@ type PR<T> = { +readonly [P in keyof T]: T[P] }; // ERROR
 declare class PCF {
   #private; // ERROR
 }
+
+// Generic tagged template
+declare const tag: any;
+tag<string>`hello`; // ERROR

@@ -3275,6 +3275,7 @@ let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
   | E.TaggedTemplate
       {
         E.TaggedTemplate.tag = (_, E.Identifier (_, { Ast.Identifier.name = "graphql"; _ }));
+        targs = _;
         quasi;
         comments = _;
       }

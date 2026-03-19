@@ -1284,6 +1284,22 @@ pub(super) fn call_cover(
                                     && should_parse_record(env, &callee)
                                 {
                                     parse_record(env, start_loc, callee, targs)
+                                } else if let TokenKind::TTemplatePart(part) = peek::token(env) {
+                                    let part = part.clone();
+                                    let expr = tagged_template(
+                                        env,
+                                        targs,
+                                        start_loc.dupe(),
+                                        callee,
+                                        part,
+                                    )?;
+                                    call_cover(
+                                        env,
+                                        true,
+                                        false,
+                                        start_loc,
+                                        PatternCover::CoverExpr(expr),
+                                    )
                                 } else {
                                     arguments_helper(
                                         env,
@@ -1380,7 +1396,7 @@ fn new_expression(env: &mut ParserEnv) -> Result<expression::Expression<Loc, Loc
             let mut callee = match peek::token(env) {
                 TokenKind::TTemplatePart(part) => {
                     let part = part.clone();
-                    tagged_template(env, callee_loc, callee, part)?
+                    tagged_template(env, None, callee_loc, callee, part)?
                 }
                 _ => callee,
             };
@@ -1794,7 +1810,7 @@ fn member_cover(
                 env.error(ParseError::OptionalChainTemplate)?;
             }
             let tag = as_expression(env, left)?;
-            let expr = tagged_template(env, start_loc.dupe(), tag, part)?;
+            let expr = tagged_template(env, None, start_loc.dupe(), tag, part)?;
             call_cover(env, true, false, start_loc, PatternCover::CoverExpr(expr))
         }
         _ => Ok(left),
@@ -2522,6 +2538,7 @@ fn template_literal(
 
 fn tagged_template(
     env: &mut ParserEnv,
+    targs: Option<expression::CallTypeArgs<Loc, Loc>>,
     start_loc: Loc,
     mut tag: expression::Expression<Loc, Loc>,
     part: TemplatePart,
@@ -2534,6 +2551,7 @@ fn tagged_template(
             loc,
             inner: Arc::new(expression::TaggedTemplate {
                 tag,
+                targs,
                 quasi: (quasi_loc, quasi),
                 comments: None,
             }),

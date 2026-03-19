@@ -342,7 +342,7 @@ class requires_calculator ~file_key ~ast ~opts =
 
     method! tagged_template loc (expr : ('loc, 'loc) Ast.Expression.TaggedTemplate.t) =
       let open Ast.Expression.TaggedTemplate in
-      let { tag; quasi; comments = _ } = expr in
+      let { tag; targs = _; quasi; comments = _ } = expr in
       match tag with
       | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "graphql"; _ }))
         when opts.enable_relay_integration ->

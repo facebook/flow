@@ -142,6 +142,7 @@ and ts_lib_syntax_kind =
   | OptionalIndexer
   | NamespaceExportDeclaration
   | PrivateClassField
+  | GenericTaggedTemplate
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

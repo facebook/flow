@@ -1792,8 +1792,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (t_tmpl1 : (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t)
       (t_tmpl2 : (Loc.t, Loc.t) Ast.Expression.TaggedTemplate.t) : node change list =
     let open Ast.Expression.TaggedTemplate in
-    let { tag = tag1; quasi = (quasi_loc1, quasi1); comments = comments1 } = t_tmpl1 in
-    let { tag = tag2; quasi = (quasi_loc2, quasi2); comments = comments2 } = t_tmpl2 in
+    let { tag = tag1; targs = targs1; quasi = (quasi_loc1, quasi1); comments = comments1 } =
+      t_tmpl1
+    in
+    let { tag = tag2; targs = targs2; quasi = (quasi_loc2, quasi2); comments = comments2 } =
+      t_tmpl2
+    in
     let tag_diff =
       diff_if_changed
         (expression
@@ -1802,9 +1806,12 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
         tag1
         tag2
     in
+    let targs_diff =
+      diff_if_changed_opt call_type_args targs1 targs2 |> Base.Option.value ~default:[]
+    in
     let quasi_diff = diff_if_changed (template_literal quasi_loc1 quasi_loc2) quasi1 quasi2 in
     let comments_diff = syntax_opt loc comments1 comments2 |> Base.Option.value ~default:[] in
-    Base.List.concat [tag_diff; quasi_diff; comments_diff]
+    Base.List.concat [tag_diff; targs_diff; quasi_diff; comments_diff]
   and template_literal
       (loc1 : Loc.t)
       (loc2 : Loc.t)

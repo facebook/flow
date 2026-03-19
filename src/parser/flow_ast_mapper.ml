@@ -3807,14 +3807,15 @@ class ['loc] mapper =
 
     method tagged_template _loc (expr : ('loc, 'loc) Ast.Expression.TaggedTemplate.t) =
       let open Ast.Expression.TaggedTemplate in
-      let { tag; quasi; comments } = expr in
+      let { tag; targs; quasi; comments } = expr in
       let tag' = this#expression tag in
+      let targs' = map_opt this#call_type_args targs in
       let quasi' = map_loc this#template_literal quasi in
       let comments' = this#syntax_opt comments in
-      if tag == tag' && quasi == quasi' && comments == comments' then
+      if tag == tag' && targs == targs' && quasi == quasi' && comments == comments' then
         expr
       else
-        { tag = tag'; quasi = quasi'; comments = comments' }
+        { tag = tag'; targs = targs'; quasi = quasi'; comments = comments' }
 
     method template_literal _loc (expr : ('loc, 'loc) Ast.Expression.TemplateLiteral.t) =
       let open Ast.Expression.TemplateLiteral in

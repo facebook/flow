@@ -4562,6 +4562,10 @@ fn tagged_template(
         vec![
             ("tag", expression(offset_table, config, &tagged.tag)),
             (
+                "typeArguments",
+                option(&tagged.targs, |t| call_type_args(offset_table, config, t)),
+            ),
+            (
                 "quasi",
                 template_literal(offset_table, config, &tagged.quasi.0, &tagged.quasi.1),
             ),

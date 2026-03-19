@@ -118,6 +118,23 @@ Destructuring is not supported in `declare` variable declarations. [unsupported-
                      ^^^
 
 
+Error ----------------------------------------------------------------------------------- generic_tagged_template.js:4:1
+
+Cannot cast template string to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   generic_tagged_template.js:4:1
+   4| tag<number>`hello` as empty; // ERROR
+      ^^^^^^^^^^^^^^^^^^
+
+References:
+   generic_tagged_template.js:4:5
+   4| tag<number>`hello` as empty; // ERROR
+          ^^^^^^ [1]
+   generic_tagged_template.js:4:23
+   4| tag<number>`hello` as empty; // ERROR
+                            ^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------- mapped_type_variance_op.js:7:5
 
 Cannot assign `3` to `pro.foo` because property `foo` is not writable. [cannot-write]
@@ -392,4 +409,4 @@ References:
 
 
 
-Found 28 errors
+Found 29 errors

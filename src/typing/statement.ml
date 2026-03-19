@@ -4048,6 +4048,7 @@ module Make
     | TaggedTemplate
         {
           TaggedTemplate.tag = (_, Identifier (_, { Ast.Identifier.name = "graphql"; _ })) as tag;
+          targs;
           quasi;
           comments;
         }
@@ -4094,21 +4095,38 @@ module Make
           AnyT.error reason
       in
       let tag_ast = expression cx tag in
+      let (_, targs_ast) = convert_call_targs_opt cx targs in
       let quasi_ast =
         let (quasi_loc, { TemplateLiteral.quasis; expressions; comments }) = quasi in
         let expressions = Base.List.map ~f:(expression cx) expressions in
         (quasi_loc, { TemplateLiteral.quasis; expressions; comments })
       in
-      ((loc, t), TaggedTemplate { TaggedTemplate.tag = tag_ast; quasi = quasi_ast; comments })
+      ( (loc, t),
+        TaggedTemplate
+          { TaggedTemplate.tag = tag_ast; targs = targs_ast; quasi = quasi_ast; comments }
+      )
+    | TaggedTemplate { TaggedTemplate.tag = _; targs = Some _; quasi = _; comments = _ }
+      when not (Context.tslib_syntax cx) ->
+      Flow_js_utils.add_output
+        cx
+        (Error_message.EUnsupportedSyntax
+           ( loc,
+             Flow_intermediate_error_types.TSLibSyntax
+               Flow_intermediate_error_types.GenericTaggedTemplate
+           )
+        );
+      Tast_utils.error_mapper#expression ex
     | TaggedTemplate
         {
           TaggedTemplate.tag;
+          targs;
           (* TODO: walk quasis? *)
           quasi = (quasi_loc, { TemplateLiteral.quasis; expressions; comments = quasi_comments });
           comments = tagged_template_comments;
         } ->
       let expressions = Base.List.map ~f:(expression cx) expressions in
       let (((_, t), _) as tag_ast) = expression cx tag in
+      let (targts, targs_ast) = convert_call_targs_opt cx targs in
       let reason = mk_reason (RCustom "encaps tag") loc in
       let reason_array = replace_desc_reason RArray reason in
       let ret = (reason, Tvar.mk_no_wrap cx reason) in
@@ -4119,7 +4137,7 @@ module Make
           let exprs_t = Base.List.map ~f:(fun ((_, t), _) -> Arg t) expressions in
           Arg quasi_t :: exprs_t
         in
-        let ft = mk_functioncalltype reason None args ret in
+        let ft = mk_functioncalltype reason targts args ret in
         let use_op =
           Op
             (FunCall
@@ -4140,6 +4158,7 @@ module Make
         TaggedTemplate
           {
             TaggedTemplate.tag = tag_ast;
+            targs = targs_ast;
             quasi = (quasi_loc, { TemplateLiteral.quasis; expressions; comments = quasi_comments });
             comments = tagged_template_comments;
           }

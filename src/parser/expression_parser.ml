@@ -881,6 +881,9 @@ module Expression
             match Peek.token env with
             | T_LCURLY when should_parse_record env callee ->
               parse_record env ~constructor:callee ~targs
+            | T_TEMPLATE_PART part ->
+              let expr = tagged_template ?targs env start_loc callee part in
+              call_cover ~allow_optional_chain:true env start_loc (Cover_expr expr)
             | _ -> arguments ?targs env callee
         )
       | _ -> left
@@ -1634,11 +1637,11 @@ module Expression
         }
       )
 
-  and tagged_template env start_loc tag part =
+  and tagged_template ?targs env start_loc tag part =
     let tag = expression_remove_trailing env tag in
     let quasi = template_literal env part in
     ( Loc.btwn start_loc (fst quasi),
-      Expression.(TaggedTemplate TaggedTemplate.{ tag; quasi; comments = None })
+      Expression.(TaggedTemplate TaggedTemplate.{ tag; targs; quasi; comments = None })
     )
 
   and group env =

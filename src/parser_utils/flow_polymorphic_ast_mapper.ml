@@ -3099,11 +3099,12 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method tagged_template (expr : ('M, 'T) Ast.Expression.TaggedTemplate.t)
         : ('N, 'U) Ast.Expression.TaggedTemplate.t =
       let open Ast.Expression.TaggedTemplate in
-      let { tag; quasi; comments } = expr in
+      let { tag; targs; quasi; comments } = expr in
       let tag' = this#expression tag in
+      let targs' = Option.map ~f:this#call_type_args targs in
       let quasi' = (this#on_loc_annot * this#template_literal) quasi in
       let comments' = this#syntax_opt comments in
-      { tag = tag'; quasi = quasi'; comments = comments' }
+      { tag = tag'; targs = targs'; quasi = quasi'; comments = comments' }
 
     method template_literal (expr : ('M, 'T) Ast.Expression.TemplateLiteral.t)
         : ('N, 'U) Ast.Expression.TemplateLiteral.t =

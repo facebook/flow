@@ -703,7 +703,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
 
     method! tagged_template expr =
       let open Ast.Expression.TaggedTemplate in
-      let { tag; quasi = (quasi_loc, _); comments = _ } = expr in
+      let { tag; targs = _; quasi = (quasi_loc, _); comments = _ } = expr in
       match tag with
       | (_, Ast.Expression.Identifier (_, { Ast.Identifier.name = "graphql"; _ }))
         when covers_target quasi_loc ->

@@ -1601,6 +1601,7 @@ and Expression : sig
   module TaggedTemplate : sig
     type ('M, 'T) t = {
       tag: ('M, 'T) Expression.t;
+      targs: ('M, 'T) Expression.CallTypeArgs.t option;
       quasi: 'M * ('M, 'T) TemplateLiteral.t;
       comments: ('M, unit) Syntax.t option;
     }

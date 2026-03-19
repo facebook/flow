@@ -2705,15 +2705,15 @@ fn tagged_template(
 ) -> Vec<NodeChange> {
     let expression::TaggedTemplate {
         tag: tag1,
+        targs: targs1,
         quasi: (quasi_loc1, quasi1),
         comments: comments1,
-        ..
     } = t1;
     let expression::TaggedTemplate {
         tag: tag2,
+        targs: targs2,
         quasi: (quasi_loc2, quasi2),
         comments: comments2,
-        ..
     } = t2;
     let parent = ExpressionNodeParent::ExpressionParentOfExpression(expression::Expression::new(
         ExpressionInner::TaggedTemplate {
@@ -2722,6 +2722,7 @@ fn tagged_template(
         },
     ));
     let tag_diff = diff_if_changed(|t1, t2| expression(&parent, t1, t2), tag1, tag2);
+    let targs_diff = diff_if_changed_opt(call_type_args, targs1, targs2).unwrap_or_default();
     let quasi_diff = diff_if_changed(
         |q1, q2| template_literal(quasi_loc1, quasi_loc2, q1, q2),
         quasi1,
@@ -2729,6 +2730,7 @@ fn tagged_template(
     );
     let comments_diff = syntax_opt(loc, comments1, comments2).unwrap_or_default();
     let mut result = tag_diff;
+    result.extend(targs_diff);
     result.extend(quasi_diff);
     result.extend(comments_diff);
     result

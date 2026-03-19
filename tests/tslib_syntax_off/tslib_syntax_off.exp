@@ -269,5 +269,13 @@ Private class field (`#private`) is not enabled. [unsupported-syntax]
          ^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:104:1
 
-Found 33 errors
+Type arguments for tagged template expression is not enabled. [unsupported-syntax]
+
+   104| tag<string>`hello`; // ERROR
+        ^^^^^^^^^^^^^^^^^^
+
+
+
+Found 34 errors

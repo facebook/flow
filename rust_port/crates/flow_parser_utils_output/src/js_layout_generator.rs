@@ -2033,6 +2033,10 @@ pub(crate) fn expression(
                     inner.comments.as_ref(),
                     fuse(vec![
                         expression_with_parens(opts, precedence, &ctxt, &inner.tag),
+                        option_layout(
+                            |targs| call_type_args(opts, "<", targs),
+                            inner.targs.as_ref(),
+                        ),
                         source_location_with_comments(
                             template_loc,
                             template.comments.as_ref(),

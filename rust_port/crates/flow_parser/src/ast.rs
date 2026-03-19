@@ -2207,6 +2207,7 @@ pub mod expression {
     #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
     pub struct TaggedTemplate<M: Dupe, T: Dupe> {
         pub tag: Expression<M, T>,
+        pub targs: Option<CallTypeArgs<M, T>>,
         pub quasi: (M, TemplateLiteral<M, T>),
         pub comments: Option<Syntax<M, ()>>,
     }

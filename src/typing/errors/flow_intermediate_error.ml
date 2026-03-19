@@ -5215,6 +5215,7 @@ let to_printable_error :
         | OptionalIndexer -> "Optional indexer (`?:`)"
         | NamespaceExportDeclaration -> "`export as namespace`"
         | PrivateClassField -> "Private class field (`#private`)"
+        | GenericTaggedTemplate -> "Type arguments for tagged template expression"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

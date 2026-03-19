@@ -7123,6 +7123,7 @@ fn expression_(
                 }
             };
             let tag_ast = expression(None, None, None, cx, &inner.tag)?;
+            let (_, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref());
             let (quasi_loc, quasi) = &inner.quasi;
             let expressions: Vec<_> = quasi
                 .expressions
@@ -7133,6 +7134,7 @@ fn expression_(
                 loc: (loc, t),
                 inner: expression::TaggedTemplate {
                     tag: tag_ast,
+                    targs: targs_ast,
                     quasi: (
                         quasi_loc.dupe(),
                         expression::TemplateLiteral {
@@ -7146,6 +7148,22 @@ fn expression_(
                 .into(),
             })
         }
+        ExpressionInner::TaggedTemplate { inner, .. }
+            if inner.targs.is_some() && !cx.tslib_syntax() =>
+        {
+            flow_js::add_output_non_speculating(
+                cx,
+                ErrorMessage::EUnsupportedSyntax(
+                    loc.dupe(),
+                    UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::GenericTaggedTemplate),
+                ),
+            );
+            {
+                let Ok(v) =
+                    polymorphic_ast_mapper::expression(&mut typed_ast_utils::ErrorMapper, &ex);
+                v
+            }
+        }
         ExpressionInner::TaggedTemplate { inner, .. } => {
             let (quasi_loc, quasi) = &inner.quasi;
             let expressions: Vec<_> = quasi
@@ -7154,6 +7172,7 @@ fn expression_(
                 .map(|e| expression(None, None, None, cx, e))
                 .collect::<Result<_, _>>()?;
             let tag_ast = expression(None, None, None, cx, &inner.tag)?;
+            let (targts, targs_ast) = convert_call_targs_opt(cx, inner.targs.as_ref());
             let t = tag_ast.loc().1.dupe();
             let reason = mk_reason(VirtualReasonDesc::RCustom("encaps tag".into()), loc.dupe());
             let reason_array = mk_reason(VirtualReasonDesc::RArray, reason.loc().dupe());
@@ -7169,8 +7188,13 @@ fn expression_(
             for e in &expressions {
                 args.push(CallArg::arg(e.loc().1.dupe()));
             }
-            let ft =
-                type_::mk_functioncalltype(reason.dupe(), None, args.into(), true, ret_tvar.dupe());
+            let ft = type_::mk_functioncalltype(
+                reason.dupe(),
+                targts.map(|v| v.into()),
+                args.into(),
+                true,
+                ret_tvar.dupe(),
+            );
             let use_op = UseOp::Op(Arc::new(type_::RootUseOp::FunCall {
                 op: mk_expression_reason(&ex),
                 fn_: mk_expression_reason(&inner.tag),
@@ -7190,6 +7214,7 @@ fn expression_(
                 loc: (loc.dupe(), result_t),
                 inner: expression::TaggedTemplate {
                     tag: tag_ast,
+                    targs: targs_ast,
                     quasi: (
                         quasi_loc.dupe(),
                         expression::TemplateLiteral {

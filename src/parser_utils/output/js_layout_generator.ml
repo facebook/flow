@@ -1284,6 +1284,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
       | E.TaggedTemplate
           {
             E.TaggedTemplate.tag;
+            targs;
             quasi =
               (template_loc, ({ E.TemplateLiteral.comments = template_comments; _ } as template));
             comments;
@@ -1293,6 +1294,7 @@ and expression ?(ctxt = normal_context) ~opts (root_expr : (Loc.t, Loc.t) Ast.Ex
         @@ fuse
              [
                expression_with_parens ~precedence ~ctxt ~opts tag;
+               option (call_type_args ~opts ~less_than:"<") targs;
                source_location_with_comments
                  ?comments:template_comments
                  (template_loc, template_literal ~opts template);

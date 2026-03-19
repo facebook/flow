@@ -2621,10 +2621,15 @@ pub fn tagged_template<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
 ) -> Result<ast::expression::TaggedTemplate<N, U>, E> {
     let ast::expression::TaggedTemplate {
         tag,
+        targs,
         quasi,
         comments,
     } = expr;
     let tag_ = expression(mapper, tag)?;
+    let targs_ = targs
+        .as_ref()
+        .map(|t| call_type_args(mapper, t))
+        .transpose()?;
     let quasi_ = {
         let (annot, inner) = quasi;
         (
@@ -2635,6 +2640,7 @@ pub fn tagged_template<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::expression::TaggedTemplate {
         tag: tag_,
+        targs: targs_,
         quasi: quasi_,
         comments: comments_,
     })

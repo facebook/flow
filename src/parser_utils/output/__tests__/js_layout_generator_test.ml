@@ -1958,7 +1958,9 @@ let tests =
            assert_expression_string ~ctxt "(b,c)``";
            assert_expression_string ~ctxt "````";
            assert_expression_string ~ctxt "(void b)``";
-           assert_expression_string ~ctxt "(++b)``"
+           assert_expression_string ~ctxt "(++b)``";
+           assert_expression_string ~ctxt "a<T>``";
+           assert_expression_string ~ctxt "a<T>`${b}`"
          );
          ( "template_expressions" >:: fun ctxt ->
            assert_expression_string ~ctxt "``";

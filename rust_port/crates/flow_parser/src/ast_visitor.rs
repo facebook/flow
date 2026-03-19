@@ -18202,10 +18202,14 @@ pub fn tagged_template_default<
     let _ = loc;
     let ast::expression::TaggedTemplate {
         tag,
+        targs,
         quasi,
         comments,
     } = expr;
     visitor.expression(tag)?;
+    if let Some(targs) = targs {
+        visitor.call_type_args(targs)?;
+    }
     let (loc, lit) = quasi;
     visitor.template_literal(V::normalize_loc(loc), lit)?;
     visitor.syntax_opt(comments.as_ref())?;
@@ -18219,15 +18223,18 @@ pub fn map_tagged_template_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
 ) -> ast::expression::TaggedTemplate<Loc, Loc> {
     let ast::expression::TaggedTemplate {
         tag,
+        targs,
         quasi,
         comments,
     } = expr;
     let tag_ = visitor.map_expression(tag);
+    let targs_ = targs.as_ref().map(|t| visitor.map_call_type_args(t));
     let (quasi_loc, quasi_lit) = quasi;
     let quasi_lit_ = visitor.map_template_literal(quasi_loc, quasi_lit);
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
     ast::expression::TaggedTemplate {
         tag: tag_,
+        targs: targs_,
         quasi: (quasi_loc.dupe(), quasi_lit_),
         comments: comments_,
     }
