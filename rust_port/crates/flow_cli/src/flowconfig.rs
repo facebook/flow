@@ -80,6 +80,7 @@ pub(super) mod opts {
         pub(crate) casting_syntax: Option<CastingSyntax>,
         pub(crate) casting_syntax_only_support_as_excludes: Vec<String>,
         pub(crate) channel_mode: Option<ChannelMode>,
+        pub(crate) check_is_status: bool,
         pub(crate) component_syntax: bool,
         pub(crate) async_component_syntax: bool,
         pub(crate) dev_only_refinement_info_as_errors: bool,
@@ -180,7 +181,7 @@ pub(super) mod opts {
         pub(crate) saved_state_fetcher: SavedStateFetcher,
         pub(crate) saved_state_skip_version_check: bool,
         pub(crate) shm_hash_table_pow: u32,
-        pub(crate) shm_heap_size: u32,
+        pub(crate) shm_heap_size: u64,
         pub(crate) supported_operating_systems: Vec<SupportedOs>,
         pub(crate) strict_es6_import_export: bool,
         pub(crate) ts_syntax: bool,
@@ -229,6 +230,7 @@ pub(super) mod opts {
             casting_syntax: None,
             casting_syntax_only_support_as_excludes: Vec::new(),
             channel_mode: None,
+            check_is_status: false,
             component_syntax: false,
             async_component_syntax: false,
             dev_only_refinement_info_as_errors: false,
@@ -636,6 +638,26 @@ pub(super) mod opts {
                 Err("Number cannot be negative!".to_string())
             } else {
                 Ok(v as u32)
+            }
+        };
+        opt(parser, setter, init, multiple, values, config)
+    }
+
+    fn parse_u64(
+        setter: fn(&mut Opts, u64) -> Result<(), String>,
+        init: Option<fn(&mut Opts)>,
+        multiple: bool,
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        let parser = |s: &str| {
+            let v = s
+                .parse::<i64>()
+                .map_err(|e| format!("Failed to parse integer: {}", e))?;
+            if v < 0 {
+                Err("Number cannot be negative!".to_string())
+            } else {
+                Ok(v as u64)
             }
         };
         opt(parser, setter, init, multiple, values, config)
@@ -1980,6 +2002,14 @@ pub(super) mod opts {
                 "babel_loose_array_spread" => Some(babel_loose_array_spread_parser(values, config)),
                 "ban_spread_key_props" => Some(ban_spread_key_props_parser(values, config)),
                 "casting_syntax" => Some(casting_syntax_parser(values, config)),
+                "check_is_status" => Some(parse_boolean(
+                    |opts, v| {
+                        opts.check_is_status = v;
+                        Ok(())
+                    },
+                    values,
+                    config,
+                )),
                 "component_syntax" => Some(component_syntax_parser(values, config)),
                 "dev_only.refinement_info_as_errors" => Some(parse_boolean(
                     |opts, v| {
@@ -2543,7 +2573,7 @@ pub(super) mod opts {
                     config,
                 )),
                 "sharedmemory.hash_table_pow" => Some(shm_hash_table_pow_parser(values, config)),
-                "sharedmemory.heap_size" => Some(parse_uint(
+                "sharedmemory.heap_size" => Some(parse_u64(
                     |opts, v| {
                         opts.shm_heap_size = v;
                         Ok(())
