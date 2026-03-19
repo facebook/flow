@@ -2170,6 +2170,10 @@ let tests =
              ~ctxt
              ~pretty:true
              ("type a = a.b<\n  c,\n  " ^ String.make 80 'd' ^ ",\n>;");
+           assert_statement_string ~ctxt "type a=O.readonly;";
+           assert_statement_string ~ctxt ~pretty:true "type a = O.readonly;";
+           assert_statement_string ~ctxt "type a=O.infer;";
+           assert_statement_string ~ctxt ~pretty:true "type a = O.infer;";
            assert_statement_string ~ctxt "type a=typeof a;";
            assert_statement_string ~ctxt ~pretty:true "type a = typeof import(\"foo\");";
            assert_statement_string ~ctxt ~pretty:true "type a = typeof import(\"bar\").baz;";

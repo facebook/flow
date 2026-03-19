@@ -2453,13 +2453,13 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
   (* Shared recursive helper to build qualified chain from any starting qualification *)
   and generic_identifier_with_qualification env start_loc initial_qualification =
     let rec loop (q_loc, qualification) =
-      if Peek.token env = T_PERIOD && Peek.ith_is_type_identifier ~i:1 env then
+      if Peek.token env = T_PERIOD && Peek.ith_is_identifier_name ~i:1 env then
         let (loc, q) =
           with_loc
             ~start_loc:q_loc
             (fun env ->
               Expect.token env T_PERIOD;
-              let id = type_identifier env in
+              let id = identifier_name env in
               { Type.Generic.Identifier.qualification; id })
             env
         in

@@ -1197,7 +1197,8 @@ pub(crate) mod peek {
             | TokenKind::TRecord
             | TokenKind::TPound
             | TokenKind::TIdentifier { .. }
-            | TokenKind::TReadonly => true,
+            | TokenKind::TReadonly
+            | TokenKind::TInfer => true,
             _ => false,
         }
     }

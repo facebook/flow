@@ -3466,10 +3466,10 @@ fn raw_generic_with_identifier(
         env: &mut ParserEnv,
         mut qualification: (Loc, types::generic::Identifier<Loc, Loc>),
     ) -> Result<(Loc, types::generic::Identifier<Loc, Loc>), Rollback> {
-        while peek::token(env) == &TokenKind::TPeriod && peek::ith_is_type_identifier(env, 1) {
+        while peek::token(env) == &TokenKind::TPeriod && peek::ith_is_identifier_name(env, 1) {
             let (loc, mut q) = with_loc(Some(qualification.0.dupe()), env, |env| {
                 expect::token(env, TokenKind::TPeriod)?;
-                let id = type_identifier(env)?;
+                let id = parser_common::identifier_name(env)?;
                 Ok(types::generic::Qualified {
                     loc: LOC_NONE,
                     qualification: qualification.1,
@@ -3566,10 +3566,10 @@ fn import_type_generic(env: &mut ParserEnv) -> Result<types::Type<Loc, Loc>, Rol
             }));
 
         let mut qualification = (import_loc.dupe(), initial);
-        while peek::token(env) == &TokenKind::TPeriod && peek::ith_is_type_identifier(env, 1) {
+        while peek::token(env) == &TokenKind::TPeriod && peek::ith_is_identifier_name(env, 1) {
             let (loc, mut q) = with_loc(Some(qualification.0.dupe()), env, |env| {
                 expect::token(env, TokenKind::TPeriod)?;
-                let id = type_identifier(env)?;
+                let id = parser_common::identifier_name(env)?;
                 Ok(types::generic::Qualified {
                     loc: LOC_NONE,
                     qualification: qualification.1,

@@ -1041,7 +1041,8 @@ module Peek = struct
     | T_RECORD
     | T_POUND
     | T_IDENTIFIER _
-    | T_READONLY ->
+    | T_READONLY
+    | T_INFER ->
       true
     | _ -> false
 

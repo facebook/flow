@@ -886,6 +886,10 @@ fn type_() {
         None,
         &format!("type a = a.b<\n  c,\n  {},\n>;", "d".repeat(80)),
     );
+    assert_statement_string(false, None, "type a=O.readonly;");
+    assert_statement_string(true, None, "type a = O.readonly;");
+    assert_statement_string(false, None, "type a=O.infer;");
+    assert_statement_string(true, None, "type a = O.infer;");
     assert_statement_string(false, None, "type a=typeof a;");
     assert_statement_string(true, None, "type a = typeof import(\"foo\");");
     assert_statement_string(true, None, "type a = typeof import(\"bar\").baz;");

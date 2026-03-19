@@ -391,6 +391,23 @@ References:
                        ^ [1]
 
 
+Error -------------------------------------------------------------------------------- type_keyword_dotted_access.js:7:1
+
+Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
+
+   type_keyword_dotted_access.js:7:1
+   7| x as empty; // ERROR
+      ^
+
+References:
+   type_keyword_dotted_access.js:5:18
+   5| declare const x: N.infer;
+                       ^^^^^^^ [1]
+   type_keyword_dotted_access.js:7:6
+   7| x as empty; // ERROR
+           ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------------- typeof_this.js:15:1
 
 Cannot cast `obj.method()` to empty because `MyClass` [1] is incompatible with empty [2]. [incompatible-type]
@@ -443,4 +460,4 @@ References:
 
 
 
-Found 31 errors
+Found 32 errors
