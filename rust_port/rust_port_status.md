@@ -460,6 +460,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `update_int64` → `State::update_int64`
           - [x] `digest` → `State::digest`
           - [x] `hash`
+          - [x] `XxHasher` (Rust-only: `std::hash::Hasher` adapter over `State`)
+          - [x] `content_hash_of` (Rust-only: replaces `Type_sig_bin.hash_serialized` for structured data)
           - [x] `equal` → derived `Eq` on `u64`
           - [x] `to_string` → unnecessary for `u64`
           - [x] `modulo`
@@ -1570,7 +1572,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] merge_service.ml → `flow_services_inference/src/merge_service.rs`
           - [x] `merge`
           - [x] `merge_runner`
-          - [ ] `sig_hash` (stub only)
+          - [x] `sig_hash`
           - [x] `check_contents_cache`
           - [x] `check_contents_context`
           - [x] `compute_env_of_contents`

@@ -7,7 +7,9 @@
 
 //! Merge service - drives the type merging process
 
+use std::cell::Cell;
 use std::cell::LazyCell;
+use std::cell::OnceCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::collections::HashMap;
@@ -22,20 +24,35 @@ use flow_aloc::ALocTable;
 use flow_common::docblock::Docblock;
 use flow_common::docblock::FlowMode;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
+use flow_common::flow_import_specifier::Userland;
 use flow_common::options::Options;
+use flow_common_cycle_hash as cycle_hash;
 use flow_common_utils::graph::Graph;
+use flow_common_xx as xx;
+use flow_common_xx::content_hash_of;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::entity::ResolvedModule;
+use flow_heap::parse::TypedParse;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_heap::parsing_heaps::merge_context_mutator;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
+use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
 use flow_parser_utils::file_sig::FileSig;
 use flow_services_coverage::FileCoverage;
 use flow_services_coverage::file_coverage;
+use flow_type_sig::compact_table;
+use flow_type_sig::compact_table::Index;
+use flow_type_sig::compact_table::Table;
+use flow_type_sig::type_sig_hash;
+use flow_type_sig::type_sig_hash::CheckedDep;
+use flow_type_sig::type_sig_hash::Dependency;
+use flow_type_sig::type_sig_hash::ReadHash;
+use flow_type_sig::type_sig_pack;
+use flow_type_sig::type_sig_pack::ModuleKind;
 use flow_typing::merge::get_lint_severities;
 use flow_typing::type_inference::scan_for_suppressions;
 use flow_typing_context::Context;
@@ -47,6 +64,7 @@ use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_errors::flow_error::ErrorSet;
 use flow_typing_type::type_::Type;
 use flow_utils_concurrency::thread_pool::ThreadPool;
+use once_cell::unsync::Lazy;
 use vec1::Vec1;
 
 use crate::check_cache::CheckCache;
@@ -66,12 +84,492 @@ pub struct SigOptsData {
 pub type MergeResults<A> = (Vec<A>, SigOptsData);
 
 pub fn sig_hash(
-    _check_dirty_set: bool,
+    check_dirty_set: bool,
     _root: &Path,
-    _shared_mem: &SharedMem,
-    _component: &Vec1<FileKey>,
+    shared_mem: &SharedMem,
+    component: &Vec1<FileKey>,
 ) -> u64 {
-    0u64
+    type ComponentRec = Rc<OnceCell<Vec<Rc<CheckedDep<Rc<cycle_hash::Node>>>>>>;
+
+    fn hash_file_key(file_key: &FileKey) -> u64 {
+        // Use suffix directly — it's already the relative path, avoiding a
+        // to_string (root concat) followed by relative_path (root strip).
+        xx::hash(file_key.as_str().as_bytes(), 0)
+    }
+
+    // The module type of a resource dependency only depends on the file
+    // extension. See Type_sig_merge.merge_resource_module_t
+    let resource_dep = |f: &FileKey| -> Dependency {
+        let ext = std::path::Path::new(f.as_str())
+            .extension()
+            .map(|e| format!(".{}", e.to_string_lossy()))
+            .expect("resource file without extension");
+        let hash = xx::hash(ext.as_bytes(), 0);
+        Dependency::Resource(Box::new(move || hash))
+    };
+
+    // A dependency which is not part of the cycle has already been merged and its
+    // hashes are stored in shared memory. We can create a checked_dep record
+    // containing accessors to those hashes.
+    //
+    // It might be useful to cache this for re-use across files in a component or
+    // components in a merge batch, but this performs well enough without caching
+    // for now.
+    let acyclic_dep = |dep_key: &FileKey, dep_parse: &TypedParse| -> CheckedDep<ReadHash> {
+        fn read_hash<T: std::hash::Hash>(item: &T) -> ReadHash {
+            let hash = content_hash_of(item);
+            Box::new(move || hash)
+        }
+        let cjs_module =
+            |file_key: &FileKey,
+             type_exports: &[type_sig_pack::TypeExport<compact_table::Index<Loc>>],
+             exports: &Option<type_sig_pack::Packed<compact_table::Index<Loc>>>,
+             info: &type_sig_pack::CJSModuleInfo<compact_table::Index<Loc>>| {
+                let filename = read_hash(file_key);
+                let type_exports = info
+                    .type_export_keys
+                    .iter()
+                    .enumerate()
+                    .map(|(i, key)| (key.dupe(), read_hash(&type_exports[i])))
+                    .collect();
+                let exports = exports.as_ref().map(|exp| read_hash(exp));
+                let ns = read_hash(info);
+                CheckedDep::CJS {
+                    filename,
+                    type_exports,
+                    exports,
+                    ns,
+                }
+            };
+        let es_module =
+            |file_key: &FileKey,
+             type_exports: &[type_sig_pack::TypeExport<compact_table::Index<Loc>>],
+             exports: &[type_sig_pack::Export<compact_table::Index<Loc>>],
+             info: &type_sig_pack::ESModuleInfo<compact_table::Index<Loc>>| {
+                let filename = read_hash(file_key);
+                let type_exports = info
+                    .type_export_keys
+                    .iter()
+                    .enumerate()
+                    .map(|(i, key)| (key.dupe(), read_hash(&type_exports[i])))
+                    .collect();
+                let exports = info
+                    .export_keys
+                    .iter()
+                    .enumerate()
+                    .map(|(i, key)| (key.dupe(), read_hash(&exports[i])))
+                    .collect();
+                let ns = read_hash(info);
+                CheckedDep::ES {
+                    filename,
+                    type_exports,
+                    exports,
+                    ns,
+                }
+            };
+        let module = dep_parse.type_sig_unsafe(dep_key);
+        match &module.module_kind {
+            ModuleKind::CJSModule {
+                type_exports,
+                exports,
+                info,
+            } => cjs_module(dep_key, type_exports, exports, info),
+            ModuleKind::ESModule {
+                type_exports,
+                exports,
+                info,
+            } => es_module(dep_key, type_exports, exports, info),
+        }
+    };
+
+    // Create a Type_sig_hash.checked_dep record for a file in the merged component.
+    let cyclic_dep = |file_key: &FileKey,
+                      parse: &TypedParse,
+                      file: &Rc<type_sig_hash::File>|
+     -> CheckedDep<Rc<cycle_hash::Node>> {
+        let filename_hash = hash_file_key(file_key);
+        let filename: ReadHash = Box::new(move || filename_hash);
+        let module = parse.type_sig_unsafe(file_key);
+
+        match &module.module_kind {
+            ModuleKind::CJSModule {
+                type_exports,
+                exports,
+                info,
+            } => {
+                let type_export_nodes: Vec<Rc<cycle_hash::Node>> = type_exports
+                    .iter()
+                    .map(|texport| {
+                        let init_hash = content_hash_of(texport);
+                        let hash = Rc::new(Cell::new(init_hash));
+                        let hash_r = hash.dupe();
+                        let read_hash: ReadHash = Box::new(move || hash_r.get());
+                        let hash_w = hash.dupe();
+                        let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+                        let texport = texport.clone();
+                        let file = file.dupe();
+                        let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                            Box::new(move |edge, _dep_edge| {
+                                type_sig_hash::visit_type_export(edge, &file, &texport);
+                            });
+                        Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+                    })
+                    .collect();
+
+                let exports_node: Option<Rc<cycle_hash::Node>> = exports.as_ref().map(|packed| {
+                    let init_hash = content_hash_of(packed);
+                    let hash = Rc::new(Cell::new(init_hash));
+                    let hash_r = hash.dupe();
+                    let read_hash: ReadHash = Box::new(move || hash_r.get());
+                    let hash_w = hash.dupe();
+                    let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+                    let packed = packed.clone();
+                    let file = file.dupe();
+                    let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                        Box::new(move |edge, dep_edge| {
+                            type_sig_hash::visit_packed(edge, dep_edge, &file, &packed);
+                        });
+                    Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+                });
+
+                let ns_init_hash = content_hash_of(info);
+                let ns_hash = Rc::new(Cell::new(ns_init_hash));
+                let ns_hash_r = ns_hash.dupe();
+                let ns_read: ReadHash = Box::new(move || ns_hash_r.get());
+                let ns_hash_w = ns_hash.dupe();
+                let ns_write: cycle_hash::WriteHash = Box::new(move |h| ns_hash_w.set(h));
+                let te_nodes_for_ns = type_export_nodes.clone();
+                let exp_node_for_ns = exports_node.clone();
+                let type_stars = info.type_stars.clone();
+                let file_for_ns = file.dupe();
+                let ns_visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                    Box::new(move |edge, dep_edge| {
+                        for te in &te_nodes_for_ns {
+                            edge(te.dupe());
+                        }
+                        if let Some(exp) = &exp_node_for_ns {
+                            edge(exp.dupe());
+                        }
+                        for (_, index) in &type_stars {
+                            type_sig_hash::edge_import_ns(edge, dep_edge, &file_for_ns, *index);
+                        }
+                    });
+                let ns = Rc::new(cycle_hash::create_node(ns_visit, ns_read, ns_write));
+
+                let type_export_map: BTreeMap<FlowSmolStr, Rc<cycle_hash::Node>> = info
+                    .type_export_keys
+                    .iter()
+                    .zip(type_export_nodes)
+                    .map(|(key, node)| (key.dupe(), node))
+                    .collect();
+
+                CheckedDep::CJS {
+                    filename,
+                    type_exports: type_export_map,
+                    exports: exports_node,
+                    ns,
+                }
+            }
+
+            ModuleKind::ESModule {
+                type_exports,
+                exports,
+                info,
+            } => {
+                let type_export_nodes: Vec<Rc<cycle_hash::Node>> = type_exports
+                    .iter()
+                    .map(|texport| {
+                        let init_hash = content_hash_of(texport);
+                        let hash = Rc::new(Cell::new(init_hash));
+                        let hash_r = hash.dupe();
+                        let read_hash: ReadHash = Box::new(move || hash_r.get());
+                        let hash_w = hash.dupe();
+                        let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+                        let texport = texport.clone();
+                        let file = file.dupe();
+                        let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                            Box::new(move |edge, _dep_edge| {
+                                type_sig_hash::visit_type_export(edge, &file, &texport);
+                            });
+                        Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+                    })
+                    .collect();
+
+                let export_nodes: Vec<Rc<cycle_hash::Node>> = exports
+                    .iter()
+                    .map(|export| {
+                        let init_hash = content_hash_of(export);
+                        let hash = Rc::new(Cell::new(init_hash));
+                        let hash_r = hash.dupe();
+                        let read_hash: ReadHash = Box::new(move || hash_r.get());
+                        let hash_w = hash.dupe();
+                        let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+                        let export = export.clone();
+                        let file = file.dupe();
+                        let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                            Box::new(move |edge, dep_edge| {
+                                type_sig_hash::visit_export(edge, dep_edge, &file, &export);
+                            });
+                        Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+                    })
+                    .collect();
+
+                let ns_init_hash = content_hash_of(info);
+                let ns_hash = Rc::new(Cell::new(ns_init_hash));
+                let ns_hash_r = ns_hash.dupe();
+                let ns_read: ReadHash = Box::new(move || ns_hash_r.get());
+                let ns_hash_w = ns_hash.dupe();
+                let ns_write: cycle_hash::WriteHash = Box::new(move |h| ns_hash_w.set(h));
+                let te_nodes_for_ns = type_export_nodes.clone();
+                let exp_nodes_for_ns = export_nodes.clone();
+                let type_stars = info.type_stars.clone();
+                let stars = info.stars.clone();
+                let file_for_ns = file.dupe();
+                let ns_visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                    Box::new(move |edge, dep_edge| {
+                        for te in &te_nodes_for_ns {
+                            edge(te.dupe());
+                        }
+                        for exp in &exp_nodes_for_ns {
+                            edge(exp.dupe());
+                        }
+                        for (_, index) in &type_stars {
+                            type_sig_hash::edge_import_ns(edge, dep_edge, &file_for_ns, *index);
+                        }
+                        for (_, index) in &stars {
+                            type_sig_hash::edge_import_ns(edge, dep_edge, &file_for_ns, *index);
+                        }
+                    });
+                let ns = Rc::new(cycle_hash::create_node(ns_visit, ns_read, ns_write));
+
+                let type_export_map: BTreeMap<FlowSmolStr, Rc<cycle_hash::Node>> = info
+                    .type_export_keys
+                    .iter()
+                    .zip(type_export_nodes)
+                    .map(|(key, node)| (key.dupe(), node))
+                    .collect();
+
+                let export_map: BTreeMap<FlowSmolStr, Rc<cycle_hash::Node>> = info
+                    .export_keys
+                    .iter()
+                    .zip(export_nodes)
+                    .map(|(key, node)| (key.dupe(), node))
+                    .collect();
+
+                CheckedDep::ES {
+                    filename,
+                    type_exports: type_export_map,
+                    exports: export_map,
+                    ns,
+                }
+            }
+        }
+    };
+
+    let file_dependency = |component_rec: &ComponentRec,
+                           component_map: &BTreeMap<FileKey, usize>,
+                           resolved_module: &ResolvedModule|
+     -> Dependency {
+        match resolved_module.to_result() {
+            Err(_) => Dependency::Unchecked,
+            Ok(dep_ref) => match shared_mem.get_provider(&dep_ref) {
+                None => Dependency::Unchecked,
+                Some(dep_file) => {
+                    if matches!(dep_file.inner(), FileKeyInner::ResourceFile(_)) {
+                        resource_dep(&dep_file)
+                    } else {
+                        match shared_mem.get_typed_parse(&dep_file) {
+                            None => Dependency::Unchecked,
+                            Some(dep_parse) => {
+                                if let Some(&i) = component_map.get(&dep_file) {
+                                    let component_rec = component_rec.dupe();
+                                    Dependency::Cyclic(Lazy::new(Box::new(move || {
+                                        component_rec.get().unwrap()[i].dupe()
+                                    })))
+                                } else {
+                                    let dep_key = dep_file.dupe();
+                                    Dependency::Acyclic(Lazy::new(Box::new(move || {
+                                        acyclic_dep(&dep_key, &dep_parse)
+                                    })))
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+        }
+    };
+
+    // Create a Type_sig_hash.file record for a file in the merged component.
+    let component_file = |component_rec: &ComponentRec,
+                          component_map: &BTreeMap<FileKey, usize>,
+                          file_key: &FileKey,
+                          parse: &TypedParse|
+     -> Rc<CheckedDep<Rc<cycle_hash::Node>>> {
+        let module = parse.type_sig_unsafe(file_key);
+
+        let resolved_modules_map: BTreeMap<Userland, ResolvedModule> = {
+            let requires = parse.requires();
+            let resolved_requires = parse.resolved_requires_unsafe();
+            let resolved = resolved_requires.get_resolved_modules();
+            requires
+                .iter()
+                .zip(resolved.iter())
+                .filter_map(|(spec, resolved)| match spec {
+                    FlowImportSpecifier::Userland(u) => Some((u.dupe(), resolved.clone())),
+                    _ => None,
+                })
+                .collect()
+        };
+
+        let dependencies: Table<Dependency> = Table::init(module.module_refs.len(), |i| {
+            let mref = module.module_refs.get(Index::<Userland>::new(i));
+            match resolved_modules_map.get(mref) {
+                Some(resolved) => file_dependency(component_rec, component_map, resolved),
+                None => Dependency::Unchecked,
+            }
+        });
+
+        let file_cell: Rc<OnceCell<Rc<type_sig_hash::File>>> = Rc::new(OnceCell::new());
+
+        let local_defs = {
+            let dirty_indices = &module.dirty_local_defs;
+            Table::init(module.local_defs.len(), |i| {
+                let def = module.local_defs.get(Index::<()>::new(i));
+                let mut hash_val = content_hash_of(def);
+                if check_dirty_set && dirty_indices.contains(&i) {
+                    hash_val = !hash_val;
+                }
+                let hash = Rc::new(Cell::new(hash_val));
+                let hash_r = hash.dupe();
+                let read_hash: ReadHash = Box::new(move || hash_r.get());
+                let hash_w = hash.dupe();
+                let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+                let def = def.clone();
+                let file_cell = file_cell.dupe();
+                let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                    Box::new(move |edge, dep_edge| {
+                        let file = file_cell.get().unwrap();
+                        type_sig_hash::visit_def(edge, dep_edge, file, &def);
+                    });
+                Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+            })
+        };
+
+        let remote_refs = Table::init(module.remote_refs.len(), |i| {
+            let rref = module.remote_refs.get(Index::<()>::new(i));
+            let hash_val = content_hash_of(rref);
+            let hash = Rc::new(Cell::new(hash_val));
+            let hash_r = hash.dupe();
+            let read_hash: ReadHash = Box::new(move || hash_r.get());
+            let hash_w = hash.dupe();
+            let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+            let rref = rref.clone();
+            let file_cell = file_cell.dupe();
+            let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                Box::new(move |edge, dep_edge| {
+                    let file = file_cell.get().unwrap();
+                    type_sig_hash::visit_remote_ref(edge, dep_edge, file, &rref);
+                });
+            Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+        });
+
+        let pattern_defs = {
+            let dirty_indices = &module.dirty_pattern_defs;
+            Table::init(module.pattern_defs.len(), |i| {
+                let pdef = module.pattern_defs.get(Index::<()>::new(i));
+                let mut hash_val = content_hash_of(pdef);
+                if check_dirty_set && dirty_indices.contains(&i) {
+                    hash_val = !hash_val;
+                }
+                let hash = Rc::new(Cell::new(hash_val));
+                let hash_r = hash.dupe();
+                let read_hash: ReadHash = Box::new(move || hash_r.get());
+                let hash_w = hash.dupe();
+                let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+                let pdef = pdef.clone();
+                let file_cell = file_cell.dupe();
+                let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                    Box::new(move |edge, dep_edge| {
+                        let file = file_cell.get().unwrap();
+                        type_sig_hash::visit_packed(edge, dep_edge, file, &pdef);
+                    });
+                Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+            })
+        };
+
+        let patterns = Table::init(module.patterns.len(), |i| {
+            let pattern = module.patterns.get(Index::<()>::new(i));
+            let hash_val = content_hash_of(pattern);
+            let hash = Rc::new(Cell::new(hash_val));
+            let hash_r = hash.dupe();
+            let read_hash: ReadHash = Box::new(move || hash_r.get());
+            let hash_w = hash.dupe();
+            let write_hash: cycle_hash::WriteHash = Box::new(move |h| hash_w.set(h));
+            let pattern = pattern.clone();
+            let file_cell = file_cell.dupe();
+            let visit: Box<dyn Fn(&dyn Fn(Rc<cycle_hash::Node>), &dyn Fn(&ReadHash))> =
+                Box::new(move |edge, _dep_edge| {
+                    let file = file_cell.get().unwrap();
+                    type_sig_hash::visit_pattern(edge, file, &pattern);
+                });
+            Rc::new(cycle_hash::create_node(visit, read_hash, write_hash))
+        });
+
+        let file = Rc::new(type_sig_hash::File {
+            dependencies,
+            local_defs,
+            remote_refs,
+            pattern_defs,
+            patterns,
+        });
+        file_cell.set(file.dupe()).ok();
+
+        Rc::new(cyclic_dep(file_key, parse, &file))
+    };
+
+    let component_vec: Vec<(FileKey, TypedParse)> = component
+        .iter()
+        .filter_map(|f| shared_mem.get_typed_parse(f).map(|p| (f.dupe(), p)))
+        .collect();
+
+    if component_vec.is_empty() {
+        return 0u64;
+    }
+
+    // Built a reverse lookup to detect in-cycle dependencies.
+    let component_map: BTreeMap<FileKey, usize> = component_vec
+        .iter()
+        .enumerate()
+        .map(|(i, (f, _))| (f.dupe(), i))
+        .collect();
+
+    // Create array of Type_sig_hash.checked_dep records, which we can use to
+    // traverse the graph of signature dependencies.
+    let component_rec: ComponentRec = Rc::new(OnceCell::new());
+    let files: Vec<Rc<CheckedDep<Rc<cycle_hash::Node>>>> = component_vec
+        .iter()
+        .map(|(file_key, parse)| component_file(&component_rec, &component_map, file_key, parse))
+        .collect();
+    component_rec.set(files).ok();
+
+    // Compute component hash by visiting graph starting at namespace root of
+    // each file. The component hash is an unordered combination of each file's
+    // hash.
+    let cx = cycle_hash::create_cx();
+    let mut component_hash = 0u64;
+
+    for checked_dep in component_rec.get().unwrap() {
+        match checked_dep.as_ref() {
+            CheckedDep::CJS { ns, .. } | CheckedDep::ES { ns, .. } => {
+                cycle_hash::root(&cx, ns);
+                let file_hash = cycle_hash::read_hash(ns);
+                component_hash ^= file_hash;
+            }
+        }
+    }
+
+    component_hash
 }
 
 // Entry point for merging a component
@@ -92,7 +590,7 @@ fn merge_component(
         return (false, None);
     }
 
-    let hash = 0u64;
+    let hash = sig_hash(for_find_all_refs, &options.root, shared_mem, &component);
 
     let mut suppressions = ErrorSuppressions::empty();
     for (file, typed_parse) in &typed_component {
@@ -422,6 +920,7 @@ where
 
     let shared_mem_clone = shared_mem.dupe();
 
+    // Process components in parallel, collecting job results
     let results: Vec<A> = flow_utils_concurrency::map_reduce::call(
         pool,
         move || stream_ref.next(),

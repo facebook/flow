@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::hash::Hasher;
+
 use xxhash_rust::xxh64;
 
 pub struct State(xxh64::Xxh64);
@@ -33,6 +35,33 @@ impl State {
 
 pub fn hash(data: &[u8], seed: u64) -> u64 {
     xxh64::xxh64(data, seed)
+}
+
+/// A std::hash::Hasher backed by xxHash64, for use with `content_hash_of`.
+pub struct XxHasher(xxh64::Xxh64);
+
+impl XxHasher {
+    pub fn new() -> Self {
+        Self(xxh64::Xxh64::new(0))
+    }
+}
+
+impl Hasher for XxHasher {
+    fn finish(&self) -> u64 {
+        self.0.digest()
+    }
+
+    fn write(&mut self, bytes: &[u8]) {
+        self.0.update(bytes);
+    }
+}
+
+/// Compute a deterministic xxHash64 of any Hash-able value.
+/// Replaces OCaml's Bin.hash_serialized.
+pub fn content_hash_of<T: std::hash::Hash>(item: &T) -> u64 {
+    let mut hasher = XxHasher::new();
+    item.hash(&mut hasher);
+    hasher.finish()
 }
 
 pub fn modulo(hash: u64, modulus: usize) -> usize {

@@ -33,7 +33,7 @@ use vec1::Vec1;
 
 use crate::signature_error;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum TArg<Loc, T> {
     ImplicitArg(Loc),
     ExplicitArg(T),
@@ -52,13 +52,13 @@ impl<Loc, T> TArg<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum Arg<T> {
     Arg(T),
     SpreadArg(T),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct TypeGuard<Loc, T> {
     pub loc: Loc,
     pub param_name: (Loc, FlowSmolStr),
@@ -82,7 +82,7 @@ impl<Loc, T> TypeGuard<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct TParam<Loc, T> {
     pub name_loc: Loc,
     pub name: FlowSmolStr,
@@ -110,7 +110,7 @@ impl<Loc, T> TParam<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum TParams<Loc, T> {
     Mono,
     Poly(Loc, Vec1<TParam<Loc, T>>),
@@ -156,7 +156,7 @@ impl<Loc, T> TParams<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct FunParam<T> {
     pub name: Option<FlowSmolStr>,
     pub t: T,
@@ -171,7 +171,7 @@ impl<T> FunParam<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct FunRestParam<Loc, T> {
     pub name: Option<FlowSmolStr>,
     pub loc: Loc,
@@ -193,7 +193,7 @@ impl<Loc, T> FunRestParam<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ReactEffect<Loc> {
     HookDecl(Loc),
     HookAnnot,
@@ -223,7 +223,7 @@ impl<Loc> ReactEffect<Loc> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct FunSig<Loc, T> {
     pub tparams: TParams<Loc, T>,
     pub params: Vec<FunParam<T>>,
@@ -279,7 +279,7 @@ impl<Loc, T> FunSig<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct ComponentParam<Loc, T> {
     pub name: FlowSmolStr,
     pub name_loc: Loc,
@@ -301,7 +301,7 @@ impl<Loc, T> ComponentParam<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct ComponentRestParam<T> {
     pub t: T,
 }
@@ -318,7 +318,7 @@ impl<T> ComponentRestParam<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct ComponentSig<Loc, T> {
     pub params_loc: Loc,
     pub tparams: TParams<Loc, T>,
@@ -366,7 +366,7 @@ impl<Loc, T> ComponentSig<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum TupleElement<Loc, T> {
     TupleElement {
         loc: Loc,
@@ -412,7 +412,7 @@ impl<Loc, T> TupleElement<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ObjAnnotProto<Loc, T> {
     ObjAnnotImplicitProto,
     ObjAnnotExplicitProto(Loc, T),
@@ -438,7 +438,7 @@ impl<Loc, T> ObjAnnotProto<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum Accessor<Loc, T> {
     Get(Loc, T),
     Set(Loc, T),
@@ -486,7 +486,7 @@ impl<Loc, T> Accessor<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ObjValueProp<Loc, T> {
     ObjValueField(Loc, T, Polarity),
     ObjValueAccess(Accessor<Loc, T>),
@@ -556,7 +556,7 @@ impl<Loc, T> ObjValueProp<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ObjAnnotProp<Loc, T> {
     ObjAnnotField(Loc, T, Polarity),
     ObjAnnotAccess(Accessor<Loc, T>),
@@ -594,7 +594,7 @@ impl<Loc, T> ObjAnnotProp<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum InterfaceProp<Loc, T> {
     InterfaceField(Option<Loc>, T, Polarity),
     InterfaceAccess(Accessor<Loc, T>),
@@ -650,7 +650,7 @@ impl<Loc, T> InterfaceProp<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct ObjAnnotDict<T> {
     pub name: Option<FlowSmolStr>,
     pub polarity: Polarity,
@@ -669,7 +669,7 @@ impl<T> ObjAnnotDict<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ObjSpreadAnnotElem<Loc, T> {
     ObjSpreadAnnotElem(T),
     ObjSpreadAnnotSlice {
@@ -702,7 +702,7 @@ impl<Loc, T> ObjSpreadAnnotElem<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ObjValueSpreadElem<Loc, T> {
     ObjValueSpreadElem(T),
     ObjValueSpreadSlice(BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>),
@@ -747,7 +747,7 @@ impl<Loc, T> ObjValueSpreadElem<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ClassExtends<Loc, T> {
     ClassExplicitExtends { loc: Loc, t: T },
     ClassExplicitExtendsApp { loc: Loc, t: T, targs: Vec<T> },
@@ -802,7 +802,7 @@ impl<Loc, T> ClassExtends<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ClassMixins<Loc, T> {
     ClassMixin { loc: Loc, t: T },
     ClassMixinApp { loc: Loc, t: T, targs: Vec<T> },
@@ -850,7 +850,7 @@ impl<Loc, T> ClassMixins<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct ClassSig<Loc, T> {
     pub tparams: TParams<Loc, T>,
     pub extends: ClassExtends<Loc, T>,
@@ -912,7 +912,7 @@ impl<Loc, T> ClassSig<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct DeclareClassSig<Loc, T> {
     pub tparams: TParams<Loc, T>,
     pub extends: ClassExtends<Loc, T>,
@@ -1005,7 +1005,7 @@ impl<Loc, T> DeclareClassSig<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub struct InterfaceSig<Loc, T> {
     pub extends: Vec<T>,
     pub props: BTreeMap<FlowSmolStr, InterfaceProp<Loc, T>>,
@@ -1054,7 +1054,7 @@ impl<Loc, T> InterfaceSig<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq)]
+#[derive(Debug, Clone, Copy, PartialEq, Hash)]
 pub enum EnumRep {
     BoolRep(Option<bool>),
     NumberRep { truthy: bool },
@@ -1069,7 +1069,7 @@ pub enum EnumRep {
 // The signature format is designed to exploit these forms of indirection to
 // preserve sharing and minimize size. Two references to a given definition will
 // always be represented as pointers to a shared signature of that definition.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum Def<Loc, T> {
     TypeAlias {
         id_loc: Loc,
@@ -1627,6 +1627,92 @@ pub enum Value<Loc, T> {
     AsConst(Box<Value<Loc, T>>),
 }
 
+impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Value<Loc, T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            Value::ClassExpr(loc, sig) => {
+                loc.hash(state);
+                sig.hash(state);
+            }
+            Value::FunExpr {
+                loc,
+                async_,
+                generator,
+                def,
+                statics,
+            } => {
+                loc.hash(state);
+                async_.hash(state);
+                generator.hash(state);
+                def.hash(state);
+                statics.hash(state);
+            }
+            Value::StringVal(loc) => loc.hash(state),
+            Value::StringLit(loc, s) => {
+                loc.hash(state);
+                s.hash(state);
+            }
+            Value::NumberVal(loc) => loc.hash(state),
+            Value::NumberLit(loc, n, s) => {
+                loc.hash(state);
+                n.to_bits().hash(state);
+                s.hash(state);
+            }
+            Value::BigIntVal(loc) => loc.hash(state),
+            Value::BigIntLit(loc, n, s) => {
+                loc.hash(state);
+                n.hash(state);
+                s.hash(state);
+            }
+            Value::BooleanVal(loc) => loc.hash(state),
+            Value::BooleanLit(loc, b) => {
+                loc.hash(state);
+                b.hash(state);
+            }
+            Value::NullLit(loc) => loc.hash(state),
+            Value::DeclareModuleImplicitlyExportedObject {
+                loc,
+                module_name,
+                props,
+            } => {
+                loc.hash(state);
+                module_name.hash(state);
+                props.hash(state);
+            }
+            Value::ObjLit {
+                loc,
+                frozen,
+                proto,
+                props,
+            } => {
+                loc.hash(state);
+                frozen.hash(state);
+                proto.hash(state);
+                props.hash(state);
+            }
+            Value::ObjSpreadLit {
+                loc,
+                frozen,
+                proto,
+                elems,
+            } => {
+                loc.hash(state);
+                frozen.hash(state);
+                proto.hash(state);
+                elems.hash(state);
+            }
+            Value::EmptyConstArrayLit(loc) => loc.hash(state),
+            Value::ArrayLit(loc, t, ts) => {
+                loc.hash(state);
+                t.hash(state);
+                ts.hash(state);
+            }
+            Value::AsConst(v) => v.hash(state),
+        }
+    }
+}
+
 impl<Loc, T> Value<Loc, T> {
     pub fn iter<CX>(
         &self,
@@ -1795,7 +1881,7 @@ impl<Loc, T> Value<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum ObjKind<T> {
     ExactObj,
     InexactObj,
@@ -1938,6 +2024,227 @@ pub enum Annot<Loc, T> {
         elems: Vec1<ObjSpreadAnnotElem<Loc, T>>,
     },
     InlineInterface(Loc, InterfaceSig<Loc, T>),
+}
+
+impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            Annot::Any(l)
+            | Annot::Mixed(l)
+            | Annot::Empty(l)
+            | Annot::Void(l)
+            | Annot::Null(l)
+            | Annot::Symbol(l)
+            | Annot::Number(l)
+            | Annot::BigInt(l)
+            | Annot::String(l)
+            | Annot::Boolean(l)
+            | Annot::Exists(l) => l.hash(state),
+            Annot::Optional(t) => t.hash(state),
+            Annot::Maybe(l, t) => {
+                l.hash(state);
+                t.hash(state);
+            }
+            Annot::Union { loc, t0, t1, ts } | Annot::Intersection { loc, t0, t1, ts } => {
+                loc.hash(state);
+                t0.hash(state);
+                t1.hash(state);
+                ts.hash(state);
+            }
+            Annot::Tuple {
+                loc,
+                elems,
+                inexact,
+            } => {
+                loc.hash(state);
+                elems.hash(state);
+                inexact.hash(state);
+            }
+            Annot::Array(l, t) | Annot::ReadOnlyArray(l, t) => {
+                l.hash(state);
+                t.hash(state);
+            }
+            Annot::SingletonString(l, s) => {
+                l.hash(state);
+                s.hash(state);
+            }
+            Annot::SingletonNumber(l, n, s) => {
+                l.hash(state);
+                n.to_bits().hash(state);
+                s.hash(state);
+            }
+            Annot::SingletonBigInt(l, n, s) => {
+                l.hash(state);
+                n.hash(state);
+                s.hash(state);
+            }
+            Annot::SingletonBoolean(l, b) => {
+                l.hash(state);
+                b.hash(state);
+            }
+            Annot::StringPrefix {
+                loc,
+                prefix,
+                remainder,
+            } => {
+                loc.hash(state);
+                prefix.hash(state);
+                remainder.hash(state);
+            }
+            Annot::StringSuffix {
+                loc,
+                suffix,
+                remainder,
+            } => {
+                loc.hash(state);
+                suffix.hash(state);
+                remainder.hash(state);
+            }
+            Annot::Typeof {
+                loc,
+                qname,
+                t,
+                targs,
+            } => {
+                loc.hash(state);
+                qname.hash(state);
+                t.hash(state);
+                targs.hash(state);
+            }
+            Annot::Bound { ref_loc, name } => {
+                ref_loc.hash(state);
+                name.hash(state);
+            }
+            Annot::NoInfer(t) => t.hash(state),
+            Annot::PropertyType { loc, obj, prop } => {
+                loc.hash(state);
+                obj.hash(state);
+                prop.hash(state);
+            }
+            Annot::ElementType { loc, obj, elem } => {
+                loc.hash(state);
+                obj.hash(state);
+                elem.hash(state);
+            }
+            Annot::EnumValue(l, t) | Annot::Enum(l, t) => {
+                l.hash(state);
+                t.hash(state);
+            }
+            Annot::OptionalIndexedAccessNonMaybeType { loc, obj, index } => {
+                loc.hash(state);
+                obj.hash(state);
+                index.hash(state);
+            }
+            Annot::OptionalIndexedAccessResultType {
+                loc,
+                non_maybe_result,
+                void_loc,
+            } => {
+                loc.hash(state);
+                non_maybe_result.hash(state);
+                void_loc.hash(state);
+            }
+            Annot::NonMaybeType(l, t) => {
+                l.hash(state);
+                t.hash(state);
+            }
+            Annot::Omit(l, t1, t2) => {
+                l.hash(state);
+                t1.hash(state);
+                t2.hash(state);
+            }
+            Annot::ReadOnly(l, t)
+            | Annot::Partial(l, t)
+            | Annot::Required(l, t)
+            | Annot::Keys(l, t)
+            | Annot::Values(l, t)
+            | Annot::Exact(l, t)
+            | Annot::ClassT(l, t)
+            | Annot::ReactElementConfig(l, t) => {
+                l.hash(state);
+                t.hash(state);
+            }
+            Annot::Renders { loc, arg, variant } => {
+                loc.hash(state);
+                arg.hash(state);
+                variant.hash(state);
+            }
+            Annot::ComponentMissingRenders(l) | Annot::FunctionBind(l) => l.hash(state),
+            Annot::ExportsT(l, u) => {
+                l.hash(state);
+                u.hash(state);
+            }
+            Annot::Conditional {
+                loc,
+                distributive_tparam,
+                infer_tparams,
+                check_type,
+                extends_type,
+                true_type,
+                false_type,
+            } => {
+                loc.hash(state);
+                distributive_tparam.hash(state);
+                infer_tparams.hash(state);
+                check_type.hash(state);
+                extends_type.hash(state);
+                true_type.hash(state);
+                false_type.hash(state);
+            }
+            Annot::ObjKeyMirror { loc, obj } => {
+                loc.hash(state);
+                obj.hash(state);
+            }
+            Annot::FunAnnot(l, sig) => {
+                l.hash(state);
+                sig.hash(state);
+            }
+            Annot::ComponentAnnot(l, sig) => {
+                l.hash(state);
+                sig.hash(state);
+            }
+            Annot::MappedTypeAnnot {
+                loc,
+                source_type,
+                property_type,
+                key_tparam,
+                variance,
+                variance_op,
+                optional,
+                inline_keyof,
+            } => {
+                loc.hash(state);
+                source_type.hash(state);
+                property_type.hash(state);
+                key_tparam.hash(state);
+                variance.hash(state);
+                variance_op.hash(state);
+                optional.hash(state);
+                inline_keyof.hash(state);
+            }
+            Annot::ObjAnnot {
+                loc,
+                obj_kind,
+                props,
+                proto,
+            } => {
+                loc.hash(state);
+                obj_kind.hash(state);
+                props.hash(state);
+                proto.hash(state);
+            }
+            Annot::ObjSpreadAnnot { loc, exact, elems } => {
+                loc.hash(state);
+                exact.hash(state);
+                elems.hash(state);
+            }
+            Annot::InlineInterface(l, sig) => {
+                l.hash(state);
+                sig.hash(state);
+            }
+        }
+    }
 }
 
 impl<Loc, T> Annot<Loc, T> {
@@ -2472,7 +2779,7 @@ impl<Loc, T> Annot<Loc, T> {
 // Along with literal expressions, the signature extractor also encodes some
 // operations over values and annotations, like unary operators and
 // destructuring.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Hash)]
 pub enum Op<T> {
     Arith(ast::expression::BinaryOperator, T),
     GetProp(FlowSmolStr),
@@ -2515,7 +2822,7 @@ impl<T> Op<T> {
 //    signature extractor, we should fix the signature extractor to support that
 //    syntax. These represent missing functionality in the analysis which should
 //    be fixed.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Hash)]
 pub enum Errno<Loc> {
     CheckError,
     BindingValidationError(signature_error::BindingValidation<Loc>),

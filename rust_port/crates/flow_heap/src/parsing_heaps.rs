@@ -575,12 +575,7 @@ pub mod merge_context_mutator {
         let old_sig_hash = parse.sig_hash.read_committed();
 
         match old_sig_hash {
-            Some(old_hash) if old_hash == sig_hash => {
-                // TODO: for now, we will make the hash always zero (to always make the downstream
-                // system check the file), since the hash is only useful to prune recheck, and we
-                // are only focusing on porting the full check for now.
-                true
-            }
+            Some(old_hash) if old_hash == sig_hash => false,
             _ => {
                 if !for_find_all_refs {
                     parse.sig_hash.advance(Some(sig_hash));

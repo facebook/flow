@@ -441,6 +441,12 @@ impl<'a, T> Indexed<'a, T> {
 
 pub struct Table<T>(Vec<T>);
 
+impl<T: std::hash::Hash> std::hash::Hash for Table<T> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
 impl<T> Table<T> {
     pub fn len(&self) -> usize {
         self.0.len()
