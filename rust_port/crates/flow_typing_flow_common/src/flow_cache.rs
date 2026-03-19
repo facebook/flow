@@ -68,7 +68,19 @@ pub mod flow_constraint {
                 | UseTInner::GetPropT(..)
                 | UseTInner::ObjRestT { .. }
                 | UseTInner::ObjTestT { .. }
-                | UseTInner::ArrRestT { .. },
+                | UseTInner::ArrRestT { .. }
+                | UseTInner::ValueToTypeReferenceT { .. }
+                | UseTInner::SpecializeT { .. }
+                | UseTInner::EvalTypeDestructorT { .. }
+                | UseTInner::ConcretizeTypeAppsT { .. }
+                | UseTInner::ExtendsUseT { .. }
+                | UseTInner::ResolveUnionT { .. }
+                | UseTInner::ConditionalT { .. }
+                | UseTInner::DeepReadOnlyT { .. }
+                | UseTInner::ElemT { .. }
+                | UseTInner::ReposLowerT { .. }
+                | UseTInner::ObjKitT { .. }
+                | UseTInner::HasOwnPropT { .. },
             ) => false,
             _ => {
                 // Use ops are purely for better error messages: they should have no
