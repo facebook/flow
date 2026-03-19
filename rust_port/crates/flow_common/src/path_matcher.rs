@@ -72,7 +72,7 @@ fn path_patt(path: &Path) -> Regex {
 /// No other normalization is done
 fn fixup_path(path: &Path) -> PathBuf {
     let s = path.to_string_lossy();
-    match path.canonicalize() {
+    match crate::files::cached_canonicalize(path) {
         Ok(canonical) => {
             if canonical.to_string_lossy() == s {
                 return path.to_path_buf();

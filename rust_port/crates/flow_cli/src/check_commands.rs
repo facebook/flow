@@ -239,8 +239,7 @@ pub(crate) fn focus_check_main(args: &[String]) {
     let focus_targets: FlowOrdSet<FileKey> = expanded_filenames
         .iter()
         .map(|file| {
-            let abs_path = Path::new(file.as_str())
-                .canonicalize()
+            let abs_path = flow_common::files::cached_canonicalize(Path::new(file.as_str()))
                 .unwrap_or_else(|_| std::path::PathBuf::from(file.as_str()));
             FileKey::new(FileKeyInner::SourceFile(
                 abs_path.to_string_lossy().to_string(),

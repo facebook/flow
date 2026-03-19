@@ -480,7 +480,7 @@ pub(super) fn make_options(
                 .into_iter()
                 .map(|dir| {
                     let expanded = flow_common::files::expand_project_root_token(&root, &dir);
-                    std::fs::canonicalize(&expanded)
+                    flow_common::files::cached_canonicalize(std::path::Path::new(&expanded))
                         .map(|p| p.to_string_lossy().to_string())
                         .unwrap_or(expanded)
                 })
@@ -670,7 +670,7 @@ pub(super) fn expand_file_list(
     let paths: Vec<String> = filenames
         .iter()
         .map(|f| {
-            std::fs::canonicalize(f)
+            flow_common::files::cached_canonicalize(std::path::Path::new(f))
                 .map(|p| p.to_string_lossy().into_owned())
                 .unwrap_or_else(|_| f.to_string())
         })

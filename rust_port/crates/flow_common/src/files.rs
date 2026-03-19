@@ -7,10 +7,15 @@
 
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
+use std::collections::HashMap;
 use std::collections::HashSet;
+use std::hash::Hash;
+use std::hash::Hasher;
 use std::path::Path;
 use std::path::PathBuf;
 use std::sync::Arc;
+use std::sync::Mutex;
+use std::sync::OnceLock;
 use std::sync::RwLock;
 
 use dupe::Dupe;
@@ -21,6 +26,53 @@ use regex::Regex;
 
 use crate::path_matcher::PathMatcher;
 use crate::sys_utils::normalize_filename_dir_sep;
+
+// Sharded cache for std::fs::canonicalize() to avoid kernel dcache lock contention
+// when many threads call realpath concurrently.
+const CANONICALIZE_CACHE_SHARDS: usize = 128;
+
+struct CanonicalizeCache {
+    shards: [Mutex<HashMap<PathBuf, Option<PathBuf>>>; CANONICALIZE_CACHE_SHARDS],
+}
+
+impl CanonicalizeCache {
+    fn new() -> Self {
+        Self {
+            shards: std::array::from_fn(|_| Mutex::new(HashMap::new())),
+        }
+    }
+
+    fn get_or_insert(&self, path: &Path) -> std::io::Result<PathBuf> {
+        let mut hasher = std::hash::DefaultHasher::new();
+        path.hash(&mut hasher);
+        let shard_idx = (hasher.finish() as usize) % CANONICALIZE_CACHE_SHARDS;
+
+        let mut shard = self.shards[shard_idx].lock().unwrap();
+        if let Some(cached) = shard.get(path) {
+            match cached {
+                Some(p) => Ok(p.clone()),
+                None => Err(std::io::Error::new(
+                    std::io::ErrorKind::NotFound,
+                    "cached canonicalize failure",
+                )),
+            }
+        } else {
+            let result = std::fs::canonicalize(path);
+            let cached_value = result.as_ref().ok().cloned();
+            shard.insert(path.to_path_buf(), cached_value);
+            result
+        }
+    }
+}
+
+static CANONICALIZE_CACHE: OnceLock<CanonicalizeCache> = OnceLock::new();
+
+/// Cached version of std::fs::canonicalize(). Thread-safe, uses sharded locking.
+pub fn cached_canonicalize(path: &Path) -> std::io::Result<PathBuf> {
+    CANONICALIZE_CACHE
+        .get_or_init(CanonicalizeCache::new)
+        .get_or_insert(path)
+}
 
 // utilities for supported filenames
 
@@ -436,9 +488,7 @@ pub fn ordered_and_unordered_lib_paths(
             let root_path = match libdir {
                 LibDir::Prelude(path) | LibDir::Flowlib(path) => path,
             };
-            let root = root_path
-                .canonicalize()
-                .unwrap_or_else(|_| root_path.clone());
+            let root = cached_canonicalize(root_path).unwrap_or_else(|_| root_path.clone());
             let root_resolved = root.to_string_lossy().to_string();
             let filter: Box<dyn Fn(&str) -> bool + '_> = Box::new(move |path: &str| {
                 is_prefix(&root_resolved, path) || is_valid_path(options, path)
@@ -474,7 +524,7 @@ pub fn ordered_and_unordered_lib_paths(
                         if !entry.file_type().is_file() {
                             continue;
                         }
-                        if let Ok(real_path) = path.canonicalize() {
+                        if let Ok(real_path) = cached_canonicalize(&path) {
                             let path_str = real_path.to_string_lossy().to_string();
                             if filter_prime(&path_str) {
                                 files.insert(path_str);
@@ -757,7 +807,9 @@ pub fn make_next_files(
             } {
                 continue;
             }
-            if let Ok(real_path) = path.canonicalize()
+            // Note: try_exists() check removed because canonicalize() already
+            // verifies the path exists (returns Err for non-existent paths).
+            if let Ok(real_path) = cached_canonicalize(&path)
                 && (path == real_path
                     || realpath_filter(
                         &options,
@@ -766,7 +818,6 @@ pub fn make_next_files(
                         include_libdef,
                         &all_unordered_libs,
                     ))
-                && real_path.try_exists().ok() == Some(true)
             {
                 chunk.push(real_path);
                 if chunk.len() == MAX_FILES {
@@ -999,7 +1050,7 @@ pub fn canonicalize_filenames(
         .map(|filename| {
             let filename = crate::sys_utils::expanduser(filename);
             let filename = normalize_path(cwd, &filename);
-            match std::fs::canonicalize(&filename) {
+            match cached_canonicalize(Path::new(&filename)) {
                 Ok(abs) => abs.to_string_lossy().to_string(),
                 Err(_) => handle_imaginary(&filename),
             }

@@ -286,7 +286,7 @@ fn resolve_symlinks(path: &str) -> String {
     use std::path::Path;
 
     let p = Path::new(path);
-    p.canonicalize()
+    flow_common::files::cached_canonicalize(p)
         .ok()
         .and_then(|p| p.to_str().map(|s| s.to_string()))
         .unwrap_or_else(|| path.to_string())
