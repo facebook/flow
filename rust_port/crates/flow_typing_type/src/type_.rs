@@ -951,10 +951,78 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     },
 }
 
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Debug, Clone, Dupe)]
 pub enum VirtualUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
     Op(Arc<VirtualRootUseOp<L>>),
     Frame(Arc<VirtualFrameUseOp<L>>, Arc<VirtualUseOp<L>>),
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord + std::hash::Hash> std::hash::Hash
+    for VirtualUseOp<L>
+{
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            Self::Op(a) => a.hash(state),
+            Self::Frame(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+        }
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialEq for VirtualUseOp<L> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Self::Op(a), Self::Op(b)) => Arc::ptr_eq(a, b) || a == b,
+            (Self::Frame(a1, a2), Self::Frame(b1, b2)) => {
+                (Arc::ptr_eq(a1, b1) || a1 == b1) && (Arc::ptr_eq(a2, b2) || a2 == b2)
+            }
+            _ => false,
+        }
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Eq for VirtualUseOp<L> {}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> PartialOrd for VirtualUseOp<L> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> Ord for VirtualUseOp<L> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        match (self, other) {
+            (Self::Op(a), Self::Op(b)) => {
+                if Arc::ptr_eq(a, b) {
+                    std::cmp::Ordering::Equal
+                } else {
+                    a.cmp(b)
+                }
+            }
+            (Self::Op(_), Self::Frame(..)) => std::cmp::Ordering::Less,
+            (Self::Frame(..), Self::Op(_)) => std::cmp::Ordering::Greater,
+            (Self::Frame(a1, a2), Self::Frame(b1, b2)) => {
+                let c = if Arc::ptr_eq(a1, b1) {
+                    std::cmp::Ordering::Equal
+                } else {
+                    a1.cmp(b1)
+                };
+                match c {
+                    std::cmp::Ordering::Equal => {
+                        if Arc::ptr_eq(a2, b2) {
+                            std::cmp::Ordering::Equal
+                        } else {
+                            a2.cmp(b2)
+                        }
+                    }
+                    other => other,
+                }
+            }
+        }
+    }
 }
 
 pub type UseOp = VirtualUseOp<ALoc>;
@@ -2092,8 +2160,38 @@ pub struct DictType {
 /// jump to. If the field is None, go-to-definition will jump to key_loc. The field should only
 /// be populated if multiple def_locs make sense, or if we want to track fields where we want to
 /// make an extra go-to-def jump for better UX.
-#[derive(Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(Clone, Dupe)]
 pub struct Property(Rc<PropertyInner>);
+
+impl std::hash::Hash for Property {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl PartialEq for Property {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.0, &other.0) || self.0 == other.0
+    }
+}
+
+impl Eq for Property {}
+
+impl PartialOrd for Property {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl Ord for Property {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        if Rc::ptr_eq(&self.0, &other.0) {
+            std::cmp::Ordering::Equal
+        } else {
+            self.0.cmp(&other.0)
+        }
+    }
+}
 
 impl Deref for Property {
     type Target = PropertyInner;

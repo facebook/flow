@@ -41,6 +41,9 @@ enum IdInner {
 
 impl Ord for Id {
     fn cmp(&self, other: &Self) -> Ordering {
+        if Arc::ptr_eq(&self.0, &other.0) {
+            return Ordering::Equal;
+        }
         match (self.0.as_ref(), other.0.as_ref()) {
             (
                 IdInner::Source {
@@ -70,13 +73,14 @@ impl PartialOrd for Id {
 
 impl PartialEq for Id {
     fn eq(&self, other: &Self) -> bool {
-        match (self.0.as_ref(), other.0.as_ref()) {
-            (IdInner::Source { loc: loc1, .. }, IdInner::Source { loc: loc2, .. }) => {
-                loc1.quick_compare(loc2) == Ordering::Equal
+        Arc::ptr_eq(&self.0, &other.0)
+            || match (self.0.as_ref(), other.0.as_ref()) {
+                (IdInner::Source { loc: loc1, .. }, IdInner::Source { loc: loc2, .. }) => {
+                    loc1.quick_compare(loc2) == Ordering::Equal
+                }
+                (IdInner::Generated(a), IdInner::Generated(b)) => a == b,
+                _ => false,
             }
-            (IdInner::Generated(a), IdInner::Generated(b)) => a == b,
-            _ => false,
-        }
     }
 }
 

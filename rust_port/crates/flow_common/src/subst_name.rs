@@ -132,7 +132,11 @@ impl PartialOrd for SubstName {
 
 impl Ord for SubstName {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        self.0.cmp(&other.0)
+        if Arc::ptr_eq(&self.0, &other.0) {
+            std::cmp::Ordering::Equal
+        } else {
+            self.0.cmp(&other.0)
+        }
     }
 }
 
