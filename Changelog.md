@@ -1,3 +1,14 @@
+### 0.306.0
+
+New Features:
+* Support for using well-known symbols as property names in types - the form should be exactly `Symbol.iterator`.
+
+Notable bug fixes:
+* Report prop-missing errors for unbound module properties in explicit type args used with implicit instantiation (e.g. [try-Flow](https://flow.org/try/#1N4Igxg9gdgZglgcxALlAIwIZoKYBsD6uEEAztvhgE6UYCe+JADpdhgCYowa5kA0I2KAFcAtiRQAXSkOz9sADwxgJ+NPTbYuQ3BMnTZA+Y2yU4IwRO4A6SFBIrGVDGM7c+h46fNRLuKxJIGWh8MeT0ZfhYlCStpHzNsFBAMIQkIEQwJODAQfiEyfCEoAGsoCAB3KHw4KrBMsAALfAA3KjgsXGxxZC4eAw1m-GhcWn9aY3wWZlc+-g1mbDqJbDYAWglxxJ63AxJi7AlG2lXhXFwZ9z2Do5PRHEoLgyKwTqp1zce8qChFrpIqY41VqmDA+T4gIo-MB-AGrCCMLLQbirRoYGrgor-GDYVYIA7LSgkVZkCQE7q9dxFfIrVbMdJwMjghSeBIhPwYEhkSgqeEmTIQB7bPoAX34kA0SQAOlAzIwBRIAAQAKgVHIVACVWMoFTBKOkFQByKLKA0Abml0o0Lyo2B1z0RUAVGmx1BWABkIOwAMLpOU-HwAHmlCoVPtgiGQCuAVhjouDGsEGkJkc10SsADkIBpeNKAHwACnjzpMLDYmpIECElGhkcgIj9FnzMasYfgCAAlAqWFAkyQEz2TCQc1B27XfdBG83W4hO93e-3e+aoJbFrgbQq6w2fAqAGLEfPtpcrl2lj3e8f+iQB1PKKwAWQAkgBlJ8P9MAcXwAFV0+qAKJPgA8m6ABqf4ACL4H+6rqoB6oBgAjLmvAKvgBZ7hAh4KgA9NhCrlHAZwKmU5QKiWAq5CAzSDnA0BJM0AAMVgAMwMQArFYDEgMKQA))
+
+Library Definitions:
+* Updated core.js library definitions to accept readonly tuples in Map constructor
+
 ### 0.305.1
 
 * Fix in saved state on projects including files outside the project root.
