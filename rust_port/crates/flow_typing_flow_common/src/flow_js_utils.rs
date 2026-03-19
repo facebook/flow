@@ -2485,7 +2485,7 @@ pub fn mk_distributive_tparam_subst_fn(
                     lowertvars: HashMap::default(),
                     uppertvars: HashMap::default(),
                 };
-                let node = Node::create_root(Constraints::Unresolved(Box::new(bounds)));
+                let node = Node::create_root(Constraints::Unresolved(Rc::new(bounds)));
                 cx.add_tvar(tvar_id, node);
 
                 Type::new(TypeInner::OpenT(flow_typing_type::type_::Tvar::new(

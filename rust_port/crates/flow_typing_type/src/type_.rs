@@ -5630,13 +5630,13 @@ pub mod constraint {
     #[derive(Debug, Clone)]
     pub enum Constraints {
         Resolved(Type),
-        Unresolved(Box<Bounds>),
+        Unresolved(Rc<Bounds>),
         FullyResolved(forcing_state::ForcingState),
     }
 
     impl Default for Constraints {
         fn default() -> Self {
-            Constraints::Unresolved(Box::default())
+            Constraints::Unresolved(Rc::new(Bounds::default()))
         }
     }
 
@@ -6060,7 +6060,7 @@ impl TypeContext {
                         // with LazyHintT(Rc<dyn Fn>) closures that capture cx.
                         // Clear them to break: Context → graph → Bounds → UseT
                         // → LazyHintT → cx → Context.
-                        **bounds = Default::default();
+                        *Rc::make_mut(bounds) = Default::default();
                     }
                     constraint::Constraints::Resolved(_) => {
                         // Resolved contains a plain Type (no closures).

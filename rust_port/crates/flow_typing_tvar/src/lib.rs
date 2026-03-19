@@ -23,7 +23,9 @@ pub fn mk_no_wrap(cx: &Context, reason: &Reason) -> i32 {
     let tvar = mk_id() as i32;
     cx.add_tvar(
         tvar,
-        Node::create_root(constraint::Constraints::Unresolved(Box::default())),
+        Node::create_root(constraint::Constraints::Unresolved(Rc::new(
+            constraint::Bounds::default(),
+        ))),
     );
     if cx.is_verbose() {
         eprintln!(

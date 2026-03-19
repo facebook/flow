@@ -4,8 +4,10 @@
  * This source code is licensed under the MIT license found in the
  * LICENSE file in the root directory of this source tree.
  */
+
 use std::collections::BTreeMap;
 use std::collections::HashMap;
+use std::rc::Rc;
 use std::sync::Arc;
 
 use super::helpers::*;
@@ -98,7 +100,7 @@ pub(super) fn add_upper(cx: &Context, id: i32, u: &UseT, trace: DepthTrace) {
     };
     cx.modify_constraints(id, |_root_id, constraints| {
         if let constraint::Constraints::Unresolved(bounds) = constraints {
-            bounds.upper.insert(key, trace);
+            Rc::make_mut(bounds).upper.insert(key, trace);
         }
     });
 }
@@ -107,7 +109,7 @@ pub(super) fn add_upper(cx: &Context, id: i32, u: &UseT, trace: DepthTrace) {
 pub(super) fn add_lower(id: i32, l: &Type, trace: DepthTrace, use_op: UseOp, cx: &Context) {
     cx.modify_constraints(id, |_root_id, constraints| {
         if let constraint::Constraints::Unresolved(bounds) = constraints {
-            bounds.lower.insert(l.dupe(), (trace, use_op));
+            Rc::make_mut(bounds).lower.insert(l.dupe(), (trace, use_op));
         }
     });
 }
@@ -303,7 +305,7 @@ pub(super) fn add_uppertvar(
 ) {
     cx.modify_constraints(bounds_id, |_root_id, constraints| {
         if let constraint::Constraints::Unresolved(bounds) = constraints {
-            bounds.uppertvars.insert(id, (trace, use_op));
+            Rc::make_mut(bounds).uppertvars.insert(id, (trace, use_op));
         }
     });
 }
@@ -318,7 +320,7 @@ pub(super) fn add_lowertvar(
 ) {
     cx.modify_constraints(bounds_id, |_root_id, constraints| {
         if let constraint::Constraints::Unresolved(bounds) = constraints {
-            bounds.lowertvars.insert(id, (trace, use_op));
+            Rc::make_mut(bounds).lowertvars.insert(id, (trace, use_op));
         }
     });
 }
