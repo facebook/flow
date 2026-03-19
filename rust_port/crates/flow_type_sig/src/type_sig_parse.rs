@@ -6395,7 +6395,7 @@ fn member<'arena: 'ast, 'ast>(
             &'ast ast::expression::member::Property<Loc, Loc>,
         )>,
     ) -> Parsed<'arena, 'ast> {
-        for (loc, property) in chain {
+        for (loc, property) in chain.into_iter().rev() {
             let op = prop_op(opts, scope, scopes, tbls, property);
             t = Parsed::Eval(loc, Box::new(t), Box::new(op));
         }

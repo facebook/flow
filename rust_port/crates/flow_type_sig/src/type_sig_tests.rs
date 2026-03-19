@@ -5996,6 +5996,62 @@ Module {
 }
 
 #[test]
+fn chained_member_expression() {
+    // Regression test: chained member expressions like `a.b.c` must nest
+    // as `Eval(_, Eval(_, a, GetProp(b)), GetProp(c))` (left-to-right),
+    // not `Eval(_, Eval(_, a, GetProp(c)), GetProp(b))` (reversed).
+    let input = r#"
+            module.exports = a.b.c;
+        "#;
+    let expected_output = r#"Locs:
+0. [1:17-22]
+1. [1:17-20]
+2. [1:17-18]
+Type Sig:
+Module {
+    module_kind: CJSModule {
+        type_exports: [],
+        exports: Some(
+            Eval(
+                0,
+                Eval(
+                    1,
+                    Ref(
+                        BuiltinRef {
+                            ref_loc: 2,
+                            type_ref: false,
+                            name: "a",
+                        },
+                    ),
+                    GetProp(
+                        "b",
+                    ),
+                ),
+                GetProp(
+                    "c",
+                ),
+            ),
+        ),
+        info: CJSModuleInfo {
+            type_export_keys: [],
+            type_stars: [],
+            strict: true,
+            platform_availability_set: None,
+        },
+    },
+    module_refs: [],
+    local_defs: [],
+    dirty_local_defs: [],
+    remote_refs: [],
+    pattern_defs: [],
+    dirty_pattern_defs: [],
+    patterns: [],
+}
+"#;
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
+}
+
+#[test]
 fn arith_expression1() {
     let input = r#"
             module.exports = 6*7;
