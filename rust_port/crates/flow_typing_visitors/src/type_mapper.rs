@@ -765,6 +765,7 @@ pub fn def_type_default<A, M: TypeMapper<A> + ?Sized>(
         | DefTInner::EmptyT
         | DefTInner::MixedT(_)
         | DefTInner::SymbolT
+        | DefTInner::UniqueSymbolT(_)
         | DefTInner::NullT
         | DefTInner::VoidT => t.dupe(),
         DefTInner::FunT(s, f) => {

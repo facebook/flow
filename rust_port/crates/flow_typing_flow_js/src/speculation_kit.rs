@@ -927,6 +927,7 @@ fn optimize_spec_try_shortcut(
                             | DefTInner::StrGeneralT(..)
                             | DefTInner::MixedT(..)
                             | DefTInner::SymbolT
+                            | DefTInner::UniqueSymbolT(_)
                             | DefTInner::FunT(..)
                             | DefTInner::ObjT(..)
                             | DefTInner::ArrT(..)

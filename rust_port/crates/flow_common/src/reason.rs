@@ -124,6 +124,7 @@ pub enum VirtualReasonDesc<L: Dupe> {
     RNull,
     RVoidedNull,
     RSymbol,
+    RUniqueSymbol,
     RExports,
     RNullOrVoid,
     RConditionalType,
@@ -391,6 +392,7 @@ impl<A: Dupe> VirtualReasonDesc<A> {
             RNull => RNull,
             RVoidedNull => RVoidedNull,
             RSymbol => RSymbol,
+            RUniqueSymbol => RUniqueSymbol,
             RExports => RExports,
             RNullOrVoid => RNullOrVoid,
             RStringLit(n) => RStringLit(n.dupe()),
@@ -672,6 +674,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
             | RBigInt
             | RString
             | RSymbol
+            | RUniqueSymbol
             | RBoolean
             | RStringLit(_)
             | RStringPrefix { .. }
@@ -1135,6 +1138,7 @@ pub fn string_of_desc<L: Dupe>(desc: &VirtualReasonDesc<L>) -> String {
         RVoidedNull => "undefined (result of null short-circuiting an optional chain)".to_string(),
         RNullOrVoid => "null or undefined".to_string(),
         RSymbol => "symbol".to_string(),
+        RUniqueSymbol => "unique symbol".to_string(),
         RExports => "exports".to_string(),
 
         // String literals

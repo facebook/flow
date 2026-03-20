@@ -2524,13 +2524,14 @@ fn elab_t_concrete(cx: &Context, seen: FlowOrdSet<i32>, t: Type, op: Op) -> Type
                         | DefTInner::BoolGeneralT
                         | DefTInner::SingletonBoolT { .. }
                         | DefTInner::SymbolT
+                        | DefTInner::UniqueSymbolT(_)
                 ) =>
         {
             let name = match def_t.deref() {
                 DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. } => "String",
                 DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. } => "Number",
                 DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. } => "Boolean",
-                DefTInner::SymbolT => "Symbol",
+                DefTInner::SymbolT | DefTInner::UniqueSymbolT(_) => "Symbol",
                 _ => unreachable!(),
             };
             let builtin = get_builtin_type(cx, reason.dupe(), Some(true), name);
@@ -2600,7 +2601,7 @@ fn elab_t_wildcard_op(cx: &Context, seen: FlowOrdSet<i32>, t: Type, op: Op) -> T
             DefTInner::StrGeneralT(_) | DefTInner::SingletonStrT { .. } => Some("String"),
             DefTInner::NumGeneralT(_) | DefTInner::SingletonNumT { .. } => Some("Number"),
             DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. } => Some("Boolean"),
-            DefTInner::SymbolT => Some("Symbol"),
+            DefTInner::SymbolT | DefTInner::UniqueSymbolT(_) => Some("Symbol"),
             _ => None,
         };
         if let Some(name) = name {

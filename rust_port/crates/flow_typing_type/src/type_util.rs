@@ -1721,7 +1721,10 @@ where
         }
 
         (TypeInner::DefT(_, l_def), TypeInner::DefT(_, u_def))
-            if matches!((&**l_def, &**u_def), (D::SymbolT, D::SymbolT)) =>
+            if matches!(
+                (&**l_def, &**u_def),
+                (D::SymbolT | D::UniqueSymbolT(_), D::SymbolT)
+            ) =>
         {
             true
         }
@@ -1798,6 +1801,7 @@ where
                     value: expected, ..
                 },
             ) => actual.1.as_str() == expected.as_str(),
+            (D::UniqueSymbolT(id1), D::UniqueSymbolT(id2)) => id1 == id2,
             (_, D::MixedT(mixed_flavor)) => is_mixed_subtype(l, mixed_flavor.clone()),
             _ => false,
         },

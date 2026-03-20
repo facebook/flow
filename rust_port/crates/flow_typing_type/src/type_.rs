@@ -371,6 +371,7 @@ pub enum DefTInner {
     NullT,
     VoidT,
     SymbolT,
+    UniqueSymbolT(ALocId),
     NumGeneralT(Literal),
     StrGeneralT(Literal),
     BigIntGeneralT(Literal),
@@ -6436,6 +6437,20 @@ pub mod symbol_t {
     }
 }
 
+pub mod unique_symbol_t {
+    use super::*;
+
+    pub fn at(id: ALocId, loc: ALoc) -> Type {
+        Type::new(TypeInner::DefT(
+            flow_common::reason::mk_reason(
+                flow_common::reason::VirtualReasonDesc::RUniqueSymbol,
+                loc,
+            ),
+            DefT::new(DefTInner::UniqueSymbolT(id)),
+        ))
+    }
+}
+
 pub mod mixed_t {
     use super::*;
 
@@ -6952,6 +6967,7 @@ pub fn string_of_def_ctor(def: &DefT) -> &'static str {
         DefTInner::SingletonBigIntT { .. } => "SingletonBigIntT",
         DefTInner::StrGeneralT { .. } => "StrT",
         DefTInner::SymbolT => "SymbolT",
+        DefTInner::UniqueSymbolT(_) => "UniqueSymbolT",
         DefTInner::TypeT { .. } => "TypeT",
         DefTInner::VoidT => "VoidT",
     }

@@ -559,6 +559,7 @@ fn def_t_to_json(cx: &Context, depth: i32, def_t: &DefT) -> Json {
         DefTInner::NullT => json_with_type("Null", vec![]),
         DefTInner::VoidT => json_with_type("Void", vec![]),
         DefTInner::SymbolT => json_with_type("Symbol", vec![]),
+        DefTInner::UniqueSymbolT(_) => json_with_type("UniqueSymbol", vec![]),
         DefTInner::FunT(static_, funtype) => json_with_type(
             "Fun",
             vec![

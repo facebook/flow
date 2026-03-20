@@ -263,7 +263,7 @@ let try_eval_concrete_type_truthyness cx t =
   | DefT (reason, NullT)
   | DefT (reason, VoidT) ->
     ConstCond_Falsy { constant_condition_kind = ConstCond_General; reason = Some reason }
-  | DefT (_, SymbolT) -> ConstCond_Unknown
+  | DefT (_, (SymbolT | UniqueSymbolT _)) -> ConstCond_Unknown
   | DefT (reason, FunT _) ->
     ConstCond_Truthy { constant_condition_kind = UncalledFunction; reason = Some reason }
   | DefT (_, ObjT _) -> ConstCond_Unknown

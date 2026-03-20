@@ -474,7 +474,7 @@ let not_string t =
 
 let symbol loc t =
   match t with
-  | DefT (_, SymbolT) -> unchanged_result t
+  | DefT (_, (SymbolT | UniqueSymbolT _)) -> unchanged_result t
   | DefT (_, MixedT _)
   | AnyT _ ->
     SymbolT.why (mk_reason RSymbol loc) |> changed_result
@@ -482,7 +482,7 @@ let symbol loc t =
 
 let not_symbol t =
   match t with
-  | DefT (_, SymbolT) -> DefT (reason_of_t t, EmptyT) |> changed_result
+  | DefT (_, (SymbolT | UniqueSymbolT _)) -> DefT (reason_of_t t, EmptyT) |> changed_result
   | _ -> unchanged_result t
 
 let number loc t =
@@ -841,7 +841,9 @@ let sentinel_of_tuple cx elements =
 let rec tag_of_def_t cx = function
   | NullT -> Some (TypeTagSet.singleton NullTag)
   | VoidT -> Some (TypeTagSet.singleton VoidTag)
-  | SymbolT -> Some (TypeTagSet.singleton SymbolTag)
+  | SymbolT
+  | UniqueSymbolT _ ->
+    Some (TypeTagSet.singleton SymbolTag)
   | FunT _ -> Some (TypeTagSet.singleton FunTag)
   | SingletonBoolT _
   | BoolGeneralT ->

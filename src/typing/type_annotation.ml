@@ -406,7 +406,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           );
         Tast_utils.error_mapper#type_ t
       ) else
-        ((loc, SymbolT.at loc), snd t)
+        ((loc, UniqueSymbolT.at (Context.make_aloc_id env.cx loc) loc), snd t)
     | (loc, Nullable { Nullable.argument = t; comments }) ->
       let (((_, t), _) as t_ast) = convert env t in
       let reason = mk_annot_reason (RMaybe (desc_of_t t)) loc in

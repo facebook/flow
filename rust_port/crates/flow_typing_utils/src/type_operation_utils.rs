@@ -369,6 +369,7 @@ pub mod operators {
                         | DefTInner::SingletonStrT { .. }
                         | DefTInner::SingletonBoolT { .. }
                         | DefTInner::SymbolT
+                        | DefTInner::UniqueSymbolT(_)
                         | DefTInner::EnumObjectT { .. }
                         | DefTInner::EnumValueT(_)
                 ),
@@ -434,8 +435,13 @@ pub mod operators {
                             true
                         }
                         (TypeInner::DefT(_, def_l), TypeInner::DefT(_, def_r))
-                            if matches!(def_l.deref(), DefTInner::SymbolT)
-                                && matches!(def_r.deref(), DefTInner::SymbolT) =>
+                            if matches!(
+                                def_l.deref(),
+                                DefTInner::SymbolT | DefTInner::UniqueSymbolT(_)
+                            ) && matches!(
+                                def_r.deref(),
+                                DefTInner::SymbolT | DefTInner::UniqueSymbolT(_)
+                            ) =>
                         {
                             true
                         }

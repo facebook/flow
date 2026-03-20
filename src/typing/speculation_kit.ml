@@ -502,9 +502,9 @@ module Make (Flow : INPUT) : OUTPUT = struct
         (* Types that are definitely incompatible with enums, after the above case. *)
         | DefT
             ( _,
-              ( NumGeneralT _ | BigIntGeneralT _ | StrGeneralT _ | MixedT _ | SymbolT | FunT _
-              | ObjT _ | ArrT _ | ClassT _ | InstanceT _ | TypeT _ | PolyT _
-              | ReactAbstractComponentT _ | EnumValueT _ | EnumObjectT _ )
+              ( NumGeneralT _ | BigIntGeneralT _ | StrGeneralT _ | MixedT _ | SymbolT
+              | UniqueSymbolT _ | FunT _ | ObjT _ | ArrT _ | ClassT _ | InstanceT _ | TypeT _
+              | PolyT _ | ReactAbstractComponentT _ | EnumValueT _ | EnumObjectT _ )
             )
           when Base.Option.is_some (UnionRep.check_enum rep) ->
           add_output

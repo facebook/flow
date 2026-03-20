@@ -1339,6 +1339,23 @@ module Make (Flow : INPUT) : OUTPUT = struct
       add_output
         cx
         (Error_message.EExpectedBigIntLit { reason_lower = rl; reason_upper = ru; use_op })
+    (********************************)
+    (* unique symbol ~> unique symbol *)
+    (********************************)
+    | (DefT (_, UniqueSymbolT id1), DefT (_, UniqueSymbolT id2)) when ALoc.equal_id id1 id2 -> ()
+    | (DefT (rl, UniqueSymbolT _), DefT (ru, UniqueSymbolT _)) ->
+      add_output
+        cx
+        (Error_message.EIncompatibleWithUseOp
+           { reason_lower = rl; reason_upper = ru; use_op; explanation = None }
+        )
+    (* symbol ~> unique symbol: ERROR *)
+    | (DefT (rl, SymbolT), DefT (ru, UniqueSymbolT _)) ->
+      add_output
+        cx
+        (Error_message.EIncompatibleWithUseOp
+           { reason_lower = rl; reason_upper = ru; use_op; explanation = None }
+        )
     (*****************************************************)
     (* keys (NOTE: currently we only support string keys *)
     (*****************************************************)
@@ -2823,7 +2840,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | DefT (_, StrGeneralT _)
         | DefT (_, SingletonStrT _) ->
           Some "string"
-        | DefT (_, SymbolT) -> Some "symbol"
+        | DefT (_, (SymbolT | UniqueSymbolT _)) -> Some "symbol"
         | DefT (_, BigIntGeneralT _)
         | DefT (_, SingletonBigIntT _) ->
           Some "bigint"

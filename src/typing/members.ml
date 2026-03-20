@@ -577,7 +577,8 @@ let rec extract_type cx this_t =
   | DefT (reason, SingletonBigIntT _)
   | DefT (reason, BigIntGeneralT _) ->
     get_builtin_type cx reason "BigInt" |> extract_type cx
-  | DefT (reason, SymbolT) -> get_builtin_type cx reason "Symbol" |> extract_type cx
+  | DefT (reason, (SymbolT | UniqueSymbolT _)) ->
+    get_builtin_type cx reason "Symbol" |> extract_type cx
   | DefT (_, ReactAbstractComponentT _) as t -> Success t
   | DefT (_, RendersT _) as t -> Success t
   | NominalT

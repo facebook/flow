@@ -194,6 +194,7 @@ module rec TypeTerm : sig
     | NullT
     | VoidT
     | SymbolT
+    | UniqueSymbolT of ALoc.id
     | FunT of static * funtype
     | ObjT of objtype
     | ArrT of arrtype
@@ -3913,6 +3914,10 @@ module SymbolT = Primitive (struct
   let make r = DefT (r, SymbolT)
 end)
 
+module UniqueSymbolT = struct
+  let at id loc = DefT (mk_reason RUniqueSymbol loc, UniqueSymbolT id)
+end
+
 module MixedT = Primitive (struct
   let desc = RMixed
 
@@ -4125,6 +4130,7 @@ let string_of_def_ctor = function
   | SingletonBigIntT _ -> "SingletonBigIntT"
   | StrGeneralT _ -> "StrT"
   | SymbolT -> "SymbolT"
+  | UniqueSymbolT _ -> "UniqueSymbolT"
   | TypeT _ -> "TypeT"
   | VoidT -> "VoidT"
 

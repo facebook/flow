@@ -352,6 +352,7 @@ pub fn def_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
         | DefTInner::EmptyT
         | DefTInner::MixedT(_)
         | DefTInner::SymbolT
+        | DefTInner::UniqueSymbolT(_)
         | DefTInner::NullT
         | DefTInner::VoidT => acc,
 

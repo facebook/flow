@@ -442,22 +442,159 @@ References:
                      ^^^^^ [2]
 
 
-Error --------------------------------------------------------------------------------------------- unique_symbol.js:7:1
+Error --------------------------------------------------------------------------------------------- unique_symbol.js:8:1
 
-Cannot cast `x` to empty because symbol [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because unique symbol [1] is incompatible with empty [2]. [incompatible-type]
 
-   unique_symbol.js:7:1
-   7| x as empty; // ERROR
+   unique_symbol.js:8:1
+   8| x as empty;            // ERROR
       ^
 
 References:
    unique_symbol.js:1:18
    1| declare const x: unique symbol;
                        ^^^^^^^^^^^^^ [1]
-   unique_symbol.js:7:6
-   7| x as empty; // ERROR
+   unique_symbol.js:8:6
+   8| x as empty;            // ERROR
            ^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------------- unique_symbol.js:12:1
 
-Found 32 errors
+Cannot cast `s` to `typeof x` because symbol [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   unique_symbol.js:12:1
+   12| s as typeof x;  // ERROR - symbol doesn't flow to unique symbol
+       ^
+
+References:
+   unique_symbol.js:11:18
+   11| declare const s: symbol;
+                        ^^^^^^ [1]
+   unique_symbol.js:12:6
+   12| s as typeof x;  // ERROR - symbol doesn't flow to unique symbol
+            ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- unique_symbol.js:15:1
+
+Cannot cast `y` to `typeof x` because unique symbol [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   unique_symbol.js:15:1
+   15| y as typeof x;         // ERROR - different unique symbols are incompatible
+       ^
+
+References:
+   unique_symbol.js:2:18
+    2| declare const y: unique symbol;
+                        ^^^^^^^^^^^^^ [1]
+   unique_symbol.js:15:6
+   15| y as typeof x;         // ERROR - different unique symbols are incompatible
+            ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- unique_symbol.js:40:8
+
+Cannot call `takesX` with `y` bound to `s` because unique symbol [1] is incompatible with unique symbol [2].
+[incompatible-type]
+
+   unique_symbol.js:40:8
+   40| takesX(y);      // ERROR - different unique symbol
+              ^
+
+References:
+   unique_symbol.js:2:18
+    2| declare const y: unique symbol;
+                        ^^^^^^^^^^^^^ [1]
+   unique_symbol.js:37:28
+   37| declare function takesX(s: typeof x): void;
+                                  ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- unique_symbol.js:45:1
+
+Cannot cast `a` to `typeof y` because unique symbol [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   unique_symbol.js:45:1
+   45| a as typeof y;  // ERROR
+       ^
+
+References:
+   unique_symbol.js:43:18
+   43| declare const a: typeof x;
+                        ^^^^^^^^ [1]
+   unique_symbol.js:45:6
+   45| a as typeof y;  // ERROR
+            ^^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- unique_symbol.js:48:1
+
+Cannot cast `x` to string because unique symbol [1] is incompatible with string [2]. [incompatible-type]
+
+   unique_symbol.js:48:1
+   48| x as string; // ERROR
+       ^
+
+References:
+   unique_symbol.js:1:18
+    1| declare const x: unique symbol;
+                        ^^^^^^^^^^^^^ [1]
+   unique_symbol.js:48:6
+   48| x as string; // ERROR
+            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- unique_symbol.js:49:1
+
+Cannot cast `x` to number because unique symbol [1] is incompatible with number [2]. [incompatible-type]
+
+   unique_symbol.js:49:1
+   49| x as number; // ERROR
+       ^
+
+References:
+   unique_symbol.js:1:18
+    1| declare const x: unique symbol;
+                        ^^^^^^^^^^^^^ [1]
+   unique_symbol.js:49:6
+   49| x as number; // ERROR
+            ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- unique_symbol.js:50:1
+
+Cannot cast `x` to boolean because unique symbol [1] is incompatible with boolean [2]. [incompatible-type]
+
+   unique_symbol.js:50:1
+   50| x as boolean; // ERROR
+       ^
+
+References:
+   unique_symbol.js:1:18
+    1| declare const x: unique symbol;
+                        ^^^^^^^^^^^^^ [1]
+   unique_symbol.js:50:6
+   50| x as boolean; // ERROR
+            ^^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------------------- unique_symbol.js:55:1
+
+Cannot cast `m` to `typeof x` because `unknown` [1] is incompatible with unique symbol [2]. [incompatible-type]
+
+   unique_symbol.js:55:1
+   55| m as typeof x; // ERROR - mixed doesn't flow to unique symbol
+       ^
+
+References:
+   unique_symbol.js:54:18
+   54| declare const m: mixed;
+                        ^^^^^ [1]
+   unique_symbol.js:55:6
+   55| m as typeof x; // ERROR - mixed doesn't flow to unique symbol
+            ^^^^^^^^ [2]
+
+
+
+Found 40 errors

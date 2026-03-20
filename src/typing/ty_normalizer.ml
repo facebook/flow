@@ -801,7 +801,7 @@ module Make (I : INPUT) : S = struct
       | DefT (_, BigIntGeneralT _) -> return Ty.BigInt
       | DefT (_, EmptyT) -> return (mk_empty Ty.EmptyType)
       | DefT (_, NullT) -> return Ty.Null
-      | DefT (_, SymbolT) -> return Ty.Symbol
+      | DefT (_, (SymbolT | UniqueSymbolT _)) -> return Ty.Symbol
       | DefT (_, NumericStrKeyT (_, s)) -> return (Ty.StrLit (OrdinaryName s))
       | DefT (_, SingletonNumT { value = (_, lit); _ }) -> return (Ty.NumLit lit)
       | DefT (_, SingletonStrT { value = lit; _ }) -> return (Ty.StrLit lit)
@@ -2404,7 +2404,7 @@ module Make (I : INPUT) : S = struct
       | DefT (r, (NumGeneralT _ | SingletonNumT _)) -> primitive ~env r "Number"
       | DefT (r, (StrGeneralT _ | SingletonStrT _)) -> primitive ~env r "String"
       | DefT (r, (BoolGeneralT | SingletonBoolT _)) -> primitive ~env r "Boolean"
-      | DefT (r, SymbolT) -> primitive ~env r "Symbol"
+      | DefT (r, (SymbolT | UniqueSymbolT _)) -> primitive ~env r "Symbol"
       | DefT (_, EnumValueT _) -> return no_members
       | ObjProtoT r -> primitive ~env r "Object"
       | FunProtoT r -> primitive ~env r "Function"

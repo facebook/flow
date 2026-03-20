@@ -268,7 +268,8 @@ fn check_polarity_impl(
             | DefTInner::SingletonBigIntT { .. }
             | DefTInner::StrGeneralT(_)
             | DefTInner::VoidT
-            | DefTInner::SymbolT => {}
+            | DefTInner::SymbolT
+            | DefTInner::UniqueSymbolT(_) => {}
             DefTInner::ClassT(inner_t) => {
                 check_polarity_impl(cx, trace, seen, tparams, polarity, inner_t)?;
             }

@@ -473,6 +473,7 @@ type ('loc, 'a) annot =
   | Void of 'loc
   | Null of 'loc
   | Symbol of 'loc
+  | UniqueSymbol of 'loc
   | Number of 'loc
   | BigInt of 'loc
   | String of 'loc

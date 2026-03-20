@@ -304,9 +304,11 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
                 let extra = string_of_mixed_flavor(flavor);
                 p(cx, t, true, extra)
             }
-            DefTInner::EmptyT | DefTInner::SymbolT | DefTInner::NullT | DefTInner::VoidT => {
-                p(cx, t, true, "")
-            }
+            DefTInner::EmptyT
+            | DefTInner::SymbolT
+            | DefTInner::UniqueSymbolT(_)
+            | DefTInner::NullT
+            | DefTInner::VoidT => p(cx, t, true, ""),
             DefTInner::PolyT {
                 tparams, t_out, id, ..
             } => {

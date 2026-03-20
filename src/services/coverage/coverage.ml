@@ -168,7 +168,7 @@ let visitor =
       | DefT (_, MixedT _)
       | DefT (_, NumGeneralT _)
       | DefT (_, NullT)
-      | DefT (_, SymbolT)
+      | DefT (_, (SymbolT | UniqueSymbolT _))
       | DefT (_, ObjT _)
       | DefT (_, ReactAbstractComponentT _)
       | DefT (_, RendersT _)

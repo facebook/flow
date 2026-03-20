@@ -5163,7 +5163,7 @@ struct
         (***********************)
         (* Symbol library call *)
         (***********************)
-        | (DefT (reason, SymbolT), u) when primitive_promoting_use_t u ->
+        | (DefT (reason, (SymbolT | UniqueSymbolT _)), u) when primitive_promoting_use_t u ->
           rec_flow cx trace (get_builtin_type cx ~trace reason "Symbol", u)
         (*****************************************************)
         (* Nice error messages for mixed function refinement *)

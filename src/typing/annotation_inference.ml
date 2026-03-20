@@ -1265,7 +1265,7 @@ module rec ConsGen : S = struct
     | (DefT (reason, (BoolGeneralT | SingletonBoolT _)), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "Boolean" in
       elab_t cx builtin op
-    | (DefT (reason, SymbolT), _) when primitive_promoting_op op ->
+    | (DefT (reason, (SymbolT | UniqueSymbolT _)), _) when primitive_promoting_op op ->
       let builtin = get_builtin_type cx reason ~use_desc:true "Symbol" in
       elab_t cx builtin op
     | (DefT (lreason, MixedT Mixed_function), (Annot_GetPropT _ | Annot_LookupT _)) ->

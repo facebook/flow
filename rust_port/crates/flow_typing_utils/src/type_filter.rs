@@ -1177,7 +1177,11 @@ pub fn not_string(t: Type) -> FilterResult {
 
 pub fn symbol(loc: ALoc, t: Type) -> FilterResult {
     match t.deref() {
-        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::SymbolT) => unchanged_result(t),
+        TypeInner::DefT(_, d)
+            if matches!(&**d, DefTInner::SymbolT | DefTInner::UniqueSymbolT(_)) =>
+        {
+            unchanged_result(t)
+        }
         TypeInner::DefT(_, d) if matches!(&**d, DefTInner::MixedT(_)) => {
             changed_result(symbol_t::why(mk_reason(VirtualReasonDesc::RSymbol, loc)))
         }
@@ -1190,7 +1194,9 @@ pub fn symbol(loc: ALoc, t: Type) -> FilterResult {
 
 pub fn not_symbol(t: Type) -> FilterResult {
     match t.deref() {
-        TypeInner::DefT(_, d) if matches!(&**d, DefTInner::SymbolT) => {
+        TypeInner::DefT(_, d)
+            if matches!(&**d, DefTInner::SymbolT | DefTInner::UniqueSymbolT(_)) =>
+        {
             changed_result(empty_t::why(reason_of_t(&t).dupe()))
         }
         _ => unchanged_result(t),
@@ -1919,7 +1925,9 @@ fn tag_of_def_t(cx: &Context, d: &DefTInner) -> Option<TypeTagSet> {
     match d {
         DefTInner::NullT => Some(BTreeSet::from([TypeTag(TypeTagInner::NullTag)])),
         DefTInner::VoidT => Some(BTreeSet::from([TypeTag(TypeTagInner::VoidTag)])),
-        DefTInner::SymbolT => Some(BTreeSet::from([TypeTag(TypeTagInner::SymbolTag)])),
+        DefTInner::SymbolT | DefTInner::UniqueSymbolT(_) => {
+            Some(BTreeSet::from([TypeTag(TypeTagInner::SymbolTag)]))
+        }
         DefTInner::FunT(_, _) => Some(BTreeSet::from([TypeTag(TypeTagInner::FunTag)])),
         DefTInner::SingletonBoolT { .. } | DefTInner::BoolGeneralT => {
             Some(BTreeSet::from([TypeTag(TypeTagInner::BoolTag)]))

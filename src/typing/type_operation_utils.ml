@@ -155,7 +155,7 @@ module Operators = struct
       | DefT
           ( _,
             ( NumGeneralT _ | StrGeneralT _ | BoolGeneralT | SingletonNumT _ | SingletonStrT _
-            | SingletonBoolT _ | SymbolT | EnumObjectT _ | EnumValueT _ )
+            | SingletonBoolT _ | SymbolT | UniqueSymbolT _ | EnumObjectT _ | EnumValueT _ )
           ) ->
         true
       | _ -> false
@@ -176,7 +176,7 @@ module Operators = struct
           (DefT (_, (StrGeneralT _ | SingletonStrT _)) | StrUtilT _)
         )
       | (DefT (_, (BoolGeneralT | SingletonBoolT _)), DefT (_, (BoolGeneralT | SingletonBoolT _)))
-      | (DefT (_, SymbolT), DefT (_, SymbolT)) ->
+      | (DefT (_, (SymbolT | UniqueSymbolT _)), DefT (_, (SymbolT | UniqueSymbolT _))) ->
         true
       | (t1, t2) -> (not (will_fail_check_if_unmatched t1)) && not (will_fail_check_if_unmatched t2)
     in

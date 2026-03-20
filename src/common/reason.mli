@@ -23,6 +23,7 @@ type 'loc virtual_reason_desc =
   | RNull
   | RVoidedNull
   | RSymbol
+  | RUniqueSymbol
   | RExports
   | RNullOrVoid
   | RStringLit of name

@@ -264,6 +264,7 @@ pub mod invalid_cyclic_type_validation {
                         | DefTInner::NullT
                         | DefTInner::VoidT
                         | DefTInner::SymbolT
+                        | DefTInner::UniqueSymbolT(_)
                         | DefTInner::SingletonStrT { .. }
                         | DefTInner::NumericStrKeyT(_)
                         | DefTInner::SingletonNumT { .. }

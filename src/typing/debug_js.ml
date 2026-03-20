@@ -177,7 +177,7 @@ let rec dump_t_ (depth, tvars) cx t =
     | AnyT (_, src) -> p ~extra:(string_of_any_source src) t
     | DefT (_, MixedT flavor) -> p ~extra:(string_of_mixed_flavor flavor) t
     | DefT (_, EmptyT)
-    | DefT (_, SymbolT)
+    | DefT (_, (SymbolT | UniqueSymbolT _))
     | DefT (_, NullT)
     | DefT (_, VoidT) ->
       p t

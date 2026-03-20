@@ -517,7 +517,7 @@ fn try_eval_concrete_type_truthyness(cx: &Context, t: &Type) -> TruthynessResult
                 constant_condition_kind: ConstantConditionKind::ConstCondGeneral,
                 reason: Some(reason.dupe()),
             },
-            DefTInner::SymbolT => TruthynessResult::ConstCondUnknown,
+            DefTInner::SymbolT | DefTInner::UniqueSymbolT(_) => TruthynessResult::ConstCondUnknown,
             DefTInner::FunT(..) => TruthynessResult::ConstCondTruthy {
                 constant_condition_kind: ConstantConditionKind::UncalledFunction,
                 reason: Some(reason.dupe()),

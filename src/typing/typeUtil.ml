@@ -574,7 +574,7 @@ let ground_subtype ~on_singleton_eq (l, u) =
   | (DefT (_, (StrGeneralT _ | SingletonStrT _)), DefT (_, StrGeneralT _))
   | (DefT (_, (BoolGeneralT | SingletonBoolT _)), DefT (_, BoolGeneralT))
   | (DefT (_, (BigIntGeneralT _ | SingletonBigIntT _)), DefT (_, BigIntGeneralT _))
-  | (DefT (_, SymbolT), DefT (_, SymbolT))
+  | (DefT (_, (SymbolT | UniqueSymbolT _)), DefT (_, SymbolT))
   | (DefT (_, NullT), DefT (_, NullT))
   | (DefT (_, VoidT), DefT (_, VoidT)) ->
     true
@@ -601,6 +601,7 @@ let ground_subtype ~on_singleton_eq (l, u) =
     let result = expected = actual in
     if result then on_singleton_eq l;
     result
+  | (DefT (_, UniqueSymbolT id1), DefT (_, UniqueSymbolT id2)) -> ALoc.equal_id id1 id2
   | ( StrUtilT { reason = _; op = StrPrefix prefix1; remainder = _ },
       StrUtilT { reason = _; op = StrPrefix prefix2; remainder = None }
     )

@@ -397,6 +397,7 @@ and def_t_to_json cx depth (def_t : def_t) : json =
   | NullT -> json_with_type "Null" []
   | VoidT -> json_with_type "Void" []
   | SymbolT -> json_with_type "Symbol" []
+  | UniqueSymbolT _ -> json_with_type "UniqueSymbol" []
   | FunT (static, funtype) ->
     json_with_type
       "Fun"

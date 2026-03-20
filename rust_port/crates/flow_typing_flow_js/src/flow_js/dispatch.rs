@@ -9059,7 +9059,10 @@ fn __flow_impl(
         // * Symbol library call *
         // ***********************
         (TypeInner::DefT(reason, def_t), _)
-            if matches!(def_t.deref(), DefTInner::SymbolT) && primitive_promoting_use_t(u) =>
+            if matches!(
+                def_t.deref(),
+                DefTInner::SymbolT | DefTInner::UniqueSymbolT(_)
+            ) && primitive_promoting_use_t(u) =>
         {
             let symbol_t = helpers::get_builtin_type(cx, Some(trace), reason, None, "Symbol")?;
             rec_flow(cx, trace, (&symbol_t, u))?;

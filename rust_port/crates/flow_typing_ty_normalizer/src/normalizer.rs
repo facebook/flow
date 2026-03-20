@@ -1222,7 +1222,7 @@ mod type_converter {
                 DefTInner::StrGeneralT(_) => Ok(Arc::new(ty::Ty::Str)),
                 DefTInner::BoolGeneralT => Ok(Arc::new(ty::Ty::Bool)),
                 DefTInner::BigIntGeneralT(_) => Ok(Arc::new(ty::Ty::BigInt)),
-                DefTInner::SymbolT => Ok(Arc::new(ty::Ty::Symbol)),
+                DefTInner::SymbolT | DefTInner::UniqueSymbolT(_) => Ok(Arc::new(ty::Ty::Symbol)),
                 DefTInner::EmptyT => Ok(mk_empty(BotKind::EmptyType)),
                 DefTInner::NumericStrKeyT(num_lit) => {
                     Ok(Arc::new(ty::Ty::StrLit(Name::new(num_lit.1.to_string()))))
@@ -4396,7 +4396,7 @@ mod expand_members {
                 DefTInner::BoolGeneralT | DefTInner::SingletonBoolT { .. } => {
                     primitive::<I>(env, state, force_instance, allowed_prop_names, r, "Boolean")
                 }
-                DefTInner::SymbolT => {
+                DefTInner::SymbolT | DefTInner::UniqueSymbolT(_) => {
                     primitive::<I>(env, state, force_instance, allowed_prop_names, r, "Symbol")
                 }
                 DefTInner::EnumValueT(_) => Ok(no_members()),

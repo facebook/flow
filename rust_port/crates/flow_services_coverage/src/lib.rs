@@ -196,6 +196,7 @@ impl CoverageVisitor {
                 | DefTInner::NumGeneralT(_)
                 | DefTInner::NullT
                 | DefTInner::SymbolT
+                | DefTInner::UniqueSymbolT(_)
                 | DefTInner::ObjT(_)
                 | DefTInner::ReactAbstractComponentT { .. }
                 | DefTInner::RendersT(_)

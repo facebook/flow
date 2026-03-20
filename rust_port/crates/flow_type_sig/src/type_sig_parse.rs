@@ -3336,7 +3336,7 @@ fn annot_with_loc<'arena, 'ast>(
         TypeInner::Unknown { .. } => Parsed::Annot(Box::new(ParsedAnnot::Mixed(loc))),
         TypeInner::Never { .. } => Parsed::Annot(Box::new(ParsedAnnot::Empty(loc))),
         TypeInner::Undefined { .. } => Parsed::Annot(Box::new(ParsedAnnot::Void(loc))),
-        TypeInner::UniqueSymbol { .. } => Parsed::Annot(Box::new(ParsedAnnot::Symbol(loc))),
+        TypeInner::UniqueSymbol { .. } => Parsed::Annot(Box::new(ParsedAnnot::UniqueSymbol(loc))),
         TypeInner::StringLiteral { literal, .. } => Parsed::Annot(Box::new(
             ParsedAnnot::SingletonString(loc, literal.value.dupe()),
         )),

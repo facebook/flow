@@ -56,7 +56,7 @@ end = struct
     | DefT (_, SingletonBigIntT _)
     | DefT (_, StrGeneralT _)
     | DefT (_, VoidT)
-    | DefT (_, SymbolT)
+    | DefT (_, (SymbolT | UniqueSymbolT _))
     | FunProtoBindT _
     | FunProtoT _
     | NullProtoT _

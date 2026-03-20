@@ -1242,6 +1242,9 @@ fn merge_annot(env: &MergeEnv, file: &File, annot: &Pack::PackedAnnot<ALoc>) -> 
         Annot::Void(loc) => type_::void::at(loc.dupe()),
         Annot::Null(loc) => type_::null::at(loc.dupe()),
         Annot::Symbol(loc) => type_::symbol_t::at(loc.dupe()),
+        Annot::UniqueSymbol(loc) => {
+            type_::unique_symbol_t::at(file.cx.make_aloc_id(loc), loc.dupe())
+        }
         Annot::Number(loc) => type_::num_module_t::at(loc.dupe()),
         Annot::BigInt(loc) => type_::bigint_module_t::at(loc.dupe()),
         Annot::String(loc) => type_::str_module_t::at(loc.dupe()),

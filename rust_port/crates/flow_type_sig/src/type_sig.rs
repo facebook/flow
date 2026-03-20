@@ -1896,6 +1896,7 @@ pub enum Annot<Loc, T> {
     Void(Loc),
     Null(Loc),
     Symbol(Loc),
+    UniqueSymbol(Loc),
     Number(Loc),
     BigInt(Loc),
     String(Loc),
@@ -2036,6 +2037,7 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
             | Annot::Void(l)
             | Annot::Null(l)
             | Annot::Symbol(l)
+            | Annot::UniqueSymbol(l)
             | Annot::Number(l)
             | Annot::BigInt(l)
             | Annot::String(l)
@@ -2261,6 +2263,7 @@ impl<Loc, T> Annot<Loc, T> {
             | Annot::Void(loc)
             | Annot::Null(loc)
             | Annot::Symbol(loc)
+            | Annot::UniqueSymbol(loc)
             | Annot::Number(loc)
             | Annot::BigInt(loc)
             | Annot::String(loc)
@@ -2575,6 +2578,7 @@ impl<Loc, T> Annot<Loc, T> {
             Annot::Void(loc) => Annot::Void(f_loc(cx, loc)),
             Annot::Null(loc) => Annot::Null(f_loc(cx, loc)),
             Annot::Symbol(loc) => Annot::Symbol(f_loc(cx, loc)),
+            Annot::UniqueSymbol(loc) => Annot::UniqueSymbol(f_loc(cx, loc)),
             Annot::Number(loc) => Annot::Number(f_loc(cx, loc)),
             Annot::BigInt(loc) => Annot::BigInt(f_loc(cx, loc)),
             Annot::String(loc) => Annot::String(f_loc(cx, loc)),

@@ -55,6 +55,7 @@ type 'loc virtual_reason_desc =
   | RNull
   | RVoidedNull
   | RSymbol
+  | RUniqueSymbol
   | RExports
   | RNullOrVoid
   | RStringLit of name
@@ -286,12 +287,12 @@ type reason_desc = ALoc.t virtual_reason_desc
 
 let rec map_desc_locs f = function
   | ( RAnyExplicit | RAnyImplicit | RNumber | RBigInt | RString | RBoolean | RMixed | REmpty | RVoid
-    | RNull | RVoidedNull | RSymbol | RExports | RNullOrVoid | RStringLit _ | RStringPrefix _
-    | RStringWithoutPrefix _ | RStringSuffix _ | RStringWithoutSuffix _ | RNumberLit _
-    | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit | RObjectLit_UNSOUND
-    | RObjectType | RInterfaceType | RArray | RArrayLit | RArrayLit_UNSOUND | RConstArrayLit
-    | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole | RROArrayType
-    | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
+    | RNull | RVoidedNull | RSymbol | RUniqueSymbol | RExports | RNullOrVoid | RStringLit _
+    | RStringPrefix _ | RStringWithoutPrefix _ | RStringSuffix _ | RStringWithoutSuffix _
+    | RNumberLit _ | RBigIntLit _ | RBooleanLit _ | RObject | RConstObjectLit | RObjectLit
+    | RObjectLit_UNSOUND | RObjectType | RInterfaceType | RArray | RArrayLit | RArrayLit_UNSOUND
+    | RConstArrayLit | REmptyArrayLit | RArrayType | RArrayElement | RArrayNthElement _ | RArrayHole
+    | RROArrayType | RTupleType | RTupleElement _ | RTupleLength _ | RTupleOutOfBoundsAccess _
     | RTupleUnknownElementFromInexact | RFunction _ | RFunctionType | RFunctionBody
     | RFunctionUnusedArgument | RJSXChild | RJSXFunctionCall _ | RJSXIdentifier _
     | RJSXElementProps _ | RJSXElement _ | RJSXText | RFbt | RUninitialized | RPossiblyUninitialized
@@ -579,6 +580,7 @@ let rec string_of_desc = function
   | RVoidedNull -> "undefined (result of null short-circuiting an optional chain)"
   | RNullOrVoid -> "null or undefined"
   | RSymbol -> "symbol"
+  | RUniqueSymbol -> "unique symbol"
   | RExports -> "exports"
   | RStringLit (OrdinaryName "") -> "empty string"
   | RStringLit x -> spf "string literal `%s`" (display_string_of_name x)
@@ -1378,6 +1380,7 @@ let classification_of_reason_desc desc =
   | RBigInt
   | RString
   | RSymbol
+  | RUniqueSymbol
   | RBoolean
   | RStringLit _
   | RStringPrefix _

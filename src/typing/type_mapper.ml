@@ -259,6 +259,7 @@ class virtual ['a] t =
       | EmptyT
       | MixedT _
       | SymbolT
+      | UniqueSymbolT _
       | NullT
       | VoidT ->
         t

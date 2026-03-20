@@ -2299,6 +2299,45 @@ pub fn rec_sub_t(
             )
         }
 
+        // **********************************
+        // * unique symbol ~> unique symbol *
+        // **********************************
+        (TypeInner::DefT(_, ld), TypeInner::DefT(_, ud))
+            if let (DefTInner::UniqueSymbolT(id1), DefTInner::UniqueSymbolT(id2)) =
+                (ld.deref(), ud.deref())
+                && id1 == id2 =>
+        {
+            Ok(())
+        }
+        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
+            if matches!(ld.deref(), DefTInner::UniqueSymbolT(_))
+                && matches!(ud.deref(), DefTInner::UniqueSymbolT(_)) =>
+        {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EIncompatibleWithUseOp {
+                    reason_lower: rl.dupe(),
+                    reason_upper: ru.dupe(),
+                    use_op,
+                    explanation: None,
+                },
+            )
+        }
+        // symbol ~> unique symbol: ERROR
+        (TypeInner::DefT(rl, ld), TypeInner::DefT(ru, ud))
+            if matches!(ld.deref(), DefTInner::SymbolT)
+                && matches!(ud.deref(), DefTInner::UniqueSymbolT(_)) =>
+        {
+            flow_js_utils::add_output(
+                cx,
+                ErrorMessage::EIncompatibleWithUseOp {
+                    reason_lower: rl.dupe(),
+                    reason_upper: ru.dupe(),
+                    use_op,
+                    explanation: None,
+                },
+            )
+        }
         // ****************************************************
         // keys (NOTE: currently we only support string keys)
         // ****************************************************
@@ -5089,7 +5128,9 @@ pub fn rec_sub_t(
                 {
                     Some(FlowSmolStr::new_inline("string"))
                 }
-                TypeInner::DefT(_, d) if matches!(d.deref(), DefTInner::SymbolT) => {
+                TypeInner::DefT(_, d)
+                    if matches!(d.deref(), DefTInner::SymbolT | DefTInner::UniqueSymbolT(_)) =>
+                {
                     Some(FlowSmolStr::new_inline("symbol"))
                 }
                 TypeInner::DefT(_, d)

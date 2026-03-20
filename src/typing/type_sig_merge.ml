@@ -631,6 +631,7 @@ and merge_annot env file = function
   | Void loc -> Type.VoidT.at loc
   | Null loc -> Type.NullT.at loc
   | Symbol loc -> Type.SymbolT.at loc
+  | UniqueSymbol loc -> Type.UniqueSymbolT.at (Context.make_aloc_id file.cx loc) loc
   | Number loc -> Type.NumModuleT.at loc
   | BigInt loc -> Type.BigIntModuleT.at loc
   | String loc -> Type.StrModuleT.at loc

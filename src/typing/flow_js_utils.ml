@@ -124,7 +124,7 @@ end = struct
         | DefT (_, MixedT _)
         | DefT (_, NullT)
         | DefT (_, VoidT)
-        | DefT (_, SymbolT)
+        | DefT (_, (SymbolT | UniqueSymbolT _))
         | DefT (_, SingletonStrT _)
         | DefT (_, NumericStrKeyT _)
         | DefT (_, SingletonNumT _)

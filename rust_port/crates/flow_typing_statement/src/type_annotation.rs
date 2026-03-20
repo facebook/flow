@@ -687,7 +687,7 @@ fn convert_inner(
                     t,
                 )
             } else {
-                let rt = symbol_t::at(loc.dupe());
+                let rt = unique_symbol_t::at(cx.make_aloc_id(loc), loc.dupe());
                 ast::types::Type::new(TypeInner::UniqueSymbol {
                     loc: (loc.dupe(), rt),
                     comments: comments.clone(),

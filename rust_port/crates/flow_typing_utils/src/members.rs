@@ -952,7 +952,7 @@ pub fn extract_type(cx: &Context, this_t: Type) -> GenericT<Type, Type> {
                     Err(_) => GenericT::FailureUnhandledType(this_t),
                 }
             }
-            DefTInner::SymbolT => {
+            DefTInner::SymbolT | DefTInner::UniqueSymbolT(_) => {
                 let builtin = flow_js::get_builtin_type(cx, reason, None, "Symbol");
                 match builtin {
                     Ok(t) => extract_type(cx, t),
