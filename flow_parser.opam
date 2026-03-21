@@ -9,7 +9,7 @@ license: "MIT"
 
 build: ["dune" "build" "-p" name "-j" jobs]
 depends: [
-  "ocaml" {>= "5.2.0"}
+  "ocaml" {>= "5.3.0"}
   "dune" {>= "3.2"}
   "base" {>= "v0.17.1"}
   "ppxlib" {>= "0.37.0"}

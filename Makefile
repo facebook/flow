@@ -13,8 +13,8 @@ else
   EXE=
 endif
 
-SWITCH=ocaml-variants.5.2.0+options
-JS_OF_OCAML_VERSION=5.7.2
+SWITCH=ocaml-variants.5.3.0+options
+JS_OF_OCAML_VERSION=6.3.2
 OUNIT_VERSION=2.2.2.6
 
 # set FLOW_RELEASE=[1|true] or CI=true for an optimized build; otherwise,
