@@ -19,7 +19,18 @@ use crate::flow_projects::FlowProjects;
 use crate::flow_projects::ProjectsOptions;
 
 /// Platform set is represented as a bitset where each bit corresponds to a platform
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PlatformSet(Bitset);
 
 impl PlatformSet {

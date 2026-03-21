@@ -13,7 +13,7 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser_utils::file_sig::FileSig;
 use flow_parser_utils::file_sig::Require;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Kind {
     Default,
     Named,
@@ -22,20 +22,20 @@ pub enum Kind {
     Unknown,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Source {
     UnresolvedSource(FlowImportSpecifier),
     Global,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Import {
     pub export: FlowSmolStr,
     pub source: Source,
     pub kind: Kind,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Imports(Vec<Import>);
 
 impl Imports {

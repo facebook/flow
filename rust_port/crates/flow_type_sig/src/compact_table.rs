@@ -74,6 +74,7 @@ use std::ops::Deref;
 
 use dupe::Dupe;
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct Index<Marker> {
     pub(crate) index: usize,
     pub(crate) _phantom: std::marker::PhantomData<Marker>,
@@ -439,6 +440,7 @@ impl<'a, T> Indexed<'a, T> {
     }
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct Table<T>(Vec<T>);
 
 impl<T: std::hash::Hash> std::hash::Hash for Table<T> {

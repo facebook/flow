@@ -594,7 +594,7 @@ fn merge_component(
 
     let mut suppressions = ErrorSuppressions::empty();
     for (file, typed_parse) in &typed_component {
-        let docblock = typed_parse.docblock.as_ref().unwrap();
+        let docblock = typed_parse.docblock_unsafe(file);
         let metadata = Metadata {
             overridable: OverridableMetadata {
                 strict: docblock.flow == Some(FlowMode::OptInStrict),
@@ -608,7 +608,7 @@ fn merge_component(
             &options.strict_mode,
             options.lint_severities.clone(), // clone needed: LintSettings doesn't implement Dupe
         );
-        let ast = typed_parse.ast.as_ref().unwrap();
+        let ast = typed_parse.ast_unsafe(file);
         let (_, new_suppressions, _) = scan_for_suppressions(
             false,
             &lint_severities,

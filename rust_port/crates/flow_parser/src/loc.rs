@@ -5,14 +5,30 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::RefCell;
+
 use dupe::Dupe;
 
 use crate::file_key::FileKey;
 use crate::loc_sig::LocSig;
 
+thread_local! {
+    pub static DESERIALIZE_FILE_KEY: RefCell<Option<FileKey>> = const { RefCell::new(None) };
+}
+
 /// line numbers are 1-indexed; column numbers are 0-indexed
 /// The column offset are measured by bytes
-#[derive(Debug, Copy, Clone, Dupe, PartialEq, Eq, Hash)]
+#[derive(
+    Debug,
+    Copy,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Position {
     pub line: i32,
     pub column: i32,
@@ -43,6 +59,24 @@ pub struct Loc {
     pub source: Option<FileKey>,
     pub start: Position,
     pub end: Position,
+}
+
+impl serde::Serialize for Loc {
+    fn serialize<S: serde::Serializer>(&self, serializer: S) -> Result<S::Ok, S::Error> {
+        (self.source.is_some(), &self.start, &self.end).serialize(serializer)
+    }
+}
+
+impl<'de> serde::Deserialize<'de> for Loc {
+    fn deserialize<D: serde::Deserializer<'de>>(deserializer: D) -> Result<Self, D::Error> {
+        let (has_source, start, end) = <(bool, Position, Position)>::deserialize(deserializer)?;
+        let source = if has_source {
+            DESERIALIZE_FILE_KEY.with(|k| k.borrow().clone())
+        } else {
+            None
+        };
+        Ok(Loc { source, start, end })
+    }
 }
 
 pub const LOC_NONE: Loc = Loc {

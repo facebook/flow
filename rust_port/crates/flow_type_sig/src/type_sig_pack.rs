@@ -21,7 +21,7 @@ use crate::type_sig_parse as parse;
 use crate::type_sig_parse::LocNode;
 use crate::type_sig_parse::ModuleRefNode;
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum RemoteRef<Loc> {
     Import {
         id_loc: Loc,
@@ -147,7 +147,7 @@ impl<Loc> RemoteRef<Loc> {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum PackedRef<Loc> {
     LocalRef {
         ref_loc: Loc,
@@ -194,7 +194,7 @@ impl<Loc> PackedRef<Loc> {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TyRef<Loc> {
     Unqualified(PackedRef<Loc>),
     Qualified {
@@ -224,7 +224,7 @@ impl<Loc> TyRef<Loc> {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Packed<Loc> {
     Annot(Box<PackedAnnot<Loc>>),
     Value(Box<PackedValue<Loc>>),
@@ -387,7 +387,7 @@ impl<Loc> ESModuleInfo<Loc> {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Export<Loc> {
     ExportRef(PackedRef<Loc>),
     ExportBinding(Index<PackedDef<Loc>>),
@@ -402,14 +402,14 @@ pub enum Export<Loc> {
     ExportFrom(Index<RemoteRef<Loc>>),
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TypeExport<Loc> {
     ExportTypeRef(PackedRef<Loc>),
     ExportTypeBinding(Index<PackedDef<Loc>>),
     ExportTypeFrom(Index<RemoteRef<Loc>>),
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub struct CJSModuleInfo<Loc> {
     pub type_export_keys: Vec<FlowSmolStr>,
     pub type_stars: Vec<(Loc, Index<FlowImportSpecifier>)>,
@@ -417,7 +417,7 @@ pub struct CJSModuleInfo<Loc> {
     pub platform_availability_set: Option<platform_set::PlatformSet>,
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub struct ESModuleInfo<Loc> {
     pub type_export_keys: Vec<FlowSmolStr>,
     pub type_stars: Vec<(Loc, Index<FlowImportSpecifier>)>,
@@ -427,7 +427,7 @@ pub struct ESModuleInfo<Loc> {
     pub platform_availability_set: Option<platform_set::PlatformSet>,
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ModuleKind<Loc> {
     CJSModule {
         type_exports: Vec<TypeExport<Loc>>,
@@ -466,7 +466,7 @@ impl<Loc> ModuleKind<Loc> {
     }
 }
 
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Pattern<Loc> {
     PDef(Index<Packed<Loc>>),
     PropP {

@@ -14,21 +14,52 @@ use std::sync::Arc;
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Syntax<M: Dupe, Internal: Dupe> {
     pub leading: Arc<[Comment<M>]>,
     pub trailing: Arc<[Comment<M>]>,
     pub internal: Internal,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct IdentifierInner<M: Dupe, T: Dupe> {
     pub loc: T,
     pub name: FlowSmolStr,
     pub comments: Option<Syntax<M, ()>>,
 }
 
-#[derive(Clone, Dupe, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Identifier<M: Dupe, T: Dupe>(pub Arc<IdentifierInner<M, T>>);
 
 impl<M: Dupe, T: Dupe> Deref for Identifier<M, T> {
@@ -51,21 +82,41 @@ impl<M: Dupe, T: Dupe> Identifier<M, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct PrivateName<M: Dupe> {
     pub loc: M,
     pub name: FlowSmolStr,
     pub comments: Option<Syntax<M, ()>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct StringLiteral<M: Dupe> {
     pub value: FlowSmolStr,
     pub raw: FlowSmolStr,
     pub comments: Option<Syntax<M, ()>>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct NumberLiteral<M: Dupe> {
     pub value: f64,
     pub raw: FlowSmolStr,
@@ -118,7 +169,17 @@ impl<M: Ord + Dupe> Ord for NumberLiteral<M> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct BigIntLiteral<M: Dupe> {
     /// This will be None if we couldn't parse `raw`.
     /// That could be if the number is out of range or invalid (like a float)
@@ -127,13 +188,33 @@ pub struct BigIntLiteral<M: Dupe> {
     pub comments: Option<Syntax<M, ()>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct BooleanLiteral<M: Dupe> {
     pub value: bool,
     pub comments: Option<Syntax<M, ()>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct RegExpLiteral<M: Dupe> {
     pub pattern: FlowSmolStr,
     pub flags: String,
@@ -141,7 +222,17 @@ pub struct RegExpLiteral<M: Dupe> {
     pub comments: Option<Syntax<M, ()>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ModuleRefLiteral<M: Dupe> {
     pub value: FlowSmolStr,
     pub require_loc: M,
@@ -151,7 +242,17 @@ pub struct ModuleRefLiteral<M: Dupe> {
     pub comments: Option<Syntax<M, ()>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum VarianceKind {
     Plus,
     Minus,
@@ -161,21 +262,52 @@ pub enum VarianceKind {
     InOut,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Variance<M: Dupe> {
     pub loc: M,
     pub kind: VarianceKind,
     pub comments: Option<Syntax<M, ()>>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct ComputedKey<M: Dupe, T: Dupe> {
     pub loc: M,
     pub expression: expression::Expression<M, T>,
     pub comments: Option<Syntax<M, ()>>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum VariableKind {
     Var,
     Let,
@@ -208,7 +340,17 @@ pub mod types {
     use super::Syntax;
     use super::Variance;
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Conditional<M: Dupe, T: Dupe> {
         pub check_type: Type<M, T>,
         pub extends_type: Type<M, T>,
@@ -217,7 +359,17 @@ pub mod types {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Infer<M: Dupe, T: Dupe> {
         pub tparam: TypeParam<M, T>,
         pub comments: Option<Syntax<M, ()>>,
@@ -226,7 +378,17 @@ pub mod types {
     pub mod function {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Param<M: Dupe, T: Dupe> {
             pub loc: M,
             pub name: Option<Identifier<M, T>>,
@@ -234,21 +396,51 @@ pub mod types {
             pub optional: bool,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct RestParam<M: Dupe, T: Dupe> {
             pub loc: M,
             pub argument: Param<M, T>,
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct ThisParam<M: Dupe, T: Dupe> {
             pub loc: M,
             pub annot: Annotation<M, T>,
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Params<M: Dupe, T: Dupe> {
             pub loc: T,
             pub this: Option<ThisParam<M, T>>,
@@ -257,7 +449,17 @@ pub mod types {
             pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum ReturnAnnotation<M: Dupe, T: Dupe> {
             Missing(M),
             Available(Annotation<M, T>),
@@ -265,7 +467,17 @@ pub mod types {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Function<M: Dupe, T: Dupe> {
         pub tparams: Option<TypeParams<M, T>>,
         pub params: function::Params<M, T>,
@@ -277,7 +489,17 @@ pub mod types {
     pub mod component_params {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Param<M: Dupe, T: Dupe> {
             pub loc: T,
             pub name: super::super::statement::component_params::ParamName<M, T>,
@@ -285,7 +507,17 @@ pub mod types {
             pub optional: bool,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct RestParam<M: Dupe, T: Dupe> {
             pub loc: T,
             pub argument: Option<Identifier<M, T>>,
@@ -294,7 +526,17 @@ pub mod types {
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Params<M: Dupe, T: Dupe> {
             pub loc: T,
             pub params: Arc<[Param<M, T>]>,
@@ -303,7 +545,17 @@ pub mod types {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Component<M: Dupe, T: Dupe> {
         pub tparams: Option<TypeParams<M, T>>,
         pub params: component_params::Params<M, T>,
@@ -319,21 +571,51 @@ pub mod types {
         use super::super::StringLiteral;
         use super::super::Syntax;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Identifier<M: Dupe, T: Dupe> {
             Unqualified(super::super::Identifier<M, T>),
             Qualified(Arc<Qualified<M, T>>),
             ImportTypeAnnot(Arc<ImportType<M, T>>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Qualified<M: Dupe, T: Dupe> {
             pub loc: M,
             pub qualification: Identifier<M, T>,
             pub id: super::super::Identifier<M, T>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct ImportType<M: Dupe, T: Dupe> {
             pub loc: T,
             pub argument: (M, StringLiteral<M>),
@@ -341,21 +623,51 @@ pub mod types {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Generic<M: Dupe, T: Dupe> {
         pub id: generic::Identifier<M, T>,
         pub targs: Option<TypeArgs<M, T>>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct IndexedAccess<M: Dupe, T: Dupe> {
         pub object: Type<M, T>,
         pub index: Type<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct OptionalIndexedAccess<M: Dupe, T: Dupe> {
         pub indexed_access: IndexedAccess<M, T>,
         pub optional: bool,
@@ -364,7 +676,17 @@ pub mod types {
     pub mod object {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Property<M: Dupe, T: Dupe> {
             NormalProperty(NormalProperty<M, T>),
             SpreadProperty(SpreadProperty<M, T>),
@@ -375,7 +697,17 @@ pub mod types {
             PrivateField(PrivateField<M>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct NormalProperty<M: Dupe, T: Dupe> {
             pub loc: M,
             pub key: super::super::expression::object::Key<M, T>,
@@ -390,21 +722,51 @@ pub mod types {
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum PropertyValue<M: Dupe, T: Dupe> {
             Init(Type<M, T>),
             Get(M, Function<M, T>),
             Set(M, Function<M, T>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct SpreadProperty<M: Dupe, T: Dupe> {
             pub loc: M,
             pub argument: Type<M, T>,
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Indexer<M: Dupe, T: Dupe> {
             pub loc: M,
             pub id: Option<Identifier<M, T>>,
@@ -416,7 +778,18 @@ pub mod types {
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            Copy,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum MappedTypeOptionalFlag {
             PlusOptional,
             MinusOptional,
@@ -424,13 +797,34 @@ pub mod types {
             NoOptionalFlag,
         }
 
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            Copy,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum MappedTypeVarianceOp {
             Add,
             Remove,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct MappedType<M: Dupe, T: Dupe> {
             pub loc: M,
             pub key_tparam: TypeParam<M, T>,
@@ -443,14 +837,34 @@ pub mod types {
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct PrivateField<M: Dupe> {
             pub loc: M,
             pub key: PrivateName<M>,
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct CallProperty<M: Dupe, T: Dupe> {
             pub loc: M,
             pub value: (M, Function<M, T>),
@@ -458,7 +872,17 @@ pub mod types {
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct InternalSlot<M: Dupe, T: Dupe> {
             pub loc: M,
             pub id: Identifier<M, M>,
@@ -470,7 +894,17 @@ pub mod types {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Object<M: Dupe, T: Dupe> {
         pub exact: bool,
         pub inexact: bool,
@@ -478,14 +912,34 @@ pub mod types {
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Interface<M: Dupe, T: Dupe> {
         pub body: (M, Object<M, T>),
         pub extends: Arc<[(M, Generic<M, T>)]>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Nullable<M: Dupe, T: Dupe> {
         pub argument: Type<M, T>,
         pub comments: Option<Syntax<M, ()>>,
@@ -494,7 +948,17 @@ pub mod types {
     pub mod typeof_ {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Target<M: Dupe, T: Dupe> {
             Unqualified(Identifier<M, T>),
             Qualified(Arc<Qualified<M, T>>),
@@ -511,7 +975,17 @@ pub mod types {
             }
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Qualified<M: Dupe, T: Dupe> {
             pub loc: T,
             pub qualification: Target<M, T>,
@@ -519,27 +993,68 @@ pub mod types {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Typeof<M: Dupe, T: Dupe> {
         pub argument: typeof_::Target<M, T>,
         pub targs: Option<TypeArgs<M, T>>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Keyof<M: Dupe, T: Dupe> {
         pub argument: Type<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        Hash,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum RendersVariant {
         Normal,
         Maybe,
         Star,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Renders<M: Dupe, T: Dupe> {
         pub operator_loc: M,
         pub argument: Type<M, T>,
@@ -547,7 +1062,17 @@ pub mod types {
         pub variant: RendersVariant,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ReadOnly<M: Dupe, T: Dupe> {
         pub argument: Type<M, T>,
         pub comments: Option<Syntax<M, ()>>,
@@ -556,7 +1081,17 @@ pub mod types {
     pub mod tuple {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct LabeledElement<M: Dupe, T: Dupe> {
             pub name: Identifier<M, T>,
             pub annot: Type<M, T>,
@@ -564,13 +1099,33 @@ pub mod types {
             pub optional: bool,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct SpreadElement<M: Dupe, T: Dupe> {
             pub name: Option<Identifier<M, T>>,
             pub annot: Type<M, T>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Element<M: Dupe, T: Dupe> {
             UnlabeledElement {
                 loc: M,
@@ -606,26 +1161,66 @@ pub mod types {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Tuple<M: Dupe, T: Dupe> {
         pub elements: Arc<[tuple::Element<M, T>]>,
         pub inexact: bool,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Array<M: Dupe, T: Dupe> {
         pub argument: Type<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Union<M: Dupe, T: Dupe> {
         pub types: (Type<M, T>, Type<M, T>, Vec<Type<M, T>>),
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Intersection<M: Dupe, T: Dupe> {
         pub types: (Type<M, T>, Type<M, T>, Vec<Type<M, T>>),
         pub comments: Option<Syntax<M, ()>>,
@@ -635,13 +1230,33 @@ pub mod types {
         use dupe::Dupe;
         use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Value {
             pub raw: FlowSmolStr,
             pub cooked: FlowSmolStr,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Element<M: Dupe> {
             pub loc: M,
             pub value: Value,
@@ -649,14 +1264,34 @@ pub mod types {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TypeTemplateLiteral<M: Dupe, T: Dupe> {
         pub quasis: Arc<[type_template_literal::Element<M>]>,
         pub types: Arc<[Type<M, T>]>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum BooleanRaw {
         Boolean,
         Bool,
@@ -664,7 +1299,17 @@ pub mod types {
 
     // Yes, we could add a little complexity here to show that Any and Void
     // should never be declared nullable, but that check can happen later
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum TypeInner<M: Dupe, T: Dupe> {
         Any {
             loc: T,
@@ -916,7 +1561,17 @@ pub mod types {
         }
     }
 
-    #[derive(Clone, Dupe, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Clone,
+        Dupe,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Type<M: Dupe, T: Dupe>(pub Arc<TypeInner<M, T>>);
 
     impl<M: Dupe, T: Dupe> Deref for Type<M, T> {
@@ -946,26 +1601,66 @@ pub mod types {
     // the colon and ends after the type. For example, "var a: number", the
     // identifier a would have a property annot which contains a
     // Type.annotation with a location from column 6-14
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Annotation<M: Dupe, T: Dupe> {
         pub loc: M,
         pub annotation: Type<M, T>,
     }
 
     // Same convention about the colon holds for type guards.
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TypeGuardAnnotation<M: Dupe, T: Dupe> {
         pub loc: M,
         pub guard: TypeGuard<M, T>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum AnnotationOrHint<M: Dupe, T: Dupe> {
         Missing(T),
         Available(Annotation<M, T>),
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum ComponentRendersAnnotation<M: Dupe, T: Dupe> {
         MissingRenders(T),
         AvailableRenders(M, Renders<M, T>),
@@ -974,20 +1669,50 @@ pub mod types {
     pub mod type_param {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum BoundKind {
             Colon,
             Extends,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct ConstModifier<M: Dupe, T: Dupe> {
             pub loc: T,
             pub comments: Option<Syntax<M, ()>>,
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TypeParam<M: Dupe, T: Dupe> {
         pub loc: T,
         pub name: Identifier<M, T>,
@@ -998,41 +1723,102 @@ pub mod types {
         pub const_: Option<type_param::ConstModifier<M, T>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TypeParams<M: Dupe, T: Dupe> {
         pub loc: T,
         pub params: Arc<[TypeParam<M, T>]>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TypeArgs<M: Dupe, T: Dupe> {
         pub loc: T,
         pub arguments: Arc<[Type<M, T>]>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum PredicateKind<M: Dupe, T: Dupe> {
         Declared(Arc<super::expression::Expression<M, T>>),
         Inferred,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Predicate<M: Dupe, T: Dupe> {
         pub loc: M,
         pub kind: PredicateKind<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        Hash,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum TypeGuardKind {
         Default,
         Asserts,
         Implies,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TypeGuard<M: Dupe, T: Dupe> {
         pub loc: M,
         pub kind: TypeGuardKind,
@@ -1059,7 +1845,17 @@ pub mod statement {
     use super::types::Type;
     use super::types::TypeParams;
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Block<M: Dupe, T: Dupe> {
         pub body: Arc<[Statement<M, T>]>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
@@ -1068,7 +1864,17 @@ pub mod statement {
     pub mod if_ {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Alternate<M: Dupe, T: Dupe> {
             pub loc: M,
             pub body: Statement<M, T>,
@@ -1076,7 +1882,17 @@ pub mod statement {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct If<M: Dupe, T: Dupe> {
         pub test: super::expression::Expression<M, T>,
         pub consequent: Statement<M, T>,
@@ -1084,38 +1900,98 @@ pub mod statement {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Labeled<M: Dupe, T: Dupe> {
         pub label: Identifier<M, M>,
         pub body: Statement<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Break<M: Dupe> {
         pub label: Option<Identifier<M, M>>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Continue<M: Dupe> {
         pub label: Option<Identifier<M, M>>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Debugger<M: Dupe> {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct With<M: Dupe, T: Dupe> {
         pub object: super::expression::Expression<M, T>,
         pub body: Statement<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TypeAlias<M: Dupe, T: Dupe> {
         pub id: Identifier<M, T>,
         pub tparams: Option<TypeParams<M, T>>,
@@ -1123,7 +1999,17 @@ pub mod statement {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct OpaqueType<M: Dupe, T: Dupe> {
         pub id: Identifier<M, T>,
         pub tparams: Option<TypeParams<M, T>>,
@@ -1139,7 +2025,17 @@ pub mod statement {
     pub mod switch {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Case<M: Dupe, T: Dupe> {
             pub loc: M,
             pub test: Option<super::super::expression::Expression<M, T>>,
@@ -1149,7 +2045,17 @@ pub mod statement {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Switch<M: Dupe, T: Dupe> {
         pub discriminant: super::expression::Expression<M, T>,
         pub cases: Arc<[switch::Case<M, T>]>,
@@ -1157,14 +2063,34 @@ pub mod statement {
         pub exhaustive_out: T,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Return<M: Dupe, T: Dupe> {
         pub argument: Option<super::expression::Expression<M, T>>,
         pub comments: Option<Syntax<M, ()>>,
         pub return_out: T,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Throw<M: Dupe, T: Dupe> {
         pub argument: super::expression::Expression<M, T>,
         pub comments: Option<Syntax<M, ()>>,
@@ -1173,7 +2099,17 @@ pub mod statement {
     pub mod try_ {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct CatchClause<M: Dupe, T: Dupe> {
             pub loc: M,
             pub param: Option<Pattern<M, T>>,
@@ -1182,7 +2118,17 @@ pub mod statement {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Try<M: Dupe, T: Dupe> {
         pub block: (M, Block<M, T>),
         pub handler: Option<try_::CatchClause<M, T>>,
@@ -1193,7 +2139,17 @@ pub mod statement {
     pub mod variable {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Declarator<M: Dupe, T: Dupe> {
             pub loc: M,
             pub id: Pattern<M, T>,
@@ -1201,21 +2157,51 @@ pub mod statement {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct VariableDeclaration<M: Dupe, T: Dupe> {
         pub declarations: Arc<[variable::Declarator<M, T>]>,
         pub kind: super::VariableKind,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct While<M: Dupe, T: Dupe> {
         pub test: super::expression::Expression<M, T>,
         pub body: Statement<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DoWhile<M: Dupe, T: Dupe> {
         pub body: Statement<M, T>,
         pub test: super::expression::Expression<M, T>,
@@ -1225,14 +2211,34 @@ pub mod statement {
     pub mod for_ {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Init<M: Dupe, T: Dupe> {
             InitDeclaration((M, VariableDeclaration<M, T>)),
             InitExpression(super::super::expression::Expression<M, T>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct For<M: Dupe, T: Dupe> {
         pub init: Option<for_::Init<M, T>>,
         pub test: Option<super::expression::Expression<M, T>>,
@@ -1244,14 +2250,34 @@ pub mod statement {
     pub mod for_in {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Left<M: Dupe, T: Dupe> {
             LeftDeclaration((M, VariableDeclaration<M, T>)),
             LeftPattern(Pattern<M, T>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ForIn<M: Dupe, T: Dupe> {
         pub left: for_in::Left<M, T>,
         pub right: super::expression::Expression<M, T>,
@@ -1263,14 +2289,34 @@ pub mod statement {
     pub mod for_of {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Left<M: Dupe, T: Dupe> {
             LeftDeclaration((M, VariableDeclaration<M, T>)),
             LeftPattern(Pattern<M, T>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ForOf<M: Dupe, T: Dupe> {
         pub left: for_of::Left<M, T>,
         pub right: super::expression::Expression<M, T>,
@@ -1282,20 +2328,50 @@ pub mod statement {
     pub mod enum_declaration {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct DefaultedMember<M: Dupe> {
             pub loc: M,
             pub id: Identifier<M, M>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct InitializedMember<I, M: Dupe> {
             pub loc: M,
             pub id: Identifier<M, M>,
             pub init: (M, I),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct BooleanBody<M: Dupe> {
             pub members: Arc<[InitializedMember<super::super::BooleanLiteral<M>, M>]>,
             pub explicit_type: bool,
@@ -1303,7 +2379,17 @@ pub mod statement {
             pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct NumberBody<M: Dupe> {
             pub members: Arc<[InitializedMember<super::super::NumberLiteral<M>, M>]>,
             pub explicit_type: bool,
@@ -1311,13 +2397,33 @@ pub mod statement {
             pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum StringBodyMembers<I, M: Dupe> {
             Defaulted(Arc<[DefaultedMember<M>]>),
             Initialized(Arc<[InitializedMember<I, M>]>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct StringBody<M: Dupe> {
             pub members: StringBodyMembers<StringLiteral<M>, M>,
             pub explicit_type: bool,
@@ -1325,14 +2431,34 @@ pub mod statement {
             pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct SymbolBody<M: Dupe> {
             pub members: Arc<[DefaultedMember<M>]>,
             pub has_unknown_members: bool,
             pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct BigIntBody<M: Dupe> {
             pub members: Arc<[InitializedMember<super::super::BigIntLiteral<M>, M>]>,
             pub explicit_type: bool,
@@ -1340,7 +2466,17 @@ pub mod statement {
             pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Body<M: Dupe> {
             BooleanBody { loc: M, body: BooleanBody<M> },
             NumberBody { loc: M, body: NumberBody<M> },
@@ -1372,7 +2508,17 @@ pub mod statement {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct EnumDeclaration<M: Dupe, T: Dupe> {
         pub id: Identifier<M, T>,
         pub body: enum_declaration::Body<M>,
@@ -1383,14 +2529,34 @@ pub mod statement {
     pub mod component_params {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct RestParam<M: Dupe, T: Dupe> {
             pub loc: T,
             pub argument: Pattern<M, T>,
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Param<M: Dupe, T: Dupe> {
             pub loc: T,
             /// Name should only be an Identifier or StringLiteral. However, we allow parsing
@@ -1401,13 +2567,33 @@ pub mod statement {
             pub shorthand: bool,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum ParamName<M: Dupe, T: Dupe> {
             Identifier(Identifier<M, T>),
             StringLiteral((M, StringLiteral<M>)),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Params<M: Dupe, T: Dupe> {
             pub loc: T,
             pub params: Arc<[Param<M, T>]>,
@@ -1416,7 +2602,17 @@ pub mod statement {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ComponentDeclaration<M: Dupe, T: Dupe> {
         pub id: Identifier<M, T>,
         pub tparams: Option<TypeParams<M, T>>,
@@ -1428,7 +2624,17 @@ pub mod statement {
         pub async_: bool,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Interface<M: Dupe, T: Dupe> {
         pub id: Identifier<M, T>,
         pub tparams: Option<TypeParams<M, T>>,
@@ -1437,7 +2643,17 @@ pub mod statement {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DeclareClass<M: Dupe, T: Dupe> {
         pub id: Identifier<M, T>,
         pub tparams: Option<TypeParams<M, T>>,
@@ -1449,7 +2665,17 @@ pub mod statement {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DeclareComponent<M: Dupe, T: Dupe> {
         pub id: Identifier<M, T>,
         pub tparams: Option<TypeParams<M, T>>,
@@ -1458,14 +2684,34 @@ pub mod statement {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DeclareVariable<M: Dupe, T: Dupe> {
         pub declarations: Arc<[variable::Declarator<M, T>]>,
         pub kind: super::VariableKind,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DeclareFunction<M: Dupe, T: Dupe> {
         pub id: Option<Identifier<M, T>>,
         pub annot: Annotation<M, T>,
@@ -1477,21 +2723,51 @@ pub mod statement {
     pub mod declare_module {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Id<M: Dupe, T: Dupe> {
             Identifier(Identifier<M, T>),
             Literal((T, StringLiteral<M>)),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DeclareModule<M: Dupe, T: Dupe> {
         pub id: declare_module::Id<M, T>,
         pub body: (M, Block<M, T>),
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DeclareModuleExports<M: Dupe, T: Dupe> {
         pub annot: super::types::Annotation<M, T>,
         pub comments: Option<Syntax<M, ()>>,
@@ -1500,14 +2776,34 @@ pub mod statement {
     pub mod declare_namespace {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Id<M: Dupe, T: Dupe> {
             Global(Identifier<M, M>),
             Local(Identifier<M, T>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DeclareNamespace<M: Dupe, T: Dupe> {
         pub id: declare_namespace::Id<M, T>,
         pub body: (M, Block<M, T>),
@@ -1518,7 +2814,17 @@ pub mod statement {
     pub mod export_named_declaration {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct ExportSpecifier<M: Dupe, T: Dupe> {
             pub loc: M,
             pub local: Identifier<M, T>,
@@ -1528,20 +2834,50 @@ pub mod statement {
             pub imported_name_def_loc: Option<M>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct ExportBatchSpecifier<M: Dupe, T: Dupe> {
             pub loc: M,
             pub specifier: Option<Identifier<M, T>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Specifier<M: Dupe, T: Dupe> {
             ExportSpecifiers(Vec<ExportSpecifier<M, T>>),
             ExportBatchSpecifier(ExportBatchSpecifier<M, T>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ExportNamedDeclaration<M: Dupe, T: Dupe> {
         pub declaration: Option<Statement<M, T>>,
         pub specifiers: Option<export_named_declaration::Specifier<M, T>>,
@@ -1550,13 +2886,33 @@ pub mod statement {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ExportAssignment<M: Dupe, T: Dupe> {
         pub expression: super::expression::Expression<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct NamespaceExportDeclaration<M: Dupe, T: Dupe> {
         pub id: super::Identifier<M, T>,
         pub comments: Option<Syntax<M, ()>>,
@@ -1565,14 +2921,34 @@ pub mod statement {
     pub mod export_default_declaration {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Declaration<M: Dupe, T: Dupe> {
             Declaration(Statement<M, T>),
             Expression(super::super::expression::Expression<M, T>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ExportDefaultDeclaration<M: Dupe, T: Dupe> {
         pub default: T,
         pub declaration: export_default_declaration::Declaration<M, T>,
@@ -1582,7 +2958,17 @@ pub mod statement {
     pub mod declare_export_declaration {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Declaration<M: Dupe, T: Dupe> {
             Variable {
                 loc: M,
@@ -1626,7 +3012,17 @@ pub mod statement {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DeclareExportDeclaration<M: Dupe, T: Dupe> {
         pub default: Option<M>,
         pub declaration: Option<declare_export_declaration::Declaration<M, T>>,
@@ -1635,7 +3031,18 @@ pub mod statement {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum ImportKind {
         ImportType,
         ImportTypeof,
@@ -1645,13 +3052,33 @@ pub mod statement {
     pub mod import_declaration {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Specifier<M: Dupe, T: Dupe> {
             ImportNamedSpecifiers(Vec<NamedSpecifier<M, T>>),
             ImportNamespaceSpecifier((M, Identifier<M, T>)),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct NamedSpecifier<M: Dupe, T: Dupe> {
             pub kind: Option<ImportKind>,
             pub local: Option<Identifier<M, T>>,
@@ -1659,19 +3086,49 @@ pub mod statement {
             pub remote_name_def_loc: Option<M>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct DefaultIdentifier<M: Dupe, T: Dupe> {
             pub identifier: Identifier<M, T>,
             pub remote_default_name_def_loc: Option<M>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum ImportAttributeKey<M: Dupe, T: Dupe> {
             Identifier(Identifier<M, T>),
             StringLiteral(M, StringLiteral<M>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct ImportAttribute<M: Dupe, T: Dupe> {
             pub loc: M,
             pub key: ImportAttributeKey<M, T>,
@@ -1679,7 +3136,17 @@ pub mod statement {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ImportDeclaration<M: Dupe, T: Dupe> {
         pub import_kind: ImportKind,
         pub source: (T, StringLiteral<M>),
@@ -1692,14 +3159,34 @@ pub mod statement {
     pub mod import_equals_declaration {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum ModuleReference<M: Dupe, T: Dupe> {
             ExternalModuleReference(T, StringLiteral<M>),
             Identifier(super::super::types::generic::Identifier<M, T>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ImportEqualsDeclaration<M: Dupe, T: Dupe> {
         pub id: super::Identifier<M, T>,
         pub module_reference: import_equals_declaration::ModuleReference<M, T>,
@@ -1708,19 +3195,50 @@ pub mod statement {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Expression<M: Dupe, T: Dupe> {
         pub expression: super::expression::Expression<M, T>,
         pub directive: Option<String>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Empty<M: Dupe> {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum ExportKind {
         ExportType,
         ExportValue,
@@ -1738,19 +3256,49 @@ pub mod statement {
         use super::super::expression::object::Key;
         use super::super::types::Annotation;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct InvalidPropertySyntax<M: Dupe> {
             pub invalid_variance: Option<Variance<M>>,
             pub invalid_optional: Option<M>,
             pub invalid_suffix_semicolon: Option<M>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct InvalidSyntax<M: Dupe> {
             pub invalid_infix_equals: Option<M>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Property<M: Dupe, T: Dupe> {
             pub loc: T,
             pub key: Key<M, T>,
@@ -1760,7 +3308,17 @@ pub mod statement {
             pub invalid_syntax: Option<InvalidPropertySyntax<M>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct StaticProperty<M: Dupe, T: Dupe> {
             pub loc: T,
             pub key: Key<M, T>,
@@ -1770,14 +3328,34 @@ pub mod statement {
             pub invalid_syntax: Option<InvalidPropertySyntax<M>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum BodyElement<M: Dupe, T: Dupe> {
             Method(class::Method<M, T>),
             Property(Property<M, T>),
             StaticProperty(StaticProperty<M, T>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Body<M: Dupe, T: Dupe> {
             pub loc: M,
             pub body: Arc<[BodyElement<M, T>]>,
@@ -1785,7 +3363,17 @@ pub mod statement {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct RecordDeclaration<M: Dupe, T: Dupe> {
         pub id: Identifier<M, T>,
         pub tparams: Option<TypeParams<M, T>>,
@@ -1795,7 +3383,17 @@ pub mod statement {
         pub invalid_syntax: Option<record_declaration::InvalidSyntax<M>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum StatementInner<M: Dupe, T: Dupe> {
         Block {
             loc: M,
@@ -2087,7 +3685,17 @@ pub mod statement {
         }
     }
 
-    #[derive(Clone, Dupe, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Clone,
+        Dupe,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Statement<M: Dupe, T: Dupe>(pub Arc<StatementInner<M, T>>);
 
     impl<M: Dupe, T: Dupe> Deref for Statement<M, T> {
@@ -2140,40 +3748,100 @@ pub mod expression {
     use super::types::Annotation;
     use super::types::Type;
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct CallTypeArgImplicit<M: Dupe, T: Dupe> {
         pub loc: T,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum CallTypeArg<M: Dupe, T: Dupe> {
         Explicit(Type<M, T>),
         Implicit(CallTypeArgImplicit<M, T>),
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct CallTypeArgs<M: Dupe, T: Dupe> {
         pub loc: T,
         pub arguments: Arc<[CallTypeArg<M, T>]>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct SpreadElement<M: Dupe, T: Dupe> {
         pub loc: M,
         pub argument: Expression<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum ArrayElement<M: Dupe, T: Dupe> {
         Expression(Expression<M, T>),
         Spread(SpreadElement<M, T>),
         Hole(M),
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Array<M: Dupe, T: Dupe> {
         pub elements: Arc<[ArrayElement<M, T>]>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
@@ -2183,13 +3851,33 @@ pub mod expression {
         use dupe::Dupe;
         use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Value {
             pub raw: FlowSmolStr,
             pub cooked: FlowSmolStr,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Element<M: Dupe> {
             pub loc: M,
             pub value: Value,
@@ -2197,14 +3885,34 @@ pub mod expression {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TemplateLiteral<M: Dupe, T: Dupe> {
         pub quasis: Arc<[template_literal::Element<M>]>,
         pub expressions: Arc<[Expression<M, T>]>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TaggedTemplate<M: Dupe, T: Dupe> {
         pub tag: Expression<M, T>,
         pub targs: Option<CallTypeArgs<M, T>>,
@@ -2215,7 +3923,17 @@ pub mod expression {
     pub mod object {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Key<M: Dupe, T: Dupe> {
             StringLiteral((T, StringLiteral<M>)),
             NumberLiteral((T, NumberLiteral<M>)),
@@ -2225,7 +3943,17 @@ pub mod expression {
             Computed(ComputedKey<M, T>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum NormalProperty<M: Dupe, T: Dupe> {
             Init {
                 loc: M,
@@ -2272,27 +4000,67 @@ pub mod expression {
             }
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct SpreadProperty<M: Dupe, T: Dupe> {
             pub loc: M,
             pub argument: Expression<M, T>,
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Property<M: Dupe, T: Dupe> {
             NormalProperty(NormalProperty<M, T>),
             SpreadProperty(SpreadProperty<M, T>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Object<M: Dupe, T: Dupe> {
         pub properties: Arc<[object::Property<M, T>]>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Record<M: Dupe, T: Dupe> {
         pub constructor: Expression<M, T>,
         pub targs: Option<CallTypeArgs<M, T>>,
@@ -2300,13 +4068,34 @@ pub mod expression {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Sequence<M: Dupe, T: Dupe> {
         pub expressions: Arc<[Expression<M, T>]>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum UnaryOperator {
         Minus,
         Plus,
@@ -2319,14 +4108,35 @@ pub mod expression {
         Nonnull,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Unary<M: Dupe, T: Dupe> {
         pub operator: UnaryOperator,
         pub argument: Expression<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum BinaryOperator {
         Equal,
         NotEqual,
@@ -2381,7 +4191,17 @@ pub mod expression {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Binary<M: Dupe, T: Dupe> {
         pub operator: BinaryOperator,
         pub left: Expression<M, T>,
@@ -2389,7 +4209,18 @@ pub mod expression {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum AssignmentOperator {
         PlusAssign,
         MinusAssign,
@@ -2430,7 +4261,17 @@ pub mod expression {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Assignment<M: Dupe, T: Dupe> {
         pub operator: Option<AssignmentOperator>,
         pub left: Pattern<M, T>,
@@ -2438,13 +4279,33 @@ pub mod expression {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum UpdateOperator {
         Increment,
         Decrement,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Update<M: Dupe, T: Dupe> {
         pub operator: UpdateOperator,
         pub argument: Expression<M, T>,
@@ -2452,14 +4313,35 @@ pub mod expression {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum LogicalOperator {
         Or,
         And,
         NullishCoalesce,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Logical<M: Dupe, T: Dupe> {
         pub operator: LogicalOperator,
         pub left: Expression<M, T>,
@@ -2467,7 +4349,17 @@ pub mod expression {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Conditional<M: Dupe, T: Dupe> {
         pub test: Expression<M, T>,
         pub consequent: Expression<M, T>,
@@ -2475,20 +4367,50 @@ pub mod expression {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum ExpressionOrSpread<M: Dupe, T: Dupe> {
         Expression(Expression<M, T>),
         Spread(SpreadElement<M, T>),
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ArgList<M: Dupe, T: Dupe> {
         pub loc: M,
         pub arguments: Arc<[ExpressionOrSpread<M, T>]>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct New<M: Dupe, T: Dupe> {
         pub callee: Expression<M, T>,
         pub targs: Option<CallTypeArgs<M, T>>,
@@ -2496,7 +4418,17 @@ pub mod expression {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Call<M: Dupe, T: Dupe> {
         pub callee: Expression<M, T>,
         pub targs: Option<CallTypeArgs<M, T>>,
@@ -2504,14 +4436,35 @@ pub mod expression {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum OptionalCallKind {
         Optional,
         NonOptional,
         AssertNonnull,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct OptionalCall<M: Dupe, T: Dupe> {
         pub call: Call<M, T>,
         pub filtered_out: T,
@@ -2521,7 +4474,17 @@ pub mod expression {
     pub mod member {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Property<M: Dupe, T: Dupe> {
             PropertyIdentifier(Identifier<M, T>),
             PropertyPrivateName(PrivateName<M>),
@@ -2529,28 +4492,69 @@ pub mod expression {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Member<M: Dupe, T: Dupe> {
         pub object: Expression<M, T>,
         pub property: member::Property<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum OptionalMemberKind {
         Optional,
         NonOptional,
         AssertNonnull,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct OptionalMember<M: Dupe, T: Dupe> {
         pub member: Member<M, T>,
         pub filtered_out: T,
         pub optional: OptionalMemberKind,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Yield<M: Dupe, T: Dupe> {
         pub argument: Option<Expression<M, T>>,
         pub comments: Option<Syntax<M, ()>>,
@@ -2558,49 +4562,129 @@ pub mod expression {
         pub result_out: T,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TypeCast<M: Dupe, T: Dupe> {
         pub expression: Expression<M, T>,
         pub annot: Annotation<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct AsExpression<M: Dupe, T: Dupe> {
         pub expression: Expression<M, T>,
         pub annot: Annotation<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct AsConstExpression<M: Dupe, T: Dupe> {
         pub expression: Expression<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct TSSatisfies<M: Dupe, T: Dupe> {
         pub expression: Expression<M, T>,
         pub annot: Annotation<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct MetaProperty<M: Dupe> {
         pub meta: Identifier<M, M>,
         pub property: Identifier<M, M>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct This<M: Dupe> {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Super<M: Dupe> {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Import<M: Dupe, T: Dupe> {
         pub argument: Expression<M, T>,
         pub options: Option<Expression<M, T>>,
@@ -2609,7 +4693,17 @@ pub mod expression {
 
     pub type MatchExpression<M, T> = Match<M, T, Expression<M, T>>;
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum ExpressionInner<M: Dupe, T: Dupe> {
         Array {
             loc: T,
@@ -2865,7 +4959,17 @@ pub mod expression {
         }
     }
 
-    #[derive(Clone, Dupe, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Clone,
+        Dupe,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Expression<M: Dupe, T: Dupe>(pub Arc<ExpressionInner<M, T>>);
 
     impl<M: Dupe, T: Dupe> Deref for Expression<M, T> {
@@ -2899,14 +5003,34 @@ pub mod jsx {
     use super::Syntax;
     use super::expression::Expression;
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Identifier<M: Dupe, T: Dupe> {
         pub loc: T,
         pub name: FlowSmolStr,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct NamespacedName<M: Dupe, T: Dupe> {
         pub loc: M,
         pub namespace: Identifier<M, T>,
@@ -2916,20 +5040,50 @@ pub mod jsx {
     pub mod expression_container {
         use dupe::Dupe;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Expression<M: Dupe, T: Dupe> {
             Expression(super::super::expression::Expression<M, T>),
             EmptyExpression,
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ExpressionContainer<M: Dupe, T: Dupe> {
         pub expression: expression_container::Expression<M, T>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Text {
         pub value: FlowSmolStr,
         pub raw: FlowSmolStr,
@@ -2938,27 +5092,67 @@ pub mod jsx {
     pub mod attribute {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Name<M: Dupe, T: Dupe> {
             Identifier(super::Identifier<M, T>),
             NamespacedName(NamespacedName<M, T>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Value<M: Dupe, T: Dupe> {
             StringLiteral((T, StringLiteral<M>)),
             ExpressionContainer((T, ExpressionContainer<M, T>)),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Attribute<M: Dupe, T: Dupe> {
         pub loc: M,
         pub name: attribute::Name<M, T>,
         pub value: Option<attribute::Value<M, T>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct SpreadAttribute<M: Dupe, T: Dupe> {
         pub loc: M,
         pub argument: Expression<M, T>,
@@ -2970,21 +5164,51 @@ pub mod jsx {
 
         use dupe::Dupe;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Object<M: Dupe, T: Dupe> {
             Identifier(super::Identifier<M, T>),
             MemberExpression(Arc<super::MemberExpression<M, T>>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct MemberExpression<M: Dupe, T: Dupe> {
         pub loc: M,
         pub object: member_expression::Object<M, T>,
         pub property: Identifier<M, T>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum Name<M: Dupe, T: Dupe> {
         Identifier(Identifier<M, T>),
         NamespacedName(NamespacedName<M, T>),
@@ -3001,13 +5225,33 @@ pub mod jsx {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum OpeningAttribute<M: Dupe, T: Dupe> {
         Attribute(Attribute<M, T>),
         SpreadAttribute(SpreadAttribute<M, T>),
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Opening<M: Dupe, T: Dupe> {
         pub loc: M,
         pub name: Name<M, T>,
@@ -3016,19 +5260,49 @@ pub mod jsx {
         pub attributes: Arc<[OpeningAttribute<M, T>]>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Closing<M: Dupe, T: Dupe> {
         pub loc: M,
         pub name: Name<M, T>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct SpreadChild<M: Dupe, T: Dupe> {
         pub expression: Expression<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum Child<M: Dupe, T: Dupe> {
         Element {
             loc: T,
@@ -3074,7 +5348,17 @@ pub mod jsx {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Element<M: Dupe, T: Dupe> {
         pub opening_element: Opening<M, T>,
         pub closing_element: Option<Closing<M, T>>,
@@ -3082,7 +5366,17 @@ pub mod jsx {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Fragment<M: Dupe, T: Dupe> {
         pub frag_opening_element: M,
         pub frag_closing_element: M,
@@ -3100,14 +5394,34 @@ pub mod match_ {
     use super::expression::Expression;
     use super::match_pattern::MatchPattern;
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct InvalidSyntax<M: Dupe> {
         pub invalid_prefix_case: Option<M>,
         pub invalid_infix_colon: Option<M>,
         pub invalid_suffix_semicolon: Option<M>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Case<M: Dupe, T: Dupe, B> {
         pub loc: M,
         pub pattern: MatchPattern<M, T>,
@@ -3118,7 +5432,17 @@ pub mod match_ {
         pub case_match_root_loc: M,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Match<M: Dupe, T: Dupe, B> {
         pub arg: Expression<M, T>,
         pub cases: Arc<[Case<M, T, B>]>,
@@ -3144,20 +5468,50 @@ pub mod match_pattern {
     pub mod unary_pattern {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Operator {
             Plus,
             Minus,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Argument<M: Dupe> {
             NumberLiteral(NumberLiteral<M>),
             BigIntLiteral(BigIntLiteral<M>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct UnaryPattern<M: Dupe> {
         pub operator: unary_pattern::Operator,
         pub argument: (M, unary_pattern::Argument<M>),
@@ -3167,13 +5521,33 @@ pub mod match_pattern {
     pub mod member_pattern {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Base<M: Dupe, T: Dupe> {
             BaseIdentifier(Identifier<M, T>),
             BaseMember(Arc<MemberPattern<M, T>>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Property<M: Dupe, T: Dupe> {
             PropertyString { loc: M, literal: StringLiteral<M> },
             PropertyNumber { loc: M, literal: NumberLiteral<M> },
@@ -3182,7 +5556,17 @@ pub mod match_pattern {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct MemberPattern<M: Dupe, T: Dupe> {
         pub loc: T,
         pub base: member_pattern::Base<M, T>,
@@ -3190,14 +5574,34 @@ pub mod match_pattern {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct BindingPattern<M: Dupe, T: Dupe> {
         pub kind: VariableKind,
         pub id: Identifier<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct RestPattern<M: Dupe, T: Dupe> {
         pub loc: M,
         pub argument: Option<(M, BindingPattern<M, T>)>,
@@ -3207,7 +5611,17 @@ pub mod match_pattern {
     pub mod object_pattern {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Key<M: Dupe, T: Dupe> {
             StringLiteral((M, StringLiteral<M>)),
             NumberLiteral((M, NumberLiteral<M>)),
@@ -3215,7 +5629,17 @@ pub mod match_pattern {
             Identifier(Identifier<M, T>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct PropertyStruct<M: Dupe, T: Dupe> {
             pub key: Key<M, T>,
             pub pattern: MatchPattern<M, T>,
@@ -3223,7 +5647,17 @@ pub mod match_pattern {
             pub comments: Option<Syntax<M, ()>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Property<M: Dupe, T: Dupe> {
             Valid {
                 loc: M,
@@ -3252,7 +5686,17 @@ pub mod match_pattern {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ObjectPattern<M: Dupe, T: Dupe> {
         pub properties: Arc<[object_pattern::Property<M, T>]>,
         pub rest: Option<RestPattern<M, T>>,
@@ -3262,34 +5706,84 @@ pub mod match_pattern {
     pub mod array_pattern {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Element<M: Dupe, T: Dupe> {
             pub index: M,
             pub pattern: MatchPattern<M, T>,
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ArrayPattern<M: Dupe, T: Dupe> {
         pub elements: Arc<[array_pattern::Element<M, T>]>,
         pub rest: Option<RestPattern<M, T>>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum InstancePatternConstructor<M: Dupe, T: Dupe> {
         IdentifierConstructor(Identifier<M, T>),
         MemberConstructor(MemberPattern<M, T>),
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct InstancePattern<M: Dupe, T: Dupe> {
         pub constructor: InstancePatternConstructor<M, T>,
         pub properties: (M, ObjectPattern<M, T>),
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct OrPattern<M: Dupe, T: Dupe> {
         pub patterns: Arc<[MatchPattern<M, T>]>,
         pub comments: Option<Syntax<M, ()>>,
@@ -3298,7 +5792,17 @@ pub mod match_pattern {
     pub mod as_pattern {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Target<M: Dupe, T: Dupe> {
             Identifier(Identifier<M, T>),
             Binding {
@@ -3308,20 +5812,50 @@ pub mod match_pattern {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct AsPattern<M: Dupe, T: Dupe> {
         pub pattern: MatchPattern<M, T>,
         pub target: as_pattern::Target<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct WildcardPattern<M: Dupe> {
         pub comments: Option<Syntax<M, ()>>,
         pub invalid_syntax_default_keyword: bool,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum MatchPattern<M: Dupe, T: Dupe> {
         WildcardPattern {
             loc: M,
@@ -3421,7 +5955,17 @@ pub mod pattern {
     use super::Syntax;
     use super::types::AnnotationOrHint;
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct RestElement<M: Dupe, T: Dupe> {
         pub loc: M,
         pub argument: Pattern<M, T>,
@@ -3431,7 +5975,17 @@ pub mod pattern {
     pub mod object {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Key<M: Dupe, T: Dupe> {
             StringLiteral((M, StringLiteral<M>)),
             NumberLiteral((M, NumberLiteral<M>)),
@@ -3440,7 +5994,17 @@ pub mod pattern {
             Computed(ComputedKey<M, T>),
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct NormalProperty<M: Dupe, T: Dupe> {
             pub loc: M,
             pub key: Key<M, T>,
@@ -3449,14 +6013,34 @@ pub mod pattern {
             pub shorthand: bool,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Property<M: Dupe, T: Dupe> {
             NormalProperty(NormalProperty<M, T>),
             RestElement(RestElement<M, T>),
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Object<M: Dupe, T: Dupe> {
         pub properties: Arc<[object::Property<M, T>]>,
         pub annot: AnnotationOrHint<M, T>,
@@ -3466,14 +6050,34 @@ pub mod pattern {
     pub mod array {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct NormalElement<M: Dupe, T: Dupe> {
             pub loc: M,
             pub argument: Pattern<M, T>,
             pub default: Option<super::super::expression::Expression<M, T>>,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Element<M: Dupe, T: Dupe> {
             NormalElement(NormalElement<M, T>),
             RestElement(RestElement<M, T>),
@@ -3481,21 +6085,51 @@ pub mod pattern {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Array<M: Dupe, T: Dupe> {
         pub elements: Arc<[array::Element<M, T>]>,
         pub annot: AnnotationOrHint<M, T>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Identifier<M: Dupe, T: Dupe> {
         pub name: super::Identifier<M, T>,
         pub annot: AnnotationOrHint<M, T>,
         pub optional: bool,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum Pattern<M: Dupe, T: Dupe> {
         Object {
             loc: T,
@@ -3527,13 +6161,36 @@ pub mod pattern {
     }
 }
 
-#[derive(Debug, Clone, Copy, Dupe, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum CommentKind {
     Block,
     Line,
 }
 
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Comment<M: Dupe> {
     pub loc: M,
     pub kind: CommentKind,
@@ -3562,14 +6219,35 @@ pub mod class {
 
         use super::Syntax;
 
-        #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            Copy,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Kind {
             Public,
             Protected,
             Private,
         }
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct TSAccessibility<M: Dupe> {
             pub loc: M,
             pub kind: Kind,
@@ -3577,7 +6255,18 @@ pub mod class {
         }
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum MethodKind {
         Constructor,
         Method,
@@ -3585,7 +6274,17 @@ pub mod class {
         Set,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Method<M: Dupe, T: Dupe> {
         pub loc: T,
         pub kind: MethodKind,
@@ -3600,7 +6299,17 @@ pub mod class {
     pub mod property {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub enum Value<M: Dupe, T: Dupe> {
             Declared,
             Uninitialized,
@@ -3608,7 +6317,17 @@ pub mod class {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Property<M: Dupe, T: Dupe> {
         pub loc: T,
         pub key: super::expression::object::Key<M, T>,
@@ -3622,7 +6341,17 @@ pub mod class {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct PrivateField<M: Dupe, T: Dupe> {
         pub loc: T,
         pub key: PrivateName<M>,
@@ -3636,14 +6365,34 @@ pub mod class {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct StaticBlock<M: Dupe, T: Dupe> {
         pub loc: M,
         pub body: Arc<[super::statement::Statement<M, T>]>,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct DeclareMethod<M: Dupe, T: Dupe> {
         pub loc: T,
         pub kind: MethodKind,
@@ -3653,7 +6402,17 @@ pub mod class {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct AbstractMethod<M: Dupe, T: Dupe> {
         pub loc: T,
         pub key: super::expression::object::Key<M, T>,
@@ -3662,7 +6421,17 @@ pub mod class {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct AbstractProperty<M: Dupe, T: Dupe> {
         pub loc: T,
         pub key: super::expression::object::Key<M, T>,
@@ -3672,7 +6441,17 @@ pub mod class {
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Extends<M: Dupe, T: Dupe> {
         pub loc: M,
         pub expr: Expression<M, T>,
@@ -3683,7 +6462,17 @@ pub mod class {
     pub mod implements {
         use super::*;
 
-        #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct Interface<M: Dupe, T: Dupe> {
             pub loc: M,
             pub id: super::super::types::generic::Identifier<M, T>,
@@ -3691,14 +6480,34 @@ pub mod class {
         }
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Implements<M: Dupe, T: Dupe> {
         pub loc: M,
         pub interfaces: Arc<[implements::Interface<M, T>]>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum BodyElement<M: Dupe, T: Dupe> {
         Method(Method<M, T>),
         Property(Property<M, T>),
@@ -3709,21 +6518,51 @@ pub mod class {
         AbstractProperty(AbstractProperty<M, T>),
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Body<M: Dupe, T: Dupe> {
         pub loc: M,
         pub body: Arc<[BodyElement<M, T>]>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Decorator<M: Dupe, T: Dupe> {
         pub loc: M,
         pub expression: Expression<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Class<M: Dupe, T: Dupe> {
         pub id: Option<Identifier<M, T>>,
         pub body: Body<M, T>,
@@ -3751,14 +6590,34 @@ pub mod function {
     use super::types::TypeGuardAnnotation;
     use super::types::TypeParams;
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct ThisParam<M: Dupe, T: Dupe> {
         pub loc: M,
         pub annot: Annotation<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum Param<M: Dupe, T: Dupe> {
         RegularParam {
             loc: M,
@@ -3771,14 +6630,34 @@ pub mod function {
         },
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct RestParam<M: Dupe, T: Dupe> {
         pub loc: M,
         pub argument: Pattern<M, T>,
         pub comments: Option<Syntax<M, ()>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Params<M: Dupe, T: Dupe> {
         pub loc: M,
         pub this_: Option<ThisParam<M, T>>,
@@ -3787,20 +6666,51 @@ pub mod function {
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum ReturnAnnot<M: Dupe, T: Dupe> {
         Missing(T),
         Available(Annotation<M, T>),
         TypeGuard(TypeGuardAnnotation<M, T>),
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum Effect {
         Hook,
         Arbitrary,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub struct Function<M: Dupe, T: Dupe> {
         pub id: Option<Identifier<M, T>>,
         pub params: Params<M, T>,
@@ -3818,14 +6728,34 @@ pub mod function {
         pub sig_loc: M,
     }
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+    #[derive(
+        Debug,
+        Clone,
+        PartialEq,
+        Eq,
+        Hash,
+        PartialOrd,
+        Ord,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum Body<M: Dupe, T: Dupe> {
         BodyBlock((M, super::statement::Block<M, T>)),
         BodyExpression(Expression<M, T>),
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Program<M: Dupe, T: Dupe> {
     pub loc: M,
     pub statements: Arc<[statement::Statement<M, T>]>,

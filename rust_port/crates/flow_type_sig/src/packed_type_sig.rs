@@ -18,7 +18,7 @@ use crate::type_sig_pack::PackedDef;
 use crate::type_sig_pack::Pattern;
 use crate::type_sig_pack::RemoteRef;
 
-#[derive(Debug, Hash)]
+#[derive(Debug, Hash, serde::Serialize, serde::Deserialize)]
 pub struct Module<Loc> {
     pub module_kind: ModuleKind<Index<Loc>>,
     pub module_refs: Table<Userland>,
@@ -30,13 +30,13 @@ pub struct Module<Loc> {
     pub patterns: Table<Pattern<Index<Loc>>>,
 }
 
-#[derive(Debug, Hash)]
+#[derive(Debug, Hash, serde::Serialize, serde::Deserialize)]
 pub struct ModuleDef<Loc> {
     pub loc: Loc,
     pub module_kind: ModuleKind<Loc>,
 }
 
-#[derive(Debug, Hash)]
+#[derive(Debug, Hash, serde::Serialize, serde::Deserialize)]
 pub struct Builtins<Loc> {
     pub module_refs: Table<Userland>,
     pub local_defs: Table<PackedDef<Index<Loc>>>,

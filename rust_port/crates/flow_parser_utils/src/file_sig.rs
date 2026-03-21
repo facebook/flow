@@ -27,7 +27,7 @@ use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use vec1::Vec1;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Source(pub Loc, pub FlowSmolStr);
 
 impl Source {
@@ -40,7 +40,7 @@ impl Source {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Identifier(pub Loc, pub FlowSmolStr);
 
 impl Identifier {
@@ -71,7 +71,7 @@ pub struct FileSigOptions {
 //
 // Note that different refs can point to the same module, but we haven't
 // resolved modules yet, so we don't know where the ref actually points.
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum Require {
     /// require('foo');
     Require {
@@ -149,13 +149,13 @@ pub enum Require {
     },
 }
 
-#[derive(Debug, Clone, Dupe)]
+#[derive(Debug, Clone, Dupe, serde::Serialize, serde::Deserialize)]
 pub struct ImportedLocs {
     pub remote_loc: Loc,
     pub local_loc: Loc,
 }
 
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub enum RequireBindings {
     /// source: const bar = require('./foo');
     /// result: bar
@@ -168,7 +168,7 @@ pub enum RequireBindings {
 
 // We can extract the observable interface of a module by extracting information
 // about what it requires and what it exports.
-#[derive(Debug)]
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct FileSig(Vec<Require>);
 
 fn require_bindings_to_debug_string(bindings: &RequireBindings) -> String {

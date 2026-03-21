@@ -9,7 +9,18 @@ use std::fmt;
 
 use dupe::Dupe;
 
-#[derive(Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Dupe)]
+#[derive(
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    Hash,
+    PartialOrd,
+    Ord,
+    Dupe,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Bitset(u32);
 
 const MAX_SIZE: usize = 32;

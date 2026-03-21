@@ -33,7 +33,7 @@ use vec1::Vec1;
 
 use crate::signature_error;
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TArg<Loc, T> {
     ImplicitArg(Loc),
     ExplicitArg(T),
@@ -52,13 +52,13 @@ impl<Loc, T> TArg<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Arg<T> {
     Arg(T),
     SpreadArg(T),
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct TypeGuard<Loc, T> {
     pub loc: Loc,
     pub param_name: (Loc, FlowSmolStr),
@@ -82,7 +82,7 @@ impl<Loc, T> TypeGuard<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct TParam<Loc, T> {
     pub name_loc: Loc,
     pub name: FlowSmolStr,
@@ -110,7 +110,7 @@ impl<Loc, T> TParam<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TParams<Loc, T> {
     Mono,
     Poly(Loc, Vec1<TParam<Loc, T>>),
@@ -156,7 +156,7 @@ impl<Loc, T> TParams<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct FunParam<T> {
     pub name: Option<FlowSmolStr>,
     pub t: T,
@@ -171,7 +171,7 @@ impl<T> FunParam<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct FunRestParam<Loc, T> {
     pub name: Option<FlowSmolStr>,
     pub loc: Loc,
@@ -193,7 +193,7 @@ impl<Loc, T> FunRestParam<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ReactEffect<Loc> {
     HookDecl(Loc),
     HookAnnot,
@@ -223,7 +223,7 @@ impl<Loc> ReactEffect<Loc> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct FunSig<Loc, T> {
     pub tparams: TParams<Loc, T>,
     pub params: Vec<FunParam<T>>,
@@ -279,7 +279,7 @@ impl<Loc, T> FunSig<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct ComponentParam<Loc, T> {
     pub name: FlowSmolStr,
     pub name_loc: Loc,
@@ -301,7 +301,7 @@ impl<Loc, T> ComponentParam<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct ComponentRestParam<T> {
     pub t: T,
 }
@@ -318,7 +318,7 @@ impl<T> ComponentRestParam<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct ComponentSig<Loc, T> {
     pub params_loc: Loc,
     pub tparams: TParams<Loc, T>,
@@ -366,7 +366,7 @@ impl<Loc, T> ComponentSig<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum TupleElement<Loc, T> {
     TupleElement {
         loc: Loc,
@@ -412,7 +412,7 @@ impl<Loc, T> TupleElement<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjAnnotProto<Loc, T> {
     ObjAnnotImplicitProto,
     ObjAnnotExplicitProto(Loc, T),
@@ -438,7 +438,7 @@ impl<Loc, T> ObjAnnotProto<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Accessor<Loc, T> {
     Get(Loc, T),
     Set(Loc, T),
@@ -486,7 +486,7 @@ impl<Loc, T> Accessor<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjValueProp<Loc, T> {
     ObjValueField(Loc, T, Polarity),
     ObjValueAccess(Accessor<Loc, T>),
@@ -556,7 +556,7 @@ impl<Loc, T> ObjValueProp<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjAnnotProp<Loc, T> {
     ObjAnnotField(Loc, T, Polarity),
     ObjAnnotAccess(Accessor<Loc, T>),
@@ -594,7 +594,7 @@ impl<Loc, T> ObjAnnotProp<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum InterfaceProp<Loc, T> {
     InterfaceField(Option<Loc>, T, Polarity),
     InterfaceAccess(Accessor<Loc, T>),
@@ -650,7 +650,7 @@ impl<Loc, T> InterfaceProp<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct ObjAnnotDict<T> {
     pub name: Option<FlowSmolStr>,
     pub polarity: Polarity,
@@ -669,7 +669,7 @@ impl<T> ObjAnnotDict<T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjSpreadAnnotElem<Loc, T> {
     ObjSpreadAnnotElem(T),
     ObjSpreadAnnotSlice {
@@ -702,7 +702,7 @@ impl<Loc, T> ObjSpreadAnnotElem<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjValueSpreadElem<Loc, T> {
     ObjValueSpreadElem(T),
     ObjValueSpreadSlice(BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>),
@@ -747,7 +747,7 @@ impl<Loc, T> ObjValueSpreadElem<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ClassExtends<Loc, T> {
     ClassExplicitExtends { loc: Loc, t: T },
     ClassExplicitExtendsApp { loc: Loc, t: T, targs: Vec<T> },
@@ -802,7 +802,7 @@ impl<Loc, T> ClassExtends<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ClassMixins<Loc, T> {
     ClassMixin { loc: Loc, t: T },
     ClassMixinApp { loc: Loc, t: T, targs: Vec<T> },
@@ -850,7 +850,7 @@ impl<Loc, T> ClassMixins<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct ClassSig<Loc, T> {
     pub tparams: TParams<Loc, T>,
     pub extends: ClassExtends<Loc, T>,
@@ -912,7 +912,7 @@ impl<Loc, T> ClassSig<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct DeclareClassSig<Loc, T> {
     pub tparams: TParams<Loc, T>,
     pub extends: ClassExtends<Loc, T>,
@@ -1005,7 +1005,7 @@ impl<Loc, T> DeclareClassSig<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub struct InterfaceSig<Loc, T> {
     pub extends: Vec<T>,
     pub props: BTreeMap<FlowSmolStr, InterfaceProp<Loc, T>>,
@@ -1054,7 +1054,15 @@ impl<Loc, T> InterfaceSig<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum EnumRep {
     BoolRep(Option<bool>),
     NumberRep { truthy: bool },
@@ -1069,7 +1077,7 @@ pub enum EnumRep {
 // The signature format is designed to exploit these forms of indirection to
 // preserve sharing and minimize size. Two references to a given definition will
 // always be represented as pointers to a shared signature of that definition.
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Def<Loc, T> {
     TypeAlias {
         id_loc: Loc,
@@ -1586,7 +1594,7 @@ impl<Loc: Clone, T> Def<Loc, T> {
 // The signature extractor relies heavily on annotations, but will extract
 // signatures corresponding to some literal expressions as well. The
 // representation of these things are kept distinct from annotations, below.
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Value<Loc, T> {
     ClassExpr(Loc, ClassSig<Loc, T>),
     FunExpr {
@@ -1881,14 +1889,14 @@ impl<Loc, T> Value<Loc, T> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum ObjKind<T> {
     ExactObj,
     InexactObj,
     IndexedObj(ObjAnnotDict<T>),
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum Annot<Loc, T> {
     Any(Loc),
     Mixed(Loc),
@@ -2783,7 +2791,7 @@ impl<Loc, T> Annot<Loc, T> {
 // Along with literal expressions, the signature extractor also encodes some
 // operations over values and annotations, like unary operators and
 // destructuring.
-#[derive(Debug, Clone, Hash)]
+#[derive(Debug, Clone, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Op<T> {
     Arith(ast::expression::BinaryOperator, T),
     GetProp(FlowSmolStr),
@@ -2826,7 +2834,7 @@ impl<T> Op<T> {
 //    signature extractor, we should fix the signature extractor to support that
 //    syntax. These represent missing functionality in the analysis which should
 //    be fixed.
-#[derive(Debug, Clone, PartialEq, Hash)]
+#[derive(Debug, Clone, PartialEq, Hash, serde::Serialize, serde::Deserialize)]
 pub enum Errno<Loc> {
     CheckError,
     BindingValidationError(signature_error::BindingValidation<Loc>),

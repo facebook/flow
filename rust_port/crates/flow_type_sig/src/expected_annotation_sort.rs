@@ -10,7 +10,18 @@ use std::fmt;
 use dupe::Dupe;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum ExpectedAnnotationSort {
     Identifier,
     ArrayPattern,

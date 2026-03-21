@@ -20,6 +20,7 @@ use flow_common::files;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
 use flow_common_modulename::HasteModuleInfo;
 use flow_common_modulename::Modulename;
+use flow_heap_serialization::ReaderCache;
 use flow_imports_exports::exports::Exports;
 use flow_imports_exports::imports::Imports;
 use flow_parser::ast::Program;
@@ -42,6 +43,7 @@ use crate::parse::TypedParse;
 pub struct SharedMem {
     file_heap: LockedMap<FileKey, FileEntry>,
     pub haste_module_heap: LockedMap<HasteModuleInfo, HasteModule>,
+    reader_cache: ReaderCache,
 }
 
 impl SharedMem {
@@ -49,6 +51,7 @@ impl SharedMem {
         Self {
             file_heap: LockedMap::new(),
             haste_module_heap: LockedMap::new(),
+            reader_cache: ReaderCache::new(),
         }
     }
 
@@ -200,40 +203,44 @@ impl SharedMem {
     }
 
     pub fn get_ast_unsafe(&self, file: &FileKey) -> Arc<Program<Loc, Loc>> {
+        if let Some(cached) = self.reader_cache.get_ast(file) {
+            return cached;
+        }
         let typed = self.get_typed_parse_unsafe(file);
-        typed
-            .ast
-            .as_ref()
-            .unwrap_or_else(|| panic!("AST not found for file: {}", file.as_str()))
-            .dupe()
+        typed.ast_unsafe(file)
     }
 
     pub fn get_ast(&self, file: &FileKey) -> Option<Arc<Program<Loc, Loc>>> {
+        if let Some(cached) = self.reader_cache.get_ast(file) {
+            return Some(cached);
+        }
         self.get_typed_parse(file)
-            .and_then(|typed| typed.ast.as_ref().map(|ast| ast.dupe()))
+            .and_then(|typed| match &typed.ast {
+                Some(bytes) => {
+                    let ast = flow_heap_serialization::deserialize_ast(file, bytes);
+                    self.reader_cache.add_ast(file.dupe(), ast.dupe());
+                    Some(ast)
+                }
+                None => None,
+            })
     }
 
     pub fn get_docblock_unsafe(&self, file: &FileKey) -> Arc<Docblock> {
         let typed = self.get_typed_parse_unsafe(file);
-        typed
-            .docblock
-            .as_ref()
-            .unwrap_or_else(|| panic!("Docblock not found for file: {}", file.as_str()))
-            .dupe()
+        typed.docblock_unsafe(file)
     }
 
     pub fn get_aloc_table_unsafe(&self, file: &FileKey) -> Arc<PackedALocTable> {
         let typed = self.get_typed_parse_unsafe(file);
-        typed
-            .aloc_table
-            .as_ref()
-            .unwrap_or_else(|| panic!("ALocTable not found for file: {}", file.as_str()))
-            .dupe()
+        typed.aloc_table_unsafe(file)
     }
 
     pub fn get_aloc_table(&self, file: &FileKey) -> Option<Arc<PackedALocTable>> {
-        self.get_typed_parse(file)
-            .and_then(|t| t.aloc_table.as_ref().map(|a| a.dupe()))
+        self.get_typed_parse(file).and_then(|t| {
+            t.aloc_table
+                .as_ref()
+                .map(|bytes| flow_heap_serialization::deserialize_aloc_table(bytes))
+        })
     }
 
     pub fn loc_of_aloc(&self, aloc: &ALoc) -> Loc {
@@ -260,21 +267,17 @@ impl SharedMem {
 
     pub fn get_type_sig_unsafe(&self, file: &FileKey) -> Arc<TypeSigModule<Loc>> {
         let typed = self.get_typed_parse_unsafe(file);
-        typed
-            .type_sig
-            .as_ref()
-            .unwrap_or_else(|| panic!("Type signature not found for file: {}", file.as_str()))
-            .dupe()
+        typed.type_sig_unsafe(file)
     }
 
     pub fn get_exports_unsafe(&self, file: &FileKey) -> Arc<Exports> {
         let typed = self.get_typed_parse_unsafe(file);
-        typed.exports.dupe()
+        typed.exports_unsafe()
     }
 
     pub fn get_imports_unsafe(&self, file: &FileKey) -> Arc<Imports> {
         let typed = self.get_typed_parse_unsafe(file);
-        typed.imports.dupe()
+        typed.imports_unsafe()
     }
 
     pub fn get_tolerable_file_sig_unsafe(
@@ -282,11 +285,7 @@ impl SharedMem {
         file: &FileKey,
     ) -> (Arc<FileSig>, Arc<[TolerableError<Loc>]>) {
         let typed = self.get_typed_parse_unsafe(file);
-        typed
-            .file_sig
-            .as_ref()
-            .unwrap_or_else(|| panic!("File sig not found for file: {}", file.as_str()))
-            .dupe()
+        typed.tolerable_file_sig_unsafe(file)
     }
 
     pub fn get_requires_unsafe(&self, file: &FileKey) -> Arc<[FlowImportSpecifier]> {
@@ -551,6 +550,13 @@ impl SharedMem {
                 typed.resolved_requires.set(resolved_requires);
             }
         }
+    }
+
+    pub fn compact_parse(&self, file: &FileKey) {
+        // Placeholder for future: convert Live AST to Serialized form
+        // This would require interior mutability on TypedParse.ast
+        // For now, this is a no-op until we add that capability
+        let _ = file;
     }
 }
 

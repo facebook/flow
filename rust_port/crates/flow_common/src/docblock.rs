@@ -11,7 +11,15 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::expression::Expression;
 use flow_parser::loc::Loc;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum FlowMode {
     OptIn,
     OptInStrict,
@@ -19,19 +27,27 @@ pub enum FlowMode {
     OptOut,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct JsxPragma {
     pub raw: String,
     pub expression: Expression<Loc, Loc>,
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(
+    Debug,
+    Clone,
+    Copy,
+    PartialEq,
+    Eq,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum JsxRuntimePragma {
     Classic,
     Automatic,
 }
 
-#[derive(Debug, Clone, Default)]
+#[derive(Debug, Clone, Default, serde::Serialize, serde::Deserialize)]
 pub struct Docblock {
     pub flow: Option<FlowMode>,
     pub prevent_munge: bool,

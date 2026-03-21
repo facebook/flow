@@ -851,7 +851,7 @@ impl ALocTable {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct PackedALocTable(Vec<u8>);
 
 #[cfg(test)]

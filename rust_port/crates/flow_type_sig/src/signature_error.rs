@@ -13,7 +13,17 @@ pub use flow_parser::ast_utils::expression_sort::ExpressionSort;
 
 use crate::expected_annotation_sort::ExpectedAnnotationSort;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum SignatureError<Loc> {
     ExpectedAnnotation(Loc, ExpectedAnnotationSort),
     UnexpectedObjectKey(Loc, Loc),
@@ -146,7 +156,17 @@ impl<Loc: fmt::Display> fmt::Display for BindingValidation<Loc> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum BindingValidation<Loc> {
     ModuleOverride {
         name: FlowSmolStr,
@@ -232,7 +252,7 @@ impl<Loc> BindingValidation<Loc> {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum TolerableError<Loc> {
     SignatureVerificationError(SignatureError<Loc>),
     SignatureBindingValidationError(BindingValidation<Loc>),

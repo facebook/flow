@@ -12,7 +12,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum FileKeyInner {
     LibFile(String),
     SourceFile(String),

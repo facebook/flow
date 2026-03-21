@@ -930,7 +930,18 @@ pub fn string_of_binary_operator(op: expression::BinaryOperator) -> &'static str
 }
 
 pub mod expression_sort {
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+    #[derive(
+        Debug,
+        Clone,
+        Copy,
+        PartialEq,
+        Eq,
+        PartialOrd,
+        Ord,
+        Hash,
+        serde::Serialize,
+        serde::Deserialize
+    )]
     pub enum Kind {
         Array,
         ArrowFunction,

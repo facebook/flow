@@ -26,6 +26,10 @@ use parking_lot::RwLock;
 use crate::entity::Entity;
 use crate::entity::ResolvedRequires;
 
+/// Compressed serialized bytes wrapper for heap-stored data.
+/// Fields are stored as compressed bincode bytes to reduce memory footprint.
+type CompressedBytes = Arc<[u8]>;
+
 #[derive(Clone, Debug, Dupe)]
 pub struct FileEntry {
     pub(crate) parse: Arc<Entity<Parse>>,
@@ -118,15 +122,15 @@ impl FileEntry {
 #[derive(Debug, Clone, Dupe)]
 pub struct TypedParse {
     pub(crate) file_hash: u64,
-    pub ast: Option<Arc<Program<Loc, Loc>>>,
-    pub docblock: Option<Arc<Docblock>>,
-    pub(crate) aloc_table: Option<Arc<PackedALocTable>>,
-    pub(crate) type_sig: Option<Arc<Module<Loc>>>,
-    pub(crate) file_sig: Option<(Arc<FileSig>, Arc<[TolerableError<Loc>]>)>,
-    pub(crate) exports: Arc<Exports>,
+    pub(crate) ast: Option<CompressedBytes>,
+    pub(crate) docblock: Option<CompressedBytes>,
+    pub(crate) aloc_table: Option<CompressedBytes>,
+    pub(crate) type_sig: Option<CompressedBytes>,
+    pub(crate) file_sig: Option<CompressedBytes>,
+    pub(crate) exports: CompressedBytes,
     pub(crate) requires: Arc<[FlowImportSpecifier]>,
     pub(crate) resolved_requires: Arc<Entity<ResolvedRequires>>,
-    pub(crate) imports: Arc<Imports>,
+    pub(crate) imports: CompressedBytes,
     pub(crate) leader: Arc<Entity<FileKey>>,
     pub(crate) sig_hash: Arc<Entity<u64>>,
 }
@@ -149,15 +153,20 @@ impl TypedParse {
     ) -> Self {
         Self {
             file_hash,
-            ast,
-            docblock,
-            aloc_table,
-            type_sig,
-            file_sig,
-            exports,
+            ast: ast.map(|a| Arc::from(flow_heap_serialization::serialize_ast(&a))),
+            docblock: docblock.map(|d| Arc::from(flow_heap_serialization::serialize_docblock(&d))),
+            aloc_table: aloc_table
+                .map(|a| Arc::from(flow_heap_serialization::serialize_aloc_table(&a))),
+            type_sig: type_sig.map(|t| Arc::from(flow_heap_serialization::serialize_type_sig(&t))),
+            file_sig: file_sig.map(|(f, e)| {
+                Arc::from(flow_heap_serialization::serialize_file_sig_with_errors(
+                    &f, &e,
+                ))
+            }),
+            exports: Arc::from(flow_heap_serialization::serialize_exports(&exports)),
             requires,
             resolved_requires,
-            imports,
+            imports: Arc::from(flow_heap_serialization::serialize_imports(&imports)),
             leader,
             sig_hash,
         }
@@ -165,10 +174,14 @@ impl TypedParse {
 
     /// Equivalent to OCaml's Parsing_heaps.read_ast_unsafe file_key parse
     pub fn ast_unsafe(&self, file: &FileKey) -> Arc<Program<Loc, Loc>> {
-        self.ast
-            .as_ref()
-            .unwrap_or_else(|| panic!("AST not found for file: {}", file.as_str()))
-            .dupe()
+        match &self.ast {
+            Some(bytes) => flow_heap_serialization::deserialize_ast(file, bytes),
+            None => panic!("AST not found for file: {}", file.as_str()),
+        }
+    }
+
+    pub fn has_ast(&self) -> bool {
+        self.ast.is_some()
     }
 
     /// Equivalent to OCaml's Parsing_heaps.read_tolerable_file_sig_unsafe file_key parse
@@ -176,26 +189,26 @@ impl TypedParse {
         &self,
         file: &FileKey,
     ) -> (Arc<FileSig>, Arc<[TolerableError<Loc>]>) {
-        self.file_sig
-            .as_ref()
-            .unwrap_or_else(|| panic!("File sig not found for file: {}", file.as_str()))
-            .dupe()
+        match &self.file_sig {
+            Some(bytes) => flow_heap_serialization::deserialize_file_sig_with_errors(file, bytes),
+            None => panic!("File sig not found for file: {}", file.as_str()),
+        }
     }
 
     /// Equivalent to OCaml's Parsing_heaps.read_aloc_table_unsafe file_key parse
     pub fn aloc_table_unsafe(&self, file: &FileKey) -> Arc<PackedALocTable> {
-        self.aloc_table
-            .as_ref()
-            .unwrap_or_else(|| panic!("ALocTable not found for file: {}", file.as_str()))
-            .dupe()
+        match &self.aloc_table {
+            Some(bytes) => flow_heap_serialization::deserialize_aloc_table(bytes),
+            None => panic!("ALocTable not found for file: {}", file.as_str()),
+        }
     }
 
     /// Equivalent to OCaml's Heap.get_type_sig parse
     pub fn type_sig_unsafe(&self, file: &FileKey) -> Arc<Module<Loc>> {
-        self.type_sig
-            .as_ref()
-            .unwrap_or_else(|| panic!("Type signature not found for file: {}", file.as_str()))
-            .dupe()
+        match &self.type_sig {
+            Some(bytes) => flow_heap_serialization::deserialize_type_sig(file, bytes),
+            None => panic!("Type signature not found for file: {}", file.as_str()),
+        }
     }
 
     /// Equivalent to OCaml's accessing requires from parse
@@ -217,10 +230,20 @@ impl TypedParse {
 
     /// Equivalent to OCaml's Parsing_heaps.read_docblock_unsafe file_key parse
     pub fn docblock_unsafe(&self, file: &FileKey) -> Arc<Docblock> {
-        self.docblock
-            .as_ref()
-            .unwrap_or_else(|| panic!("Docblock not found for file: {}", file.as_str()))
-            .dupe()
+        match &self.docblock {
+            Some(bytes) => flow_heap_serialization::deserialize_docblock(file, bytes),
+            None => panic!("Docblock not found for file: {}", file.as_str()),
+        }
+    }
+
+    /// Deserialize exports from compressed bytes
+    pub fn exports_unsafe(&self) -> Arc<Exports> {
+        flow_heap_serialization::deserialize_exports(&self.exports)
+    }
+
+    /// Deserialize imports from compressed bytes
+    pub fn imports_unsafe(&self) -> Arc<Imports> {
+        flow_heap_serialization::deserialize_imports(&self.imports)
     }
 }
 

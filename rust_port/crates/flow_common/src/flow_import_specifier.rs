@@ -10,7 +10,18 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
 use crate::bitset::Bitset;
 
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub struct Userland(FlowSmolStr);
 
 impl Userland {
@@ -35,7 +46,18 @@ impl Userland {
     }
 }
 
-#[derive(Debug, Clone, Dupe, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive(
+    Debug,
+    Clone,
+    Dupe,
+    PartialEq,
+    Eq,
+    PartialOrd,
+    Ord,
+    Hash,
+    serde::Serialize,
+    serde::Deserialize
+)]
 pub enum FlowImportSpecifier {
     Userland(Userland),
     HasteImportWithSpecifiedNamespace {

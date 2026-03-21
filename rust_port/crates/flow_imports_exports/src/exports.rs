@@ -33,7 +33,7 @@ use flow_type_sig::type_sig_pack::Pattern;
 use flow_type_sig::type_sig_pack::TyRef;
 use flow_type_sig::type_sig_pack::TypeExport;
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum Export {
     // e.g. `export default class Foo {}`
     DefaultType(Option<FlowSmolStr>),
@@ -49,7 +49,7 @@ pub enum Export {
     ReExportModuleTypes(Userland),
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, serde::Serialize, serde::Deserialize)]
 pub struct Exports(Vec<Export>);
 
 impl Exports {
