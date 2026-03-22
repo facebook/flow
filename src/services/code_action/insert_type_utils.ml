@@ -516,14 +516,31 @@ class mapper_type_printing_hardcoded_fixes =
         List.fold_left
           (fun (p, c) param ->
             match param with
-            | (loc, { Param.name = None; annot; optional }) ->
+            | (loc, Param.Anonymous annot) ->
               let normalized_param =
                 ( loc,
-                  {
-                    Param.name = Some (Flow_ast_utils.ident_of_source (loc, Printf.sprintf "_%d" c));
-                    annot;
-                    optional;
-                  }
+                  Param.Labeled
+                    {
+                      name = Flow_ast_utils.ident_of_source (loc, Printf.sprintf "_%d" c);
+                      annot;
+                      optional = false;
+                    }
+                )
+              in
+              (normalized_param :: p, c + 1)
+            | (loc, Param.Destructuring pattern) ->
+              let optional = Flow_ast_utils.pattern_optional pattern in
+              let (_, annot, _) =
+                Flow_ast_utils.function_type_param_parts (Param.Destructuring pattern)
+              in
+              let normalized_param =
+                ( loc,
+                  Param.Labeled
+                    {
+                      name = Flow_ast_utils.ident_of_source (loc, Printf.sprintf "_%d" c);
+                      annot;
+                      optional;
+                    }
                 )
               in
               (normalized_param :: p, c + 1)

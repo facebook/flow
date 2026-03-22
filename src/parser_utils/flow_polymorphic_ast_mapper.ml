@@ -1116,10 +1116,25 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method function_param_type (fpt : ('M, 'T) Ast.Type.Function.Param.t)
         : ('N, 'U) Ast.Type.Function.Param.t =
       let open Ast.Type.Function.Param in
-      let (annot, { annot = t_annot; name; optional }) = fpt in
-      let t_annot' = this#type_ t_annot in
-      let name' = Option.map ~f:this#t_identifier name in
-      (this#on_loc_annot annot, { annot = t_annot'; name = name'; optional })
+      let (annot, param) = fpt in
+      match param with
+      | Anonymous t_annot ->
+        let t_annot' = this#type_ t_annot in
+        (this#on_loc_annot annot, Anonymous t_annot')
+      | Labeled { name; annot = t_annot; optional } ->
+        let name' = this#function_param_type_identifier name in
+        let t_annot' = this#type_ t_annot in
+        (this#on_loc_annot annot, Labeled { name = name'; annot = t_annot'; optional })
+      | Destructuring pattern ->
+        let pattern' = this#function_param_type_pattern pattern in
+        (this#on_loc_annot annot, Destructuring pattern')
+
+    method function_param_type_identifier (id : ('M, 'T) Ast.Identifier.t)
+        : ('N, 'U) Ast.Identifier.t =
+      this#t_identifier id
+
+    method function_param_type_pattern (patt : ('M, 'T) Ast.Pattern.t) : ('N, 'U) Ast.Pattern.t =
+      this#pattern patt
 
     method function_rest_param_type (frpt : ('M, 'T) Ast.Type.Function.RestParam.t)
         : ('N, 'U) Ast.Type.Function.RestParam.t =

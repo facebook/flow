@@ -119,6 +119,8 @@ val source : env -> File_key.t option
 
 val should_parse_types : env -> bool
 
+val is_d_ts : env -> bool
+
 (* mutators: *)
 val error_at : env -> Loc.t * Parse_error.t -> unit
 

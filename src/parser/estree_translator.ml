@@ -2277,16 +2277,22 @@ with type t = Impl.t = struct
           ("rest", option function_type_rest rest);
           ("typeParameters", option type_parameter_declaration tparams);
         ]
-    and function_type_param ?comments (loc, { Type.Function.Param.name; annot; optional }) =
-      node
-        ?comments
-        "FunctionTypeParam"
-        loc
-        [
-          ("name", option identifier name);
-          ("typeAnnotation", _type annot);
-          ("optional", bool optional);
-        ]
+    and function_type_param ?comments (loc, param) =
+      let open Type.Function.Param in
+      match param with
+      | Anonymous annot ->
+        node
+          ?comments
+          "FunctionTypeParam"
+          loc
+          [("name", null); ("typeAnnotation", _type annot); ("optional", bool false)]
+      | Labeled { name; annot; optional } ->
+        node
+          ?comments
+          "FunctionTypeParam"
+          loc
+          [("name", identifier name); ("typeAnnotation", _type annot); ("optional", bool optional)]
+      | Destructuring patt -> pattern patt
     and function_type_rest (_loc, { Type.Function.RestParam.argument; comments }) =
       (* TODO: add a node for the rest param itself, including the `...`,
          like we do with RestElement on normal functions. This should be

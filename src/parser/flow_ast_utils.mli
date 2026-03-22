@@ -224,4 +224,8 @@ val export_specifiers_has_value_export :
 
 val pattern_optional : ('M, 'T) Flow_ast.Pattern.t -> bool
 
+val function_type_param_parts :
+  ('M, 'T) Flow_ast.Type.Function.Param.t' ->
+  ('M, 'T) Flow_ast.Identifier.t option * ('M, 'T) Flow_ast.Type.t * bool
+
 val string_of_bigint : 'm Flow_ast.BigIntLiteral.t -> string

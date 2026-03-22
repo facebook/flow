@@ -383,6 +383,10 @@ class virtual ['M, 'T, 'N, 'U] mapper :
     method function_param_type :
       ('M, 'T) Ast.Type.Function.Param.t -> ('N, 'U) Ast.Type.Function.Param.t
 
+    method function_param_type_identifier : ('M, 'T) Ast.Identifier.t -> ('N, 'U) Ast.Identifier.t
+
+    method function_param_type_pattern : ('M, 'T) Ast.Pattern.t -> ('N, 'U) Ast.Pattern.t
+
     method function_rest_param :
       ('M, 'T) Flow_ast.Function.RestParam.t -> ('N, 'U) Ast.Function.RestParam.t
 

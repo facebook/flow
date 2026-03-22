@@ -10318,6 +10318,15 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
         self.env_state.exclude_syms = saved_exclude_syms;
         Ok(())
     }
+
+    // Skip destructuring patterns in function type params (e.g. in
+    // `declare function f({a}: T): R`), as they are not runtime bindings.
+    fn function_param_type_pattern(
+        &mut self,
+        _patt: &'ast flow_parser::ast::pattern::Pattern<ALoc, ALoc>,
+    ) -> Result<(), AbruptCompletion> {
+        Ok(())
+    }
 }
 
 // The EnvBuilder does not traverse dead code, but statement.ml does. Dead code
@@ -10979,6 +10988,15 @@ impl<'ast, 'a, Cx: Context> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for Dead
         let body_loc = &n.body.0;
         let body_block = &n.body.1;
         let Ok(()) = self.block(body_loc, body_block);
+        Ok(())
+    }
+
+    // Skip destructuring patterns in function type params (e.g. in
+    // `declare function f({a}: T): R`), as they are not runtime bindings.
+    fn function_param_type_pattern(
+        &mut self,
+        _patt: &'ast flow_parser::ast::pattern::Pattern<ALoc, ALoc>,
+    ) -> Result<(), !> {
         Ok(())
     }
 }

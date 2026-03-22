@@ -394,12 +394,13 @@ struct
           this#component_ref_param_maybe param;
           super#component_param param
 
-        (* Skip names in function parameter types (e.g. declared functions) *)
-        method! function_param_type (fpt : ('loc, 'loc) Ast.Type.Function.Param.t) =
-          let open Ast.Type.Function.Param in
-          let (_, { annot; _ }) = fpt in
-          run this#type_ annot;
-          fpt
+        (* Skip names in function parameter types (e.g. declared functions).
+           Only visit the type annotation, not the binding identifiers. *)
+        method! function_param_type_identifier (id : ('loc, 'loc) Ast.Identifier.t) = id
+
+        (* Skip destructuring patterns in function type params (e.g. in
+           `declare function f({a}: T): R`), as they are not runtime bindings. *)
+        method! function_param_type_pattern (patt : ('loc, 'loc) Ast.Pattern.t) = patt
 
         method! member_property_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
 

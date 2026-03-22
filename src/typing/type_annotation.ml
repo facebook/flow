@@ -41,8 +41,14 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
   module Func_type_params_config = struct
     let id_name (_, { Ast.Identifier.name; _ }) = name
 
-    let param_type (t, (_, { Ast.Type.Function.Param.name; optional; _ })) =
-      let name = Base.Option.map name ~f:id_name in
+    let param_type (t, (_, param)) =
+      let open Ast.Type.Function.Param in
+      let (name, optional) =
+        match param with
+        | Anonymous _ -> (None, false)
+        | Labeled { name; optional; _ } -> (Some (id_name name), optional)
+        | Destructuring pattern -> (None, Flow_ast_utils.pattern_optional pattern)
+      in
       let t =
         if optional then
           TypeUtil.optional t
@@ -52,8 +58,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       (name, t)
 
     let rest_type (t, (loc, { Ast.Type.Function.RestParam.argument; comments = _ })) =
-      let (_, { Ast.Type.Function.Param.name; _ }) = argument in
-      let name = Base.Option.map name ~f:id_name in
+      let open Ast.Type.Function.Param in
+      let (_, param) = argument in
+      let name =
+        match param with
+        | Labeled { name; _ } -> Some (id_name name)
+        | _ -> None
+      in
       (name, loc, t)
 
     let this_type (t, _) = t
@@ -351,6 +362,22 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       ?(in_renders_arg = false)
       tparams_map =
     { cx; tparams_map; infer_tparams_map; in_no_infer; in_renders_arg }
+
+  let function_type_param_parts = Flow_ast_utils.function_type_param_parts
+
+  (* Build typed AST for a function type parameter after type-checking. *)
+  let typed_function_param_ast param t annot_ast =
+    let open Ast.Type.Function.Param in
+    match param with
+    | Labeled { name = (name_loc, name_id); optional; _ } ->
+      let typed_name = ((name_loc, t), name_id) in
+      Labeled { name = typed_name; annot = annot_ast; optional }
+    | Anonymous _ -> Anonymous annot_ast
+    | Destructuring pattern ->
+      (* Destructuring patterns in function type params are not runtime bindings —
+         they exist purely for documentation in .d.ts files. Map them with
+         unimplemented_mapper to assign placeholder types to the pattern nodes. *)
+      Destructuring (Tast_utils.unimplemented_mapper#pattern pattern)
 
   let rec convert env =
     let open Ast.Type in
@@ -1342,7 +1369,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       let (rev_params, rev_param_asts) =
         List.fold_left
           (fun (params_acc, asts_acc) (param_loc, param) ->
-            let { Function.Param.name; annot; optional } = param in
+            let (name, annot, optional) = function_type_param_parts param in
             let (((_, t), _) as annot_ast) = convert env annot in
             let t =
               if optional then
@@ -1350,9 +1377,10 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               else
                 t
             in
-            let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
-            ( (Base.Option.map ~f:ident_name name, t) :: params_acc,
-              (param_loc, { Function.Param.name; annot = annot_ast; optional }) :: asts_acc
+            let typed_name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
+            let param_ast = typed_function_param_ast param t annot_ast in
+            ( (Base.Option.map ~f:ident_name typed_name, t) :: params_acc,
+              (param_loc, param_ast) :: asts_acc
             ))
           ([], [])
           ps
@@ -1368,23 +1396,13 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       let (rest_param, rest_param_ast) =
         match rest with
         | Some (rest_loc, { Function.RestParam.argument = (param_loc, param); comments }) ->
-          let { Function.Param.name; annot; optional } = param in
+          let (name, annot, _optional) = function_type_param_parts param in
           let (((_, rest), _) as annot_ast) = convert env annot in
+          let rest_param_ast_inner = typed_function_param_ast param rest annot_ast in
           ( Some (Base.Option.map ~f:ident_name name, loc_of_t rest, rest),
             Some
               ( rest_loc,
-                {
-                  Function.RestParam.argument =
-                    ( param_loc,
-                      {
-                        Function.Param.name =
-                          Base.Option.map ~f:(fun (loc, id_name) -> ((loc, rest), id_name)) name;
-                        annot = annot_ast;
-                        optional;
-                      }
-                    );
-                  comments;
-                }
+                { Function.RestParam.argument = (param_loc, rest_param_ast_inner); comments }
               )
           )
         | None -> (None, None)
@@ -2591,11 +2609,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
               {
                 T.Function.RestParam.argument =
                   ( _,
-                    {
-                      T.Function.Param.name =
-                        Some ((rloc, _), { Ast.Identifier.name = rest_name; _ });
-                      _;
-                    }
+                    T.Function.Param.Labeled
+                      { name = ((rloc, _), { Ast.Identifier.name = rest_name; _ }); _ }
                   );
                 _;
               }
@@ -2618,10 +2633,11 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             in
             error_type_guard env (gloc, x, t, kind, comments) msg
           else if
-            Base.List.for_all params ~f:(fun (_, { T.Function.Param.name = pname; _ }) ->
-                match pname with
-                | Some (_, { Ast.Identifier.name = pname; _ }) -> pname <> name
-                | None -> true
+            Base.List.for_all params ~f:(fun (_, param) ->
+                let open T.Function.Param in
+                match param with
+                | Labeled { name = (_, { Ast.Identifier.name = pname; _ }); _ } -> pname <> name
+                | _ -> true
             )
           then
             let msg =
@@ -2664,23 +2680,20 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
 
   and mk_method_func_sig =
     let add_param env x param =
-      let open Ast.Type.Function in
-      let (loc, { Param.name; annot; optional }) = param in
-      let (((_, t), _) as annot) = convert env annot in
-      let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
-      let param = (t, (loc, { Param.name; annot; optional })) in
+      let (loc, p) = param in
+      let (_name, annot, _optional) = function_type_param_parts p in
+      let (((_, t), _) as annot_ast) = convert env annot in
+      let param_ast = typed_function_param_ast p t annot_ast in
+      let param = (t, (loc, param_ast)) in
       Func_type_params.add_param param x
     in
     let add_rest env x rest_param =
       let open Ast.Type.Function in
-      let (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }); comments }) =
-        rest_param
-      in
-      let (((_, t), _) as annot) = convert env annot in
-      let name = Base.Option.map ~f:(fun (loc, id_name) -> ((loc, t), id_name)) name in
-      let rest =
-        (t, (rest_loc, { RestParam.argument = (loc, { Param.name; annot; optional }); comments }))
-      in
+      let (rest_loc, { RestParam.argument = (loc, p); comments }) = rest_param in
+      let (_name, annot, _optional) = function_type_param_parts p in
+      let (((_, t), _) as annot_ast) = convert env annot in
+      let param_ast = typed_function_param_ast p t annot_ast in
+      let rest = (t, (rest_loc, { RestParam.argument = (loc, param_ast); comments })) in
       Func_type_params.add_rest rest x
     in
     let add_this env x this_param =

@@ -4450,29 +4450,26 @@ and type_union_or_intersection ~opts ~sep loc ts comments =
        ts
     )
 
-and type_function_param ~opts (loc, { Ast.Type.Function.Param.name; annot; optional }) =
+and type_function_param ~opts (loc, param) =
+  let open Ast.Type.Function.Param in
   source_location_with_comments
     ( loc,
-      fuse
-        [
-          begin
-            match name with
-            | Some id ->
-              fuse
-                [
-                  identifier id;
-                  ( if optional then
-                    Atom "?"
-                  else
-                    Empty
-                  );
-                  Atom ":";
-                  pretty_space;
-                ]
-            | None -> Empty
-          end;
-          type_ ~opts annot;
-        ]
+      match param with
+      | Anonymous annot -> type_ ~opts annot
+      | Labeled { name; annot; optional } ->
+        fuse
+          [
+            identifier name;
+            ( if optional then
+              Atom "?"
+            else
+              Empty
+            );
+            Atom ":";
+            pretty_space;
+            type_ ~opts annot;
+          ]
+      | Destructuring patt -> pattern ~opts patt
     )
 
 and type_function_params ~opts (loc, { Ast.Type.Function.Params.this_; params; rest; comments }) =

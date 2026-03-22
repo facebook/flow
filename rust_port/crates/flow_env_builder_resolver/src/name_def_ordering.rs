@@ -1088,13 +1088,21 @@ where
         flow_parser::ast_visitor::component_param_default(self, param)
     }
 
-    // Skip names in function parameter types (e.g. declared functions)
-    fn function_param_type(
+    // Skip names in function parameter types (e.g. declared functions).
+    // Only visit the type annotation, not the binding identifiers.
+    fn function_param_type_identifier(
         &mut self,
-        fpt: &ast::types::function::Param<ALoc, ALoc>,
+        _id: &ast::Identifier<ALoc, ALoc>,
     ) -> Result<(), !> {
-        let annot = &fpt.annot;
-        self.type_(annot)?;
+        Ok(())
+    }
+
+    // Skip destructuring patterns in function type params (e.g. in
+    // `declare function f({a}: T): R`), as they are not runtime bindings.
+    fn function_param_type_pattern(
+        &mut self,
+        _patt: &ast::pattern::Pattern<ALoc, ALoc>,
+    ) -> Result<(), !> {
         Ok(())
     }
 

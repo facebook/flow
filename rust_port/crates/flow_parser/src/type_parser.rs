@@ -28,6 +28,7 @@ use crate::parser_common;
 use crate::parser_common::*;
 use crate::parser_env::try_parse::Rollback;
 use crate::parser_env::*;
+use crate::pattern_parser;
 use crate::token;
 use crate::token::NumberType;
 use crate::token::TokenKind;
@@ -1460,9 +1461,7 @@ fn render_type(env: &mut ParserEnv) -> Result<types::Renders<Loc, Loc>, Rollback
 fn anonymous_function_param(annot: types::Type<Loc, Loc>) -> types::function::Param<Loc, Loc> {
     types::function::Param {
         loc: annot.loc().dupe(),
-        name: None,
-        annot,
-        optional: false,
+        param: types::function::ParamKind::Anonymous(annot),
     }
 }
 
@@ -1470,7 +1469,7 @@ fn anonymous_function_param(annot: types::Type<Loc, Loc>) -> types::function::Pa
 fn function_param_with_id(
     env: &mut ParserEnv,
 ) -> Result<types::function::Param<Loc, Loc>, Rollback> {
-    let (loc, mut param) = with_loc(None, env, |env| {
+    let (loc, (name, optional, annot)) = with_loc(None, env, |env| {
         eat::push_lex_mode(env, LexMode::Normal);
         let name = main_parser::parse_identifier(env, None)?;
         eat::pop_lex_mode(env);
@@ -1480,29 +1479,53 @@ fn function_param_with_id(
         let optional = eat::maybe(env, TokenKind::TPling)?;
         expect::token(env, TokenKind::TColon)?;
         let annot = type_inner(env)?;
-        Ok(types::function::Param {
-            loc: LOC_NONE,
-            name: Some(name),
+        Ok((name, optional, annot))
+    })?;
+    Ok(types::function::Param {
+        loc,
+        param: types::function::ParamKind::Labeled {
+            name,
             annot,
             optional,
-        })
+        },
+    })
+}
+
+fn destructuring_function_param(
+    env: &mut ParserEnv,
+    allow_optional: bool,
+) -> Result<types::function::Param<Loc, Loc>, Rollback> {
+    let (loc, param) = with_loc(None, env, |env| {
+        let pattern = pattern_parser::pattern(env, allow_optional, ParseError::StrictParamName)?;
+        Ok(types::function::ParamKind::Destructuring(pattern))
     })?;
-    param.loc = loc;
-    Ok(param)
+    Ok(types::function::Param { loc, param })
 }
 
 fn function_param_list_without_parens(
     env: &mut ParserEnv,
     mut params: Vec<types::function::Param<Loc, Loc>>,
 ) -> Result<types::function::Params<Loc, Loc>, Rollback> {
-    fn param(env: &mut ParserEnv) -> Result<types::function::Param<Loc, Loc>, Rollback> {
-        match peek::ith_token(env, 1) {
-            TokenKind::TColon | TokenKind::TPling => function_param_with_id(env),
-            _ => {
-                let annot = type_inner(env)?;
-                let param = anonymous_function_param(annot);
-                Ok(param)
+    fn param(
+        env: &mut ParserEnv,
+        allow_optional: bool,
+    ) -> Result<types::function::Param<Loc, Loc>, Rollback> {
+        match peek::token(env) {
+            TokenKind::TLcurly | TokenKind::TLbracket => {
+                if env.is_d_ts() {
+                    destructuring_function_param(env, allow_optional)
+                } else {
+                    let annot = type_inner(env)?;
+                    Ok(anonymous_function_param(annot))
+                }
             }
+            _ => match peek::ith_token(env, 1) {
+                TokenKind::TColon | TokenKind::TPling => function_param_with_id(env),
+                _ => {
+                    let annot = type_inner(env)?;
+                    Ok(anonymous_function_param(annot))
+                }
+            },
         }
     }
 
@@ -1514,7 +1537,7 @@ fn function_param_list_without_parens(
                     let (loc, mut param) = with_loc(None, env, |env| {
                         let leading = peek::comments(env);
                         expect::token(env, TokenKind::TEllipsis)?;
-                        let argument = param(env)?;
+                        let argument = param(env, false)?;
                         Ok(types::function::RestParam {
                             loc: LOC_NONE,
                             argument,
@@ -1559,14 +1582,14 @@ fn function_param_list_without_parens(
                     }
                     this = Some(this_param);
                 } else {
-                    params.push(param(env)?);
+                    params.push(param(env, true)?);
                     if peek::token(env) != &TokenKind::TRparen {
                         expect::token(env, TokenKind::TComma)?;
                     }
                 }
             }
             _ => {
-                params.push(param(env)?);
+                params.push(param(env, true)?);
                 if peek::token(env) != &TokenKind::TRparen {
                     expect::token(env, TokenKind::TComma)?;
                 }

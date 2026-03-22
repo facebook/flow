@@ -883,6 +883,23 @@ let pattern_optional = function
   | (_, Pattern.Identifier { Pattern.Identifier.optional; _ }) -> optional
   | _ -> false
 
+let pattern_annot (patt : ('M, 'T) Pattern.t) =
+  match patt with
+  | (_, Pattern.Object { Pattern.Object.annot; _ }) -> annot
+  | (_, Pattern.Array { Pattern.Array.annot; _ }) -> annot
+  | (_, Pattern.Identifier { Pattern.Identifier.annot; _ }) -> annot
+  | (_, Pattern.Expression _) -> failwith "Expression patterns have no annotation"
+
+let function_type_param_parts param =
+  let open Type.Function.Param in
+  match param with
+  | Anonymous annot -> (None, annot, false)
+  | Labeled { name; annot; optional } -> (Some name, annot, optional)
+  | Destructuring pattern ->
+    (match pattern_annot pattern with
+    | Type.Available (_, annot) -> (None, annot, pattern_optional pattern)
+    | Type.Missing _ -> failwith "Destructuring function type param must have annotation")
+
 let string_of_bigint { BigIntLiteral.value; raw; comments = _ } =
   (* https://github.com/estree/estree/blob/master/es2020.md#bigintliteral
    * `bigint` property is the string representation of the `BigInt` value.

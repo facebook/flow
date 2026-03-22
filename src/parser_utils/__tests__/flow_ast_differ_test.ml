@@ -210,13 +210,15 @@ class useless_mapper =
 
     method! function_param_type (fpt : (Loc.t, Loc.t) Ast.Type.Function.Param.t) =
       let open Ast.Type.Function.Param in
-      let ((loc, fpt') as fpt) = super#function_param_type fpt in
-      let { name; _ } = fpt' in
-      let name' = Flow_ast_mapper.map_opt this#identifier name in
-      if name' == name then
-        fpt
-      else
-        (loc, { fpt' with name = name' })
+      let ((loc, param) as fpt) = super#function_param_type fpt in
+      match param with
+      | Labeled { name; annot; optional } ->
+        let name' = this#identifier name in
+        if name' == name then
+          fpt
+        else
+          (loc, Labeled { name = name'; annot; optional })
+      | _ -> fpt
 
     method! update_expression loc (expr : (Loc.t, Loc.t) Ast.Expression.Update.t) =
       let open Ast.Expression.Update in

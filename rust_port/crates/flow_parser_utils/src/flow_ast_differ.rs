@@ -5100,15 +5100,36 @@ fn function_param_type(
     fpt1: &ast::types::function::Param<Loc, Loc>,
     fpt2: &ast::types::function::Param<Loc, Loc>,
 ) -> Option<Vec<NodeChange>> {
-    // These are boolean literals, so structural equality is ok
-    let optional_diff = if fpt1.optional == fpt2.optional {
-        Some(vec![])
-    } else {
-        None
-    };
-    let name_diff = diff_if_changed_nonopt_fn(identifier, &fpt1.name, &fpt2.name);
-    let annot_diff = Some(diff_if_changed(type_, &fpt1.annot, &fpt2.annot));
-    join_diff_list(vec![optional_diff, name_diff, annot_diff])
+    use ast::types::function::ParamKind;
+    match (&fpt1.param, &fpt2.param) {
+        (ParamKind::Anonymous(annot1), ParamKind::Anonymous(annot2)) => {
+            Some(diff_if_changed(type_, annot1, annot2))
+        }
+        (
+            ParamKind::Labeled {
+                name: name1,
+                annot: annot1,
+                optional: optional1,
+            },
+            ParamKind::Labeled {
+                name: name2,
+                annot: annot2,
+                optional: optional2,
+            },
+        ) => {
+            if optional1 != optional2 {
+                None
+            } else {
+                let name_diff = Some(diff_if_changed(identifier, name1, name2));
+                let annot_diff = Some(diff_if_changed(type_, annot1, annot2));
+                join_diff_list(vec![name_diff, annot_diff])
+            }
+        }
+        (ParamKind::Destructuring(patt1), ParamKind::Destructuring(patt2)) => {
+            Some(diff_if_changed(pattern, patt1, patt2))
+        }
+        _ => None,
+    }
 }
 
 fn function_rest_param_type(

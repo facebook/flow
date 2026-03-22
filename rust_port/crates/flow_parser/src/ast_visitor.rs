@@ -2005,6 +2005,40 @@ pub trait AstVisitor<'ast, Loc: Dupe, Type: Dupe = Loc, C = &'ast Loc, E = !> {
         map_function_param_type_default(self, fpt)
     }
 
+    fn function_param_type_identifier(
+        &mut self,
+        id: &'ast ast::Identifier<Loc, Type>,
+    ) -> Result<(), E> {
+        self.identifier(id)
+    }
+
+    fn map_function_param_type_identifier(
+        &mut self,
+        id: &'ast ast::Identifier<Loc, Loc>,
+    ) -> ast::Identifier<Loc, Loc>
+    where
+        Loc: Dupe,
+    {
+        self.map_identifier(id)
+    }
+
+    fn function_param_type_pattern(
+        &mut self,
+        patt: &'ast ast::pattern::Pattern<Loc, Type>,
+    ) -> Result<(), E> {
+        self.pattern(None, patt)
+    }
+
+    fn map_function_param_type_pattern(
+        &mut self,
+        patt: &'ast ast::pattern::Pattern<Loc, Loc>,
+    ) -> ast::pattern::Pattern<Loc, Loc>
+    where
+        Loc: Dupe,
+    {
+        self.map_pattern(None, patt)
+    }
+
     fn function_rest_param_type(
         &mut self,
         frpt: &'ast ast::types::function::RestParam<Loc, Type>,
@@ -10469,15 +10503,17 @@ pub fn function_param_type_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
     fpt: &'ast ast::types::function::Param<Loc, Type>,
 ) -> Result<(), E> {
-    let ast::types::function::Param {
-        loc: _,
-        name,
-        annot,
-        optional: _,
-    } = fpt;
-    visitor.type_(annot)?;
-    if let Some(name) = name {
-        visitor.identifier(name)?;
+    match &fpt.param {
+        ast::types::function::ParamKind::Anonymous(annot) => {
+            visitor.type_(annot)?;
+        }
+        ast::types::function::ParamKind::Labeled { name, annot, .. } => {
+            visitor.function_param_type_identifier(name)?;
+            visitor.type_(annot)?;
+        }
+        ast::types::function::ParamKind::Destructuring(pattern) => {
+            visitor.function_param_type_pattern(pattern)?;
+        }
     }
     Ok(())
 }
@@ -10486,19 +10522,33 @@ pub fn map_function_param_type_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
     fpt: &'ast ast::types::function::Param<Loc, Loc>,
 ) -> ast::types::function::Param<Loc, Loc> {
-    let ast::types::function::Param {
-        loc,
-        name,
-        annot,
-        optional,
-    } = fpt;
-    let annot_ = visitor.map_type_(annot);
-    let name_ = name.as_ref().map(|n| visitor.map_identifier(n));
+    let loc = &fpt.loc;
+    let param = match &fpt.param {
+        ast::types::function::ParamKind::Anonymous(annot) => {
+            let annot_ = visitor.map_type_(annot);
+            ast::types::function::ParamKind::Anonymous(annot_)
+        }
+        ast::types::function::ParamKind::Labeled {
+            name,
+            annot,
+            optional,
+        } => {
+            let name_ = visitor.map_function_param_type_identifier(name);
+            let annot_ = visitor.map_type_(annot);
+            ast::types::function::ParamKind::Labeled {
+                name: name_,
+                annot: annot_,
+                optional: *optional,
+            }
+        }
+        ast::types::function::ParamKind::Destructuring(pattern) => {
+            let pattern_ = visitor.map_function_param_type_pattern(pattern);
+            ast::types::function::ParamKind::Destructuring(pattern_)
+        }
+    };
     ast::types::function::Param {
         loc: loc.dupe(),
-        name: name_,
-        annot: annot_,
-        optional: *optional,
+        param,
     }
 }
 

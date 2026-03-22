@@ -1347,6 +1347,15 @@ mod hardcoded_tests {
                             case.options.1.ambient = true;
                             test.cases.insert(case_name, case);
                         }
+                        // Handle .d.ts files (e.g., foo.d.ts -> foo)
+                        "ts" if case_name.ends_with(".d") => {
+                            let case_name = case_name.strip_suffix(".d").unwrap().to_owned();
+                            let mut case = test.cases.remove(&case_name).unwrap_or_default();
+                            let content = fs::read_to_string(&file).unwrap();
+                            case.content = Some(content);
+                            case.filename = Some(file.clone());
+                            test.cases.insert(case_name, case);
+                        }
                         "json" => {
                             let (case_name, kind) = split_extension(case_name);
                             let mut case = test.cases.remove(&case_name).unwrap_or_default();
@@ -1386,13 +1395,59 @@ mod hardcoded_tests {
     fn parse_file(
         (test_options, parse_options): &(TestOptions, ParseOptions),
         content: &str,
-        _filename: Option<&str>,
+        filename: Option<&str>,
     ) -> serde_json::Value {
-        main_parser::parse_to_json(
-            Some(parse_options.clone()),
-            test_options.intern_comments,
-            Ok(content),
-        )
+        // For .d.ts files, pass the filename to the parser so it can detect
+        // the file type and enable d.ts-specific parsing (e.g., destructuring
+        // in function type parameters). For other files, use the simpler path
+        // that doesn't set a file key.
+        let is_d_ts = filename.is_some_and(|f| f.ends_with(".d.ts"));
+        if is_d_ts {
+            use crate::comment_utils;
+            use crate::estree_translator;
+            use crate::file_key::FileKey;
+            use crate::file_key::FileKeyInner;
+            use crate::offset_utils;
+
+            let offset_table = offset_utils::OffsetTable::make(content);
+            let file_key = FileKey::new(FileKeyInner::SourceFile(filename.unwrap().to_owned()));
+            let (mut ast, errors) = main_parser::parse_program_file::<()>(
+                false,
+                None,
+                Some(parse_options.clone()),
+                file_key,
+                Ok(content),
+            );
+            if !test_options.intern_comments {
+                comment_utils::strip_inlined_comments(&mut ast);
+            }
+            let mut result = estree_translator::program(
+                &offset_table,
+                &estree_translator::Config {
+                    include_locs: true,
+                    include_filename: false,
+                },
+                &ast,
+            );
+            match &mut result {
+                serde_json::Value::Object(obj) => {
+                    if !errors.is_empty() {
+                        obj.insert(
+                            "errors".to_owned(),
+                            estree_translator::errors(&offset_table, &errors),
+                        );
+                    }
+                }
+                _ => unreachable!(),
+            }
+            result
+        } else {
+            main_parser::parse_to_json(
+                Some(parse_options.clone()),
+                test_options.intern_comments,
+                Ok(content),
+            )
+        }
     }
 
     fn compare_json(

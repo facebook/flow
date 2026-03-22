@@ -391,9 +391,28 @@ pub mod types {
         )]
         pub struct Param<M: Dupe, T: Dupe> {
             pub loc: M,
-            pub name: Option<Identifier<M, T>>,
-            pub annot: Type<M, T>,
-            pub optional: bool,
+            pub param: ParamKind<M, T>,
+        }
+
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
+        pub enum ParamKind<M: Dupe, T: Dupe> {
+            Anonymous(Type<M, T>),
+            Labeled {
+                name: Identifier<M, T>,
+                annot: Type<M, T>,
+                optional: bool,
+            },
+            Destructuring(super::super::pattern::Pattern<M, T>),
         }
 
         #[derive(

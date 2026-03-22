@@ -165,11 +165,14 @@ and Type : sig
     module Param : sig
       type ('M, 'T) t = 'M * ('M, 'T) t'
 
-      and ('M, 'T) t' = {
-        name: ('M, 'T) Identifier.t option;
-        annot: ('M, 'T) Type.t;
-        optional: bool;
-      }
+      and ('M, 'T) t' =
+        | Anonymous of ('M, 'T) Type.t
+        | Labeled of {
+            name: ('M, 'T) Identifier.t;
+            annot: ('M, 'T) Type.t;
+            optional: bool;
+          }
+        | Destructuring of ('M, 'T) Pattern.t
       [@@deriving show]
     end
 

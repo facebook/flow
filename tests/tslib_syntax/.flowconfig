@@ -3,3 +3,5 @@ all=true
 no_flowlib=false
 experimental.ts_syntax=true
 experimental.tslib_syntax=true
+module.file_ext=.js
+module.file_ext=.d.ts

@@ -385,14 +385,17 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
       (match argument with
       | (_, Pattern.Identifier { Pattern.Identifier.name; annot; optional }) ->
         (match annot with
-        | Ast.Type.Available (_, (type_loc, type_annot)) ->
-          Ok
-            ( param_loc,
-              { Ast.Type.Function.Param.name = Some name; annot = (type_loc, type_annot); optional }
-            )
+        | Ast.Type.Available (_, annot_type) ->
+          Ok (param_loc, Ast.Type.Function.Param.Labeled { name; annot = annot_type; optional })
         | Ast.Type.Missing _ ->
           let (_, { Identifier.name = param_name; _ }) = name in
           Error (Printf.sprintf "parameter '%s' is missing a type annotation" param_name))
+      | (_, Pattern.Object { Pattern.Object.annot = Ast.Type.Available _; _ })
+      | (_, Pattern.Array { Pattern.Array.annot = Ast.Type.Available _; _ }) ->
+        Ok (param_loc, Ast.Type.Function.Param.Destructuring argument)
+      | (_, Pattern.Object _)
+      | (_, Pattern.Array _) ->
+        Error "destructuring parameter is missing a type annotation"
       | _ -> Error "complex parameter patterns are not allowed")
     | ParamProperty _ -> Error "parameter properties are not allowed"
 

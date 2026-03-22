@@ -58,8 +58,9 @@ let assert_statement ~ctxt ?msg ?pretty ?(opts = Js_layout_generator.default_opt
   let layout = Js_layout_generator.statement ~opts ast in
   assert_output ~ctxt ?msg ?pretty expected_str layout
 
-let assert_statement_string ~ctxt ?msg ?pretty ?(opts = Js_layout_generator.default_opts) str =
-  let ast = test_statement_of_string str in
+let assert_statement_string
+    ~ctxt ?msg ?pretty ?filename ?(opts = Js_layout_generator.default_opts) str =
+  let ast = test_statement_of_string ?filename str in
   let layout = Js_layout_generator.statement ~opts ast in
   assert_output ~ctxt ?msg ?pretty str layout
 

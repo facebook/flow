@@ -6006,20 +6006,48 @@ fn function_param_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     mapper: &mut impl LocMapper<M, T, N, U, E>,
     param: &ast::types::function::Param<M, T>,
 ) -> Result<ast::types::function::Param<N, U>, E> {
-    let ast::types::function::Param {
-        loc,
-        name,
-        annot,
-        optional,
-    } = param;
-    let annot_ = type_(mapper, annot)?;
-    let name_ = name.as_ref().map(|n| t_identifier(mapper, n)).transpose()?;
+    let loc_ = mapper.on_loc_annot(&param.loc)?;
+    let param_ = match &param.param {
+        ast::types::function::ParamKind::Anonymous(annot) => {
+            let annot_ = type_(mapper, annot)?;
+            ast::types::function::ParamKind::Anonymous(annot_)
+        }
+        ast::types::function::ParamKind::Labeled {
+            name,
+            annot,
+            optional,
+        } => {
+            let name_ = function_param_type_identifier(mapper, name)?;
+            let annot_ = type_(mapper, annot)?;
+            ast::types::function::ParamKind::Labeled {
+                name: name_,
+                annot: annot_,
+                optional: *optional,
+            }
+        }
+        ast::types::function::ParamKind::Destructuring(patt) => {
+            let patt_ = function_param_type_pattern(mapper, patt)?;
+            ast::types::function::ParamKind::Destructuring(patt_)
+        }
+    };
     Ok(ast::types::function::Param {
-        loc: mapper.on_loc_annot(loc)?,
-        name: name_,
-        annot: annot_,
-        optional: *optional,
+        loc: loc_,
+        param: param_,
     })
+}
+
+fn function_param_type_identifier<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
+    mapper: &mut impl LocMapper<M, T, N, U, E>,
+    id: &ast::Identifier<M, T>,
+) -> Result<ast::Identifier<N, U>, E> {
+    t_identifier(mapper, id)
+}
+
+fn function_param_type_pattern<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
+    mapper: &mut impl LocMapper<M, T, N, U, E>,
+    patt: &ast::pattern::Pattern<M, T>,
+) -> Result<ast::pattern::Pattern<N, U>, E> {
+    pattern(mapper, None, patt)
 }
 fn function_rest_param_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     mapper: &mut impl LocMapper<M, T, N, U, E>,

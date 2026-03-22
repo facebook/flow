@@ -1962,9 +1962,8 @@ and function_component_type_param opts scope tbls xs t optional =
     t
 
 and function_type_params =
-  let module F = T.Function in
   let param opts scope tbls xs (_, p) =
-    let { F.Param.name = id; annot = t; optional } = p in
+    let (id, t, optional) = Flow_ast_utils.function_type_param_parts p in
     let name =
       match id with
       | None -> None
@@ -1987,9 +1986,8 @@ and function_type_rest_param opts scope tbls xs =
   | None -> None
   | Some (loc, { F.RestParam.argument = p; comments = _ }) ->
     let loc = push_loc tbls loc in
-    let (_, { F.Param.name = id; annot = t; optional }) = p in
-    ignore optional;
-    (* allowed by the parser, but semantically void *)
+    let (_, param) = p in
+    let (id, t, _optional) = Flow_ast_utils.function_type_param_parts param in
     let name =
       match id with
       | None -> None
@@ -2072,7 +2070,7 @@ and setter_type opts scope tbls xs id_loc f =
   let { F.params = (_, { F.Params.params; _ }); _ } = f in
   match params with
   | [(_, p)] ->
-    let { F.Param.annot = t; optional; _ } = p in
+    let (_, t, optional) = Flow_ast_utils.function_type_param_parts p in
     let t = annot opts scope tbls xs t in
     let t =
       if optional then

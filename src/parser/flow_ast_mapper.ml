@@ -1502,13 +1502,31 @@ class ['loc] mapper =
 
     method function_param_type (fpt : ('loc, 'loc) Ast.Type.Function.Param.t) =
       let open Ast.Type.Function.Param in
-      let (loc, { annot; name; optional }) = fpt in
-      let annot' = this#type_ annot in
-      let name' = map_opt this#identifier name in
-      if annot' == annot && name' == name then
-        fpt
-      else
-        (loc, { annot = annot'; name = name'; optional })
+      let (loc, param) = fpt in
+      match param with
+      | Anonymous annot ->
+        let annot' = this#type_ annot in
+        if annot' == annot then
+          fpt
+        else
+          (loc, Anonymous annot')
+      | Labeled { name; annot; optional } ->
+        let name' = this#function_param_type_identifier name in
+        let annot' = this#type_ annot in
+        if name' == name && annot' == annot then
+          fpt
+        else
+          (loc, Labeled { name = name'; annot = annot'; optional })
+      | Destructuring pattern ->
+        let pattern' = this#function_param_type_pattern pattern in
+        if pattern' == pattern then
+          fpt
+        else
+          (loc, Destructuring pattern')
+
+    method function_param_type_identifier (id : ('loc, 'loc) Ast.Identifier.t) = this#identifier id
+
+    method function_param_type_pattern (patt : ('loc, 'loc) Ast.Pattern.t) = this#pattern patt
 
     method function_rest_param_type (frpt : ('loc, 'loc) Ast.Type.Function.RestParam.t) =
       let open Ast.Type.Function.RestParam in

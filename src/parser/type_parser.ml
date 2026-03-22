@@ -926,31 +926,49 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
       variant;
     }
 
-  and anonymous_function_param _env annot =
-    (fst annot, Type.Function.Param.{ name = None; annot; optional = false })
+  and anonymous_function_param _env annot = (fst annot, Type.Function.Param.Anonymous annot)
 
   and function_param_with_id env =
+    let (loc, (name, optional, annot)) =
+      with_loc
+        (fun env ->
+          Eat.push_lex_mode env Lex_mode.NORMAL;
+          let name = Parse.identifier env in
+          Eat.pop_lex_mode env;
+          if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
+          let optional = Eat.maybe env T_PLING in
+          Expect.token env T_COLON;
+          let annot = _type env in
+          (name, optional, annot))
+        env
+    in
+    (loc, Type.Function.Param.Labeled { name; annot; optional })
+
+  and destructuring_function_param ~allow_optional env =
     with_loc
       (fun env ->
-        Eat.push_lex_mode env Lex_mode.NORMAL;
-        let name = Parse.identifier env in
-        Eat.pop_lex_mode env;
-        if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
-        let optional = Eat.maybe env T_PLING in
-        Expect.token env T_COLON;
-        let annot = _type env in
-        { Type.Function.Param.name = Some name; annot; optional })
+        let pattern = Parse.pattern env ~allow_optional Parse_error.StrictParamName in
+        Type.Function.Param.Destructuring pattern)
       env
 
   and function_param_list_without_parens =
-    let param env =
-      match Peek.ith_token ~i:1 env with
-      | T_COLON
-      | T_PLING ->
-        function_param_with_id env
+    let param ~allow_optional env =
+      match Peek.token env with
+      | T_LCURLY
+      | T_LBRACKET ->
+        if is_d_ts env then
+          destructuring_function_param ~allow_optional env
+        else
+          let annot = _type env in
+          anonymous_function_param env annot
       | _ ->
-        let annot = _type env in
-        anonymous_function_param env annot
+        (match Peek.ith_token ~i:1 env with
+        | T_COLON
+        | T_PLING ->
+          function_param_with_id env
+        | _ ->
+          let annot = _type env in
+          anonymous_function_param env annot)
     in
     let rec param_list env this_ acc =
       match Peek.token env with
@@ -963,7 +981,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
                   let leading = Peek.comments env in
                   Expect.token env T_ELLIPSIS;
                   {
-                    Type.Function.RestParam.argument = param env;
+                    Type.Function.RestParam.argument = param ~allow_optional:false env;
                     comments = Flow_ast_utils.mk_comments_opt ~leading ();
                   })
                 env
@@ -991,7 +1009,7 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
         if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
         param_list env (Some this_) acc
       | _ ->
-        let acc = param env :: acc in
+        let acc = param ~allow_optional:true env :: acc in
         if Peek.token env <> T_RPAREN then Expect.token env T_COMMA;
         param_list env this_ acc
     in

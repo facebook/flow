@@ -3790,9 +3790,10 @@ fn function_type_params<'arena, 'ast>(
     params
         .iter()
         .map(|p| {
-            let name = p.name.as_ref().map(|id| id_name(id).clone());
-            let t =
-                function_component_type_param(opts, scope, scopes, tbls, xs, &p.annot, p.optional);
+            let (id, annot_t, optional) =
+                flow_parser::ast_utils::function_type_param_parts(&p.param);
+            let name = id.map(|id| id_name(id).clone());
+            let t = function_component_type_param(opts, scope, scopes, tbls, xs, annot_t, optional);
             FunParam { name, t }
         })
         .collect()
@@ -3808,8 +3809,10 @@ fn function_type_rest_param<'arena, 'ast>(
 ) -> Option<FunRestParam<LocNode<'arena>, Parsed<'arena, 'ast>>> {
     rest.as_ref().map(|rp| {
         let loc = tbls.push_loc(rp.loc.dupe());
-        let name = rp.argument.name.as_ref().map(|id| id_name(id).clone());
-        let t = annot(opts, scope, scopes, tbls, xs, &rp.argument.annot);
+        let (id, annot_t, _optional) =
+            flow_parser::ast_utils::function_type_param_parts(&rp.argument.param);
+        let name = id.map(|id| id_name(id).clone());
+        let t = annot(opts, scope, scopes, tbls, xs, annot_t);
         FunRestParam { name, loc, t }
     })
 }
@@ -3931,8 +3934,9 @@ fn setter_type<'arena, 'ast>(
     if f.params.params.len() == 1
         && let Some(p) = f.params.params.first()
     {
-        let t = annot(opts, scope, scopes, tbls, xs, &p.annot);
-        let t = if p.optional {
+        let (_, annot_t, optional) = flow_parser::ast_utils::function_type_param_parts(&p.param);
+        let t = annot(opts, scope, scopes, tbls, xs, annot_t);
+        let t = if optional {
             Parsed::Annot(Box::new(Annot::Optional(t)))
         } else {
             t

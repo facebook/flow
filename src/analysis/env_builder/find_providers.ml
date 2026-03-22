@@ -788,6 +788,10 @@ end = struct
 
       method! record_body ((loc, _) as body) =
         this#enter_scope Var (fun _ body -> super#record_body body) loc body
+
+      (* Skip destructuring patterns in function type params (e.g. in
+         `declare function f({a}: T): R`), as they are not runtime bindings. *)
+      method! function_param_type_pattern (patt : ('loc, 'loc) Ast.Pattern.t) = patt
     end
 
   (****** pass 1 *******)

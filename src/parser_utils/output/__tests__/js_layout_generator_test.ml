@@ -2402,7 +2402,98 @@ let tests =
            assert_statement_string ~ctxt ~pretty:true "declare function a(): b;";
            assert_statement_string ~ctxt "declare function f():a%checks;";
            assert_statement_string ~ctxt "declare function f(a:b):a%checks(!a);";
-           assert_statement_string ~ctxt ~pretty:true "declare function f(a: b): a %checks(!a);"
+           assert_statement_string ~ctxt ~pretty:true "declare function f(a: b): a %checks(!a);";
+           let dts = "test.d.ts" in
+           assert_statement_string
+             ~ctxt
+             ~filename:dts
+             "declare function f({a,b}:{a:number,b:string}):number;";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "declare function f({a, b}: { a: number, b: string }): number;";
+           assert_statement_string
+             ~ctxt
+             ~filename:dts
+             "declare function g([a,b]:[number,string]):number;";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "declare function g([a, b]: [number, string]): number;";
+           assert_statement_string ~ctxt ~filename:dts "declare function h({a}?:{a:number}):number;";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "declare function h({a}?: { a: number }): number;";
+           (* property renaming *)
+           assert_statement_string
+             ~ctxt
+             ~filename:dts
+             "declare function i({a:b}:{a:number}):number;";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "declare function i({a: b}: { a: number }): number;";
+           (* nested destructuring *)
+           assert_statement_string
+             ~ctxt
+             ~filename:dts
+             "declare function j({a:{b}}:{a:{b:number}}):number;";
+           (* rest in destructuring *)
+           assert_statement_string
+             ~ctxt
+             ~filename:dts
+             "declare function k({a,...b}:{a:number,c:string}):number;";
+           (* declare class with destructuring methods *)
+           assert_statement_string
+             ~ctxt
+             ~filename:dts
+             "declare class C{m({a,b}:{a:number,b:string}):number}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "declare class C { m({a, b}: { a: number, b: string }): number }";
+           assert_statement_string ~ctxt ~filename:dts "declare class D{m({a}?:{a:number}):number}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "declare class D { m({a}?: { a: number }): number }";
+           assert_statement_string ~ctxt ~filename:dts "declare class E{m([a]:[number]):string}";
+           (* interface with destructuring *)
+           assert_statement_string
+             ~ctxt
+             ~filename:dts
+             "interface I{m([a,b]:[number,string]):number}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "interface I { m([a, b]: [number, string]): number }";
+           (* rest param with destructuring *)
+           assert_statement_string
+             ~ctxt
+             ~filename:dts
+             "declare function r(...[a,b]:[number,string]):number;";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "declare function r(...[a, b]: [number, string]): number;";
+           assert_statement_string
+             ~ctxt
+             ~filename:dts
+             "declare function s(...{a}:{a:number}):number;";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "declare function s(...{a}: { a: number }): number;"
          );
          ( "anonymous_declare_export_default_function" >:: fun ctxt ->
            (* Build AST for: export default function(dir: string): string; *)
@@ -2410,12 +2501,12 @@ let tests =
            let string_annot = (loc, Ast.Type.String None) in
            let param =
              ( loc,
-               {
-                 Ast.Type.Function.Param.name =
-                   Some (loc, { Ast.Identifier.name = "dir"; comments = None });
-                 annot = string_annot;
-                 optional = false;
-               }
+               Ast.Type.Function.Param.Labeled
+                 {
+                   name = (loc, { Ast.Identifier.name = "dir"; comments = None });
+                   annot = string_annot;
+                   optional = false;
+                 }
              )
            in
            let func_type =

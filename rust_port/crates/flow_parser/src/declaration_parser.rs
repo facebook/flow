@@ -661,14 +661,35 @@ fn convert_function_param_to_type_param(
                         annotation, ..
                     }) => Ok(types::function::Param {
                         loc: loc.dupe(),
-                        name: Some(name.clone()),
-                        annot: annotation.clone(),
-                        optional: *optional,
+                        param: types::function::ParamKind::Labeled {
+                            name: name.clone(),
+                            annot: annotation.clone(),
+                            optional: *optional,
+                        },
                     }),
                     types::AnnotationOrHint::Missing(_) => {
                         Err("parameter is missing a type annotation")
                     }
                 }
+            }
+            pattern::Pattern::Object { inner, .. }
+                if matches!(inner.annot, types::AnnotationOrHint::Available(_)) =>
+            {
+                Ok(types::function::Param {
+                    loc: loc.dupe(),
+                    param: types::function::ParamKind::Destructuring(argument.clone()),
+                })
+            }
+            pattern::Pattern::Array { inner, .. }
+                if matches!(inner.annot, types::AnnotationOrHint::Available(_)) =>
+            {
+                Ok(types::function::Param {
+                    loc: loc.dupe(),
+                    param: types::function::ParamKind::Destructuring(argument.clone()),
+                })
+            }
+            pattern::Pattern::Object { .. } | pattern::Pattern::Array { .. } => {
+                Err("destructuring parameter is missing a type annotation")
             }
             _ => Err("complex parameter patterns are not allowed"),
         },

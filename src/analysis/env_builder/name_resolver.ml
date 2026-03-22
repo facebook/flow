@@ -2210,6 +2210,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           (* Skip parameter properties, they are not supported *)
           (loc, ParamProperty prop)
 
+      (* Skip destructuring patterns in function type params (e.g. in
+         `declare function f({a}: T): R`), as they are not runtime bindings. *)
+      method! function_param_type_pattern (patt : (ALoc.t, ALoc.t) Ast.Pattern.t) = patt
+
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
        * this read
@@ -6946,6 +6950,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         match param with
         | (_, ParamProperty _) -> param
         | _ -> super#function_param param
+
+      (* Skip destructuring patterns in function type params (e.g. in
+         `declare function f({a}: T): R`), as they are not runtime bindings. *)
+      method! function_param_type_pattern (patt : (ALoc.t, ALoc.t) Ast.Pattern.t) = patt
 
       method! import_named_specifier ~import_kind specifier =
         import_named_specifier

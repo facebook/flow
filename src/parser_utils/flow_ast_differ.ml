@@ -3128,18 +3128,23 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (fpt1 : (Loc.t, Loc.t) Ast.Type.Function.Param.t)
       (fpt2 : (Loc.t, Loc.t) Ast.Type.Function.Param.t) : node change list option =
     let open Ast.Type.Function.Param in
-    let (_loc1, { annot = annot1; name = name1; optional = opt1 }) = fpt1 in
-    let (_loc2, { annot = annot2; name = name2; optional = opt2 }) = fpt2 in
-    (* These are boolean literals, so structural equality is ok *)
-    let optional_diff =
-      if opt1 = opt2 then
-        Some []
-      else
+    let (_loc1, param1) = fpt1 in
+    let (_loc2, param2) = fpt2 in
+    match (param1, param2) with
+    | (Anonymous annot1, Anonymous annot2) ->
+      diff_if_changed type_ annot1 annot2 |> Base.Option.return
+    | ( Labeled { name = name1; annot = annot1; optional = optional1 },
+        Labeled { name = name2; annot = annot2; optional = optional2 }
+      ) ->
+      if optional1 <> optional2 then
         None
-    in
-    let name_diff = diff_if_changed_nonopt_fn identifier name1 name2 in
-    let annot_diff = diff_if_changed type_ annot1 annot2 |> Base.Option.return in
-    join_diff_list [optional_diff; name_diff; annot_diff]
+      else
+        let name_diff = diff_if_changed identifier name1 name2 |> Base.Option.return in
+        let annot_diff = diff_if_changed type_ annot1 annot2 |> Base.Option.return in
+        join_diff_list [name_diff; annot_diff]
+    | (Destructuring patt1, Destructuring patt2) ->
+      diff_if_changed pattern patt1 patt2 |> Base.Option.return
+    | _ -> None
   and function_rest_param_type
       (frpt1 : (Loc.t, Loc.t) Ast.Type.Function.RestParam.t)
       (frpt2 : (Loc.t, Loc.t) Ast.Type.Function.RestParam.t) : node change list option =

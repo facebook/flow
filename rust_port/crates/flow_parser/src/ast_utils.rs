@@ -136,6 +136,38 @@ pub fn pattern_optional<M: Dupe, T: Dupe>(pattern: &pattern::Pattern<M, T>) -> b
     }
 }
 
+pub fn pattern_annot<M: Dupe, T: Dupe>(
+    pattern: &pattern::Pattern<M, T>,
+) -> &types::AnnotationOrHint<M, T> {
+    match pattern {
+        pattern::Pattern::Object { inner, .. } => &inner.annot,
+        pattern::Pattern::Array { inner, .. } => &inner.annot,
+        pattern::Pattern::Identifier { inner, .. } => &inner.annot,
+        pattern::Pattern::Expression { .. } => panic!("Expression patterns have no annotation"),
+    }
+}
+
+pub fn function_type_param_parts<M: Dupe, T: Dupe>(
+    param: &types::function::ParamKind<M, T>,
+) -> (Option<&Identifier<M, T>>, &types::Type<M, T>, bool) {
+    match param {
+        types::function::ParamKind::Anonymous(annot) => (None, annot, false),
+        types::function::ParamKind::Labeled {
+            name,
+            annot,
+            optional,
+        } => (Some(name), annot, *optional),
+        types::function::ParamKind::Destructuring(pattern) => match pattern_annot(pattern) {
+            types::AnnotationOrHint::Available(annot) => {
+                (None, &annot.annotation, pattern_optional(pattern))
+            }
+            types::AnnotationOrHint::Missing(_) => {
+                panic!("Destructuring function type param must have annotation")
+            }
+        },
+    }
+}
+
 pub fn string_of_variable_kind(kind: VariableKind) -> &'static str {
     kind.as_str()
 }

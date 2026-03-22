@@ -499,6 +499,13 @@ impl<'a> ParserEnv<'a> {
         self.parse_options.types
     }
 
+    pub(crate) fn is_d_ts(&self) -> bool {
+        match self.source() {
+            Some(file_key) => file_key.check_suffix(".d.ts"),
+            None => false,
+        }
+    }
+
     pub(crate) fn source(&self) -> Option<FileKey> {
         self.lex_env.source()
     }

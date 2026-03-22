@@ -5150,21 +5150,38 @@ fn function_type_param(
     param: &ast::types::function::Param<Loc, Loc>,
     comments: Option<&ast::Syntax<Loc, ()>>,
 ) -> Value {
-    node(
-        offset_table,
-        config,
-        "FunctionTypeParam",
-        loc,
-        comments,
-        vec![
-            (
-                "name",
-                option(&param.name, |n| identifier(offset_table, config, n)),
-            ),
-            ("typeAnnotation", type_(offset_table, config, &param.annot)),
-            ("optional", bool_value(param.optional)),
-        ],
-    )
+    use ast::types::function::ParamKind;
+    match &param.param {
+        ParamKind::Anonymous(annot) => node(
+            offset_table,
+            config,
+            "FunctionTypeParam",
+            loc,
+            comments,
+            vec![
+                ("name", Value::Null),
+                ("typeAnnotation", type_(offset_table, config, annot)),
+                ("optional", bool_value(false)),
+            ],
+        ),
+        ParamKind::Labeled {
+            name,
+            annot,
+            optional,
+        } => node(
+            offset_table,
+            config,
+            "FunctionTypeParam",
+            loc,
+            comments,
+            vec![
+                ("name", identifier(offset_table, config, name)),
+                ("typeAnnotation", type_(offset_table, config, annot)),
+                ("optional", bool_value(*optional)),
+            ],
+        ),
+        ParamKind::Destructuring(patt) => pattern(offset_table, config, patt),
+    }
 }
 
 fn function_type_rest(

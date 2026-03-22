@@ -71,8 +71,16 @@ impl flow_typing_loc_env::func_class_sig_types::ConfigTypes for FuncTypeParamsCo
 impl crate::func_params_intf::Config for FuncTypeParamsConfig {
     fn param_type(param: &Self::Param) -> type_::FunParam {
         let (t, param_ast) = param;
-        let name = param_ast.name.as_ref().map(func_type_id_name);
-        let t = if param_ast.optional {
+        let (name, optional) = match &param_ast.param {
+            ast::types::function::ParamKind::Anonymous(_) => (None, false),
+            ast::types::function::ParamKind::Labeled { name, optional, .. } => {
+                (Some(func_type_id_name(name)), *optional)
+            }
+            ast::types::function::ParamKind::Destructuring(pattern) => {
+                (None, flow_parser::ast_utils::pattern_optional(pattern))
+            }
+        };
+        let t = if optional {
             type_util::optional(t.dupe(), None, false)
         } else {
             t.dupe()
@@ -82,7 +90,10 @@ impl crate::func_params_intf::Config for FuncTypeParamsConfig {
 
     fn rest_type(rest: &Self::Rest) -> type_::FunRestParam {
         let (t, rest_ast) = rest;
-        let name = rest_ast.argument.name.as_ref().map(func_type_id_name);
+        let name = match &rest_ast.argument.param {
+            ast::types::function::ParamKind::Labeled { name, .. } => Some(func_type_id_name(name)),
+            _ => None,
+        };
         type_::FunRestParam(name, rest_ast.loc.dupe(), t.dupe())
     }
 
@@ -2523,9 +2534,8 @@ fn convert_inner(
             let mut param_asts = Vec::new();
             for param in ps.iter() {
                 let param_loc = &param.loc;
-                let name = &param.name;
-                let annot = &param.annot;
-                let optional = param.optional;
+                let (name, annot, optional) =
+                    flow_parser::ast_utils::function_type_param_parts(&param.param);
                 let annot_ast = convert_inner(cx, env, annot);
                 let (_, t) = annot_ast.loc();
                 let t = t.dupe();
@@ -2534,20 +2544,12 @@ fn convert_inner(
                 } else {
                     t
                 };
-                let name_ast = name.as_ref().map(|n| {
-                    ast::Identifier::new(ast::IdentifierInner {
-                        loc: (n.loc.dupe(), t.dupe()),
-                        name: n.name.dupe(),
-                        comments: n.comments.dupe(),
-                    })
-                });
-                let fun_param_name = name.as_ref().map(ident_name);
-                params.push(type_::FunParam(fun_param_name, t));
+                let fun_param_name = name.map(ident_name);
+                params.push(type_::FunParam(fun_param_name, t.dupe()));
+                let param_ast = typed_function_param_ast(&param.param, t, annot_ast);
                 param_asts.push(ast::types::function::Param {
                     loc: param_loc.dupe(),
-                    name: name_ast,
-                    annot: annot_ast,
-                    optional,
+                    param: param_ast,
                 });
             }
             let (this_t, this_param_ast) = match this_ {
@@ -2579,32 +2581,24 @@ fn convert_inner(
                     let rest_loc = &rp.loc;
                     let param = &rp.argument;
                     let param_loc = &param.loc;
-                    let name = &param.name;
-                    let annot = &param.annot;
-                    let optional = param.optional;
+                    let (name, annot, _optional) =
+                        flow_parser::ast_utils::function_type_param_parts(&param.param);
                     let annot_ast = convert_inner(cx, env, annot);
                     let (_, rest_t) = annot_ast.loc();
                     let rest_t = rest_t.dupe();
-                    let rest_name = name.as_ref().map(ident_name);
+                    let rest_name = name.map(ident_name);
                     let rest_param = Some(type_::FunRestParam(
                         rest_name,
                         type_util::loc_of_t(&rest_t).dupe(),
                         rest_t.dupe(),
                     ));
-                    let name_ast = name.as_ref().map(|n| {
-                        ast::Identifier::new(ast::IdentifierInner {
-                            loc: (n.loc.dupe(), rest_t.dupe()),
-                            name: n.name.dupe(),
-                            comments: n.comments.dupe(),
-                        })
-                    });
+                    let rest_param_ast_inner =
+                        typed_function_param_ast(&param.param, rest_t, annot_ast);
                     let rest_ast = Some(ast::types::function::RestParam {
                         loc: rest_loc.dupe(),
                         argument: ast::types::function::Param {
                             loc: param_loc.dupe(),
-                            name: name_ast,
-                            annot: annot_ast,
-                            optional,
+                            param: rest_param_ast_inner,
                         },
                         comments: rp.comments.dupe(),
                     });
@@ -4811,13 +4805,18 @@ fn convert_return_annotation(
             // Check that type guard variable is not a rest param
             let is_rest_param_conflict = params.rest.as_ref().and_then(|rest| {
                 let arg = &rest.argument;
-                arg.name.as_ref().and_then(|param_name| {
-                    if param_name.name.as_str() == name.as_str() {
-                        Some(param_name.loc.dupe())
-                    } else {
-                        None
+                match &arg.param {
+                    ast::types::function::ParamKind::Labeled {
+                        name: param_name, ..
+                    } => {
+                        if param_name.name.as_str() == name.as_str() {
+                            Some(param_name.loc.dupe())
+                        } else {
+                            None
+                        }
                     }
-                })
+                    _ => None,
+                }
             });
             if let Some(rloc) = is_rest_param_conflict {
                 let msg = ErrorMessage::ETypeGuardInvalidParameter {
@@ -4842,9 +4841,11 @@ fn convert_return_annotation(
                 let (bool_t, guard_prime, predicate) =
                     error_type_guard(cx, env, gloc, x, t, kind, comments, msg);
                 (bool_t, ReturnAnnotation::TypeGuard(guard_prime), predicate)
-            } else if params.params.iter().all(|p| match &p.name {
-                Some(pname) => pname.name.as_str() != name.as_str(),
-                None => true,
+            } else if params.params.iter().all(|p| match &p.param {
+                ast::types::function::ParamKind::Labeled { name: pname, .. } => {
+                    pname.name.as_str() != name.as_str()
+                }
+                _ => true,
             }) {
                 let msg = ErrorMessage::ETypeGuardParamUnbound(reason::mk_reason(
                     reason::VirtualReasonDesc::RTypeGuardParam(name.dupe()),
@@ -4905,6 +4906,42 @@ fn convert_return_annotation(
     }
 }
 
+/// Build typed AST for a function type parameter after type-checking.
+fn typed_function_param_ast(
+    param: &ast::types::function::ParamKind<ALoc, ALoc>,
+    t: Type,
+    annot_ast: ast::types::Type<ALoc, (ALoc, Type)>,
+) -> ast::types::function::ParamKind<ALoc, (ALoc, Type)> {
+    match param {
+        ast::types::function::ParamKind::Labeled { name, optional, .. } => {
+            let typed_name = ast::Identifier::new(ast::IdentifierInner {
+                loc: (name.loc.dupe(), t),
+                name: name.name.dupe(),
+                comments: name.comments.dupe(),
+            });
+            ast::types::function::ParamKind::Labeled {
+                name: typed_name,
+                annot: annot_ast,
+                optional: *optional,
+            }
+        }
+        ast::types::function::ParamKind::Anonymous(_) => {
+            ast::types::function::ParamKind::Anonymous(annot_ast)
+        }
+        ast::types::function::ParamKind::Destructuring(pattern) => {
+            // Destructuring patterns in function type params are not runtime bindings —
+            // they exist purely for documentation in .d.ts files. Map them with
+            // unimplemented_mapper to assign placeholder types to the pattern nodes.
+            let Ok(mapped) = polymorphic_ast_mapper::pattern(
+                &mut typed_ast_utils::UnimplementedMapper,
+                None,
+                pattern,
+            );
+            ast::types::function::ParamKind::Destructuring(mapped)
+        }
+    }
+}
+
 fn mk_method_func_sig(
     cx: &Context,
     env: &mut ConvertEnv,
@@ -4922,21 +4959,15 @@ fn mk_method_func_sig(
         param: &ast::types::function::Param<ALoc, ALoc>,
     ) {
         let param_loc = param.loc.dupe();
-        let annot_ast = convert_inner(cx, env, &param.annot);
+        let (_name, annot, _optional) =
+            flow_parser::ast_utils::function_type_param_parts(&param.param);
+        let annot_ast = convert_inner(cx, env, annot);
         let (_, t) = annot_ast.loc();
         let t = t.dupe();
-        let name = param.name.as_ref().map(|n| {
-            ast::Identifier::new(ast::IdentifierInner {
-                loc: (n.loc.dupe(), t.dupe()),
-                name: n.name.dupe(),
-                comments: n.comments.dupe(),
-            })
-        });
+        let param_ast = typed_function_param_ast(&param.param, t.dupe(), annot_ast);
         let typed_param = ast::types::function::Param {
             loc: param_loc,
-            name,
-            annot: annot_ast,
-            optional: param.optional,
+            param: param_ast,
         };
         crate::func_params::add_param::<FuncTypeParamsConfig>((t, typed_param), x);
     }
@@ -4950,23 +4981,17 @@ fn mk_method_func_sig(
         let rest_loc = rest_param.loc.dupe();
         let argument = &rest_param.argument;
         let arg_loc = argument.loc.dupe();
-        let annot_ast = convert_inner(cx, env, &argument.annot);
+        let (_name, annot, _optional) =
+            flow_parser::ast_utils::function_type_param_parts(&argument.param);
+        let annot_ast = convert_inner(cx, env, annot);
         let (_, t) = annot_ast.loc();
         let t = t.dupe();
-        let name = argument.name.as_ref().map(|n| {
-            ast::Identifier::new(ast::IdentifierInner {
-                loc: (n.loc.dupe(), t.dupe()),
-                name: n.name.dupe(),
-                comments: n.comments.dupe(),
-            })
-        });
+        let rest_param_ast_inner = typed_function_param_ast(&argument.param, t.dupe(), annot_ast);
         let typed_rest = ast::types::function::RestParam {
             loc: rest_loc,
             argument: ast::types::function::Param {
                 loc: arg_loc,
-                name,
-                annot: annot_ast,
-                optional: argument.optional,
+                param: rest_param_ast_inner,
             },
             comments: rest_param.comments.dupe(),
         };

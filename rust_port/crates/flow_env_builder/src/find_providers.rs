@@ -1688,6 +1688,15 @@ impl<'ast, L: LocSig> AstVisitor<'ast, L> for FindDeclarations<L> {
         );
         Ok(())
     }
+
+    // Skip destructuring patterns in function type params (e.g. in
+    // `declare function f({a}: T): R`), as they are not runtime bindings.
+    fn function_param_type_pattern(
+        &mut self,
+        _patt: &'ast ast::pattern::Pattern<L, L>,
+    ) -> Result<(), !> {
+        Ok(())
+    }
 }
 
 /// Context for the find_providers visitor.
@@ -2158,6 +2167,15 @@ impl<'ast, L: LocSig> AstVisitor<'ast, L> for FindProviders<L> {
             _ => {}
         }
         ast_visitor::expression_default(self, expr)
+    }
+
+    // Skip destructuring patterns in function type params (e.g. in
+    // `declare function f({a}: T): R`), as they are not runtime bindings.
+    fn function_param_type_pattern(
+        &mut self,
+        _patt: &'ast ast::pattern::Pattern<L, L>,
+    ) -> Result<(), !> {
+        Ok(())
     }
 }
 

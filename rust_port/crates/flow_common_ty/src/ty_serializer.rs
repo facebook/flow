@@ -503,13 +503,21 @@ impl Serializer {
         t: &Arc<Ty<L>>,
         prm: &FunParam,
     ) -> ast::types::function::Param<Loc, Loc> {
-        let name = name.map(|n| id_from_string(n.as_str()));
         let annot = self.type_(t);
+        let param = match name {
+            Some(n) => {
+                let name = id_from_string(n.as_str());
+                ast::types::function::ParamKind::Labeled {
+                    name,
+                    annot,
+                    optional: prm.prm_optional,
+                }
+            }
+            None => ast::types::function::ParamKind::Anonymous(annot),
+        };
         ast::types::function::Param {
             loc: LOC_NONE,
-            name,
-            annot,
-            optional: prm.prm_optional,
+            param,
         }
     }
 
@@ -518,15 +526,16 @@ impl Serializer {
         name: Option<&FlowSmolStr>,
         t: &Arc<Ty<L>>,
     ) -> ast::types::function::RestParam<Loc, Loc> {
-        let param = ast::types::function::Param {
-            loc: LOC_NONE,
-            name: name.map(|n| id_from_string(n.as_str())),
-            annot: self.type_(t),
-            optional: false,
-        };
+        let argument = self.fun_param(
+            name,
+            t,
+            &FunParam {
+                prm_optional: false,
+            },
+        );
         ast::types::function::RestParam {
             loc: LOC_NONE,
-            argument: param,
+            argument,
             comments: None,
         }
     }
@@ -979,9 +988,7 @@ impl Serializer {
     fn setter<L: Dupe>(&self, t: &Arc<Ty<L>>) -> AstFunction {
         let param = ast::types::function::Param {
             loc: LOC_NONE,
-            name: None,
-            annot: self.type_(t),
-            optional: false,
+            param: ast::types::function::ParamKind::Anonymous(self.type_(t)),
         };
         ast::types::Function {
             tparams: None,

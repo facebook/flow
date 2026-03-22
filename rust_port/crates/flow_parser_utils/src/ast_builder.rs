@@ -45,12 +45,15 @@ pub mod types {
         ) -> at::function::Param<Loc, Loc> {
             let loc = loc.unwrap_or_else(Loc::none);
             let optional = optional.unwrap_or(false);
-            at::function::Param {
-                loc,
-                name,
-                annot,
-                optional,
-            }
+            let param = match name {
+                Some(name) => at::function::ParamKind::Labeled {
+                    name,
+                    annot,
+                    optional,
+                },
+                None => at::function::ParamKind::Anonymous(annot),
+            };
+            at::function::Param { loc, param }
         }
 
         pub fn params(
@@ -647,23 +650,25 @@ pub mod functions {
     pub fn pattern_of_param(
         param: &at::function::Param<Loc, Loc>,
     ) -> Option<pattern::Pattern<Loc, Loc>> {
-        let at::function::Param {
-            name,
-            annot,
-            optional,
-            ..
-        } = param;
-        name.as_ref().map(|name| pattern::Pattern::Identifier {
-            loc: Loc::none(),
-            inner: Arc::new(pattern::Identifier {
-                name: name.dupe(),
-                annot: at::AnnotationOrHint::Available(at::Annotation {
-                    loc: Loc::none(),
-                    annotation: annot.dupe(),
+        match &param.param {
+            at::function::ParamKind::Anonymous(_) => None,
+            at::function::ParamKind::Labeled {
+                name,
+                annot,
+                optional,
+            } => Some(pattern::Pattern::Identifier {
+                loc: Loc::none(),
+                inner: Arc::new(pattern::Identifier {
+                    name: name.dupe(),
+                    annot: at::AnnotationOrHint::Available(at::Annotation {
+                        loc: Loc::none(),
+                        annotation: annot.dupe(),
+                    }),
+                    optional: *optional,
                 }),
-                optional: *optional,
             }),
-        })
+            at::function::ParamKind::Destructuring(patt) => Some(patt.clone()),
+        }
     }
 
     pub fn param_of_type(

@@ -5963,25 +5963,29 @@ fn type_function_return(
 }
 
 fn type_function_param(opts: &Opts, param: &ast::types::function::Param<Loc, Loc>) -> LayoutNode {
+    use ast::types::function::ParamKind;
     source_location_with_comments(
         &param.loc,
         None::<&ast::Syntax<Loc, ()>>,
-        fuse(vec![
-            match &param.name {
-                Some(id) => fuse(vec![
-                    identifier(id),
-                    if param.optional {
-                        atom("?")
-                    } else {
-                        LayoutNode::empty()
-                    },
-                    atom(":"),
-                    pretty_space(),
-                ]),
-                None => LayoutNode::empty(),
-            },
-            type_(opts, &param.annot),
-        ]),
+        match &param.param {
+            ParamKind::Anonymous(annot) => type_(opts, annot),
+            ParamKind::Labeled {
+                name,
+                annot,
+                optional,
+            } => fuse(vec![
+                identifier(name),
+                if *optional {
+                    atom("?")
+                } else {
+                    LayoutNode::empty()
+                },
+                atom(":"),
+                pretty_space(),
+                type_(opts, annot),
+            ]),
+            ParamKind::Destructuring(patt) => pattern(opts, None, patt),
+        },
     )
 }
 

@@ -14,7 +14,9 @@ end
 module Types = struct
   module Functions = struct
     let param ?(loc = Loc.none) ?(optional = false) name annot =
-      (loc, { Ast.Type.Function.Param.name; annot; optional })
+      match name with
+      | Some name -> (loc, Ast.Type.Function.Param.Labeled { name; annot; optional })
+      | None -> (loc, Ast.Type.Function.Param.Anonymous annot)
 
     let params ?(loc = Loc.none) ?rest ?this ?comments params =
       (loc, { Ast.Type.Function.Params.params; rest; this_ = this; comments })
@@ -262,13 +264,17 @@ module Functions = struct
     }
 
   let pattern_of_param param =
-    let (_, { Ast.Type.Function.Param.name; annot; optional }) = param in
-    Base.Option.map name ~f:(fun name ->
+    let open Ast.Type.Function.Param in
+    let (_, param') = param in
+    match param' with
+    | Anonymous _ -> None
+    | Labeled { name; annot; optional } ->
+      Some
         ( Loc.none,
           Ast.Pattern.Identifier
             { Ast.Pattern.Identifier.name; annot = Ast.Type.Available (Loc.none, annot); optional }
         )
-    )
+    | Destructuring pattern -> Some pattern
 
   let param_of_type param =
     let argument = pattern_of_param param in
@@ -957,17 +963,21 @@ let mk_program ?(loc = Loc.none) ?(interpreter = None) ?(comments = None) ?(all_
     =
   (loc, { Ast.Program.statements = stmts; interpreter; comments; all_comments })
 
-let test_ast_of_string ~parser str =
+let test_ast_of_string ~parser ?filename str =
   let parse_options = Some Parser_env.permissive_parse_options in
-  let env = Parser_env.init_env ~token_sink:None ~parse_options None str in
+  let source = Base.Option.map filename ~f:(fun f -> File_key.SourceFile f) in
+  let env = Parser_env.init_env ~token_sink:None ~parse_options source str in
   let (ast, _) = Parser_flow.do_parse env parser false in
   ast
 
 let test_expression_of_string str = test_ast_of_string ~parser:Parser_flow.Parse.expression str
 
-let test_statement_of_string str =
+let test_statement_of_string ?filename str =
   let ast_list =
-    test_ast_of_string ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false)) str
+    test_ast_of_string
+      ~parser:(Parser_flow.Parse.module_body ~term_fn:(fun _ -> false))
+      ?filename
+      str
   in
   match ast_list with
   | [ast] -> ast

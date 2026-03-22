@@ -299,9 +299,12 @@ let type_ options =
       }
     )
   and fun_param (name, t, { prm_optional }) =
-    let name = Base.Option.map ~f:id_from_string name in
     let annot = type_ t in
-    (Loc.none, { T.Function.Param.name; annot; optional = prm_optional })
+    match name with
+    | Some n ->
+      let name = id_from_string n in
+      (Loc.none, T.Function.Param.Labeled { name; annot; optional = prm_optional })
+    | None -> (Loc.none, T.Function.Param.Anonymous annot)
   and fun_rest_param (name, t) =
     let argument = fun_param (name, t, { prm_optional = false }) in
     (Loc.none, { T.Function.RestParam.argument; comments = None })

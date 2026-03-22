@@ -118,6 +118,227 @@ Destructuring is not supported in `declare` variable declarations. [unsupported-
                      ^^^
 
 
+Error ------------------------------------------------------------------------- destructuring_function_type_usage.js:6:1
+
+Cannot cast `f(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:6:1
+   6| f({a: 1, b: "hello"}) as string; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:2:60
+   2| export declare function f({a, b}: {a: number, b: string}): number;
+                                                                 ^^^^^^ [1]
+   destructuring_function_type_usage.js:6:26
+   6| f({a: 1, b: "hello"}) as string; // ERROR
+                               ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:10:1
+
+Cannot cast `g(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:10:1
+   10| g({a: 1}) as string; // ERROR
+       ^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:4:49
+    4| export declare function g({a: b}: {a: number}): number;
+                                                       ^^^^^^ [1]
+   destructuring_function_type_usage.js:10:14
+   10| g({a: 1}) as string; // ERROR
+                    ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:14:1
+
+Cannot cast `h(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:14:1
+   14| h([1, "hello"]) as string; // ERROR
+       ^^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:6:54
+    6| export declare function h([a, b]: [number, string]): number;
+                                                            ^^^^^^ [1]
+   destructuring_function_type_usage.js:14:20
+   14| h([1, "hello"]) as string; // ERROR
+                          ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:18:1
+
+Cannot cast `nested(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:18:1
+   18| nested({a: {b: 1}}) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:8:61
+    8| export declare function nested({a: {b}}: {a: {b: number}}): number;
+                                                                   ^^^^^^ [1]
+   destructuring_function_type_usage.js:18:24
+   18| nested({a: {b: 1}}) as string; // ERROR
+                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:22:1
+
+Cannot cast `rest(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:22:1
+   22| rest({a: 1, c: "hello", d: true}) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:10:78
+   10| export declare function rest({a, ...b}: {a: number, c: string, d: boolean}): number;
+                                                                                    ^^^^^^ [1]
+   destructuring_function_type_usage.js:22:38
+   22| rest({a: 1, c: "hello", d: true}) as string; // ERROR
+                                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:27:1
+
+Cannot cast `optObj(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:27:1
+   27| optObj({a: 1}) as string; // ERROR
+       ^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:12:52
+   12| export declare function optObj({a}?: {a: number}): number;
+                                                          ^^^^^^ [1]
+   destructuring_function_type_usage.js:27:19
+   27| optObj({a: 1}) as string; // ERROR
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:32:1
+
+Cannot cast `optArr(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:32:1
+   32| optArr([1]) as string; // ERROR
+       ^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:14:49
+   14| export declare function optArr([a]?: [number]): number;
+                                                       ^^^^^^ [1]
+   destructuring_function_type_usage.js:32:16
+   32| optArr([1]) as string; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:37:1
+
+Cannot cast `c.m(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:37:1
+   37| c.m({a: 1, b: "hello"}) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:17:38
+   17|   m({a, b}: {a: number, b: string}): number;
+                                            ^^^^^^ [1]
+   destructuring_function_type_usage.js:37:28
+   37| c.m({a: 1, b: "hello"}) as string; // ERROR
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:39:1
+
+Cannot cast `c.n(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:39:1
+   39| c.n([1]) as number; // ERROR
+       ^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:18:21
+   18|   n([a]: [number]): string;
+                           ^^^^^^ [1]
+   destructuring_function_type_usage.js:39:13
+   39| c.n([1]) as number; // ERROR
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:42:1
+
+Cannot cast `c.o(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:42:1
+   42| c.o({a: 1}) as string; // ERROR
+       ^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:19:25
+   19|   o({a}?: {a: number}): number;
+                               ^^^^^^ [1]
+   destructuring_function_type_usage.js:42:16
+   42| c.o({a: 1}) as string; // ERROR
+                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:47:1
+
+Cannot cast `i.m(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:47:1
+   47| i.m({a: 1, b: "hello"}) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:23:38
+   23|   m({a, b}: {a: number, b: string}): number;
+                                            ^^^^^^ [1]
+   destructuring_function_type_usage.js:47:28
+   47| i.m({a: 1, b: "hello"}) as string; // ERROR
+                                  ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:49:1
+
+Cannot cast `i.n(...)` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:49:1
+   49| i.n([1]) as number; // ERROR
+       ^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:24:21
+   24|   n([a]: [number]): string;
+                           ^^^^^^ [1]
+   destructuring_function_type_usage.js:49:13
+   49| i.n([1]) as number; // ERROR
+                   ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:53:1
+
+Cannot cast `restArr(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:53:1
+   53| restArr(1, "hello") as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:27:63
+   27| export declare function restArr(...[a, b]: [number, string]): number;
+                                                                     ^^^^^^ [1]
+   destructuring_function_type_usage.js:53:24
+   53| restArr(1, "hello") as string; // ERROR
+                              ^^^^^^ [2]
+
+
 Error ----------------------------------------------------------------------------------- generic_tagged_template.js:4:1
 
 Cannot cast template string to empty because number [1] is incompatible with empty [2]. [incompatible-type]
@@ -597,4 +818,4 @@ References:
 
 
 
-Found 40 errors
+Found 53 errors
