@@ -1770,11 +1770,11 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         };
 
     let is_public =
-        matches!(peek::token(env), TokenKind::TPublic) && peek::ith_is_identifier(env, 1);
+        matches!(peek::token(env), TokenKind::TPublic) && peek::ith_is_object_key(env, 1, true);
     let is_private =
-        matches!(peek::token(env), TokenKind::TPrivate) && peek::ith_is_identifier(env, 1);
+        matches!(peek::token(env), TokenKind::TPrivate) && peek::ith_is_object_key(env, 1, true);
     let is_protected =
-        matches!(peek::token(env), TokenKind::TProtected) && peek::ith_is_identifier(env, 1);
+        matches!(peek::token(env), TokenKind::TProtected) && peek::ith_is_object_key(env, 1, true);
     let (ts_accessibility, leading_accessibility) = if is_public {
         let loc = peek::loc(env).dupe();
         let leading = peek::comments(env);
@@ -1859,7 +1859,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     let abstract_ = matches!(
         peek::token(env),
         TokenKind::TIdentifier { raw, .. } if raw == "abstract"
-    ) && peek::ith_is_identifier(env, 1);
+    ) && peek::ith_is_object_key(env, 1, true);
     let leading_abstract = if abstract_ {
         let leading = peek::comments(env);
         eat::token(env)?;
@@ -1913,8 +1913,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     };
     let (mut generator, mut leading_generator) = declaration_parser::parse_generator(env)?;
 
-    let parse_readonly =
-        peek::ith_is_identifier(env, 1) || matches!(peek::ith_token(env, 1), TokenKind::TLbracket);
+    let parse_readonly = peek::ith_is_object_key(env, 1, true);
     let variance = declaration_parser::parse_variance(env, parse_readonly, async_, generator)?;
 
     if !generator && variance.is_some() {
@@ -2317,8 +2316,7 @@ fn record_body(
                     let (mut generator, mut leading_generator) =
                         declaration_parser::parse_generator(env)?;
 
-                    let parse_readonly = peek::ith_is_identifier(env, 1)
-                        || matches!(peek::ith_token(env, 1), TokenKind::TLbracket);
+                    let parse_readonly = peek::ith_is_object_key(env, 1, false);
                     let variance =
                         declaration_parser::parse_variance(env, parse_readonly, async_, generator)?;
                     if !generator && variance.is_some() {

@@ -2141,16 +2141,14 @@ fn type_guard_annotation(
     Ok(types::TypeGuardAnnotation { loc, guard })
 }
 
+// and ith_is_object_key ~i ~is_class env =
+//   Eat.push_lex_mode env Lex_mode.NORMAL;
+//   let result = Peek.ith_is_object_key ~i ~is_class env in
+//   Eat.pop_lex_mode env;
+//   result
 fn ith_is_object_key(env: &mut ParserEnv, i: usize, is_class: bool) -> bool {
     eat::push_lex_mode(env, LexMode::Normal);
-    let result = match peek::ith_token(env, i) {
-        TokenKind::TString { .. }
-        | TokenKind::TNumber { .. }
-        | TokenKind::TBigint { .. }
-        | TokenKind::TLbracket => true,
-        TokenKind::TPound if is_class => true,
-        _ => peek::ith_is_identifier_name(env, i),
-    };
+    let result = peek::ith_is_object_key(env, i, is_class);
     eat::pop_lex_mode(env);
     result
 }

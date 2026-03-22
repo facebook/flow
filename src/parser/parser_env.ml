@@ -1055,6 +1055,16 @@ module Peek = struct
 
   let ith_is_identifier_name ~i env = ith_is_identifier ~i env || ith_is_type_identifier ~i env
 
+  let ith_is_object_key ~i ~is_class env =
+    match ith_token ~i env with
+    | T_STRING _
+    | T_NUMBER _
+    | T_BIGINT _
+    | T_LBRACKET ->
+      true
+    | T_POUND when is_class -> true
+    | _ -> ith_is_identifier_name ~i env
+
   (* This returns true if the next token is identifier-ish (even if it is an
      error) *)
   let is_identifier env = ith_is_identifier ~i:0 env

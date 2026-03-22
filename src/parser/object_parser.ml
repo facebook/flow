@@ -1269,7 +1269,7 @@ module Object
         | (T_PUBLIC as t)
         | (T_PRIVATE as t)
         | (T_PROTECTED as t)
-          when Peek.ith_is_identifier ~i:1 env ->
+          when Peek.ith_is_object_key ~i:1 ~is_class:true env ->
           let kind =
             match t with
             | T_PUBLIC -> Ast.Class.TSAccessibility.Public
@@ -1311,7 +1311,9 @@ module Object
       (* Parse abstract modifier *)
       let abstract =
         match Peek.token env with
-        | T_IDENTIFIER { raw = "abstract"; _ } when Peek.ith_is_identifier ~i:1 env -> true
+        | T_IDENTIFIER { raw = "abstract"; _ } when Peek.ith_is_object_key ~i:1 ~is_class:true env
+          ->
+          true
         | _ -> false
       in
       let leading_abstract =
@@ -1363,9 +1365,7 @@ module Object
             []
         in
         let (generator, leading_generator) = Declaration.generator env in
-        let parse_readonly =
-          Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET
-        in
+        let parse_readonly = Peek.ith_is_object_key ~i:1 ~is_class:true env in
         let variance = Declaration.variance env ~parse_readonly async generator in
         let (generator, leading_generator) =
           match (generator, variance) with
@@ -1663,9 +1663,7 @@ module Object
         let (static, leading_static) = maybe_eat_and_get_comments T_STATIC env in
         let (async, leading_async) = maybe_eat_and_get_comments T_ASYNC env in
         let (generator, leading_generator) = Declaration.generator env in
-        let parse_readonly =
-          Peek.ith_is_identifier ~i:1 env || Peek.ith_token ~i:1 env = T_LBRACKET
-        in
+        let parse_readonly = Peek.ith_is_object_key ~i:1 ~is_class:false env in
         let variance = Declaration.variance env ~parse_readonly async generator in
         let (generator, leading_generator) =
           match (generator, variance) with

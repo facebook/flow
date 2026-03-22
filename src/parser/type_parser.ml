@@ -1381,18 +1381,8 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
   and type_guard_annotation env ~start_loc = with_loc ~start_loc type_guard env
 
   and ith_is_object_key ~i ~is_class env =
-    let open Token in
     Eat.push_lex_mode env Lex_mode.NORMAL;
-    let result =
-      match Peek.ith_token ~i env with
-      | T_STRING _
-      | T_NUMBER _
-      | T_BIGINT _
-      | T_LBRACKET ->
-        true
-      | T_POUND when is_class -> true
-      | _ -> Peek.ith_is_identifier_name ~i env
-    in
+    let result = Peek.ith_is_object_key ~i ~is_class env in
     Eat.pop_lex_mode env;
     result
 

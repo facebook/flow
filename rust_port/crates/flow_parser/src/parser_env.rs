@@ -1224,6 +1224,22 @@ pub(crate) mod peek {
         ith_is_identifier(env, i) || ith_is_type_identifier(env, i)
     }
 
+    // let ith_is_object_key ~i ~is_class env =
+    //   match ith_token ~i env with
+    //   | T_STRING _ | T_NUMBER _ | T_BIGINT _ | T_LBRACKET -> true
+    //   | T_POUND when is_class -> true
+    //   | _ -> ith_is_identifier_name ~i env
+    pub(crate) fn ith_is_object_key(env: &mut ParserEnv, i: usize, is_class: bool) -> bool {
+        match ith_token(env, i) {
+            TokenKind::TString { .. }
+            | TokenKind::TNumber { .. }
+            | TokenKind::TBigint { .. }
+            | TokenKind::TLbracket => true,
+            TokenKind::TPound if is_class => true,
+            _ => ith_is_identifier_name(env, i),
+        }
+    }
+
     /// This returns true if the next token is identifier-ish (even if it is an error)
     pub(crate) fn is_identifier(env: &mut ParserEnv) -> bool {
         ith_is_identifier(env, 0)

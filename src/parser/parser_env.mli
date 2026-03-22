@@ -269,6 +269,8 @@ module Peek : sig
 
   val ith_is_type_identifier : i:int -> env -> bool
 
+  val ith_is_object_key : i:int -> is_class:bool -> env -> bool
+
   val lex_env : env -> Lex_env.t
 end
 

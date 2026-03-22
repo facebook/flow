@@ -9,6 +9,12 @@ class A {
   private static readonly z: string;
 }
 
+// accessibility with computed keys
+class ComputedKeys {
+  private [sym]: string;
+  private [sym](): void {}
+}
+
 class NoIssueField {
   private: string;
 }
