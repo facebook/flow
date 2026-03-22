@@ -308,6 +308,7 @@ pub(super) fn strict_component_post_check(
 }
 
 fn rest_param(
+    allow_optional: bool,
     env: &mut ParserEnv,
     t: &TokenKind,
 ) -> Result<Option<(Loc, pattern::Pattern<Loc, Loc>, Option<Syntax<Loc, ()>>)>, Rollback> {
@@ -315,7 +316,7 @@ fn rest_param(
         let leading = peek::comments(env);
         let (loc, id) = with_loc(None, env, |env| {
             expect::token(env, TokenKind::TEllipsis)?;
-            pattern_parser::pattern(env, ParseError::StrictParamName)
+            pattern_parser::pattern(env, allow_optional, ParseError::StrictParamName)
         })?;
         let comments = ast_utils::mk_comments_opt(Some(leading.into()), None);
         Ok(Some((loc, id, comments)))
@@ -410,7 +411,7 @@ pub(super) fn parse_function_params(
                     property,
                 })
             } else {
-                let argument = pattern_parser::pattern(env, ParseError::StrictParamName)?;
+                let argument = pattern_parser::pattern(env, true, ParseError::StrictParamName)?;
                 let default = if peek::token(env) == &TokenKind::TAssign {
                     expect::token(env, TokenKind::TAssign)?;
                     Some(expression_parser::assignment(env)?)
@@ -455,12 +456,13 @@ pub(super) fn parse_function_params(
             match peek::token(env) {
                 TokenKind::TEof | TokenKind::TRparen | TokenKind::TEllipsis => {
                     let t = peek::token(env).clone();
-                    let rest =
-                        rest_param(env, &t)?.map(|(loc, id, comments)| function::RestParam {
+                    let rest = rest_param(false, env, &t)?.map(|(loc, id, comments)| {
+                        function::RestParam {
                             loc,
                             argument: id,
                             comments,
-                        });
+                        }
+                    });
                     if peek::token(env) != &TokenKind::TRparen {
                         env.error(ParseError::ParameterAfterRestParameter)?;
                     }
@@ -966,7 +968,7 @@ pub(super) fn variable_declaration_list(
         Rollback,
     > {
         let (loc, (id, init, err)) = with_loc(None, env, |env| {
-            let id = pattern_parser::pattern(env, ParseError::StrictVarName)?;
+            let id = pattern_parser::pattern(env, false, ParseError::StrictVarName)?;
             let (init, err) = if eat::maybe(env, TokenKind::TAssign)? {
                 (Some(expression_parser::assignment(env)?), None)
             } else {
@@ -1150,7 +1152,8 @@ pub(super) fn parse_component_params(
                         }
                         _ => {
                             eat::token(env)?;
-                            let local = pattern_parser::pattern(env, ParseError::StrictParamName)?;
+                            let local =
+                                pattern_parser::pattern(env, true, ParseError::StrictParamName)?;
                             (name, local, false)
                         }
                     }
@@ -1160,7 +1163,7 @@ pub(super) fn parse_component_params(
                         parser_common::identifier_name(env)?,
                     );
                     expect::identifier(env, "as")?;
-                    let local = pattern_parser::pattern(env, ParseError::StrictParamName)?;
+                    let local = pattern_parser::pattern(env, true, ParseError::StrictParamName)?;
                     (name, local, false)
                 }
                 (TokenKind::TLcurly, _) => {
@@ -1172,13 +1175,13 @@ pub(super) fn parse_component_params(
                         comments: None,
                     });
                     let name = statement::component_params::ParamName::Identifier(fallback_ident);
-                    let local = pattern_parser::pattern(env, ParseError::StrictParamName)?;
+                    let local = pattern_parser::pattern(env, false, ParseError::StrictParamName)?;
                     (name, local, false)
                 }
                 _ => {
                     let (loc, id) = main_parser::parse_identifier_with_type(
                         env,
-                        false,
+                        true,
                         Some(ParseError::StrictParamName),
                     )?;
                     (
@@ -1223,7 +1226,7 @@ pub(super) fn parse_component_params(
             match peek::token(env) {
                 t @ (TokenKind::TEof | TokenKind::TRparen | TokenKind::TEllipsis) => {
                     let t = t.clone();
-                    let rest_param_opt = rest_param(env, &t)?;
+                    let rest_param_opt = rest_param(true, env, &t)?;
                     let rest = if let Some((loc, id, comments)) = rest_param_opt {
                         if peek::token(env) == &TokenKind::TComma {
                             eat::token(env)?;

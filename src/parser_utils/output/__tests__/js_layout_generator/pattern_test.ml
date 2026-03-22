@@ -96,9 +96,7 @@ let tests =
       assert_output ~ctxt ("let{" ^ a80 ^ "}=a;") layout;
       assert_output ~ctxt ~pretty:true ("let {\n  " ^ a80 ^ "\n} = a;") layout
     );
-    ("let_optional_assign" >:: fun ctxt -> assert_statement_string ~ctxt "let a?=a;");
     ("let_assign_annotation" >:: fun ctxt -> assert_statement_string ~ctxt "let a:b=a;");
-    ("let_optional_assign_annotation" >:: fun ctxt -> assert_statement_string ~ctxt "let a?:b=a;");
     ("let_empty_object" >:: fun ctxt -> assert_statement_string ~ctxt "let{}=a;");
     ("let_empty_object_annotation" >:: fun ctxt -> assert_statement_string ~ctxt "let{}:b=a;");
     ("let_object_single_var" >:: fun ctxt -> assert_statement_string ~ctxt "let{a}=a;");
@@ -190,11 +188,7 @@ let tests =
       assert_output ~ctxt ("let[" ^ a80 ^ "]=a;") layout;
       assert_output ~ctxt ~pretty:true ("let [\n" ^ "  " ^ a80 ^ "\n" ^ "] = a;") layout
     );
-    ("let_array_optional_item" >:: fun ctxt -> assert_statement_string ~ctxt "let[a?]=a;");
     ("let_array_annotated_item" >:: fun ctxt -> assert_statement_string ~ctxt "let[a:b]=a;");
-    ( "let_array_optional_annotated_item" >:: fun ctxt ->
-      assert_statement_string ~ctxt "let[a?:b]=a;"
-    );
     ( "let_array_multiple_items" >:: fun ctxt ->
       assert_statement_string ~ctxt "let[a,b]=a;";
       assert_statement_string ~ctxt ~pretty:true "let [a, b] = a;"

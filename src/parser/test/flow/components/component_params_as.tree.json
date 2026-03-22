@@ -1,7 +1,7 @@
 {
   "type":"Program",
-  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":9,"column":38}},
-  "range":[0,202],
+  "loc":{"source":null,"start":{"line":1,"column":0},"end":{"line":13,"column":54}},
+  "range":[0,310],
   "body":[
     {
       "type":"ComponentDeclaration",
@@ -281,6 +281,116 @@
               }
             ],
             "typeAnnotation":null
+          },
+          "shorthand":false
+        }
+      ],
+      "rendersType":null,
+      "typeParameters":null
+    },
+    {
+      "type":"ComponentDeclaration",
+      "loc":{"source":null,"start":{"line":11,"column":0},"end":{"line":11,"column":50}},
+      "range":[204,254],
+      "async":false,
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":11,"column":48},"end":{"line":11,"column":50}},
+        "range":[252,254],
+        "body":[]
+      },
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":11,"column":10},"end":{"line":11,"column":15}},
+        "range":[214,219],
+        "name":"Comp6",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "implicitDeclare":false,
+      "params":[
+        {
+          "type":"ComponentParameter",
+          "loc":{"source":null,"start":{"line":11,"column":16},"end":{"line":11,"column":46}},
+          "range":[220,250],
+          "name":{
+            "type":"Literal",
+            "loc":{"source":null,"start":{"line":11,"column":16},"end":{"line":11,"column":28}},
+            "range":[220,232],
+            "value":"string-key",
+            "raw":"'string-key'"
+          },
+          "local":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":11,"column":32},"end":{"line":11,"column":46}},
+            "range":[236,250],
+            "name":"alias",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":11,"column":38},"end":{"line":11,"column":46}},
+              "range":[242,250],
+              "typeAnnotation":{
+                "type":"StringTypeAnnotation",
+                "loc":{"source":null,"start":{"line":11,"column":40},"end":{"line":11,"column":46}},
+                "range":[244,250]
+              }
+            },
+            "optional":true
+          },
+          "shorthand":false
+        }
+      ],
+      "rendersType":null,
+      "typeParameters":null
+    },
+    {
+      "type":"ComponentDeclaration",
+      "loc":{"source":null,"start":{"line":13,"column":0},"end":{"line":13,"column":54}},
+      "range":[256,310],
+      "async":false,
+      "body":{
+        "type":"BlockStatement",
+        "loc":{"source":null,"start":{"line":13,"column":52},"end":{"line":13,"column":54}},
+        "range":[308,310],
+        "body":[]
+      },
+      "id":{
+        "type":"Identifier",
+        "loc":{"source":null,"start":{"line":13,"column":10},"end":{"line":13,"column":15}},
+        "range":[266,271],
+        "name":"Comp7",
+        "typeAnnotation":null,
+        "optional":false
+      },
+      "implicitDeclare":false,
+      "params":[
+        {
+          "type":"ComponentParameter",
+          "loc":{"source":null,"start":{"line":13,"column":16},"end":{"line":13,"column":50}},
+          "range":[272,306],
+          "name":{
+            "type":"Literal",
+            "loc":{"source":null,"start":{"line":13,"column":16},"end":{"line":13,"column":28}},
+            "range":[272,284],
+            "value":"aria-label",
+            "raw":"'aria-label'"
+          },
+          "local":{
+            "type":"Identifier",
+            "loc":{"source":null,"start":{"line":13,"column":32},"end":{"line":13,"column":50}},
+            "range":[288,306],
+            "name":"ariaLabel",
+            "typeAnnotation":{
+              "type":"TypeAnnotation",
+              "loc":{"source":null,"start":{"line":13,"column":42},"end":{"line":13,"column":50}},
+              "range":[298,306],
+              "typeAnnotation":{
+                "type":"StringTypeAnnotation",
+                "loc":{"source":null,"start":{"line":13,"column":44},"end":{"line":13,"column":50}},
+                "range":[300,306]
+              }
+            },
+            "optional":true
           },
           "shorthand":false
         }

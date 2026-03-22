@@ -194,14 +194,14 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
   let strict_component_post_check env ~contains_use_strict id params =
     strict_post_check env ~contains_use_strict (Some id) (ComponentParams params)
 
-  let rest_param env t =
+  let rest_param ~allow_optional env t =
     if t = T_ELLIPSIS then
       let leading = Peek.comments env in
       let (loc, id) =
         with_loc
           (fun env ->
             Expect.token env T_ELLIPSIS;
-            Parse.pattern env Parse_error.StrictParamName)
+            Parse.pattern env ~allow_optional Parse_error.StrictParamName)
           env
       in
       let comments = Flow_ast_utils.mk_comments_opt ~leading () in
@@ -270,7 +270,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
           | T_IDENTIFIER { raw = "readonly"; _ } when Peek.ith_is_identifier ~i:1 env ->
             Function.Param.ParamProperty (param_property env None)
           | _ ->
-            let argument = Parse.pattern env Parse_error.StrictParamName in
+            let argument = Parse.pattern env ~allow_optional:true Parse_error.StrictParamName in
             let default =
               if Peek.token env = T_ASSIGN then (
                 Expect.token env T_ASSIGN;
@@ -284,7 +284,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
       match Peek.token env with
       | (T_EOF | T_RPAREN | T_ELLIPSIS) as t ->
         let rest =
-          rest_param env t
+          rest_param ~allow_optional:false env t
           |> Option.map (fun (loc, id, comments) ->
                  (loc, { Function.RestParam.argument = id; comments })
              )
@@ -633,7 +633,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
       let (loc, (decl, err)) =
         with_loc
           (fun env ->
-            let id = Parse.pattern env Parse_error.StrictVarName in
+            let id = Parse.pattern env ~allow_optional:false Parse_error.StrictVarName in
             let (init, err) =
               if Eat.maybe env T_ASSIGN then
                 (Some (Parse.assignment env), None)
@@ -746,21 +746,23 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
                 (name, local, false)
               | _ ->
                 Eat.token env;
-                let local = Parse.pattern env Parse_error.StrictParamName in
+                let local = Parse.pattern env ~allow_optional:true Parse_error.StrictParamName in
                 (name, local, false))
             | (_, T_IDENTIFIER { raw = "as"; _ }) ->
               let name = Statement.ComponentDeclaration.Param.Identifier (identifier_name env) in
               Expect.identifier env "as";
-              (name, Parse.pattern env Parse_error.StrictParamName, false)
+              (name, Parse.pattern env ~allow_optional:true Parse_error.StrictParamName, false)
             | (T_LCURLY, _) ->
               error env Parse_error.InvalidComponentParamName;
               let fake_name_loc = Peek.loc env in
               let fallback_ident = (fake_name_loc, { Ast.Identifier.name = ""; comments = None }) in
               let name = Statement.ComponentDeclaration.Param.Identifier fallback_ident in
-              let local = Parse.pattern env Parse_error.StrictParamName in
+              let local = Parse.pattern env ~allow_optional:false Parse_error.StrictParamName in
               (name, local, false)
             | (_, _) ->
-              let id = Parse.identifier_with_type env Parse_error.StrictParamName in
+              let id =
+                Parse.identifier_with_type env ~allow_optional:true Parse_error.StrictParamName
+              in
               (match id with
               | (loc, ({ Ast.Pattern.Identifier.name; _ } as id)) ->
                 ( Ast.Statement.ComponentDeclaration.Param.Identifier name,
@@ -782,7 +784,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
       match Peek.token env with
       | (T_EOF | T_RPAREN | T_ELLIPSIS) as t ->
         let rest =
-          rest_param env t
+          rest_param ~allow_optional:true env t
           |> Option.map (fun (loc, id, comments) ->
                  if Peek.token env = T_COMMA then Eat.token env;
                  (loc, { Statement.ComponentDeclaration.RestParam.argument = id; comments })

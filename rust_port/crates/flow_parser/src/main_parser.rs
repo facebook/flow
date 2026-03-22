@@ -76,18 +76,27 @@ pub(super) fn parse_expression_or_pattern(env: &mut ParserEnv) -> Result<Pattern
 
 pub(super) fn parse_identifier_with_type(
     env: &mut ParserEnv,
-    no_optional: bool,
+    allow_optional: bool,
     restricted_error: Option<ParseError>,
 ) -> Result<(Loc, ast::pattern::Identifier<Loc, Loc>), Rollback> {
     with_loc(None, env, |env| {
         let name = parse_identifier(env, restricted_error)?;
-        let optional = !no_optional && peek::token(env) == &TokenKind::TPling;
-        if optional {
-            if !env.should_parse_types() {
-                env.error(ParseError::UnexpectedTypeAnnotation)?;
+        let optional = match peek::token(env) {
+            TokenKind::TPling => {
+                let optional = if allow_optional {
+                    if !env.should_parse_types() {
+                        env.error(ParseError::UnexpectedTypeAnnotation)?;
+                    }
+                    true
+                } else {
+                    env.error(ParseError::UnexpectedOptional)?;
+                    false
+                };
+                eat::token(env)?;
+                optional
             }
-            expect::token(env, TokenKind::TPling)?;
-        }
+            _ => false,
+        };
         let annot = type_parser::parse_annotation_opt(env)?;
         Ok(ast::pattern::Identifier {
             name,

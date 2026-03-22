@@ -61,6 +61,28 @@ component Destruct(foo: number, ...{bar}: {bar: number}) {
 }
 <Destruct foo={3} bar={3} />;
 
+component OptionalAsBinding(
+  foo as bar?: number,
+) {
+  bar as number; // ERROR, bar is optional
+  bar as number | void; // OK
+  return;
+}
+<OptionalAsBinding />;
+<OptionalAsBinding foo={3} />;
+<OptionalAsBinding foo="str" />; // ERROR
+
+component OptionalStringKeyAsBinding(
+  'aria-label' as ariaLabel?: string,
+) {
+  ariaLabel as string; // ERROR, ariaLabel is optional
+  ariaLabel as string | void; // OK
+  return;
+}
+<OptionalStringKeyAsBinding />;
+<OptionalStringKeyAsBinding aria-label="hello" />;
+<OptionalStringKeyAsBinding aria-label={3} />; // ERROR
+
 module.exports = {
   InlineOnly,
   InexactRest,
@@ -68,4 +90,6 @@ module.exports = {
   DefaultProps,
   RenamedParams,
   Destruct,
+  OptionalAsBinding,
+  OptionalStringKeyAsBinding,
 };

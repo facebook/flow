@@ -47,7 +47,7 @@ module type PARSER = sig
   val identifier : ?restricted_error:Parse_error.t -> env -> (Loc.t, Loc.t) Identifier.t
 
   val identifier_with_type :
-    env -> ?no_optional:bool -> Parse_error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
+    env -> allow_optional:bool -> Parse_error.t -> Loc.t * (Loc.t, Loc.t) Pattern.Identifier.t
 
   val block_body : env -> Loc.t * (Loc.t, Loc.t) Statement.Block.t
 
@@ -58,7 +58,7 @@ module type PARSER = sig
     env ->
     Loc.t * [ `Element of (Loc.t, Loc.t) JSX.element | `Fragment of (Loc.t, Loc.t) JSX.fragment ]
 
-  val pattern : env -> Parse_error.t -> (Loc.t, Loc.t) Pattern.t
+  val pattern : env -> allow_optional:bool -> Parse_error.t -> (Loc.t, Loc.t) Pattern.t
 
   val pattern_from_expr : env -> (Loc.t, Loc.t) Expression.t -> (Loc.t, Loc.t) Pattern.t
 
@@ -134,7 +134,7 @@ end
 module type PATTERN = sig
   val from_expr : Parser_env.env -> (Loc.t, Loc.t) Expression.t -> (Loc.t, Loc.t) Pattern.t
 
-  val pattern : Parser_env.env -> Parse_error.t -> (Loc.t, Loc.t) Pattern.t
+  val pattern : Parser_env.env -> allow_optional:bool -> Parse_error.t -> (Loc.t, Loc.t) Pattern.t
 end
 
 module type OBJECT = sig

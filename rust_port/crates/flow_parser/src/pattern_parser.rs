@@ -327,7 +327,7 @@ fn parse_object(
         let leading = peek::comments(env);
         let (loc, argument) = with_loc(None, env, |env| {
             expect::token(env, TokenKind::TEllipsis)?;
-            pattern(env, restricted_error)
+            pattern(env, false, restricted_error)
         })?;
 
         Ok(pattern::object::Property::RestElement(
@@ -365,7 +365,7 @@ fn parse_object(
             TokenKind::TColon => {
                 expect::token(env, TokenKind::TColon)?;
                 let (loc, (pattern, default)) = with_loc(Some(start_loc), env, |env| {
-                    let pattern = pattern(env, restricted_error)?;
+                    let pattern = pattern(env, false, restricted_error)?;
                     let default = parse_property_default(env)?;
                     Ok((pattern, default))
                 })?;
@@ -408,6 +408,10 @@ fn parse_object(
                         } else if is_strict_reserved(&id.name) {
                             // it is a syntax error if `name` is a strict reserved word, in strict mode
                             env.strict_error_at((id.loc.dupe(), ParseError::StrictReservedWord))?;
+                        }
+                        if peek::token(env) == &TokenKind::TPling {
+                            env.error(ParseError::UnexpectedOptional)?;
+                            eat::token(env)?;
                         }
 
                         let (loc, (pattern, default)) = with_loc(Some(start_loc), env, |env| {
@@ -553,7 +557,7 @@ fn parse_array(
                     let leading = peek::comments(env);
                     let (loc, argument) = with_loc(None, env, |env| {
                         expect::token(env, TokenKind::TEllipsis)?;
-                        pattern(env, restricted_error.clone())
+                        pattern(env, false, restricted_error.clone())
                     })?;
 
                     let element = pattern::array::Element::RestElement(pattern::RestElement {
@@ -576,7 +580,7 @@ fn parse_array(
                 }
                 _ => {
                     let (loc, (pattern, default)) = with_loc(None, env, |env| {
-                        let pattern = pattern(env, restricted_error.clone())?;
+                        let pattern = pattern(env, false, restricted_error.clone())?;
                         let default = if peek::token(env) == &TokenKind::TAssign {
                             expect::token(env, TokenKind::TAssign)?;
                             Some(expression_parser::assignment(env)?)
@@ -639,14 +643,18 @@ fn parse_array(
 
 pub(super) fn pattern(
     env: &mut ParserEnv,
+    allow_optional: bool,
     restricted_error: ParseError,
 ) -> Result<pattern::Pattern<Loc, Loc>, Rollback> {
     match peek::token(env) {
         TokenKind::TLcurly => parse_object(env, restricted_error),
         TokenKind::TLbracket => parse_array(env, restricted_error),
         _ => {
-            let (loc, id) =
-                main_parser::parse_identifier_with_type(env, false, Some(restricted_error))?;
+            let (loc, id) = main_parser::parse_identifier_with_type(
+                env,
+                allow_optional,
+                Some(restricted_error),
+            )?;
             Ok(pattern::Pattern::Identifier {
                 loc,
                 inner: Arc::new(id),

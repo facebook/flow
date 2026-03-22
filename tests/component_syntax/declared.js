@@ -60,6 +60,14 @@ declare export default component DefaultExport(x: number);
 <Export />; // error
 <DefaultExport x={"a"} />; // error
 
+declare component OptionalStringKeyAsBinding(
+  'aria-label' as ariaLabel?: string,
+);
+
+<OptionalStringKeyAsBinding />; // OK
+<OptionalStringKeyAsBinding aria-label="hello" />; // OK
+<OptionalStringKeyAsBinding aria-label={3} />; // ERROR
+
 declare component Poly<T>();
 
 type PolyT = component<T>();

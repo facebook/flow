@@ -209,6 +209,7 @@ pub enum ParseError {
     UnexpectedProto,
     UnexpectedReserved,
     UnexpectedReservedType,
+    UnexpectedOptional,
     UnexpectedSpreadType,
     UnexpectedStatic,
     UnexpectedSuper,
@@ -985,6 +986,9 @@ impl fmt::Display for ParseError {
             }
             Self::UnexpectedReservedType => {
                 write!(f, "Unexpected reserved type")
+            }
+            Self::UnexpectedOptional => {
+                write!(f, "Unexpected `?` (optional modifier not allowed here)")
             }
             Self::UnexpectedSpreadType => {
                 write!(f, "Spreading a type is only allowed inside an object type")

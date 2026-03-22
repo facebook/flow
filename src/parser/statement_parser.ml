@@ -703,7 +703,10 @@ module Statement
                   let param =
                     if Peek.token env = T_LPAREN then (
                       Expect.token env T_LPAREN;
-                      let p = Some (Parse.pattern env Parse_error.StrictCatchVariable) in
+                      let p =
+                        Some
+                          (Parse.pattern env ~allow_optional:false Parse_error.StrictCatchVariable)
+                      in
                       Expect.token env T_RPAREN;
                       p
                     ) else

@@ -174,6 +174,7 @@ type t =
   | UnexpectedProto
   | UnexpectedReserved
   | UnexpectedReservedType
+  | UnexpectedOptional
   | UnexpectedSpreadType
   | UnexpectedStatic
   | UnexpectedSuper
@@ -516,6 +517,7 @@ module PP = struct
     | UnexpectedProto -> "Unexpected proto modifier"
     | UnexpectedReserved -> "Unexpected reserved word"
     | UnexpectedReservedType -> "Unexpected reserved type"
+    | UnexpectedOptional -> "Unexpected `?` (optional modifier not allowed here)"
     | UnexpectedSpreadType -> "Spreading a type is only allowed inside an object type"
     | UnexpectedStatic -> "Unexpected static modifier"
     | UnexpectedSuper -> "Unexpected `super` outside of a class method"

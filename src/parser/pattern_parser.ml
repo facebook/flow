@@ -173,7 +173,7 @@ struct
         with_loc
           (fun env ->
             Expect.token env T_ELLIPSIS;
-            pattern env restricted_error)
+            pattern env ~allow_optional:false restricted_error)
           env
       in
       Pattern.Object.RestElement
@@ -201,7 +201,7 @@ struct
             with_loc
               ~start_loc
               (fun env ->
-                let pattern = pattern env restricted_error in
+                let pattern = pattern env ~allow_optional:false restricted_error in
                 let default = property_default env in
                 (pattern, default))
               env
@@ -230,6 +230,10 @@ struct
             else if is_strict_reserved string_val then
               (* it is a syntax error if `name` is a strict reserved word, in strict mode *)
               strict_error_at env (id_loc, Parse_error.StrictReservedWord);
+            if Peek.token env = T_PLING then (
+              error env Parse_error.UnexpectedOptional;
+              Eat.token env
+            );
             let (loc, (pattern, default)) =
               with_loc
                 ~start_loc
@@ -333,7 +337,7 @@ struct
           with_loc
             (fun env ->
               Expect.token env T_ELLIPSIS;
-              pattern env restricted_error)
+              pattern env ~allow_optional:false restricted_error)
             env
         in
         let element =
@@ -357,7 +361,7 @@ struct
         let (loc, (pattern, default)) =
           with_loc
             (fun env ->
-              let pattern = pattern env restricted_error in
+              let pattern = pattern env ~allow_optional:false restricted_error in
               let default =
                 match Peek.token env with
                 | T_ASSIGN ->
@@ -391,11 +395,11 @@ struct
         Pattern.Array { Pattern.Array.elements; annot; comments }
     )
 
-  and pattern env restricted_error =
+  and pattern env ~allow_optional restricted_error =
     match Peek.token env with
     | T_LCURLY -> object_ restricted_error env
     | T_LBRACKET -> array_ restricted_error env
     | _ ->
-      let (loc, id) = Parse.identifier_with_type env restricted_error in
+      let (loc, id) = Parse.identifier_with_type env ~allow_optional restricted_error in
       (loc, Pattern.Identifier id)
 end

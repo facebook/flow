@@ -465,18 +465,29 @@ module rec Parse : PARSER = struct
   and bigint = Expression.bigint
 
   and identifier_with_type =
-    let with_loc_helper no_optional restricted_error env =
+    let with_loc_helper allow_optional restricted_error env =
       let name = identifier ~restricted_error env in
-      let optional = (not no_optional) && Peek.token env = T_PLING in
-      if optional then (
-        if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
-        Expect.token env T_PLING
-      );
+      let optional =
+        match Peek.token env with
+        | T_PLING ->
+          let optional =
+            if allow_optional then (
+              if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
+              true
+            ) else (
+              error env Parse_error.UnexpectedOptional;
+              false
+            )
+          in
+          Eat.token env;
+          optional
+        | _ -> false
+      in
       let annot = Type.annotation_opt env in
       Ast.Pattern.Identifier.{ name; optional; annot }
     in
-    fun env ?(no_optional = false) restricted_error ->
-      with_loc (with_loc_helper no_optional restricted_error) env
+    fun env ~allow_optional restricted_error ->
+      with_loc (with_loc_helper allow_optional restricted_error) env
 
   and block_body env =
     let start_loc = Peek.loc env in

@@ -129,18 +129,8 @@ fn let_simple_object_assign() {
 }
 
 #[test]
-fn let_optional_assign() {
-    assert_statement_string(false, None, "let a?=a;");
-}
-
-#[test]
 fn let_assign_annotation() {
     assert_statement_string(false, None, "let a:b=a;");
-}
-
-#[test]
-fn let_optional_assign_annotation() {
-    assert_statement_string(false, None, "let a?:b=a;");
 }
 
 #[test]
@@ -303,18 +293,8 @@ fn let_array_single_item() {
 }
 
 #[test]
-fn let_array_optional_item() {
-    assert_statement_string(false, None, "let[a?]=a;");
-}
-
-#[test]
 fn let_array_annotated_item() {
     assert_statement_string(false, None, "let[a:b]=a;");
-}
-
-#[test]
-fn let_array_optional_annotated_item() {
-    assert_statement_string(false, None, "let[a?:b]=a;");
 }
 
 #[test]

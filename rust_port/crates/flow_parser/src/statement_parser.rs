@@ -1015,6 +1015,7 @@ fn try_statement(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>, 
                         expect::token(env, TokenKind::TLparen)?;
                         let p = Some(pattern_parser::pattern(
                             env,
+                            false,
                             ParseError::StrictCatchVariable,
                         )?);
                         expect::token(env, TokenKind::TRparen)?;
