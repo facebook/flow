@@ -46,7 +46,15 @@ pub fn param_type(param: &Param) -> FunParam {
             };
             FunParam(Some(name.dupe()), t)
         }
-        _ => {
+        Pattern::Object { optional, .. } | Pattern::Array { optional, .. } => {
+            let t = if *optional || param.default.is_some() {
+                type_util::optional(param.t.dupe(), None, false)
+            } else {
+                param.t.dupe()
+            };
+            FunParam(None, t)
+        }
+        Pattern::ParamPropertyPattern(_) => {
             let t = if param.default.is_some() {
                 type_util::optional(param.t.dupe(), None, false)
             } else {
@@ -203,6 +211,7 @@ pub fn eval_param(
         Pattern::Object {
             annot,
             properties,
+            optional,
             comments,
         } => {
             let default = eval_default(cx, false, t, *has_anno, default.dupe())?;
@@ -223,6 +232,7 @@ pub fn eval_param(
                     inner: pattern::Object {
                         properties: properties.into(),
                         annot: annot.clone(),
+                        optional: *optional,
                         comments: comments.dupe(),
                     }
                     .into(),
@@ -233,6 +243,7 @@ pub fn eval_param(
         Pattern::Array {
             annot,
             elements,
+            optional,
             comments,
         } => {
             let default = eval_default(cx, false, t, *has_anno, default.dupe())?;
@@ -252,6 +263,7 @@ pub fn eval_param(
                     inner: pattern::Array {
                         elements: elements.into(),
                         annot: annot.clone(),
+                        optional: *optional,
                         comments: comments.dupe(),
                     }
                     .into(),

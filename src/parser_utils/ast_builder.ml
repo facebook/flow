@@ -181,7 +181,9 @@ module Patterns = struct
           | None -> Array.Hole Loc.none)
         elements
     in
-    (Loc.none, Array { Array.elements; annot = Ast.Type.Missing Loc.none; comments = None })
+    ( Loc.none,
+      Array { Array.elements; annot = Ast.Type.Missing Loc.none; optional = false; comments = None }
+    )
 
   let object_ str =
     let open Object in
@@ -202,6 +204,7 @@ module Patterns = struct
                 );
             ];
           annot = Ast.Type.Missing Loc.none;
+          optional = false;
           comments = None;
         }
     )
@@ -744,7 +747,10 @@ module Statements = struct
           in
           Some
             (Functions.params
-               [Functions.param (Loc.none, Object { Object.properties; annot; comments = None })]
+               [
+                 Functions.param
+                   (Loc.none, Object { Object.properties; annot; optional = false; comments = None });
+               ]
             )
       in
       ( Loc.none,

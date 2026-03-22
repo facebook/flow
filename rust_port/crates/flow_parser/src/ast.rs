@@ -6044,6 +6044,7 @@ pub mod pattern {
     pub struct Object<M: Dupe, T: Dupe> {
         pub properties: Arc<[object::Property<M, T>]>,
         pub annot: AnnotationOrHint<M, T>,
+        pub optional: bool,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 
@@ -6099,6 +6100,7 @@ pub mod pattern {
     pub struct Array<M: Dupe, T: Dupe> {
         pub elements: Arc<[array::Element<M, T>]>,
         pub annot: AnnotationOrHint<M, T>,
+        pub optional: bool,
         pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
     }
 

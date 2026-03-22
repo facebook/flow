@@ -8389,7 +8389,12 @@ module Make
                 ploc = name_loc;
                 pattern =
                   Func_stmt_config_types.Types.Object
-                    { annot = Ast.Type.Missing (name_loc, obj_t); properties = []; comments = None };
+                    {
+                      annot = Ast.Type.Missing (name_loc, obj_t);
+                      properties = [];
+                      optional = false;
+                      comments = None;
+                    };
                 default = None;
                 has_anno = false;
               }
@@ -9189,7 +9194,12 @@ module Make
                 ploc = name_loc;
                 pattern =
                   Func_stmt_config_types.Types.Object
-                    { annot = Ast.Type.Missing (name_loc, obj_t); properties = []; comments = None };
+                    {
+                      annot = Ast.Type.Missing (name_loc, obj_t);
+                      properties = [];
+                      optional = false;
+                      comments = None;
+                    };
                 default = None;
                 has_anno = false;
               }
@@ -9547,14 +9557,19 @@ module Make
             id_param cx tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
           in
           (t, Component_sig_types.DeclarationParamConfig.Id id)
-        | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
+        | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; optional; comments } ->
           let reason = mk_reason RDestructuring ploc in
           let (t, annot) = mk_param_annot cx tparams_map reason annot in
-          (t, Component_sig_types.DeclarationParamConfig.Object { annot; properties; comments })
-        | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
+          ( t,
+            Component_sig_types.DeclarationParamConfig.Object
+              { annot; properties; optional; comments }
+          )
+        | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; optional; comments } ->
           let reason = mk_reason RDestructuring ploc in
           let (t, annot) = mk_param_annot cx tparams_map reason annot in
-          (t, Component_sig_types.DeclarationParamConfig.Array { annot; elements; comments })
+          ( t,
+            Component_sig_types.DeclarationParamConfig.Array { annot; elements; optional; comments }
+          )
         | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
       in
       Component_sig_types.DeclarationParamConfig.Param
@@ -9590,22 +9605,23 @@ module Make
                comments = rest_comments;
              }
           )
-      | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
+      | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; optional; comments } ->
         let reason = mk_reason RDestructuring ploc in
         let (t, annot) = mk_param_annot cx tparams_map reason annot in
         let pattern =
-          Component_sig_types.DeclarationParamConfig.Object { annot; properties; comments }
+          Component_sig_types.DeclarationParamConfig.Object
+            { annot; properties; optional; comments }
         in
         Ok
           (Component_sig_types.DeclarationParamConfig.Rest
              { t; loc; ploc; pattern; has_anno = has_param_anno; comments = rest_comments }
           )
-      | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
+      | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; optional; comments } ->
         Flow_js.add_output cx Error_message.(EInvalidComponentRestParam ploc);
         let reason = mk_reason RDestructuring ploc in
         let (t, annot) = mk_param_annot cx tparams_map reason annot in
         let pattern =
-          Component_sig_types.DeclarationParamConfig.Array { annot; elements; comments }
+          Component_sig_types.DeclarationParamConfig.Array { annot; elements; optional; comments }
         in
         Ok
           (Component_sig_types.DeclarationParamConfig.Rest
@@ -9765,14 +9781,14 @@ module Make
               id_param cx tparams_map id (fun name -> mk_reason (RParameter (Some name)) ploc)
             in
             (t, Func_stmt_config_types.Types.Id id)
-          | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; comments } ->
+          | Ast.Pattern.Object { Ast.Pattern.Object.annot; properties; optional; comments } ->
             let reason = mk_reason RDestructuring ploc in
             let (t, annot) = mk_param_annot cx tparams_map reason annot in
-            (t, Func_stmt_config_types.Types.Object { annot; properties; comments })
-          | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; comments } ->
+            (t, Func_stmt_config_types.Types.Object { annot; properties; optional; comments })
+          | Ast.Pattern.Array { Ast.Pattern.Array.annot; elements; optional; comments } ->
             let reason = mk_reason RDestructuring ploc in
             let (t, annot) = mk_param_annot cx tparams_map reason annot in
-            (t, Func_stmt_config_types.Types.Array { annot; elements; comments })
+            (t, Func_stmt_config_types.Types.Array { annot; elements; optional; comments })
           | Ast.Pattern.Expression _ -> failwith "unexpected expression pattern in param"
         in
         Func_stmt_config_types.Types.Param

@@ -14874,6 +14874,7 @@ pub fn mk_class_sig(
                                     obj_t,
                                 )),
                                 properties: vec![],
+                                optional: false,
                                 comments: None,
                             },
                             default: None,
@@ -16242,6 +16243,7 @@ pub fn mk_record_sig(
                                     obj_t,
                                 )),
                                 properties: vec![],
+                                optional: false,
                                 comments: None,
                             },
                             default: None,
@@ -16835,6 +16837,7 @@ pub fn mk_component_sig(
                     declaration_param_config::Pattern::Object {
                         annot: typed_annot,
                         properties: inner.properties.to_vec(),
+                        optional: inner.optional,
                         comments: inner.comments.dupe(),
                     },
                 )
@@ -16847,6 +16850,7 @@ pub fn mk_component_sig(
                     declaration_param_config::Pattern::Array {
                         annot: typed_annot,
                         elements: inner.elements.to_vec(),
+                        optional: inner.optional,
                         comments: inner.comments.dupe(),
                     },
                 )
@@ -16904,6 +16908,7 @@ pub fn mk_component_sig(
                 let pattern = declaration_param_config::Pattern::Object {
                     annot: typed_annot,
                     properties: inner.properties.to_vec(),
+                    optional: inner.optional,
                     comments: inner.comments.dupe(),
                 };
                 Ok(declaration_param_config::Rest {
@@ -16925,6 +16930,7 @@ pub fn mk_component_sig(
                 let pattern = declaration_param_config::Pattern::Array {
                     annot: typed_annot,
                     elements: inner.elements.to_vec(),
+                    optional: inner.optional,
                     comments: inner.comments.dupe(),
                 };
                 Ok(declaration_param_config::Rest {
@@ -17264,6 +17270,7 @@ pub fn mk_func_sig(
                             func_stmt_config_types::Pattern::Object {
                                 annot: typed_annot,
                                 properties: inner.properties.to_vec(),
+                                optional: inner.optional,
                                 comments: inner.comments.dupe(),
                             },
                         )
@@ -17277,6 +17284,7 @@ pub fn mk_func_sig(
                             func_stmt_config_types::Pattern::Array {
                                 annot: typed_annot,
                                 elements: inner.elements.to_vec(),
+                                optional: inner.optional,
                                 comments: inner.comments.dupe(),
                             },
                         )

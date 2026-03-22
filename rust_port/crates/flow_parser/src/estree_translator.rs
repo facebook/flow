@@ -4015,6 +4015,7 @@ fn pattern(
                         }),
                     ),
                     ("typeAnnotation", type_annot),
+                    ("optional", bool_value(inner.optional)),
                 ],
             )
         }
@@ -4038,6 +4039,7 @@ fn pattern(
                         }),
                     ),
                     ("typeAnnotation", type_annot),
+                    ("optional", bool_value(inner.optional)),
                 ],
             )
         }

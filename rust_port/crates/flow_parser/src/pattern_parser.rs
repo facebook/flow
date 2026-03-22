@@ -154,6 +154,7 @@ fn object_from_expr(
         inner: Arc::new(pattern::Object {
             properties: properties.into(),
             annot: missing_annot(env),
+            optional: false,
             comments: obj.comments,
         }),
     })
@@ -254,6 +255,7 @@ fn array_from_expr(
         inner: Arc::new(pattern::Array {
             elements: elements.into(),
             annot: missing_annot(env),
+            optional: false,
             comments: arr.comments,
         }),
     })
@@ -318,6 +320,7 @@ pub(super) fn from_expr(
 
 fn parse_object(
     env: &mut ParserEnv,
+    allow_optional: bool,
     restricted_error: ParseError,
 ) -> Result<pattern::Pattern<Loc, Loc>, Rollback> {
     fn parse_rest_property(
@@ -510,6 +513,7 @@ fn parse_object(
         let internal = peek::comments(env);
         expect::token(env, TokenKind::TRcurly)?;
         let trailing = eat::trailing_comments(env);
+        let optional = parse_optional(env, allow_optional)?;
 
         let annot = if peek::token(env) == &TokenKind::TColon {
             types::AnnotationOrHint::Available(type_parser::parse_annotation(env)?)
@@ -520,6 +524,7 @@ fn parse_object(
         Ok(pattern::Object {
             properties: properties.into(),
             annot,
+            optional,
             comments: ast_utils::mk_comments_with_internal_opt(
                 Some(leading.into()),
                 Some(trailing.into()),
@@ -533,8 +538,31 @@ fn parse_object(
     })
 }
 
+fn parse_optional(env: &mut ParserEnv, allow_optional: bool) -> Result<bool, Rollback> {
+    match peek::token(env) {
+        TokenKind::TPling => {
+            if allow_optional {
+                if !env.should_parse_types() {
+                    env.error(ParseError::UnexpectedTypeAnnotation)?;
+                }
+                if !env.in_ambient_context() {
+                    env.error(ParseError::OptionalDestructuringMustHaveDefault)?;
+                }
+                eat::token(env)?;
+                Ok(true)
+            } else {
+                env.error(ParseError::UnexpectedOptional)?;
+                eat::token(env)?;
+                Ok(false)
+            }
+        }
+        _ => Ok(false),
+    }
+}
+
 fn parse_array(
     env: &mut ParserEnv,
+    allow_optional: bool,
     restricted_error: ParseError,
 ) -> Result<pattern::Pattern<Loc, Loc>, Rollback> {
     fn parse_array_elements(
@@ -615,6 +643,7 @@ fn parse_array(
 
         let internal = peek::comments(env);
         expect::token(env, TokenKind::TRbracket)?;
+        let optional = parse_optional(env, allow_optional)?;
 
         let annot = if peek::token(env) == &TokenKind::TColon {
             types::AnnotationOrHint::Available(type_parser::parse_annotation(env)?)
@@ -632,6 +661,7 @@ fn parse_array(
         Ok(pattern::Array {
             elements: elements.into(),
             annot,
+            optional,
             comments,
         })
     })?;
@@ -647,8 +677,8 @@ pub(super) fn pattern(
     restricted_error: ParseError,
 ) -> Result<pattern::Pattern<Loc, Loc>, Rollback> {
     match peek::token(env) {
-        TokenKind::TLcurly => parse_object(env, restricted_error),
-        TokenKind::TLbracket => parse_array(env, restricted_error),
+        TokenKind::TLcurly => parse_object(env, allow_optional, restricted_error),
+        TokenKind::TLbracket => parse_array(env, allow_optional, restricted_error),
         _ => {
             let (loc, id) = main_parser::parse_identifier_with_type(
                 env,

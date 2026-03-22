@@ -83,11 +83,13 @@ module DeclarationParamConfig = struct
     | Object of {
         annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
         properties: (ALoc.t, ALoc.t) Ast.Pattern.Object.property list;
+        optional: bool;
         comments: (ALoc.t, ALoc.t Ast.Comment.t list) Ast.Syntax.t option;
       }
     | Array of {
         annot: (ALoc.t, ALoc.t * Type.t) Ast.Type.annotation_or_hint;
         elements: (ALoc.t, ALoc.t) Ast.Pattern.Array.element list;
+        optional: bool;
         comments: (ALoc.t, ALoc.t Ast.Comment.t list) Ast.Syntax.t option;
       }
 

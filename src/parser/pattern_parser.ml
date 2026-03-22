@@ -72,7 +72,12 @@ struct
       ( loc,
         Pattern.(
           Object
-            { Object.properties = properties env [] props; annot = missing_annot env; comments }
+            {
+              Object.properties = properties env [] props;
+              annot = missing_annot env;
+              optional = false;
+              comments;
+            }
         )
       )
 
@@ -134,7 +139,12 @@ struct
     fun env (loc, { Ast.Expression.Array.elements = elems; comments }) ->
       ( loc,
         Pattern.Array
-          { Pattern.Array.elements = elements env [] elems; annot = missing_annot env; comments }
+          {
+            Pattern.Array.elements = elements env [] elems;
+            annot = missing_annot env;
+            optional = false;
+            comments;
+          }
       )
 
   and from_expr env (loc, expr) =
@@ -166,7 +176,7 @@ struct
     | expr -> (loc, Pattern.Expression (loc, expr))
 
   (* Parse object destructuring pattern *)
-  let rec object_ restricted_error =
+  let rec object_ ~allow_optional restricted_error =
     let rest_property env =
       let leading = Peek.comments env in
       let (loc, argument) =
@@ -306,6 +316,7 @@ struct
         let internal = Peek.comments env in
         Expect.token env T_RCURLY;
         let trailing = Eat.trailing_comments env in
+        let optional = parse_optional ~allow_optional env in
         let annot =
           if Peek.token env = T_COLON then
             Ast.Type.Available (Type.annotation env)
@@ -316,12 +327,29 @@ struct
           {
             Pattern.Object.properties;
             annot;
+            optional;
             comments = Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ();
           }
     )
 
+  and parse_optional ~allow_optional env =
+    match Peek.token env with
+    | T_PLING ->
+      if allow_optional then (
+        if not (should_parse_types env) then error env Parse_error.UnexpectedTypeAnnotation;
+        if not (in_ambient_context env) then
+          error env Parse_error.OptionalDestructuringMustHaveDefault;
+        Eat.token env;
+        true
+      ) else (
+        error env Parse_error.UnexpectedOptional;
+        Eat.token env;
+        false
+      )
+    | _ -> false
+
   (* Parse array destructuring pattern *)
-  and array_ restricted_error =
+  and array_ ~allow_optional restricted_error =
     let rec elements env acc =
       match Peek.token env with
       | T_EOF
@@ -382,6 +410,7 @@ struct
         let elements = elements env [] in
         let internal = Peek.comments env in
         Expect.token env T_RBRACKET;
+        let optional = parse_optional ~allow_optional env in
         let annot =
           if Peek.token env = T_COLON then
             Ast.Type.Available (Type.annotation env)
@@ -392,13 +421,13 @@ struct
         let comments =
           Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
         in
-        Pattern.Array { Pattern.Array.elements; annot; comments }
+        Pattern.Array { Pattern.Array.elements; annot; optional; comments }
     )
 
   and pattern env ~allow_optional restricted_error =
     match Peek.token env with
-    | T_LCURLY -> object_ restricted_error env
-    | T_LBRACKET -> array_ restricted_error env
+    | T_LCURLY -> object_ ~allow_optional restricted_error env
+    | T_LBRACKET -> array_ ~allow_optional restricted_error env
     | _ ->
       let (loc, id) = Parse.identifier_with_type env ~allow_optional restricted_error in
       (loc, Pattern.Identifier id)

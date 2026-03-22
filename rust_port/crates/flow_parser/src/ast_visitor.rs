@@ -17060,6 +17060,7 @@ pub fn pattern_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
             let ast::pattern::Object {
                 properties,
                 annot,
+                optional: _,
                 comments,
             } = inner.as_ref();
             for p in properties.iter() {
@@ -17072,6 +17073,7 @@ pub fn pattern_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
             let ast::pattern::Array {
                 elements,
                 annot,
+                optional: _,
                 comments,
             } = inner.as_ref();
             for e in elements.iter() {
@@ -17106,6 +17108,7 @@ pub fn map_pattern_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
             let ast::pattern::Object {
                 properties,
                 annot,
+                optional,
                 comments,
             } = inner.as_ref();
             let properties_ = Arc::from(
@@ -17121,6 +17124,7 @@ pub fn map_pattern_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
                 inner: Arc::new(ast::pattern::Object {
                     properties: properties_,
                     annot: annot_,
+                    optional: *optional,
                     comments: comments_,
                 }),
             }
@@ -17129,6 +17133,7 @@ pub fn map_pattern_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
             let ast::pattern::Array {
                 elements,
                 annot,
+                optional,
                 comments,
             } = inner.as_ref();
             let elements_ = Arc::from(
@@ -17144,6 +17149,7 @@ pub fn map_pattern_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
                 inner: Arc::new(ast::pattern::Array {
                     elements: elements_,
                     annot: annot_,
+                    optional: *optional,
                     comments: comments_,
                 }),
             }

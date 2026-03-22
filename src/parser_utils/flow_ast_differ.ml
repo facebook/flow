@@ -2676,14 +2676,21 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (o1 : (Loc.t, Loc.t) Ast.Pattern.Object.t)
       (o2 : (Loc.t, Loc.t) Ast.Pattern.Object.t) : node change list option =
     let open Ast.Pattern.Object in
-    let { properties = properties1; annot = annot1; comments = comments1 } = o1 in
-    let { properties = properties2; annot = annot2; comments = comments2 } = o2 in
-    let properties_diff =
-      diff_and_recurse_no_trivial pattern_object_property properties1 properties2
+    let { properties = properties1; annot = annot1; optional = optional1; comments = comments1 } =
+      o1
     in
-    let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Base.Option.return in
-    let comments_diff = syntax_opt loc comments1 comments2 in
-    join_diff_list [properties_diff; annot_diff; comments_diff]
+    let { properties = properties2; annot = annot2; optional = optional2; comments = comments2 } =
+      o2
+    in
+    if optional1 != optional2 then
+      None
+    else
+      let properties_diff =
+        diff_and_recurse_no_trivial pattern_object_property properties1 properties2
+      in
+      let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Base.Option.return in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [properties_diff; annot_diff; comments_diff]
   and pattern_object_property
       (p1 : (Loc.t, Loc.t) Ast.Pattern.Object.property)
       (p2 : (Loc.t, Loc.t) Ast.Pattern.Object.property) : node change list option =
@@ -2723,12 +2730,15 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       loc (a1 : (Loc.t, Loc.t) Ast.Pattern.Array.t) (a2 : (Loc.t, Loc.t) Ast.Pattern.Array.t) :
       node change list option =
     let open Ast.Pattern.Array in
-    let { elements = elements1; annot = annot1; comments = comments1 } = a1 in
-    let { elements = elements2; annot = annot2; comments = comments2 } = a2 in
-    let elements_diff = diff_and_recurse_no_trivial pattern_array_e elements1 elements2 in
-    let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Base.Option.return in
-    let comments_diff = syntax_opt loc comments1 comments2 in
-    join_diff_list [comments_diff; elements_diff; annot_diff]
+    let { elements = elements1; annot = annot1; optional = optional1; comments = comments1 } = a1 in
+    let { elements = elements2; annot = annot2; optional = optional2; comments = comments2 } = a2 in
+    if optional1 != optional2 then
+      None
+    else
+      let elements_diff = diff_and_recurse_no_trivial pattern_array_e elements1 elements2 in
+      let annot_diff = diff_if_changed type_annotation_hint annot1 annot2 |> Base.Option.return in
+      let comments_diff = syntax_opt loc comments1 comments2 in
+      join_diff_list [comments_diff; elements_diff; annot_diff]
   and pattern_array_e
       (eo1 : (Loc.t, Loc.t) Ast.Pattern.Array.element)
       (eo2 : (Loc.t, Loc.t) Ast.Pattern.Array.element) : node change list option =

@@ -2185,6 +2185,11 @@ pub(crate) fn pattern(
                     inner.comments.as_ref(),
                     group(vec![
                         wrap_and_indent((atom("{"), atom("}")), None, props_layout),
+                        if inner.optional {
+                            atom("?")
+                        } else {
+                            LayoutNode::empty()
+                        },
                         hint(|a| type_annotation(opts, false, a), &inner.annot),
                     ]),
                 )
@@ -2217,6 +2222,11 @@ pub(crate) fn pattern(
                     inner.comments.as_ref(),
                     group(vec![
                         wrap_and_indent((atom("["), atom("]")), None, elements_layout),
+                        if inner.optional {
+                            atom("?")
+                        } else {
+                            LayoutNode::empty()
+                        },
                         hint(|a| type_annotation(opts, false, a), &inner.annot),
                     ]),
                 )

@@ -6490,6 +6490,7 @@ fn param<'arena: 'ast, 'ast>(
         }
         ast::pattern::Pattern::Object { loc: _, inner } => {
             let annot = &inner.annot;
+            let optional = inner.optional;
             let sort = ExpectedAnnotationSort::ObjectPattern;
             let loc_node = tbls.push_loc(loc.clone());
 
@@ -6537,7 +6538,7 @@ fn param<'arena: 'ast, 'ast>(
                 (scope, t)
             };
 
-            let t = if default.is_some() {
+            let t = if optional || default.is_some() {
                 Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
             } else {
                 t
@@ -6546,6 +6547,7 @@ fn param<'arena: 'ast, 'ast>(
         }
         ast::pattern::Pattern::Array { loc: _, inner } => {
             let annot = &inner.annot;
+            let optional = inner.optional;
             let sort = ExpectedAnnotationSort::ArrayPattern;
             let loc_node = tbls.push_loc(loc.clone());
 
@@ -6593,7 +6595,7 @@ fn param<'arena: 'ast, 'ast>(
                 (scope, t)
             };
 
-            let t = if default.is_some() {
+            let t = if optional || default.is_some() {
                 Parsed::Annot(Box::new(ParsedAnnot::Optional(t)))
             } else {
                 t

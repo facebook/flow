@@ -57,7 +57,8 @@
                 "computed":false
               }
             ],
-            "typeAnnotation":null
+            "typeAnnotation":null,
+            "optional":false
           },
           "init":{
             "type":"Identifier",

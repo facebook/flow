@@ -25,7 +25,16 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
           t
       in
       (Some name, t)
-    | _ ->
+    | Object { optional; _ }
+    | Array { optional; _ } ->
+      let t =
+        if optional || default <> None then
+          TypeUtil.optional t
+        else
+          t
+      in
+      (None, t)
+    | ParamPropertyPattern _ ->
       let t =
         if default <> None then
           TypeUtil.optional t
@@ -99,7 +108,7 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
         Ast.Function.Param.RegularParam
           { argument = ((ploc, t), Ast.Pattern.Identifier id); default }
       )
-    | Object { annot; properties; comments } ->
+    | Object { annot; properties; optional; comments } ->
       let default = eval_default cx t has_anno default in
       let properties =
         let init = Destructuring.empty () in
@@ -110,11 +119,13 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
         Ast.Function.Param.RegularParam
           {
             argument =
-              ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; comments });
+              ( (ploc, t),
+                Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; optional; comments }
+              );
             default;
           }
       )
-    | Array { annot; elements; comments } ->
+    | Array { annot; elements; optional; comments } ->
       let default = eval_default cx t has_anno default in
       let elements =
         let init = Destructuring.empty () in
@@ -124,7 +135,10 @@ module Make (Destructuring : Destructuring_sig.S) (Statement : Statement_sig.S) 
       ( loc,
         Ast.Function.Param.RegularParam
           {
-            argument = ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; comments });
+            argument =
+              ( (ploc, t),
+                Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; optional; comments }
+              );
             default;
           }
       )

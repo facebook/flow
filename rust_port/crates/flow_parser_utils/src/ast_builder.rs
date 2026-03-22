@@ -514,6 +514,7 @@ pub mod patterns {
             inner: Arc::new(ap::Array {
                 elements: elements.into(),
                 annot: at::AnnotationOrHint::Missing(Loc::none()),
+                optional: false,
                 comments: None,
             }),
         }
@@ -538,6 +539,7 @@ pub mod patterns {
                 )]
                 .into(),
                 annot: at::AnnotationOrHint::Missing(Loc::none()),
+                optional: false,
                 comments: None,
             }),
         }
@@ -1991,6 +1993,7 @@ pub mod statements {
                             inner: Arc::new(ast::pattern::Object {
                                 properties: properties.into(),
                                 annot,
+                                optional: false,
                                 comments: None,
                             }),
                         },

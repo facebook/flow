@@ -61,8 +61,9 @@ let identifier acc bind (name_loc, { Ast.Identifier.name; _ }) = SMap.add name (
 
 let rec fold_pattern acc bind (ploc, p) =
   match p with
-  | Array { Array.elements; annot = _; comments = _ } -> array_elements acc (ploc, bind) elements
-  | Object { Object.properties; annot = _; comments = _ } ->
+  | Array { Array.elements; annot = _; optional = _; comments = _ } ->
+    array_elements acc (ploc, bind) elements
+  | Object { Object.properties; annot = _; optional = _; comments = _ } ->
     object_properties acc (ploc, bind) properties
   | Identifier { Identifier.name = id; optional = _; annot = _ } -> identifier acc bind id
   | Expression _ -> acc

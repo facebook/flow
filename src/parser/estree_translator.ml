@@ -1896,7 +1896,7 @@ with type t = Impl.t = struct
     and pattern =
       Pattern.(
         function
-        | (loc, Object { Object.properties; annot; comments }) ->
+        | (loc, Object { Object.properties; annot; optional; comments }) ->
           node
             ?comments:(format_internal_comments comments)
             "ObjectPattern"
@@ -1904,8 +1904,9 @@ with type t = Impl.t = struct
             [
               ("properties", array_of_list object_pattern_property properties);
               ("typeAnnotation", hint type_annotation annot);
+              ("optional", bool optional);
             ]
-        | (loc, Array { Array.elements; annot; comments }) ->
+        | (loc, Array { Array.elements; annot; optional; comments }) ->
           node
             ?comments:(format_internal_comments comments)
             "ArrayPattern"
@@ -1913,6 +1914,7 @@ with type t = Impl.t = struct
             [
               ("elements", array_of_list array_pattern_element elements);
               ("typeAnnotation", hint type_annotation annot);
+              ("optional", bool optional);
             ]
         | (loc, Identifier pattern_id) -> pattern_identifier loc pattern_id
         | (_loc, Expression expr) -> expression expr

@@ -877,6 +877,12 @@ let export_specifiers_has_value_export ~statement_export_kind specs =
       effective_export_kind ~statement_export_kind specifier_export_kind = Statement.ExportValue)
     specs
 
+let pattern_optional = function
+  | (_, Pattern.Object { Pattern.Object.optional; _ }) -> optional
+  | (_, Pattern.Array { Pattern.Array.optional; _ }) -> optional
+  | (_, Pattern.Identifier { Pattern.Identifier.optional; _ }) -> optional
+  | _ -> false
+
 let string_of_bigint { BigIntLiteral.value; raw; comments = _ } =
   (* https://github.com/estree/estree/blob/master/es2020.md#bigintliteral
    * `bigint` property is the string representation of the `BigInt` value.

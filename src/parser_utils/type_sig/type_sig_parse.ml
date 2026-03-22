@@ -3596,9 +3596,9 @@ and pattern opts scope tbls f def (_, p) =
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
     let id_loc = push_loc tbls id_loc in
     f id_loc name def
-  | P.Object { P.Object.properties; annot = _; comments = _ } ->
+  | P.Object { P.Object.properties; annot = _; optional = _; comments = _ } ->
     object_pattern opts scope tbls f def properties
-  | P.Array { P.Array.elements; annot = _; comments = _ } ->
+  | P.Array { P.Array.elements; annot = _; optional = _; comments = _ } ->
     array_pattern opts scope tbls f def elements
   | P.Expression _ -> failwith "unexpected expression pattern"
 
@@ -3734,8 +3734,8 @@ and param opts scope tbls (xs, tparams) loc patt ~bind_names default =
         scope
     in
     (Some name, scope, t)
-  | P.Object { P.Object.annot = t; properties = _; comments = _ }
-  | P.Array { P.Array.annot = t; elements = _; comments = _ } ->
+  | P.Object { P.Object.annot = t; optional; properties = _; comments = _ }
+  | P.Array { P.Array.annot = t; optional; elements = _; comments = _ } ->
     let patt_with_loc = (loc, patt) in
     let loc = push_loc tbls loc in
     let lazy_t =
@@ -3769,7 +3769,7 @@ and param opts scope tbls (xs, tparams) loc patt ~bind_names default =
     in
     let t = Lazy.force lazy_t in
     let t =
-      if default <> None then
+      if optional || default <> None then
         Annot (Optional t)
       else
         t

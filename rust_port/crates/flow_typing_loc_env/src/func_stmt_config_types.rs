@@ -34,11 +34,13 @@ pub enum Pattern {
     Object {
         annot: AnnotationOrHint<ALoc, (ALoc, Type)>,
         properties: Vec<ObjectProperty<ALoc, ALoc>>,
+        optional: bool,
         comments: Option<Syntax<ALoc, Arc<[Comment<ALoc>]>>>,
     },
     Array {
         annot: AnnotationOrHint<ALoc, (ALoc, Type)>,
         elements: Vec<ArrayElement<ALoc, ALoc>>,
+        optional: bool,
         comments: Option<Syntax<ALoc, Arc<[Comment<ALoc>]>>>,
     },
     ParamPropertyPattern(ClassProperty<ALoc, (ALoc, Type)>),

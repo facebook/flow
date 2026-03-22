@@ -41,6 +41,7 @@ pub fn pattern_with_toplevel_annot_removed<Loc: Default + Dupe>(
             let new_inner = ast::pattern::Object {
                 properties: inner.properties.dupe(),
                 annot: ast::types::AnnotationOrHint::Missing(Loc::default()),
+                optional: inner.optional,
                 comments: inner.comments.dupe(),
             };
             (
@@ -56,6 +57,7 @@ pub fn pattern_with_toplevel_annot_removed<Loc: Default + Dupe>(
             let new_inner = ast::pattern::Array {
                 elements: inner.elements.dupe(),
                 annot: ast::types::AnnotationOrHint::Missing(Loc::default()),
+                optional: inner.optional,
                 comments: inner.comments.dupe(),
             };
             (

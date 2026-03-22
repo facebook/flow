@@ -497,10 +497,10 @@ struct
           let (_, patt) = expr in
           begin
             match patt with
-            | Object { Object.properties; annot; comments = _ } ->
+            | Object { Object.properties; annot; optional = _; comments = _ } ->
               Base.List.iter ~f:this#function_param_pattern_object_p_annotated properties;
               run this#type_annotation_hint annot
-            | Array { Array.elements; annot; comments = _ } ->
+            | Array { Array.elements; annot; optional = _; comments = _ } ->
               Base.List.iter ~f:this#function_param_pattern_array_e_annotated elements;
               run this#type_annotation_hint annot
             | Identifier { Identifier.name; annot; optional = _ } ->
@@ -527,8 +527,8 @@ struct
           let open Ast.Pattern in
           let (_, patt) = expr in
           match patt with
-          | Object { Object.properties = _; annot; comments = _ }
-          | Array { Array.elements = _; annot; comments = _ }
+          | Object { Object.properties = _; annot; optional = _; comments = _ }
+          | Array { Array.elements = _; annot; optional = _; comments = _ }
           | Identifier { Identifier.name = _; annot; optional = _ } ->
             ignore @@ this#type_annotation_hint annot
           | Expression _ -> ()

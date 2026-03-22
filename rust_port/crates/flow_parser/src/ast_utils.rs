@@ -127,6 +127,15 @@ pub fn pattern_has_type_annotation<M: Dupe, T: Dupe>(pattern: &pattern::Pattern<
     }
 }
 
+pub fn pattern_optional<M: Dupe, T: Dupe>(pattern: &pattern::Pattern<M, T>) -> bool {
+    match pattern {
+        pattern::Pattern::Object { loc: _, inner } => inner.optional,
+        pattern::Pattern::Array { loc: _, inner } => inner.optional,
+        pattern::Pattern::Identifier { loc: _, inner } => inner.optional,
+        _ => false,
+    }
+}
+
 pub fn string_of_variable_kind(kind: VariableKind) -> &'static str {
     kind.as_str()
 }

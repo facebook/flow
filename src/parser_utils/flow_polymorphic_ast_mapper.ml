@@ -2768,16 +2768,16 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let (annot, patt) = expr in
       ( this#on_type_annot annot,
         match patt with
-        | Object { Object.properties; annot; comments } ->
+        | Object { Object.properties; annot; optional; comments } ->
           let properties' = List.map ~f:(this#pattern_object_p ?kind) properties in
           let annot' = this#type_annotation_hint annot in
           let comments' = this#syntax_with_internal_opt comments in
-          Object { Object.properties = properties'; annot = annot'; comments = comments' }
-        | Array { Array.elements; annot; comments } ->
+          Object { Object.properties = properties'; annot = annot'; optional; comments = comments' }
+        | Array { Array.elements; annot; optional; comments } ->
           let elements' = List.map ~f:(this#pattern_array_e ?kind) elements in
           let annot' = this#type_annotation_hint annot in
           let comments' = this#syntax_with_internal_opt comments in
-          Array { Array.elements = elements'; annot = annot'; comments = comments' }
+          Array { Array.elements = elements'; annot = annot'; optional; comments = comments' }
         | Identifier { Identifier.name; annot; optional } ->
           let name' = this#pattern_identifier ?kind name in
           let annot' = this#type_annotation_hint annot in

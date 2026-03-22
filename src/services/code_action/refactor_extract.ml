@@ -237,6 +237,7 @@ let create_extracted_function_call
                          )
                    );
               annot = Flow_ast.Type.Missing Loc.none;
+              optional = false;
               comments = None;
             }
         )

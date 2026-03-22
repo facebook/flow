@@ -100,7 +100,7 @@ end = struct
       acc
       (ploc, p) =
     match p with
-    | Array { Array.elements; annot = _; comments = _ } ->
+    | Array { Array.elements; annot = _; optional = _; comments = _ } ->
       record_destructuring_intermediate ploc acc;
       array_elements
         ~record_identifier
@@ -110,7 +110,7 @@ end = struct
         ~default
         (ploc, acc)
         elements
-    | Object { Object.properties; annot = _; comments = _ } ->
+    | Object { Object.properties; annot = _; optional = _; comments = _ } ->
       record_destructuring_intermediate ploc acc;
       object_properties
         ~record_identifier

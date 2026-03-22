@@ -473,6 +473,7 @@ pub fn pattern(
                 inner: pattern::Array {
                     elements: elements.into(),
                     annot,
+                    optional: inner.optional,
                     comments: inner.comments.dupe(),
                 }
                 .into(),
@@ -488,6 +489,7 @@ pub fn pattern(
                 inner: pattern::Object {
                     properties: properties.into(),
                     annot,
+                    optional: inner.optional,
                     comments: inner.comments.dupe(),
                 }
                 .into(),

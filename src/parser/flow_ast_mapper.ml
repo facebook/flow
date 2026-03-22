@@ -3427,22 +3427,23 @@ class ['loc] mapper =
       let (loc, patt) = expr in
       let patt' =
         match patt with
-        | Object { Object.properties; annot; comments } ->
+        | Object { Object.properties; annot; optional; comments } ->
           let properties' = map_list (this#pattern_object_p ?kind) properties in
           let annot' = this#type_annotation_hint annot in
           let comments' = this#syntax_opt comments in
           if properties' == properties && annot' == annot && comments' == comments then
             patt
           else
-            Object { Object.properties = properties'; annot = annot'; comments = comments' }
-        | Array { Array.elements; annot; comments } ->
+            Object
+              { Object.properties = properties'; annot = annot'; optional; comments = comments' }
+        | Array { Array.elements; annot; optional; comments } ->
           let elements' = map_list (this#pattern_array_e ?kind) elements in
           let annot' = this#type_annotation_hint annot in
           let comments' = this#syntax_opt comments in
           if comments == comments' && elements' == elements && annot' == annot then
             patt
           else
-            Array { Array.elements = elements'; annot = annot'; comments = comments' }
+            Array { Array.elements = elements'; annot = annot'; optional; comments = comments' }
         | Identifier { Identifier.name; annot; optional } ->
           let name' = this#pattern_identifier ?kind name in
           let annot' = this#type_annotation_hint annot in

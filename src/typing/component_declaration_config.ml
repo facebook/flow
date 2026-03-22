@@ -37,8 +37,9 @@ struct
             t
         in
         t
-      | _ ->
-        if default <> None then
+      | Object { optional; _ }
+      | Array { optional; _ } ->
+        if optional || default <> None then
           TypeUtil.optional t
         else
           t
@@ -51,7 +52,9 @@ struct
     let optional =
       match pattern with
       | Id { Ast.Pattern.Identifier.optional; _ } -> optional
-      | _ -> false
+      | Object { optional; _ }
+      | Array { optional; _ } ->
+        optional
     in
     if optional then
       TypeUtil.optional t
@@ -111,7 +114,7 @@ struct
           name = reconstruct_prop_name t;
         }
       )
-    | Object { annot; properties; comments } ->
+    | Object { annot; properties; optional; comments } ->
       let default = eval_default cx t has_anno default in
       let properties =
         let init = Destructuring.empty () in
@@ -121,13 +124,15 @@ struct
       ( loc,
         {
           Ast.Statement.ComponentDeclaration.Param.local =
-            ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; comments });
+            ( (ploc, t),
+              Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; optional; comments }
+            );
           default;
           shorthand;
           name = reconstruct_prop_name t;
         }
       )
-    | Array { annot; elements; comments } ->
+    | Array { annot; elements; optional; comments } ->
       let default = eval_default cx t has_anno default in
       let elements =
         let init = Destructuring.empty () in
@@ -137,7 +142,7 @@ struct
       ( loc,
         {
           Ast.Statement.ComponentDeclaration.Param.local =
-            ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; comments });
+            ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; optional; comments });
           default;
           shorthand;
           name = reconstruct_prop_name t;
@@ -154,7 +159,7 @@ struct
           comments = rest_comments;
         }
       )
-    | Object { annot; properties; comments } ->
+    | Object { annot; properties; optional; comments } ->
       let properties =
         let init = Destructuring.empty () in
         let f = destruct cx in
@@ -163,11 +168,13 @@ struct
       ( loc,
         {
           Ast.Statement.ComponentDeclaration.RestParam.argument =
-            ((ploc, t), Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; comments });
+            ( (ploc, t),
+              Ast.Pattern.Object { Ast.Pattern.Object.properties; annot; optional; comments }
+            );
           comments = rest_comments;
         }
       )
-    | Array { annot; elements; comments } ->
+    | Array { annot; elements; optional; comments } ->
       let elements =
         let init = Destructuring.empty () in
         let f = destruct cx in
@@ -176,7 +183,7 @@ struct
       ( loc,
         {
           Ast.Statement.ComponentDeclaration.RestParam.argument =
-            ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; comments });
+            ((ploc, t), Ast.Pattern.Array { Ast.Pattern.Array.elements; annot; optional; comments });
           comments = rest_comments;
         }
       )

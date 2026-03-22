@@ -1,0 +1,7 @@
+export function obj_optional({foo}?: {foo: string}): void {}
+export function arr_optional([foo]?: [string]): void {}
+
+obj_optional({foo: 'hello'}); // OK
+arr_optional(['hello']); // OK
+obj_optional(); // OK - parameter is optional
+arr_optional(); // OK - parameter is optional

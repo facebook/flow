@@ -1971,7 +1971,7 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         let open Ast.Pattern in
         let (ploc, patt) = expr in
         (match patt with
-        | Object { Object.properties; annot; comments = _ } ->
+        | Object { Object.properties; annot; optional = _; comments = _ } ->
           let write_entries =
             EnvMap.add
               (Env_api.PatternLoc, ploc)

@@ -198,6 +198,7 @@ pub(super) fn check_unique_component_formal_parameters(
     let obj_pattern = pattern::Pattern::Object {
         loc: LOC_NONE,
         inner: Arc::new(pattern::Object {
+            optional: false,
             properties: params
                 .params
                 .iter()

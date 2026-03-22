@@ -48,8 +48,8 @@ pub fn param_type_with_name(param: &Param) -> (ALoc, FlowSmolStr, Type) {
                 param.t.dupe()
             }
         }
-        _ => {
-            if param.default.is_some() {
+        Pattern::Object { optional, .. } | Pattern::Array { optional, .. } => {
+            if *optional || param.default.is_some() {
                 type_util::optional(param.t.dupe(), None, false)
             } else {
                 param.t.dupe()
@@ -65,7 +65,7 @@ pub fn param_type_with_name(param: &Param) -> (ALoc, FlowSmolStr, Type) {
 pub fn rest_type(rest: &Rest) -> Type {
     let optional = match &rest.pattern {
         Pattern::Id(id) => id.optional,
-        _ => false,
+        Pattern::Object { optional, .. } | Pattern::Array { optional, .. } => *optional,
     };
     if optional {
         type_util::optional(rest.t.dupe(), None, false)
@@ -203,6 +203,7 @@ pub fn eval_param(
         Pattern::Object {
             annot,
             properties,
+            optional,
             comments,
         } => {
             let default = eval_default(cx, false, t, has_anno, default.clone())?;
@@ -224,6 +225,7 @@ pub fn eval_param(
                     inner: ast::pattern::Object {
                         properties: typed_properties.into(),
                         annot: annot.clone(),
+                        optional: *optional,
                         comments: comments.clone(),
                     }
                     .into(),
@@ -236,6 +238,7 @@ pub fn eval_param(
         Pattern::Array {
             annot,
             elements,
+            optional,
             comments,
         } => {
             let default = eval_default(cx, false, t, has_anno, default.clone())?;
@@ -256,6 +259,7 @@ pub fn eval_param(
                     inner: ast::pattern::Array {
                         elements: typed_elements.into(),
                         annot: annot.clone(),
+                        optional: *optional,
                         comments: comments.clone(),
                     }
                     .into(),
@@ -289,6 +293,7 @@ pub fn eval_rest(cx: &Context, rest: &Rest) -> Result<RestAst<(ALoc, Type)>, Abn
         Pattern::Object {
             annot,
             properties,
+            optional,
             comments: obj_comments,
         } => {
             let mut init = destructuring::empty(None, None);
@@ -308,6 +313,7 @@ pub fn eval_rest(cx: &Context, rest: &Rest) -> Result<RestAst<(ALoc, Type)>, Abn
                     inner: ast::pattern::Object {
                         properties: typed_properties.into(),
                         annot: annot.clone(),
+                        optional: *optional,
                         comments: obj_comments.clone(),
                     }
                     .into(),
@@ -318,6 +324,7 @@ pub fn eval_rest(cx: &Context, rest: &Rest) -> Result<RestAst<(ALoc, Type)>, Abn
         Pattern::Array {
             annot,
             elements,
+            optional,
             comments: arr_comments,
         } => {
             let mut init = destructuring::empty(None, None);
@@ -336,6 +343,7 @@ pub fn eval_rest(cx: &Context, rest: &Rest) -> Result<RestAst<(ALoc, Type)>, Abn
                     inner: ast::pattern::Array {
                         elements: typed_elements.into(),
                         annot: annot.clone(),
+                        optional: *optional,
                         comments: arr_comments.clone(),
                     }
                     .into(),

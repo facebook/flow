@@ -222,4 +222,6 @@ val export_specifiers_has_value_export :
   ('M, 'T) Flow_ast.Statement.ExportNamedDeclaration.ExportSpecifier.t list ->
   bool
 
+val pattern_optional : ('M, 'T) Flow_ast.Pattern.t -> bool
+
 val string_of_bigint : 'm Flow_ast.BigIntLiteral.t -> string

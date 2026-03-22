@@ -210,6 +210,7 @@ pub enum ParseError {
     UnexpectedReserved,
     UnexpectedReservedType,
     UnexpectedOptional,
+    OptionalDestructuringMustHaveDefault,
     UnexpectedSpreadType,
     UnexpectedStatic,
     UnexpectedSuper,
@@ -989,6 +990,12 @@ impl fmt::Display for ParseError {
             }
             Self::UnexpectedOptional => {
                 write!(f, "Unexpected `?` (optional modifier not allowed here)")
+            }
+            Self::OptionalDestructuringMustHaveDefault => {
+                write!(
+                    f,
+                    "Optional destructuring patterns must use a default value (e.g., `{{...}}: T = {{}}`)."
+                )
             }
             Self::UnexpectedSpreadType => {
                 write!(f, "Spreading a type is only allowed inside an object type")

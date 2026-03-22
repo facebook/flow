@@ -175,6 +175,7 @@ type t =
   | UnexpectedReserved
   | UnexpectedReservedType
   | UnexpectedOptional
+  | OptionalDestructuringMustHaveDefault
   | UnexpectedSpreadType
   | UnexpectedStatic
   | UnexpectedSuper
@@ -518,6 +519,8 @@ module PP = struct
     | UnexpectedReserved -> "Unexpected reserved word"
     | UnexpectedReservedType -> "Unexpected reserved type"
     | UnexpectedOptional -> "Unexpected `?` (optional modifier not allowed here)"
+    | OptionalDestructuringMustHaveDefault ->
+      "Optional destructuring patterns must use a default value (e.g., `{...}: T = {}`)."
     | UnexpectedSpreadType -> "Spreading a type is only allowed inside an object type"
     | UnexpectedStatic -> "Unexpected static modifier"
     | UnexpectedSuper -> "Unexpected `super` outside of a class method"

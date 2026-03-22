@@ -4419,6 +4419,7 @@ fn pattern_object<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let ast::pattern::Object {
         properties,
         annot,
+        optional,
         comments,
     } = obj;
     let properties_ = properties
@@ -4430,6 +4431,7 @@ fn pattern_object<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     Ok(ast::pattern::Object {
         properties: properties_.into(),
         annot: annot_,
+        optional: *optional,
         comments: comments_,
     })
 }
@@ -4603,6 +4605,7 @@ fn pattern_array<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     let ast::pattern::Array {
         elements,
         annot,
+        optional,
         comments,
     } = arr;
     let elements_ = elements
@@ -4614,6 +4617,7 @@ fn pattern_array<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     Ok(ast::pattern::Array {
         elements: elements_.into(),
         annot: annot_,
+        optional: *optional,
         comments: comments_,
     })
 }

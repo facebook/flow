@@ -232,16 +232,16 @@ module Make (Statement : Statement_sig.S) : Destructuring_sig.S = struct
     let open Ast.Pattern in
     ( (loc, current_type cx (loc, p)),
       match p with
-      | Array { Array.elements; annot; comments } ->
+      | Array { Array.elements; annot; optional; comments } ->
         check_for_invalid_annot annot;
         let elements = array_elements cx ~f acc elements in
         let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
-        Array { Array.elements; annot; comments }
-      | Object { Object.properties; annot; comments } ->
+        Array { Array.elements; annot; optional; comments }
+      | Object { Object.properties; annot; optional; comments } ->
         check_for_invalid_annot annot;
         let properties = object_properties cx ~f ~parent_loc:loc acc properties in
         let annot = Tast_utils.unimplemented_mapper#type_annotation_hint annot in
-        Object { Object.properties; annot; comments }
+        Object { Object.properties; annot; optional; comments }
       | Identifier { Identifier.name = id; optional; annot } ->
         let (id_loc, { Ast.Identifier.name; comments }) = id in
         check_for_invalid_annot annot;

@@ -4273,13 +4273,18 @@ fn pattern_object(
     let ast::pattern::Object {
         properties: properties1,
         annot: annot1,
+        optional: optional1,
         comments: comments1,
     } = o1;
     let ast::pattern::Object {
         properties: properties2,
         annot: annot2,
+        optional: optional2,
         comments: comments2,
     } = o2;
+    if optional1 != optional2 {
+        return None;
+    }
     let properties_diff = diff_and_recurse_no_trivial(
         &|p1, p2| pattern_object_property(p1, p2),
         properties1,
@@ -4369,15 +4374,18 @@ fn pattern_array(
     let ast::pattern::Array {
         elements: elements1,
         annot: annot1,
+        optional: optional1,
         comments: comments1,
-        ..
     } = a1;
     let ast::pattern::Array {
         elements: elements2,
         annot: annot2,
+        optional: optional2,
         comments: comments2,
-        ..
     } = a2;
+    if optional1 != optional2 {
+        return None;
+    }
     let elements_diff =
         diff_and_recurse_no_trivial(&|e1, e2| pattern_array_e(e1, e2), elements1, elements2);
     let annot_diff = Some(diff_if_changed(type_annotation_hint, annot1, annot2));

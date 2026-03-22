@@ -1669,7 +1669,7 @@ and pattern ?(ctxt = normal_context) ~opts ((loc, pat) : (Loc.t, Loc.t) Ast.Patt
   source_location_with_comments
     ( loc,
       match pat with
-      | P.Object { P.Object.properties; annot; comments } ->
+      | P.Object { P.Object.properties; annot; optional; comments } ->
         let props =
           List.map
             (fun property ->
@@ -1705,8 +1705,16 @@ and pattern ?(ctxt = normal_context) ~opts ((loc, pat) : (Loc.t, Loc.t) Ast.Patt
         let props_layout = list_add_internal_comments props props_layout comments in
         layout_node_with_comments_opt loc comments
         @@ group
-             [wrap_and_indent (Atom "{", Atom "}") props_layout; hint (type_annotation ~opts) annot]
-      | P.Array { P.Array.elements; annot; comments } ->
+             [
+               wrap_and_indent (Atom "{", Atom "}") props_layout;
+               ( if optional then
+                 Atom "?"
+               else
+                 Empty
+               );
+               hint (type_annotation ~opts) annot;
+             ]
+      | P.Array { P.Array.elements; annot; optional; comments } ->
         let element_loc = function
           | P.Array.Hole loc -> loc
           | P.Array.Element (loc, _) -> loc
@@ -1730,6 +1738,11 @@ and pattern ?(ctxt = normal_context) ~opts ((loc, pat) : (Loc.t, Loc.t) Ast.Patt
         @@ group
              [
                wrap_and_indent (Atom "[", Atom "]") elements_layout;
+               ( if optional then
+                 Atom "?"
+               else
+                 Empty
+               );
                hint (type_annotation ~opts) annot;
              ]
       | P.Identifier { P.Identifier.name; annot; optional } ->

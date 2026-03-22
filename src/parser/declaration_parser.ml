@@ -105,6 +105,7 @@ module Declaration (Parse : Parser_common.PARSER) (Type : Parser_common.TYPE) :
           {
             Ast.Pattern.Object.properties = pattern_obj_props;
             annot = Ast.Type.Missing Loc.none;
+            optional = false;
             comments = None;
           }
       )

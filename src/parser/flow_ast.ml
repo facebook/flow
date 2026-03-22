@@ -2389,6 +2389,7 @@ and Pattern : sig
     and ('M, 'T) t = {
       properties: ('M, 'T) property list;
       annot: ('M, 'T) Type.annotation_or_hint;
+      optional: bool;
       comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
@@ -2413,6 +2414,7 @@ and Pattern : sig
     and ('M, 'T) t = {
       elements: ('M, 'T) element list;
       annot: ('M, 'T) Type.annotation_or_hint;
+      optional: bool;
       comments: ('M, 'M Comment.t list) Syntax.t option;
     }
     [@@deriving show]
