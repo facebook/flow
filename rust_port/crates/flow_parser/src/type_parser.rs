@@ -1836,7 +1836,49 @@ fn param_list_or_type(env: &mut ParserEnv) -> Result<ParamListOrType, Rollback> 
                 function_param_or_generic_type(env)
             }
             _ => {
-                if is_primitive(peek::token(env)) {
+                if matches!(peek::token(env), TokenKind::TLcurly | TokenKind::TLbracket)
+                    && env.is_d_ts()
+                {
+                    // In .d.ts files, ({...} or ([... could be a parenthesized type or
+                    // a destructuring function parameter. Try parsing as type first.
+                    fn error_callback(_err: ParseError) -> Result<(), Rollback> {
+                        Err(Rollback)
+                    }
+                    let try_type =
+                        |env: &mut ParserEnv| -> Result<types::Type<Loc, Loc>, Rollback> {
+                            env.with_error_callback(error_callback, |env| {
+                                let t = type_inner(env)?;
+                                // After parsing, verify we're at ) or , — otherwise this isn't
+                                // a simple parenthesized type
+                                match peek::token(env) {
+                                    TokenKind::TRparen | TokenKind::TComma => {}
+                                    _ => return Err(Rollback),
+                                }
+                                Ok(t)
+                            })
+                        };
+                    match try_parse::to_parse(env, try_type) {
+                        try_parse::ParseResult::ParsedSuccessfully(t) => {
+                            Ok(ParamListOrType::Type(t))
+                        }
+                        try_parse::ParseResult::FailedToParse => {
+                            // Type parse failed. Try destructuring. If that also fails,
+                            // re-parse as type to produce type-level error messages.
+                            match try_parse::to_parse(env, |env| {
+                                env.with_error_callback(error_callback, |env| {
+                                    function_param_list_without_parens(env, Vec::new())
+                                })
+                            }) {
+                                try_parse::ParseResult::ParsedSuccessfully(params) => {
+                                    Ok(ParamListOrType::ParamList(params))
+                                }
+                                try_parse::ParseResult::FailedToParse => {
+                                    Ok(ParamListOrType::Type(type_inner(env)?))
+                                }
+                            }
+                        }
+                    }
+                } else if is_primitive(peek::token(env)) {
                     // Don't know if this is (number) or (number: number). The first
                     // is a type, the second is a param.
                     match peek::ith_token(env, 1) {

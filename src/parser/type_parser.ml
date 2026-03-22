@@ -1183,6 +1183,38 @@ module Type (Parse : Parser_common.PARSER) : Parser_common.TYPE = struct
           (* Ok this is definitely a parameter *)
           ParamList (function_param_list_without_parens env [])
         | _ -> Type (_type env))
+      | T_LCURLY
+      | T_LBRACKET
+        when is_d_ts env ->
+        (* In .d.ts files, ({...} or ([... could be a parenthesized type or
+           a destructuring function parameter. Try parsing as type first. *)
+        let try_type env =
+          let error_callback _ _ = raise Try.Rollback in
+          let env = with_error_callback error_callback env in
+          let t = _type env in
+          (* After parsing, verify we're at ) or , — otherwise this isn't
+             a simple parenthesized type *)
+          (match Peek.token env with
+          | T_RPAREN
+          | T_COMMA ->
+            ()
+          | _ -> raise Try.Rollback);
+          t
+        in
+        (match Try.to_parse env try_type with
+        | Try.ParsedSuccessfully t -> Type t
+        | Try.FailedToParse ->
+          (* Type parse failed. Try destructuring. If that also fails,
+             re-parse as type to produce type-level error messages. *)
+          (match
+             Try.to_parse env (fun env ->
+                 let error_callback _ _ = raise Try.Rollback in
+                 let env = with_error_callback error_callback env in
+                 function_param_list_without_parens env []
+             )
+           with
+          | Try.ParsedSuccessfully params -> ParamList params
+          | Try.FailedToParse -> Type (_type env)))
       | _ ->
         (* All params start with an identifier or `...` *)
         Type (_type env)

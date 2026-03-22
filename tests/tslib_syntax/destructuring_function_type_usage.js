@@ -1,5 +1,5 @@
 import {f, g, h, nested, rest, optObj, optArr, C, restArr} from "./destructuring_function_type";
-import type {I} from "./destructuring_function_type";
+import type {I, ArrowDestructObj, ArrowDestructArr, ArrowDestructRename} from "./destructuring_function_type";
 
 // Object destructuring with shorthand properties
 f({a: 1, b: "hello"}) as number; // OK
@@ -51,3 +51,16 @@ i.n([1]) as number; // ERROR
 // Rest param with array destructuring
 restArr(1, "hello") as number; // OK
 restArr(1, "hello") as string; // ERROR
+
+// Arrow function types with destructuring
+declare const arrowObj: ArrowDestructObj;
+arrowObj({a: 1, b: "hello"}) as number; // OK
+arrowObj({a: 1, b: "hello"}) as string; // ERROR
+
+declare const arrowArr: ArrowDestructArr;
+arrowArr([1, "hello"]) as number; // OK
+arrowArr([1, "hello"]) as string; // ERROR
+
+declare const arrowRename: ArrowDestructRename;
+arrowRename({x: 1}) as number; // OK
+arrowRename({x: 1}) as string; // ERROR

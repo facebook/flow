@@ -25,3 +25,7 @@ export interface I {
 }
 // Rest param with array destructuring (valid TS pattern)
 export declare function restArr(...[a, b]: [number, string]): number;
+// Arrow function types with destructuring
+export type ArrowDestructObj = ({a, b}: {a: number, b: string}) => number;
+export type ArrowDestructArr = ([a, b]: [number, string]) => number;
+export type ArrowDestructRename = ({x: x1}: {x: number}) => number;
