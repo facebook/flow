@@ -324,8 +324,12 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [ ] `to_string`
   - [ ] test_utils/
       - [ ] test_utils.ml
-  - [ ] transaction/
-      - [ ] transaction.ml
+  - [x] transaction/
+      - [x] transaction.ml → `flow_services_inference/src/transaction.rs`
+          - [x] `add`
+          - [x] `commit`
+          - [x] `rollback`
+          - [x] `with_transaction`
   - [x] ty/ → `flow_common_ty/src/`
       - [x] __tests__/
         - [x] ty_printer_test.ml → `flow_common_ty/src/ty_printer_test.rs`
@@ -873,7 +877,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] procfs/
         - [ ] procFS.ml
     - [ ] string/
-        - [ ] string_utils.ml
+        - [ ] string_utils.ml (partial → `flow_common/src/string_utils.rs`)
+            - [x] `filename_escape`
     - [ ] sys/
       - [ ] __tests__/
           - [ ] sys_utils_tests.ml
@@ -1374,8 +1379,38 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `get_with_separate_warnings` (public 2-tuple version)
   - [ ] monitor_listener/
       - [ ] serverMonitorListener.ml
-      - [ ] serverMonitorListenerState.ml
-      - [ ] workloadStream.ml
+      - [x] serverMonitorListenerState.ml → `flow_server_env/src/server_monitor_listener_state.rs`
+          - [x] `push_new_workload`
+          - [x] `push_new_parallelizable_workload`
+          - [x] `defer_parallelizable_workload`
+          - [x] `requeue_deferred_parallelizable_workloads`
+          - [x] `push_new_env_update`
+          - [x] `cancellation_requests`
+          - [x] `push_files_to_recheck`
+          - [x] `push_files_to_prioritize`
+          - [x] `push_files_to_force_focused_and_recheck`
+          - [x] `push_global_find_ref_request`
+          - [x] `push_lazy_init`
+          - [x] `push_dependencies_to_prioritize`
+          - [x] `push_after_reinit`
+          - [x] `pop_next_workload`
+          - [x] `pop_next_parallelizable_workload`
+          - [x] `update_env`
+          - [x] `recheck_fetch`
+          - [x] `requeue_workload`
+          - [x] `get_and_clear_recheck_workload`
+          - [x] `wait_for_recheck`
+          - [x] `wait_for_parallelizable_workload`
+          - [x] `wait_for_updates_for_recheck`
+          - [x] `wait_for_anything`
+      - [x] workloadStream.ml → `flow_server_env/src/workload_stream.rs`
+          - [x] `push`
+          - [x] `push_parallelizable`
+          - [x] `requeue_parallelizable`
+          - [x] `pop`
+          - [x] `pop_parallelizable`
+          - [x] `wait_for_workload`
+          - [x] `wait_for_parallelizable_workload`
   - [ ] persistent_connection/
       - [ ] persistent_connection.ml
   - [ ] protocol/
@@ -1387,8 +1422,25 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] rechecker/
       - [ ] recheck_updates.ml
       - [ ] rechecker.ml
-  - [ ] server_files/
-      - [ ] server_files_js.ml
+  - [x] server_files/
+      - [x] server_files_js.ml → `flow_server_files/src/server_files_js.rs` (14/14 functions, 100% complete)
+          - [x] `default_flowconfig_name`
+          - [x] `default_temp_dir`
+          - [x] `add_dir_sep`
+          - [x] `mk_root`
+          - [x] `digest_root_part`
+          - [x] `file_of_root`
+          - [x] `config_file`
+          - [x] `max_root_part_len`
+          - [x] `log_file`
+          - [x] `dfind_log_file`
+          - [x] `monitor_log_file`
+          - [x] `lock_file`
+          - [x] `pids_file`
+          - [x] `recheck_stats_file`
+          - [x] `socket_file`
+          - [x] `legacy2_socket_file`
+          - [x] `legacy1_socket_file`
   - [ ] server_utils/
       - [ ] file_input.ml
   - [ ] watchman_expression_terms/
@@ -1590,18 +1642,61 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `calc_all_dependents`
           - [x] `calc_direct_dependencies`
           - [x] `calc_direct_dependents`
-      - [ ] recheck_stats.ml
+      - [x] recheck_stats.ml → `flow_services_inference/src/recheck_stats.rs`
+          - [x] `moving_average`
+          - [x] `get_file`
+          - [x] `load_per_file_time`
+          - [x] `save_averages`
+          - [x] `init`
+          - [x] `record_recheck_time`
+          - [x] `record_last_estimates`
+          - [x] `get_init_time`
+          - [x] `get_per_file_time`
       - [ ] type_contents.ml
-      - [ ] types_js.ml → `flow_services_inference/src/type_service.rs` (3/10 functions, 30% complete)
-          - [x] `calc_deps` → `calc_deps()`
-          - [x] `ensure_parsed_or_trigger_recheck` → `ensure_parsed_or_trigger_recheck()`
-          - [x] `full_check_for_init` → `full_check_from_scratch()` (partial - only "from scratch" variant)
-          - [ ] `init` - Missing (service initialization)
-          - [ ] `recheck` - Missing (incremental type checking)
-          - [ ] `libdef_check_for_lazy_init` - Missing
+      - [ ] types_js.ml → `flow_services_inference/src/type_service.rs`
+          - [x] `with_memory_timer`
+          - [x] `clear_errors`
+          - [x] `filter_errors`
+          - [x] `parse`
+          - [x] `reparse`
+          - [x] `commit_modules`
+          - [x] `resolve_requires`
+          - [x] `calc_deps`
           - [x] `include_dependencies_and_dependents`
-          - [ ] `debug_determine_what_to_recheck` - Missing
-          - [ ] `debug_include_dependencies_and_dependents` - Missing
+          - [x] `run_merge_service`
+          - [x] `merge`
+          - [x] `update_merge_results`
+          - [x] `check_files`
+          - [x] `ensure_parsed`
+          - [x] `ensure_parsed_or_trigger_recheck`
+          - [x] `handle_unexpected_file_changes`
+          - [x] `init_libs`
+          - [x] `filter_out_node_modules`
+          - [x] `unfocused_files_to_infer`
+          - [x] `focused_files_to_infer`
+          - [x] `files_to_infer`
+          - [x] `restart_if_faster_than_recheck`
+          - [x] `recheck_parse_and_update_dependency_info`
+          - [x] `determine_what_to_recheck`
+          - [x] `recheck_merge`
+          - [x] `recheck::full`
+          - [x] `recheck::parse_and_update_dependency_info`
+          - [x] `clear_caches`
+          - [x] `with_transaction`
+          - [x] `recheck_impl`
+          - [x] `make_next_files`
+          - [x] `init_from_scratch`
+          - [x] `exit_if_no_fallback`
+          - [x] `reinit` (stub — saved state not yet ported)
+          - [x] `reinit_full_check`
+          - [x] `recheck`
+          - [x] `check_files_for_init`
+          - [x] `libdef_check_for_lazy_init`
+          - [x] `full_check_for_init`
+          - [x] `check_once` (Rust-only convenience)
+          - [ ] `init` (saved state init — not yet ported)
+          - [ ] `init_from_saved_state` (not yet ported)
+          - [ ] `handle_updates_since_saved_state` (not yet ported)
   - [ ] jsdoc/
       - [ ] find_documentation.ml
       - [ ] insert_jsdoc.ml

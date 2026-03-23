@@ -26,6 +26,7 @@ pub mod refinement_invalidation;
 pub mod relay_options;
 pub mod slow_to_check_logging;
 pub mod span_map;
+pub mod string_utils;
 pub mod subst_name;
 pub mod sys_utils;
 pub mod verbose;

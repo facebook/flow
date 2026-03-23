@@ -23,6 +23,7 @@ use flow_common::span_map::SpanMap;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::ErrorKind;
 use flow_data_structure_wrapper::ord_map::FlowOrdMap;
+use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_lint_settings::lint_settings::LintSettings;
 use flow_lint_settings::lint_severity_cover::LintSeverityCover;
@@ -553,7 +554,7 @@ impl ErrorSuppressions {
         })
     }
 
-    pub fn filter_by_file(&mut self, files: &BTreeSet<FileKey>) {
+    pub fn filter_by_file(&mut self, files: &FlowOrdSet<FileKey>) {
         self.0.retain(|file, _| files.contains(file));
     }
 }

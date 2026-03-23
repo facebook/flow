@@ -14,4 +14,6 @@ pub mod job_utils;
 pub mod merge_service;
 pub mod merge_stream;
 pub mod pure_dep_graph_operations;
+pub mod recheck_stats;
+pub mod transaction;
 pub mod type_service;

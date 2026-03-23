@@ -18,6 +18,7 @@ use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::PrintableError;
 use flow_common_errors::error_utils::code_of_printable_error;
 use flow_common_utils::checked_set::CheckedSet;
+use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast::Program;
 use flow_parser::file_key::FileKey;
@@ -118,7 +119,7 @@ pub fn update_local_collated_errors<F, G>(
     file_options: &flow_common::files::FileOptions,
     unsuppressable_error_codes: &BTreeSet<FlowSmolStr>,
     suppressions: &ErrorSuppressions,
-    errors: &BTreeMap<FileKey, ErrorSet>,
+    errors: &FlowOrdMap<FileKey, ErrorSet>,
     acc: &mut CollatedErrors,
 ) where
     F: Fn(&ALoc) -> Loc,

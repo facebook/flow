@@ -11,10 +11,12 @@ use std::sync::Arc;
 
 use flow_common::options::Options;
 use flow_common_utils::checked_set::CheckedSet;
+use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
 use flow_services_coverage::FileCoverage;
+use flow_services_export::export_search::ExportSearch;
 use flow_typing_context::MasterContext;
 use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_errors::flow_error::ErrorSet;
@@ -37,19 +39,22 @@ pub struct Genv {
 // The environment constantly maintained by the server
 // ***************************************************
 
+// Do not change these to contain `Loc.t`s. Because these errors are stored between rechecks, it
+// is critical that they contain `ALoc.t`s, so that we can update the concrete locations when we
+// render the errors, without having to retypecheck the files that generated those errors.
 pub struct Errors {
     /// errors are stored in a map from file path to error set, so that the errors
     /// from checking particular files can be cleared during recheck. *)
-    pub local_errors: BTreeMap<FileKey, ErrorSet>,
+    pub local_errors: FlowOrdMap<FileKey, ErrorSet>,
     /// duplicate providers found during commit_modules are stored separately so
     /// they can be cleared easily  
     pub duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
     /// errors encountered during merge have to be stored separately so
     /// dependencies can be cleared during merge. *)
-    pub merge_errors: BTreeMap<FileKey, ErrorSet>,
+    pub merge_errors: FlowOrdMap<FileKey, ErrorSet>,
     /// warnings are stored in a map from file path to error set, so that the warnings
     /// from checking particular files can be cleared during recheck. *)
-    pub warnings: BTreeMap<FileKey, ErrorSet>,
+    pub warnings: FlowOrdMap<FileKey, ErrorSet>,
     /// error suppressions in the code
     pub suppressions: ErrorSuppressions,
 }
@@ -72,6 +77,7 @@ pub struct Env {
     pub coverage: BTreeMap<FileKey, FileCoverage>,
     pub collated_errors: CollatedErrors,
     // TODO: connections: Persistent_connection.t - not needed for full-check-only
-    // TODO: exports: Export_search.t option - not needed for full-check-only
+    /// None means auto-imports are not enabled
+    pub exports: Option<ExportSearch>,
     pub master_cx: Arc<MasterContext>,
 }

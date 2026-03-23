@@ -11,6 +11,7 @@ use std::collections::BTreeSet;
 use flow_aloc::ALoc;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::PrintableError;
+use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 use flow_typing_errors::intermediate_error_types::IntermediateError;
@@ -56,7 +57,7 @@ impl CollatedErrors {
         }
     }
 
-    pub fn clear_all(&mut self, files: &BTreeSet<FileKey>) {
+    pub fn clear_all(&mut self, files: &FlowOrdSet<FileKey>) {
         for file in files {
             self.collated_duplicate_providers_errors
                 .retain(|(_, f1, f2)| f1 != file && f2 != file);
@@ -67,7 +68,7 @@ impl CollatedErrors {
         }
     }
 
-    pub fn clear_merge(&mut self, files: &BTreeSet<FileKey>) {
+    pub fn clear_merge(&mut self, files: &FlowOrdSet<FileKey>) {
         for file in files {
             self.collated_merge_errors.remove(file);
             self.collated_warning_map.remove(file);
