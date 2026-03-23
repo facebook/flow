@@ -1,3 +1,7 @@
+### 0.306.1
+
+* Fix in Meta-internal saved state logic
+
 ### 0.306.0
 
 New Features:
