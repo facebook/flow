@@ -346,7 +346,7 @@ impl LocSig for ALoc {
             (Kind::Concrete, Kind::Concrete) => {
                 let l1 = self.to_loc_exn();
                 let l2 = other.to_loc_exn();
-                l1.compare_ignore_source(&l2)
+                l1.compare_ignore_source(l2)
             }
             (Kind::ALocNone, Kind::ALocNone) => Equal,
             (Kind::ALocNone, Kind::Keyed | Kind::Concrete) => Less,
