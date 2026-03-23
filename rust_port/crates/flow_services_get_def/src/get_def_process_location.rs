@@ -1618,7 +1618,7 @@ pub fn process_location(
     match available_ast {
         AvailableAst::TypedAst(typed_ast) => {
             let covers_target =
-                |test_loc: &ALoc| -> bool { reason::in_range(&loc, &test_loc.to_loc_exn()) };
+                |test_loc: &ALoc| -> bool { reason::in_range(&loc, test_loc.to_loc_exn()) };
             let callback = TypedAstSearcherCallback { cx };
             let mut searcher = Searcher::new(
                 &callback,
@@ -1631,7 +1631,7 @@ pub fn process_location(
         }
         AvailableAst::ALocAst(aloc_ast) => {
             let covers_target =
-                |test_loc: &ALoc| -> bool { reason::in_range(&loc, &test_loc.to_loc_exn()) };
+                |test_loc: &ALoc| -> bool { reason::in_range(&loc, test_loc.to_loc_exn()) };
             let callback = OnDemandSearcherCallback { cx };
             let mut searcher = Searcher::new(
                 &callback,
