@@ -80,39 +80,45 @@ pub enum Exports {
 #[derive(Clone, Dupe)]
 pub struct File(Rc<FileInner>);
 
-pub struct FileInner {
-    pub cx: Context,
-    dependencies: Table<(
-        Userland,
-        Rc<Lazy<ResolvedRequire, Box<dyn FnOnce() -> ResolvedRequire>>>,
-    )>,
-    pub exports: Rc<dyn Fn() -> Result<ModuleType, Type>>,
-    local_defs: Table<
-        Rc<
-            Lazy<
-                (
+type DependenciesTable = Table<(
+    Userland,
+    Rc<Lazy<ResolvedRequire, Box<dyn FnOnce() -> ResolvedRequire>>>,
+)>;
+
+type LocalDefsTable = Table<
+    Rc<
+        Lazy<
+            (
+                ALoc,
+                FlowSmolStr,
+                Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
+                Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
+            ),
+            Box<
+                dyn FnOnce() -> (
                     ALoc,
                     FlowSmolStr,
-                    // general
                     Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
-                    // const
                     Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
                 ),
-                Box<
-                    dyn FnOnce() -> (
-                        ALoc,
-                        FlowSmolStr,
-                        Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
-                        Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
-                    ),
-                >,
             >,
         >,
     >,
-    remote_refs:
-        Table<Rc<Lazy<(ALoc, FlowSmolStr, Type), Box<dyn FnOnce() -> (ALoc, FlowSmolStr, Type)>>>>,
-    patterns: Table<Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>>,
-    pattern_defs: Table<Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>>,
+>;
+
+type RemoteRefsTable =
+    Table<Rc<Lazy<(ALoc, FlowSmolStr, Type), Box<dyn FnOnce() -> (ALoc, FlowSmolStr, Type)>>>>;
+
+type PatternsTable = Table<Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>>;
+
+pub struct FileInner {
+    pub cx: Context,
+    dependencies: RefCell<DependenciesTable>,
+    pub exports: Rc<dyn Fn() -> Result<ModuleType, Type>>,
+    local_defs: RefCell<LocalDefsTable>,
+    remote_refs: RefCell<RemoteRefsTable>,
+    patterns: RefCell<PatternsTable>,
+    pattern_defs: RefCell<PatternsTable>,
 }
 
 impl std::ops::Deref for File {
@@ -125,45 +131,21 @@ impl std::ops::Deref for File {
 impl File {
     pub fn new(
         cx: Context,
-        dependencies: Table<(
-            Userland,
-            Rc<Lazy<ResolvedRequire, Box<dyn FnOnce() -> ResolvedRequire>>>,
-        )>,
+        dependencies: DependenciesTable,
         exports: Rc<dyn Fn() -> Result<ModuleType, Type>>,
-        local_defs: Table<
-            Rc<
-                Lazy<
-                    (
-                        ALoc,
-                        FlowSmolStr,
-                        Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
-                        Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
-                    ),
-                    Box<
-                        dyn FnOnce() -> (
-                            ALoc,
-                            FlowSmolStr,
-                            Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
-                            Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
-                        ),
-                    >,
-                >,
-            >,
-        >,
-        remote_refs: Table<
-            Rc<Lazy<(ALoc, FlowSmolStr, Type), Box<dyn FnOnce() -> (ALoc, FlowSmolStr, Type)>>>,
-        >,
-        pattern_defs: Table<Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>>,
-        patterns: Table<Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>>,
+        local_defs: LocalDefsTable,
+        remote_refs: RemoteRefsTable,
+        pattern_defs: PatternsTable,
+        patterns: PatternsTable,
     ) -> Self {
         File(Rc::new(FileInner {
             cx,
-            dependencies,
+            dependencies: RefCell::new(dependencies),
             exports,
-            local_defs,
-            remote_refs,
-            pattern_defs,
-            patterns,
+            local_defs: RefCell::new(local_defs),
+            remote_refs: RefCell::new(remote_refs),
+            pattern_defs: RefCell::new(pattern_defs),
+            patterns: RefCell::new(patterns),
         }))
     }
 
@@ -171,6 +153,19 @@ impl File {
     /// Used to break Rc cycles when the File is evicted from cache or cleaned up.
     pub fn cx(&self) -> &Context {
         &self.0.cx
+    }
+
+    /// Break Rc reference cycles by clearing closure-holding fields.
+    /// The `dependencies` Lazy closures capture `Arc<SharedMem>` and
+    /// `Rc<CheckCache>`, forming cycles that prevent deallocation.
+    /// Other closure fields (`local_defs`, `remote_refs`, etc.) capture
+    /// `file_cell` (Weak — safe) and `cx.dupe()` which also forms cycles.
+    pub fn drop_closures(&self) {
+        *self.0.dependencies.borrow_mut() = Table::empty();
+        *self.0.local_defs.borrow_mut() = Table::empty();
+        *self.0.remote_refs.borrow_mut() = Table::empty();
+        *self.0.patterns.borrow_mut() = Table::empty();
+        *self.0.pattern_defs.borrow_mut() = Table::empty();
     }
 
     /// Create a Weak reference to the inner FileInner.
@@ -496,8 +491,12 @@ fn require(
     index: Index<FlowImportSpecifier>,
     standard_cjs_esm_interop: bool,
 ) -> Type {
-    let (mref, lazy_resolved) = file.dependencies.get(index);
-    let resolved_require = Lazy::force(&**lazy_resolved).dupe();
+    let (mref, lazy_resolved) = {
+        let deps = file.dependencies.borrow();
+        let (m, l) = deps.get(index);
+        (m.dupe(), l.dupe())
+    };
+    let resolved_require = Lazy::force(&*lazy_resolved).dupe();
     let reason = reason::mk_reason(reason::VirtualReasonDesc::RModule(mref.dupe()), loc.dupe());
     let symbol = Symbol::mk_module_symbol(mref.dupe().into_inner(), loc.dupe());
     annotation_inference::cjs_require(
@@ -518,8 +517,12 @@ fn import(
     remote: &FlowSmolStr,
     local: &FlowSmolStr,
 ) -> Type {
-    let (mref, lazy_resolved) = file.dependencies.get(index);
-    let resolved_require = Lazy::force(&**lazy_resolved).dupe();
+    let (mref, lazy_resolved) = {
+        let deps = file.dependencies.borrow();
+        let (m, l) = deps.get(index);
+        (m.dupe(), l.dupe())
+    };
+    let resolved_require = Lazy::force(&*lazy_resolved).dupe();
     if remote.as_str() == "default" {
         annotation_inference::import_default(
             &file.cx,
@@ -550,8 +553,8 @@ fn import_ns(
     id_loc: ALoc,
     index: Index<FlowImportSpecifier>,
 ) -> Type {
-    let (_, lazy_resolved) = file.dependencies.get(index);
-    let resolved_require = Lazy::force(&**lazy_resolved).dupe();
+    let lazy_resolved = file.dependencies.borrow().get(index).1.dupe();
+    let resolved_require = Lazy::force(&*lazy_resolved).dupe();
     let namespace_symbol = Symbol::mk_module_symbol(
         Userland::from_smol_str(name.dupe()).into_inner(),
         id_loc.dupe(),
@@ -566,8 +569,8 @@ fn import_typeof_ns(
     id_loc: ALoc,
     index: Index<FlowImportSpecifier>,
 ) -> Type {
-    let (_, lazy_resolved) = file.dependencies.get(index);
-    let resolved_require = Lazy::force(&**lazy_resolved).dupe();
+    let lazy_resolved = file.dependencies.borrow().get(index).1.dupe();
+    let resolved_require = Lazy::force(&*lazy_resolved).dupe();
     let namespace_symbol = Symbol::mk_namespace_symbol(name.dupe(), id_loc.dupe());
     let ns_t = annotation_inference::import_ns(
         &file.cx,
@@ -648,9 +651,15 @@ fn merge_enum(
 pub fn merge_pattern(file: &File, pattern: &Pack::Pattern<ALoc>) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
     match pattern {
-        Pack::Pattern::PDef(i) => Lazy::force(file.pattern_defs.get(*i)).dupe(),
+        Pack::Pattern::PDef(i) => {
+            let __rc = file.pattern_defs.borrow().get(*i).dupe();
+            Lazy::force(&*__rc).dupe()
+        }
         Pack::Pattern::PropP { id_loc, name, def } => {
-            let t = Lazy::force(file.patterns.get(*def)).dupe();
+            let t = {
+                let __rc = file.patterns.borrow().get(*def).dupe();
+                Lazy::force(&*__rc).dupe()
+            };
             let name = Name::new(name.dupe());
             let reason = reason::mk_reason(RProperty(Some(name.dupe())), id_loc.dupe());
             // TODO: use_op
@@ -658,8 +667,14 @@ pub fn merge_pattern(file: &File, pattern: &Pack::Pattern<ALoc>) -> Type {
             annotation_inference::get_prop(&file.cx, use_op, reason, None, name, t)
         }
         Pack::Pattern::ComputedP { elem, def } => {
-            let elem = Lazy::force(file.pattern_defs.get(*elem)).dupe();
-            let t = Lazy::force(file.patterns.get(*def)).dupe();
+            let elem = {
+                let __rc = file.pattern_defs.borrow().get(*elem).dupe();
+                Lazy::force(&*__rc).dupe()
+            };
+            let t = {
+                let __rc = file.patterns.borrow().get(*def).dupe();
+                Lazy::force(&*__rc).dupe()
+            };
             let loc = type_util::loc_of_t(&elem);
             let reason = reason::mk_reason(RProperty(None), loc.dupe());
             // TODO: use_op
@@ -670,12 +685,18 @@ pub fn merge_pattern(file: &File, pattern: &Pack::Pattern<ALoc>) -> Type {
             type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe())
         }
         Pack::Pattern::ObjRestP { loc, xs, def } => {
-            let t = Lazy::force(file.patterns.get(*def)).dupe();
+            let t = {
+                let __rc = file.patterns.borrow().get(*def).dupe();
+                Lazy::force(&*__rc).dupe()
+            };
             let reason = reason::mk_reason(RObjectPatternRestProp, loc.dupe());
             annotation_inference::obj_rest(&file.cx, reason, xs.iter().duped().collect(), t)
         }
         Pack::Pattern::IndexP { loc, i, def } => {
-            let t = Lazy::force(file.patterns.get(*def)).dupe();
+            let t = {
+                let __rc = file.patterns.borrow().get(*def).dupe();
+                Lazy::force(&*__rc).dupe()
+            };
             let reason = reason::mk_reason(RArrayNthElement(*i as i32), loc.dupe());
             let i = {
                 let reason = reason::mk_reason(RNumber, loc.dupe());
@@ -692,7 +713,10 @@ pub fn merge_pattern(file: &File, pattern: &Pack::Pattern<ALoc>) -> Type {
             annotation_inference::get_elem(&file.cx, use_op, reason, i, t.dupe())
         }
         Pack::Pattern::ArrRestP { loc, i, def } => {
-            let t = Lazy::force(file.patterns.get(*def)).dupe();
+            let t = {
+                let __rc = file.patterns.borrow().get(*def).dupe();
+                Lazy::force(&*__rc).dupe()
+            };
             let reason = reason::mk_reason(RArrayPatternRestProp, loc.dupe());
             // TODO: use_op
             let use_op = type_::unknown_use();
@@ -770,7 +794,8 @@ fn merge_ref<R>(
 
     match packed_ref {
         Pack::PackedRef::LocalRef { ref_loc, index } => {
-            let entry = Lazy::force(file.local_defs.get(*index));
+            let __rc = file.local_defs.borrow().get(*index).dupe();
+            let entry = Lazy::force(&*__rc);
             let (def_loc, name, t_general, t_const) = entry;
             let t = Lazy::force(&*if const_decl {
                 t_const.dupe()
@@ -782,7 +807,8 @@ fn merge_ref<R>(
             f(t, ref_loc.dupe(), def_loc.dupe(), name)
         }
         Pack::PackedRef::RemoteRef { ref_loc, index } => {
-            let entry = Lazy::force(file.remote_refs.get(*index));
+            let __rc = file.remote_refs.borrow().get(*index).dupe();
+            let entry = Lazy::force(&*__rc);
             let (def_loc, name, t) = entry;
             let t = reposition_sig_tvar(&file.cx, ref_loc.dupe(), t.dupe());
             f(t, ref_loc.dupe(), def_loc.dupe(), name)
@@ -884,7 +910,8 @@ pub fn merge_type_export(
             )
         }
         Pack::TypeExport::ExportTypeBinding(index) => {
-            let entry = Lazy::force(file.local_defs.get(*index));
+            let __rc = file.local_defs.borrow().get(*index).dupe();
+            let entry = Lazy::force(&*__rc);
             let (loc, name, t_general, _t_const) = entry;
             let t = Lazy::force(&*t_general.clone()).dupe();
             let type_ =
@@ -892,7 +919,8 @@ pub fn merge_type_export(
             NamedSymbol::new(Some(loc.dupe()), None, type_)
         }
         Pack::TypeExport::ExportTypeFrom(index) => {
-            let entry = Lazy::force(file.remote_refs.get(*index));
+            let __rc = file.remote_refs.borrow().get(*index).dupe();
+            let entry = Lazy::force(&*__rc);
             let (loc, _name, type_) = entry;
             NamedSymbol::new(Some(loc.dupe()), None, type_.dupe())
         }
@@ -933,8 +961,8 @@ pub fn merge_exports(
         file: &File,
         (loc, index): &(ALoc, Index<FlowImportSpecifier>),
     ) -> (ALoc, FromNs) {
-        let (_, lazy_resolved) = file.dependencies.get(index.clone());
-        let resolved_require = Lazy::force(&**lazy_resolved).dupe();
+        let lazy_resolved = file.dependencies.borrow().get(index.clone()).1.dupe();
+        let resolved_require = Lazy::force(&*lazy_resolved).dupe();
         let f: FromNs = match resolved_require {
             ResolvedRequire::TypedModule(f) => Some(f),
             ResolvedRequire::UncheckedModule(_) => None,
@@ -1195,7 +1223,10 @@ fn merge_impl(
             )
         }
         Pack::Packed::AsyncVoidReturn(loc) => async_void_return(file, loc.dupe()),
-        Pack::Packed::Pattern(i) => Lazy::force(file.patterns.get(*i)).dupe(),
+        Pack::Packed::Pattern(i) => {
+            let __rc = file.patterns.borrow().get(*i).dupe();
+            Lazy::force(&*__rc).dupe()
+        }
         Pack::Packed::Err(loc) => type_::any_t::at(type_::AnySource::AnyError(None), loc.dupe()),
         Pack::Packed::Eval(loc, t, op) => {
             let (eval_as_const, eval_const_decl) = match op {
@@ -1211,7 +1242,7 @@ fn merge_impl(
         }
         Pack::Packed::Require { loc, index } => require(file, loc.dupe(), *index, false),
         Pack::Packed::ImportDynamic { loc, index } => {
-            let (mref, _) = file.dependencies.get(*index);
+            let mref = file.dependencies.borrow().get(*index).0.dupe();
             let ns_reason = reason::mk_reason(RModule(mref.dupe()), loc.dupe());
             let name = mref.dupe().into_inner();
             let ns_t = import_ns(file, ns_reason, &name, loc.dupe(), index.clone());
@@ -1224,7 +1255,7 @@ fn merge_impl(
             flow_js_utils::lookup_builtin_typeapp(&file.cx, reason, "$Flow$ModuleRef", vec![t])
         }
         Pack::Packed::ImportTypeAnnot { loc, index } => {
-            let (mref, _) = file.dependencies.get(*index);
+            let mref = file.dependencies.borrow().get(*index).0.dupe();
             let ns_reason = reason::mk_reason(RModule(mref.dupe()), loc.dupe());
             let name = mref.dupe().into_inner();
             import_ns(file, ns_reason, &name, loc.dupe(), *index)
@@ -4331,7 +4362,8 @@ pub fn merge_export(file: &File, export: &Pack::Export<ALoc>) -> NamedSymbol {
             }
         }
         Pack::Export::ExportBinding(index) => {
-            let entry = Lazy::force(file.local_defs.get(*index));
+            let __rc = file.local_defs.borrow().get(*index).dupe();
+            let entry = Lazy::force(&*__rc);
             let (loc, _name, _t_general, t_const) = entry;
             let type_ = Lazy::force(&**t_const).dupe();
             NamedSymbol::new(Some(loc.dupe()), None, type_)
@@ -4340,13 +4372,15 @@ pub fn merge_export(file: &File, export: &Pack::Export<ALoc>) -> NamedSymbol {
             default_loc: _,
             index,
         } => {
-            let entry = Lazy::force(file.local_defs.get(*index));
+            let __rc = file.local_defs.borrow().get(*index).dupe();
+            let entry = Lazy::force(&*__rc);
             let (loc, _name, _t_general, t_const) = entry;
             let type_ = Lazy::force(&**t_const).dupe();
             NamedSymbol::new(Some(loc.dupe()), None, type_)
         }
         Pack::Export::ExportFrom(index) => {
-            let entry = Lazy::force(file.remote_refs.get(*index));
+            let __rc = file.remote_refs.borrow().get(*index).dupe();
+            let entry = Lazy::force(&*__rc);
             let (loc, _name, type_) = entry;
             NamedSymbol::new(Some(loc.dupe()), None, type_.dupe())
         }
@@ -4869,21 +4903,27 @@ pub fn merge_builtins(
 
             let file = File(Rc::new(FileInner {
                 cx: cx.dupe(),
-                dependencies: builtins.module_refs.map(|mref| {
+                dependencies: RefCell::new(builtins.module_refs.map(|mref| {
                     let resolved = map_module_ref(mref, &dependencies_map);
                     (mref.dupe(), resolved)
-                }),
+                })),
                 exports,
-                local_defs: builtins
-                    .local_defs
-                    .map(|def| local_def_impl(&cx, &aloc, &self_ref, def)),
-                remote_refs: builtins
-                    .remote_refs
-                    .map(|rref| remote_ref_fn(&self_ref, rref)),
-                pattern_defs: builtins
-                    .pattern_defs
-                    .map(|def| pattern_def_fn(&self_ref, def)),
-                patterns: builtins.patterns.map(|p| pattern_fn(&self_ref, p)),
+                local_defs: RefCell::new(
+                    builtins
+                        .local_defs
+                        .map(|def| local_def_impl(&cx, &aloc, &self_ref, def)),
+                ),
+                remote_refs: RefCell::new(
+                    builtins
+                        .remote_refs
+                        .map(|rref| remote_ref_fn(&self_ref, rref)),
+                ),
+                pattern_defs: RefCell::new(
+                    builtins
+                        .pattern_defs
+                        .map(|def| pattern_def_fn(&self_ref, def)),
+                ),
+                patterns: RefCell::new(builtins.patterns.map(|p| pattern_fn(&self_ref, p))),
             }));
 
             let result = (file, dependencies_map);

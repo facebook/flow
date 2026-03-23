@@ -677,7 +677,7 @@ mod check_files {
                             if opt.is_none() {
                                 *opt = Some(mk_check_for_steal());
                             }
-                            let (check, _cache) = opt.as_mut().unwrap();
+                            let (check, cache) = opt.as_mut().unwrap();
                             let result = check(file.dupe());
                             let mapped = match result {
                                 Ok(Some((_, r))) => Ok(Some(r)),
@@ -685,6 +685,9 @@ mod check_files {
                                 Err(e) => Err(e),
                             };
                             acc.push((file, mapped));
+                            // Clear the cache after each stolen file to break
+                            // Rc cycles in dep_file closures that capture cache.
+                            cache.borrow_mut().clear();
                         });
                         return true;
                     }
@@ -697,7 +700,7 @@ mod check_files {
         // Each worker accumulated Context objects in its thread-local
         // across all batches. Dropping the WorkerState allows the
         // next recheck cycle to start fresh.
-        pool.broadcast(|_| {
+        pool.broadcast(move |_| {
             WORKER_CHECK.with(|cell| {
                 *cell.borrow_mut() = None;
             });

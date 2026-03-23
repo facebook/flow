@@ -450,6 +450,10 @@ impl<T: std::hash::Hash> std::hash::Hash for Table<T> {
 }
 
 impl<T> Table<T> {
+    pub fn empty() -> Self {
+        Table(Vec::new())
+    }
+
     pub fn len(&self) -> usize {
         self.0.len()
     }

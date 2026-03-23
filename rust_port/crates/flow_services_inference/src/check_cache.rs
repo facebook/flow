@@ -88,6 +88,7 @@ impl CheckCache {
                     // is still needed by sibling files in the cache.
                     file.cx().post_inference_cleanup_per_file();
                 }
+                file.drop_closures();
                 self.release_ccx(&cached_ccx);
                 self.size -= 1;
             }
@@ -156,9 +157,12 @@ impl CheckCache {
     }
 
     /// Break Rc cycles in all cached files. Call before dropping the cache.
+    /// Clears both Context Rc cycles (via post_inference_cleanup) and File
+    /// closure fields that capture Arc<SharedMem> and Rc<CheckCache>.
     pub fn cleanup_all_files(&mut self) {
         for (_, cached_file) in self.files.iter() {
             cached_file.file.cx().post_inference_cleanup();
+            cached_file.file.drop_closures();
         }
     }
 }
