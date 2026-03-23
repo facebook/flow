@@ -610,7 +610,7 @@ fn aloc_contains(outer: &ALoc, inner: &ALoc) -> bool {
     std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
         let outer = outer.to_loc_exn();
         let inner = inner.to_loc_exn();
-        outer.contains(&inner)
+        outer.contains(inner)
     }))
     .unwrap_or(false)
 }
