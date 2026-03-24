@@ -1442,7 +1442,12 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `legacy2_socket_file`
           - [x] `legacy1_socket_file`
   - [ ] server_utils/
-      - [ ] file_input.ml
+      - [x] file_input.ml → `flow_server_utils/src/file_input.rs`
+          - [x] `FileInput` enum
+          - [x] `path_of_file_input`
+          - [x] `filename_of_file_input`
+          - [x] `content_of_file_input_unsafe`
+          - [x] `content_of_file_input`
   - [ ] watchman_expression_terms/
       - [ ] watchman_expression_terms.ml
     - [ ] server.ml

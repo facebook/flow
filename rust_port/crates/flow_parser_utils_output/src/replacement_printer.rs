@@ -9,6 +9,7 @@ use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser::offset_utils::OffsetTable;
 use flow_parser_utils::flow_ast_differ::NodeChanges;
+use flow_server_utils::file_input::FileInput;
 
 use crate::ast_diff_printer;
 use crate::js_layout_generator::Opts;
@@ -91,26 +92,4 @@ pub fn loc_patch_to_patch(file_content: &str, loc_patch: &LocPatch) -> Patch {
         .iter()
         .map(|(loc, replacement)| (offset(loc.start), offset(loc.end), replacement.clone()))
         .collect()
-}
-
-pub enum FileInput {
-    FileName(String),
-    FileContent(Option<String>, String),
-}
-
-impl FileInput {
-    fn filename_of_file_input(&self) -> &str {
-        match self {
-            FileInput::FileName(f) => f,
-            FileInput::FileContent(Some(f), _) => f,
-            FileInput::FileContent(None, _) => "-",
-        }
-    }
-
-    fn content_of_file_input(&self) -> Result<String, String> {
-        match self {
-            FileInput::FileName(f) => std::fs::read_to_string(f).map_err(|e| format!("{}", e)),
-            FileInput::FileContent(_, content) => Ok(content.clone()),
-        }
-    }
 }
