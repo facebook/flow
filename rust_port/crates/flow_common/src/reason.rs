@@ -46,8 +46,10 @@ use flow_parser::ast::expression::BinaryOperator;
 use flow_parser::ast::expression::ExpressionInner;
 use flow_parser::ast::expression::LogicalOperator;
 use flow_parser::file_key::FileKey;
+use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::loc_sig::LocSig;
+use flow_parser::offset_utils::OffsetTable;
 
 use crate::flow_import_specifier::Userland;
 use crate::subst_name::SubstName;
@@ -727,6 +729,7 @@ impl<L: Dupe> VirtualReasonDesc<L> {
         }
     }
 }
+
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct VirtualReasonInner<L: Dupe> {
     pub desc: VirtualReasonDesc<L>,
@@ -1071,6 +1074,98 @@ pub fn string_of_aloc(strip_root: Option<&str>, aloc: &ALoc) -> String {
             format!("{}:{}", source_str, loc_str)
         }
     }
+}
+
+pub fn json_of_source(strip_root: Option<&str>, source: Option<&FileKey>) -> serde_json::Value {
+    match source {
+        Some(x) => serde_json::Value::String(string_of_source(strip_root, x)),
+        None => serde_json::Value::Null,
+    }
+}
+
+pub fn json_source_type_of_source(source: Option<&FileKey>) -> serde_json::Value {
+    match source.map(|s| s.inner()) {
+        Some(FileKeyInner::LibFile(_)) => serde_json::Value::String("LibFile".to_string()),
+        Some(FileKeyInner::SourceFile(_)) => serde_json::Value::String("SourceFile".to_string()),
+        Some(FileKeyInner::JsonFile(_)) => serde_json::Value::String("JsonFile".to_string()),
+        Some(FileKeyInner::ResourceFile(_)) => {
+            serde_json::Value::String("ResourceFile".to_string())
+        }
+        None => serde_json::Value::Null,
+    }
+}
+
+pub fn json_of_loc_props(
+    strip_root: Option<&str>,
+    catch_offset_errors: bool,
+    offset_table: Option<&OffsetTable>,
+    loc: &Loc,
+) -> Vec<(String, serde_json::Value)> {
+    let offset_entry = |table: &OffsetTable,
+                        pos: &flow_parser::loc::Position|
+     -> Vec<(String, serde_json::Value)> {
+        let offset = match table.offset(*pos) {
+            Ok(o) => serde_json::json!(o),
+            Err(exn) => {
+                if catch_offset_errors {
+                    serde_json::Value::Null
+                } else {
+                    panic!("{}", exn.debug_to_string())
+                }
+            }
+        };
+        vec![("offset".to_string(), offset)]
+    };
+    let mut start: Vec<(String, serde_json::Value)> = vec![
+        ("line".to_string(), serde_json::json!(loc.start.line)),
+        (
+            "column".to_string(),
+            serde_json::json!(loc.start.column + 1),
+        ),
+    ];
+    match offset_table {
+        None => {}
+        Some(table) => start.extend(offset_entry(table, &loc.start)),
+    }
+    let mut end_: Vec<(String, serde_json::Value)> = vec![
+        ("line".to_string(), serde_json::json!(loc.end.line)),
+        ("column".to_string(), serde_json::json!(loc.end.column)),
+    ];
+    match offset_table {
+        None => {}
+        Some(table) => end_.extend(offset_entry(table, &loc.end)),
+    }
+    vec![
+        (
+            "source".to_string(),
+            json_of_source(strip_root, loc.source.as_ref()),
+        ),
+        (
+            "type".to_string(),
+            json_source_type_of_source(loc.source.as_ref()),
+        ),
+        (
+            "start".to_string(),
+            serde_json::Value::Object(start.into_iter().collect()),
+        ),
+        (
+            "end".to_string(),
+            serde_json::Value::Object(end_.into_iter().collect()),
+        ),
+    ]
+}
+
+pub fn json_of_loc(
+    strip_root: Option<&str>,
+    catch_offset_errors: bool,
+    offset_table: Option<&OffsetTable>,
+    loc: &Loc,
+) -> serde_json::Value {
+    serde_json::Value::Object(
+        json_of_loc_props(strip_root, catch_offset_errors, offset_table, loc)
+            .into_iter()
+            .collect(),
+    )
 }
 
 pub fn mk_reason<L: Dupe>(desc: VirtualReasonDesc<L>, loc: L) -> VirtualReason<L> {

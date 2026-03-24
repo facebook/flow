@@ -600,7 +600,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `no_overlap`
         - [x] `platform_specific_implementation_mrefs_of_possibly_interface_file`
         - [x] `to_platform_string_set`
-    - [ ] reason.ml → `flow_common/src/reason.rs`
+    - [x] reason.ml → `flow_common/src/reason.rs`
         - [x] `code_desc_of_expression`
         - [x] `code_desc_of_pattern`
         - [x] `concretize_equal`
@@ -651,14 +651,14 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `update_desc_reason` → `VirtualReason::update_desc()`
         - [x] `mk_annot_reason` → `mk_annot_reason()`
         - [x] `display_string_of_name` → `Display for Name` trait impl (also `Name::as_str()`)
-        - [ ] `json_of_loc` - Missing (JSON serialization)
-        - [ ] `json_of_loc_props` - Missing (JSON serialization)
-        - [ ] `json_of_source` - Missing (JSON serialization)
-        - [ ] `json_source_type_of_source` - Missing (JSON serialization)
-        - [ ] `pp_virtual_reason_desc` - Missing (pretty print)
+        - [x] `json_of_loc` → `json_of_loc()`
+        - [x] `json_of_loc_props` → `json_of_loc_props()`
+        - [x] `json_of_source` → `json_of_source()`
+        - [x] `json_source_type_of_source` → `json_source_type_of_source()`
+        - [x] `pp_virtual_reason_desc` → `just use Debug`
         - [x] `range_string_of_loc` → `range_string_of_loc()`
-        - [ ] `show_reason_desc_function` - Missing (show function)
-        - [ ] `show_virtual_reason_desc` - Missing (show function)
+        - [x] `show_reason_desc_function` → `just use Debug`
+        - [x] `show_virtual_reason_desc` → `just use Debug`
     - [x] refinement_invalidation.ml → `flow_common/src/refinement_invalidation.rs`
         - [x] `Reason` enum
         - [x] `RefinementInvalidation` struct
