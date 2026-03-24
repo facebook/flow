@@ -7281,6 +7281,11 @@ fn object_literal<'arena: 'ast, 'ast>(
         prop_loc: &Loc,
         p: &'ast NormalProperty<Loc, Loc>,
     ) {
+        let (frozen_inner, polarity) = if frozen {
+            (FrozenKind::FrozenProp, Polarity::Positive)
+        } else {
+            (FrozenKind::NotFrozen, Polarity::Neutral)
+        };
         match p {
             NormalProperty::Init { key, value, .. } => {
                 let (id_loc, name) = match key {
@@ -7288,13 +7293,24 @@ fn object_literal<'arena: 'ast, 'ast>(
                         let IdentifierInner {
                             loc: id_loc, name, ..
                         } = &**id;
-                        (id_loc, name)
+                        (id_loc.dupe(), name.clone())
                     }
                     Key::StringLiteral((id_loc, ast::StringLiteral { value: name, .. })) => {
-                        (id_loc, name)
+                        (id_loc.dupe(), name.clone())
+                    }
+                    Key::NumberLiteral((
+                        id_loc,
+                        ast::NumberLiteral {
+                            value: num_value, ..
+                        },
+                    )) if flow_common::js_number::is_float_safe_integer(*num_value) => {
+                        let name = FlowSmolStr::new(flow_common::js_number::ecma_string_of_float(
+                            *num_value,
+                        ));
+                        (id_loc.dupe(), name)
                     }
                     Key::NumberLiteral(_) | Key::BigIntLiteral(_) => {
-                        // unsupported non-string literal key
+                        // unsupported literal key: BigIntLiteral or non-safe-integer NumberLiteral
                         return;
                     }
                     Key::Computed(_) => {
@@ -7304,23 +7320,12 @@ fn object_literal<'arena: 'ast, 'ast>(
                         panic!("unexpected private field in object literal")
                     }
                 };
-                let id_loc = tbls.push_loc(id_loc.dupe());
-                let name = name.clone();
+                let id_loc = tbls.push_loc(id_loc);
                 let value_loc = tbls.push_loc(value.loc().dupe());
-                let frozen_inner = if frozen {
-                    FrozenKind::FrozenProp
-                } else {
-                    FrozenKind::NotFrozen
-                };
                 let t = expression(opts, scope, scopes, tbls, frozen_inner, value);
                 if name.as_str() == "__proto__" {
                     acc.add_proto((value_loc, t));
                 } else {
-                    let polarity = if frozen {
-                        Polarity::Positive
-                    } else {
-                        Polarity::Neutral
-                    };
                     acc.add_field(name, id_loc, t, polarity);
                 }
             }
@@ -7334,13 +7339,24 @@ fn object_literal<'arena: 'ast, 'ast>(
                         let IdentifierInner {
                             loc: id_loc, name, ..
                         } = &**id;
-                        (id_loc, name)
+                        (id_loc.dupe(), name.clone())
                     }
                     Key::StringLiteral((id_loc, ast::StringLiteral { value: name, .. })) => {
-                        (id_loc, name)
+                        (id_loc.dupe(), name.clone())
+                    }
+                    Key::NumberLiteral((
+                        id_loc,
+                        ast::NumberLiteral {
+                            value: num_value, ..
+                        },
+                    )) if flow_common::js_number::is_float_safe_integer(*num_value) => {
+                        let name = FlowSmolStr::new(flow_common::js_number::ecma_string_of_float(
+                            *num_value,
+                        ));
+                        (id_loc.dupe(), name)
                     }
                     Key::NumberLiteral(_) | Key::BigIntLiteral(_) => {
-                        // unsupported non-string literal key
+                        // unsupported literal key: BigIntLiteral or non-safe-integer NumberLiteral
                         return;
                     }
                     Key::Computed(_) => {
@@ -7350,9 +7366,8 @@ fn object_literal<'arena: 'ast, 'ast>(
                         panic!("unexpected private field in object literal")
                     }
                 };
-                let name = name.clone();
                 let fn_loc = tbls.push_loc(prop_loc.dupe());
-                let id_loc = tbls.push_loc(id_loc.dupe());
+                let id_loc = tbls.push_loc(id_loc);
                 let async_ = fn_expr.async_;
                 let generator = fn_expr.generator;
                 let def = function_def(
@@ -7376,10 +7391,21 @@ fn object_literal<'arena: 'ast, 'ast>(
                         let IdentifierInner {
                             loc: id_loc, name, ..
                         } = id.deref();
-                        (id_loc, name)
+                        (id_loc.dupe(), name.clone())
                     }
                     Key::StringLiteral((id_loc, ast::StringLiteral { value: name, .. })) => {
-                        (id_loc, name)
+                        (id_loc.dupe(), name.clone())
+                    }
+                    Key::NumberLiteral((
+                        id_loc,
+                        ast::NumberLiteral {
+                            value: num_value, ..
+                        },
+                    )) if flow_common::js_number::is_float_safe_integer(*num_value) => {
+                        let name = FlowSmolStr::new(flow_common::js_number::ecma_string_of_float(
+                            *num_value,
+                        ));
+                        (id_loc.dupe(), name)
                     }
                     Key::NumberLiteral(_) | Key::BigIntLiteral(_) | Key::Computed(_) => {
                         // unsupported key
@@ -7389,8 +7415,7 @@ fn object_literal<'arena: 'ast, 'ast>(
                         panic!("unexpected private field in object literal")
                     }
                 };
-                let name = name.clone();
-                let id_loc = tbls.push_loc(id_loc.dupe());
+                let id_loc = tbls.push_loc(id_loc);
                 let getter = getter_def(
                     opts,
                     scope,
@@ -7412,10 +7437,21 @@ fn object_literal<'arena: 'ast, 'ast>(
                         let IdentifierInner {
                             loc: id_loc, name, ..
                         } = &**id;
-                        (id_loc, name)
+                        (id_loc.dupe(), name.clone())
                     }
                     Key::StringLiteral((id_loc, ast::StringLiteral { value: name, .. })) => {
-                        (id_loc, name)
+                        (id_loc.dupe(), name.clone())
+                    }
+                    Key::NumberLiteral((
+                        id_loc,
+                        ast::NumberLiteral {
+                            value: num_value, ..
+                        },
+                    )) if flow_common::js_number::is_float_safe_integer(*num_value) => {
+                        let name = FlowSmolStr::new(flow_common::js_number::ecma_string_of_float(
+                            *num_value,
+                        ));
+                        (id_loc.dupe(), name)
                     }
                     Key::NumberLiteral(_) | Key::BigIntLiteral(_) | Key::Computed(_) => {
                         // unsupported key
@@ -7425,8 +7461,7 @@ fn object_literal<'arena: 'ast, 'ast>(
                         panic!("unexpected private field in object literal")
                     }
                 };
-                let name = name.clone();
-                let id_loc = tbls.push_loc(id_loc.dupe());
+                let id_loc = tbls.push_loc(id_loc);
                 let setter = setter_def(
                     opts,
                     scope,

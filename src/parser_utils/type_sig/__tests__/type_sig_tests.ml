@@ -973,6 +973,32 @@ let%expect_test "empty_object_literal" =
         stars = []; strict = true; platform_availability_set = None}}
   |}]
 
+let%expect_test "export_object_literal_number_key" =
+  print_sig {|
+    export default { 1: true, 2: "hello" };
+  |};
+  [%expect {|
+    ESModule {type_exports = [||];
+      exports =
+      [|ExportDefault {default_loc = [1:7-14];
+          def =
+          (Value
+             ObjLit {loc = [1:15-38];
+               frozen = false; proto = None;
+               props =
+               { "1" ->
+                 (ObjValueField ([1:17-18], (
+                    Value (BooleanLit ([1:20-24], true))), Polarity.Neutral));
+                 "2" ->
+                 (ObjValueField ([1:26-27], (
+                    Value (StringLit ([1:29-36], "hello"))), Polarity.Neutral)) }})}
+        |];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"default"|];
+        stars = []; strict = true; platform_availability_set = None}}
+  |}]
+
 let%expect_test "export_class_reference" =
   print_sig {|
     class C {

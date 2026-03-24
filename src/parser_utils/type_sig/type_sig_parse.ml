@@ -4208,7 +4208,14 @@ and object_literal =
   let module O = Ast.Expression.Object in
   let module P = O.Property in
   let module Acc = ObjectLiteralAcc in
-  let prop ~frozen opts scope tbls acc prop_loc = function
+  let prop ~frozen opts scope tbls acc prop_loc prop =
+    let (frozen, polarity) =
+      if frozen then
+        (FrozenProp, Polarity.Positive)
+      else
+        (NotFrozen, Polarity.Neutral)
+    in
+    match prop with
     | P.Init
         {
           key =
@@ -4219,12 +4226,22 @@ and object_literal =
         } ->
       let id_loc = push_loc tbls id_loc in
       let loc = push_loc tbls (fst value) in
-      let t = expression ~frozen:(Utils_js.ite frozen FrozenProp NotFrozen) opts scope tbls value in
+      let t = expression ~frozen opts scope tbls value in
       if name = "__proto__" then
         Acc.add_proto (loc, t) acc
       else
-        let polarity = Utils_js.ite frozen Polarity.Positive Polarity.Neutral in
         Acc.add_field name id_loc t polarity acc
+    | P.Init
+        {
+          key = P.NumberLiteral (id_loc, { Ast.NumberLiteral.value = num_value; _ });
+          value;
+          shorthand = _;
+        }
+      when Js_number.is_float_safe_integer num_value ->
+      let name = Dtoa.ecma_string_of_float num_value in
+      let id_loc = push_loc tbls id_loc in
+      let t = expression ~frozen opts scope tbls value in
+      Acc.add_field name id_loc t polarity acc
     | P.Method
         {
           key =
@@ -4232,6 +4249,18 @@ and object_literal =
             | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) );
           value = (_, fn);
         } ->
+      let { Ast.Function.async; generator; _ } = fn in
+      let fn_loc = push_loc tbls prop_loc in
+      let id_loc = push_loc tbls id_loc in
+      let def = function_def opts scope tbls SSet.empty fn_loc fn in
+      Acc.add_method name id_loc fn_loc ~async ~generator def acc
+    | P.Method
+        {
+          key = P.NumberLiteral (id_loc, { Ast.NumberLiteral.value = num_value; _ });
+          value = (_, fn);
+        }
+      when Js_number.is_float_safe_integer num_value ->
+      let name = Dtoa.ecma_string_of_float num_value in
       let { Ast.Function.async; generator; _ } = fn in
       let fn_loc = push_loc tbls prop_loc in
       let id_loc = push_loc tbls id_loc in
@@ -4248,6 +4277,17 @@ and object_literal =
       let id_loc = push_loc tbls id_loc in
       let getter = getter_def opts scope tbls SSet.empty id_loc fn in
       Acc.add_accessor name getter acc
+    | P.Get
+        {
+          key = P.NumberLiteral (id_loc, { Ast.NumberLiteral.value = num_value; _ });
+          value = (_, fn);
+          comments = _;
+        }
+      when Js_number.is_float_safe_integer num_value ->
+      let name = Dtoa.ecma_string_of_float num_value in
+      let id_loc = push_loc tbls id_loc in
+      let getter = getter_def opts scope tbls SSet.empty id_loc fn in
+      Acc.add_accessor name getter acc
     | P.Set
         {
           key =
@@ -4259,11 +4299,22 @@ and object_literal =
       let id_loc = push_loc tbls id_loc in
       let setter = setter_def opts scope tbls SSet.empty id_loc fn in
       Acc.add_accessor name setter acc
+    | P.Set
+        {
+          key = P.NumberLiteral (id_loc, { Ast.NumberLiteral.value = num_value; _ });
+          value = (_, fn);
+          comments = _;
+        }
+      when Js_number.is_float_safe_integer num_value ->
+      let name = Dtoa.ecma_string_of_float num_value in
+      let id_loc = push_loc tbls id_loc in
+      let setter = setter_def opts scope tbls SSet.empty id_loc fn in
+      Acc.add_accessor name setter acc
     | P.Init { key = P.NumberLiteral _ | P.BigIntLiteral _; _ }
     | P.Method { key = P.NumberLiteral _ | P.BigIntLiteral _; _ }
     | P.Get { key = P.NumberLiteral _ | P.BigIntLiteral _; _ }
     | P.Set { key = P.NumberLiteral _ | P.BigIntLiteral _; _ } ->
-      acc (* unsupported non-string literal key *)
+      acc (* unsupported literal key: BigIntLiteral or non-safe-integer NumberLiteral *)
     | P.Get { key = P.Computed _; _ }
     | P.Set { key = P.Computed _; _ } ->
       acc (* unsupported computed get/set key *)

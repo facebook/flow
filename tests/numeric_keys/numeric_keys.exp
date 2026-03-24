@@ -66,6 +66,40 @@ Unsupported key in object type. Number literals must not be larger than `Number.
          ^^^^^^^^^^^^^^^^
 
 
+Error ---------------------------------------------------------------------------------------- import_numeric_key.js:7:1
+
+Cannot cast `obj[1]` to empty because boolean [1] is incompatible with empty [2]. [incompatible-type]
+
+   import_numeric_key.js:7:1
+   7| obj[1] as empty; // ERROR
+      ^^^^^^
+
+References:
+   export_numeric_key.js:2:6
+   2|   1: true,
+           ^^^^ [1]
+   import_numeric_key.js:7:11
+   7| obj[1] as empty; // ERROR
+                ^^^^^ [2]
+
+
+Error ---------------------------------------------------------------------------------------- import_numeric_key.js:8:1
+
+Cannot cast `obj[2]` to empty because string [1] is incompatible with empty [2]. [incompatible-type]
+
+   import_numeric_key.js:8:1
+   8| obj[2] as empty; // ERROR
+      ^^^^^^
+
+References:
+   export_numeric_key.js:3:6
+   3|   2: "hello",
+           ^^^^^^^ [1]
+   import_numeric_key.js:8:11
+   8| obj[2] as empty; // ERROR
+                ^^^^^ [2]
+
+
 Error ---------------------------------------------------------------------------------------- non_literal_number.js:5:5
 
 Cannot access object type [1] with computed property using number [2]. [invalid-computed-prop]
@@ -841,4 +875,4 @@ References:
 
 
 
-Found 46 errors
+Found 48 errors

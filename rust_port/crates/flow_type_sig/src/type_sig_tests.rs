@@ -2094,6 +2094,80 @@ Module {
 }
 
 #[test]
+fn export_object_literal_number_key() {
+    let input = r#"
+            export default { 1: true, 2: "hello" };
+        "#;
+    let expected_output = r#"
+Locs:
+0. [1:7-14]
+1. [1:15-38]
+2. [1:17-18]
+3. [1:20-24]
+4. [1:26-27]
+5. [1:29-36]
+Type Sig:
+Module {
+    module_kind: ESModule {
+        type_exports: [],
+        exports: [
+            ExportDefault {
+                default_loc: 0,
+                def: Value(
+                    ObjLit {
+                        loc: 1,
+                        frozen: false,
+                        proto: None,
+                        props: {
+                            "1": ObjValueField(
+                                2,
+                                Value(
+                                    BooleanLit(
+                                        3,
+                                        true,
+                                    ),
+                                ),
+                                Neutral,
+                            ),
+                            "2": ObjValueField(
+                                4,
+                                Value(
+                                    StringLit(
+                                        5,
+                                        "hello",
+                                    ),
+                                ),
+                                Neutral,
+                            ),
+                        },
+                    },
+                ),
+            },
+        ],
+        info: ESModuleInfo {
+            type_export_keys: [],
+            type_stars: [],
+            export_keys: [
+                "default",
+            ],
+            stars: [],
+            strict: true,
+            platform_availability_set: None,
+        },
+    },
+    module_refs: [],
+    local_defs: [],
+    dirty_local_defs: [],
+    remote_refs: [],
+    pattern_defs: [],
+    dirty_pattern_defs: [],
+    patterns: [],
+}
+"#;
+    assert_eq!(dedent_trim(expected_output), dedent_trim(&print_sig(input)))
+}
+
+#[test]
 fn export_class_reference() {
     let input = r#"
     class C {
