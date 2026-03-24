@@ -109,7 +109,7 @@ let recheck_canceled
 
 let recheck_series ~recheck_count:_ ~profiling:_ = ()
 
-let reinit ~profiling:_ = ()
+let reinit ~reason:_ ~profiling:_ = ()
 
 let reinit_full_check ~profiling:_ = ()
 

@@ -2504,7 +2504,8 @@ let init ~profiling ~workers options =
   in
   Lwt.return (libs_ok, env)
 
-let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env =
+let reinit ~reason ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env
+    =
   match%lwt load_saved_state ~profiling ~workers options with
   | Error msg ->
     (* Either there is no saved state or we failed to load it for some reason *)
@@ -2553,7 +2554,7 @@ let reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checke
       ();
 
     let log_recheck_event ~profiling =
-      FlowEventLogger.reinit ~profiling;
+      FlowEventLogger.reinit ~reason ~profiling;
       Lwt.return_unit
     in
     let recheck_stats =
@@ -2636,7 +2637,15 @@ let recheck
     (* Reinitialize the server. This should be just like starting up a new server,
        except that the existing server stays running and can answer requests
        using committed data until the re-init is complete. *)
-    reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env
+    reinit
+      ~reason:"missed_changes"
+      ~profiling
+      ~workers
+      ~options
+      ~updates
+      ~files_to_force
+      ~will_be_checked_files
+      env
   else
     try%lwt
       recheck_impl
@@ -2651,7 +2660,15 @@ let recheck
         env
     with
     | Recheck_too_slow ->
-      reinit ~profiling ~workers ~options ~updates ~files_to_force ~will_be_checked_files env
+      reinit
+        ~reason:"recheck_too_slow"
+        ~profiling
+        ~workers
+        ~options
+        ~updates
+        ~files_to_force
+        ~will_be_checked_files
+        env
 
 let check_files_for_init ~profiling ~options ~workers ~focus_targets ~parsed ~message env =
   let { ServerEnv.dependency_info; errors; collated_errors; _ } = env in
