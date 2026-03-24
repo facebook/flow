@@ -114,6 +114,24 @@ let changes_since_mergebase =
   in
   (fun ~mergebase_with watch_paths -> helper ~mergebase_with (SSet.empty, SSet.empty) watch_paths)
 
+(** Query VCS for the current mergebase hash. *)
+let query_mergebase ~(root : File_path.t) ~(mergebase_with : string) : (string, string) result Lwt.t
+    =
+  match Vcs.find_root root with
+  | None -> Lwt.return (Error "no VCS root found")
+  | Some (vcs, vcs_root) ->
+    let cwd = File_path.to_string vcs_root in
+    let%lwt result =
+      match vcs with
+      | Vcs.Hg -> Hg.merge_base ~cwd "." mergebase_with
+      | Vcs.Git -> Git.merge_base ~cwd mergebase_with "HEAD"
+    in
+    (match result with
+    | Ok hash -> Lwt.return (Ok hash)
+    | Error (Vcs_utils.Not_installed { path }) ->
+      Lwt.return (Error (Printf.sprintf "VCS not installed at %s" path))
+    | Error (Vcs_utils.Errored msg) -> Lwt.return (Error msg))
+
 class dfind (monitor_options : FlowServerMonitorOptions.t) : watcher =
   object (self)
     val mutable dfind_instance = None
@@ -591,7 +609,31 @@ end = struct
     mutable is_initial: bool;
     listening_thread: exit_reason Lwt.t;
     changes_condition: unit Lwt_condition.t;
+    mutable mergebase: string option;
+    root: File_path.t;
+    mergebase_with: string;
   }
+
+  (** Query VCS for the current mergebase and compare with the stored value.
+      Updates [env.mergebase] if it changed. Returns [Some bool] or [None] on error. *)
+  let check_mergebase (env : env) : bool option Lwt.t =
+    match%lwt query_mergebase ~root:env.root ~mergebase_with:env.mergebase_with with
+    | Error _ ->
+      Logger.warn "EdenFS: failed to query mergebase";
+      Lwt.return None
+    | Ok new_mergebase ->
+      (match env.mergebase with
+      | None ->
+        env.mergebase <- Some new_mergebase;
+        Lwt.return None
+      | Some old_mergebase ->
+        let changed = not (String.equal new_mergebase old_mergebase) in
+        if changed then (
+          Logger.info "EdenFS: mergebase changed from %S to %S" old_mergebase new_mergebase;
+          env.mergebase <- Some new_mergebase
+        ) else
+          Logger.debug "EdenFS: mergebase unchanged at %S" new_mergebase;
+        Lwt.return (Some changed))
 
   (** Convert EdenFS watcher changes to a set of file paths and metadata updates.
       Note: The paths from EdenFS watcher are already absolute (the Rust code joins
@@ -700,6 +742,25 @@ end = struct
       | Ok (changes_list, _clock, _telemetry) ->
         handle_state_changes changes_list;
         let (new_files, new_metadata) = convert_changes changes_list in
+        (* If a commit transition occurred, check if mergebase actually changed *)
+        let%lwt new_metadata =
+          match new_metadata.MonitorProt.changed_mergebase with
+          | Some true ->
+            Logger.debug
+              "EdenFS: CommitTransition reported changed_mergebase=true; verifying with VCS";
+            let%lwt actual_changed = check_mergebase env in
+            let changed_mergebase =
+              match actual_changed with
+              | Some changed ->
+                if not changed then
+                  Logger.info
+                    "EdenFS: overriding changed_mergebase from true to false (mergebase did not actually change)";
+                Some changed
+              | None -> new_metadata.MonitorProt.changed_mergebase
+            in
+            Lwt.return { new_metadata with MonitorProt.changed_mergebase }
+          | _ -> Lwt.return new_metadata
+        in
         env.files <- SSet.union env.files new_files;
         env.metadata <- MonitorProt.merge_file_watcher_metadata env.metadata new_metadata;
         broadcast env;
@@ -805,6 +866,16 @@ end = struct
                 let msg = Edenfs_watcher.show_edenfs_watcher_error err in
                 failwith (Printf.sprintf "Failed to get EdenFS notification fd: %s" msg)
             in
+            (* Query VCS for the initial mergebase *)
+            let%lwt initial_mergebase =
+              match%lwt query_mergebase ~root:root_path ~mergebase_with with
+              | Ok hash ->
+                Logger.info "EdenFS: initial mergebase is %S" hash;
+                Lwt.return (Some hash)
+              | Error _ ->
+                Logger.warn "EdenFS: failed to determine initial mergebase";
+                Lwt.return None
+            in
             let (waiter, wakener) = Lwt.task () in
             let new_env =
               {
@@ -818,6 +889,9 @@ end = struct
                 is_initial = true;
                 changes_condition = Lwt_condition.create ();
                 metadata = MonitorProt.empty_file_watcher_metadata;
+                mergebase = initial_mergebase;
+                root = root_path;
+                mergebase_with;
               }
             in
             env <- Some new_env;
