@@ -32,6 +32,300 @@ References:
                ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------- computed_property_key.d.ts:86:29
+
+Unsupported key in object type. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
+
+   86| export type WithUnionKey = {[UNION_KEY]: number}; // ERROR
+                                   ^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------ computed_property_key_remote_usage.js:6:1
+
+Cannot cast `strObj.remoteProp` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   computed_property_key_remote_usage.js:6:1
+   6| strObj.remoteProp as string; // ERROR
+      ^^^^^^^^^^^^^^^^^
+
+References:
+   computed_property_key_remote.d.ts:5:51
+   5| export type WithRemoteStrKey = {[REMOTE_STR_KEY]: number};
+                                                        ^^^^^^ [1]
+   computed_property_key_remote_usage.js:6:22
+   6| strObj.remoteProp as string; // ERROR
+                           ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------- computed_property_key_remote_usage.js:11:1
+
+Cannot cast `numObj[99]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   computed_property_key_remote_usage.js:11:1
+   11| numObj[99] as number; // ERROR
+       ^^^^^^^^^^
+
+References:
+   computed_property_key_remote.d.ts:8:51
+    8| export type WithRemoteNumKey = {[REMOTE_NUM_KEY]: string};
+                                                         ^^^^^^ [1]
+   computed_property_key_remote_usage.js:11:15
+   11| numObj[99] as number; // ERROR
+                     ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------- computed_property_key_remote_usage.js:16:1
+
+Cannot cast `ifaceObj.remoteProp` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   computed_property_key_remote_usage.js:16:1
+   16| ifaceObj.remoteProp as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_property_key_remote.d.ts:12:21
+   12|   [REMOTE_STR_KEY]: boolean;
+                           ^^^^^^^ [1]
+   computed_property_key_remote_usage.js:16:24
+   16| ifaceObj.remoteProp as string; // ERROR
+                              ^^^^^^ [2]
+
+
+Error ----------------------------------------------------------------------- computed_property_key_remote_usage.js:21:1
+
+Cannot cast `classObj[99]` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   computed_property_key_remote_usage.js:21:1
+   21| classObj[99] as string; // ERROR
+       ^^^^^^^^^^^^
+
+References:
+   computed_property_key_remote.d.ts:17:21
+   17|   [REMOTE_NUM_KEY]: boolean;
+                           ^^^^^^^ [1]
+   computed_property_key_remote_usage.js:21:17
+   21| classObj[99] as string; // ERROR
+                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- computed_property_key_usage.js:9:1
+
+Cannot cast `strObj.myProp` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   computed_property_key_usage.js:9:1
+   9| strObj.myProp as string; // ERROR
+      ^^^^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:3:38
+   3| export type WithStrKey = {[STR_KEY]: number};
+                                           ^^^^^^ [1]
+   computed_property_key_usage.js:9:18
+   9| strObj.myProp as string; // ERROR
+                       ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:14:1
+
+Cannot cast `numObj[42]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   computed_property_key_usage.js:14:1
+   14| numObj[42] as number; // ERROR
+       ^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:7:38
+    7| export type WithNumKey = {[NUM_KEY]: string};
+                                            ^^^^^^ [1]
+   computed_property_key_usage.js:14:15
+   14| numObj[42] as number; // ERROR
+                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:23:1
+
+Cannot cast `ifaceObj.ifaceProp` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   computed_property_key_usage.js:23:1
+   23| ifaceObj.ifaceProp as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:15:16
+   15|   [IFACE_KEY]: boolean;
+                      ^^^^^^^ [1]
+   computed_property_key_usage.js:23:23
+   23| ifaceObj.ifaceProp as string; // ERROR
+                             ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:32:1
+
+Cannot cast `optMethodObj.myMethod` to string because function type [1] is incompatible with string [2].
+[incompatible-type]
+
+   computed_property_key_usage.js:32:1
+   32| optMethodObj.myMethod as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:35:35
+   35| export type WithOptionalMethod = {[METHOD_KEY]?(x: number): void};
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   computed_property_key_usage.js:32:26
+   32| optMethodObj.myMethod as string; // ERROR
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:32:1
+
+Cannot cast `optMethodObj.myMethod` to string because undefined [1] is incompatible with string [2]. [incompatible-type]
+
+   computed_property_key_usage.js:32:1
+   32| optMethodObj.myMethod as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:35:35
+   35| export type WithOptionalMethod = {[METHOD_KEY]?(x: number): void};
+                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   computed_property_key_usage.js:32:26
+   32| optMethodObj.myMethod as string; // ERROR
+                                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:42:1
+
+Cannot cast `protoObj.protoMethod()` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   computed_property_key_usage.js:42:1
+   42| protoObj.protoMethod() as number; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:44:18
+   44|   [PROTO_KEY](): string;
+                        ^^^^^^ [1]
+   computed_property_key_usage.js:42:27
+   42| protoObj.protoMethod() as number; // ERROR
+                                 ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:53:1
+
+Cannot cast `strLitObj.directStr` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   computed_property_key_usage.js:53:1
+   53| strLitObj.directStr as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:55:45
+   55| export type WithStrLitKey = {["directStr"]: number};
+                                                   ^^^^^^ [1]
+   computed_property_key_usage.js:53:24
+   53| strLitObj.directStr as string; // ERROR
+                              ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:59:1
+
+Cannot cast `numLitObj[100]` to number because string [1] is incompatible with number [2]. [incompatible-type]
+
+   computed_property_key_usage.js:59:1
+   59| numLitObj[100] as number; // ERROR
+       ^^^^^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:58:37
+   58| export type WithNumLitKey = {[100]: string};
+                                           ^^^^^^ [1]
+   computed_property_key_usage.js:59:19
+   59| numLitObj[100] as number; // ERROR
+                         ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:65:1
+
+Cannot cast `memberObj.nsProp` to string because boolean [1] is incompatible with string [2]. [incompatible-type]
+
+   computed_property_key_usage.js:65:1
+   65| memberObj.nsProp as string; // ERROR
+       ^^^^^^^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:62:42
+   62| export type WithMemberKey = {[Keys.foo]: boolean};
+                                                ^^^^^^^ [1]
+   computed_property_key_usage.js:65:21
+   65| memberObj.nsProp as string; // ERROR
+                           ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:71:1
+
+Cannot cast `memberMethodObj.nsMethod()` to number because string [1] is incompatible with number [2].
+[incompatible-type]
+
+   computed_property_key_usage.js:71:1
+   71| memberMethodObj.nsMethod() as number; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:67:23
+   67|   [MethodKeys.bar](): string;
+                             ^^^^^^ [1]
+   computed_property_key_usage.js:71:31
+   71| memberMethodObj.nsMethod() as number; // ERROR
+                                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:77:1
+
+Cannot cast `memberClassObj.nsClassProp` to string because number [1] is incompatible with string [2].
+[incompatible-type]
+
+   computed_property_key_usage.js:77:1
+   77| memberClassObj.nsClassProp as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   computed_property_key.d.ts:73:20
+   73|   [ClassKeys.baz]: number;
+                          ^^^^^^ [1]
+   computed_property_key_usage.js:77:31
+   77| memberClassObj.nsClassProp as string; // ERROR
+                                     ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ computed_property_key_usage.js:83:8
+
+Cannot get `accObj.classProp` because property `classProp` is missing in `WithAccessibility` [1]. [prop-missing]
+
+   computed_property_key_usage.js:83:8
+   83| accObj.classProp as number; // ERROR: private
+              ^^^^^^^^^
+
+References:
+   computed_property_key_usage.js:81:23
+   81| declare const accObj: WithAccessibility;
+                             ^^^^^^^^^^^^^^^^^ [1]
+
+
+Error ----------------------------------------------------------------------------- computed_property_key_usage.js:89:10
+
+Cannot get `unionObj.a` because property `a` is missing in `WithUnionKey` [1]. [prop-missing]
+
+   computed_property_key_usage.js:89:10
+   89| unionObj.a; // ERROR
+                ^
+
+References:
+   computed_property_key_usage.js:88:25
+   88| declare const unionObj: WithUnionKey;
+                               ^^^^^^^^^^^^ [1]
+
+
 Error --------------------------------------------------------------------------------------- declare_var_extras.js:24:1
 
 Cannot cast `s` to string literal `bar` because string literal `foo` [1] is incompatible with string literal `bar` [2].
@@ -869,4 +1163,4 @@ References:
 
 
 
-Found 56 errors
+Found 74 errors

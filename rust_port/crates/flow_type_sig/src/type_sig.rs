@@ -675,6 +675,7 @@ pub enum ObjSpreadAnnotElem<Loc, T> {
     ObjSpreadAnnotSlice {
         dict: Option<ObjAnnotDict<T>>,
         props: BTreeMap<FlowSmolStr, ObjAnnotProp<Loc, T>>,
+        computed_props: Vec<(T, ObjAnnotProp<Loc, T>)>,
     },
 }
 
@@ -689,15 +690,21 @@ impl<Loc, T> ObjSpreadAnnotElem<Loc, T> {
             ObjSpreadAnnotElem::ObjSpreadAnnotElem(t) => {
                 ObjSpreadAnnotElem::ObjSpreadAnnotElem(f_t(cx, t))
             }
-            ObjSpreadAnnotElem::ObjSpreadAnnotSlice { dict, props } => {
-                ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
-                    dict: dict.as_ref().map(|d| d.map(cx, &f_t)),
-                    props: props
-                        .iter()
-                        .map(|(k, v)| (k.dupe(), v.map(cx, &f_loc, &f_t)))
-                        .collect(),
-                }
-            }
+            ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
+                dict,
+                props,
+                computed_props,
+            } => ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
+                dict: dict.as_ref().map(|d| d.map(cx, &f_t)),
+                props: props
+                    .iter()
+                    .map(|(k, v)| (k.dupe(), v.map(cx, &f_loc, &f_t)))
+                    .collect(),
+                computed_props: computed_props
+                    .iter()
+                    .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
+                    .collect(),
+            },
         }
     }
 }
@@ -921,6 +928,9 @@ pub struct DeclareClassSig<Loc, T> {
     pub static_props: BTreeMap<FlowSmolStr, InterfaceProp<Loc, T>>,
     pub own_props: BTreeMap<FlowSmolStr, InterfaceProp<Loc, T>>,
     pub proto_props: BTreeMap<FlowSmolStr, InterfaceProp<Loc, T>>,
+    pub computed_own_props: Vec<(T, InterfaceProp<Loc, T>)>,
+    pub computed_proto_props: Vec<(T, InterfaceProp<Loc, T>)>,
+    pub computed_static_props: Vec<(T, InterfaceProp<Loc, T>)>,
     pub static_calls: Vec<T>,
     pub calls: Vec<T>,
     pub dict: Option<ObjAnnotDict<T>>,
@@ -950,6 +960,18 @@ impl<Loc, T> DeclareClassSig<Loc, T> {
         }
         for v in self.proto_props.values() {
             v.iter(cx, f_loc, f_t);
+        }
+        for (t, prop) in &self.computed_own_props {
+            f_t(cx, t);
+            prop.iter(cx, f_loc, f_t);
+        }
+        for (t, prop) in &self.computed_proto_props {
+            f_t(cx, t);
+            prop.iter(cx, f_loc, f_t);
+        }
+        for (t, prop) in &self.computed_static_props {
+            f_t(cx, t);
+            prop.iter(cx, f_loc, f_t);
         }
         for t in &self.static_calls {
             f_t(cx, t);
@@ -997,6 +1019,21 @@ impl<Loc, T> DeclareClassSig<Loc, T> {
                 .iter()
                 .map(|(k, v)| (k.dupe(), v.map(cx, &f_loc, &f_t)))
                 .collect(),
+            computed_own_props: self
+                .computed_own_props
+                .iter()
+                .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
+                .collect(),
+            computed_proto_props: self
+                .computed_proto_props
+                .iter()
+                .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
+                .collect(),
+            computed_static_props: self
+                .computed_static_props
+                .iter()
+                .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
+                .collect(),
             static_calls: self.static_calls.iter().map(|t| f_t(cx, t)).collect(),
             calls: self.calls.iter().map(|t| f_t(cx, t)).collect(),
             dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
@@ -1009,6 +1046,7 @@ impl<Loc, T> DeclareClassSig<Loc, T> {
 pub struct InterfaceSig<Loc, T> {
     pub extends: Vec<T>,
     pub props: BTreeMap<FlowSmolStr, InterfaceProp<Loc, T>>,
+    pub computed_props: Vec<(T, InterfaceProp<Loc, T>)>,
     pub calls: Vec<T>,
     pub dict: Option<ObjAnnotDict<T>>,
 }
@@ -1025,6 +1063,10 @@ impl<Loc, T> InterfaceSig<Loc, T> {
         }
         for v in self.props.values() {
             v.iter(cx, f_loc, f_t);
+        }
+        for (t, prop) in &self.computed_props {
+            f_t(cx, t);
+            prop.iter(cx, f_loc, f_t);
         }
         for t in &self.calls {
             f_t(cx, t);
@@ -1047,6 +1089,11 @@ impl<Loc, T> InterfaceSig<Loc, T> {
                 .props
                 .iter()
                 .map(|(k, v)| (k.dupe(), v.map(cx, &f_loc, &f_t)))
+                .collect(),
+            computed_props: self
+                .computed_props
+                .iter()
+                .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
                 .collect(),
             calls: self.calls.iter().map(|t| f_t(cx, t)).collect(),
             dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
@@ -2025,6 +2072,7 @@ pub enum Annot<Loc, T> {
         loc: Loc,
         obj_kind: ObjKind<T>,
         props: BTreeMap<FlowSmolStr, ObjAnnotProp<Loc, T>>,
+        computed_props: Vec<(T, ObjAnnotProp<Loc, T>)>,
         proto: ObjAnnotProto<Loc, T>,
     },
     ObjSpreadAnnot {
@@ -2237,11 +2285,13 @@ impl<Loc: std::hash::Hash, T: std::hash::Hash> std::hash::Hash for Annot<Loc, T>
                 loc,
                 obj_kind,
                 props,
+                computed_props,
                 proto,
             } => {
                 loc.hash(state);
                 obj_kind.hash(state);
                 props.hash(state);
+                computed_props.hash(state);
                 proto.hash(state);
             }
             Annot::ObjSpreadAnnot { loc, exact, elems } => {
@@ -2487,6 +2537,7 @@ impl<Loc, T> Annot<Loc, T> {
                 loc,
                 obj_kind,
                 props,
+                computed_props,
                 proto,
             } => {
                 f_loc(cx, loc);
@@ -2499,6 +2550,25 @@ impl<Loc, T> Annot<Loc, T> {
                 }
                 for v in props.values() {
                     match v {
+                        ObjAnnotProp::ObjAnnotField(loc, t, _) => {
+                            f_loc(cx, loc);
+                            f_t(cx, t);
+                        }
+                        ObjAnnotProp::ObjAnnotAccess(accessor) => accessor.iter(cx, f_loc, f_t),
+                        ObjAnnotProp::ObjAnnotMethod {
+                            id_loc,
+                            fn_loc,
+                            def,
+                        } => {
+                            f_loc(cx, id_loc);
+                            f_loc(cx, fn_loc);
+                            def.iter(cx, f_loc, f_t);
+                        }
+                    }
+                }
+                for (t, prop) in computed_props {
+                    f_t(cx, t);
+                    match prop {
                         ObjAnnotProp::ObjAnnotField(loc, t, _) => {
                             f_loc(cx, loc);
                             f_t(cx, t);
@@ -2537,13 +2607,38 @@ impl<Loc, T> Annot<Loc, T> {
                 for elem in elems.iter() {
                     match elem {
                         ObjSpreadAnnotElem::ObjSpreadAnnotElem(t) => f_t(cx, t),
-                        ObjSpreadAnnotElem::ObjSpreadAnnotSlice { dict, props } => {
+                        ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
+                            dict,
+                            props,
+                            computed_props,
+                        } => {
                             if let Some(d) = dict {
                                 f_t(cx, &d.key);
                                 f_t(cx, &d.value);
                             }
                             for v in props.values() {
                                 match v {
+                                    ObjAnnotProp::ObjAnnotField(loc, t, _) => {
+                                        f_loc(cx, loc);
+                                        f_t(cx, t);
+                                    }
+                                    ObjAnnotProp::ObjAnnotAccess(accessor) => {
+                                        accessor.iter(cx, f_loc, f_t)
+                                    }
+                                    ObjAnnotProp::ObjAnnotMethod {
+                                        id_loc,
+                                        fn_loc,
+                                        def,
+                                    } => {
+                                        f_loc(cx, id_loc);
+                                        f_loc(cx, fn_loc);
+                                        def.iter(cx, f_loc, f_t);
+                                    }
+                                }
+                            }
+                            for (t, prop) in computed_props {
+                                f_t(cx, t);
+                                match prop {
                                     ObjAnnotProp::ObjAnnotField(loc, t, _) => {
                                         f_loc(cx, loc);
                                         f_t(cx, t);
@@ -2762,6 +2857,7 @@ impl<Loc, T> Annot<Loc, T> {
                 loc,
                 obj_kind,
                 props,
+                computed_props,
                 proto,
             } => Annot::ObjAnnot {
                 loc: f_loc(cx, loc),
@@ -2773,6 +2869,10 @@ impl<Loc, T> Annot<Loc, T> {
                 props: props
                     .iter()
                     .map(|(k, v)| (k.dupe(), v.map(cx, &f_loc, &f_t)))
+                    .collect(),
+                computed_props: computed_props
+                    .iter()
+                    .map(|(t, prop)| (f_t(cx, t), prop.map(cx, &f_loc, &f_t)))
                     .collect(),
                 proto: proto.map(cx, &f_loc, &f_t),
             },

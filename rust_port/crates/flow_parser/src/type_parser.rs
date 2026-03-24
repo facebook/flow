@@ -2479,6 +2479,7 @@ fn object_type(
         start_loc: Loc,
         static_: Option<Loc>,
         variance: Option<Variance<Loc>>,
+        ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
         // We've already consumed '['. Now consume 'Symbol', '.', and the property name.
@@ -2528,44 +2529,15 @@ fn object_type(
             expression: member_expr,
             comments: mk_comments_opt(Some(leading.into()), None),
         });
-        // Dispatch to method or init property based on what follows
-        match peek::token(env) {
-            TokenKind::TLessThan | TokenKind::TLparen => {
-                error_unexpected_variance(env, variance.as_ref())?;
-                method_property(env, start_loc, static_, false, key, false, None, Vec::new())
-            }
-            TokenKind::TPling => match peek::ith_token(env, 1) {
-                TokenKind::TLparen | TokenKind::TLessThan => {
-                    eat::token(env)?;
-                    error_unexpected_variance(env, variance.as_ref())?;
-                    method_property(env, start_loc, static_, false, key, true, None, Vec::new())
-                }
-                _ => init_property(
-                    env,
-                    start_loc,
-                    variance,
-                    static_,
-                    None,
-                    false,
-                    None,
-                    Vec::new(),
-                    computed_loc,
-                    key,
-                ),
-            },
-            _ => init_property(
-                env,
-                start_loc,
-                variance,
-                static_,
-                None,
-                false,
-                None,
-                Vec::new(),
-                computed_loc,
-                key,
-            ),
-        }
+        computed_key_property(
+            env,
+            start_loc,
+            static_,
+            variance,
+            ts_accessibility,
+            computed_loc,
+            key,
+        )
     }
 
     fn bracket_property(
@@ -2574,6 +2546,7 @@ fn object_type(
         static_: Option<Loc>,
         variance: Option<Variance<Loc>>,
         variance_op: Option<types::object::MappedTypeVarianceOp>,
+        ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
         let leading = [leading, peek::comments(env)].concat();
@@ -2583,17 +2556,34 @@ fn object_type(
             (_, TokenKind::TIdentifier { raw, .. }) if raw == "in" && static_.is_none() => {
                 mapped_type(env, start_loc, variance, variance_op, leading)
             }
+            (_, TokenKind::TColon) => {
+                if variance_op.is_some() {
+                    error_unexpected_variance(env, variance.as_ref())?;
+                }
+                indexer_property(env, start_loc, static_, variance, leading)
+            }
             (TokenKind::TIdentifier { raw, .. }, TokenKind::TPeriod) if raw == "Symbol" => {
                 if variance_op.is_some() {
                     error_unexpected_variance(env, variance.as_ref())?;
                 }
-                well_known_symbol_property(env, start_loc, static_, variance, leading)
+                well_known_symbol_property(
+                    env,
+                    start_loc,
+                    static_,
+                    variance,
+                    ts_accessibility,
+                    leading,
+                )
             }
             _ => {
                 if variance_op.is_some() {
                     error_unexpected_variance(env, variance.as_ref())?;
                 }
-                indexer_property(env, start_loc, static_, variance, leading)
+                if env.is_d_ts() {
+                    computed_property(env, start_loc, static_, variance, ts_accessibility, leading)
+                } else {
+                    indexer_property(env, start_loc, static_, variance, leading)
+                }
             }
         }
     }
@@ -2690,6 +2680,101 @@ fn object_type(
             env.error_at(v.loc.dupe(), ParseError::UnexpectedVariance)?;
         }
         Ok(())
+    }
+
+    fn computed_key_property(
+        env: &mut ParserEnv,
+        start_loc: Loc,
+        static_: Option<Loc>,
+        variance: Option<Variance<Loc>>,
+        ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
+        computed_loc: Loc,
+        key: expression::object::Key<Loc, Loc>,
+    ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
+        match peek::token(env) {
+            TokenKind::TLessThan | TokenKind::TLparen => {
+                error_unexpected_variance(env, variance.as_ref())?;
+                method_property(
+                    env,
+                    start_loc,
+                    static_,
+                    false,
+                    key,
+                    false,
+                    ts_accessibility,
+                    Vec::new(),
+                )
+            }
+            TokenKind::TPling => match peek::ith_token(env, 1) {
+                TokenKind::TLparen | TokenKind::TLessThan => {
+                    eat::token(env)?;
+                    error_unexpected_variance(env, variance.as_ref())?;
+                    method_property(
+                        env,
+                        start_loc,
+                        static_,
+                        false,
+                        key,
+                        true,
+                        ts_accessibility,
+                        Vec::new(),
+                    )
+                }
+                _ => init_property(
+                    env,
+                    start_loc,
+                    variance,
+                    static_,
+                    None,
+                    false,
+                    ts_accessibility,
+                    Vec::new(),
+                    computed_loc,
+                    key,
+                ),
+            },
+            _ => init_property(
+                env,
+                start_loc,
+                variance,
+                static_,
+                None,
+                false,
+                ts_accessibility,
+                Vec::new(),
+                computed_loc,
+                key,
+            ),
+        }
+    }
+
+    fn computed_property(
+        env: &mut ParserEnv,
+        start_loc: Loc,
+        static_: Option<Loc>,
+        variance: Option<Variance<Loc>>,
+        ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
+        leading: Vec<Comment<Loc>>,
+    ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
+        eat::push_lex_mode(env, LexMode::Normal);
+        let expr = expression_parser::assignment(env)?;
+        eat::pop_lex_mode(env);
+        let computed_loc = Loc::between(&start_loc, peek::loc(env));
+        expect::token(env, TokenKind::TRbracket)?;
+        let key = expression::object::Key::Computed(ComputedKey {
+            loc: computed_loc.dupe(),
+            expression: expr,
+            comments: mk_comments_opt(Some(leading.into()), None),
+        });
+        computed_key_property(
+            env,
+            start_loc,
+            static_,
+            variance,
+            ts_accessibility,
+            computed_loc,
+            key,
+        )
     }
 
     fn error_unexpected_proto(env: &mut ParserEnv, proto: Option<&Loc>) -> Result<(), Rollback> {
@@ -2905,6 +2990,7 @@ fn object_type(
                     if peek::ith_is_identifier(env, 1)
                         || peek::ith_token(env, 1) == &TokenKind::TReadonly
                         || peek::ith_token(env, 1) == &TokenKind::TStatic
+                        || peek::ith_token(env, 1) == &TokenKind::TLbracket
                     {
                         let acc_loc = peek::loc(env).dupe();
                         leading = [leading, peek::comments(env)].concat();
@@ -2989,6 +3075,7 @@ fn object_type(
                             static_,
                             variance,
                             variance_op,
+                            ts_accessibility,
                             leading,
                         ),
                     };

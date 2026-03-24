@@ -533,6 +533,34 @@ impl ConvertEnv {
     }
 }
 
+fn resolve_computed_key_name(
+    cx: &Context,
+    expr: &ast::expression::Expression<ALoc, ALoc>,
+) -> (
+    ast::expression::Expression<ALoc, (ALoc, Type)>,
+    Option<Name>,
+) {
+    if let Some(name) = flow_parser::ast_utils::well_known_symbol_name(expr) {
+        let typed_expr = crate::statement::expression(None, None, None, cx, expr).unwrap();
+        (typed_expr, Some(Name::new(name)))
+    } else {
+        let typed_expr = crate::statement::expression(None, None, Some(true), cx, expr).unwrap();
+        let key_t = typed_expr.loc().1.dupe();
+        let reason = type_util::reason_of_t(&key_t);
+        let concrete_keys =
+            FlowJs::possible_concrete_types_for_computed_object_keys(cx, reason, &key_t)
+                .expect("Should not be under speculation");
+        let resolved_name = match concrete_keys.as_slice() {
+            [key] => match flow_js_utils::propref_for_elem_t(cx, key) {
+                type_::PropRef::Named { name, .. } => Some(name),
+                type_::PropRef::Computed(_) => None,
+            },
+            _ => None,
+        };
+        (typed_expr, resolved_name)
+    }
+}
+
 // =========================================================================
 // converter
 // =========================================================================
@@ -4020,87 +4048,80 @@ fn convert_object(
                             v
                         }
                     }
-                    Key::Computed(comp)
-                        if flow_parser::ast_utils::well_known_symbol_name(&comp.expression)
-                            .is_some() =>
-                    {
-                        let name = FlowSmolStr::from(
-                            flow_parser::ast_utils::well_known_symbol_name(&comp.expression)
-                                .unwrap(),
-                        );
-                        let id_loc = comp.expression.loc().dupe();
-                        let value_ast = convert_inner(cx, env, value);
-                        let t = value_ast.loc().1.dupe();
-                        let t = if optional {
-                            type_util::optional(t, None, false)
-                        } else {
-                            t
-                        };
-                        let prop_name = Name::new(name.dupe());
-                        if method {
-                            let id_loc_clone = id_loc.dupe();
-                            let t_clone = t.dupe();
-                            acc.add_prop(move |pmap| {
-                                pmap.insert(
-                                    prop_name,
-                                    type_::Property::new(type_::PropertyInner::Method {
-                                        key_loc: Some(id_loc_clone),
-                                        type_: t_clone,
-                                    }),
-                                );
-                            });
-                        } else {
-                            let pol = polarity(cx, variance.as_ref());
-                            let id_loc_clone = id_loc.dupe();
-                            let t_clone = t.dupe();
-                            acc.add_prop(move |pmap| {
-                                pmap.insert(
-                                    prop_name,
-                                    type_::Property::new(type_::PropertyInner::Field {
-                                        preferred_def_locs: None,
-                                        key_loc: Some(id_loc_clone),
-                                        type_: t_clone,
-                                        polarity: pol,
-                                    }),
-                                );
-                            });
-                        }
-                        let typed_expr =
-                            crate::statement::expression(None, None, None, cx, &comp.expression)
-                                .unwrap();
-                        ast::types::object::NormalProperty {
-                            loc: prop.loc.dupe(),
-                            key: Key::Computed(ast::ComputedKey {
-                                loc: comp.loc.dupe(),
-                                expression: typed_expr,
-                                comments: comp.comments.dupe(),
-                            }),
-                            value: ast::types::object::PropertyValue::Init(value_ast),
-                            optional,
-                            static_: false,
-                            proto: false,
-                            method,
-                            abstract_,
-                            variance: prop.variance.clone(),
-                            ts_accessibility: None,
-                            comments: None,
-                        }
-                    }
                     Key::Computed(comp) => {
-                        flow_js_utils::add_output_non_speculating(
-                            cx,
-                            ErrorMessage::EUnsupportedKeyInObject {
-                                loc: comp.loc.dupe(),
-                                obj_kind: intermediate_error_types::ObjKind::Type,
-                                key_error_kind: InvalidObjKey::Other,
-                            },
-                        );
-                        {
-                            let Ok(v) = polymorphic_ast_mapper::object_property_type(
-                                &mut typed_ast_utils::ErrorMapper,
-                                prop,
-                            );
-                            v
+                        let (typed_expr, resolved_name) =
+                            resolve_computed_key_name(cx, &comp.expression);
+                        match resolved_name {
+                            Some(name) => {
+                                let value_ast = convert_inner(cx, env, value);
+                                let t = value_ast.loc().1.dupe();
+                                let t = if optional {
+                                    type_util::optional(t, None, false)
+                                } else {
+                                    t
+                                };
+                                let id_loc = comp.expression.loc().dupe();
+                                if method {
+                                    let id_loc_clone = id_loc.dupe();
+                                    let t_clone = t.dupe();
+                                    acc.add_prop(move |pmap| {
+                                        pmap.insert(
+                                            name,
+                                            type_::Property::new(type_::PropertyInner::Method {
+                                                key_loc: Some(id_loc_clone),
+                                                type_: t_clone,
+                                            }),
+                                        );
+                                    });
+                                } else {
+                                    let pol = polarity(cx, variance.as_ref());
+                                    let id_loc_clone = id_loc.dupe();
+                                    let t_clone = t.dupe();
+                                    acc.add_prop(move |pmap| {
+                                        pmap.insert(
+                                            name,
+                                            type_::Property::new(type_::PropertyInner::Field {
+                                                preferred_def_locs: None,
+                                                key_loc: Some(id_loc_clone),
+                                                type_: t_clone,
+                                                polarity: pol,
+                                            }),
+                                        );
+                                    });
+                                }
+                                ast::types::object::NormalProperty {
+                                    loc: prop.loc.dupe(),
+                                    key: Key::Computed(ast::ComputedKey {
+                                        loc: comp.loc.dupe(),
+                                        expression: typed_expr,
+                                        comments: comp.comments.dupe(),
+                                    }),
+                                    value: ast::types::object::PropertyValue::Init(value_ast),
+                                    optional,
+                                    static_: false,
+                                    proto: false,
+                                    method,
+                                    abstract_,
+                                    variance: prop.variance.clone(),
+                                    ts_accessibility: None,
+                                    comments: None,
+                                }
+                            }
+                            None => {
+                                flow_js_utils::add_output_non_speculating(
+                                    cx,
+                                    ErrorMessage::EUnsupportedKeyInObject {
+                                        loc: comp.loc.dupe(),
+                                        obj_kind: intermediate_error_types::ObjKind::Type,
+                                        key_error_kind: InvalidObjKey::Other,
+                                    },
+                                );
+                                let Ok(v) = polymorphic_ast_mapper::object_property_type(
+                                    &mut typed_ast_utils::ErrorMapper,
+                                    prop,
+                                );
+                                v
+                            }
                         }
                     }
                 }
@@ -5755,196 +5776,186 @@ fn add_interface_properties(
                             prop_asts.push(Property::NormalProperty(error_prop));
                             continue;
                         }
-                        Key::Computed(ck)
-                            if flow_parser::ast_utils::well_known_symbol_name(&ck.expression)
-                                .is_some() =>
-                        {
-                            let name = FlowSmolStr::from(
-                                flow_parser::ast_utils::well_known_symbol_name(&ck.expression)
-                                    .unwrap(),
-                            );
-                            let id_loc = ck.expression.loc().dupe();
-                            if np.method {
-                                match &np.value {
-                                    ast::types::object::PropertyValue::Init(value)
-                                        if let ast::types::TypeInner::Function {
-                                            loc: func_loc,
-                                            inner: func,
-                                        } = &**value =>
-                                    {
-                                        let meth_kind = MethodKind::MethodKind {
-                                            is_static: np.static_,
-                                        };
-                                        let (fsig, func_ast) = mk_method_func_sig(
-                                            cx,
-                                            env,
-                                            meth_kind,
-                                            np.loc.dupe(),
-                                            func,
-                                        );
-                                        let this_write_loc = None;
-                                        let ft = crate::func_sig::methodtype(
-                                            cx,
-                                            this_write_loc,
-                                            this.dupe(),
-                                            &fsig,
-                                        );
-                                        class_sig::append_method(
-                                            np.static_,
-                                            name.dupe(),
-                                            id_loc.dupe(),
-                                            None,
-                                            fsig,
-                                            None,
-                                            None,
-                                            &mut s,
-                                        );
-                                        let typed_expr = crate::statement::expression(
-                                            None,
-                                            None,
-                                            None,
-                                            cx,
-                                            &ck.expression,
-                                        )
-                                        .unwrap();
-                                        prop_asts.push(Property::NormalProperty(
-                                            ast::types::object::NormalProperty {
-                                                loc: np.loc.dupe(),
-                                                key: Key::Computed(ast::ComputedKey {
-                                                    loc: ck.loc.dupe(),
-                                                    expression: typed_expr,
-                                                    comments: ck.comments.dupe(),
-                                                }),
-                                                value: ast::types::object::PropertyValue::Init(
-                                                    ast::types::Type::new(
-                                                        ast::types::TypeInner::Function {
-                                                            loc: (func_loc.dupe(), ft),
-                                                            inner: func_ast.into(),
-                                                        },
+                        Key::Computed(ck) => {
+                            let (typed_expr, resolved_name) =
+                                resolve_computed_key_name(cx, &ck.expression);
+                            let resolved_name = resolved_name.map(|n| n.into_smol_str());
+                            match resolved_name {
+                                Some(name) => {
+                                    let id_loc = ck.expression.loc().dupe();
+                                    if np.method {
+                                        match &np.value {
+                                            ast::types::object::PropertyValue::Init(value)
+                                                if let ast::types::TypeInner::Function {
+                                                    loc: func_loc,
+                                                    inner: func,
+                                                } = &**value =>
+                                            {
+                                                let meth_kind = MethodKind::MethodKind {
+                                                    is_static: np.static_,
+                                                };
+                                                let (fsig, func_ast) = mk_method_func_sig(
+                                                    cx,
+                                                    env,
+                                                    meth_kind,
+                                                    np.loc.dupe(),
+                                                    func,
+                                                );
+                                                let this_write_loc = None;
+                                                let ft = crate::func_sig::methodtype(
+                                                    cx,
+                                                    this_write_loc,
+                                                    this.dupe(),
+                                                    &fsig,
+                                                );
+                                                class_sig::append_method(
+                                                    np.static_,
+                                                    name.dupe(),
+                                                    id_loc.dupe(),
+                                                    None,
+                                                    fsig,
+                                                    None,
+                                                    None,
+                                                    &mut s,
+                                                );
+                                                prop_asts.push(Property::NormalProperty(
+                                                    ast::types::object::NormalProperty {
+                                                        loc: np.loc.dupe(),
+                                                        key: Key::Computed(ast::ComputedKey {
+                                                            loc: ck.loc.dupe(),
+                                                            expression: typed_expr,
+                                                            comments: ck.comments.dupe(),
+                                                        }),
+                                                        value:
+                                                            ast::types::object::PropertyValue::Init(
+                                                                ast::types::Type::new(
+                                                                    ast::types::TypeInner::Function {
+                                                                        loc: (func_loc.dupe(), ft),
+                                                                        inner: func_ast.into(),
+                                                                    },
+                                                                ),
+                                                            ),
+                                                        optional: np.optional,
+                                                        static_: np.static_,
+                                                        proto: np.proto,
+                                                        method: np.method,
+                                                        abstract_: np.abstract_,
+                                                        variance: np.variance.clone(),
+                                                        ts_accessibility: np.ts_accessibility.clone(),
+                                                        comments: np.comments.dupe(),
+                                                    },
+                                                ));
+                                            }
+                                            _ => {
+                                                flow_js_utils::add_output_non_speculating(
+                                                    cx,
+                                                    ErrorMessage::EUnsupportedSyntax(
+                                                        ck.loc.dupe(),
+                                                        intermediate_error_types::UnsupportedSyntax::IllegalName,
                                                     ),
-                                                ),
-                                                optional: np.optional,
-                                                static_: np.static_,
-                                                proto: np.proto,
-                                                method: np.method,
-                                                abstract_: np.abstract_,
-                                                variance: np.variance.clone(),
-                                                ts_accessibility: np.ts_accessibility.clone(),
-                                                comments: np.comments.dupe(),
-                                            },
-                                        ));
-                                    }
-                                    _ => {
-                                        flow_js_utils::add_output_non_speculating(
-                                            cx,
-                                            ErrorMessage::EUnsupportedSyntax(
-                                                ck.loc.dupe(),
-                                                intermediate_error_types::UnsupportedSyntax::IllegalName,
-                                            ),
-                                        );
-                                        let Ok(error_prop) =
-                                            polymorphic_ast_mapper::object_property_type(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                np,
-                                            );
-                                        prop_asts.push(Property::NormalProperty(error_prop));
+                                                );
+                                                let Ok(error_prop) =
+                                                    polymorphic_ast_mapper::object_property_type(
+                                                        &mut typed_ast_utils::ErrorMapper,
+                                                        np,
+                                                    );
+                                                prop_asts
+                                                    .push(Property::NormalProperty(error_prop));
+                                            }
+                                        }
+                                    } else {
+                                        match &np.value {
+                                            ast::types::object::PropertyValue::Init(value) => {
+                                                let value_ast = convert_inner(cx, env, value);
+                                                let (_, t) = value_ast.loc();
+                                                let t = t.dupe();
+                                                let t_with_optional = if np.optional {
+                                                    type_util::optional(t.dupe(), None, false)
+                                                } else {
+                                                    t.dupe()
+                                                };
+                                                if np.proto {
+                                                    class_sig::add_proto_field(
+                                                        name.dupe(),
+                                                        id_loc.dupe(),
+                                                        polarity,
+                                                        func_class_sig_types::class::Field::Annot(
+                                                            t_with_optional.dupe(),
+                                                        ),
+                                                        &mut s,
+                                                    );
+                                                } else {
+                                                    class_sig::add_field(
+                                                        np.static_,
+                                                        name.dupe(),
+                                                        id_loc.dupe(),
+                                                        polarity,
+                                                        func_class_sig_types::class::Field::Annot(
+                                                            t_with_optional.dupe(),
+                                                        ),
+                                                        &mut s,
+                                                    );
+                                                }
+                                                prop_asts.push(Property::NormalProperty(
+                                                    ast::types::object::NormalProperty {
+                                                        loc: np.loc.dupe(),
+                                                        key: Key::Computed(ast::ComputedKey {
+                                                            loc: ck.loc.dupe(),
+                                                            expression: typed_expr,
+                                                            comments: ck.comments.dupe(),
+                                                        }),
+                                                        value:
+                                                            ast::types::object::PropertyValue::Init(
+                                                                value_ast,
+                                                            ),
+                                                        optional: np.optional,
+                                                        static_: np.static_,
+                                                        proto: np.proto,
+                                                        method: np.method,
+                                                        abstract_: np.abstract_,
+                                                        variance: np.variance.clone(),
+                                                        ts_accessibility: np
+                                                            .ts_accessibility
+                                                            .clone(),
+                                                        comments: np.comments.dupe(),
+                                                    },
+                                                ));
+                                            }
+                                            _ => {
+                                                flow_js_utils::add_output_non_speculating(
+                                                    cx,
+                                                    ErrorMessage::EUnsupportedSyntax(
+                                                        ck.loc.dupe(),
+                                                        intermediate_error_types::UnsupportedSyntax::IllegalName,
+                                                    ),
+                                                );
+                                                let Ok(error_prop) =
+                                                    polymorphic_ast_mapper::object_property_type(
+                                                        &mut typed_ast_utils::ErrorMapper,
+                                                        np,
+                                                    );
+                                                prop_asts
+                                                    .push(Property::NormalProperty(error_prop));
+                                            }
+                                        }
                                     }
                                 }
-                            } else {
-                                match &np.value {
-                                    ast::types::object::PropertyValue::Init(value) => {
-                                        let value_ast = convert_inner(cx, env, value);
-                                        let (_, t) = value_ast.loc();
-                                        let t = t.dupe();
-                                        let t_with_optional = if np.optional {
-                                            type_util::optional(t.dupe(), None, false)
-                                        } else {
-                                            t.dupe()
-                                        };
-                                        let typed_expr = crate::statement::expression(
-                                            None,
-                                            None,
-                                            None,
-                                            cx,
-                                            &ck.expression,
-                                        )
-                                        .unwrap();
-                                        if np.proto {
-                                            class_sig::add_proto_field(
-                                                name.dupe(),
-                                                id_loc.dupe(),
-                                                polarity,
-                                                func_class_sig_types::class::Field::Annot(
-                                                    t_with_optional.dupe(),
-                                                ),
-                                                &mut s,
-                                            );
-                                        } else {
-                                            class_sig::add_field(
-                                                np.static_,
-                                                name.dupe(),
-                                                id_loc.dupe(),
-                                                polarity,
-                                                func_class_sig_types::class::Field::Annot(
-                                                    t_with_optional.dupe(),
-                                                ),
-                                                &mut s,
-                                            );
-                                        }
-                                        prop_asts.push(Property::NormalProperty(
-                                            ast::types::object::NormalProperty {
-                                                loc: np.loc.dupe(),
-                                                key: Key::Computed(ast::ComputedKey {
-                                                    loc: ck.loc.dupe(),
-                                                    expression: typed_expr,
-                                                    comments: ck.comments.dupe(),
-                                                }),
-                                                value: ast::types::object::PropertyValue::Init(
-                                                    value_ast,
-                                                ),
-                                                optional: np.optional,
-                                                static_: np.static_,
-                                                proto: np.proto,
-                                                method: np.method,
-                                                abstract_: np.abstract_,
-                                                variance: np.variance.clone(),
-                                                ts_accessibility: np.ts_accessibility.clone(),
-                                                comments: np.comments.dupe(),
-                                            },
-                                        ));
-                                    }
-                                    _ => {
-                                        flow_js_utils::add_output_non_speculating(
-                                            cx,
-                                            ErrorMessage::EUnsupportedSyntax(
-                                                ck.loc.dupe(),
-                                                intermediate_error_types::UnsupportedSyntax::IllegalName,
-                                            ),
+                                None => {
+                                    flow_js_utils::add_output_non_speculating(
+                                        cx,
+                                        ErrorMessage::EUnsupportedSyntax(
+                                            ck.loc.dupe(),
+                                            intermediate_error_types::UnsupportedSyntax::IllegalName,
+                                        ),
+                                    );
+                                    let Ok(error_prop) =
+                                        polymorphic_ast_mapper::object_property_type(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            np,
                                         );
-                                        let Ok(error_prop) =
-                                            polymorphic_ast_mapper::object_property_type(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                np,
-                                            );
-                                        prop_asts.push(Property::NormalProperty(error_prop));
-                                    }
+                                    prop_asts.push(Property::NormalProperty(error_prop));
                                 }
                             }
-                            continue;
-                        }
-                        Key::Computed(ck) => {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EUnsupportedSyntax(
-                                    ck.loc.dupe(),
-                                    intermediate_error_types::UnsupportedSyntax::IllegalName,
-                                ),
-                            );
-                            let Ok(error_prop) = polymorphic_ast_mapper::object_property_type(
-                                &mut typed_ast_utils::ErrorMapper,
-                                np,
-                            );
-                            prop_asts.push(Property::NormalProperty(error_prop));
                             continue;
                         }
                         Key::Identifier(id_name) => id_name,

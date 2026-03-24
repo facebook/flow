@@ -379,6 +379,25 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
          unimplemented_mapper to assign placeholder types to the pattern nodes. *)
       Destructuring (Tast_utils.unimplemented_mapper#pattern pattern)
 
+  let resolve_computed_key_name cx expr =
+    match Flow_ast_utils.well_known_symbol_name expr with
+    | Some name ->
+      let typed_expr = Statement.expression cx expr in
+      (typed_expr, Some (OrdinaryName name))
+    | None ->
+      let (((_, key_t), _) as typed_expr) = Statement.expression ~as_const:true cx expr in
+      let reason = TypeUtil.reason_of_t key_t in
+      let concrete_keys = Flow.possible_concrete_types_for_computed_object_keys cx reason key_t in
+      let resolved_name =
+        match concrete_keys with
+        | [key] ->
+          (match Flow_js_utils.propref_for_elem_t cx key with
+          | Type.Named { name; _ } -> Some name
+          | Type.Computed _ -> None)
+        | _ -> None
+      in
+      (typed_expr, resolved_name)
+
   let rec convert env =
     let open Ast.Type in
     function
@@ -2165,50 +2184,58 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 (acc, prop_ast)
               ))
           | Ast.Expression.Object.Property.Computed
-              (computed_loc, { Ast.ComputedKey.expression = expr; comments = computed_comments })
-            when Flow_ast_utils.well_known_symbol_name expr <> None ->
-            let name = Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr) in
-            let id_loc = fst expr in
-            let (((_, t), _) as value_ast) = convert env value in
-            let t =
-              if optional then
-                TypeUtil.optional t
-              else
-                t
-            in
-            let prop =
-              if _method then
-                Properties.add_method (OrdinaryName name) (Some id_loc) t
-              else
-                Properties.add_field
-                  (OrdinaryName name)
-                  (polarity env.cx variance)
-                  ~key_loc:(Some id_loc)
+              (computed_loc, { Ast.ComputedKey.expression = expr; comments = computed_comments }) ->
+            let (typed_expr, resolved_name) = resolve_computed_key_name env.cx expr in
+            (match resolved_name with
+            | Some name ->
+              let (((_, t), _) as value_ast) = convert env value in
+              let t =
+                if optional then
+                  TypeUtil.optional t
+                else
                   t
-            in
-            let typed_expr = Statement.expression env.cx expr in
-            let prop_ast =
-              {
-                Ast.Type.Object.Property.key =
-                  Ast.Expression.Object.Property.Computed
-                    ( computed_loc,
-                      { Ast.ComputedKey.expression = typed_expr; comments = computed_comments }
-                    );
-                value = Object.Property.Init value_ast;
-                optional;
-                static = false;
-                proto = false;
-                _method;
-                abstract;
-                variance;
-                ts_accessibility = None;
-                comments = None;
-              }
-            in
-            (Acc.add_prop prop acc, prop_ast)
+              in
+              let prop =
+                if _method then
+                  Properties.add_method name (Some (fst expr)) t
+                else
+                  Properties.add_field name (polarity env.cx variance) ~key_loc:(Some (fst expr)) t
+              in
+              let prop_ast =
+                {
+                  Ast.Type.Object.Property.key =
+                    Ast.Expression.Object.Property.Computed
+                      ( computed_loc,
+                        { Ast.ComputedKey.expression = typed_expr; comments = computed_comments }
+                      );
+                  value = Object.Property.Init value_ast;
+                  optional;
+                  static = false;
+                  proto = false;
+                  _method;
+                  abstract;
+                  variance;
+                  ts_accessibility = None;
+                  comments = None;
+                }
+              in
+              (Acc.add_prop prop acc, prop_ast)
+            | None ->
+              Flow_js_utils.add_output
+                env.cx
+                (Error_message.EUnsupportedKeyInObject
+                   {
+                     loc = computed_loc;
+                     obj_kind = `Type;
+                     key_error_kind = Flow_intermediate_error_types.InvalidObjKey.Other;
+                   }
+                );
+              let (_, prop_ast) =
+                Tast_utils.error_mapper#object_property_type (computed_loc, prop)
+              in
+              (acc, prop_ast))
           | Ast.Expression.Object.Property.BigIntLiteral (loc, _)
-          | Ast.Expression.Object.Property.PrivateName (loc, _)
-          | Ast.Expression.Object.Property.Computed (loc, _) ->
+          | Ast.Expression.Object.Property.PrivateName (loc, _) ->
             Flow_js_utils.add_output
               env.cx
               (Error_message.EUnsupportedKeyInObject
@@ -3092,83 +3119,99 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                             { Ast.ComputedKey.expression = expr; comments = computed_comments }
                           ),
                         Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func)
-                      )
-                      when Flow_ast_utils.well_known_symbol_name expr <> None ->
-                      let name =
-                        Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr)
+                      ) ->
+                      let (typed_expr, resolved_name) = resolve_computed_key_name env.cx expr in
+                      let resolved_name =
+                        Base.Option.map resolved_name ~f:Reason.display_string_of_name
                       in
-                      let id_loc = fst expr in
-                      let meth_kind = MethodKind { static } in
-                      let (fsig, func_ast) = mk_method_func_sig ~meth_kind env loc func in
-                      let this_write_loc = None in
-                      let ft = Func_type_sig.methodtype env.cx this_write_loc this fsig in
-                      let typed_expr = Statement.expression env.cx expr in
-                      let open Ast.Type in
-                      ( Class_type_sig.append_method
-                          ~static
-                          name
-                          ~id_loc
-                          ~this_write_loc
-                          ~func_sig:fsig
-                          x,
-                        ( loc,
-                          {
-                            prop with
-                            Object.Property.key =
-                              Property.Computed
-                                ( computed_loc,
-                                  {
-                                    Ast.ComputedKey.expression = typed_expr;
-                                    comments = computed_comments;
-                                  }
-                                );
-                            value = Object.Property.Init ((func_loc, ft), Function func_ast);
-                          }
+                      (match resolved_name with
+                      | Some name ->
+                        let id_loc = fst expr in
+                        let meth_kind = MethodKind { static } in
+                        let (fsig, func_ast) = mk_method_func_sig ~meth_kind env loc func in
+                        let this_write_loc = None in
+                        let ft = Func_type_sig.methodtype env.cx this_write_loc this fsig in
+                        let open Ast.Type in
+                        ( Class_type_sig.append_method
+                            ~static
+                            name
+                            ~id_loc
+                            ~this_write_loc
+                            ~func_sig:fsig
+                            x,
+                          ( loc,
+                            {
+                              prop with
+                              Object.Property.key =
+                                Property.Computed
+                                  ( computed_loc,
+                                    {
+                                      Ast.ComputedKey.expression = typed_expr;
+                                      comments = computed_comments;
+                                    }
+                                  );
+                              value = Object.Property.Init ((func_loc, ft), Function func_ast);
+                            }
+                          )
                         )
-                      )
+                      | None ->
+                        Flow_js_utils.add_output
+                          env.cx
+                          (Error_message.EUnsupportedSyntax
+                             (computed_loc, Flow_intermediate_error_types.IllegalName)
+                          );
+                        (x, Tast_utils.error_mapper#object_property_type (loc, prop)))
                     | ( false,
                         Property.Computed
                           ( computed_loc,
                             { Ast.ComputedKey.expression = expr; comments = computed_comments }
                           ),
                         Ast.Type.Object.Property.Init value
-                      )
-                      when Flow_ast_utils.well_known_symbol_name expr <> None ->
-                      let name =
-                        Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr)
+                      ) ->
+                      let (typed_expr, resolved_name) = resolve_computed_key_name env.cx expr in
+                      let resolved_name =
+                        Base.Option.map resolved_name ~f:Reason.display_string_of_name
                       in
-                      let id_loc = fst expr in
-                      let (((_, t), _) as value_ast) = convert env value in
-                      let t =
-                        if optional then
-                          TypeUtil.optional t
-                        else
-                          t
-                      in
-                      let typed_expr = Statement.expression env.cx expr in
-                      let add =
-                        if proto then
-                          Class_type_sig.add_proto_field
-                        else
-                          Class_type_sig.add_field ~static
-                      in
-                      let open Ast.Type in
-                      ( add name id_loc polarity (Class_type_sig.Types.Annot t) x,
-                        ( loc,
-                          {
-                            prop with
-                            Object.Property.key =
-                              Property.Computed
-                                ( computed_loc,
-                                  {
-                                    Ast.ComputedKey.expression = typed_expr;
-                                    comments = computed_comments;
-                                  }
-                                );
-                            value = Object.Property.Init value_ast;
-                          }
+                      (match resolved_name with
+                      | Some name ->
+                        let id_loc = fst expr in
+                        let (((_, t), _) as value_ast) = convert env value in
+                        let t =
+                          if optional then
+                            TypeUtil.optional t
+                          else
+                            t
+                        in
+                        let add =
+                          if proto then
+                            Class_type_sig.add_proto_field
+                          else
+                            Class_type_sig.add_field ~static
+                        in
+                        let open Ast.Type in
+                        ( add name id_loc polarity (Class_type_sig.Types.Annot t) x,
+                          ( loc,
+                            {
+                              prop with
+                              Object.Property.key =
+                                Property.Computed
+                                  ( computed_loc,
+                                    {
+                                      Ast.ComputedKey.expression = typed_expr;
+                                      comments = computed_comments;
+                                    }
+                                  );
+                              value = Object.Property.Init value_ast;
+                            }
+                          )
                         )
-                      )
+                      | None ->
+                        Flow_js_utils.add_output
+                          env.cx
+                          (Error_message.EUnsupportedSyntax
+                             (computed_loc, Flow_intermediate_error_types.IllegalName)
+                          );
+                        (x, Tast_utils.error_mapper#object_property_type (loc, prop)))
                     | (_, Property.StringLiteral (key_loc, _), _)
                     | (_, Property.NumberLiteral (key_loc, _), _)
                     | (_, Property.BigIntLiteral (key_loc, _), _)

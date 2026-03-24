@@ -246,6 +246,11 @@ let parse_and_pack_module ~parse_options ~strict sig_opts contents =
   let (ast, _errors) = Parser_flow.program ~parse_options contents in
   Type_sig_utils.parse_and_pack_module ~strict sig_opts None ast
 
+let parse_and_pack_d_ts_module ~parse_options ~strict ~platform_availability_set sig_opts contents =
+  let filename = Some (File_key.SourceFile "/test.d.ts") in
+  let (ast, _errors) = Parser_flow.program_file ~parse_options contents filename in
+  Type_sig_utils.parse_and_pack_module ~strict ~platform_availability_set sig_opts filename ast
+
 let print_sig
     ?munge
     ?facebook_fbt
@@ -281,6 +286,24 @@ let print_sig
   let parse_options = parse_options ~module_ref_prefix in
   let type_sig =
     parse_and_pack_module
+      ~parse_options
+      ~strict:true
+      ~platform_availability_set:None
+      sig_opts
+      contents
+  in
+  let fmt = make_test_formatter () in
+  pp_sig fmt type_sig
+
+let print_d_ts_sig ?(enable_ts_syntax = true) contents_indent =
+  let contents = dedent_trim contents_indent in
+  let sig_opts = sig_options ~enable_ts_syntax () in
+  let parse_options =
+    let open Parser_env in
+    Some { default_parse_options with components = true; enums = true; module_ref_prefix = None }
+  in
+  let type_sig =
+    parse_and_pack_d_ts_module
       ~parse_options
       ~strict:true
       ~platform_availability_set:None
@@ -785,6 +808,7 @@ let%expect_test "function_param_typeof_reference" =
                                     t = (Ref LocalRef {ref_loc = [2:78-81]; index = 2});
                                     targs = None}),
                                Polarity.Neutral)) };
+                          computed_props = [];
                           proto = ObjAnnotImplicitProto})}
                    ];
                  rest_param = None; this_param = None;
@@ -869,6 +893,7 @@ let%expect_test "component_param_typeof_reference" =
                               (Ref BuiltinRef {ref_loc = [2:81-84]; type_ref = false; name = "baz"});
                               targs = None}),
                          Polarity.Neutral)) };
+                    computed_props = [];
                     proto = ObjAnnotImplicitProto})}
              ];
            rest_param = None; renders = (Annot (ComponentMissingRenders [2:86]))}}
@@ -2734,7 +2759,8 @@ let%expect_test "interface_coverage" =
               bound = None; default = None;
               is_const = false},
             []));
-         def = InterfaceSig {extends = []; props = {}; calls = []; dict = None}}
+         def =
+         InterfaceSig {extends = []; props = {}; computed_props = []; calls = []; dict = None}}
     1. DeclareClassBinding {id_loc = [2:21-22];
          nominal_id_loc = [2:21-22];
          name = "C";
@@ -2750,8 +2776,11 @@ let%expect_test "interface_coverage" =
                   name = (Unqualified LocalRef {ref_loc = [3:7-10]; index = 0});
                   targs = [(Annot (Any [3:11-14]))]},
                 Polarity.Neutral)) };
-           proto_props = {}; static_calls = [];
-           calls = []; dict = None; static_dict = None}}
+           proto_props = {}; computed_own_props = [];
+           computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}}
   |}]
 
 let%expect_test "bound_coverage" =
@@ -3251,7 +3280,7 @@ let%expect_test "type_spread" =
               obj_kind = InexactObj;
               props =
               { "a" -> (ObjAnnotField ([1:11-12], (Annot (String [1:14-20])), Polarity.Neutral)) };
-              proto = ObjAnnotImplicitProto})}
+              computed_props = []; proto = ObjAnnotImplicitProto})}
     1. TypeAlias {id_loc = [2:5-6]; custom_error_loc_opt = None;
          name = "B"; tparams = Mono;
          body =
@@ -3260,7 +3289,7 @@ let%expect_test "type_spread" =
               obj_kind = InexactObj;
               props =
               { "b" -> (ObjAnnotField ([2:11-12], (Annot (Number [2:14-20])), Polarity.Neutral)) };
-              proto = ObjAnnotImplicitProto})}
+              computed_props = []; proto = ObjAnnotImplicitProto})}
     2. TypeAlias {id_loc = [3:12-13];
          custom_error_loc_opt = None;
          name = "C"; tparams = Mono;
@@ -3271,7 +3300,8 @@ let%expect_test "type_spread" =
               elems_rev =
               (ObjSpreadAnnotSlice {dict = None;
                  props =
-                 { "c" -> (ObjAnnotField ([3:30-31], (Annot (Null [3:33-37])), Polarity.Neutral)) }},
+                 { "c" -> (ObjAnnotField ([3:30-31], (Annot (Null [3:33-37])), Polarity.Neutral)) };
+                 computed_props = []},
                [(ObjSpreadAnnotElem (TyRef (Unqualified LocalRef {ref_loc = [3:27-28]; index = 1})));
                  (ObjSpreadAnnotElem
                     (TyRef (Unqualified LocalRef {ref_loc = [3:21-22]; index = 0})))
@@ -3297,7 +3327,8 @@ let%expect_test "inline_interface" =
          body =
          (Annot
             (InlineInterface ([1:9-21],
-               InterfaceSig {extends = []; props = {}; calls = []; dict = None})))}
+               InterfaceSig {extends = []; props = {}; computed_props = []; calls = []; dict = None}
+               )))}
     1. TypeAlias {id_loc = [2:12-13];
          custom_error_loc_opt = None;
          name = "B"; tparams = Mono;
@@ -3310,6 +3341,7 @@ let%expect_test "inline_interface" =
                  { "p" ->
                    (InterfaceField ((Some [2:38-39]), (
                       Annot (String [2:41-47])), Polarity.Neutral)) };
+                 computed_props = [];
                  calls = []; dict = None}
                )))}
   |}]
@@ -3338,7 +3370,7 @@ let%expect_test "object_annot_optional" =
               { "p" ->
                 (ObjAnnotField ([1:18-19], (
                    Annot (Optional (Annot (String [1:22-28])))), Polarity.Neutral)) };
-              proto = ObjAnnotImplicitProto})} |}]
+              computed_props = []; proto = ObjAnnotImplicitProto})} |}]
 
 let%expect_test "interface_optional" =
   print_sig {|
@@ -3361,7 +3393,8 @@ let%expect_test "interface_optional" =
            { "p" ->
              (InterfaceField ((Some [1:21-22]), (
                 Annot (Optional (Annot (String [1:25-31])))), Polarity.Neutral)) };
-           calls = []; dict = None}} |}]
+           computed_props = []; calls = [];
+           dict = None}} |}]
 
 let%expect_test "interface_method" =
   print_sig {|
@@ -3391,7 +3424,8 @@ let%expect_test "interface_method" =
                     type_guard = None;
                     effect_ = ArbitraryEffect}),
                  [])) };
-           calls = []; dict = None}}
+           computed_props = []; calls = [];
+           dict = None}}
   |}]
 
 let%expect_test "interface_indexer" =
@@ -3411,7 +3445,8 @@ let%expect_test "interface_indexer" =
          name = "I"; tparams = Mono;
          def =
          InterfaceSig {extends = [];
-           props = {}; calls = [];
+           props = {}; computed_props = [];
+           calls = [];
            dict =
            (Some ObjDict {name = (Some "key");
                    polarity = Polarity.Neutral;
@@ -3449,7 +3484,7 @@ let%expect_test "object_annot_method" =
                     return = (Annot (Void [1:23-27]));
                     type_guard = None;
                     effect_ = ArbitraryEffect}} };
-              proto = ObjAnnotImplicitProto})} |}]
+              computed_props = []; proto = ObjAnnotImplicitProto})} |}]
 
 let%expect_test "object_annot_optional_method" =
   print_sig {|
@@ -3488,7 +3523,7 @@ let%expect_test "object_annot_optional_method" =
                                  effect_ = ArbitraryEffect}
                                ))))),
                    Polarity.Neutral)) };
-              proto = ObjAnnotImplicitProto})} |}]
+              computed_props = []; proto = ObjAnnotImplicitProto})} |}]
 
 let%expect_test "interface_optional_method" =
   print_sig {|
@@ -3523,7 +3558,8 @@ let%expect_test "interface_optional_method" =
                               effect_ = ArbitraryEffect}
                             ))))),
                 Polarity.Neutral)) };
-           calls = []; dict = None}} |}]
+           computed_props = []; calls = [];
+           dict = None}} |}]
 
 let%expect_test "declare_class_optional_method" =
   print_sig {|
@@ -3561,8 +3597,11 @@ let%expect_test "declare_class_optional_method" =
                               effect_ = ArbitraryEffect}
                             ))))),
                 Polarity.Neutral)) };
-           proto_props = {}; static_calls = [];
-           calls = []; dict = None; static_dict = None}} |}]
+           proto_props = {}; computed_own_props = [];
+           computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}} |}]
 
 let%expect_test "object_annot_call_poly" =
   print_sig {|
@@ -3584,7 +3623,7 @@ let%expect_test "object_annot_call_poly" =
          (Annot
             ObjAnnot {loc = [1:16-29];
               obj_kind = InexactObj;
-              props = {};
+              props = {}; computed_props = [];
               proto =
               ObjAnnotCallable {
                 ts_rev =
@@ -3638,7 +3677,7 @@ let%expect_test "object_annot_multiple_call" =
          (Annot
             ObjAnnot {loc = [1:16-42];
               obj_kind = InexactObj;
-              props = {};
+              props = {}; computed_props = [];
               proto =
               ObjAnnotCallable {
                 ts_rev =
@@ -3870,7 +3909,7 @@ let%expect_test "cycle" =
                       (Maybe ([1:21-23],
                          (TyRef (Unqualified LocalRef {ref_loc = [1:22-23]; index = 1}))))),
                    Polarity.Neutral)) };
-              proto = ObjAnnotImplicitProto})}
+              computed_props = []; proto = ObjAnnotImplicitProto})}
     1. TypeAlias {id_loc = [2:12-13];
          custom_error_loc_opt = None;
          name = "B"; tparams = Mono;
@@ -3885,7 +3924,7 @@ let%expect_test "cycle" =
                       (Maybe ([2:21-23],
                          (TyRef (Unqualified LocalRef {ref_loc = [2:22-23]; index = 0}))))),
                    Polarity.Neutral)) };
-              proto = ObjAnnotImplicitProto})}
+              computed_props = []; proto = ObjAnnotImplicitProto})}
   |}]
 
 let%expect_test "typeof loc" =
@@ -4024,8 +4063,11 @@ let%expect_test "class_extends" =
            extends = ClassImplicitExtends;
            mixins = []; implements = [];
            static_props = {}; own_props = {};
-           proto_props = {}; static_calls = [];
-           calls = []; dict = None; static_dict = None}}
+           proto_props = {}; computed_own_props = [];
+           computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}}
     1. Variable {id_loc = [2:6-7]; name = "M";
          def =
          (Value
@@ -4063,8 +4105,11 @@ let%expect_test "class_extends" =
              t = (Ref LocalRef {ref_loc = [5:32-33]; index = 0})};
            mixins = []; implements = [];
            static_props = {}; own_props = {};
-           proto_props = {}; static_calls = [];
-           calls = []; dict = None; static_dict = None}}
+           proto_props = {}; computed_own_props = [];
+           computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}}
     5. DeclareClassBinding {id_loc = [6:21-23];
          nominal_id_loc = [6:21-23];
          name = "C4";
@@ -4075,8 +4120,11 @@ let%expect_test "class_extends" =
              t = (Eval ([6:32-35], (Ref LocalRef {ref_loc = [6:32-33]; index = 1}), (GetProp "C")))};
            mixins = []; implements = [];
            static_props = {}; own_props = {};
-           proto_props = {}; static_calls = [];
-           calls = []; dict = None; static_dict = None}} |}]
+           proto_props = {}; computed_own_props = [];
+           computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}} |}]
 
 let%expect_test "class_this" =
   print_sig {|
@@ -4142,6 +4190,8 @@ let%expect_test "declare_class_this" =
                     type_guard = None;
                     effect_ = ArbitraryEffect}),
                  [])) };
+           computed_own_props = []; computed_proto_props = [];
+           computed_static_props = [];
            static_calls = []; calls = [];
            dict = None; static_dict = None}} |}]
 
@@ -4206,7 +4256,7 @@ let%expect_test "exact_by_default" =
               obj_kind = ExactObj;
               props =
               { "p" -> (ObjAnnotField ([1:18-19], (Annot (String [1:21-27])), Polarity.Neutral)) };
-              proto = ObjAnnotImplicitProto})} |}]
+              computed_props = []; proto = ObjAnnotImplicitProto})} |}]
 
 let%expect_test "cjs_export_props" =
   print_sig {|
@@ -4486,7 +4536,8 @@ let%expect_test "obj_annot_proto" =
          (Annot
             ObjAnnot {loc = [1:22-41];
               obj_kind = InexactObj;
-              props = {}; proto = (ObjAnnotExplicitProto ([1:35-39], (Annot (Null [1:35-39]))))})} |}]
+              props = {}; computed_props = [];
+              proto = (ObjAnnotExplicitProto ([1:35-39], (Annot (Null [1:35-39]))))})} |}]
 
 let%expect_test "getter_setter" =
   print_sig {|
@@ -4671,8 +4722,11 @@ let%expect_test "declared_export_default_class_binding" =
            extends = ClassImplicitExtends;
            mixins = []; implements = [];
            static_props = {}; own_props = {};
-           proto_props = {}; static_calls = [];
-           calls = []; dict = None; static_dict = None}} |}]
+           proto_props = {}; computed_own_props = [];
+           computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}} |}]
 
 let%expect_test "module_ref_prefix" =
   print_sig ~module_ref_prefix:"m#" {|
@@ -4943,6 +4997,7 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
                             (Unqualified
                                BuiltinRef {ref_loc = [2:26-29]; type_ref = true; name = "bar"})),
                          Polarity.Neutral)) };
+                    computed_props = [];
                     proto = ObjAnnotImplicitProto})
                )))}
     2. DeclareClassBinding {id_loc = [3:14-19];
@@ -4953,8 +5008,11 @@ let%expect_test "builtins_ignore_name_def_for_use_special_cased_names" =
            extends = ClassImplicitExtends;
            mixins = []; implements = [];
            static_props = {}; own_props = {};
-           proto_props = {}; static_calls = [];
-           calls = []; dict = None; static_dict = None}}
+           proto_props = {}; computed_own_props = [];
+           computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}}
     3. TypeAlias {id_loc = [4:5-14];
          custom_error_loc_opt = None;
          name = "$ReadOnly"; tparams = Mono;
@@ -5203,8 +5261,11 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            extends = ClassImplicitExtends;
            mixins = []; implements = [];
            static_props = {}; own_props = {};
-           proto_props = {}; static_calls = [];
-           calls = []; dict = None; static_dict = None}}
+           proto_props = {}; computed_own_props = [];
+           computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}}
     5. ComponentBinding {id_loc = [9:20-23];
          name = "foo"; fn_loc = [9:2-25];
          def =
@@ -5736,6 +5797,8 @@ let%expect_test "this_param_4" =
                     type_guard = None;
                     effect_ = ArbitraryEffect}),
                  [])) };
+           computed_own_props = []; computed_proto_props = [];
+           computed_static_props = [];
            static_calls = []; calls = [];
            dict = None; static_dict = None}} |}]
 
@@ -5800,7 +5863,7 @@ let%expect_test "this_param_6" =
                            effect_ = ArbitraryEffect}
                          ))),
                    Polarity.Neutral)) };
-              proto = ObjAnnotImplicitProto})} |}]
+              computed_props = []; proto = ObjAnnotImplicitProto})} |}]
 
 let%expect_test "optional_indexed_access" =
   print_sig {|
@@ -5958,7 +6021,7 @@ let%expect_test "duplicate_binding2" =
             props =
             { "bar" -> (ObjAnnotField ([2:37-40], (Annot (Number [2:42-48])), Polarity.Neutral));
               "foo" -> (ObjAnnotField ([2:24-27], (Annot (Number [2:29-35])), Polarity.Neutral)) };
-            proto = ObjAnnotImplicitProto})
+            computed_props = []; proto = ObjAnnotImplicitProto})
 
     Patterns:
     0. (PDef 0)
@@ -6118,7 +6181,7 @@ let%expect_test "mapped_types" =
               props =
               { "bar" -> (ObjAnnotField ([1:23-26], (Annot (String [1:28-34])), Polarity.Neutral));
                 "foo" -> (ObjAnnotField ([1:10-13], (Annot (Number [1:15-21])), Polarity.Neutral)) };
-              proto = ObjAnnotImplicitProto})}
+              computed_props = []; proto = ObjAnnotImplicitProto})}
     1. TypeAlias {id_loc = [2:12-14];
          custom_error_loc_opt = None;
          name = "T1"; tparams = Mono;
@@ -6275,6 +6338,7 @@ export const {foo} = {foo: 3};
                         (ObjAnnotField ([1:35-38], (Annot (String [1:40-46])), Polarity.Neutral));
                         "foo" ->
                         (ObjAnnotField ([1:22-25], (Annot (Number [1:27-33])), Polarity.Neutral)) };
+                      computed_props = [];
                       proto = ObjAnnotImplicitProto})}
     (dirty) 1. Variable {id_loc = [2:13-18];
                  name = "aaaaa";
@@ -6367,7 +6431,7 @@ let%expect_test "component2" =
               obj_kind = InexactObj;
               props =
               { "x" -> (ObjAnnotField ([1:14-15], (Annot (Number [1:17-23])), Polarity.Neutral)) };
-              proto = ObjAnnotImplicitProto})}
+              computed_props = []; proto = ObjAnnotImplicitProto})}
     1. ComponentBinding {id_loc = [2:10-13];
          name = "Baz"; fn_loc = [2:0-40];
          def =
@@ -6641,7 +6705,8 @@ let%expect_test "component_type" =
          (Annot
             ObjAnnot {loc = [5:13-15];
               obj_kind = InexactObj;
-              props = {}; proto = ObjAnnotImplicitProto})}
+              props = {}; computed_props = [];
+              proto = ObjAnnotImplicitProto})}
     5. TypeAlias {id_loc = [6:12-16];
          custom_error_loc_opt = None;
          name = "Mono"; tparams = Mono;
@@ -7072,3 +7137,234 @@ let%expect_test "import_equals_qualified_name" =
     Local defs:
     0. Variable {id_loc = [1:7-10]; name = "Foo"; def = (Annot (Any [1:7-10]))}
   |}]
+
+let%expect_test "d_ts_computed_property_string_key" =
+  print_d_ts_sig {|
+    export declare const STR_KEY: "myProp";
+    export type WithStrKey = {[STR_KEY]: number};
+  |};
+  [%expect {|
+    ESModule {type_exports = [|(ExportTypeBinding 1)|];
+      exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [|"WithStrKey"|];
+        type_stars = []; export_keys = [|"STR_KEY"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. Variable {id_loc = [1:21-28];
+         name = "STR_KEY"; def = (Annot (SingletonString ([1:30-38], "myProp")))}
+    1. TypeAlias {id_loc = [2:12-22];
+         custom_error_loc_opt = None;
+         name = "WithStrKey"; tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [2:25-44];
+              obj_kind = InexactObj;
+              props = {};
+              computed_props =
+              [((Ref LocalRef {ref_loc = [2:27-34]; index = 0}),
+                (ObjAnnotField ([2:27-34], (Annot (Number [2:37-43])), Polarity.Neutral)))];
+              proto = ObjAnnotImplicitProto})} |}]
+
+let%expect_test "d_ts_computed_property_number_key" =
+  print_d_ts_sig {|
+    export declare const NUM_KEY: 42;
+    export type WithNumKey = {[NUM_KEY]: string};
+  |};
+  [%expect {|
+    ESModule {type_exports = [|(ExportTypeBinding 1)|];
+      exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [|"WithNumKey"|];
+        type_stars = []; export_keys = [|"NUM_KEY"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. Variable {id_loc = [1:21-28];
+         name = "NUM_KEY"; def = (Annot (SingletonNumber ([1:30-32], 42., "42")))}
+    1. TypeAlias {id_loc = [2:12-22];
+         custom_error_loc_opt = None;
+         name = "WithNumKey"; tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [2:25-44];
+              obj_kind = InexactObj;
+              props = {};
+              computed_props =
+              [((Ref LocalRef {ref_loc = [2:27-34]; index = 0}),
+                (ObjAnnotField ([2:27-34], (Annot (String [2:37-43])), Polarity.Neutral)))];
+              proto = ObjAnnotImplicitProto})} |}]
+
+let%expect_test "d_ts_computed_property_in_interface" =
+  print_d_ts_sig {|
+    export declare const IFACE_KEY: "ifaceProp";
+    export interface WithComputedIface {
+      [IFACE_KEY]: boolean;
+    }
+  |};
+  [%expect {|
+    ESModule {type_exports = [|(ExportTypeBinding 1)|];
+      exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [|"WithComputedIface"|];
+        type_stars = []; export_keys = [|"IFACE_KEY"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. Variable {id_loc = [1:21-30];
+         name = "IFACE_KEY"; def = (Annot (SingletonString ([1:32-43], "ifaceProp")))}
+    1. Interface {id_loc = [2:17-34];
+         name = "WithComputedIface";
+         tparams = Mono;
+         def =
+         InterfaceSig {extends = [];
+           props = {};
+           computed_props =
+           [((Ref LocalRef {ref_loc = [3:3-12]; index = 0}),
+             (InterfaceField ((Some [3:3-12]), (Annot (Boolean [3:15-22])), Polarity.Neutral)))];
+           calls = []; dict = None}} |}]
+
+let%expect_test "d_ts_computed_property_in_declare_class" =
+  print_d_ts_sig {|
+    export declare const CLASS_KEY: "classProp";
+    export declare class WithComputedClass {
+      [CLASS_KEY]: string;
+    }
+  |};
+  [%expect {|
+    ESModule {type_exports = [||]; exports = [|(ExportBinding 0); (ExportBinding 1)|];
+      info =
+      ESModuleInfo {type_export_keys = [||];
+        type_stars = []; export_keys = [|"CLASS_KEY"; "WithComputedClass"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. Variable {id_loc = [1:21-30];
+         name = "CLASS_KEY"; def = (Annot (SingletonString ([1:32-43], "classProp")))}
+    1. DeclareClassBinding {id_loc = [2:21-38];
+         nominal_id_loc = [2:21-38];
+         name = "WithComputedClass";
+         def =
+         DeclareClassSig {tparams = Mono;
+           extends = ClassImplicitExtends;
+           mixins = []; implements = [];
+           static_props = {}; own_props = {};
+           proto_props = {};
+           computed_own_props =
+           [((Ref LocalRef {ref_loc = [3:3-12]; index = 0}),
+             (InterfaceField ((Some [3:3-12]), (Annot (String [3:15-21])), Polarity.Neutral)))];
+           computed_proto_props = [];
+           computed_static_props = [];
+           static_calls = []; calls = [];
+           dict = None; static_dict = None}} |}]
+
+let%expect_test "d_ts_computed_property_bigint_key" =
+  print_d_ts_sig {|
+    export declare const BIG_KEY: 42n;
+    export type WithBigKey = {[BIG_KEY]: string};
+  |};
+  [%expect {|
+    ESModule {type_exports = [|(ExportTypeBinding 1)|];
+      exports = [|(ExportBinding 0)|];
+      info =
+      ESModuleInfo {type_export_keys = [|"WithBigKey"|];
+        type_stars = []; export_keys = [|"BIG_KEY"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. Variable {id_loc = [1:21-28];
+         name = "BIG_KEY"; def = (Annot (SingletonBigInt ([1:30-33], (Some 42L), "42n")))}
+    1. TypeAlias {id_loc = [2:12-22];
+         custom_error_loc_opt = None;
+         name = "WithBigKey"; tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [2:25-44];
+              obj_kind = InexactObj;
+              props = {};
+              computed_props =
+              [((Ref LocalRef {ref_loc = [2:27-34]; index = 0}),
+                (ObjAnnotField ([2:27-34], (Annot (String [2:37-43])), Polarity.Neutral)))];
+              proto = ObjAnnotImplicitProto})} |}]
+
+let%expect_test "d_ts_computed_property_bigint_literal" =
+  print_d_ts_sig {|
+    export type WithBigIntLit = {[42n]: string};
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"WithBigIntLit"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-25];
+         custom_error_loc_opt = None;
+         name = "WithBigIntLit"; tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [1:28-43];
+              obj_kind = InexactObj;
+              props =
+              { "42" -> (ObjAnnotField ([1:30-33], (Annot (String [1:36-42])), Polarity.Neutral)) };
+              computed_props = []; proto = ObjAnnotImplicitProto})} |}]
+
+let%expect_test "d_ts_computed_property_number_literal" =
+  print_d_ts_sig {|
+    export type WithNumLit = {[100]: string};
+  |};
+  [%expect {|
+    CJSModule {type_exports = [|(ExportTypeBinding 0)|];
+      exports = None;
+      info =
+      CJSModuleInfo {type_export_keys = [|"WithNumLit"|];
+        type_stars = []; strict = true;
+        platform_availability_set = None}}
+
+    Local defs:
+    0. TypeAlias {id_loc = [1:12-22];
+         custom_error_loc_opt = None;
+         name = "WithNumLit"; tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [1:25-40];
+              obj_kind = InexactObj;
+              props =
+              { "100" -> (ObjAnnotField ([1:27-30], (Annot (String [1:33-39])), Polarity.Neutral)) };
+              computed_props = []; proto = ObjAnnotImplicitProto})} |}]
+
+let%expect_test "d_ts_computed_property_unsupported_expression" =
+  print_d_ts_sig {|
+    export declare const A: "a";
+    export declare const B: "b";
+    export type WithUnsupported = {[A + B]: number};
+  |};
+  [%expect {|
+    ESModule {type_exports = [|(ExportTypeBinding 2)|];
+      exports = [|(ExportBinding 0); (ExportBinding 1)|];
+      info =
+      ESModuleInfo {type_export_keys = [|"WithUnsupported"|];
+        type_stars = []; export_keys = [|"A"; "B"|];
+        stars = []; strict = true; platform_availability_set = None}}
+
+    Local defs:
+    0. Variable {id_loc = [1:21-22]; name = "A"; def = (Annot (SingletonString ([1:24-27], "a")))}
+    1. Variable {id_loc = [2:21-22]; name = "B"; def = (Annot (SingletonString ([2:24-27], "b")))}
+    2. TypeAlias {id_loc = [3:12-27];
+         custom_error_loc_opt = None;
+         name = "WithUnsupported"; tparams = Mono;
+         body =
+         (Annot
+            ObjAnnot {loc = [3:30-47];
+              obj_kind = InexactObj;
+              props = {};
+              computed_props =
+              [((Err [3:31-38]),
+                (ObjAnnotField ([3:31-38], (Annot (Number [3:40-46])), Polarity.Neutral)))];
+              proto = ObjAnnotImplicitProto})}
+
+    Errors:
+    (SigError (Signature_error.UnexpectedObjectKey ([3:31-38], [3:31-38]))) |}]

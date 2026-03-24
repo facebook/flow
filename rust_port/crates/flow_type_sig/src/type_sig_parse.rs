@@ -2623,6 +2623,10 @@ mod obj_annot_acc {
         pub(super) dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
         pub(super) props:
             BTreeMap<FlowSmolStr, ObjAnnotProp<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        pub(super) computed_props: Vec<(
+            Parsed<'arena, 'ast>,
+            ObjAnnotProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        )>,
         pub(super) tail: Vec<ObjSpreadAnnotElem<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         pub(super) proto: Option<(LocNode<'arena>, Parsed<'arena, 'ast>)>,
         pub(super) calls: Vec<Parsed<'arena, 'ast>>,
@@ -2633,6 +2637,7 @@ mod obj_annot_acc {
             ObjAnnotAcc {
                 dict: None,
                 props: BTreeMap::new(),
+                computed_props: Vec::new(),
                 tail: Vec::new(),
                 proto: None,
                 calls: Vec::new(),
@@ -2643,18 +2648,20 @@ mod obj_annot_acc {
             ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
                 dict: None,
                 props: BTreeMap::new(),
+                computed_props: Vec::new(),
             }
         }
 
         fn head_slice(
             &mut self,
         ) -> Option<ObjSpreadAnnotElem<LocNode<'arena>, Parsed<'arena, 'ast>>> {
-            if self.dict.is_none() && self.props.is_empty() {
+            if self.dict.is_none() && self.props.is_empty() && self.computed_props.is_empty() {
                 None
             } else {
                 Some(ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
                     dict: self.dict.take(),
                     props: std::mem::take(&mut self.props),
+                    computed_props: std::mem::take(&mut self.computed_props),
                 })
             }
         }
@@ -2702,6 +2709,34 @@ mod obj_annot_acc {
             self.props.insert(name, ObjAnnotProp::ObjAnnotAccess(x));
         }
 
+        pub(super) fn add_computed_field(
+            &mut self,
+            key: Parsed<'arena, 'ast>,
+            id_loc: LocNode<'arena>,
+            polarity: Polarity,
+            t: Parsed<'arena, 'ast>,
+        ) {
+            self.computed_props
+                .push((key, ObjAnnotProp::ObjAnnotField(id_loc, t, polarity)));
+        }
+
+        pub(super) fn add_computed_method(
+            &mut self,
+            key: Parsed<'arena, 'ast>,
+            id_loc: LocNode<'arena>,
+            fn_loc: LocNode<'arena>,
+            def: FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) {
+            self.computed_props.push((
+                key,
+                ObjAnnotProp::ObjAnnotMethod {
+                    id_loc,
+                    fn_loc,
+                    def,
+                },
+            ));
+        }
+
         pub(super) fn add_dict(&mut self, d: ObjAnnotDict<Parsed<'arena, 'ast>>) {
             if self.dict.is_none() {
                 self.dict = Some(d);
@@ -2732,6 +2767,7 @@ mod obj_annot_acc {
             self.tail.push(ObjSpreadAnnotElem::ObjSpreadAnnotElem(t));
             self.dict = None;
             self.props = BTreeMap::new();
+            self.computed_props = Vec::new();
         }
 
         pub(super) fn object_type(
@@ -2748,7 +2784,11 @@ mod obj_annot_acc {
                 (last, self.tail)
             };
             if tail.is_empty()
-                && let ObjSpreadAnnotElem::ObjSpreadAnnotSlice { dict, props } = last
+                && let ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
+                    dict,
+                    props,
+                    computed_props,
+                } = last
             {
                 let proto = if let Ok(calls) = Vec1::try_from_vec(self.calls) {
                     ObjAnnotProto::ObjAnnotCallable { ts: calls }
@@ -2767,10 +2807,13 @@ mod obj_annot_acc {
                         }
                     }
                 };
+                let mut computed_props = computed_props;
+                computed_props.reverse();
                 return Parsed::Annot(Box::new(ParsedAnnot::ObjAnnot {
                     loc,
                     obj_kind,
                     props,
+                    computed_props,
                     proto,
                 }));
             }
@@ -2909,6 +2952,18 @@ mod declare_class_acc {
         pub(super) proto:
             BTreeMap<FlowSmolStr, InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         pub(super) own: BTreeMap<FlowSmolStr, InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        pub(super) computed_own: Vec<(
+            Parsed<'arena, 'ast>,
+            InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        )>,
+        pub(super) computed_proto: Vec<(
+            Parsed<'arena, 'ast>,
+            InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        )>,
+        pub(super) computed_static: Vec<(
+            Parsed<'arena, 'ast>,
+            InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        )>,
         pub(super) scalls: Vec<Parsed<'arena, 'ast>>,
         pub(super) calls: Vec<Parsed<'arena, 'ast>>,
         pub(super) dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
@@ -2921,6 +2976,9 @@ mod declare_class_acc {
                 static_: BTreeMap::new(),
                 proto: BTreeMap::new(),
                 own: BTreeMap::new(),
+                computed_own: Vec::new(),
+                computed_proto: Vec::new(),
+                computed_static: Vec::new(),
                 scalls: Vec::new(),
                 calls: Vec::new(),
                 dict: None,
@@ -3030,6 +3088,41 @@ mod declare_class_acc {
             }
         }
 
+        pub(super) fn add_computed_field(
+            &mut self,
+            static_: bool,
+            proto: bool,
+            key: Parsed<'arena, 'ast>,
+            id_loc: LocNode<'arena>,
+            polarity: Polarity,
+            t: Parsed<'arena, 'ast>,
+        ) {
+            let prop = InterfaceProp::InterfaceField(Some(id_loc), t, polarity);
+            if proto {
+                self.computed_proto.push((key, prop));
+            } else if static_ {
+                self.computed_static.push((key, prop));
+            } else {
+                self.computed_own.push((key, prop));
+            }
+        }
+
+        pub(super) fn append_computed_method(
+            &mut self,
+            static_: bool,
+            key: Parsed<'arena, 'ast>,
+            id_loc: LocNode<'arena>,
+            fn_loc: LocNode<'arena>,
+            def: FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) {
+            let prop = InterfaceProp::InterfaceMethod(Vec1::new((id_loc, fn_loc, def)));
+            if static_ {
+                self.computed_static.push((key, prop));
+            } else {
+                self.computed_proto.push((key, prop));
+            }
+        }
+
         pub(super) fn append_call(&mut self, static_: bool, t: Parsed<'arena, 'ast>) {
             if static_ {
                 self.scalls.push(t);
@@ -3045,6 +3138,12 @@ mod declare_class_acc {
             mixins: Vec<ClassMixins<LocNode<'arena>, Parsed<'arena, 'ast>>>,
             implements: Vec<Parsed<'arena, 'ast>>,
         ) -> DeclareClassSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            let mut computed_own = self.computed_own;
+            computed_own.reverse();
+            let mut computed_proto = self.computed_proto;
+            computed_proto.reverse();
+            let mut computed_static = self.computed_static;
+            computed_static.reverse();
             DeclareClassSig {
                 tparams,
                 extends,
@@ -3053,6 +3152,9 @@ mod declare_class_acc {
                 static_props: self.static_,
                 own_props: self.own,
                 proto_props: self.proto,
+                computed_own_props: computed_own,
+                computed_proto_props: computed_proto,
+                computed_static_props: computed_static,
                 static_calls: self.scalls,
                 calls: self.calls,
                 dict: self.dict,
@@ -3074,6 +3176,10 @@ mod interface_acc {
     pub(super) struct InterfaceAcc<'arena, 'ast> {
         pub(super) props:
             BTreeMap<FlowSmolStr, InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        pub(super) computed_props: Vec<(
+            Parsed<'arena, 'ast>,
+            InterfaceProp<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        )>,
         pub(super) calls: Vec<Parsed<'arena, 'ast>>,
         pub(super) dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
     }
@@ -3082,6 +3188,7 @@ mod interface_acc {
         pub(super) fn empty() -> Self {
             InterfaceAcc {
                 props: BTreeMap::new(),
+                computed_props: Vec::new(),
                 calls: Vec::new(),
                 dict: None,
             }
@@ -3142,6 +3249,32 @@ mod interface_acc {
             self.props.insert(name, InterfaceProp::InterfaceAccess(x));
         }
 
+        pub(super) fn add_computed_field(
+            &mut self,
+            key: Parsed<'arena, 'ast>,
+            id_loc: LocNode<'arena>,
+            polarity: Polarity,
+            t: Parsed<'arena, 'ast>,
+        ) {
+            self.computed_props.push((
+                key,
+                InterfaceProp::InterfaceField(Some(id_loc), t, polarity),
+            ));
+        }
+
+        pub(super) fn append_computed_method(
+            &mut self,
+            key: Parsed<'arena, 'ast>,
+            id_loc: LocNode<'arena>,
+            fn_loc: LocNode<'arena>,
+            def: FunSig<LocNode<'arena>, Parsed<'arena, 'ast>>,
+        ) {
+            self.computed_props.push((
+                key,
+                InterfaceProp::InterfaceMethod(Vec1::new((id_loc, fn_loc, def))),
+            ));
+        }
+
         pub(super) fn append_call(&mut self, t: Parsed<'arena, 'ast>) {
             self.calls.push(t);
         }
@@ -3150,9 +3283,12 @@ mod interface_acc {
             self,
             extends: Vec<Parsed<'arena, 'ast>>,
         ) -> InterfaceSig<LocNode<'arena>, Parsed<'arena, 'ast>> {
+            let mut computed_props = self.computed_props;
+            computed_props.reverse();
             InterfaceSig {
                 extends,
                 props: self.props,
+                computed_props,
                 calls: self.calls,
                 dict: self.dict,
             }
@@ -3295,6 +3431,124 @@ mod object_literal_acc {
                 proto: self.proto,
                 elems: Vec1::try_from_vec(elems).unwrap(),
             }))
+        }
+    }
+}
+
+fn expression_for_computed_key<'arena, 'ast>(
+    scope: ScopeId,
+    tbls: &mut Tables<'arena, 'ast>,
+    expr: &ast::expression::Expression<Loc, Loc>,
+) -> Parsed<'arena, 'ast> {
+    let loc = tbls.push_loc(expr.loc().dupe());
+    match expr.deref() {
+        ExpressionInner::Identifier { inner, .. } => {
+            let id_loc = tbls.push_loc(inner.loc.dupe());
+            val_ref(false, scope, id_loc, inner.name.dupe())
+        }
+        ExpressionInner::StringLiteral { inner, .. } => {
+            string_literal(FrozenKind::NotFrozen, loc, &inner.value)
+        }
+        ExpressionInner::NumberLiteral { inner, .. } => Parsed::Value(Box::new(
+            ParsedValue::NumberLit(loc, inner.value, inner.raw.dupe()),
+        )),
+        ExpressionInner::BigIntLiteral { inner, .. } => Parsed::Value(Box::new(
+            ParsedValue::BigIntLit(loc, inner.value, inner.raw.dupe()),
+        )),
+        ExpressionInner::Member { inner, .. } => {
+            let base = expression_for_computed_key(scope, tbls, &inner.object);
+            match &inner.property {
+                ast::expression::member::Property::PropertyIdentifier(id) => Parsed::Eval(
+                    loc,
+                    Box::new(base),
+                    Box::new(Op::GetProp(id_name(id).clone())),
+                ),
+                _ => Parsed::Err(
+                    loc.dupe(),
+                    Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
+                        loc.dupe(),
+                        loc,
+                    )),
+                ),
+            }
+        }
+        _ => Parsed::Err(
+            loc.dupe(),
+            Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
+                loc.dupe(),
+                loc,
+            )),
+        ),
+    }
+}
+
+enum ResolvedPropKey<'ast> {
+    Named(FlowSmolStr, Loc),
+    ComputedRef {
+        expr_loc: Loc,
+        ref_name: FlowSmolStr,
+    },
+    ComputedExpr {
+        expr: &'ast ast::expression::Expression<Loc, Loc>,
+    },
+    ComputedError {
+        loc: Loc,
+    },
+}
+
+fn resolve_prop_key<'ast>(
+    key: &'ast ast::expression::object::Key<Loc, Loc>,
+) -> ResolvedPropKey<'ast> {
+    use ast::expression::object::Key;
+    match key {
+        Key::Identifier(id) => ResolvedPropKey::Named(id.name.dupe(), id.loc.dupe()),
+        Key::StringLiteral((id_loc, ast::StringLiteral { value: name, .. })) => {
+            ResolvedPropKey::Named(name.dupe(), id_loc.dupe())
+        }
+        Key::NumberLiteral((id_loc, ast::NumberLiteral { value, .. }))
+            if flow_common::js_number::is_float_safe_integer(*value) =>
+        {
+            ResolvedPropKey::Named(
+                FlowSmolStr::new(flow_common::js_number::ecma_string_of_float(*value)),
+                id_loc.dupe(),
+            )
+        }
+        Key::BigIntLiteral((id_loc, lit)) => ResolvedPropKey::Named(
+            FlowSmolStr::new(ast_utils::string_of_bigint(lit)),
+            id_loc.dupe(),
+        ),
+        Key::Computed(ck) => {
+            if let Some(name) = ast_utils::well_known_symbol_name(&ck.expression) {
+                return ResolvedPropKey::Named(FlowSmolStr::from(name), ck.expression.loc().dupe());
+            }
+            match ck.expression.deref() {
+                ExpressionInner::StringLiteral { loc, inner, .. } => {
+                    ResolvedPropKey::Named(inner.value.dupe(), loc.dupe())
+                }
+                ExpressionInner::NumberLiteral { loc, inner, .. }
+                    if flow_common::js_number::is_float_safe_integer(inner.value) =>
+                {
+                    ResolvedPropKey::Named(
+                        FlowSmolStr::new(flow_common::js_number::ecma_string_of_float(inner.value)),
+                        loc.dupe(),
+                    )
+                }
+                ExpressionInner::BigIntLiteral { loc, inner, .. } => ResolvedPropKey::Named(
+                    FlowSmolStr::new(ast_utils::string_of_bigint(inner)),
+                    loc.dupe(),
+                ),
+                ExpressionInner::Identifier { inner, .. } => ResolvedPropKey::ComputedRef {
+                    expr_loc: inner.loc.dupe(),
+                    ref_name: inner.name.dupe(),
+                },
+                ExpressionInner::Member { .. } => ResolvedPropKey::ComputedExpr {
+                    expr: &ck.expression,
+                },
+                _ => ResolvedPropKey::ComputedError { loc: ck.loc.dupe() },
+            }
+        }
+        Key::NumberLiteral((loc, _)) | Key::PrivateName(ast::PrivateName { loc, .. }) => {
+            ResolvedPropKey::ComputedError { loc: loc.dupe() }
         }
     }
 }
@@ -4039,62 +4293,161 @@ fn object_type<'arena, 'ast>(
         use ast::expression::object::Key;
         use ast::types::object as O;
 
-        match &p.value {
-            O::PropertyValue::Init(t) => {
-                let (name, id_loc) = match &p.key {
-                    Key::Identifier(id) => {
-                        let IdentifierInner { loc, name, .. } = &**id;
-                        (name.dupe(), loc)
-                    }
-                    Key::StringLiteral((loc, ast::StringLiteral { value: name, .. })) => {
-                        (name.dupe(), loc)
-                    }
-                    Key::Computed(ck) => match ast_utils::well_known_symbol_name(&ck.expression) {
-                        Some(name) => (FlowSmolStr::from(name), ck.expression.loc()),
-                        None => return,
-                    },
-                    _ => return, // unsupported object keys
-                };
-
-                if p.method {
-                    if p.optional {
-                        if let TypeInner::Function {
-                            loc: fn_loc, inner, ..
-                        } = t.deref()
-                        {
-                            let (id_loc, t) = optional_method_as_field(
-                                opts,
-                                scope,
-                                scopes,
-                                tbls,
-                                xs,
-                                id_loc,
-                                fn_loc,
-                                inner.as_ref(),
-                            );
+        fn obj_add_computed_prop<'arena, 'ast>(
+            opts: &TypeSigOptions,
+            scope: ScopeId,
+            scopes: &mut scope::Scopes<'arena, 'ast>,
+            tbls: &mut Tables<'arena, 'ast>,
+            xs: &mut tparam_stack::TParamStack,
+            acc: &mut obj_annot_acc::ObjAnnotAcc<'arena, 'ast>,
+            p: &ast::types::object::NormalProperty<Loc, Loc>,
+            t: &ast::types::Type<Loc, Loc>,
+            build_key: impl FnOnce(
+                &mut Tables<'arena, 'ast>,
+                &mut scope::Scopes<'arena, 'ast>,
+            ) -> (Parsed<'arena, 'ast>, LocNode<'arena>),
+        ) {
+            if p.method {
+                match t.deref() {
+                    TypeInner::Function {
+                        loc: fn_loc, inner, ..
+                    } => {
+                        let fn_loc = tbls.push_loc(fn_loc.dupe());
+                        let (key_ref, ref_loc) = build_key(tbls, scopes);
+                        let def =
+                            function_type(false, opts, scope, scopes, tbls, xs, inner.as_ref());
+                        if p.optional {
+                            let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
+                                Box::new(ParsedAnnot::FunAnnot(fn_loc, def)),
+                            ))));
                             let polarity_val =
                                 polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
-                            acc.add_field(name, id_loc, polarity_val, t);
+                            acc.add_computed_field(key_ref, ref_loc, polarity_val, t);
                         } else {
-                            unreachable!("unexpected optional method type")
+                            acc.add_computed_method(key_ref, ref_loc, fn_loc, def);
                         }
-                    } else {
-                        add_method(opts, scope, scopes, tbls, xs, acc, id_loc, &name, t);
                     }
-                } else {
-                    let id_loc = tbls.push_loc(id_loc.dupe());
-                    let value_loc = tbls.push_loc(t.loc().dupe());
-                    let mut t = annot(opts, scope, scopes, tbls, xs, t);
+                    _ => unreachable!("unexpected method type"),
+                }
+            } else {
+                let (key_ref, ref_loc) = build_key(tbls, scopes);
+                let mut t = annot(opts, scope, scopes, tbls, xs, t);
+                if p.optional {
+                    t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                }
+                let polarity_val = polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                acc.add_computed_field(key_ref, ref_loc, polarity_val, t);
+            }
+        }
 
-                    if name.as_str() == "__proto__" && !p.optional && p.variance.is_none() {
-                        acc.add_proto((value_loc, t));
-                    } else {
-                        if p.optional {
-                            t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+        match &p.value {
+            O::PropertyValue::Init(t) => {
+                match resolve_prop_key(&p.key) {
+                    ResolvedPropKey::Named(name, id_loc) => {
+                        if p.method {
+                            if p.optional {
+                                if let TypeInner::Function {
+                                    loc: fn_loc, inner, ..
+                                } = t.deref()
+                                {
+                                    let (id_loc, t) = optional_method_as_field(
+                                        opts,
+                                        scope,
+                                        scopes,
+                                        tbls,
+                                        xs,
+                                        &id_loc,
+                                        fn_loc,
+                                        inner.as_ref(),
+                                    );
+                                    let polarity_val = polarity(
+                                        p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())),
+                                    );
+                                    acc.add_field(name, id_loc, polarity_val, t);
+                                } else {
+                                    unreachable!("unexpected optional method type")
+                                }
+                            } else {
+                                add_method(opts, scope, scopes, tbls, xs, acc, &id_loc, &name, t);
+                            }
+                        } else {
+                            let id_loc = tbls.push_loc(id_loc);
+                            let value_loc = tbls.push_loc(t.loc().dupe());
+                            let mut t = annot(opts, scope, scopes, tbls, xs, t);
+
+                            if name.as_str() == "__proto__" && !p.optional && p.variance.is_none() {
+                                acc.add_proto((value_loc, t));
+                            } else {
+                                if p.optional {
+                                    t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                                }
+                                let polarity_val = polarity(
+                                    p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())),
+                                );
+                                acc.add_field(name, id_loc, polarity_val, t);
+                            }
                         }
-                        let polarity_val =
-                            polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
-                        acc.add_field(name, id_loc, polarity_val, t);
+                    }
+                    ResolvedPropKey::ComputedRef { expr_loc, ref_name } => {
+                        obj_add_computed_prop(
+                            opts,
+                            scope,
+                            scopes,
+                            tbls,
+                            xs,
+                            acc,
+                            p,
+                            t,
+                            |tbls, _scopes| {
+                                // Thunk defers loc pushes so callers can push fn_loc first
+                                // for methods, satisfying Packed_locs ascending-order
+                                // requirement.
+                                let ref_loc = tbls.push_loc(expr_loc);
+                                (val_ref(false, scope, ref_loc.dupe(), ref_name), ref_loc)
+                            },
+                        );
+                    }
+                    ResolvedPropKey::ComputedExpr { expr } => {
+                        obj_add_computed_prop(
+                            opts,
+                            scope,
+                            scopes,
+                            tbls,
+                            xs,
+                            acc,
+                            p,
+                            t,
+                            |tbls, _scopes| {
+                                let ref_loc = tbls.push_loc(expr.loc().dupe());
+                                let key_ref = expression_for_computed_key(scope, tbls, expr);
+                                (key_ref, ref_loc)
+                            },
+                        );
+                    }
+                    ResolvedPropKey::ComputedError { loc } => {
+                        obj_add_computed_prop(
+                            opts,
+                            scope,
+                            scopes,
+                            tbls,
+                            xs,
+                            acc,
+                            p,
+                            t,
+                            |tbls, _scopes| {
+                                let loc = tbls.push_loc(loc);
+                                let key_ref = Parsed::Err(
+                                    loc.dupe(),
+                                    Errno::SigError(
+                                        signature_error::SignatureError::UnexpectedObjectKey(
+                                            loc.dupe(),
+                                            loc.dupe(),
+                                        ),
+                                    ),
+                                );
+                                (key_ref, loc)
+                            },
+                        );
                     }
                 }
             }
@@ -4290,68 +4643,153 @@ fn interface_props<'arena, 'ast>(
         acc: &mut interface_acc::InterfaceAcc<'arena, 'ast>,
         p: &ast::types::object::NormalProperty<Loc, Loc>,
     ) {
-        use ast::expression::object::Key;
         use ast::types::object as O;
-        let (name, id_loc) = match &p.key {
-            Key::Identifier(id) => {
-                let IdentifierInner { loc, name, .. } = id.deref();
-                (name.dupe(), loc.dupe())
-            }
-            Key::Computed(ck) => match ast_utils::well_known_symbol_name(&ck.expression) {
-                Some(name) => (FlowSmolStr::from(name), ck.expression.loc().dupe()),
-                None => return,
-            },
-            _ => return, // unsupported interface keys
-        };
 
-        match (p.method, &p.value) {
-            (true, O::PropertyValue::Init(ty)) => {
-                if let TypeInner::Function {
-                    loc: fn_loc, inner, ..
-                } = ty.deref()
-                {
+        fn add_named_prop<'arena, 'ast>(
+            opts: &TypeSigOptions,
+            scope: ScopeId,
+            scopes: &mut scope::Scopes<'arena, 'ast>,
+            tbls: &mut Tables<'arena, 'ast>,
+            xs: &mut tparam_stack::TParamStack,
+            acc: &mut interface_acc::InterfaceAcc<'arena, 'ast>,
+            p: &ast::types::object::NormalProperty<Loc, Loc>,
+            name: FlowSmolStr,
+            id_loc: Loc,
+        ) {
+            match (p.method, &p.value) {
+                (true, O::PropertyValue::Init(ty)) => {
+                    if let TypeInner::Function {
+                        loc: fn_loc, inner, ..
+                    } = ty.deref()
+                    {
+                        if p.optional {
+                            let (id_loc, t) = optional_method_as_field(
+                                opts,
+                                scope,
+                                scopes,
+                                tbls,
+                                xs,
+                                &id_loc,
+                                fn_loc,
+                                inner.as_ref(),
+                            );
+                            let polarity_val =
+                                polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                            acc.add_field(name, id_loc, polarity_val, t);
+                        } else {
+                            let fn_loc = tbls.push_loc(p.loc.dupe());
+                            let id_loc = tbls.push_loc(id_loc);
+                            let def =
+                                function_type(false, opts, scope, scopes, tbls, xs, inner.as_ref());
+                            acc.append_method(name, id_loc, fn_loc, def);
+                        }
+                    }
+                    // unexpected non-function method otherwise
+                }
+                (false, O::PropertyValue::Init(t)) => {
+                    let id_loc = tbls.push_loc(id_loc);
+                    let mut t = annot(opts, scope, scopes, tbls, xs, t);
                     if p.optional {
-                        let (id_loc, t) = optional_method_as_field(
-                            opts,
-                            scope,
-                            scopes,
-                            tbls,
-                            xs,
-                            &id_loc,
-                            fn_loc,
-                            inner.as_ref(),
-                        );
-                        let polarity_val =
-                            polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
-                        acc.add_field(name, id_loc, polarity_val, t);
-                    } else {
-                        let fn_loc = tbls.push_loc(p.loc.dupe());
-                        let id_loc = tbls.push_loc(id_loc);
+                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                    }
+                    let polarity_val =
+                        polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                    acc.add_field(name, id_loc, polarity_val, t);
+                }
+                (_, O::PropertyValue::Get(_, fn_expr)) => {
+                    let id_loc = tbls.push_loc(id_loc);
+                    let getter = getter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
+                    acc.add_accessor(name, getter);
+                }
+                (_, O::PropertyValue::Set(_, fn_expr)) => {
+                    let id_loc = tbls.push_loc(id_loc);
+                    let setter = setter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
+                    acc.add_accessor(name, setter);
+                }
+            }
+        }
+
+        fn add_computed_prop<'arena, 'ast>(
+            opts: &TypeSigOptions,
+            scope: ScopeId,
+            scopes: &mut scope::Scopes<'arena, 'ast>,
+            tbls: &mut Tables<'arena, 'ast>,
+            xs: &mut tparam_stack::TParamStack,
+            acc: &mut interface_acc::InterfaceAcc<'arena, 'ast>,
+            p: &ast::types::object::NormalProperty<Loc, Loc>,
+            build_key: impl FnOnce(
+                &mut Tables<'arena, 'ast>,
+                &mut scope::Scopes<'arena, 'ast>,
+            ) -> (Parsed<'arena, 'ast>, LocNode<'arena>),
+        ) {
+            match (p.method, &p.value) {
+                (true, O::PropertyValue::Init(ty)) => {
+                    if let TypeInner::Function {
+                        loc: fn_loc, inner, ..
+                    } = ty.deref()
+                    {
+                        let fn_loc = tbls.push_loc(fn_loc.dupe());
+                        let (key_ref, ref_loc) = build_key(tbls, scopes);
                         let def =
                             function_type(false, opts, scope, scopes, tbls, xs, inner.as_ref());
-                        acc.append_method(name, id_loc, fn_loc, def);
+                        if p.optional {
+                            let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
+                                Box::new(ParsedAnnot::FunAnnot(fn_loc, def)),
+                            ))));
+                            let polarity_val =
+                                polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                            acc.add_computed_field(key_ref, ref_loc, polarity_val, t);
+                        } else {
+                            acc.append_computed_method(key_ref, ref_loc, fn_loc, def);
+                        }
                     }
                 }
-                // unexpected non-function method otherwise
-            }
-            (false, O::PropertyValue::Init(t)) => {
-                let id_loc = tbls.push_loc(id_loc);
-                let mut t = annot(opts, scope, scopes, tbls, xs, t);
-                if p.optional {
-                    t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                (true, _) => {}
+                (false, O::PropertyValue::Init(t)) => {
+                    let (key_ref, ref_loc) = build_key(tbls, scopes);
+                    let mut t = annot(opts, scope, scopes, tbls, xs, t);
+                    if p.optional {
+                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                    }
+                    let polarity_val =
+                        polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                    acc.add_computed_field(key_ref, ref_loc, polarity_val, t);
                 }
-                let polarity_val = polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
-                acc.add_field(name, id_loc, polarity_val, t);
+                _ => {}
             }
-            (_, O::PropertyValue::Get(_, fn_expr)) => {
-                let id_loc = tbls.push_loc(id_loc);
-                let getter = getter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
-                acc.add_accessor(name, getter);
+        }
+
+        match resolve_prop_key(&p.key) {
+            ResolvedPropKey::Named(name, id_loc) => {
+                add_named_prop(opts, scope, scopes, tbls, xs, acc, p, name, id_loc);
             }
-            (_, O::PropertyValue::Set(_, fn_expr)) => {
-                let id_loc = tbls.push_loc(id_loc);
-                let setter = setter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
-                acc.add_accessor(name, setter);
+            ResolvedPropKey::ComputedRef { expr_loc, ref_name } => {
+                add_computed_prop(opts, scope, scopes, tbls, xs, acc, p, |tbls, _scopes| {
+                    let ref_loc = tbls.push_loc(expr_loc);
+                    (val_ref(false, scope, ref_loc.dupe(), ref_name), ref_loc)
+                });
+            }
+            ResolvedPropKey::ComputedExpr { expr } => {
+                add_computed_prop(opts, scope, scopes, tbls, xs, acc, p, |tbls, _scopes| {
+                    let ref_loc = tbls.push_loc(expr.loc().dupe());
+                    let t = expression_for_computed_key(scope, tbls, expr);
+                    (t, ref_loc)
+                });
+            }
+            ResolvedPropKey::ComputedError { loc } => {
+                add_computed_prop(opts, scope, scopes, tbls, xs, acc, p, |tbls, _scopes| {
+                    let loc = tbls.push_loc(loc);
+                    (
+                        Parsed::Err(
+                            loc.dupe(),
+                            Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
+                                loc.dupe(),
+                                loc.dupe(),
+                            )),
+                        ),
+                        loc,
+                    )
+                });
             }
         }
     }
@@ -4413,7 +4851,6 @@ fn declare_class_props<'arena, 'ast>(
         acc: &mut declare_class_acc::DeclareClassAcc<'arena, 'ast>,
         p: &ast::types::object::NormalProperty<Loc, Loc>,
     ) {
-        use ast::expression::object::Key;
         use ast::types::object as O;
 
         // Skip private properties entirely
@@ -4427,78 +4864,173 @@ fn declare_class_props<'arena, 'ast>(
             return;
         }
 
-        let (name, id_loc) = match &p.key {
-            Key::Identifier(id) => (id.name.dupe(), id.loc.dupe()),
-            Key::Computed(ck) => match ast_utils::well_known_symbol_name(&ck.expression) {
-                Some(name) => (FlowSmolStr::from(name), ck.expression.loc().dupe()),
-                None => return,
-            },
-            _ => return, // unsupported interface / declare class keys
-        };
-
-        match (p.method, &p.value) {
-            (true, O::PropertyValue::Init(ty)) => {
-                if let TypeInner::Function {
-                    loc: fn_loc, inner, ..
-                } = ty.deref()
-                {
-                    if p.optional {
-                        let (id_loc, t) = optional_method_as_field(
-                            opts,
-                            scope,
-                            scopes,
-                            tbls,
-                            xs,
-                            &id_loc,
-                            fn_loc,
-                            inner.as_ref(),
-                        );
-                        let polarity_val =
-                            polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
-                        if p.proto {
-                            acc.add_proto_field(name, id_loc, polarity_val, t);
+        fn add_named_prop<'arena, 'ast>(
+            opts: &TypeSigOptions,
+            scope: ScopeId,
+            scopes: &mut scope::Scopes<'arena, 'ast>,
+            tbls: &mut Tables<'arena, 'ast>,
+            xs: &mut tparam_stack::TParamStack,
+            acc: &mut declare_class_acc::DeclareClassAcc<'arena, 'ast>,
+            p: &ast::types::object::NormalProperty<Loc, Loc>,
+            name: FlowSmolStr,
+            id_loc: Loc,
+        ) {
+            match (p.method, &p.value) {
+                (true, O::PropertyValue::Init(ty)) => {
+                    if let TypeInner::Function {
+                        loc: fn_loc, inner, ..
+                    } = ty.deref()
+                    {
+                        if p.optional {
+                            let (id_loc, t) = optional_method_as_field(
+                                opts,
+                                scope,
+                                scopes,
+                                tbls,
+                                xs,
+                                &id_loc,
+                                fn_loc,
+                                inner.as_ref(),
+                            );
+                            let polarity_val =
+                                polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                            if p.proto {
+                                acc.add_proto_field(name, id_loc, polarity_val, t);
+                            } else {
+                                acc.add_field(p.static_, name, id_loc, polarity_val, t);
+                            }
                         } else {
-                            acc.add_field(p.static_, name, id_loc, polarity_val, t);
+                            let fn_loc = tbls.push_loc(fn_loc.dupe());
+                            let id_loc = tbls.push_loc(id_loc);
+                            let def = function_type(
+                                name.as_str() == "constructor",
+                                opts,
+                                scope,
+                                scopes,
+                                tbls,
+                                xs,
+                                inner.as_ref(),
+                            );
+                            acc.append_method(p.static_, name, id_loc, fn_loc, def);
                         }
+                    }
+                    // unexpected non-function method otherwise
+                }
+                (false, O::PropertyValue::Init(t)) => {
+                    let id_loc = tbls.push_loc(id_loc);
+                    let mut t = annot(opts, scope, scopes, tbls, xs, t);
+                    if p.optional {
+                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                    }
+                    let polarity_val =
+                        polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                    if p.proto {
+                        acc.add_proto_field(name, id_loc, polarity_val, t);
                     } else {
-                        let fn_loc = tbls.push_loc(fn_loc.dupe());
-                        let id_loc = tbls.push_loc(id_loc);
-                        let def = function_type(
-                            name.as_str() == "constructor",
-                            opts,
-                            scope,
-                            scopes,
-                            tbls,
-                            xs,
-                            inner.as_ref(),
-                        );
-                        acc.append_method(p.static_, name, id_loc, fn_loc, def);
+                        acc.add_field(p.static_, name, id_loc, polarity_val, t);
                     }
                 }
-                // unexpected non-function method otherwise
-            }
-            (false, O::PropertyValue::Init(t)) => {
-                let id_loc = tbls.push_loc(id_loc);
-                let mut t = annot(opts, scope, scopes, tbls, xs, t);
-                if p.optional {
-                    t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                (_, O::PropertyValue::Get(_, fn_expr)) => {
+                    let id_loc = tbls.push_loc(id_loc);
+                    let getter = getter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
+                    acc.add_accessor(p.static_, name, getter);
                 }
-                let polarity_val = polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
-                if p.proto {
-                    acc.add_proto_field(name, id_loc, polarity_val, t);
-                } else {
-                    acc.add_field(p.static_, name, id_loc, polarity_val, t);
+                (_, O::PropertyValue::Set(_, fn_expr)) => {
+                    let id_loc = tbls.push_loc(id_loc);
+                    let setter = setter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
+                    acc.add_accessor(p.static_, name, setter);
                 }
             }
-            (_, O::PropertyValue::Get(_, fn_expr)) => {
-                let id_loc = tbls.push_loc(id_loc);
-                let getter = getter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
-                acc.add_accessor(p.static_, name, getter);
+        }
+
+        fn add_computed_prop<'arena, 'ast>(
+            opts: &TypeSigOptions,
+            scope: ScopeId,
+            scopes: &mut scope::Scopes<'arena, 'ast>,
+            tbls: &mut Tables<'arena, 'ast>,
+            xs: &mut tparam_stack::TParamStack,
+            acc: &mut declare_class_acc::DeclareClassAcc<'arena, 'ast>,
+            p: &ast::types::object::NormalProperty<Loc, Loc>,
+            build_key: impl FnOnce(
+                &mut Tables<'arena, 'ast>,
+                &mut scope::Scopes<'arena, 'ast>,
+            ) -> (Parsed<'arena, 'ast>, LocNode<'arena>),
+        ) {
+            match (p.method, &p.value) {
+                (true, O::PropertyValue::Init(ty)) => {
+                    if let TypeInner::Function {
+                        loc: fn_loc, inner, ..
+                    } = ty.deref()
+                    {
+                        let fn_loc = tbls.push_loc(fn_loc.dupe());
+                        let (key_ref, ref_loc) = build_key(tbls, scopes);
+                        let def =
+                            function_type(false, opts, scope, scopes, tbls, xs, inner.as_ref());
+                        if p.optional {
+                            let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
+                                Box::new(ParsedAnnot::FunAnnot(fn_loc, def)),
+                            ))));
+                            let polarity_val =
+                                polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                            acc.add_computed_field(
+                                p.static_,
+                                p.proto,
+                                key_ref,
+                                ref_loc,
+                                polarity_val,
+                                t,
+                            );
+                        } else {
+                            acc.append_computed_method(p.static_, key_ref, ref_loc, fn_loc, def);
+                        }
+                    }
+                }
+                (true, _) => {}
+                (false, O::PropertyValue::Init(t)) => {
+                    let (key_ref, ref_loc) = build_key(tbls, scopes);
+                    let mut t = annot(opts, scope, scopes, tbls, xs, t);
+                    if p.optional {
+                        t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                    }
+                    let polarity_val =
+                        polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                    acc.add_computed_field(p.static_, p.proto, key_ref, ref_loc, polarity_val, t);
+                }
+                _ => {}
             }
-            (_, O::PropertyValue::Set(_, fn_expr)) => {
-                let id_loc = tbls.push_loc(id_loc);
-                let setter = setter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
-                acc.add_accessor(p.static_, name, setter);
+        }
+
+        match resolve_prop_key(&p.key) {
+            ResolvedPropKey::Named(name, id_loc) => {
+                add_named_prop(opts, scope, scopes, tbls, xs, acc, p, name, id_loc);
+            }
+            ResolvedPropKey::ComputedRef { expr_loc, ref_name } => {
+                add_computed_prop(opts, scope, scopes, tbls, xs, acc, p, |tbls, _scopes| {
+                    let ref_loc = tbls.push_loc(expr_loc);
+                    (val_ref(false, scope, ref_loc.dupe(), ref_name), ref_loc)
+                });
+            }
+            ResolvedPropKey::ComputedExpr { expr } => {
+                add_computed_prop(opts, scope, scopes, tbls, xs, acc, p, |tbls, _scopes| {
+                    let ref_loc = tbls.push_loc(expr.loc().dupe());
+                    let t = expression_for_computed_key(scope, tbls, expr);
+                    (t, ref_loc)
+                });
+            }
+            ResolvedPropKey::ComputedError { loc } => {
+                add_computed_prop(opts, scope, scopes, tbls, xs, acc, p, |tbls, _scopes| {
+                    let loc = tbls.push_loc(loc);
+                    (
+                        Parsed::Err(
+                            loc.dupe(),
+                            Errno::SigError(signature_error::SignatureError::UnexpectedObjectKey(
+                                loc.dupe(),
+                                loc.dupe(),
+                            )),
+                        ),
+                        loc,
+                    )
+                });
             }
         }
     }

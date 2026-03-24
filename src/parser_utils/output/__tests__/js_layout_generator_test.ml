@@ -2495,6 +2495,58 @@ let tests =
              ~filename:dts
              "declare function s(...{a}: { a: number }): number;"
          );
+         ( "computed_property_in_dts" >:: fun ctxt ->
+           let dts = "test.d.ts" in
+           (* computed property in object type *)
+           assert_statement_string ~ctxt ~filename:dts "type T={[MY_KEY]:number};";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "type T = { [ MY_KEY ]: number };";
+           (* computed property with Symbol.iterator *)
+           assert_statement_string ~ctxt ~filename:dts "type T={[Symbol.iterator]:string};";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "type T = { [ Symbol.iterator ]: string };";
+           (* indexer with label in .d.ts *)
+           assert_statement_string ~ctxt ~filename:dts "type T={[key:string]:number};";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "type T = { [key: string]: number };";
+           (* computed property in interface *)
+           assert_statement_string ~ctxt ~filename:dts "interface I{[MY_KEY]:number}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "interface I { [ MY_KEY ]: number }";
+           (* computed property in declare class *)
+           assert_statement_string ~ctxt ~filename:dts "declare class C{[MY_KEY]:number}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "declare class C { [ MY_KEY ]: number }";
+           (* computed property method *)
+           assert_statement_string ~ctxt ~filename:dts "type T={[MY_KEY]():void};";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "type T = { [ MY_KEY ](): void };";
+           (* optional computed property *)
+           assert_statement_string ~ctxt ~filename:dts "type T={[MY_KEY]?:number};";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             ~filename:dts
+             "type T = { [ MY_KEY ]?: number };"
+         );
          ( "anonymous_declare_export_default_function" >:: fun ctxt ->
            (* Build AST for: export default function(dir: string): string; *)
            let loc = Loc.none in

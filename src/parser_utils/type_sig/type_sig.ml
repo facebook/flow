@@ -192,6 +192,7 @@ type ('loc, 'a) obj_spread_annot_elem =
   | ObjSpreadAnnotSlice of {
       dict: 'a obj_annot_dict option;
       props: ('loc, 'a) obj_annot_prop smap;
+      computed_props: ('a * ('loc, 'a) obj_annot_prop) list;
     }
 [@@deriving iter, map, show { with_path = false }]
 
@@ -246,6 +247,9 @@ type ('loc, 'a) declare_class_sig =
       static_props: ('loc, 'a) interface_prop smap;
       own_props: ('loc, 'a) interface_prop smap;
       proto_props: ('loc, 'a) interface_prop smap;
+      computed_own_props: ('a * ('loc, 'a) interface_prop) list;
+      computed_proto_props: ('a * ('loc, 'a) interface_prop) list;
+      computed_static_props: ('a * ('loc, 'a) interface_prop) list;
       static_calls: 'a list;
       calls: 'a list;
       dict: 'a obj_annot_dict option;
@@ -257,6 +261,7 @@ type ('loc, 'a) interface_sig =
   | InterfaceSig of {
       extends: 'a list;
       props: ('loc, 'a) interface_prop smap;
+      computed_props: ('a * ('loc, 'a) interface_prop) list;
       calls: 'a list;
       dict: 'a obj_annot_dict option;
     }
@@ -594,6 +599,7 @@ type ('loc, 'a) annot =
       loc: 'loc;
       obj_kind: 'a obj_kind;
       props: ('loc, 'a) obj_annot_prop smap;
+      computed_props: ('a * ('loc, 'a) obj_annot_prop) list;
       proto: ('loc, 'a) obj_annot_proto;
     }
   | ObjSpreadAnnot of {

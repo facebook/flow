@@ -1263,6 +1263,44 @@ fn merge_impl(
     }
 }
 
+fn resolve_computed_key(env: &MergeEnv, file: &File, key: &Pack::Packed<ALoc>) -> Option<Name> {
+    let key_t = merge_impl(env, file, key, false, false);
+    match file.cx.find_resolved(&key_t) {
+        Some(resolved_t) => match flow_js_utils::propref_for_elem_t(&file.cx, &resolved_t) {
+            type_::PropRef::Named { name, .. } => Some(name),
+            type_::PropRef::Computed(_) => None,
+        },
+        None => None,
+    }
+}
+
+fn merge_overloaded_property(
+    existing_prop: &type_::Property,
+    new_prop: type_::Property,
+) -> type_::Property {
+    match (&**existing_prop, &*new_prop) {
+        (
+            type_::PropertyInner::Method {
+                type_: existing_t, ..
+            },
+            type_::PropertyInner::Method {
+                key_loc,
+                type_: new_t,
+            },
+        ) => {
+            let reason = type_util::reason_of_t(new_t).dupe();
+            type_::Property::new(type_::PropertyInner::Method {
+                key_loc: key_loc.dupe(),
+                type_: Type::new(type_::TypeInner::IntersectionT(
+                    reason,
+                    type_::inter_rep::make(existing_t.dupe(), new_t.dupe(), vec![].into()),
+                )),
+            })
+        }
+        _ => new_prop,
+    }
+}
+
 fn merge_annot(env: &MergeEnv, file: &File, annot: &Pack::PackedAnnot<ALoc>) -> Type {
     use flow_common::reason::VirtualReasonDesc::*;
     use flow_type_sig::type_sig::Annot;
@@ -2035,6 +2073,7 @@ fn merge_annot(env: &MergeEnv, file: &File, annot: &Pack::PackedAnnot<ALoc>) -> 
             loc,
             obj_kind,
             props,
+            computed_props,
             proto,
         } => {
             let reason = reason::mk_annot_reason(RObjectType, loc.dupe());
@@ -2045,12 +2084,31 @@ fn merge_annot(env: &MergeEnv, file: &File, annot: &Pack::PackedAnnot<ALoc>) -> 
                     type_::ObjKind::Indexed(merge_dict(env, file, dict, false))
                 }
             };
-            let props_map: type_::properties::PropertiesMap = props
+            let mut props_smap: BTreeMap<FlowSmolStr, type_::Property> = props
                 .iter()
                 .map(|(key, prop)| {
                     let p = merge_obj_annot_prop(env, file, prop);
-                    (Name::new(key.dupe()), p)
+                    (key.dupe(), p)
                 })
+                .collect();
+            for (key, prop) in computed_props {
+                if let Some(name) = resolve_computed_key(env, file, key) {
+                    let name_str = name.into_smol_str();
+                    let t = merge_obj_annot_prop(env, file, prop);
+                    match props_smap.entry(name_str) {
+                        std::collections::btree_map::Entry::Vacant(e) => {
+                            e.insert(t);
+                        }
+                        std::collections::btree_map::Entry::Occupied(mut e) => {
+                            let merged = merge_overloaded_property(e.get(), t);
+                            e.insert(merged);
+                        }
+                    }
+                }
+            }
+            let props_map: type_::properties::PropertiesMap = props_smap
+                .into_iter()
+                .map(|(k, v)| (Name::new(k), v))
                 .collect();
             let mk_object = |call: Option<Type>, proto: Type| {
                 let id = type_::properties::Id::of_aloc_id(true, file.cx.make_aloc_id(loc));
@@ -2120,16 +2178,39 @@ fn merge_annot(env: &MergeEnv, file: &File, annot: &Pack::PackedAnnot<ALoc>) -> 
                                props: &BTreeMap<
                 FlowSmolStr,
                 ObjAnnotProp<ALoc, Pack::Packed<ALoc>>,
-            >| {
+            >,
+                               computed_props: &[(
+                Pack::Packed<ALoc>,
+                ObjAnnotProp<ALoc, Pack::Packed<ALoc>>,
+            )]| {
                 let dict = dict.as_ref().map(|d| merge_dict(env, file, d, false));
-                let mut prop_map = BTreeMap::new();
+                let mut props_smap: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
                 for (key, prop) in props {
                     let p = merge_obj_annot_prop(env, file, prop);
-                    prop_map.insert(Name::new(key.dupe()), p);
+                    props_smap.insert(key.dupe(), p);
                 }
+                for (key, prop) in computed_props {
+                    if let Some(name) = resolve_computed_key(env, file, key) {
+                        let name_str = name.into_smol_str();
+                        let t = merge_obj_annot_prop(env, file, prop);
+                        match props_smap.entry(name_str) {
+                            std::collections::btree_map::Entry::Vacant(e) => {
+                                e.insert(t);
+                            }
+                            std::collections::btree_map::Entry::Occupied(mut e) => {
+                                let merged = merge_overloaded_property(e.get(), t);
+                                e.insert(merged);
+                            }
+                        }
+                    }
+                }
+                let prop_map = props_smap
+                    .into_iter()
+                    .map(|(k, v)| (Name::new(k), v))
+                    .collect();
                 type_::object::spread::OperandSlice::new(type_::object::spread::OperandSliceInner {
                     reason: reason.dupe(),
-                    prop_map: prop_map.into_iter().collect(),
+                    prop_map,
                     generics: flow_typing_generics::spread_empty(),
                     dict,
                     reachable_targs: vec![].into(),
@@ -2139,8 +2220,12 @@ fn merge_annot(env: &MergeEnv, file: &File, annot: &Pack::PackedAnnot<ALoc>) -> 
                 ObjSpreadAnnotElem::ObjSpreadAnnotElem(t) => {
                     type_::object::spread::Operand::Type(merge_impl(env, file, t, false, false))
                 }
-                ObjSpreadAnnotElem::ObjSpreadAnnotSlice { dict, props } => {
-                    type_::object::spread::Operand::Slice(merge_slice(dict, props))
+                ObjSpreadAnnotElem::ObjSpreadAnnotSlice {
+                    dict,
+                    props,
+                    computed_props,
+                } => {
+                    type_::object::spread::Operand::Slice(merge_slice(dict, props, computed_props))
                 }
             };
             let mut merged_elems_rev: Vec<type_::object::spread::Operand> =
@@ -3082,6 +3167,7 @@ fn merge_interface(
     let InterfaceSig {
         extends,
         props,
+        computed_props,
         calls,
         dict,
     } = def;
@@ -3130,8 +3216,8 @@ fn merge_interface(
         )
     };
     let (own_props, proto_props) = {
-        let mut own = BTreeMap::new();
-        let mut proto = BTreeMap::new();
+        let mut own: BTreeMap<Name, type_::Property> = BTreeMap::new();
+        let mut proto: BTreeMap<Name, type_::Property> = BTreeMap::new();
         for (k, prop) in props {
             let t = merge_interface_prop(env, file, prop, false);
             let name = Name::new(k.dupe());
@@ -3141,6 +3227,27 @@ fn merge_interface(
                 }
                 InterfaceProp::InterfaceAccess(..) | InterfaceProp::InterfaceMethod(..) => {
                     proto.insert(name, t);
+                }
+            }
+        }
+        for (key, prop) in computed_props {
+            if let Some(name) = resolve_computed_key(env, file, key) {
+                let t = merge_interface_prop(env, file, prop, false);
+                let update_map =
+                    |map: &mut BTreeMap<Name, type_::Property>| match map.entry(name.dupe()) {
+                        std::collections::btree_map::Entry::Vacant(e) => {
+                            e.insert(t.dupe());
+                        }
+                        std::collections::btree_map::Entry::Occupied(mut e) => {
+                            let merged = merge_overloaded_property(e.get(), t.dupe());
+                            e.insert(merged);
+                        }
+                    };
+                match prop {
+                    InterfaceProp::InterfaceField(..) => update_map(&mut own),
+                    InterfaceProp::InterfaceAccess(..) | InterfaceProp::InterfaceMethod(..) => {
+                        update_map(&mut proto)
+                    }
                 }
             }
         }
@@ -3914,6 +4021,9 @@ fn merge_declare_class(
         static_props,
         own_props,
         proto_props,
+        computed_own_props,
+        computed_proto_props,
+        computed_static_props,
         static_calls,
         calls,
         dict,
@@ -3925,158 +4035,201 @@ fn merge_declare_class(
     let reason_c = reason.dupe();
     let this_reason_c = this_reason.dupe();
     let file_c = file.dupe();
-    let this_class_t =
-        move |env: &MergeEnv, targs: Vec<(SubstName, Reason, Type, Polarity)>, rec_type: Type| {
-            let file = &file_c;
-            let this = {
-                let this_tp = type_::TypeParam::new(type_::TypeParamInner {
-                    name: SubstName::name(FlowSmolStr::new_inline("this")),
-                    reason: this_reason_c.dupe(),
-                    bound: rec_type,
-                    polarity: Polarity::Positive,
-                    default: None,
-                    is_this: true,
-                    is_const: false,
-                });
-                flow_js_utils::generic_of_tparam(&file.cx, |x| x.dupe(), &this_tp)
-            };
-            let (super_, static_proto) =
-                merge_class_extends(env, file, this.dupe(), reason_c.dupe(), &extends, &mixins);
-            let implements: Vec<Type> = implements
-                .iter()
-                .map(|t| merge_impl(env, file, t, false, false))
-                .collect();
-            let mut env = env.dupe();
-            env.tps.insert(FlowSmolStr::new_inline("this"), this.dupe());
-            let static_ = {
-                let static_reason = reason_c.dupe().update_desc(|d| RStatics(Arc::new(d)));
-                let mut props = type_::properties::PropertiesMap::new();
-                for (k, prop) in static_props {
-                    let p = merge_interface_prop(&env, file, &prop, true);
-                    props.insert(Name::new(k.dupe()), p);
-                }
-                add_name_field(reason_c.dupe(), &mut props);
-                let call = {
-                    let ts: Vec<Type> = static_calls
-                        .iter()
-                        .map(|t| merge_impl(&env, file, t, false, false))
-                        .collect();
-                    match ts.len() {
-                        0 => None,
-                        1 => Some(ts.into_iter().next().unwrap()),
-                        _ => {
-                            let mut iter = ts.into_iter();
-                            let t0 = iter.next().unwrap();
-                            let t1 = iter.next().unwrap();
-                            let rest: Vec<Type> = iter.collect();
-                            let r = type_util::reason_of_t(&t0).dupe();
-                            Some(Type::new(type_::TypeInner::IntersectionT(
-                                r,
-                                type_::inter_rep::make(t0, t1, rest.into()),
-                            )))
+    let this_class_t = move |env: &MergeEnv,
+                             targs: Vec<(SubstName, Reason, Type, Polarity)>,
+                             rec_type: Type| {
+        let file = &file_c;
+        let this = {
+            let this_tp = type_::TypeParam::new(type_::TypeParamInner {
+                name: SubstName::name(FlowSmolStr::new_inline("this")),
+                reason: this_reason_c.dupe(),
+                bound: rec_type,
+                polarity: Polarity::Positive,
+                default: None,
+                is_this: true,
+                is_const: false,
+            });
+            flow_js_utils::generic_of_tparam(&file.cx, |x| x.dupe(), &this_tp)
+        };
+        let (super_, static_proto) =
+            merge_class_extends(env, file, this.dupe(), reason_c.dupe(), &extends, &mixins);
+        let implements: Vec<Type> = implements
+            .iter()
+            .map(|t| merge_impl(env, file, t, false, false))
+            .collect();
+        let mut env = env.dupe();
+        env.tps.insert(FlowSmolStr::new_inline("this"), this.dupe());
+        let static_ = {
+            let static_reason = reason_c.dupe().update_desc(|d| RStatics(Arc::new(d)));
+            let mut props_smap: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
+            for (k, prop) in static_props {
+                let p = merge_interface_prop(&env, file, &prop, true);
+                props_smap.insert(k.dupe(), p);
+            }
+            for (key, prop) in &computed_static_props {
+                if let Some(name) = resolve_computed_key(&env, file, key) {
+                    let name_str = name.into_smol_str();
+                    let t = merge_interface_prop(&env, file, prop, true);
+                    match props_smap.entry(name_str) {
+                        std::collections::btree_map::Entry::Vacant(e) => {
+                            e.insert(t);
+                        }
+                        std::collections::btree_map::Entry::Occupied(mut e) => {
+                            let merged = merge_overloaded_property(e.get(), t);
+                            e.insert(merged);
                         }
                     }
-                };
-                obj_type::mk_with_proto(
-                    &file.cx,
-                    static_reason,
-                    type_::ObjKind::Inexact,
-                    None,
-                    call,
-                    Some(props),
-                    None,
-                    static_proto,
-                )
-            };
-            let own_props = {
-                let pmap: type_::properties::PropertiesMap = own_props
-                    .iter()
-                    .map(|(k, prop)| {
-                        let p = merge_interface_prop(&env, file, prop, false);
-                        (Name::new(k.dupe()), p)
-                    })
-                    .collect();
-                file.cx.generate_property_map(pmap)
-            };
-            let proto_props = {
-                let mut proto_map: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
-                for (k, prop) in proto_props {
-                    let p = merge_interface_prop(&env, file, &prop, false);
-                    proto_map.insert(k.dupe(), p);
                 }
-                add_default_constructor(reason_c.dupe(), &extends, &mut proto_map);
-                let pmap: type_::properties::PropertiesMap = proto_map
-                    .into_iter()
-                    .map(|(k, v)| (Name::new(k), v))
-                    .collect();
-                file.cx.generate_property_map(pmap)
-            };
-            let inst_call_t = {
-                let ts: Vec<Type> = calls
+            }
+            let mut props: type_::properties::PropertiesMap = props_smap
+                .into_iter()
+                .map(|(k, v)| (Name::new(k), v))
+                .collect();
+            add_name_field(reason_c.dupe(), &mut props);
+            let call = {
+                let ts: Vec<Type> = static_calls
                     .iter()
                     .map(|t| merge_impl(&env, file, t, false, false))
                     .collect();
                 match ts.len() {
                     0 => None,
-                    1 => Some(file.cx.make_call_prop(ts.into_iter().next().unwrap())),
+                    1 => Some(ts.into_iter().next().unwrap()),
                     _ => {
                         let mut iter = ts.into_iter();
                         let t0 = iter.next().unwrap();
                         let t1 = iter.next().unwrap();
                         let rest: Vec<Type> = iter.collect();
                         let r = type_util::reason_of_t(&t0).dupe();
-                        let t = Type::new(type_::TypeInner::IntersectionT(
+                        Some(Type::new(type_::TypeInner::IntersectionT(
                             r,
                             type_::inter_rep::make(t0, t1, rest.into()),
-                        ));
-                        Some(file.cx.make_call_prop(t))
+                        )))
                     }
                 }
             };
-            let inst_dict = dict.as_ref().map(|d| merge_dict(&env, file, d, false));
-            let inst = type_::InstType::new(type_::InstTypeInner {
-                class_id: id_owned.dupe(),
-                inst_react_dro: None,
-                class_name: Some(class_name_owned.dupe()),
-                type_args: targs.into(),
-                own_props,
-                proto_props,
-                inst_call_t,
-                initialized_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
-                initialized_static_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
-                inst_kind: type_::InstanceKind::ClassKind,
-                inst_dict,
-                class_private_fields: file
-                    .cx
-                    .generate_property_map(type_::properties::PropertiesMap::new()),
-                class_private_methods: file
-                    .cx
-                    .generate_property_map(type_::properties::PropertiesMap::new()),
-                class_private_static_fields: file
-                    .cx
-                    .generate_property_map(type_::properties::PropertiesMap::new()),
-                class_private_static_methods: file
-                    .cx
-                    .generate_property_map(type_::properties::PropertiesMap::new()),
-            });
-            type_util::class_type(
-                Type::new(type_::TypeInner::ThisInstanceT(Box::new(
-                    ThisInstanceTData {
-                        reason: reason_c.dupe(),
-                        instance: type_::InstanceT::new(type_::InstanceTInner {
-                            inst,
-                            static_,
-                            super_,
-                            implements: implements.into(),
-                        }),
-                        is_this: false,
-                        subst_name: SubstName::name(FlowSmolStr::new_inline("this")),
-                    },
-                ))),
-                false,
+            obj_type::mk_with_proto(
+                &file.cx,
+                static_reason,
+                type_::ObjKind::Inexact,
                 None,
+                call,
+                Some(props),
+                None,
+                static_proto,
             )
         };
+        let fold_computed_interface_props =
+            |computed_props: &[(Pack::Packed<ALoc>, InterfaceProp<ALoc, Pack::Packed<ALoc>>)],
+             props: &mut BTreeMap<FlowSmolStr, type_::Property>| {
+                for (key, prop) in computed_props {
+                    if let Some(name) = resolve_computed_key(&env, file, key) {
+                        let name_str = name.into_smol_str();
+                        let t = merge_interface_prop(&env, file, prop, false);
+                        match props.entry(name_str) {
+                            std::collections::btree_map::Entry::Vacant(e) => {
+                                e.insert(t);
+                            }
+                            std::collections::btree_map::Entry::Occupied(mut e) => {
+                                let merged = merge_overloaded_property(e.get(), t);
+                                e.insert(merged);
+                            }
+                        }
+                    }
+                }
+            };
+        let own_props = {
+            let mut props: BTreeMap<FlowSmolStr, type_::Property> = own_props
+                .iter()
+                .map(|(k, prop)| {
+                    let p = merge_interface_prop(&env, file, prop, false);
+                    (k.dupe(), p)
+                })
+                .collect();
+            fold_computed_interface_props(&computed_own_props, &mut props);
+            let pmap: type_::properties::PropertiesMap =
+                props.into_iter().map(|(k, v)| (Name::new(k), v)).collect();
+            file.cx.generate_property_map(pmap)
+        };
+        let proto_props = {
+            let mut proto_map: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
+            for (k, prop) in proto_props {
+                let p = merge_interface_prop(&env, file, &prop, false);
+                proto_map.insert(k.dupe(), p);
+            }
+            add_default_constructor(reason_c.dupe(), &extends, &mut proto_map);
+            fold_computed_interface_props(&computed_proto_props, &mut proto_map);
+            let pmap: type_::properties::PropertiesMap = proto_map
+                .into_iter()
+                .map(|(k, v)| (Name::new(k), v))
+                .collect();
+            file.cx.generate_property_map(pmap)
+        };
+        let inst_call_t = {
+            let ts: Vec<Type> = calls
+                .iter()
+                .map(|t| merge_impl(&env, file, t, false, false))
+                .collect();
+            match ts.len() {
+                0 => None,
+                1 => Some(file.cx.make_call_prop(ts.into_iter().next().unwrap())),
+                _ => {
+                    let mut iter = ts.into_iter();
+                    let t0 = iter.next().unwrap();
+                    let t1 = iter.next().unwrap();
+                    let rest: Vec<Type> = iter.collect();
+                    let r = type_util::reason_of_t(&t0).dupe();
+                    let t = Type::new(type_::TypeInner::IntersectionT(
+                        r,
+                        type_::inter_rep::make(t0, t1, rest.into()),
+                    ));
+                    Some(file.cx.make_call_prop(t))
+                }
+            }
+        };
+        let inst_dict = dict.as_ref().map(|d| merge_dict(&env, file, d, false));
+        let inst = type_::InstType::new(type_::InstTypeInner {
+            class_id: id_owned.dupe(),
+            inst_react_dro: None,
+            class_name: Some(class_name_owned.dupe()),
+            type_args: targs.into(),
+            own_props,
+            proto_props,
+            inst_call_t,
+            initialized_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
+            initialized_static_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
+            inst_kind: type_::InstanceKind::ClassKind,
+            inst_dict,
+            class_private_fields: file
+                .cx
+                .generate_property_map(type_::properties::PropertiesMap::new()),
+            class_private_methods: file
+                .cx
+                .generate_property_map(type_::properties::PropertiesMap::new()),
+            class_private_static_fields: file
+                .cx
+                .generate_property_map(type_::properties::PropertiesMap::new()),
+            class_private_static_methods: file
+                .cx
+                .generate_property_map(type_::properties::PropertiesMap::new()),
+        });
+        type_util::class_type(
+            Type::new(type_::TypeInner::ThisInstanceT(Box::new(
+                ThisInstanceTData {
+                    reason: reason_c.dupe(),
+                    instance: type_::InstanceT::new(type_::InstanceTInner {
+                        inst,
+                        static_,
+                        super_,
+                        implements: implements.into(),
+                    }),
+                    is_this: false,
+                    subst_name: SubstName::name(FlowSmolStr::new_inline("this")),
+                },
+            ))),
+            false,
+            None,
+        )
+    };
     let this_reason_t = this_reason.dupe();
     let t = move |env: &MergeEnv, targs: Vec<(SubstName, Reason, Type, Polarity)>| {
         let lazy_cell: Rc<RefCell<Option<Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>>>> =

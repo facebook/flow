@@ -1393,20 +1393,29 @@ module ObjAnnotAcc = struct
   type 'loc t = {
     dict: 'loc dict option;
     props: 'loc prop SMap.t;
+    computed_props: ('loc parsed * 'loc prop) list;
     tail: 'loc elem list;
     proto: ('loc loc_node * 'loc parsed) option;
     calls_rev: 'loc parsed list;
   }
 
-  let empty = { dict = None; props = SMap.empty; tail = []; proto = None; calls_rev = [] }
+  let empty =
+    {
+      dict = None;
+      props = SMap.empty;
+      computed_props = [];
+      tail = [];
+      proto = None;
+      calls_rev = [];
+    }
 
-  let empty_slice = ObjSpreadAnnotSlice { dict = None; props = SMap.empty }
+  let empty_slice = ObjSpreadAnnotSlice { dict = None; props = SMap.empty; computed_props = [] }
 
-  let head_slice { dict; props; _ } =
-    if dict = None && SMap.is_empty props then
+  let head_slice { dict; props; computed_props; _ } =
+    if dict = None && SMap.is_empty props && computed_props = [] then
       None
     else
-      Some (ObjSpreadAnnotSlice { dict; props })
+      Some (ObjSpreadAnnotSlice { dict; props; computed_props })
 
   let map_props f acc = { acc with props = f acc.props }
 
@@ -1425,6 +1434,15 @@ module ObjAnnotAcc = struct
   let add_accessor name x acc =
     let f = SMap.update name (add_accessor_helper x) in
     map_props f acc
+
+  let add_computed_field key id_loc polarity t acc =
+    { acc with computed_props = (key, ObjAnnotField (id_loc, t, polarity)) :: acc.computed_props }
+
+  let add_computed_method key id_loc fn_loc def acc =
+    {
+      acc with
+      computed_props = (key, ObjAnnotMethod { id_loc; fn_loc; def }) :: acc.computed_props;
+    }
 
   let add_dict d acc =
     match acc.dict with
@@ -1449,7 +1467,7 @@ module ObjAnnotAcc = struct
       | Some slice -> slice :: acc.tail
     in
     let tail = ObjSpreadAnnotElem t :: tail in
-    { acc with dict = None; props = SMap.empty; tail }
+    { acc with dict = None; props = SMap.empty; computed_props = []; tail }
 
   let elements_rev acc =
     match head_slice acc with
@@ -1461,7 +1479,7 @@ module ObjAnnotAcc = struct
 
   let object_type loc ~exact acc =
     match elements_rev acc with
-    | (ObjSpreadAnnotSlice { dict; props }, []) ->
+    | (ObjSpreadAnnotSlice { dict; props; _ }, []) ->
       let proto =
         match (acc.calls_rev, acc.proto) with
         | (t :: ts, _) -> ObjAnnotCallable { ts_rev = (t, ts) }
@@ -1477,7 +1495,7 @@ module ObjAnnotAcc = struct
           else
             InexactObj
       in
-      Annot (ObjAnnot { loc; props; proto; obj_kind })
+      Annot (ObjAnnot { loc; props; computed_props = List.rev acc.computed_props; proto; obj_kind })
     | elems_rev -> Annot (ObjSpreadAnnot { loc; exact; elems_rev })
 end
 
@@ -1537,6 +1555,9 @@ module DeclareClassAcc = struct
     static: 'loc prop SMap.t;
     proto: 'loc prop SMap.t;
     own: 'loc prop SMap.t;
+    computed_own: ('loc parsed * 'loc prop) list;
+    computed_proto: ('loc parsed * 'loc prop) list;
+    computed_static: ('loc parsed * 'loc prop) list;
     scalls: 'loc calls;
     calls: 'loc calls;
     dict: 'loc parsed obj_annot_dict option;
@@ -1548,6 +1569,9 @@ module DeclareClassAcc = struct
       static = SMap.empty;
       proto = SMap.empty;
       own = SMap.empty;
+      computed_own = [];
+      computed_proto = [];
+      computed_static = [];
       scalls = [];
       calls = [];
       dict = None;
@@ -1602,6 +1626,22 @@ module DeclareClassAcc = struct
     else
       map_proto f acc
 
+  let add_computed_field ~static ~proto key id_loc polarity t acc =
+    let prop = InterfaceField (Some id_loc, t, polarity) in
+    if proto then
+      { acc with computed_proto = (key, prop) :: acc.computed_proto }
+    else if static then
+      { acc with computed_static = (key, prop) :: acc.computed_static }
+    else
+      { acc with computed_own = (key, prop) :: acc.computed_own }
+
+  let append_computed_method ~static key id_loc fn_loc def acc =
+    let prop = InterfaceMethod (Nel.one (id_loc, fn_loc, def)) in
+    if static then
+      { acc with computed_static = (key, prop) :: acc.computed_static }
+    else
+      { acc with computed_proto = (key, prop) :: acc.computed_proto }
+
   let append_call ~static t acc =
     let f = List.cons t in
     if static then
@@ -1619,6 +1659,9 @@ module DeclareClassAcc = struct
         static_props = acc.static;
         own_props = acc.own;
         proto_props = acc.proto;
+        computed_own_props = List.rev acc.computed_own;
+        computed_proto_props = List.rev acc.computed_proto;
+        computed_static_props = List.rev acc.computed_static;
         static_calls = acc.scalls;
         calls = acc.calls;
         dict = acc.dict;
@@ -1631,11 +1674,12 @@ module InterfaceAcc = struct
 
   type 'loc t = {
     props: 'loc prop SMap.t;
+    computed_props: ('loc parsed * 'loc prop) list;
     calls: 'loc parsed list;
     dict: 'loc parsed obj_annot_dict option;
   }
 
-  let empty = { props = SMap.empty; calls = []; dict = None }
+  let empty = { props = SMap.empty; computed_props = []; calls = []; dict = None }
 
   let map_props f acc = { acc with props = f acc.props }
 
@@ -1664,11 +1708,24 @@ module InterfaceAcc = struct
     let f = SMap.update name (add_accessor_helper x) in
     map_props f acc
 
+  let add_computed_field key id_loc polarity t acc =
+    {
+      acc with
+      computed_props = (key, InterfaceField (Some id_loc, t, polarity)) :: acc.computed_props;
+    }
+
+  let append_computed_method key id_loc fn_loc def acc =
+    {
+      acc with
+      computed_props = (key, InterfaceMethod (Nel.one (id_loc, fn_loc, def))) :: acc.computed_props;
+    }
+
   let append_call t acc =
     let f = List.cons t in
     { acc with calls = f acc.calls }
 
-  let interface_def extends { props; calls; dict } = InterfaceSig { extends; props; calls; dict }
+  let interface_def extends { props; computed_props; calls; dict } =
+    InterfaceSig { extends; props; computed_props = List.rev computed_props; calls; dict }
 end
 
 module ObjectLiteralAcc = struct
@@ -1736,6 +1793,68 @@ let rec sequence f = function
   | [] -> failwith "unexpected empty sequence"
   | [expr] -> f expr
   | _ :: exprs -> sequence f exprs
+
+let resolve_prop_key ~expression scope tbls key ~add_named_prop ~add_computed_prop =
+  let module P = Ast.Expression.Object.Property in
+  let module E = Ast.Expression in
+  match key with
+  | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
+  | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ->
+    add_named_prop name id_loc
+  | P.NumberLiteral (id_loc, { Ast.NumberLiteral.value; _ })
+    when Js_number.is_float_safe_integer value ->
+    add_named_prop (Dtoa.ecma_string_of_float value) id_loc
+  | P.BigIntLiteral (id_loc, lit) -> add_named_prop (Flow_ast_utils.string_of_bigint lit) id_loc
+  | P.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ })
+    when Flow_ast_utils.well_known_symbol_name expr <> None ->
+    add_named_prop (Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr)) (fst expr)
+  | P.Computed
+      ( _,
+        {
+          Ast.ComputedKey.expression =
+            (expr_loc, E.StringLiteral { Ast.StringLiteral.value = name; _ });
+          _;
+        }
+      ) ->
+    add_named_prop name expr_loc
+  | P.Computed
+      ( _,
+        {
+          Ast.ComputedKey.expression = (expr_loc, E.NumberLiteral { Ast.NumberLiteral.value; _ });
+          _;
+        }
+      )
+    when Js_number.is_float_safe_integer value ->
+    add_named_prop (Dtoa.ecma_string_of_float value) expr_loc
+  | P.Computed (_, { Ast.ComputedKey.expression = (expr_loc, E.BigIntLiteral lit); _ }) ->
+    add_named_prop (Flow_ast_utils.string_of_bigint lit) expr_loc
+  | P.Computed
+      ( _,
+        {
+          Ast.ComputedKey.expression =
+            (expr_loc, E.Identifier (_, { Ast.Identifier.name = ref_name; _ }));
+          _;
+        }
+      ) ->
+    (* Thunk defers loc pushes so callers can push fn_loc first for methods,
+       satisfying Packed_locs ascending-order requirement. *)
+    add_computed_prop (fun () ->
+        let ref_loc = push_loc tbls expr_loc in
+        (val_ref ~type_only:false scope ref_loc ref_name, ref_loc)
+    )
+  | P.Computed (_, { Ast.ComputedKey.expression = (_, E.Member _) as expr; _ }) ->
+    add_computed_prop (fun () ->
+        let ref_loc = push_loc tbls (fst expr) in
+        let t = expression expr in
+        (t, ref_loc)
+    )
+  | P.Computed (loc, _)
+  | P.NumberLiteral (loc, _)
+  | P.PrivateName (loc, _) ->
+    add_computed_prop (fun () ->
+        let loc = push_loc tbls loc in
+        (Err (loc, SigError (Signature_error.UnexpectedObjectKey (loc, loc))), loc)
+    )
 
 let rec annot opts scope tbls xs (loc, t) =
   let (_, annot) = annot_with_loc opts scope tbls xs (loc, t) in
@@ -2141,45 +2260,62 @@ and object_type =
     in
     match value with
     | O.Property.Init t ->
-      let module P = Ast.Expression.Object.Property in
-      let name_and_loc =
-        match key with
-        | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ })
-        | P.StringLiteral (id_loc, { Ast.StringLiteral.value = name; _ }) ->
-          Some (name, id_loc)
-        | P.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ })
-          when Flow_ast_utils.well_known_symbol_name expr <> None ->
-          Some (Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr), fst expr)
-        | _ -> None
-      in
-      begin
-        match name_and_loc with
-        | None -> acc (* unsupported object keys *)
-        | Some (name, id_loc) ->
-          if _method then
-            if optional then
-              match t with
-              | (fn_loc, T.Function f) ->
-                let (id_loc, t) = optional_method_as_field opts scope tbls xs id_loc fn_loc f in
-                Acc.add_field name id_loc (polarity variance) t acc
-              | _ -> failwith "unexpected optional method type"
-            else
-              add_method opts scope tbls xs acc id_loc name t
-          else
-            let id_loc = push_loc tbls id_loc in
-            let loc = push_loc tbls (fst t) in
-            let t = annot opts scope tbls xs t in
-            if name = "__proto__" && (not optional) && variance = None then
-              Acc.add_proto (loc, t) acc
-            else
-              let t =
-                if optional then
-                  Annot (Optional t)
-                else
-                  t
-              in
+      let add_named_prop name id_loc =
+        if _method then
+          if optional then
+            match t with
+            | (fn_loc, T.Function f) ->
+              let (id_loc, t) = optional_method_as_field opts scope tbls xs id_loc fn_loc f in
               Acc.add_field name id_loc (polarity variance) t acc
-      end
+            | _ -> failwith "unexpected optional method type"
+          else
+            add_method opts scope tbls xs acc id_loc name t
+        else
+          let id_loc = push_loc tbls id_loc in
+          let loc = push_loc tbls (fst t) in
+          let t = annot opts scope tbls xs t in
+          if name = "__proto__" && (not optional) && variance = None then
+            Acc.add_proto (loc, t) acc
+          else
+            let t =
+              if optional then
+                Annot (Optional t)
+              else
+                t
+            in
+            Acc.add_field name id_loc (polarity variance) t acc
+      in
+      let add_computed_prop build_key =
+        if _method then
+          match t with
+          | (fn_loc, T.Function f) ->
+            let fn_loc = push_loc tbls fn_loc in
+            let (key_ref, ref_loc) = build_key () in
+            let def = function_type opts scope tbls xs f in
+            if optional then
+              let t = Annot (Optional (Annot (FunAnnot (fn_loc, def)))) in
+              Acc.add_computed_field key_ref ref_loc (polarity variance) t acc
+            else
+              Acc.add_computed_method key_ref ref_loc fn_loc def acc
+          | _ -> failwith "unexpected method type"
+        else
+          let (key_ref, ref_loc) = build_key () in
+          let t = annot opts scope tbls xs t in
+          let t =
+            if optional then
+              Annot (Optional t)
+            else
+              t
+          in
+          Acc.add_computed_field key_ref ref_loc (polarity variance) t acc
+      in
+      resolve_prop_key
+        ~expression:(expression opts scope tbls)
+        scope
+        tbls
+        key
+        ~add_named_prop
+        ~add_computed_prop
     | O.Property.Get (_, f) ->
       let module P = Ast.Expression.Object.Property in
       begin
@@ -2370,19 +2506,8 @@ and interface_props =
     } =
       p
     in
-    let module P = Ast.Expression.Object.Property in
-    let name_and_loc =
-      match key with
-      | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) -> Some (name, id_loc)
-      | P.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ })
-        when Flow_ast_utils.well_known_symbol_name expr <> None ->
-        Some (Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr), fst expr)
-      | _ -> None
-    in
-    match name_and_loc with
-    | None -> acc (* unsupported interface keys *)
-    | Some (name, id_loc) ->
-      (match (_method, value) with
+    let add_named_prop name id_loc =
+      match (_method, value) with
       | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
         if optional then
           let (id_loc, t) = optional_method_as_field opts scope tbls xs id_loc fn_loc fn in
@@ -2412,7 +2537,41 @@ and interface_props =
       | (_, O.Property.Set (_, fn)) ->
         let id_loc = push_loc tbls id_loc in
         let setter = setter_type opts scope tbls xs id_loc fn in
-        Acc.add_accessor name setter acc)
+        Acc.add_accessor name setter acc
+    in
+    let add_computed_prop build_key =
+      match (_method, value) with
+      | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
+        let fn_loc = push_loc tbls fn_loc in
+        let (key_ref, ref_loc) = build_key () in
+        let def = function_type opts scope tbls xs fn in
+        if optional then
+          let t = Annot (Optional (Annot (FunAnnot (fn_loc, def)))) in
+          let polarity = polarity variance in
+          Acc.add_computed_field key_ref ref_loc polarity t acc
+        else
+          Acc.append_computed_method key_ref ref_loc fn_loc def acc
+      | (true, _) -> acc
+      | (false, O.Property.Init t) ->
+        let (key_ref, ref_loc) = build_key () in
+        let t = annot opts scope tbls xs t in
+        let t =
+          if optional then
+            Annot (Optional t)
+          else
+            t
+        in
+        let polarity = polarity variance in
+        Acc.add_computed_field key_ref ref_loc polarity t acc
+      | _ -> acc
+    in
+    resolve_prop_key
+      ~expression:(expression opts scope tbls)
+      scope
+      tbls
+      key
+      ~add_named_prop
+      ~add_computed_prop
   in
   let interface_indexer opts scope tbls xs acc p =
     let i = indexer opts scope tbls xs p in
@@ -2478,19 +2637,8 @@ and declare_class_props =
     match ts_accessibility with
     | Some (_, { Ast.Class.TSAccessibility.kind = Ast.Class.TSAccessibility.Private; _ }) -> acc
     | _ ->
-      let module P = Ast.Expression.Object.Property in
-      let name_and_loc =
-        match key with
-        | P.Identifier (id_loc, { Ast.Identifier.name; comments = _ }) -> Some (name, id_loc)
-        | P.Computed (_, { Ast.ComputedKey.expression = expr; comments = _ })
-          when Flow_ast_utils.well_known_symbol_name expr <> None ->
-          Some (Base.Option.value_exn (Flow_ast_utils.well_known_symbol_name expr), fst expr)
-        | _ -> None
-      in
-      (match name_and_loc with
-      | None -> acc (* unsupported declare class keys *)
-      | Some (name, id_loc) ->
-        (match (_method, value) with
+      let add_named_prop name id_loc =
+        match (_method, value) with
         | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
           if optional then
             let (id_loc, t) = optional_method_as_field opts scope tbls xs id_loc fn_loc fn in
@@ -2526,7 +2674,41 @@ and declare_class_props =
         | (_, O.Property.Set (_, fn)) ->
           let id_loc = push_loc tbls id_loc in
           let setter = setter_type opts scope tbls xs id_loc fn in
-          Acc.add_accessor ~static name setter acc))
+          Acc.add_accessor ~static name setter acc
+      in
+      let add_computed_prop build_key =
+        match (_method, value) with
+        | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
+          let fn_loc = push_loc tbls fn_loc in
+          let (key_ref, ref_loc) = build_key () in
+          let def = function_type opts scope tbls xs fn in
+          if optional then
+            let t = Annot (Optional (Annot (FunAnnot (fn_loc, def)))) in
+            let polarity = polarity variance in
+            Acc.add_computed_field ~static ~proto key_ref ref_loc polarity t acc
+          else
+            Acc.append_computed_method ~static key_ref ref_loc fn_loc def acc
+        | (true, _) -> acc
+        | (false, O.Property.Init t) ->
+          let (key_ref, ref_loc) = build_key () in
+          let t = annot opts scope tbls xs t in
+          let t =
+            if optional then
+              Annot (Optional t)
+            else
+              t
+          in
+          let polarity = polarity variance in
+          Acc.add_computed_field ~static ~proto key_ref ref_loc polarity t acc
+        | _ -> acc
+      in
+      resolve_prop_key
+        ~expression:(expression opts scope tbls)
+        scope
+        tbls
+        key
+        ~add_named_prop
+        ~add_computed_prop
   in
   let class_indexer opts scope tbls xs acc p =
     let { O.Indexer.static; _ } = p in
@@ -3053,7 +3235,7 @@ and optional_indexed_access
   in
   (non_maybe_result, result)
 
-let annot_or_hint ~sort ~err_loc opts scope tbls xs = function
+and annot_or_hint ~sort ~err_loc opts scope tbls xs = function
   | Ast.Type.Available (_, t) -> annot opts scope tbls xs t
   | Ast.Type.Missing loc ->
     let err_loc =
@@ -3063,7 +3245,7 @@ let annot_or_hint ~sort ~err_loc opts scope tbls xs = function
     in
     Err (err_loc, SigError (Signature_error.ExpectedAnnotation (err_loc, sort)))
 
-let function_return_annot ~sort ~err_loc opts scope tbls xs = function
+and function_return_annot ~sort ~err_loc opts scope tbls xs = function
   | Ast.Function.ReturnAnnot.Available (_, t) -> annot opts scope tbls xs t
   | Ast.Function.ReturnAnnot.TypeGuard (loc, _) ->
     (* This is only used for getters, where type guards are not allowed *)
@@ -3077,7 +3259,7 @@ let function_return_annot ~sort ~err_loc opts scope tbls xs = function
     in
     Err (err_loc, SigError (Signature_error.ExpectedAnnotation (err_loc, sort)))
 
-let class_implements =
+and class_implements =
   let module C = Ast.Class in
   let rec loop opts scope tbls xs acc = function
     | [] -> List.rev acc
@@ -3095,7 +3277,7 @@ let class_implements =
     | None -> []
     | Some (_, { C.Implements.interfaces; comments = _ }) -> loop opts scope tbls xs [] interfaces
 
-let getter_def opts scope tbls xs id_loc f =
+and getter_def opts scope tbls xs id_loc f =
   let module F = Ast.Function in
   let { F.return = r; _ } = f in
   let t =
@@ -3110,7 +3292,7 @@ let getter_def opts scope tbls xs id_loc f =
   in
   Get (id_loc, t)
 
-let setter_def opts scope tbls xs id_loc f =
+and setter_def opts scope tbls xs id_loc f =
   let module F = Ast.Function in
   let module P = Ast.Pattern in
   let { F.params = (_, { F.Params.params; _ }); _ } = f in
@@ -3135,26 +3317,26 @@ let setter_def opts scope tbls xs id_loc f =
     Set (id_loc, t)
   | _ -> failwith "unexpected setter"
 
-let module_ref_literal tbls loc { Ast.ModuleRefLiteral.value; prefix_len; _ } =
+and module_ref_literal tbls loc { Ast.ModuleRefLiteral.value; prefix_len; _ } =
   let mref =
     push_module_ref tbls (Flow_import_specifier.userland (Base.String.drop_prefix value prefix_len))
   in
   ModuleRef { loc; mref }
 
-let string_literal ~frozen loc s =
+and string_literal ~frozen loc s =
   if frozen = FrozenProp then
     Annot (SingletonString (loc, s))
   else
     Value (StringLit (loc, s))
 
-let template_literal loc quasis =
+and template_literal loc quasis =
   let module T = Ast.Expression.TemplateLiteral in
   match quasis with
   | [(_, { T.Element.value = { T.Element.raw = _; cooked = s }; tail = _ })] ->
     string_literal ~frozen:NotFrozen loc s
   | _ -> Value (StringVal loc)
 
-let graphql_literal opts tbls loc quasi =
+and graphql_literal opts tbls loc quasi =
   let module_prefix = opts.relay_integration_module_prefix in
   match Graphql.extract_module_name ~module_prefix quasi with
   | Ok module_name ->
@@ -3162,7 +3344,7 @@ let graphql_literal opts tbls loc quasi =
     Require { loc; mref }
   | Error _ -> Annot (Any loc)
 
-let key_mirror =
+and key_mirror =
   let module O = Ast.Expression.Object in
   let module P = O.Property in
   let module Acc = ObjectLiteralAcc in
@@ -3197,7 +3379,7 @@ let key_mirror =
   in
   (fun tbls loc properties -> loop tbls loc Acc.empty properties)
 
-let jsx_element opts tbls loc elem =
+and jsx_element opts tbls loc elem =
   let module J = Ast.JSX in
   let { J.opening_element; closing_element = _; children = _; comments = _ } = elem in
   let (_, { J.Opening.name; targs = _; self_closing = _; attributes = _ }) = opening_element in
@@ -3212,7 +3394,7 @@ let jsx_element opts tbls loc elem =
           (Signature_error.UnexpectedExpression (loc, Flow_ast_utils.ExpressionSort.JSXElement))
       )
 
-let binary loc lhs_t rhs_t op =
+and binary loc lhs_t rhs_t op =
   let open Ast.Expression.Binary in
   match op with
   | Equal
@@ -3240,7 +3422,7 @@ let binary loc lhs_t rhs_t op =
   | Plus ->
     Eval (loc, lhs_t, Arith (op, rhs_t))
 
-let rec expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
+and expression opts scope tbls ?(frozen = NotFrozen) (loc, expr) =
   let module E = Ast.Expression in
   let loc = push_loc tbls loc in
   match expr with

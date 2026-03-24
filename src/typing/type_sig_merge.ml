@@ -624,6 +624,23 @@ let rec merge ?(as_const = false) ?(const_decl = false) env file = function
     let ns_reason = Reason.(mk_reason (RModule mref) loc) in
     import_ns file ns_reason (Flow_import_specifier.unwrap_userland mref) loc index
 
+and resolve_computed_key env file key =
+  let key_t = merge env file key in
+  match Context.find_resolved file.cx key_t with
+  | Some resolved_t ->
+    (match Flow_js_utils.propref_for_elem_t file.cx resolved_t with
+    | Type.Named { name; _ } -> Some name
+    | Type.Computed _ -> None)
+  | None -> None
+
+and merge_overloaded_property existing_prop new_prop =
+  match (existing_prop, new_prop) with
+  | (Type.Method { type_ = existing_t; _ }, Type.Method { key_loc; type_ = new_t }) ->
+    let reason = TypeUtil.reason_of_t new_t in
+    Type.Method
+      { key_loc; type_ = Type.(IntersectionT (reason, InterRep.make existing_t new_t [])) }
+  | _ -> new_prop
+
 and merge_annot env file = function
   | Any loc -> Type.AnyT.at Type.AnnotatedAny loc
   | Mixed loc -> Type.MixedT.at loc
@@ -1004,7 +1021,7 @@ and merge_annot env file = function
   | ComponentAnnot (loc, def) ->
     let reason = Reason.(mk_annot_reason RComponentType loc) in
     merge_component env file reason ~is_annotation:true def None
-  | ObjAnnot { loc; props; proto; obj_kind } ->
+  | ObjAnnot { loc; props; computed_props; proto; obj_kind } ->
     let reason = Reason.(mk_annot_reason RObjectType loc) in
     let obj_kind =
       match obj_kind with
@@ -1012,7 +1029,25 @@ and merge_annot env file = function
       | InexactObj -> Type.Inexact
       | IndexedObj dict -> Type.Indexed ((merge_dict env file) dict)
     in
-    let props = SMap.map (merge_obj_annot_prop env file) props |> NameUtils.namemap_of_smap in
+    let props = SMap.map (merge_obj_annot_prop env file) props in
+    let props =
+      List.fold_left
+        (fun props (key, prop) ->
+          match resolve_computed_key env file key with
+          | Some name ->
+            let name_str = Reason.display_string_of_name name in
+            let t = merge_obj_annot_prop env file prop in
+            SMap.update
+              name_str
+              (function
+                | None -> Some t
+                | Some existing -> Some (merge_overloaded_property existing t))
+              props
+          | None -> props)
+        props
+        computed_props
+    in
+    let props = NameUtils.namemap_of_smap props in
     let mk_object call proto =
       let id = Type.Properties.id_of_aloc_id ~type_sig:true (Context.make_aloc_id file.cx loc) in
       let obj_type =
@@ -1053,9 +1088,27 @@ and merge_annot env file = function
   | ObjSpreadAnnot { loc; exact; elems_rev } ->
     let reason = Reason.(mk_annot_reason RObjectType loc) in
     let target = Type.Object.Spread.Annot { make_exact = exact } in
-    let merge_slice dict props =
+    let merge_slice dict props computed_props =
       let dict = Option.map ~f:(merge_dict env file ~as_const:false) dict in
-      let prop_map = SMap.map (merge_obj_annot_prop env file) props |> NameUtils.namemap_of_smap in
+      let props = SMap.map (merge_obj_annot_prop env file) props in
+      let props =
+        List.fold_left
+          (fun props (key, prop) ->
+            match resolve_computed_key env file key with
+            | Some name ->
+              let name_str = Reason.display_string_of_name name in
+              let t = merge_obj_annot_prop env file prop in
+              SMap.update
+                name_str
+                (function
+                  | None -> Some t
+                  | Some existing -> Some (merge_overloaded_property existing t))
+                props
+            | None -> props)
+          props
+          computed_props
+      in
+      let prop_map = NameUtils.namemap_of_smap props in
       {
         Type.Object.Spread.reason;
         prop_map;
@@ -1066,7 +1119,8 @@ and merge_annot env file = function
     in
     let merge_elem = function
       | ObjSpreadAnnotElem t -> Type.Object.Spread.Type (merge env file t)
-      | ObjSpreadAnnotSlice { dict; props } -> Type.Object.Spread.Slice (merge_slice dict props)
+      | ObjSpreadAnnotSlice { dict; props; computed_props } ->
+        Type.Object.Spread.Slice (merge_slice dict props computed_props)
     in
     let (t, todo_rev, head_slice) =
       let open Type.Object.Spread in
@@ -1495,7 +1549,7 @@ and merge_tparam ~from_infer env file tp =
 and merge_op env file op = map_op (merge env file) op
 
 and merge_interface ~inline env file reason class_name id def =
-  let (InterfaceSig { extends; props; calls; dict }) = def in
+  let (InterfaceSig { extends; props; computed_props; calls; dict }) = def in
   let super =
     let super_reason = Reason.(update_desc_reason (fun d -> RSuperOf d) reason) in
     let ts = List.map (merge env file) extends in
@@ -1519,16 +1573,39 @@ and merge_interface ~inline env file reason class_name id def =
   in
   let (own_props, proto_props) =
     let open Reason in
-    SMap.fold
-      (fun k prop (own, proto) ->
-        let t = merge_interface_prop env file prop in
-        match prop with
-        | InterfaceField _ -> (NameUtils.Map.add (OrdinaryName k) t own, proto)
-        | InterfaceAccess _
-        | InterfaceMethod _ ->
-          (own, NameUtils.Map.add (OrdinaryName k) t proto))
-      props
-      (NameUtils.Map.empty, NameUtils.Map.empty)
+    let (own, proto) =
+      SMap.fold
+        (fun k prop (own, proto) ->
+          let t = merge_interface_prop env file prop in
+          match prop with
+          | InterfaceField _ -> (NameUtils.Map.add (OrdinaryName k) t own, proto)
+          | InterfaceAccess _
+          | InterfaceMethod _ ->
+            (own, NameUtils.Map.add (OrdinaryName k) t proto))
+        props
+        (NameUtils.Map.empty, NameUtils.Map.empty)
+    in
+    List.fold_left
+      (fun (own, proto) (key, prop) ->
+        match resolve_computed_key env file key with
+        | Some name ->
+          let t = merge_interface_prop env file prop in
+          let update_map map =
+            NameUtils.Map.update
+              name
+              (function
+                | None -> Some t
+                | Some existing -> Some (merge_overloaded_property existing t))
+              map
+          in
+          (match prop with
+          | InterfaceField _ -> (update_map own, proto)
+          | InterfaceAccess _
+          | InterfaceMethod _ ->
+            (own, update_map proto))
+        | None -> (own, proto))
+      (own, proto)
+      computed_props
   in
   let inst_call_t =
     let ts = List.rev_map (merge env file) calls in
@@ -1966,6 +2043,9 @@ let merge_declare_class file reason class_name id def =
           static_props;
           own_props;
           proto_props;
+          computed_own_props;
+          computed_proto_props;
+          computed_static_props;
           static_calls;
           calls;
           dict;
@@ -1996,6 +2076,23 @@ let merge_declare_class file reason class_name id def =
     let static =
       let static_reason = Reason.(update_desc_reason (fun d -> RStatics d) reason) in
       let props = SMap.map (merge_interface_prop ~is_static:true env file) static_props in
+      let props =
+        List.fold_left
+          (fun props (key, prop) ->
+            match resolve_computed_key env file key with
+            | Some name ->
+              let name_str = Reason.display_string_of_name name in
+              let t = merge_interface_prop ~is_static:true env file prop in
+              SMap.update
+                name_str
+                (function
+                  | None -> Some t
+                  | Some existing -> Some (merge_overloaded_property existing t))
+                props
+            | None -> props)
+          props
+          computed_static_props
+      in
       let props = add_name_field reason props in
       let props = NameUtils.namemap_of_smap props in
       let call =
@@ -2009,16 +2106,35 @@ let merge_declare_class file reason class_name id def =
       in
       Obj_type.mk_with_proto file.cx static_reason static_proto ~props ?call ~obj_kind:Type.Inexact
     in
+    let fold_computed_interface_props computed_props props =
+      List.fold_left
+        (fun props (key, prop) ->
+          match resolve_computed_key env file key with
+          | Some name ->
+            let name_str = Reason.display_string_of_name name in
+            let t = merge_interface_prop env file prop in
+            SMap.update
+              name_str
+              (function
+                | None -> Some t
+                | Some existing -> Some (merge_overloaded_property existing t))
+              props
+          | None -> props)
+        props
+        computed_props
+    in
     let own_props =
-      SMap.map (merge_interface_prop env file) own_props
-      |> NameUtils.namemap_of_smap
-      |> Context.generate_property_map file.cx
+      let props = SMap.map (merge_interface_prop env file) own_props in
+      let props = fold_computed_interface_props computed_own_props props in
+      props |> NameUtils.namemap_of_smap |> Context.generate_property_map file.cx
     in
     let proto_props =
-      SMap.map (merge_interface_prop env file) proto_props
-      |> add_default_constructor reason extends
-      |> NameUtils.namemap_of_smap
-      |> Context.generate_property_map file.cx
+      let props =
+        SMap.map (merge_interface_prop env file) proto_props
+        |> add_default_constructor reason extends
+      in
+      let props = fold_computed_interface_props computed_proto_props props in
+      props |> NameUtils.namemap_of_smap |> Context.generate_property_map file.cx
     in
     let inst_call_t =
       match List.rev_map (merge env file) calls with
