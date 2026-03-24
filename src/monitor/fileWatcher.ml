@@ -666,6 +666,7 @@ end = struct
           let%lwt () = Lwt_unix.wait_read env.notification_fd in
           Lwt.return (Ok ())
         with
+        | Lwt.Canceled as exn -> raise exn
         | Unix.Unix_error (Unix.EBADF, _, _) ->
           Lwt.return (Error (Edenfs_watcher_types.EdenfsWatcherError "Notification fd closed"))
         | exn ->
