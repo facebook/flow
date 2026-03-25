@@ -5,7 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  *)
 
-type logging_context = { from: string option }
+type logging_context = {
+  from: string option;
+  agent_id: string option;
+}
 
 type persistent_context = {
   start_lsp_state: string option;
@@ -31,7 +34,7 @@ type persistent_delay = {
   recheck_worst_cycle_size: int option;
 }
 
-let context = ref { from = None }
+let context = ref { from = None; agent_id = None }
 
 let disable_logging () = ()
 
@@ -45,7 +48,12 @@ let set_command _ = ()
 
 let set_eden _ = ()
 
-let set_from from = context := { from }
+let set_from from = context := { !context with from }
+
+let set_agent_id agent_id = context := { !context with agent_id }
+
+let set_agent_id_from_client_context client_context =
+  context := { !context with agent_id = client_context.agent_id }
 
 let set_root _ = ()
 

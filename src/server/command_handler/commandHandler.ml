@@ -2453,6 +2453,7 @@ let enqueue_or_handle_ephemeral genv (request_id, command_with_context) =
   let { ServerCommandWithContext.client_logging_context = client_context; command } =
     command_with_context
   in
+  FlowEventLogger.set_agent_id_from_client_context client_context;
   let cmd_str = spf "%s: %s" request_id (ServerProt.Request.to_string command) in
   match get_ephemeral_handler genv command with
   | Handle_immediately workload ->
