@@ -5,7 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::collections::BTreeMap;
 use std::collections::HashSet;
 use std::ops::Deref;
 use std::rc::Rc;
@@ -388,8 +387,7 @@ pub fn props<MapCx, M: TypeMapper<MapCx>>(
     id: properties::Id,
 ) -> properties::Id {
     let props_map = cx.find_props(id.dupe());
-    let mut props_changed = false;
-    let mut props_map_prime = BTreeMap::new();
+    let mut props_map_prime = None;
     for (name, prop) in props_map.iter() {
         let new_prop = match prop.deref() {
             PropertyInner::Field {
@@ -402,7 +400,6 @@ pub fn props<MapCx, M: TypeMapper<MapCx>>(
                 if type_.ptr_eq(&type_prime) {
                     prop.dupe()
                 } else {
-                    props_changed = true;
                     Property::new(PropertyInner::Field {
                         preferred_def_locs: preferred_def_locs.clone(),
                         key_loc: key_loc.dupe(),
@@ -416,7 +413,6 @@ pub fn props<MapCx, M: TypeMapper<MapCx>>(
                 if type_.ptr_eq(&type_prime) {
                     prop.dupe()
                 } else {
-                    props_changed = true;
                     Property::new(PropertyInner::Get {
                         key_loc: key_loc.dupe(),
                         type_: type_prime,
@@ -428,7 +424,6 @@ pub fn props<MapCx, M: TypeMapper<MapCx>>(
                 if type_.ptr_eq(&type_prime) {
                     prop.dupe()
                 } else {
-                    props_changed = true;
                     Property::new(PropertyInner::Set {
                         key_loc: key_loc.dupe(),
                         type_: type_prime,
@@ -446,7 +441,6 @@ pub fn props<MapCx, M: TypeMapper<MapCx>>(
                 if get_type.ptr_eq(&get_type_prime) && set_type.ptr_eq(&set_type_prime) {
                     prop.dupe()
                 } else {
-                    props_changed = true;
                     Property::new(PropertyInner::GetSet {
                         get_key_loc: get_key_loc.dupe(),
                         get_type: get_type_prime,
@@ -460,7 +454,6 @@ pub fn props<MapCx, M: TypeMapper<MapCx>>(
                 if type_.ptr_eq(&type_prime) {
                     prop.dupe()
                 } else {
-                    props_changed = true;
                     Property::new(PropertyInner::Method {
                         key_loc: key_loc.dupe(),
                         type_: type_prime,
@@ -468,16 +461,20 @@ pub fn props<MapCx, M: TypeMapper<MapCx>>(
                 }
             }
         };
-        props_map_prime.insert(name.dupe(), new_prop);
+        if !prop.ptr_eq(&new_prop) {
+            props_map_prime
+                .get_or_insert_with(|| props_map.clone())
+                .insert(name.dupe(), new_prop);
+        }
     }
-    if !props_changed {
-        id
-    } else {
+    if let Some(props_map_prime) = props_map_prime {
         // When substitution results in a new property map, we have to use a
         // generated id, rather than a location from source. The substituted
         // object will have the same location as the generic version, meaning
         // that this location will not serve as a unique identifier.
-        cx.generate_property_map(props_map_prime.into())
+        cx.generate_property_map(props_map_prime)
+    } else {
+        id
     }
 }
 
@@ -489,15 +486,11 @@ pub fn exports<MapCx, M: TypeMapper<MapCx>>(
 ) -> exports::Id {
     // let exps = Context.find_exports cx id in
     let exps = cx.find_exports(id);
-    let mut exps_changed = false;
-    let mut exps_prime = exports::T::new();
+    let mut exps_prime = None;
     for (name, ns) in exps.iter() {
         let type_prime = mapper.type_(cx, map_cx, ns.type_.dupe());
-        if ns.type_.ptr_eq(&type_prime) {
-            exps_prime.insert(name.dupe(), ns.clone());
-        } else {
-            exps_changed = true;
-            exps_prime.insert(
+        if !ns.type_.ptr_eq(&type_prime) {
+            exps_prime.get_or_insert_with(|| exps.clone()).insert(
                 name.dupe(),
                 flow_typing_type::type_::NamedSymbol::new(
                     ns.name_loc.dupe(),
@@ -507,10 +500,10 @@ pub fn exports<MapCx, M: TypeMapper<MapCx>>(
             );
         }
     }
-    if !exps_changed {
-        id
-    } else {
+    if let Some(exps_prime) = exps_prime {
         cx.make_export_map(exps_prime)
+    } else {
+        id
     }
 }
 

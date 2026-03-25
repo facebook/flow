@@ -1245,24 +1245,22 @@ pub fn destructor_default<A, M: TypeMapper<A> + ?Sized>(
             props,
             allow_ref_in_spread,
         } => {
-            let mut props_changed = false;
-            let props_prime: properties::PropertiesMap = props
-                .iter()
-                .map(|(name, prop)| {
-                    let prop_prime = mapper.prop(cx, map_cx, prop.dupe());
-                    if !prop.ptr_eq(&prop_prime) {
-                        props_changed = true;
-                    }
-                    (name.clone(), prop_prime)
-                })
-                .collect();
-            if !props_changed {
-                t.dupe()
-            } else {
+            let mut props_prime = None;
+            for (name, prop) in props.iter() {
+                let prop_prime = mapper.prop(cx, map_cx, prop.dupe());
+                if !prop.ptr_eq(&prop_prime) {
+                    props_prime
+                        .get_or_insert_with(|| props.dupe())
+                        .insert(name.dupe(), prop_prime);
+                }
+            }
+            if let Some(props_prime) = props_prime {
                 Rc::new(Destructor::ReactCheckComponentConfig {
                     props: props_prime,
                     allow_ref_in_spread: *allow_ref_in_spread,
                 })
+            } else {
+                t.dupe()
             }
         }
         Destructor::ReactDRO(_)

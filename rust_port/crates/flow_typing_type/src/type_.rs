@@ -6189,16 +6189,38 @@ impl Default for FlowSet {
 impl FlowSet {
     /// Returns whether the pair is inserted into the set.
     pub fn add(&mut self, l: Type, u: UseT) -> bool {
-        for level in self.levels.iter().rev() {
-            if let Some(set) = level.get(&l) {
-                if set.contains(&u) {
+        let (top, rest) = self.levels.split_last_mut().expect("FlowSet has no levels");
+        match top.entry(l) {
+            std::collections::btree_map::Entry::Occupied(mut entry) => {
+                if entry.get().contains(&u) {
                     return false;
                 }
+                let key = entry.key();
+                for level in rest.iter().rev() {
+                    if let Some(set) = level.get(key) {
+                        if set.contains(&u) {
+                            return false;
+                        }
+                    }
+                }
+                entry.get_mut().insert(u);
+                true
+            }
+            std::collections::btree_map::Entry::Vacant(entry) => {
+                let key = entry.key();
+                for level in rest.iter().rev() {
+                    if let Some(set) = level.get(key) {
+                        if set.contains(&u) {
+                            return false;
+                        }
+                    }
+                }
+                let mut set = BTreeSet::new();
+                set.insert(u);
+                entry.insert(set);
+                true
             }
         }
-        let top = self.levels.last_mut().expect("FlowSet has no levels");
-        top.entry(l).or_default().insert(u);
-        true
     }
 
     pub fn fold<F, R>(&self, mut f: F, init: R) -> R

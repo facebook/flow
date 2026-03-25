@@ -361,19 +361,6 @@ pub(super) fn make_options(
         single_quotes: format_single_quotes.unwrap_or(false),
     };
 
-    // Compute max_workers (using number of processors)
-    //
-    // Unlike OCaml's forked workers which share memory via copy-on-write,
-    // Rust threads each have independent heap allocations. The type checker's
-    // per-thread working set (CheckCache, lazy thunks, Context) causes severe
-    // memory pressure at high thread counts, leading to kernel spinlock
-    // contention from page faults and swap. Empirically, 32-64 threads is
-    // optimal; beyond ~128 threads performance degrades dramatically.
-    //
-    // Priority: CLI --max-workers > server.max_workers.full_check (non-lazy only)
-    //           > server.max_workers > system default.
-    // The result is capped at MAX_WORKERS_CAP.
-    const MAX_WORKERS_CAP: usize = 128;
     let available = std::thread::available_parallelism()
         .map(|n| n.get())
         .unwrap_or(1);
@@ -385,12 +372,8 @@ pub(super) fn make_options(
     let max_workers = std::env::var("FLOW_MAX_WORKERS")
         .ok()
         .and_then(|s| s.parse::<usize>().ok())
-        .unwrap_or_else(|| {
-            config_max_workers
-                .map(|w| w as usize)
-                .unwrap_or(available)
-                .min(MAX_WORKERS_CAP)
-        }) as i32;
+        .unwrap_or_else(|| config_max_workers.map(|w| w as usize).unwrap_or(available))
+        as i32;
 
     // Create log file path
     let log_file = std::path::PathBuf::from(&temp_dir).join(format!("{}.log", flowconfig_name));
