@@ -144,6 +144,7 @@ pub(super) fn make_options(
                 log_saving,
                 long_lived_workers,
                 max_files_checked_per_worker,
+                max_files_checked_per_worker_rust_port,
                 max_header_tokens,
                 max_seconds_for_check_per_worker,
                 max_workers,
@@ -242,7 +243,8 @@ pub(super) fn make_options(
         lazy_mode,
         Some(LazyMode::Lazy) | Some(LazyMode::WatchmanDeprecated)
     );
-    let max_files_checked_per_worker = max_files_checked_per_worker as i32;
+    let max_files_checked_per_worker =
+        max_files_checked_per_worker_rust_port.unwrap_or(max_files_checked_per_worker) as i32;
     let max_header_tokens = max_header_tokens as i32;
     let merge_timeout = merge_timeout.map(|t| t as f64);
     let use_unknown_in_catch_variables = use_unknown_in_catch_variables.unwrap_or(false);
