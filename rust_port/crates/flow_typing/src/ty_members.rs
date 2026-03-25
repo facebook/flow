@@ -506,6 +506,7 @@ pub fn extract(
 ) -> Result<TyMembers, String> {
     let options = Options {
         expand_internal_types: true,
+        expand_enum_members: false,
         evaluate_type_destructors: EvaluateTypeDestructorsMode::EvaluateNone,
         optimize_types: false,
         omit_targ_defaults_option: false,

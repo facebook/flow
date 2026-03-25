@@ -1909,7 +1909,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] type_test.ml
       - [ ] typed_ast_test.ml
       - [ ] typing_tests.ml
-  - [ ] errors/
+  - [x] errors/
       - [x] error_message.ml → `flow_typing_errors/src/error_message.rs`
       - [x] error_suppressions.ml → `flow_typing_errors/src/error_suppressions.rs`
           - [x] `add`
@@ -2037,7 +2037,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] exhaustive.ml → `flow_typing_utils/src/exhaustive.rs`
     - [x] existsCheck.ml → `flow_typing_exists_check/src/`lib.rs
     - [x] exists_marker.ml → `flow_typing_statement/src/exists_marker.rs`
-    - [ ] fix_statement.ml
+    - [x] fix_statement.ml → `unnecessary in rust`
     - [x] flow_cache.ml → `flow_typing_flow_common/src/flow_cache.rs`
         - [x] `flow_constraint` module
         - [x] `eval` module
@@ -2227,7 +2227,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `uses_propname` → `Key::uses_propname` method
         - [x] `is_simple` → `Key::is_simple` method
         - [x] `reason_desc` → `Key::reason_desc` method
-    - [ ] key_map.ml
+    - [x] key_map.ml → `just use map of keys directly`
     - [x] loc_env.ml → `flow_typing_loc_env/src/loc_env.rs`
     - [x] marked.ml → `flow_typing/src/marked.rs`
         - [x] `Marked<K>` generic struct (replaces OCaml functor)
@@ -2261,13 +2261,23 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] object_kit.ml → `flow_typing_flow_js/src/object_kit.rs`
     - [x] optional_chain_kit.ml → `flow_typing_flow_js/src/optional_chain_kit.rs`
     - [x] predicate_kit.ml → `flow_typing_utils/src/predicate_kit.rs`
-    - [ ] query_types.ml
+    - [x] query_types.ml → `flow_typing/src/query_types.rs`
+        - [x] `type 'a result` → `QueryResult<A>` enum
+        - [x] `concretize_loc_pairs`
+        - [x] `sort_loc_pairs`
+        - [x] `result_of_normalizer_error`
+        - [x] `max_size_of_evaluated_type` → `MAX_SIZE_OF_EVALUATED_TYPE`
+        - [x] `dump_type_at_pos`
+        - [x] `type_at_pos_type`
+        - [x] `dump_types`
+        - [x] `dump_types_for_tool`
+        - [x] `insert_type_normalize`
     - [x] react_kit.ml → `flow_typing_flow_js/src/react_kit.rs`
     - [x] react_rules.ml → `flow_typing_statement/src/react_rules.rs`
     - [x] refinement.ml → `flow_typing_statement/src/refinement.rs`
     - [x] renders_kit.ml → `flow_typing_flow_js/src/renders_kit.rs`
     - [x] slice_utils.ml → `flow_typing_flow_js/src/slice_utils.rs`
-    - [ ] sort_js.ml
+    - [x] sort_js.ml → `directly use tarjans instead`
     - [x] source_or_generated_id.ml → `flow_typing_type/src/source_or_generated_id.rs` (7/7 functions, 100% complete)
         - [x] `compare_id` → `Ord for Id` trait impl
         - [x] `equal_id` → `PartialEq for Id` trait impl
@@ -2391,7 +2401,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `subst_destructor`
         - [x] `subst_instance_type`
     - [x] type_visitor.ml → `flow_typing_visitors/src/type_visitor.rs`
-    - [ ] typed_ast_finder.ml → `flow_typing/src/typed_ast_finder.rs` (partial)
+    - [x] typed_ast_finder.ml → `flow_typing/src/typed_ast_finder.rs`
         - [x] `mk_bound_t`
         - [x] `EnclosingNode` enum
         - [x] `infer_node`
@@ -2400,10 +2410,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `exact_match_query` module
         - [x] `find_exact_match_annotation`
         - [x] `enclosing_node_mapper` class (folded into `Searcher` in `flow_services_get_def/src/get_def_process_location.rs`)
-        - [ ] `type_parameter_mapper_generic` class
-        - [ ] `type_parameter_mapper` class
-        - [ ] `Type_at_pos` module (`type result`, `class type_at_pos_searcher`, `let find`)
-        - [ ] `find_type_at_pos_annotation`
+        - [x] `type_parameter_mapper_generic` class (folded into `TypeAtPosSearcher` methods)
+        - [x] `type_parameter_mapper` class (folded into `TypeAtPosSearcher`'s `AstVisitor` impl)
+        - [x] `Type_at_pos` module (`type_at_pos` module: `TypeAtPosResult`, `FoundResult`, `TypeAtPosSearcher`, `find`)
+        - [x] `find_type_at_pos_annotation`
     - [x] typed_ast_utils.ml → `flow_typing_utils/src/typed_ast_utils.rs`
         - [x] `AvailableAst` enum
         - [x] `typed_ast_of_available_ast`

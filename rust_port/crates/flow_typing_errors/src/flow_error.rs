@@ -96,7 +96,7 @@ pub fn ordered_reasons(reasons: (Reason, Reason)) -> (Reason, Reason) {
     }
 }
 
-#[derive(Debug, Clone, Dupe)]
+#[derive(Debug, Clone, Dupe, PartialEq)]
 pub struct ErrorSet(FlowOrdSet<FlowError<ALoc>>);
 
 impl Default for ErrorSet {

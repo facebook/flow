@@ -1390,12 +1390,50 @@ fn variable_decl<L: Dupe>(depth: usize, name: &Name, t: &Ty<L>) -> LayoutNode {
     ])
 }
 
-fn enum_decl<L: Dupe>(s: &Symbol<L>) -> LayoutNode {
-    layout::fuse(vec![
+fn enum_decl<L: Dupe>(
+    s: &Symbol<L>,
+    members: &Option<Arc<[FlowSmolStr]>>,
+    has_unknown_members: bool,
+    truncated_members_count: i64,
+) -> LayoutNode {
+    let base = layout::fuse(vec![
         LayoutNode::atom("enum".to_string()),
         layout::space(),
         identifier(&local_name_of_symbol(s)),
-    ])
+    ]);
+    match members {
+        None => base,
+        Some(ms) => {
+            let mut member_nodes: Vec<_> = ms
+                .iter()
+                .map(|member| LayoutNode::atom(member.to_string()))
+                .collect();
+            if truncated_members_count > 0 {
+                member_nodes.push(LayoutNode::atom(format!(
+                    "/* ... {} more members */",
+                    truncated_members_count
+                )));
+            } else if has_unknown_members {
+                member_nodes.push(LayoutNode::atom("...".to_string()));
+            }
+            layout::fuse(vec![
+                base,
+                layout::space(),
+                layout::list(
+                    None,
+                    Some((
+                        LayoutNode::atom("{".to_string()),
+                        LayoutNode::atom("}".to_string()),
+                    )),
+                    Some(LayoutNode::atom(",".to_string())),
+                    false,
+                    None,
+                    None,
+                    member_nodes,
+                ),
+            ])
+        }
+    }
 }
 
 fn namespace<L: Dupe>(name: &Option<Symbol<L>>) -> LayoutNode {
@@ -1438,7 +1476,17 @@ fn decl<L: Dupe>(_opts: &PrinterOptions, depth: usize, d: &Decl<L>) -> LayoutNod
         Decl::ClassDecl(s, ps) => class_decl(depth, s, ps),
         Decl::InterfaceDecl(s, ps) => interface_decl(depth, s, ps),
         Decl::RecordDecl(s, ps) => record_decl(depth, s, ps),
-        Decl::EnumDecl(n) => enum_decl(n),
+        Decl::EnumDecl {
+            name,
+            members,
+            has_unknown_members,
+            truncated_members_count,
+        } => enum_decl(
+            name,
+            members,
+            *has_unknown_members,
+            *truncated_members_count,
+        ),
         Decl::NominalComponentDecl {
             name,
             tparams,

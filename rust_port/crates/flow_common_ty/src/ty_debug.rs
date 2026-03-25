@@ -102,7 +102,7 @@ pub fn string_of_ctor_decl<L>(d: &Decl<L>) -> &'static str {
         Decl::NamespaceDecl { .. } => "NamespaceDecl",
         Decl::VariableDecl(_, _) => "VariableDecl",
         Decl::NominalComponentDecl { .. } => "NominalComponentDecl",
-        Decl::EnumDecl(_) => "EnumDecl",
+        Decl::EnumDecl { .. } => "EnumDecl",
     }
 }
 
@@ -686,7 +686,30 @@ fn dump_decl<L: Debug + Clone + Dupe>(depth: i32, d: &Decl<L>) -> String {
             dump_symbol(s),
             dump_type_params(depth, ps.as_deref())
         ),
-        Decl::EnumDecl(name) => format!("Enum({})", dump_symbol(name)),
+        Decl::EnumDecl {
+            name,
+            members,
+            has_unknown_members,
+            truncated_members_count,
+        } => {
+            let members_str = match members {
+                None => String::new(),
+                Some(ms) => {
+                    let ms_str = ms.iter().map(|m| m.as_str()).collect::<Vec<_>>().join(", ");
+                    if *truncated_members_count > 0 {
+                        format!(
+                            " {{ {}, /* ... {} more members */ }}",
+                            ms_str, truncated_members_count
+                        )
+                    } else if *has_unknown_members {
+                        format!(" {{ {}, ... }}", ms_str)
+                    } else {
+                        format!(" {{ {} }}", ms_str)
+                    }
+                }
+            };
+            format!("Enum({}){}", dump_symbol(name), members_str)
+        }
         Decl::NominalComponentDecl {
             name,
             tparams,
@@ -1472,9 +1495,33 @@ fn json_of_decl<L: Debug + Clone + Dupe, C: ALocToLoc<L>>(
         Decl::ClassDecl(s, ps) => json_of_class_decl::<L, C>(s, ps, strip_root),
         Decl::InterfaceDecl(s, ps) => json_of_interface_decl::<L, C>(s, ps, strip_root),
         Decl::RecordDecl(s, ps) => json_of_record_decl::<L, C>(s, ps, strip_root),
-        Decl::EnumDecl(name) => {
-            vec![("name".to_string(), json_of_symbol::<L, C>(name, strip_root))]
-        }
+        Decl::EnumDecl {
+            name,
+            members,
+            has_unknown_members,
+            truncated_members_count,
+        } => vec![
+            ("name".to_string(), json_of_symbol::<L, C>(name, strip_root)),
+            (
+                "members".to_string(),
+                match members {
+                    Some(ms) => Json::Array(
+                        ms.iter()
+                            .map(|m| Json::String(m.to_string()))
+                            .collect::<Vec<_>>(),
+                    ),
+                    None => Json::Null,
+                },
+            ),
+            (
+                "has_unknown_members".to_string(),
+                Json::Bool(*has_unknown_members),
+            ),
+            (
+                "truncated_members_count".to_string(),
+                Json::Number((*truncated_members_count).into()),
+            ),
+        ],
         Decl::NominalComponentDecl {
             name,
             tparams,

@@ -620,7 +620,7 @@ pub fn typify_elt(elt: Elt<ALoc>) -> Option<ALocTy> {
     match elt {
         Elt::Type(ty) => Some(ty),
         Elt::Decl(Decl::ClassDecl(s, _))
-        | Elt::Decl(Decl::EnumDecl(s))
+        | Elt::Decl(Decl::EnumDecl { name: s, .. })
         | Elt::Decl(Decl::NominalComponentDecl { name: s, .. }) => {
             Some(Arc::new(Ty::TypeOf(BuiltinOrSymbol::TSymbol(s), None)))
         }

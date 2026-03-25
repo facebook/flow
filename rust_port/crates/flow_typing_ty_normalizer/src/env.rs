@@ -51,6 +51,8 @@ pub struct Options {
     /// Expand the signatures of built-in functions, such as:
     /// Function.prototype.apply: (thisArg: any, argArray?: any): any
     pub expand_internal_types: bool,
+    /// If true, expand enum declarations to include their members.
+    pub expand_enum_members: bool,
     /// Consider all kinds of Bot and Any the same when simplifying types.
     ///
     /// The normalized type Ty.Bot may correspond to either the `Empty` type,
@@ -87,6 +89,7 @@ impl Default for Options {
         Self {
             evaluate_type_destructors: EvaluateTypeDestructorsMode::EvaluateNone,
             expand_internal_types: false,
+            expand_enum_members: false,
             merge_bot_and_any_kinds: true,
             omit_targ_defaults_option: false,
             optimize_types: true,
@@ -101,6 +104,7 @@ impl Options {
     pub fn default_for_codemod() -> Self {
         Self {
             expand_internal_types: false,
+            expand_enum_members: false,
             evaluate_type_destructors: EvaluateTypeDestructorsMode::EvaluateSome,
             optimize_types: false,
             omit_targ_defaults_option: true,
@@ -190,6 +194,10 @@ impl<'cx> Env<'cx> {
 
     pub fn expand_internal_types(&self) -> bool {
         self.genv.options.expand_internal_types
+    }
+
+    pub fn expand_enum_members(&self) -> bool {
+        self.genv.options.expand_enum_members
     }
 
     pub fn evaluate_type_destructors(&self) -> &EvaluateTypeDestructorsMode {

@@ -370,7 +370,12 @@ pub enum Decl<L> {
     ClassDecl(Symbol<L>, Option<Arc<[TypeParam<L>]>>),
     InterfaceDecl(Symbol<L>, Option<Arc<[TypeParam<L>]>>),
     RecordDecl(Symbol<L>, Option<Arc<[TypeParam<L>]>>),
-    EnumDecl(Symbol<L>),
+    EnumDecl {
+        name: Symbol<L>,
+        members: Option<Arc<[FlowSmolStr]>>,
+        has_unknown_members: bool,
+        truncated_members_count: i64,
+    },
     NominalComponentDecl {
         name: Symbol<L>,
         tparams: Option<Arc<[TypeParam<L>]>>,
@@ -426,6 +431,12 @@ pub type ALocUtility = Utility<ALoc>;
 pub type ALocComponentProps = ComponentProps<ALoc>;
 
 pub type ALocGenericT = GenericT<ALoc>;
+
+pub struct TypeAtPosResult {
+    pub unevaluated: ALocElt,
+    pub evaluated: Option<ALocElt>,
+    pub refs: Option<BTreeSet<Symbol<Loc>>>,
+}
 
 /* Type destructors */
 
@@ -813,8 +824,20 @@ where
                     }
                 }
             }
-            Decl::EnumDecl(sym) => {
-                self.on_symbol(env, sym);
+            Decl::EnumDecl {
+                name,
+                members,
+                has_unknown_members,
+                truncated_members_count,
+            } => {
+                self.on_symbol(env, name);
+                if let Some(ms) = members {
+                    for member in ms.iter() {
+                        self.on_string(env, member.as_str());
+                    }
+                }
+                self.on_bool(env, *has_unknown_members);
+                self.on_int(env, *truncated_members_count);
             }
             Decl::NominalComponentDecl {
                 name,
@@ -1306,7 +1329,34 @@ where
                 self.on_symbol(env, s1, s2)?;
                 self.on_option_vec_type_param(env, tp1, tp2)
             }
-            (Decl::EnumDecl(s1), Decl::EnumDecl(s2)) => self.on_symbol(env, s1, s2),
+            (
+                Decl::EnumDecl {
+                    name: n1,
+                    members: m1,
+                    has_unknown_members: hum1,
+                    truncated_members_count: tmc1,
+                },
+                Decl::EnumDecl {
+                    name: n2,
+                    members: m2,
+                    has_unknown_members: hum2,
+                    truncated_members_count: tmc2,
+                },
+            ) => {
+                self.on_symbol(env, n1, n2)?;
+                match (m1, m2) {
+                    (Some(v1), Some(v2)) => self.on_list(
+                        |s, e, m1, m2| s.on_string(e, m1.as_str(), m2.as_str()),
+                        env,
+                        v1,
+                        v2,
+                    )?,
+                    (None, None) => {}
+                    _ => self.fail_option(env, m1, m2)?,
+                }
+                self.on_bool(env, *hum1, *hum2)?;
+                self.on_int(env, *tmc1, *tmc2)
+            }
             (
                 Decl::NominalComponentDecl {
                     name: n1,
@@ -2267,7 +2317,21 @@ where
                 }
                 acc
             }
-            Decl::EnumDecl(sym) => self.on_symbol(env, sym),
+            Decl::EnumDecl {
+                name,
+                members,
+                has_unknown_members,
+                truncated_members_count,
+            } => {
+                let mut acc = self.on_symbol(env, name);
+                if let Some(ms) = members {
+                    for member in ms.iter() {
+                        acc = Self::Acc::plus(acc, self.on_string(env, member.as_str()));
+                    }
+                }
+                acc = Self::Acc::plus(acc, self.on_bool(env, *has_unknown_members));
+                Self::Acc::plus(acc, self.on_int(env, *truncated_members_count))
+            }
             Decl::NominalComponentDecl {
                 name,
                 tparams,
@@ -2786,9 +2850,31 @@ where
                 });
                 Decl::RecordDecl(sym_new, tparams_new)
             }
-            Decl::EnumDecl(sym) => {
-                let sym_new = self.on_symbol(env, sym);
-                Decl::EnumDecl(sym_new)
+            Decl::EnumDecl {
+                name,
+                members,
+                has_unknown_members,
+                truncated_members_count,
+            } => {
+                let name_new = self.on_symbol(env, name);
+                let members_new = members.map(|ms| -> Arc<[_]> {
+                    self.on_list(
+                        |s2, e2, member| -> FlowSmolStr {
+                            s2.on_string(e2, member.to_string()).into()
+                        },
+                        env,
+                        &ms,
+                    )
+                    .into()
+                });
+                let has_unknown_members_new = self.on_bool(env, has_unknown_members);
+                let truncated_members_count_new = self.on_int(env, truncated_members_count);
+                Decl::EnumDecl {
+                    name: name_new,
+                    members: members_new,
+                    has_unknown_members: has_unknown_members_new,
+                    truncated_members_count: truncated_members_count_new,
+                }
             }
             Decl::NominalComponentDecl {
                 name,
@@ -4224,7 +4310,7 @@ where
             | Decl::ClassDecl(_, _)
             | Decl::InterfaceDecl(_, _)
             | Decl::RecordDecl(_, _)
-            | Decl::EnumDecl(_)
+            | Decl::EnumDecl { .. }
             | Decl::NominalComponentDecl { .. } => collector.on_decl(&(), d),
             Decl::NamespaceDecl { name, exports: _ }
             | Decl::ModuleDecl {

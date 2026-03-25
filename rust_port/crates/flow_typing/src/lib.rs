@@ -13,6 +13,7 @@ pub mod cycles;
 pub mod env_resolution;
 pub mod marked;
 pub mod merge;
+pub mod query_types;
 pub mod ty_members;
 pub mod ty_normalizer_flow;
 pub mod ty_normalizer_imports;

@@ -3384,9 +3384,47 @@ pub mod element_converter {
             }))
         }
 
-        fn enum_decl(env: &mut Env<'_>, reason: &Reason) -> Result<ALocElt, Error> {
+        fn enum_decl(
+            env: &mut Env<'_>,
+            reason: &Reason,
+            enum_info_opt: Option<&std::rc::Rc<flow_typing_type::type_::EnumInfo>>,
+        ) -> Result<ALocElt, Error> {
             let symbol = reason_utils::local_type_alias_symbol(env, reason)?;
-            Ok(ty::Elt::Decl(ty::Decl::EnumDecl(symbol)))
+            let (members, has_unknown_members, truncated_members_count) =
+                if env.expand_enum_members() {
+                    let max_enum_members = 50;
+                    match enum_info_opt {
+                        Some(enum_info) => match &***enum_info {
+                            flow_typing_type::type_::EnumInfoInner::ConcreteEnum(concrete) => {
+                                let mut all_members: Vec<_> =
+                                    concrete.members.keys().cloned().collect();
+                                all_members.sort();
+                                let num_members = all_members.len();
+                                if num_members > max_enum_members {
+                                    let truncated_members_count = num_members - max_enum_members;
+                                    all_members.truncate(max_enum_members);
+                                    (
+                                        Some(all_members.into()),
+                                        concrete.has_unknown_members,
+                                        truncated_members_count as i64,
+                                    )
+                                } else {
+                                    (Some(all_members.into()), concrete.has_unknown_members, 0)
+                                }
+                            }
+                            _ => (None, false, 0),
+                        },
+                        None => (None, false, 0),
+                    }
+                } else {
+                    (None, false, 0)
+                };
+            Ok(ty::Elt::Decl(ty::Decl::EnumDecl {
+                name: symbol,
+                members,
+                has_unknown_members,
+                truncated_members_count,
+            }))
         }
 
         fn singleton_poly<I: NormalizerInput>(
@@ -3616,7 +3654,9 @@ pub mod element_converter {
                             }
                         },
                         // Enums
-                        DefTInner::EnumObjectT { .. } => return enum_decl(env, r),
+                        DefTInner::EnumObjectT { enum_info, .. } => {
+                            return enum_decl(env, r, Some(enum_info));
+                        }
                         DefTInner::ReactAbstractComponentT {
                             component_kind:
                                 flow_typing_type::type_::ComponentKind::Nominal(_, name, targs),
@@ -3664,7 +3704,7 @@ pub mod element_converter {
                             if matches!(kind, TypeTKind::ImportEnumKind) {
                                 if let TypeInner::DefT(enum_reason, inner_def_t) = inner_t.deref() {
                                     if matches!(&**inner_def_t, DefTInner::EnumValueT(_)) {
-                                        return enum_decl(env, enum_reason);
+                                        return enum_decl(env, enum_reason, None);
                                     }
                                 }
                             }
@@ -5023,7 +5063,7 @@ impl<I: NormalizerInput> Normalizer<I> {
                 ty::Decl::ClassDecl(sym, _) => Some(sym.sym_def_loc.dupe()),
                 ty::Decl::InterfaceDecl(sym, _) => Some(sym.sym_def_loc.dupe()),
                 ty::Decl::RecordDecl(sym, _) => Some(sym.sym_def_loc.dupe()),
-                ty::Decl::EnumDecl(sym) => Some(sym.sym_def_loc.dupe()),
+                ty::Decl::EnumDecl { name, .. } => Some(name.sym_def_loc.dupe()),
                 ty::Decl::NominalComponentDecl { name, .. } => Some(name.sym_def_loc.dupe()),
                 ty::Decl::TypeAliasDecl {
                     import: true,
