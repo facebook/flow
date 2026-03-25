@@ -16,10 +16,18 @@ type estimates = {
 
 val init : options:Options.t -> init_time:float -> parsed_count:int -> unit Lwt.t
 
-val record_recheck_time : options:Options.t -> total_time:float -> rechecked_files:int -> unit Lwt.t
+val record_recheck_time :
+  options:Options.t ->
+  merge_time:float ->
+  check_time:float ->
+  merged_files:int ->
+  checked_files:int ->
+  unit Lwt.t
 
 val record_last_estimates : options:Options.t -> estimates:estimates -> unit Lwt.t
 
 val get_init_time : unit -> float
 
-val get_per_file_time : unit -> float
+val get_per_merge_file_time : unit -> float
+
+val get_per_check_file_time : unit -> float

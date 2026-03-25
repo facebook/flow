@@ -7,7 +7,15 @@
 
 let per_file_time_guess = 0.003
 
+let per_merge_file_time_guess = 0.001
+
+let per_check_file_time_guess = 0.005
+
 let per_file_time_key = "per_file_time"
+
+let per_merge_file_time_key = "per_merge_file_time"
+
+let per_check_file_time_key = "per_check_file_time"
 
 let estimates_key = "estimates"
 
@@ -35,6 +43,8 @@ type estimates = {
 type averages = {
   init_time: float;
   per_file_time: float;
+  per_merge_file_time: float;
+  per_check_file_time: float;
   parsed_count: int;
 }
 
@@ -55,7 +65,7 @@ let get_file ~options =
   let flowconfig_name = Options.flowconfig_name options in
   Server_files_js.recheck_stats_file ~flowconfig_name ~tmp_dir root
 
-let load_per_file_time ~options =
+let load_stats ~options =
   Lwt_result.(
     let file = get_file ~options in
     let%lwt result =
@@ -75,11 +85,22 @@ let load_per_file_time ~options =
       Lwt_result.lift
         (try
            let json = Some (Hh_json.json_of_string contents) in
-           match Hh_json_helpers.Jget.float_opt json per_file_time_key with
-           | None ->
-             Result.Error
-               (Printf.sprintf "Failed to find key %S in JSON %S" per_file_time_key contents)
-           | Some v -> Result.Ok v
+           let per_file_time =
+             match Hh_json_helpers.Jget.float_opt json per_file_time_key with
+             | Some v -> v
+             | None -> per_file_time_guess
+           in
+           let per_merge_file_time =
+             match Hh_json_helpers.Jget.float_opt json per_merge_file_time_key with
+             | Some v -> v
+             | None -> per_merge_file_time_guess
+           in
+           let per_check_file_time =
+             match Hh_json_helpers.Jget.float_opt json per_check_file_time_key with
+             | Some v -> v
+             | None -> per_check_file_time_guess
+           in
+           Result.Ok (per_file_time, per_merge_file_time, per_check_file_time)
          with
         | Hh_json.Syntax_error str ->
           Result.Error (Printf.sprintf "Failed to parse as JSON contents. %S: %S" str contents)
@@ -87,10 +108,11 @@ let load_per_file_time ~options =
           Result.Error (Printf.sprintf "Failed to find key %S in estimates object. %S" key contents))
     in
     match result with
-    | Result.Ok per_file_time -> Lwt.return per_file_time
+    | Result.Ok (per_file_time, per_merge_file_time, per_check_file_time) ->
+      Lwt.return (per_file_time, per_merge_file_time, per_check_file_time)
     | Result.Error reason ->
       Hh_logger.info "Failed to load recheck stats from %S. Reason: %S" file reason;
-      Lwt.return per_file_time_guess
+      Lwt.return (per_file_time_guess, per_merge_file_time_guess, per_check_file_time_guess)
   )
 
 let save_averages ~options ?estimates new_averages =
@@ -141,8 +163,16 @@ let save_averages ~options ?estimates new_averages =
     Hh_json.(
       json_to_string
       @@ JSON_Object
-           ((per_file_time_key, JSON_Number (Dtoa.ecma_string_of_float new_averages.per_file_time))
-           :: estimates
+           ([
+              (per_file_time_key, JSON_Number (Dtoa.ecma_string_of_float new_averages.per_file_time));
+              ( per_merge_file_time_key,
+                JSON_Number (Dtoa.ecma_string_of_float new_averages.per_merge_file_time)
+              );
+              ( per_check_file_time_key,
+                JSON_Number (Dtoa.ecma_string_of_float new_averages.per_check_file_time)
+              );
+            ]
+           @ estimates
            )
     )
   in
@@ -180,8 +210,9 @@ let save_averages ~options ?estimates new_averages =
   )
 
 let init ~options ~init_time ~parsed_count =
-  let%lwt per_file_time = load_per_file_time ~options in
-  averages := Some { init_time; per_file_time; parsed_count };
+  let%lwt (per_file_time, per_merge_file_time, per_check_file_time) = load_stats ~options in
+  averages :=
+    Some { init_time; per_file_time; per_merge_file_time; per_check_file_time; parsed_count };
   Lwt.return_unit
 
 let with_averages f =
@@ -189,28 +220,53 @@ let with_averages f =
   | None -> failwith "Recheck_stats needs to be initialized before it can be used"
   | Some averages -> f averages
 
-let record_recheck_time ~options ~total_time ~rechecked_files =
-  (* rechecked_files should be non-negative. If it's 0, then we have no new information to add *)
-  if rechecked_files > 0 then
-    with_averages @@ fun { init_time; per_file_time; parsed_count } ->
-    (* What should we do for tiny repositories? Let's make the window at least 15 samples big *)
-    let window = max parsed_count 15 in
-    let per_file_time =
+let record_recheck_time ~options ~merge_time ~check_time ~merged_files ~checked_files =
+  with_averages
+  @@ fun { init_time; per_file_time; per_merge_file_time; per_check_file_time; parsed_count } ->
+  (* What should we do for tiny repositories? Let's make the window at least 15 samples big *)
+  let window = max parsed_count 15 in
+  let total_files = merged_files + checked_files in
+  let per_file_time =
+    if total_files > 0 then
       moving_average
         ~window
         ~avg:per_file_time
-        ~sample:(total_time /. float_of_int rechecked_files)
-        ~sample_count:rechecked_files
-    in
-    save_averages ~options { init_time; per_file_time; parsed_count }
-  else
-    Lwt.return_unit
+        ~sample:((merge_time +. check_time) /. float_of_int total_files)
+        ~sample_count:total_files
+    else
+      per_file_time
+  in
+  let per_merge_file_time =
+    if merged_files > 0 then
+      moving_average
+        ~window
+        ~avg:per_merge_file_time
+        ~sample:(merge_time /. float_of_int merged_files)
+        ~sample_count:merged_files
+    else
+      per_merge_file_time
+  in
+  let per_check_file_time =
+    if checked_files > 0 then
+      moving_average
+        ~window
+        ~avg:per_check_file_time
+        ~sample:(check_time /. float_of_int checked_files)
+        ~sample_count:checked_files
+    else
+      per_check_file_time
+  in
+  save_averages
+    ~options
+    { init_time; per_file_time; per_merge_file_time; per_check_file_time; parsed_count }
 
 let record_last_estimates ~options ~estimates =
   with_averages @@ fun averages -> save_averages ~options ~estimates averages
 
-let get_init_time () =
-  with_averages @@ fun { init_time; per_file_time = _; parsed_count = _ } -> init_time
+let get_init_time () = with_averages @@ fun { init_time; _ } -> init_time
 
-let get_per_file_time () =
-  with_averages @@ fun { init_time = _; per_file_time; parsed_count = _ } -> per_file_time
+let get_per_merge_file_time () =
+  with_averages @@ fun { per_merge_file_time; _ } -> per_merge_file_time
+
+let get_per_check_file_time () =
+  with_averages @@ fun { per_check_file_time; _ } -> per_check_file_time
