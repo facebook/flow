@@ -365,7 +365,7 @@ let type_ options =
         {
           (* TODO consider making it an error to try to serialize an internal name *)
           T.Object.Property.key = to_key (Reason.display_string_of_name x);
-          value = T.Object.Property.Init t;
+          value = T.Object.Property.Init (Some t);
           optional;
           static = false;
           proto = false;
@@ -373,13 +373,14 @@ let type_ options =
           abstract = false;
           variance = variance_ polarity;
           ts_accessibility = None;
+          init = None;
           comments = None;
         }
       | Method f ->
         let fun_t = function_ f in
         {
           T.Object.Property.key = to_key (Reason.display_string_of_name x);
-          value = T.Object.Property.Init (Loc.none, T.Function fun_t);
+          value = T.Object.Property.Init (Some (Loc.none, T.Function fun_t));
           optional = false;
           static = false;
           proto = false;
@@ -387,6 +388,7 @@ let type_ options =
           abstract = false;
           variance = None;
           ts_accessibility = None;
+          init = None;
           comments = None;
         }
       | Get t ->
@@ -401,6 +403,7 @@ let type_ options =
           abstract = false;
           variance = None;
           ts_accessibility = None;
+          init = None;
           comments = None;
         }
       | Set t ->
@@ -415,6 +418,7 @@ let type_ options =
           abstract = false;
           variance = None;
           ts_accessibility = None;
+          init = None;
           comments = None;
         }
   and obj_index_prop d =

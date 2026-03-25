@@ -34,11 +34,7 @@
               "typeAnnotation":null,
               "optional":false
             },
-            "value":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":2,"column":10},"end":{"line":2,"column":11}},
-              "range":[28,29]
-            },
+            "value":null,
             "method":false,
             "optional":false,
             "static":false,
@@ -46,6 +42,7 @@
             "abstract":false,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"private"
           },
           {
@@ -72,6 +69,7 @@
             "abstract":false,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"private"
           },
           {
@@ -86,11 +84,7 @@
               "typeAnnotation":null,
               "optional":false
             },
-            "value":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":4,"column":19},"end":{"line":4,"column":20}},
-              "range":[71,72]
-            },
+            "value":null,
             "method":false,
             "optional":false,
             "static":false,
@@ -103,6 +97,7 @@
               "kind":"readonly"
             },
             "kind":"init",
+            "init":null,
             "tsAccessibility":"private"
           },
           {
@@ -129,6 +124,7 @@
             "abstract":false,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"private"
           },
           {
@@ -155,6 +151,7 @@
             "abstract":false,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"protected"
           },
           {
@@ -181,6 +178,7 @@
             "abstract":false,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"public"
           },
           {
@@ -212,6 +210,7 @@
               "kind":"readonly"
             },
             "kind":"init",
+            "init":null,
             "tsAccessibility":"public"
           },
           {
@@ -247,6 +246,7 @@
             "abstract":false,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"private"
           },
           {
@@ -282,6 +282,7 @@
             "abstract":false,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"protected"
           },
           {
@@ -317,6 +318,7 @@
             "abstract":false,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"public"
           },
           {
@@ -343,6 +345,7 @@
             "abstract":false,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"protected"
           },
           {
@@ -369,6 +372,7 @@
             "abstract":false,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"public"
           },
           {
@@ -400,6 +404,7 @@
               "kind":"readonly"
             },
             "kind":"init",
+            "init":null,
             "tsAccessibility":"private"
           }
         ],
@@ -454,6 +459,7 @@
             "abstract":true,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"protected"
           },
           {
@@ -480,6 +486,7 @@
             "abstract":true,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"public"
           },
           {
@@ -515,6 +522,7 @@
             "abstract":true,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"protected"
           },
           {
@@ -550,6 +558,7 @@
             "abstract":true,
             "variance":null,
             "kind":"init",
+            "init":null,
             "tsAccessibility":"public"
           }
         ],
@@ -603,7 +612,8 @@
             "proto":false,
             "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           },
           {
             "type":"ObjectTypeProperty",
@@ -628,7 +638,8 @@
             "proto":false,
             "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           },
           {
             "type":"ObjectTypeProperty",
@@ -653,7 +664,8 @@
             "proto":false,
             "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           }
         ],
         "indexers":[],

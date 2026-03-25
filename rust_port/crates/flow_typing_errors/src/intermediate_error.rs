@@ -8236,6 +8236,7 @@ where
             // MessageUnsupportedSyntax variants
             MessageUnsupportedSyntax(syntax) => {
                 use crate::intermediate_error_types::ContextDependentUnsupportedStatement::*;
+                use crate::intermediate_error_types::DeclareClassPropKind;
                 use crate::intermediate_error_types::TsLibSyntaxKind;
                 use crate::intermediate_error_types::UnsupportedSyntax::*;
                 match syntax {
@@ -8419,6 +8420,37 @@ where
                             " variable declarations cannot have both a type annotation and an initializer.",
                         ),
                     ]),
+                    DeclareClassProperty(kind) => {
+                        use DeclareClassPropKind::*;
+                        match kind {
+                            AnnotationAndInit => friendly::Message(vec![
+                                code("declare"),
+                                text(
+                                    " class properties cannot have both a type annotation and an initializer.",
+                                ),
+                            ]),
+                            MissingAnnotationOrInit => friendly::Message(vec![
+                                code("declare"),
+                                text(
+                                    " class properties require a type annotation or a literal initializer.",
+                                ),
+                            ]),
+                            NonLiteralInit => friendly::Message(vec![
+                                text("Initializer in a "),
+                                code("declare"),
+                                text(
+                                    " class property must be a literal (string, number, bigint, or boolean).",
+                                ),
+                            ]),
+                            InitWithoutReadonly => friendly::Message(vec![
+                                text("Only "),
+                                code("readonly"),
+                                text(" properties in "),
+                                code("declare"),
+                                text(" class can have initializers."),
+                            ]),
+                        }
+                    }
                     ExportTypeSpecifierInExportType => friendly::Message(vec![
                         text("The "),
                         code("type"),
@@ -8468,6 +8500,7 @@ where
                                 "Type arguments for tagged template expression"
                             }
                             TypeofThis => "`typeof this` syntax",
+                            PropertyValueInitializer => "Property value initializer in declaration",
                         };
                         friendly::Message(vec![text(kind_str), text(" is not enabled.")])
                     }

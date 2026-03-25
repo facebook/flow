@@ -4888,8 +4888,19 @@ fn object_property_type(
     let variance_diff = diff_if_changed_ret_opt(variance, &p1.variance, &p2.variance);
     let key_diff = diff_if_changed_ret_opt(object_key, &p1.key, &p2.key);
     let value_diff = diff_if_changed_ret_opt(object_property_value_type, &p1.value, &p2.value);
+    let init_diff = diff_if_changed_nonopt_fn(
+        |e1, e2| expression(&ExpressionNodeParent::SlotParentOfExpression, e1, e2),
+        &p1.init,
+        &p2.init,
+    );
     let comments_diff = syntax_opt(&p1.loc, &p1.comments, &p2.comments);
-    join_diff_list(vec![variance_diff, key_diff, value_diff, comments_diff])
+    join_diff_list(vec![
+        variance_diff,
+        key_diff,
+        value_diff,
+        init_diff,
+        comments_diff,
+    ])
 }
 
 fn object_property_value_type(
@@ -4898,7 +4909,8 @@ fn object_property_value_type(
 ) -> Option<Vec<NodeChange>> {
     use ast::types::object::PropertyValue::*;
     match (v1, v2) {
-        (Init(t1), Init(t2)) => Some(diff_if_changed(type_, t1, t2)),
+        (Init(Some(t1)), Init(Some(t2))) => Some(diff_if_changed(type_, t1, t2)),
+        (Init(None), Init(None)) => Some(vec![]),
         (Get(loc1, ft1), Get(_, ft2)) | (Set(loc1, ft1), Set(_, ft2)) => {
             diff_if_changed_ret_opt(|f1, f2| function_type(loc1, f1, f2), ft1, ft2)
         }

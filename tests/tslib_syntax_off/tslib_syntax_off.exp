@@ -293,5 +293,21 @@ Error --------------------------------------------------------------------------
                           ^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:112:3
 
-Found 36 errors
+Property value initializer in declaration is not enabled. [unsupported-syntax]
+
+   112|   readonly x = 42; // ERROR
+          ^^^^^^^^^^^^^^^
+
+
+Error ----------------------------------------------------------------------------------------------- test.js.flow:117:3
+
+Property value initializer in declaration is not enabled. [unsupported-syntax]
+
+   117|   private readonly x = 42; // ERROR
+          ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 38 errors

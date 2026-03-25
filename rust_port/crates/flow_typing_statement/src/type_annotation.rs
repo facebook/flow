@@ -3833,7 +3833,7 @@ fn convert_object(
         use flow_typing_errors::error_message::ErrorMessage;
         use flow_typing_type::type_::*;
         match &prop.value {
-            ast::types::object::PropertyValue::Init(value) => {
+            ast::types::object::PropertyValue::Init(Some(value)) => {
                 let key = &prop.key;
                 let optional = prop.optional;
                 let variance = &prop.variance;
@@ -3886,7 +3886,7 @@ fn convert_object(
                         ast::types::object::NormalProperty {
                             loc: prop.loc.dupe(),
                             key: key_ast,
-                            value: ast::types::object::PropertyValue::Init(value_ast.dupe()),
+                            value: ast::types::object::PropertyValue::Init(Some(value_ast.dupe())),
                             optional,
                             static_: prop.static_,
                             proto: prop.proto,
@@ -3900,6 +3900,7 @@ fn convert_object(
                                     comments: tsa.comments.dupe(),
                                 }
                             }),
+                            init: None,
                             comments: prop.comments.dupe(),
                         }
                     };
@@ -4096,7 +4097,7 @@ fn convert_object(
                                         expression: typed_expr,
                                         comments: comp.comments.dupe(),
                                     }),
-                                    value: ast::types::object::PropertyValue::Init(value_ast),
+                                    value: ast::types::object::PropertyValue::Init(Some(value_ast)),
                                     optional,
                                     static_: false,
                                     proto: false,
@@ -4104,6 +4105,7 @@ fn convert_object(
                                     abstract_,
                                     variance: prop.variance.clone(),
                                     ts_accessibility: None,
+                                    init: None,
                                     comments: None,
                                 }
                             }
@@ -4168,6 +4170,7 @@ fn convert_object(
                                 comments: tsa.comments.dupe(),
                             }
                         }),
+                        init: None,
                         comments: prop.comments.dupe(),
                     }
                 }
@@ -4230,6 +4233,7 @@ fn convert_object(
                                 comments: tsa.comments.dupe(),
                             }
                         }),
+                        init: None,
                         comments: prop.comments.dupe(),
                     }
                 }
@@ -4250,6 +4254,13 @@ fn convert_object(
                     }
                 }
             },
+            ast::types::object::PropertyValue::Init(None) => {
+                let Ok(v) = polymorphic_ast_mapper::object_property_type(
+                    &mut typed_ast_utils::ErrorMapper,
+                    prop,
+                );
+                v
+            }
         }
     }
 
@@ -5688,6 +5699,7 @@ fn add_interface_properties(
                 prop_asts.push(error_prop);
             }
             Property::NormalProperty(np) => {
+                let init_ = &np.init;
                 let is_ts_private = match &np.ts_accessibility {
                     Some(acc) => {
                         if !cx.ts_syntax() {
@@ -5706,6 +5718,91 @@ fn add_interface_properties(
                     }
                     None => false,
                 };
+                let is_literal_init = |expr: &ast::expression::Expression<ALoc, ALoc>| -> bool {
+                    match &*expr.0 {
+                        ast::expression::ExpressionInner::StringLiteral { .. }
+                        | ast::expression::ExpressionInner::NumberLiteral { .. }
+                        | ast::expression::ExpressionInner::BigIntLiteral { .. }
+                        | ast::expression::ExpressionInner::BooleanLiteral { .. } => true,
+                        ast::expression::ExpressionInner::Unary { inner, .. }
+                            if inner.operator == ast::expression::UnaryOperator::Minus =>
+                        {
+                            matches!(
+                                &*inner.argument.0,
+                                ast::expression::ExpressionInner::NumberLiteral { .. }
+                                    | ast::expression::ExpressionInner::BigIntLiteral { .. }
+                            )
+                        }
+                        _ => false,
+                    }
+                };
+                match (init_, &np.value) {
+                    (Some(_), _) if !cx.tslib_syntax() => {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EUnsupportedSyntax(
+                                np.loc.dupe(),
+                                intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                                    TsLibSyntaxKind::PropertyValueInitializer,
+                                ),
+                            ),
+                        );
+                    }
+                    (Some(init_expr), ast::types::object::PropertyValue::Init(Some(_))) => {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EUnsupportedSyntax(
+                                init_expr.loc().dupe(),
+                                intermediate_error_types::UnsupportedSyntax::DeclareClassProperty(
+                                    intermediate_error_types::DeclareClassPropKind::AnnotationAndInit,
+                                ),
+                            ),
+                        );
+                    }
+                    (Some(init_expr), ast::types::object::PropertyValue::Init(None)) => {
+                        let is_readonly = matches!(
+                            &np.variance,
+                            Some(ast::Variance {
+                                kind: ast::VarianceKind::Readonly | ast::VarianceKind::Plus,
+                                ..
+                            })
+                        );
+                        if !is_readonly {
+                            flow_js_utils::add_output_non_speculating(
+                                cx,
+                                ErrorMessage::EUnsupportedSyntax(
+                                    init_expr.loc().dupe(),
+                                    intermediate_error_types::UnsupportedSyntax::DeclareClassProperty(
+                                        intermediate_error_types::DeclareClassPropKind::InitWithoutReadonly,
+                                    ),
+                                ),
+                            );
+                        }
+                        if !is_literal_init(init_expr) {
+                            flow_js_utils::add_output_non_speculating(
+                                cx,
+                                ErrorMessage::EUnsupportedSyntax(
+                                    init_expr.loc().dupe(),
+                                    intermediate_error_types::UnsupportedSyntax::DeclareClassProperty(
+                                        intermediate_error_types::DeclareClassPropKind::NonLiteralInit,
+                                    ),
+                                ),
+                            );
+                        }
+                    }
+                    (None, ast::types::object::PropertyValue::Init(None)) if !is_ts_private => {
+                        flow_js_utils::add_output_non_speculating(
+                            cx,
+                            ErrorMessage::EUnsupportedSyntax(
+                                np.loc.dupe(),
+                                intermediate_error_types::UnsupportedSyntax::DeclareClassProperty(
+                                    intermediate_error_types::DeclareClassPropKind::MissingAnnotationOrInit,
+                                ),
+                            ),
+                        );
+                    }
+                    _ => {}
+                }
                 if is_ts_private {
                     // Private members are excluded from the declare class's public interface
                     let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
@@ -5742,6 +5839,67 @@ fn add_interface_properties(
                         continue;
                     }
                     let polarity = polarity(cx, np.variance.as_ref());
+                    let mut handle_init_only_property =
+                        |name: FlowSmolStr,
+                         id_loc: ALoc,
+                         rebuild_key: &dyn Fn(Type) -> ast::expression::object::Key<ALoc, (ALoc, Type)>|
+                         -> Option<ast::types::object::Property<ALoc, (ALoc, Type)>> {
+                            match init_ {
+                                Some(init_expr)
+                                    if cx.tslib_syntax() && is_literal_init(init_expr) =>
+                                {
+                                    let init_ast = crate::statement::expression(
+                                        None,
+                                        None,
+                                        Some(true),
+                                        cx,
+                                        init_expr,
+                                    )
+                                    .unwrap();
+                                    let t = init_ast.loc().1.dupe();
+                                    let t = if np.optional {
+                                        type_util::optional(t, None, false)
+                                    } else {
+                                        t
+                                    };
+                                    if np.proto {
+                                        class_sig::add_proto_field(
+                                            name.dupe(),
+                                            id_loc.dupe(),
+                                            polarity,
+                                            func_class_sig_types::class::Field::Annot(t.dupe()),
+                                            &mut s,
+                                        );
+                                    } else {
+                                        class_sig::add_field(
+                                            np.static_,
+                                            name.dupe(),
+                                            id_loc.dupe(),
+                                            polarity,
+                                            func_class_sig_types::class::Field::Annot(t.dupe()),
+                                            &mut s,
+                                        );
+                                    }
+                                    Some(Property::NormalProperty(
+                                        ast::types::object::NormalProperty {
+                                            loc: np.loc.dupe(),
+                                            key: rebuild_key(t),
+                                            value: ast::types::object::PropertyValue::Init(None),
+                                            optional: np.optional,
+                                            static_: np.static_,
+                                            proto: np.proto,
+                                            method: np.method,
+                                            abstract_: np.abstract_,
+                                            variance: np.variance.clone(),
+                                            ts_accessibility: np.ts_accessibility.clone(),
+                                            init: Some(init_ast),
+                                            comments: np.comments.dupe(),
+                                        },
+                                    ))
+                                }
+                                _ => None,
+                            }
+                        };
                     use flow_parser::ast::expression::object::Key;
                     let id_name = match &np.key {
                         Key::StringLiteral((loc, _))
@@ -5785,11 +5943,12 @@ fn add_interface_properties(
                                     let id_loc = ck.expression.loc().dupe();
                                     if np.method {
                                         match &np.value {
-                                            ast::types::object::PropertyValue::Init(value)
-                                                if let ast::types::TypeInner::Function {
-                                                    loc: func_loc,
-                                                    inner: func,
-                                                } = &**value =>
+                                            ast::types::object::PropertyValue::Init(Some(
+                                                value,
+                                            )) if let ast::types::TypeInner::Function {
+                                                loc: func_loc,
+                                                inner: func,
+                                            } = &**value =>
                                             {
                                                 let meth_kind = MethodKind::MethodKind {
                                                     is_static: np.static_,
@@ -5828,12 +5987,12 @@ fn add_interface_properties(
                                                         }),
                                                         value:
                                                             ast::types::object::PropertyValue::Init(
-                                                                ast::types::Type::new(
+                                                                Some(ast::types::Type::new(
                                                                     ast::types::TypeInner::Function {
                                                                         loc: (func_loc.dupe(), ft),
                                                                         inner: func_ast.into(),
                                                                     },
-                                                                ),
+                                                                )),
                                                             ),
                                                         optional: np.optional,
                                                         static_: np.static_,
@@ -5842,6 +6001,7 @@ fn add_interface_properties(
                                                         abstract_: np.abstract_,
                                                         variance: np.variance.clone(),
                                                         ts_accessibility: np.ts_accessibility.clone(),
+                                                        init: None,
                                                         comments: np.comments.dupe(),
                                                     },
                                                 ));
@@ -5865,7 +6025,9 @@ fn add_interface_properties(
                                         }
                                     } else {
                                         match &np.value {
-                                            ast::types::object::PropertyValue::Init(value) => {
+                                            ast::types::object::PropertyValue::Init(Some(
+                                                value,
+                                            )) => {
                                                 let value_ast = convert_inner(cx, env, value);
                                                 let (_, t) = value_ast.loc();
                                                 let t = t.dupe();
@@ -5896,6 +6058,16 @@ fn add_interface_properties(
                                                         &mut s,
                                                     );
                                                 }
+                                                let init_ast = init_.as_ref().map(|init_expr| {
+                                                    crate::statement::expression(
+                                                        None,
+                                                        None,
+                                                        Some(true),
+                                                        cx,
+                                                        init_expr,
+                                                    )
+                                                    .unwrap()
+                                                });
                                                 prop_asts.push(Property::NormalProperty(
                                                     ast::types::object::NormalProperty {
                                                         loc: np.loc.dupe(),
@@ -5906,7 +6078,7 @@ fn add_interface_properties(
                                                         }),
                                                         value:
                                                             ast::types::object::PropertyValue::Init(
-                                                                value_ast,
+                                                                Some(value_ast),
                                                             ),
                                                         optional: np.optional,
                                                         static_: np.static_,
@@ -5917,9 +6089,36 @@ fn add_interface_properties(
                                                         ts_accessibility: np
                                                             .ts_accessibility
                                                             .clone(),
+                                                        init: init_ast,
                                                         comments: np.comments.dupe(),
                                                     },
                                                 ));
+                                            }
+                                            ast::types::object::PropertyValue::Init(None) => {
+                                                let typed_expr_clone = typed_expr.clone();
+                                                let ck_loc = ck.loc.dupe();
+                                                let ck_comments = ck.comments.dupe();
+                                                if let Some(prop_ast) = handle_init_only_property(
+                                                    name.dupe(),
+                                                    id_loc.dupe(),
+                                                    &|_t| {
+                                                        Key::Computed(ast::ComputedKey {
+                                                            loc: ck_loc.dupe(),
+                                                            expression: typed_expr_clone.clone(),
+                                                            comments: ck_comments.dupe(),
+                                                        })
+                                                    },
+                                                ) {
+                                                    prop_asts.push(prop_ast);
+                                                } else {
+                                                    let Ok(error_prop) =
+                                                        polymorphic_ast_mapper::object_property_type(
+                                                            &mut typed_ast_utils::ErrorMapper,
+                                                            np,
+                                                        );
+                                                    prop_asts
+                                                        .push(Property::NormalProperty(error_prop));
+                                                }
                                             }
                                             _ => {
                                                 flow_js_utils::add_output_non_speculating(
@@ -5965,94 +6164,102 @@ fn add_interface_properties(
 
                     if np.method {
                         match &np.value {
-                            ast::types::object::PropertyValue::Init(value) => match &**value {
-                                ast::types::TypeInner::Function {
-                                    loc: func_loc,
-                                    inner: func,
-                                } => {
-                                    let meth_kind = match name.as_str() {
-                                        "constructor" => MethodKind::ConstructorKind,
-                                        _ => MethodKind::MethodKind {
-                                            is_static: np.static_,
-                                        },
-                                    };
-                                    let (fsig, func_ast) =
-                                        mk_method_func_sig(cx, env, meth_kind, np.loc.dupe(), func);
-                                    let this_write_loc = None;
-                                    let ft = crate::func_sig::methodtype(
-                                        cx,
-                                        this_write_loc,
-                                        this.dupe(),
-                                        &fsig,
-                                    );
-                                    match (np.static_, &meth_kind) {
-                                        (false, MethodKind::ConstructorKind) => {
-                                            class_sig::append_constructor(
-                                                Some(id_loc.dupe()),
-                                                fsig,
-                                                None,
-                                                None,
-                                                &mut s,
-                                            );
-                                        }
-                                        _ => {
-                                            class_sig::append_method(
-                                                np.static_,
-                                                name.dupe(),
-                                                id_loc.dupe(),
-                                                None,
-                                                fsig,
-                                                None,
-                                                None,
-                                                &mut s,
-                                            );
-                                        }
-                                    }
-                                    prop_asts.push(Property::NormalProperty(
-                                        ast::types::object::NormalProperty {
-                                            loc: np.loc.dupe(),
-                                            key: Key::Identifier(ast::Identifier::new(
-                                                ast::IdentifierInner {
-                                                    loc: (id_loc.dupe(), ft.dupe()),
-                                                    name: id_name.name.dupe(),
-                                                    comments: id_name.comments.dupe(),
-                                                },
-                                            )),
-                                            value: ast::types::object::PropertyValue::Init(
-                                                ast::types::Type::new(
-                                                    ast::types::TypeInner::Function {
-                                                        loc: (func_loc.dupe(), ft),
-                                                        inner: func_ast.into(),
-                                                    },
-                                                ),
-                                            ),
-                                            optional: np.optional,
-                                            static_: np.static_,
-                                            proto: np.proto,
-                                            method: np.method,
-                                            abstract_: np.abstract_,
-                                            variance: np.variance.clone(),
-                                            ts_accessibility: np.ts_accessibility.clone(),
-                                            comments: np.comments.dupe(),
-                                        },
-                                    ));
-                                }
-                                _ => {
-                                    flow_js_utils::add_output_non_speculating(
-                                        cx,
-                                        ErrorMessage::EInternal(
+                            ast::types::object::PropertyValue::Init(Some(value)) => {
+                                match &**value {
+                                    ast::types::TypeInner::Function {
+                                        loc: func_loc,
+                                        inner: func,
+                                    } => {
+                                        let meth_kind = match name.as_str() {
+                                            "constructor" => MethodKind::ConstructorKind,
+                                            _ => MethodKind::MethodKind {
+                                                is_static: np.static_,
+                                            },
+                                        };
+                                        let (fsig, func_ast) = mk_method_func_sig(
+                                            cx,
+                                            env,
+                                            meth_kind,
                                             np.loc.dupe(),
-                                            InternalError::MethodNotAFunction,
-                                        ),
-                                    );
-                                    let Ok(error_prop) =
-                                        polymorphic_ast_mapper::object_property_type(
-                                            &mut typed_ast_utils::ErrorMapper,
-                                            np,
+                                            func,
                                         );
-                                    prop_asts.push(Property::NormalProperty(error_prop));
+                                        let this_write_loc = None;
+                                        let ft = crate::func_sig::methodtype(
+                                            cx,
+                                            this_write_loc,
+                                            this.dupe(),
+                                            &fsig,
+                                        );
+                                        match (np.static_, &meth_kind) {
+                                            (false, MethodKind::ConstructorKind) => {
+                                                class_sig::append_constructor(
+                                                    Some(id_loc.dupe()),
+                                                    fsig,
+                                                    None,
+                                                    None,
+                                                    &mut s,
+                                                );
+                                            }
+                                            _ => {
+                                                class_sig::append_method(
+                                                    np.static_,
+                                                    name.dupe(),
+                                                    id_loc.dupe(),
+                                                    None,
+                                                    fsig,
+                                                    None,
+                                                    None,
+                                                    &mut s,
+                                                );
+                                            }
+                                        }
+                                        prop_asts.push(Property::NormalProperty(
+                                            ast::types::object::NormalProperty {
+                                                loc: np.loc.dupe(),
+                                                key: Key::Identifier(ast::Identifier::new(
+                                                    ast::IdentifierInner {
+                                                        loc: (id_loc.dupe(), ft.dupe()),
+                                                        name: id_name.name.dupe(),
+                                                        comments: id_name.comments.dupe(),
+                                                    },
+                                                )),
+                                                value: ast::types::object::PropertyValue::Init(
+                                                    Some(ast::types::Type::new(
+                                                        ast::types::TypeInner::Function {
+                                                            loc: (func_loc.dupe(), ft),
+                                                            inner: func_ast.into(),
+                                                        },
+                                                    )),
+                                                ),
+                                                optional: np.optional,
+                                                static_: np.static_,
+                                                proto: np.proto,
+                                                method: np.method,
+                                                abstract_: np.abstract_,
+                                                variance: np.variance.clone(),
+                                                ts_accessibility: np.ts_accessibility.clone(),
+                                                init: None,
+                                                comments: np.comments.dupe(),
+                                            },
+                                        ));
+                                    }
+                                    _ => {
+                                        flow_js_utils::add_output_non_speculating(
+                                            cx,
+                                            ErrorMessage::EInternal(
+                                                np.loc.dupe(),
+                                                InternalError::MethodNotAFunction,
+                                            ),
+                                        );
+                                        let Ok(error_prop) =
+                                            polymorphic_ast_mapper::object_property_type(
+                                                &mut typed_ast_utils::ErrorMapper,
+                                                np,
+                                            );
+                                        prop_asts.push(Property::NormalProperty(error_prop));
+                                    }
                                 }
-                            },
+                            }
                             _ => {
                                 flow_js_utils::add_output_non_speculating(
                                     cx,
@@ -6070,7 +6277,7 @@ fn add_interface_properties(
                         }
                     } else {
                         match &np.value {
-                            ast::types::object::PropertyValue::Init(value) => {
+                            ast::types::object::PropertyValue::Init(Some(value)) => {
                                 let value_ast = convert_inner(cx, env, value);
                                 let (_, t) = value_ast.loc();
                                 let t = t.dupe();
@@ -6101,6 +6308,16 @@ fn add_interface_properties(
                                         &mut s,
                                     );
                                 }
+                                let init_ast = init_.as_ref().map(|init_expr| {
+                                    crate::statement::expression(
+                                        None,
+                                        None,
+                                        Some(true),
+                                        cx,
+                                        init_expr,
+                                    )
+                                    .unwrap()
+                                });
                                 prop_asts.push(Property::NormalProperty(
                                     ast::types::object::NormalProperty {
                                         loc: np.loc.dupe(),
@@ -6111,7 +6328,9 @@ fn add_interface_properties(
                                                 comments: id_name.comments.dupe(),
                                             },
                                         )),
-                                        value: ast::types::object::PropertyValue::Init(value_ast),
+                                        value: ast::types::object::PropertyValue::Init(Some(
+                                            value_ast,
+                                        )),
                                         optional: np.optional,
                                         static_: np.static_,
                                         proto: np.proto,
@@ -6119,9 +6338,33 @@ fn add_interface_properties(
                                         abstract_: np.abstract_,
                                         variance: np.variance.clone(),
                                         ts_accessibility: np.ts_accessibility.clone(),
+                                        init: init_ast,
                                         comments: np.comments.dupe(),
                                     },
                                 ));
+                            }
+                            ast::types::object::PropertyValue::Init(None) => {
+                                let id_name_clone = id_name.clone();
+                                if let Some(prop_ast) =
+                                    handle_init_only_property(name.dupe(), id_loc.dupe(), &|t| {
+                                        Key::Identifier(ast::Identifier::new(
+                                            ast::IdentifierInner {
+                                                loc: (id_loc.dupe(), t),
+                                                name: id_name_clone.name.dupe(),
+                                                comments: id_name_clone.comments.dupe(),
+                                            },
+                                        ))
+                                    })
+                                {
+                                    prop_asts.push(prop_ast);
+                                } else {
+                                    let Ok(error_prop) =
+                                        polymorphic_ast_mapper::object_property_type(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            np,
+                                        );
+                                    prop_asts.push(Property::NormalProperty(error_prop));
+                                }
                             }
                             // unsafe getter property
                             ast::types::object::PropertyValue::Get(get_loc, func) => {
@@ -6170,6 +6413,7 @@ fn add_interface_properties(
                                         abstract_: np.abstract_,
                                         variance: np.variance.clone(),
                                         ts_accessibility: np.ts_accessibility.clone(),
+                                        init: None,
                                         comments: np.comments.dupe(),
                                     },
                                 ));
@@ -6238,6 +6482,7 @@ fn add_interface_properties(
                                         abstract_: np.abstract_,
                                         variance: np.variance.clone(),
                                         ts_accessibility: np.ts_accessibility.clone(),
+                                        init: None,
                                         comments: np.comments.dupe(),
                                     },
                                 ));

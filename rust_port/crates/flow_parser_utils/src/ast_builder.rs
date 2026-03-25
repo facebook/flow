@@ -123,6 +123,7 @@ pub mod types {
             comments: Option<ast::Syntax<Loc, ()>>,
             key: expression::object::Key<Loc, Loc>,
             value: at::object::PropertyValue<Loc, Loc>,
+            init: Option<expression::Expression<Loc, Loc>>,
         ) -> at::object::NormalProperty<Loc, Loc> {
             let loc = loc.unwrap_or_else(Loc::none);
             let optional = optional.unwrap_or(false);
@@ -141,6 +142,7 @@ pub mod types {
                 abstract_,
                 variance,
                 ts_accessibility,
+                init,
                 comments,
             }
         }
@@ -169,6 +171,7 @@ pub mod types {
                 None,
                 key,
                 value,
+                None,
             );
             at::object::Property::NormalProperty(prop)
         }
@@ -197,6 +200,7 @@ pub mod types {
                 None,
                 key,
                 value,
+                None,
             );
             at::object::Property::NormalProperty(prop)
         }
@@ -1955,7 +1959,8 @@ pub mod statements {
                             None,
                             None,
                             expression::object::Key::Identifier(identifiers::identifier(None, def)),
-                            at::object::PropertyValue::Init(t.clone()),
+                            at::object::PropertyValue::Init(Some(t.clone())),
+                            None,
                         ))
                     })
                     .collect();

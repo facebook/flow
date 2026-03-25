@@ -2924,6 +2924,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             abstract = abstract1;
             variance = var1;
             ts_accessibility = ts_accessibility1;
+            init = init1;
             comments = comments1;
           }
         ) =
@@ -2940,6 +2941,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
             abstract = abstract2;
             variance = var2;
             ts_accessibility = ts_accessibility2;
+            init = init2;
             comments = comments2;
           }
         ) =
@@ -2958,14 +2960,18 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       let variance_diff = diff_if_changed_ret_opt variance var1 var2 in
       let key_diff = diff_if_changed_ret_opt object_key key1 key2 in
       let value_diff = diff_if_changed_ret_opt object_property_value_type value1 value2 in
+      let init_diff =
+        diff_if_changed_nonopt_fn (expression ~parent:SlotParentOfExpression) init1 init2
+      in
       let comments_diff = syntax_opt loc1 comments1 comments2 in
-      join_diff_list [variance_diff; key_diff; value_diff; comments_diff]
+      join_diff_list [variance_diff; key_diff; value_diff; init_diff; comments_diff]
   and object_property_value_type
       (opvt1 : (Loc.t, Loc.t) Ast.Type.Object.Property.value)
       (opvt2 : (Loc.t, Loc.t) Ast.Type.Object.Property.value) : node change list option =
     let open Ast.Type.Object.Property in
     match (opvt1, opvt2) with
-    | (Init t1, Init t2) -> diff_if_changed type_ t1 t2 |> Base.Option.return
+    | (Init (Some t1), Init (Some t2)) -> diff_if_changed type_ t1 t2 |> Base.Option.return
+    | (Init None, Init None) -> Some []
     | (Get (loc1, ft1), Get (_, ft2))
     | (Set (loc1, ft1), Set (_, ft2)) ->
       diff_if_changed_ret_opt (function_type loc1) ft1 ft2

@@ -957,6 +957,196 @@ References:
                        ^ [1]
 
 
+Error ------------------------------------------------------------------------------- property_value_initializer.js:16:1
+
+Cannot cast `c.code` to string literal `wrong` because string literal `NEXT_STATIC_GEN_BAILOUT` [1] is incompatible with
+string literal `wrong` [2]. [incompatible-type]
+
+   property_value_initializer.js:16:1
+   16| c.code as "wrong"; // ERROR - incompatible literal types
+       ^^^^^^
+
+References:
+   property_value_initializer.js:4:19
+    4|   readonly code = "NEXT_STATIC_GEN_BAILOUT";
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
+   property_value_initializer.js:16:11
+   16| c.code as "wrong"; // ERROR - incompatible literal types
+                 ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:18:1
+
+Cannot cast `c.neg` to number literal `1` because number literal `-1` [1] is incompatible with number literal `1` [2].
+[incompatible-type]
+
+   property_value_initializer.js:18:1
+   18| c.neg as 1; // ERROR - -1 !== 1
+       ^^^^^
+
+References:
+   property_value_initializer.js:8:18
+    8|   readonly neg = -1;
+                        ^^ [1]
+   property_value_initializer.js:18:10
+   18| c.neg as 1; // ERROR - -1 !== 1
+                ^ [2]
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:20:1
+
+Cannot cast `c.big` to bigint literal `0n` because bigint literal `100n` [1] is incompatible with bigint literal
+`0n` [2]. [incompatible-type]
+
+   property_value_initializer.js:20:1
+   20| c.big as 0n; // ERROR - incompatible literal types
+       ^^^^^
+
+References:
+   property_value_initializer.js:7:18
+    7|   readonly big = 100n;
+                        ^^^^ [1]
+   property_value_initializer.js:20:10
+   20| c.big as 0n; // ERROR - incompatible literal types
+                ^^ [2]
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:22:1
+
+Cannot cast `c.negBig` to bigint literal `100n` because bigint literal `-100n` [1] is incompatible with bigint literal
+`100n` [2]. [incompatible-type]
+
+   property_value_initializer.js:22:1
+   22| c.negBig as 100n; // ERROR - incompatible literal types
+       ^^^^^^^^
+
+References:
+   property_value_initializer.js:9:21
+    9|   readonly negBig = -100n;
+                           ^^^^^ [1]
+   property_value_initializer.js:22:13
+   22| c.negBig as 100n; // ERROR - incompatible literal types
+                   ^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------ property_value_initializer.js:31:24
+
+`declare` class properties cannot have both a type annotation and an initializer. [unsupported-syntax]
+
+   31|   readonly x: number = 42; // ERROR: DeclareClassPropertyAnnotationAndInit
+                              ^^
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:36:7
+
+Only `readonly` properties in `declare` class can have initializers. [unsupported-syntax]
+
+   36|   x = 42; // ERROR: DeclareClassPropertyInitWithoutReadonly
+             ^^
+
+
+Error ------------------------------------------------------------------------------ property_value_initializer.js:41:16
+
+Initializer in a `declare` class property must be a literal (string, number, bigint, or boolean). [unsupported-syntax]
+
+   41|   readonly x = someVariable; // ERROR: DeclareClassPropertyNonLiteralInit
+                      ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:46:3
+
+`declare` class properties require a type annotation or a literal initializer. [unsupported-syntax]
+
+   46|   x; // ERROR: DeclareClassPropertyMissingAnnotationOrInit
+         ^
+
+
+Error ------------------------------------------------------------------------------- property_value_initializer.js:47:3
+
+`declare` class properties require a type annotation or a literal initializer. [unsupported-syntax]
+
+   47|   readonly y; // ERROR: DeclareClassPropertyMissingAnnotationOrInit
+         ^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------ property_value_initializer.js:52:32
+
+`declare` class properties cannot have both a type annotation and an initializer. [unsupported-syntax]
+
+   52|   private readonly x: number = 42; // ERROR: DeclareClassPropertyAnnotationAndInit
+                                      ^^
+
+
+Error ------------------------------------------------------------------------------ property_value_initializer.js:53:15
+
+Only `readonly` properties in `declare` class can have initializers. [unsupported-syntax]
+
+   53|   private y = 42; // ERROR: DeclareClassPropertyInitWithoutReadonly
+                     ^^
+
+
+Error ------------------------------------------------------------------------------ property_value_initializer.js:54:24
+
+Initializer in a `declare` class property must be a literal (string, number, bigint, or boolean). [unsupported-syntax]
+
+   54|   private readonly z = someVariable; // ERROR: DeclareClassPropertyNonLiteralInit
+                              ^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------- property_value_initializer_import.js:5:1
+
+Cannot cast `e.code` to string literal `wrong` because string literal `EXPORTED_VALUE` [1] is incompatible with string
+literal `wrong` [2]. [incompatible-type]
+
+   property_value_initializer_import.js:5:1
+   5| e.code as "wrong"; // ERROR - incompatible literal types
+      ^^^^^^
+
+References:
+   property_value_initializer_exported.js.flow:3:12
+   3|   readonly code = "EXPORTED_VALUE";
+                 ^^^^ [1]
+   property_value_initializer_import.js:5:11
+   5| e.code as "wrong"; // ERROR - incompatible literal types
+                ^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------- property_value_initializer_import.js:7:1
+
+Cannot cast `ExportedConstants.BUFFER_SIZE` to number literal `0` because number literal `256` [1] is incompatible with
+number literal `0` [2]. [incompatible-type]
+
+   property_value_initializer_import.js:7:1
+   7| ExportedConstants.BUFFER_SIZE as 0; // ERROR - incompatible literal types
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   property_value_initializer_exported.js.flow:2:19
+   2|   static readonly BUFFER_SIZE = 256;
+                        ^^^^^^^^^^^ [1]
+   property_value_initializer_import.js:7:34
+   7| ExportedConstants.BUFFER_SIZE as 0; // ERROR - incompatible literal types
+                                       ^ [2]
+
+
+Error ------------------------------------------------------------------------- property_value_initializer_import.js:9:1
+
+Cannot cast `e.neg` to number literal `1` because number literal `-1` [1] is incompatible with number literal `1` [2].
+[incompatible-type]
+
+   property_value_initializer_import.js:9:1
+   9| e.neg as 1; // ERROR
+      ^^^^^
+
+References:
+   property_value_initializer_exported.js.flow:4:12
+   4|   readonly neg = -1;
+                 ^^^ [1]
+   property_value_initializer_import.js:9:10
+   9| e.neg as 1; // ERROR
+               ^ [2]
+
+
 Error -------------------------------------------------------------------------------- type_keyword_dotted_access.js:7:1
 
 Cannot cast `x` to empty because number [1] is incompatible with empty [2]. [incompatible-type]
@@ -1163,4 +1353,4 @@ References:
 
 
 
-Found 74 errors
+Found 89 errors

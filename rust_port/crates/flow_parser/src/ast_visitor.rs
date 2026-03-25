@@ -10757,9 +10757,10 @@ pub fn object_property_value_type_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     opvt: &'ast ast::types::object::PropertyValue<Loc, Type>,
 ) -> Result<(), E> {
     match opvt {
-        ast::types::object::PropertyValue::Init(t) => {
+        ast::types::object::PropertyValue::Init(Some(t)) => {
             visitor.type_(t)?;
         }
+        ast::types::object::PropertyValue::Init(None) => {}
         ast::types::object::PropertyValue::Get(loc, getter) => {
             visitor.object_type_property_getter(loc, getter)?;
         }
@@ -10775,8 +10776,11 @@ pub fn map_object_property_value_type_default<'ast, Loc: Dupe, Type: Dupe, C, E>
     opvt: &'ast ast::types::object::PropertyValue<Loc, Loc>,
 ) -> ast::types::object::PropertyValue<Loc, Loc> {
     match opvt {
-        ast::types::object::PropertyValue::Init(t) => {
-            ast::types::object::PropertyValue::Init(visitor.map_type_(t))
+        ast::types::object::PropertyValue::Init(Some(t)) => {
+            ast::types::object::PropertyValue::Init(Some(visitor.map_type_(t)))
+        }
+        ast::types::object::PropertyValue::Init(None) => {
+            ast::types::object::PropertyValue::Init(None)
         }
         ast::types::object::PropertyValue::Get(loc, getter) => {
             ast::types::object::PropertyValue::Get(
@@ -10842,12 +10846,16 @@ pub fn object_property_type_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         abstract_: _,
         variance,
         ts_accessibility: _,
+        init,
         comments,
     } = p;
     visitor.object_key(key)?;
     visitor.object_property_value_type(value)?;
     if let Some(variance) = variance {
         visitor.variance(variance)?;
+    }
+    if let Some(init) = init {
+        visitor.expression(init)?;
     }
     visitor.syntax_opt(comments.as_ref())?;
     Ok(())
@@ -10868,11 +10876,13 @@ pub fn map_object_property_type_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         abstract_,
         variance,
         ts_accessibility,
+        init,
         comments,
     } = p;
     let key_ = visitor.map_object_key(key);
     let value_ = visitor.map_object_property_value_type(value);
     let variance_ = visitor.map_variance_opt(variance.as_ref());
+    let init_ = init.as_ref().map(|i| visitor.map_expression(i));
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
     ast::types::object::NormalProperty {
         loc: loc.dupe(),
@@ -10885,6 +10895,7 @@ pub fn map_object_property_type_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         abstract_: *abstract_,
         variance: variance_,
         ts_accessibility: ts_accessibility.clone(),
+        init: init_,
         comments: comments_,
     }
 }

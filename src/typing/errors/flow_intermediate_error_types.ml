@@ -115,8 +115,15 @@ type unsupported_syntax =
   | DeclareVariableDestructuring
   | DeclareVariableMissingAnnotationOrInit
   | DeclareVariableAnnotationAndInit
+  | DeclareClassProperty of declare_class_prop_kind
   | TSLibSyntax of ts_lib_syntax_kind
   | ExportTypeSpecifierInExportType
+
+and declare_class_prop_kind =
+  | AnnotationAndInit
+  | MissingAnnotationOrInit
+  | NonLiteralInit
+  | InitWithoutReadonly
 
 and ts_lib_syntax_kind =
   | DeclarationWithoutDeclare
@@ -144,6 +151,7 @@ and ts_lib_syntax_kind =
   | PrivateClassField
   | GenericTaggedTemplate
   | TypeofThis
+  | PropertyValueInitializer
 
 module SubComponentOfInvariantSubtypingError = struct
   type t = ObjectProps of name list

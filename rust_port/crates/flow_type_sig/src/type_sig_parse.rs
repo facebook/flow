@@ -4341,7 +4341,7 @@ fn object_type<'arena, 'ast>(
         }
 
         match &p.value {
-            O::PropertyValue::Init(t) => {
+            O::PropertyValue::Init(Some(t)) => {
                 match resolve_prop_key(&p.key) {
                     ResolvedPropKey::Named(name, id_loc) => {
                         if p.method {
@@ -4451,6 +4451,7 @@ fn object_type<'arena, 'ast>(
                     }
                 }
             }
+            O::PropertyValue::Init(None) => {}
             O::PropertyValue::Get(_, fn_expr) => {
                 if let Key::Identifier(id) = &p.key {
                     let id_loc = tbls.push_loc(id.loc.dupe());
@@ -4657,7 +4658,7 @@ fn interface_props<'arena, 'ast>(
             id_loc: Loc,
         ) {
             match (p.method, &p.value) {
-                (true, O::PropertyValue::Init(ty)) => {
+                (true, O::PropertyValue::Init(Some(ty))) => {
                     if let TypeInner::Function {
                         loc: fn_loc, inner, ..
                     } = ty.deref()
@@ -4686,7 +4687,7 @@ fn interface_props<'arena, 'ast>(
                     }
                     // unexpected non-function method otherwise
                 }
-                (false, O::PropertyValue::Init(t)) => {
+                (false, O::PropertyValue::Init(Some(t))) => {
                     let id_loc = tbls.push_loc(id_loc);
                     let mut t = annot(opts, scope, scopes, tbls, xs, t);
                     if p.optional {
@@ -4696,6 +4697,7 @@ fn interface_props<'arena, 'ast>(
                         polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
                     acc.add_field(name, id_loc, polarity_val, t);
                 }
+                (_, O::PropertyValue::Init(None)) => {}
                 (_, O::PropertyValue::Get(_, fn_expr)) => {
                     let id_loc = tbls.push_loc(id_loc);
                     let getter = getter_type(opts, scope, scopes, tbls, xs, id_loc, fn_expr);
@@ -4723,7 +4725,7 @@ fn interface_props<'arena, 'ast>(
             ) -> (Parsed<'arena, 'ast>, LocNode<'arena>),
         ) {
             match (p.method, &p.value) {
-                (true, O::PropertyValue::Init(ty)) => {
+                (true, O::PropertyValue::Init(Some(ty))) => {
                     if let TypeInner::Function {
                         loc: fn_loc, inner, ..
                     } = ty.deref()
@@ -4745,7 +4747,7 @@ fn interface_props<'arena, 'ast>(
                     }
                 }
                 (true, _) => {}
-                (false, O::PropertyValue::Init(t)) => {
+                (false, O::PropertyValue::Init(Some(t))) => {
                     let (key_ref, ref_loc) = build_key(tbls, scopes);
                     let mut t = annot(opts, scope, scopes, tbls, xs, t);
                     if p.optional {
@@ -4833,6 +4835,53 @@ fn interface_props<'arena, 'ast>(
     }
 }
 
+fn literal_expr_to_annot<'arena, 'ast>(
+    loc: LocNode<'arena>,
+    expr: &ast::expression::Expression<Loc, Loc>,
+) -> Option<Parsed<'arena, 'ast>> {
+    use ast::expression::ExpressionInner;
+    match expr.deref() {
+        ExpressionInner::StringLiteral { inner, .. } => Some(Parsed::Annot(Box::new(
+            ParsedAnnot::SingletonString(loc, inner.value.dupe()),
+        ))),
+        ExpressionInner::NumberLiteral { inner, .. } => Some(Parsed::Annot(Box::new(
+            ParsedAnnot::SingletonNumber(loc, inner.value, inner.raw.dupe()),
+        ))),
+        ExpressionInner::BigIntLiteral { inner, .. } => Some(Parsed::Annot(Box::new(
+            ParsedAnnot::SingletonBigInt(loc, inner.value, inner.raw.dupe()),
+        ))),
+        ExpressionInner::BooleanLiteral { inner, .. } => Some(Parsed::Annot(Box::new(
+            ParsedAnnot::SingletonBoolean(loc, inner.value),
+        ))),
+        ExpressionInner::Unary { inner, .. }
+            if inner.operator == ast::expression::UnaryOperator::Minus =>
+        {
+            match inner.argument.deref() {
+                ExpressionInner::NumberLiteral { inner: num, .. } => {
+                    Some(Parsed::Annot(Box::new(ParsedAnnot::SingletonNumber(
+                        loc,
+                        -num.value,
+                        FlowSmolStr::new(format!("-{}", num.raw)),
+                    ))))
+                }
+                ExpressionInner::BigIntLiteral {
+                    inner: bigint_inner,
+                    ..
+                } => {
+                    let negated = bigint_inner.value.map(|i| -i);
+                    Some(Parsed::Annot(Box::new(ParsedAnnot::SingletonBigInt(
+                        loc,
+                        negated,
+                        FlowSmolStr::new(format!("-{}", bigint_inner.raw)),
+                    ))))
+                }
+                _ => None,
+            }
+        }
+        _ => None,
+    }
+}
+
 fn declare_class_props<'arena, 'ast>(
     opts: &TypeSigOptions,
     scope: ScopeId,
@@ -4876,7 +4925,7 @@ fn declare_class_props<'arena, 'ast>(
             id_loc: Loc,
         ) {
             match (p.method, &p.value) {
-                (true, O::PropertyValue::Init(ty)) => {
+                (true, O::PropertyValue::Init(Some(ty))) => {
                     if let TypeInner::Function {
                         loc: fn_loc, inner, ..
                     } = ty.deref()
@@ -4916,7 +4965,7 @@ fn declare_class_props<'arena, 'ast>(
                     }
                     // unexpected non-function method otherwise
                 }
-                (false, O::PropertyValue::Init(t)) => {
+                (false, O::PropertyValue::Init(Some(t))) => {
                     let id_loc = tbls.push_loc(id_loc);
                     let mut t = annot(opts, scope, scopes, tbls, xs, t);
                     if p.optional {
@@ -4928,6 +4977,23 @@ fn declare_class_props<'arena, 'ast>(
                         acc.add_proto_field(name, id_loc, polarity_val, t);
                     } else {
                         acc.add_field(p.static_, name, id_loc, polarity_val, t);
+                    }
+                }
+                (_, O::PropertyValue::Init(None)) => {
+                    if let Some(ref init_expr) = p.init {
+                        let id_loc = tbls.push_loc(id_loc);
+                        if let Some(mut t) = literal_expr_to_annot(id_loc.dupe(), init_expr) {
+                            if p.optional {
+                                t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                            }
+                            let polarity_val =
+                                polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                            if p.proto {
+                                acc.add_proto_field(name, id_loc, polarity_val, t);
+                            } else {
+                                acc.add_field(p.static_, name, id_loc, polarity_val, t);
+                            }
+                        }
                     }
                 }
                 (_, O::PropertyValue::Get(_, fn_expr)) => {
@@ -4957,7 +5023,7 @@ fn declare_class_props<'arena, 'ast>(
             ) -> (Parsed<'arena, 'ast>, LocNode<'arena>),
         ) {
             match (p.method, &p.value) {
-                (true, O::PropertyValue::Init(ty)) => {
+                (true, O::PropertyValue::Init(Some(ty))) => {
                     if let TypeInner::Function {
                         loc: fn_loc, inner, ..
                     } = ty.deref()
@@ -4986,7 +5052,7 @@ fn declare_class_props<'arena, 'ast>(
                     }
                 }
                 (true, _) => {}
-                (false, O::PropertyValue::Init(t)) => {
+                (false, O::PropertyValue::Init(Some(t))) => {
                     let (key_ref, ref_loc) = build_key(tbls, scopes);
                     let mut t = annot(opts, scope, scopes, tbls, xs, t);
                     if p.optional {
@@ -4995,6 +5061,26 @@ fn declare_class_props<'arena, 'ast>(
                     let polarity_val =
                         polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
                     acc.add_computed_field(p.static_, p.proto, key_ref, ref_loc, polarity_val, t);
+                }
+                (false, O::PropertyValue::Init(None)) => {
+                    if let Some(ref init_expr) = p.init {
+                        let (key_ref, ref_loc) = build_key(tbls, scopes);
+                        if let Some(mut t) = literal_expr_to_annot(ref_loc.dupe(), init_expr) {
+                            if p.optional {
+                                t = Parsed::Annot(Box::new(ParsedAnnot::Optional(t)));
+                            }
+                            let polarity_val =
+                                polarity(p.variance.as_ref().map(|v| (v.loc.dupe(), v.clone())));
+                            acc.add_computed_field(
+                                p.static_,
+                                p.proto,
+                                key_ref,
+                                ref_loc,
+                                polarity_val,
+                                t,
+                            );
+                        }
+                    }
                 }
                 _ => {}
             }
@@ -8965,8 +9051,8 @@ fn declare_variable_decl<'arena: 'ast, 'ast>(
             let id_loc_node = tbls.push_loc(id_loc.dupe());
 
             let mut xs = tparam_stack::TParamStack::new();
-            match (id_annot, init) {
-                (ast::types::AnnotationOrHint::Available(type_annot), _) => {
+            match id_annot {
+                ast::types::AnnotationOrHint::Available(type_annot) => {
                     let t = annot(opts, scope, scopes, tbls, &mut xs, &type_annot.annotation);
                     let def = Lazy::new(Box::new(move |_, _, _| t));
                     scope::bind_var(
@@ -8980,145 +9066,42 @@ fn declare_variable_decl<'arena: 'ast, 'ast>(
                         k,
                     );
                 }
-                (ast::types::AnnotationOrHint::Missing(_), Some(init_expr))
-                    if matches!(
-                        init_expr.deref(),
-                        ast::expression::ExpressionInner::StringLiteral { .. }
-                    ) =>
-                {
-                    if let ast::expression::ExpressionInner::StringLiteral { inner, .. } =
-                        init_expr.deref()
+                ast::types::AnnotationOrHint::Missing(_) => {
+                    match init
+                        .as_ref()
+                        .and_then(|e| literal_expr_to_annot(id_loc_node.dupe(), e))
                     {
-                        let id_loc_for_closure = id_loc_node.dupe();
-                        let id_loc_for_bind = id_loc_node.dupe();
-                        let value = inner.value.dupe();
-                        let def = Lazy::new(Box::new(move |_, _, _| {
-                            Parsed::Value(Box::new(ParsedValue::StringLit(
-                                id_loc_for_closure,
-                                value,
-                            )))
-                        }));
-                        scope::bind_var(
-                            scope,
-                            scopes,
-                            tbls,
-                            kind_val,
-                            id_loc_for_bind,
-                            name.dupe(),
-                            def,
-                            k,
-                        );
+                        Some(t) => {
+                            let id_loc_for_bind = id_loc_node.dupe();
+                            let def = Lazy::new(Box::new(move |_, _, _| t));
+                            scope::bind_var(
+                                scope,
+                                scopes,
+                                tbls,
+                                kind_val,
+                                id_loc_for_bind,
+                                name.dupe(),
+                                def,
+                                k,
+                            );
+                        }
+                        None => {
+                            let id_loc_node_for_bind = id_loc_node.dupe();
+                            let def = Lazy::new(Box::new(move |_, _, _| {
+                                Parsed::Annot(Box::new(ParsedAnnot::Any(id_loc_node)))
+                            }));
+                            scope::bind_var(
+                                scope,
+                                scopes,
+                                tbls,
+                                kind_val,
+                                id_loc_node_for_bind,
+                                name.dupe(),
+                                def,
+                                k,
+                            );
+                        }
                     }
-                }
-                (ast::types::AnnotationOrHint::Missing(_), Some(init_expr))
-                    if matches!(
-                        init_expr.deref(),
-                        ast::expression::ExpressionInner::NumberLiteral { .. }
-                    ) =>
-                {
-                    if let ast::expression::ExpressionInner::NumberLiteral { inner, .. } =
-                        init_expr.deref()
-                    {
-                        let id_loc_for_closure = id_loc_node.dupe();
-                        let id_loc_for_bind = id_loc_node.dupe();
-                        let value = inner.value;
-                        let raw = inner.raw.dupe();
-                        let def = Lazy::new(Box::new(move |_, _, _| {
-                            Parsed::Value(Box::new(ParsedValue::NumberLit(
-                                id_loc_for_closure,
-                                value,
-                                raw,
-                            )))
-                        }));
-                        scope::bind_var(
-                            scope,
-                            scopes,
-                            tbls,
-                            kind_val,
-                            id_loc_for_bind,
-                            name.dupe(),
-                            def,
-                            k,
-                        );
-                    }
-                }
-                (ast::types::AnnotationOrHint::Missing(_), Some(init_expr))
-                    if matches!(
-                        init_expr.deref(),
-                        ast::expression::ExpressionInner::BooleanLiteral { .. }
-                    ) =>
-                {
-                    if let ast::expression::ExpressionInner::BooleanLiteral { inner, .. } =
-                        init_expr.deref()
-                    {
-                        let id_loc_for_closure = id_loc_node.dupe();
-                        let id_loc_for_bind = id_loc_node.dupe();
-                        let value = inner.value;
-                        let def = Lazy::new(Box::new(move |_, _, _| {
-                            Parsed::Value(Box::new(ParsedValue::BooleanLit(
-                                id_loc_for_closure,
-                                value,
-                            )))
-                        }));
-                        scope::bind_var(
-                            scope,
-                            scopes,
-                            tbls,
-                            kind_val,
-                            id_loc_for_bind,
-                            name.dupe(),
-                            def,
-                            k,
-                        );
-                    }
-                }
-                (ast::types::AnnotationOrHint::Missing(_), Some(init_expr))
-                    if matches!(
-                        init_expr.deref(),
-                        ast::expression::ExpressionInner::BigIntLiteral { .. }
-                    ) =>
-                {
-                    if let ast::expression::ExpressionInner::BigIntLiteral { inner, .. } =
-                        init_expr.deref()
-                    {
-                        let id_loc_for_closure = id_loc_node.dupe();
-                        let id_loc_for_bind = id_loc_node.dupe();
-                        let value = inner.value;
-                        let raw = inner.raw.dupe();
-                        let def = Lazy::new(Box::new(move |_, _, _| {
-                            Parsed::Value(Box::new(ParsedValue::BigIntLit(
-                                id_loc_for_closure,
-                                value,
-                                raw,
-                            )))
-                        }));
-                        scope::bind_var(
-                            scope,
-                            scopes,
-                            tbls,
-                            kind_val,
-                            id_loc_for_bind,
-                            name.dupe(),
-                            def,
-                            k,
-                        );
-                    }
-                }
-                _ => {
-                    let id_loc_node_for_bind = id_loc_node.dupe();
-                    let def = Lazy::new(Box::new(move |_, _, _| {
-                        Parsed::Annot(Box::new(ParsedAnnot::Any(id_loc_node)))
-                    }));
-                    scope::bind_var(
-                        scope,
-                        scopes,
-                        tbls,
-                        kind_val,
-                        id_loc_node_for_bind,
-                        name.dupe(),
-                        def,
-                        k,
-                    );
                 }
             }
         }

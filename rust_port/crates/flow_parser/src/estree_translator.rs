@@ -5299,7 +5299,8 @@ fn object_type_property(
         property_key(offset_table, config, &prop.key, prop.comments.as_ref());
 
     let (value, kind) = match &prop.value {
-        PropertyValue::Init(t) => (type_(offset_table, config, t), "init"),
+        PropertyValue::Init(Some(t)) => (type_(offset_table, config, t), "init"),
+        PropertyValue::Init(None) => (Value::Null, "init"),
         PropertyValue::Get(loc, f) => (function_type(offset_table, config, loc, f), "get"),
         PropertyValue::Set(loc, f) => (function_type(offset_table, config, loc, f), "set"),
     };
@@ -5317,6 +5318,10 @@ fn object_type_property(
             option(&prop.variance, |v| variance(offset_table, config, v)),
         ),
         ("kind", string(kind)),
+        (
+            "init",
+            option(&prop.init, |e| expression(offset_table, config, e)),
+        ),
     ];
     if computed {
         fields.push(("computed", bool_value(computed)));

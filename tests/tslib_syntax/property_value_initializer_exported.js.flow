@@ -1,0 +1,5 @@
+declare export class ExportedConstants {
+  static readonly BUFFER_SIZE = 256;
+  readonly code = "EXPORTED_VALUE";
+  readonly neg = -1;
+}

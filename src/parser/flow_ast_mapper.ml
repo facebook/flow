@@ -1601,7 +1601,8 @@ class ['loc] mapper =
     method object_property_value_type (opvt : ('loc, 'loc) Ast.Type.Object.Property.value) =
       let open Ast.Type.Object.Property in
       match opvt with
-      | Init t -> id this#type_ t opvt (fun t -> Init t)
+      | Init (Some t) -> id this#type_ t opvt (fun t -> Init (Some t))
+      | Init None -> opvt
       | Get t -> id this#object_type_property_getter t opvt (fun t -> Get t)
       | Set t -> id this#object_type_property_setter t opvt (fun t -> Set t)
 
@@ -1626,6 +1627,7 @@ class ['loc] mapper =
               abstract;
               variance;
               ts_accessibility;
+              init;
               comments;
             }
           ) =
@@ -1634,8 +1636,15 @@ class ['loc] mapper =
       let key' = this#object_key key in
       let value' = this#object_property_value_type value in
       let variance' = this#variance_opt variance in
+      let init' = map_opt this#expression init in
       let comments' = this#syntax_opt comments in
-      if key' == key && value' == value && variance' == variance && comments' == comments then
+      if
+        key' == key
+        && value' == value
+        && variance' == variance
+        && init' == init
+        && comments' == comments
+      then
         opt
       else
         ( loc,
@@ -1649,6 +1658,7 @@ class ['loc] mapper =
             abstract;
             variance = variance';
             ts_accessibility;
+            init = init';
             comments = comments';
           }
         )

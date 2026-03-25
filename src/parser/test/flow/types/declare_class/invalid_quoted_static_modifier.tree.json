@@ -2,10 +2,6 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":30}},
-      "message":"Unexpected identifier, expected the token `:`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":30}},
       "message":"Unexpected identifier, expected the token `,`"
     }
   ],
@@ -43,17 +39,15 @@
               "value":"static",
               "raw":"\"static\""
             },
-            "value":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":18},"end":{"line":1,"column":26}},
-              "range":[18,26]
-            },
+            "value":null,
             "method":false,
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           },
           {
             "type":"ObjectTypeProperty",
@@ -72,21 +66,23 @@
               "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":40}},
               "range":[27,40],
               "params":[],
-              "this":null,
               "returnType":{
                 "type":"NumberTypeAnnotation",
                 "loc":{"source":null,"start":{"line":1,"column":34},"end":{"line":1,"column":40}},
                 "range":[34,40]
               },
               "rest":null,
-              "typeParameters":null
+              "typeParameters":null,
+              "this":null
             },
             "method":true,
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           }
         ],
         "indexers":[],

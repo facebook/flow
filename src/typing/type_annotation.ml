@@ -2082,7 +2082,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
       match prop with
       | {
        Object.Property.key;
-       value = Object.Property.Init value;
+       value = Object.Property.Init (Some value);
        optional;
        variance;
        _method;
@@ -2120,7 +2120,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                         ((loc, t), { Ast.Identifier.name; comments = comments_inner })
                     | _ -> assert_false "branch invariant"
                   end;
-                value = Object.Property.Init value_ast;
+                value = Object.Property.Init (Some value_ast);
+                init = None;
               }
             in
             if name = "__proto__" && (not (_method || optional)) && variance = None then
@@ -2208,7 +2209,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                       ( computed_loc,
                         { Ast.ComputedKey.expression = typed_expr; comments = computed_comments }
                       );
-                  value = Object.Property.Init value_ast;
+                  value = Object.Property.Init (Some value_ast);
                   optional;
                   static = false;
                   proto = false;
@@ -2216,6 +2217,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   abstract;
                   variance;
                   ts_accessibility = None;
+                  init = None;
                   comments = None;
                 }
               in
@@ -2265,6 +2267,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             Object.Property.key =
               Ast.Expression.Object.Property.Identifier ((id_loc, return_t), id_name);
             value = Object.Property.Get getter_ast;
+            init = None;
           }
         )
       (* unsafe setter property *)
@@ -2285,6 +2288,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
             Object.Property.key =
               Ast.Expression.Object.Property.Identifier ((id_loc, param_t), id_name);
             value = Object.Property.Set setter_ast;
+            init = None;
           }
         )
       | { Object.Property.value = Object.Property.Get _ | Object.Property.Set _; _ } ->
@@ -2292,6 +2296,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           env.cx
           (Error_message.EUnsupportedSyntax (loc, Flow_intermediate_error_types.ObjectPropertyGetSet)
           );
+        let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
+        (acc, prop_ast)
+      | { Object.Property.value = Object.Property.Init None; _ } ->
         let (_, prop_ast) = Tast_utils.error_mapper#object_property_type (loc, prop) in
         (acc, prop_ast)
     in
@@ -3075,6 +3082,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                       abstract;
                       variance;
                       ts_accessibility;
+                      init = init_;
                       comments = _;
                     } as prop
                   )
@@ -3091,6 +3099,71 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   kind = Ast.Class.TSAccessibility.Private
                 | None -> false
               in
+              let is_literal_init expr =
+                match snd expr with
+                | Ast.Expression.StringLiteral _
+                | Ast.Expression.NumberLiteral _
+                | Ast.Expression.BigIntLiteral _
+                | Ast.Expression.BooleanLiteral _ ->
+                  true
+                | Ast.Expression.Unary
+                    { Ast.Expression.Unary.operator = Ast.Expression.Unary.Minus; argument; _ } ->
+                  (match snd argument with
+                  | Ast.Expression.NumberLiteral _
+                  | Ast.Expression.BigIntLiteral _ ->
+                    true
+                  | _ -> false)
+                | _ -> false
+              in
+              (* Validate initializer and annotation *)
+              (match (init_, value) with
+              | (Some _, _) when not (Context.tslib_syntax env.cx) ->
+                Flow_js_utils.add_output
+                  env.cx
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.(TSLibSyntax PropertyValueInitializer))
+                  )
+              | (Some (init_loc, _), Ast.Type.Object.Property.Init (Some _)) ->
+                Flow_js_utils.add_output
+                  env.cx
+                  (Error_message.EUnsupportedSyntax
+                     ( init_loc,
+                       Flow_intermediate_error_types.(DeclareClassProperty AnnotationAndInit)
+                     )
+                  )
+              | (Some ((init_loc, _) as init_expr), Ast.Type.Object.Property.Init None) ->
+                let is_readonly =
+                  match variance with
+                  | Some (_, Ast.Variance.{ kind = Ast.Variance.Readonly | Ast.Variance.Plus; _ })
+                    ->
+                    true
+                  | _ -> false
+                in
+                if not is_readonly then
+                  Flow_js_utils.add_output
+                    env.cx
+                    (Error_message.EUnsupportedSyntax
+                       ( init_loc,
+                         Flow_intermediate_error_types.(DeclareClassProperty InitWithoutReadonly)
+                       )
+                    );
+                if not (is_literal_init init_expr) then
+                  Flow_js_utils.add_output
+                    env.cx
+                    (Error_message.EUnsupportedSyntax
+                       ( init_loc,
+                         Flow_intermediate_error_types.(DeclareClassProperty NonLiteralInit)
+                       )
+                    )
+              | (None, Ast.Type.Object.Property.Init None) when not is_ts_private ->
+                Flow_js_utils.add_output
+                  env.cx
+                  (Error_message.EUnsupportedSyntax
+                     ( loc,
+                       Flow_intermediate_error_types.(DeclareClassProperty MissingAnnotationOrInit)
+                     )
+                  )
+              | _ -> ());
               if is_ts_private then
                 (* Private members are excluded from the declare class's public
                    interface, so we skip adding them to the class signature. *)
@@ -3110,6 +3183,39 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                        (loc, Flow_intermediate_error_types.(TSLibSyntax OptionalShorthandMethod))
                     );
                 let polarity = polarity env.cx variance in
+                let handle_init_only_property name id_loc ~rebuild_key =
+                  match init_ with
+                  | Some init_expr when Context.tslib_syntax env.cx && is_literal_init init_expr ->
+                    let (((_, t), _) as init_ast) =
+                      Statement.expression env.cx ~as_const:true init_expr
+                    in
+                    let t =
+                      if optional then
+                        TypeUtil.optional t
+                      else
+                        t
+                    in
+                    let add =
+                      if proto then
+                        Class_type_sig.add_proto_field
+                      else
+                        Class_type_sig.add_field ~static
+                    in
+                    let open Ast.Type in
+                    ( add name id_loc polarity (Class_type_sig.Types.Annot t) x,
+                      ( loc,
+                        {
+                          prop with
+                          Object.Property.key = rebuild_key t;
+                          value = Object.Property.Init None;
+                          init = Some init_ast;
+                        }
+                      )
+                    )
+                  | _ ->
+                    (* Errors already emitted by the init validation above *)
+                    (x, Tast_utils.error_mapper#object_property_type (loc, prop))
+                in
                 let (x, prop) =
                   Ast.Expression.Object.(
                     match (_method, key, value) with
@@ -3118,7 +3224,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                           ( computed_loc,
                             { Ast.ComputedKey.expression = expr; comments = computed_comments }
                           ),
-                        Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func)
+                        Ast.Type.Object.Property.Init (Some (func_loc, Ast.Type.Function func))
                       ) ->
                       let (typed_expr, resolved_name) = resolve_computed_key_name env.cx expr in
                       let resolved_name =
@@ -3150,7 +3256,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                                       comments = computed_comments;
                                     }
                                   );
-                              value = Object.Property.Init ((func_loc, ft), Function func_ast);
+                              value = Object.Property.Init (Some ((func_loc, ft), Function func_ast));
+                              init = None;
                             }
                           )
                         )
@@ -3166,7 +3273,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                           ( computed_loc,
                             { Ast.ComputedKey.expression = expr; comments = computed_comments }
                           ),
-                        Ast.Type.Object.Property.Init value
+                        Ast.Type.Object.Property.Init (Some value)
                       ) ->
                       let (typed_expr, resolved_name) = resolve_computed_key_name env.cx expr in
                       let resolved_name =
@@ -3201,9 +3308,40 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                                       comments = computed_comments;
                                     }
                                   );
-                              value = Object.Property.Init value_ast;
+                              value = Object.Property.Init (Some value_ast);
+                              init =
+                                Base.Option.map init_ ~f:(Statement.expression env.cx ~as_const:true);
                             }
                           )
+                        )
+                      | None ->
+                        Flow_js_utils.add_output
+                          env.cx
+                          (Error_message.EUnsupportedSyntax
+                             (computed_loc, Flow_intermediate_error_types.IllegalName)
+                          );
+                        (x, Tast_utils.error_mapper#object_property_type (loc, prop)))
+                    | ( false,
+                        Property.Computed
+                          ( computed_loc,
+                            { Ast.ComputedKey.expression = expr; comments = computed_comments }
+                          ),
+                        Ast.Type.Object.Property.Init None
+                      ) ->
+                      let (typed_expr, resolved_name) = resolve_computed_key_name env.cx expr in
+                      let resolved_name =
+                        Base.Option.map resolved_name ~f:Reason.display_string_of_name
+                      in
+                      (match resolved_name with
+                      | Some name ->
+                        handle_init_only_property name (fst expr) ~rebuild_key:(fun _t ->
+                            Property.Computed
+                              ( computed_loc,
+                                {
+                                  Ast.ComputedKey.expression = typed_expr;
+                                  comments = computed_comments;
+                                }
+                              )
                         )
                       | None ->
                         Flow_js_utils.add_output
@@ -3226,7 +3364,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     | ( true,
                         Property.Identifier
                           (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Init (func_loc, Ast.Type.Function func)
+                        Ast.Type.Object.Property.Init (Some (func_loc, Ast.Type.Function func))
                       ) ->
                       let meth_kind =
                         match name with
@@ -3248,7 +3386,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                           {
                             prop with
                             Object.Property.key = Property.Identifier ((id_loc, ft), id_name);
-                            value = Object.Property.Init ((func_loc, ft), Function func_ast);
+                            value = Object.Property.Init (Some ((func_loc, ft), Function func_ast));
+                            init = None;
                           }
                         )
                       )
@@ -3260,7 +3399,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                     | ( false,
                         Property.Identifier
                           (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
-                        Ast.Type.Object.Property.Init value
+                        Ast.Type.Object.Property.Init (Some value)
                       ) ->
                       let (((_, t), _) as value_ast) = convert env value in
                       let t =
@@ -3281,9 +3420,19 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                           {
                             prop with
                             Object.Property.key = Property.Identifier ((id_loc, t), id_name);
-                            value = Object.Property.Init value_ast;
+                            value = Object.Property.Init (Some value_ast);
+                            init =
+                              Base.Option.map init_ ~f:(Statement.expression env.cx ~as_const:true);
                           }
                         )
+                      )
+                    | ( false,
+                        Property.Identifier
+                          (id_loc, ({ Ast.Identifier.name; comments = _ } as id_name)),
+                        Ast.Type.Object.Property.Init None
+                      ) ->
+                      handle_init_only_property name id_loc ~rebuild_key:(fun t ->
+                          Property.Identifier ((id_loc, t), id_name)
                       )
                     (* unsafe getter property *)
                     | ( _,
@@ -3311,6 +3460,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                             prop with
                             Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
                             value = Object.Property.Get (get_loc, func_ast);
+                            init = None;
                           }
                         )
                       )
@@ -3347,6 +3497,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                             prop with
                             Object.Property.key = Property.Identifier ((id_loc, prop_t), id_name);
                             value = Object.Property.Set (set_loc, func_ast);
+                            init = None;
                           }
                         )
                       )

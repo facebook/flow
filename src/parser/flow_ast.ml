@@ -329,11 +329,12 @@ and Type : sig
         abstract: bool;
         variance: 'M Variance.t option;
         ts_accessibility: 'M Class.TSAccessibility.t option;
+        init: ('M, 'T) Expression.t option;
         comments: ('M, unit) Syntax.t option;
       }
 
       and ('M, 'T) value =
-        | Init of ('M, 'T) Type.t
+        | Init of ('M, 'T) Type.t option
         | Get of ('M * ('M, 'T) Function.t)
         | Set of ('M * ('M, 'T) Function.t)
       [@@deriving show]

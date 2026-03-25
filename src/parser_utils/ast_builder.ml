@@ -38,6 +38,7 @@ module Types = struct
         ?(abstract = false)
         ?(variance = None)
         ?(ts_accessibility = None)
+        ?(init = None)
         ?comments
         key
         value =
@@ -52,6 +53,7 @@ module Types = struct
           abstract;
           variance;
           ts_accessibility;
+          init;
           comments;
         }
       )
@@ -727,7 +729,7 @@ module Statements = struct
                 Flow_ast.Type.Object.Property
                   (Types.Objects.property
                      (Flow_ast.Expression.Object.Property.Identifier (Identifiers.identifier def))
-                     (Flow_ast.Type.Object.Property.Init t)
+                     (Flow_ast.Type.Object.Property.Init (Some t))
                   )
             )
           in

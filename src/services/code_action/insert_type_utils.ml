@@ -703,6 +703,7 @@ end = struct
             abstract = _;
             variance = _;
             ts_accessibility = _;
+            init = _;
             comments = _;
           }
         ) =
@@ -713,12 +714,13 @@ end = struct
     | Identifier (_, { Ast.Identifier.name; _ })
     | StringLiteral (_, { Ast.StringLiteral.value = name; _ }) -> begin
       match value with
-      | Init t ->
+      | Init (Some t) ->
         let optional = opt_chain || optional in
         let ty' =
           Ty.IndexedAccess { _object = ty; index = Ty.StrLit (Reason.OrdinaryName name); optional }
         in
         visit_type defs tgt ~opt_chain:optional ty' t
+      | Init None
       | Get _
       | Set _ ->
         None

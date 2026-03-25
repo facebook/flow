@@ -2207,7 +2207,7 @@ fn object_type(
             types::object::NormalProperty {
                 loc: value_loc,
                 key,
-                value: types::object::PropertyValue::Init(value),
+                value: types::object::PropertyValue::Init(Some(value)),
                 optional,
                 static_: static_.is_some(),
                 proto: false,
@@ -2216,6 +2216,7 @@ fn object_type(
                 abstract_,
                 variance: None,
                 ts_accessibility,
+                init: None,
                 comments: mk_comments_opt(Some(leading.into()), None),
             },
         ))
@@ -2254,6 +2255,7 @@ fn object_type(
         leading: Vec<Comment<Loc>>,
         key_loc: Loc,
         key: expression::object::Key<Loc, Loc>,
+        is_class: bool,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
         if !env.should_parse_types() {
             env.error(ParseError::UnexpectedTypeAnnotation)?;
@@ -2261,26 +2263,33 @@ fn object_type(
 
         let (loc, mut prop) = with_loc(Some(start_loc), env, |env| {
             let optional = eat::maybe(env, TokenKind::TPling)?;
-            // Private fields can omit the type annotation since they are
-            // dropped from the public interface of the declare class
-            let ate_colon = match &ts_accessibility {
-                Some(tsa) if tsa.kind == class::ts_accessibility::Kind::Private => {
-                    eat::maybe(env, TokenKind::TColon)?
-                }
-                _ => expect::token_maybe(env, TokenKind::TColon)?,
+            let ate_colon = if is_class {
+                eat::maybe(env, TokenKind::TColon)?
+            } else {
+                expect::token_maybe(env, TokenKind::TColon)?
             };
             let value = if ate_colon {
-                type_inner(env)?
+                types::object::PropertyValue::Init(Some(type_inner(env)?))
+            } else if is_class {
+                types::object::PropertyValue::Init(None)
             } else {
-                types::Type::new(TypeInner::Any {
+                types::object::PropertyValue::Init(Some(types::Type::new(TypeInner::Any {
                     loc: key_loc,
                     comments: None,
-                })
+                })))
+            };
+            let init = if is_class && eat::maybe(env, TokenKind::TAssign)? {
+                eat::push_lex_mode(env, LexMode::Normal);
+                let init_expr = expression_parser::assignment(env)?;
+                eat::pop_lex_mode(env);
+                Some(init_expr)
+            } else {
+                None
             };
             Ok(types::object::NormalProperty {
                 loc: LOC_NONE,
                 key,
-                value: types::object::PropertyValue::Init(value),
+                value,
                 optional,
                 static_: static_.is_some(),
                 proto: proto.is_some(),
@@ -2288,6 +2297,7 @@ fn object_type(
                 abstract_,
                 variance,
                 ts_accessibility,
+                init,
                 comments: mk_comments_opt(Some(leading.into()), None),
             })
         })?;
@@ -2355,6 +2365,7 @@ fn object_type(
                 abstract_: false,
                 variance: None,
                 ts_accessibility,
+                init: None,
                 comments: mk_comments_opt(Some(leading.into()), None),
             })
         })?;
@@ -2481,6 +2492,7 @@ fn object_type(
         variance: Option<Variance<Loc>>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
+        is_class: bool,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
         // We've already consumed '['. Now consume 'Symbol', '.', and the property name.
         let sym_loc = peek::loc(env).dupe();
@@ -2537,6 +2549,7 @@ fn object_type(
             ts_accessibility,
             computed_loc,
             key,
+            is_class,
         )
     }
 
@@ -2548,6 +2561,7 @@ fn object_type(
         variance_op: Option<types::object::MappedTypeVarianceOp>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
+        is_class: bool,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
         let leading = [leading, peek::comments(env)].concat();
         expect::token(env, TokenKind::TLbracket)?;
@@ -2573,6 +2587,7 @@ fn object_type(
                     variance,
                     ts_accessibility,
                     leading,
+                    is_class,
                 )
             }
             _ => {
@@ -2580,7 +2595,15 @@ fn object_type(
                     error_unexpected_variance(env, variance.as_ref())?;
                 }
                 if env.is_d_ts() {
-                    computed_property(env, start_loc, static_, variance, ts_accessibility, leading)
+                    computed_property(
+                        env,
+                        start_loc,
+                        static_,
+                        variance,
+                        ts_accessibility,
+                        leading,
+                        is_class,
+                    )
                 } else {
                     indexer_property(env, start_loc, static_, variance, leading)
                 }
@@ -2690,6 +2713,7 @@ fn object_type(
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         computed_loc: Loc,
         key: expression::object::Key<Loc, Loc>,
+        is_class: bool,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
         match peek::token(env) {
             TokenKind::TLessThan | TokenKind::TLparen => {
@@ -2731,6 +2755,7 @@ fn object_type(
                     Vec::new(),
                     computed_loc,
                     key,
+                    is_class,
                 ),
             },
             _ => init_property(
@@ -2744,6 +2769,7 @@ fn object_type(
                 Vec::new(),
                 computed_loc,
                 key,
+                is_class,
             ),
         }
     }
@@ -2755,6 +2781,7 @@ fn object_type(
         variance: Option<Variance<Loc>>,
         ts_accessibility: Option<class::ts_accessibility::TSAccessibility<Loc>>,
         leading: Vec<Comment<Loc>>,
+        is_class: bool,
     ) -> Result<types::object::Property<Loc, Loc>, Rollback> {
         eat::push_lex_mode(env, LexMode::Normal);
         let expr = expression_parser::assignment(env)?;
@@ -2774,6 +2801,7 @@ fn object_type(
             ts_accessibility,
             computed_loc,
             key,
+            is_class,
         )
     }
 
@@ -3077,6 +3105,7 @@ fn object_type(
                             variance_op,
                             ts_accessibility,
                             leading,
+                            is_class,
                         ),
                     };
                 }
@@ -3092,8 +3121,11 @@ fn object_type(
                 }
             }
         }
-        if let (Some(static_loc), None, TokenKind::TPling | TokenKind::TColon) =
-            (&static_, &proto, peek::token(env))
+        if let (
+            Some(static_loc),
+            None,
+            TokenKind::TPling | TokenKind::TColon | TokenKind::TAssign,
+        ) = (&static_, &proto, peek::token(env))
         {
             // We speculatively parsed `static` as a static modifier, but now
             // we want to parse `static` as the key of a named property.
@@ -3113,9 +3145,13 @@ fn object_type(
                 Vec::new(),
                 static_loc.dupe(),
                 key,
+                is_class,
             )
-        } else if let (None, Some(proto_loc), TokenKind::TPling | TokenKind::TColon) =
-            (&static_, &proto, peek::token(env))
+        } else if let (
+            None,
+            Some(proto_loc),
+            TokenKind::TPling | TokenKind::TColon | TokenKind::TAssign,
+        ) = (&static_, &proto, peek::token(env))
         {
             // We speculatively parsed `proto` as a proto modifier, but now
             // we want to parse `proto` as the key of a named property.
@@ -3135,6 +3171,7 @@ fn object_type(
                 Vec::new(),
                 proto_loc.dupe(),
                 key,
+                is_class,
             )
         } else {
             fn object_key(
@@ -3188,18 +3225,21 @@ fn object_type(
                                 leading,
                             )
                         }
-                        TokenKind::TColon | TokenKind::TPling => init_property(
-                            env,
-                            start_loc,
-                            variance,
-                            static_,
-                            proto,
-                            abstract_,
-                            ts_accessibility,
-                            leading,
-                            key_loc,
-                            key,
-                        ),
+                        TokenKind::TColon | TokenKind::TPling | TokenKind::TAssign => {
+                            init_property(
+                                env,
+                                start_loc,
+                                variance,
+                                static_,
+                                proto,
+                                abstract_,
+                                ts_accessibility,
+                                leading,
+                                key_loc,
+                                key,
+                                is_class,
+                            )
+                        }
                         _ => {
                             comment_attachment::object_key_remove_trailing(env, &mut key);
                             let key = object_key(env)?;
@@ -3267,6 +3307,7 @@ fn object_type(
                             leading,
                             key_loc,
                             key,
+                            is_class,
                         )
                     }
                 },

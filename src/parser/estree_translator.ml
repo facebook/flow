@@ -2369,13 +2369,15 @@ with type t = Impl.t = struct
             _method;
             abstract;
             ts_accessibility;
+            init = init_;
             comments;
           }
         ) =
       let (key, computed, comments) = property_key ~comments key in
       let (value, kind) =
         match value with
-        | Type.Object.Property.Init value -> (_type value, "init")
+        | Type.Object.Property.Init (Some value) -> (_type value, "init")
+        | Type.Object.Property.Init None -> (null, "init")
         | Type.Object.Property.Get (loc, f) -> (function_type (loc, f), "get")
         | Type.Object.Property.Set (loc, f) -> (function_type (loc, f), "set")
       in
@@ -2393,6 +2395,7 @@ with type t = Impl.t = struct
            ("abstract", bool abstract);
            ("variance", option variance variance_);
            ("kind", string kind);
+           ("init", option expression init_);
          ]
         @ ( if computed then
             [("computed", bool computed)]

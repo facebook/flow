@@ -656,7 +656,7 @@ impl Serializer {
                 ast::types::object::NormalProperty {
                     loc: LOC_NONE,
                     key,
-                    value: ast::types::object::PropertyValue::Init(t),
+                    value: ast::types::object::PropertyValue::Init(Some(t)),
                     optional: *optional,
                     static_: false,
                     proto: false,
@@ -664,6 +664,7 @@ impl Serializer {
                     abstract_: false,
                     variance: variance_(*polarity),
                     ts_accessibility: None,
+                    init: None,
                     comments: None,
                 }
             }
@@ -672,12 +673,12 @@ impl Serializer {
                 ast::types::object::NormalProperty {
                     loc: LOC_NONE,
                     key,
-                    value: ast::types::object::PropertyValue::Init(ast::types::Type::new(
+                    value: ast::types::object::PropertyValue::Init(Some(ast::types::Type::new(
                         TypeInner::Function {
                             loc: LOC_NONE,
                             inner: Arc::new(fun_t),
                         },
-                    )),
+                    ))),
                     optional: false,
                     static_: false,
                     proto: false,
@@ -685,6 +686,7 @@ impl Serializer {
                     abstract_: false,
                     variance: None,
                     ts_accessibility: None,
+                    init: None,
                     comments: None,
                 }
             }
@@ -701,6 +703,7 @@ impl Serializer {
                     abstract_: false,
                     variance: None,
                     ts_accessibility: None,
+                    init: None,
                     comments: None,
                 }
             }
@@ -717,6 +720,7 @@ impl Serializer {
                     abstract_: false,
                     variance: None,
                     ts_accessibility: None,
+                    init: None,
                     comments: None,
                 }
             }

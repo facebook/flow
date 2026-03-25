@@ -6277,7 +6277,8 @@ fn object_property_value_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
 ) -> Result<ast::types::object::PropertyValue<N, U>, E> {
     use ast::types::object::PropertyValue;
     Ok(match opvt {
-        PropertyValue::Init(t) => PropertyValue::Init(type_(mapper, t)?),
+        PropertyValue::Init(Some(t)) => PropertyValue::Init(Some(type_(mapper, t)?)),
+        PropertyValue::Init(None) => PropertyValue::Init(None),
         PropertyValue::Get(annot, ft) => {
             PropertyValue::Get(mapper.on_loc_annot(annot)?, function_type(mapper, ft)?)
         }
@@ -6301,6 +6302,7 @@ pub fn object_property_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         abstract_,
         variance: var,
         ts_accessibility,
+        init,
         comments,
     } = prop;
     let key_ = object_key(mapper, key)?;
@@ -6316,6 +6318,7 @@ pub fn object_property_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
             })
         })
         .transpose()?;
+    let init_ = init.as_ref().map(|i| expression(mapper, i)).transpose()?;
     let comments_ = syntax_opt(mapper, comments.as_ref())?;
     Ok(ast::types::object::NormalProperty {
         loc: mapper.on_loc_annot(loc)?,
@@ -6328,6 +6331,7 @@ pub fn object_property_type<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         abstract_: *abstract_,
         variance: variance_,
         ts_accessibility: ts_accessibility_,
+        init: init_,
         comments: comments_,
     })
 }

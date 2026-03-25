@@ -1636,6 +1636,30 @@ let tests =
            assert_statement_string ~ctxt "declare class Foo{#private}";
            assert_statement_string ~ctxt ~pretty:true "declare class Foo {\n  #private,\n}"
          );
+         ( "property_value_initializer" >:: fun ctxt ->
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare class Foo {\n  static readonly BUFFER_SIZE = 256,\n}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare class Foo {\n  readonly code = \"NEXT_STATIC_GEN_BAILOUT\",\n}";
+           assert_statement_string ~ctxt ~pretty:true "declare class Foo {\n  readonly neg = -1,\n}";
+           assert_statement_string ~ctxt ~pretty:true "declare class Foo {\n  readonly x? = 1,\n}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare class Foo {\n  private readonly x = 42,\n}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare class Foo {\n  protected readonly x = 42,\n}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "declare class Foo {\n  readonly [\n    Symbol.iterator\n  ] = 0,\n}"
+         );
          ( "class_ts_parameter_properties" >:: fun ctxt ->
            assert_statement_string ~ctxt "class C{constructor(private x:number){}}";
            assert_statement_string ~ctxt "class C{constructor(protected x:string){}}";

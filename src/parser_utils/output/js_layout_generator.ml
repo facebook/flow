@@ -4553,6 +4553,7 @@ and type_object_property ~opts =
           _method;
           abstract;
           ts_accessibility;
+          init = init_;
           comments;
         }
       ) ->
@@ -4575,12 +4576,17 @@ and type_object_property ~opts =
         Empty
     in
     let s_accessibility = ts_accessibility_layout ts_accessibility in
+    let s_init =
+      match init_ with
+      | Some expr -> fuse [space; Atom "="; space; expression ~opts expr]
+      | None -> Empty
+    in
     source_location_with_comments
       ?comments
       ( loc,
         match (value, _method, proto, optional) with
         (* Functions with no special properties can be rendered as methods *)
-        | (Property.Init (loc, Ast.Type.Function func), true, false, false) ->
+        | (Property.Init (Some (loc, Ast.Type.Function func)), true, false, false) ->
           source_location_with_comments
             ( loc,
               fuse
@@ -4593,7 +4599,7 @@ and type_object_property ~opts =
                 ]
             )
         (* Optional methods: key?(): Type *)
-        | (Property.Init (loc, Ast.Type.Function func), true, false, true) ->
+        | (Property.Init (Some (loc, Ast.Type.Function func)), true, false, true) ->
           source_location_with_comments
             ( loc,
               fuse
@@ -4607,7 +4613,7 @@ and type_object_property ~opts =
                 ]
             )
         (* Normal properties *)
-        | (Property.Init (_, Ast.Type.Any None), _, _, _) when ts_accessibility <> None ->
+        | (Property.Init (Some (_, Ast.Type.Any None)), _, _, _) when ts_accessibility <> None ->
           (* Property with accessibility modifier but no annotation, e.g. `private x` *)
           fuse
             [
@@ -4618,7 +4624,24 @@ and type_object_property ~opts =
               option variance variance_;
               object_property_key ~opts key;
             ]
-        | (Property.Init t, _, _, _) ->
+        (* Property with init but no type annotation *)
+        | (Property.Init None, _, _, _) ->
+          fuse
+            [
+              s_accessibility;
+              s_abstract;
+              s_static;
+              s_proto;
+              option variance variance_;
+              object_property_key ~opts key;
+              ( if optional then
+                Atom "?"
+              else
+                Empty
+              );
+              s_init;
+            ]
+        | (Property.Init (Some t), _, _, _) ->
           fuse
             [
               s_accessibility;
@@ -4635,6 +4658,7 @@ and type_object_property ~opts =
               Atom ":";
               pretty_space;
               type_ ~opts t;
+              s_init;
             ]
         (* Getters/Setters *)
         | (Property.Get (loc, func), _, _, _) ->

@@ -2,10 +2,6 @@
   "errors":[
     {
       "loc":{"source":null,"start":{"line":1,"column":31},"end":{"line":1,"column":32}},
-      "message":"Unexpected identifier, expected the token `:`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":31},"end":{"line":1,"column":32}},
       "message":"Unexpected identifier, expected the token `,`"
     }
   ],
@@ -44,17 +40,15 @@
               "typeAnnotation":null,
               "optional":false
             },
-            "value":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":25},"end":{"line":1,"column":30}},
-              "range":[25,30]
-            },
+            "value":null,
             "method":false,
             "optional":false,
             "static":true,
             "proto":false,
+            "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           },
           {
             "type":"ObjectTypeProperty",
@@ -86,8 +80,10 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           }
         ],
         "indexers":[],

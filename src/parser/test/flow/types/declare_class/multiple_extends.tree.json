@@ -6,19 +6,11 @@
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
-      "message":"Unexpected token `{`, expected the token `:`"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
       "message":"Unexpected token `{`, expected the token `,`"
     },
     {
       "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
       "message":"Unexpected token `{`, expected an identifier"
-    },
-    {
-      "loc":{"source":null,"start":{"line":1,"column":30},"end":{"line":1,"column":31}},
-      "message":"Unexpected token `}`, expected the token `:`"
     }
   ],
   "type":"Program",
@@ -56,17 +48,15 @@
               "typeAnnotation":null,
               "optional":false
             },
-            "value":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":27},"end":{"line":1,"column":28}},
-              "range":[27,28]
-            },
+            "value":null,
             "method":false,
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           },
           {
             "type":"ObjectTypeProperty",
@@ -80,17 +70,15 @@
               "typeAnnotation":null,
               "optional":false
             },
-            "value":{
-              "type":"AnyTypeAnnotation",
-              "loc":{"source":null,"start":{"line":1,"column":29},"end":{"line":1,"column":30}},
-              "range":[29,30]
-            },
+            "value":null,
             "method":false,
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           }
         ],
         "indexers":[],

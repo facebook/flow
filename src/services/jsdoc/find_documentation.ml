@@ -229,12 +229,13 @@ class jsdoc_documentation_searcher find =
       let (_, { key; value; comments; variance; _ }) = prop_type in
       let value_loc =
         match value with
-        | Init (value_loc, _)
+        | Init (Some (value_loc, _))
         | Get (_, Ast.Type.Function.{ return = Available (value_loc, _); _ })
         | Get (_, Ast.Type.Function.{ return = TypeGuard (value_loc, _); _ })
         | Get (_, Ast.Type.Function.{ return = Missing value_loc; _ })
         | Set (value_loc, _) ->
           value_loc
+        | Init None -> loc_of_object_key key
       in
       let key_loc = loc_of_object_key key in
       find key_loc comments;

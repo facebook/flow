@@ -1201,7 +1201,8 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : ('N, 'U) Ast.Type.Object.Property.value =
       let open Ast.Type.Object.Property in
       match opvt with
-      | Init t -> Init (this#type_ t)
+      | Init (Some t) -> Init (Some (this#type_ t))
+      | Init None -> Init None
       | Get t -> Get (this#object_type_property_getter t)
       | Set t -> Set (this#object_type_property_setter t)
 
@@ -1231,6 +1232,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
               abstract;
               variance;
               ts_accessibility;
+              init;
               comments;
             }
           ) =
@@ -1242,6 +1244,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let ts_accessibility' =
         Option.map ~f:(this#on_loc_annot * this#ts_accessibility) ts_accessibility
       in
+      let init' = Option.map ~f:this#expression init in
       let comments' = this#syntax_opt comments in
       ( this#on_loc_annot annot,
         {
@@ -1254,6 +1257,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
           abstract;
           variance = variance';
           ts_accessibility = ts_accessibility';
+          init = init';
           comments = comments';
         }
       )

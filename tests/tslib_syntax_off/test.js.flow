@@ -106,3 +106,13 @@ tag<string>`hello`; // ERROR
 // Typeof this
 type TT = typeof this; // ERROR
 type TTP = typeof this.property; // ERROR
+
+// Property value initializer
+declare class PVI {
+  readonly x = 42; // ERROR
+}
+
+// Property value initializer on private field
+declare class PrivatePVI {
+  private readonly x = 42; // ERROR
+}

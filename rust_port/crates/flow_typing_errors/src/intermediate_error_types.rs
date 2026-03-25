@@ -165,8 +165,17 @@ pub enum UnsupportedSyntax {
     DeclareVariableDestructuring,
     DeclareVariableMissingAnnotationOrInit,
     DeclareVariableAnnotationAndInit,
+    DeclareClassProperty(DeclareClassPropKind),
     TSLibSyntax(TsLibSyntaxKind),
     ExportTypeSpecifierInExportType,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum DeclareClassPropKind {
+    AnnotationAndInit,
+    MissingAnnotationOrInit,
+    NonLiteralInit,
+    InitWithoutReadonly,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -196,6 +205,7 @@ pub enum TsLibSyntaxKind {
     PrivateClassField,
     GenericTaggedTemplate,
     TypeofThis,
+    PropertyValueInitializer,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]

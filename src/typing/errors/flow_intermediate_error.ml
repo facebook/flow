@@ -5178,6 +5178,27 @@ let to_printable_error :
         code "declare";
         text " variable declarations cannot have both a type annotation and an initializer.";
       ]
+    | MessageUnsupportedSyntax (DeclareClassProperty AnnotationAndInit) ->
+      [
+        code "declare";
+        text " class properties cannot have both a type annotation and an initializer.";
+      ]
+    | MessageUnsupportedSyntax (DeclareClassProperty MissingAnnotationOrInit) ->
+      [code "declare"; text " class properties require a type annotation or a literal initializer."]
+    | MessageUnsupportedSyntax (DeclareClassProperty NonLiteralInit) ->
+      [
+        text "Initializer in a ";
+        code "declare";
+        text " class property must be a literal (string, number, bigint, or boolean).";
+      ]
+    | MessageUnsupportedSyntax (DeclareClassProperty InitWithoutReadonly) ->
+      [
+        text "Only ";
+        code "readonly";
+        text " properties in ";
+        code "declare";
+        text " class can have initializers.";
+      ]
     | MessageUnsupportedSyntax ExportTypeSpecifierInExportType ->
       [
         text "The ";
@@ -5217,6 +5238,7 @@ let to_printable_error :
         | PrivateClassField -> "Private class field (`#private`)"
         | GenericTaggedTemplate -> "Type arguments for tagged template expression"
         | TypeofThis -> "`typeof this` syntax"
+        | PropertyValueInitializer -> "Property value initializer in declaration"
       in
       [text kind_str; text " is not enabled."]
     | MessageUnsupportedSyntax RequireDynamicArgument ->

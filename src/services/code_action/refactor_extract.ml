@@ -136,7 +136,7 @@ let create_extracted_function
                    Flow_ast.Type.Object.Property
                      (Types.Objects.property
                         (Expressions.object_property_key v)
-                        (Flow_ast.Type.Object.Property.Init type_)
+                        (Flow_ast.Type.Object.Property.Init (Some type_))
                      )
                )
             |> Types.Objects.make

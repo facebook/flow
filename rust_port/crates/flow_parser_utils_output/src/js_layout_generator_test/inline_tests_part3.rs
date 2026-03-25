@@ -157,6 +157,37 @@ fn declare_class_ts_accessibility() {
 }
 
 #[test]
+fn declare_class_property_value_initializer() {
+    assert_statement_string(
+        true,
+        None,
+        "declare class Foo {\n  static readonly BUFFER_SIZE = 256,\n}",
+    );
+    assert_statement_string(
+        true,
+        None,
+        "declare class Foo {\n  readonly code = \"NEXT_STATIC_GEN_BAILOUT\",\n}",
+    );
+    assert_statement_string(true, None, "declare class Foo {\n  readonly neg = -1,\n}");
+    assert_statement_string(true, None, "declare class Foo {\n  readonly x? = 1,\n}");
+    assert_statement_string(
+        true,
+        None,
+        "declare class Foo {\n  private readonly x = 42,\n}",
+    );
+    assert_statement_string(
+        true,
+        None,
+        "declare class Foo {\n  protected readonly x = 42,\n}",
+    );
+    assert_statement_string(
+        true,
+        None,
+        "declare class Foo {\n  readonly [\n    Symbol.iterator\n  ] = 0,\n}",
+    );
+}
+
+#[test]
 fn class_ts_parameter_properties() {
     assert_statement_string(false, None, "class C{constructor(private x:number){}}");
     assert_statement_string(false, None, "class C{constructor(protected x:string){}}");

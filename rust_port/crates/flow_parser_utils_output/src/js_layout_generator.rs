@@ -6544,12 +6544,22 @@ fn type_object_property(
                 LayoutNode::empty()
             };
             let s_accessibility = ts_accessibility_layout(prop.ts_accessibility.as_ref());
+            let init_ = &prop.init;
+            let s_init = match init_ {
+                Some(expr) => fuse(vec![
+                    space(),
+                    atom("="),
+                    space(),
+                    expression(opts, None, expr),
+                ]),
+                None => LayoutNode::empty(),
+            };
             source_location_with_comments(
                 loc,
                 prop.comments.as_ref(),
                 match (&prop.value, prop.method, prop.proto, prop.optional) {
                     // Functions with no special properties can be rendered as methods
-                    (ast::types::object::PropertyValue::Init(init_t), true, false, false)
+                    (ast::types::object::PropertyValue::Init(Some(init_t)), true, false, false)
                         if matches!(
                             &**init_t,
                             ast::types::TypeInner::Function { inner: _, .. }
@@ -6572,7 +6582,7 @@ fn type_object_property(
                         )
                     }
                     // Optional methods: key?(): Type
-                    (ast::types::object::PropertyValue::Init(init_t), true, false, true)
+                    (ast::types::object::PropertyValue::Init(Some(init_t)), true, false, true)
                         if matches!(
                             &**init_t,
                             ast::types::TypeInner::Function { inner: _, .. }
@@ -6596,7 +6606,7 @@ fn type_object_property(
                         )
                     }
                     // Property with accessibility modifier but no annotation, e.g. `private x`
-                    (ast::types::object::PropertyValue::Init(init_t), _, _, _)
+                    (ast::types::object::PropertyValue::Init(Some(init_t)), _, _, _)
                         if prop.ts_accessibility.is_some()
                             && matches!(
                                 &**init_t,
@@ -6612,8 +6622,23 @@ fn type_object_property(
                             object_property_key(opts, &prop.key),
                         ])
                     }
+                    // Property with init but no type annotation
+                    (ast::types::object::PropertyValue::Init(None), _, _, _) => fuse(vec![
+                        s_accessibility,
+                        s_abstract,
+                        s_static,
+                        s_proto,
+                        option_layout(variance, prop.variance.as_ref()),
+                        object_property_key(opts, &prop.key),
+                        if prop.optional {
+                            atom("?")
+                        } else {
+                            LayoutNode::empty()
+                        },
+                        s_init,
+                    ]),
                     // Normal properties
-                    (ast::types::object::PropertyValue::Init(t), _, _, _) => fuse(vec![
+                    (ast::types::object::PropertyValue::Init(Some(t)), _, _, _) => fuse(vec![
                         s_accessibility,
                         s_abstract,
                         s_static,
@@ -6628,6 +6653,7 @@ fn type_object_property(
                         atom(":"),
                         pretty_space(),
                         type_(opts, t),
+                        s_init,
                     ]),
                     // Getters/Setters
                     (ast::types::object::PropertyValue::Get(get_loc, get_func), _, _, _) => {

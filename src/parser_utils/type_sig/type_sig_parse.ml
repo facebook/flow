@@ -454,6 +454,39 @@ let extract_number_literal =
   | E.NumberLiteral { N.value = x; raw; _ } -> Some (x, raw)
   | _ -> None
 
+(* Extract a singleton literal type from an expression. Used by both
+   declare_variable_decl and declare_class_props to materialize types
+   from initializer expressions without explicit type annotations. *)
+let literal_expr_to_annot loc expr =
+  let module E = Ast.Expression in
+  match expr with
+  | E.StringLiteral { Ast.StringLiteral.value; _ } -> Some (Annot (SingletonString (loc, value)))
+  | E.NumberLiteral { Ast.NumberLiteral.value; raw; _ } ->
+    Some (Annot (SingletonNumber (loc, value, raw)))
+  | E.BigIntLiteral { Ast.BigIntLiteral.value; raw; _ } ->
+    Some (Annot (SingletonBigInt (loc, value, raw)))
+  | E.BooleanLiteral { Ast.BooleanLiteral.value; _ } -> Some (Annot (SingletonBoolean (loc, value)))
+  | E.Unary
+      {
+        E.Unary.operator = E.Unary.Minus;
+        argument = (_, E.NumberLiteral { Ast.NumberLiteral.value; raw; _ });
+        _;
+      } ->
+    Some (Annot (SingletonNumber (loc, -.value, "-" ^ raw)))
+  | E.Unary
+      {
+        E.Unary.operator = E.Unary.Minus;
+        argument = (_, E.BigIntLiteral { Ast.BigIntLiteral.value; raw; _ });
+        _;
+      } ->
+    let negated_value =
+      match value with
+      | Some i -> Some (Int64.neg i)
+      | None -> None
+    in
+    Some (Annot (SingletonBigInt (loc, negated_value, "-" ^ raw)))
+  | _ -> None
+
 (* The parser determines the type of a module based on the kinds of exports it
  * sees. All modules start out as an empty CJS module, but transition to an
  * explicit CJS module if we see module.exports or an ES module if we see import
@@ -2254,12 +2287,13 @@ and object_type =
       abstract = _;
       variance;
       ts_accessibility = _;
+      init = _;
       comments = _;
     } =
       p
     in
     match value with
-    | O.Property.Init t ->
+    | O.Property.Init (Some t) ->
       let add_named_prop name id_loc =
         if _method then
           if optional then
@@ -2316,6 +2350,7 @@ and object_type =
         key
         ~add_named_prop
         ~add_computed_prop
+    | O.Property.Init None -> acc (* no type annotation — init not expected in object types *)
     | O.Property.Get (_, f) ->
       let module P = Ast.Expression.Object.Property in
       begin
@@ -2502,13 +2537,14 @@ and interface_props =
       abstract = _;
       variance;
       ts_accessibility = _;
+      init = _;
       comments = _;
     } =
       p
     in
     let add_named_prop name id_loc =
       match (_method, value) with
-      | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
+      | (true, O.Property.Init (Some (fn_loc, Ast.Type.Function fn))) ->
         if optional then
           let (id_loc, t) = optional_method_as_field opts scope tbls xs id_loc fn_loc fn in
           let polarity = polarity variance in
@@ -2519,7 +2555,7 @@ and interface_props =
           let def = function_type opts scope tbls xs fn in
           Acc.append_method name id_loc fn_loc def acc
       | (true, _) -> acc (* unexpected non-function method *)
-      | (false, O.Property.Init t) ->
+      | (false, O.Property.Init (Some t)) ->
         let id_loc = push_loc tbls id_loc in
         let t = annot opts scope tbls xs t in
         let t =
@@ -2530,6 +2566,8 @@ and interface_props =
         in
         let polarity = polarity variance in
         Acc.add_field name id_loc polarity t acc
+      | (false, O.Property.Init None) ->
+        acc (* no type annotation — init not expected in interfaces *)
       | (_, O.Property.Get (_, fn)) ->
         let id_loc = push_loc tbls id_loc in
         let getter = getter_type opts scope tbls xs id_loc fn in
@@ -2541,7 +2579,7 @@ and interface_props =
     in
     let add_computed_prop build_key =
       match (_method, value) with
-      | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
+      | (true, O.Property.Init (Some (fn_loc, Ast.Type.Function fn))) ->
         let fn_loc = push_loc tbls fn_loc in
         let (key_ref, ref_loc) = build_key () in
         let def = function_type opts scope tbls xs fn in
@@ -2552,7 +2590,7 @@ and interface_props =
         else
           Acc.append_computed_method key_ref ref_loc fn_loc def acc
       | (true, _) -> acc
-      | (false, O.Property.Init t) ->
+      | (false, O.Property.Init (Some t)) ->
         let (key_ref, ref_loc) = build_key () in
         let t = annot opts scope tbls xs t in
         let t =
@@ -2629,6 +2667,7 @@ and declare_class_props =
       abstract = _;
       variance;
       ts_accessibility;
+      init;
       comments = _;
     } =
       p
@@ -2639,7 +2678,7 @@ and declare_class_props =
     | _ ->
       let add_named_prop name id_loc =
         match (_method, value) with
-        | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
+        | (true, O.Property.Init (Some (fn_loc, Ast.Type.Function fn))) ->
           if optional then
             let (id_loc, t) = optional_method_as_field opts scope tbls xs id_loc fn_loc fn in
             let polarity = polarity variance in
@@ -2653,7 +2692,7 @@ and declare_class_props =
             let def = function_type ~is_constructor:(name = "constructor") opts scope tbls xs fn in
             Acc.append_method ~static name id_loc fn_loc def acc
         | (true, _) -> acc (* unexpected non-function method *)
-        | (false, O.Property.Init t) ->
+        | (false, O.Property.Init (Some t)) ->
           let id_loc = push_loc tbls id_loc in
           let t = annot opts scope tbls xs t in
           let t =
@@ -2667,6 +2706,23 @@ and declare_class_props =
             Acc.add_proto_field name id_loc polarity t acc
           else
             Acc.add_field ~static name id_loc polarity t acc
+        | (false, O.Property.Init None) ->
+          (* No type annotation — materialize singleton type from literal init *)
+          let id_loc = push_loc tbls id_loc in
+          (match Option.bind init ~f:(fun (_, expr) -> literal_expr_to_annot id_loc expr) with
+          | Some t ->
+            let t =
+              if optional then
+                Annot (Optional t)
+              else
+                t
+            in
+            let polarity = polarity variance in
+            if proto then
+              Acc.add_proto_field name id_loc polarity t acc
+            else
+              Acc.add_field ~static name id_loc polarity t acc
+          | None -> acc (* non-literal or missing init — error emitted by type checker *))
         | (_, O.Property.Get (_, fn)) ->
           let id_loc = push_loc tbls id_loc in
           let getter = getter_type opts scope tbls xs id_loc fn in
@@ -2678,7 +2734,7 @@ and declare_class_props =
       in
       let add_computed_prop build_key =
         match (_method, value) with
-        | (true, O.Property.Init (fn_loc, Ast.Type.Function fn)) ->
+        | (true, O.Property.Init (Some (fn_loc, Ast.Type.Function fn))) ->
           let fn_loc = push_loc tbls fn_loc in
           let (key_ref, ref_loc) = build_key () in
           let def = function_type opts scope tbls xs fn in
@@ -2689,7 +2745,7 @@ and declare_class_props =
           else
             Acc.append_computed_method ~static key_ref ref_loc fn_loc def acc
         | (true, _) -> acc
-        | (false, O.Property.Init t) ->
+        | (false, O.Property.Init (Some t)) ->
           let (key_ref, ref_loc) = build_key () in
           let t = annot opts scope tbls xs t in
           let t =
@@ -2700,6 +2756,19 @@ and declare_class_props =
           in
           let polarity = polarity variance in
           Acc.add_computed_field ~static ~proto key_ref ref_loc polarity t acc
+        | (false, O.Property.Init None) ->
+          let (key_ref, ref_loc) = build_key () in
+          (match Option.bind init ~f:(fun (_, expr) -> literal_expr_to_annot ref_loc expr) with
+          | Some t ->
+            let t =
+              if optional then
+                Annot (Optional t)
+              else
+                t
+            in
+            let polarity = polarity variance in
+            Acc.add_computed_field ~static ~proto key_ref ref_loc polarity t acc
+          | None -> acc)
         | _ -> acc
       in
       resolve_prop_key
@@ -4952,32 +5021,16 @@ let declare_variable_decl opts scope tbls decl k =
             }
         ) ->
         let id_loc = push_loc tbls id_loc in
-        (match (id_annot, init) with
-        | (Ast.Type.Available (_, t), _) ->
-          let def = lazy (splice tbls id_loc (fun tbls -> annot opts scope tbls SSet.empty t)) in
-          Scope.bind_var scope tbls kind id_loc name def k
-        | (Ast.Type.Missing _, Some (_, Ast.Expression.StringLiteral { Ast.StringLiteral.value; _ }))
-          ->
-          let def = lazy (Value (Type_sig.StringLit (id_loc, value))) in
-          Scope.bind_var scope tbls kind id_loc name def k
-        | ( Ast.Type.Missing _,
-            Some (_, Ast.Expression.NumberLiteral { Ast.NumberLiteral.value; raw; _ })
-          ) ->
-          let def = lazy (Value (Type_sig.NumberLit (id_loc, value, raw))) in
-          Scope.bind_var scope tbls kind id_loc name def k
-        | ( Ast.Type.Missing _,
-            Some (_, Ast.Expression.BooleanLiteral { Ast.BooleanLiteral.value; _ })
-          ) ->
-          let def = lazy (Value (Type_sig.BooleanLit (id_loc, value))) in
-          Scope.bind_var scope tbls kind id_loc name def k
-        | ( Ast.Type.Missing _,
-            Some (_, Ast.Expression.BigIntLiteral { Ast.BigIntLiteral.value; raw; _ })
-          ) ->
-          let def = lazy (Value (Type_sig.BigIntLit (id_loc, value, raw))) in
-          Scope.bind_var scope tbls kind id_loc name def k
-        | _ ->
-          let def = lazy (Annot (Type_sig.Any id_loc)) in
-          Scope.bind_var scope tbls kind id_loc name def k)
+        let def =
+          match id_annot with
+          | Ast.Type.Available (_, t) ->
+            lazy (splice tbls id_loc (fun tbls -> annot opts scope tbls SSet.empty t))
+          | Ast.Type.Missing _ ->
+            (match Option.bind init ~f:(fun (_, expr) -> literal_expr_to_annot id_loc expr) with
+            | Some t -> lazy t
+            | None -> lazy (Annot (Type_sig.Any id_loc)))
+        in
+        Scope.bind_var scope tbls kind id_loc name def k
       | _ -> ())
     declarations
 

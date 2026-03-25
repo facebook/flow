@@ -738,6 +738,7 @@ pub mod types {
             pub abstract_: bool,
             pub variance: Option<Variance<M>>,
             pub ts_accessibility: Option<super::super::class::ts_accessibility::TSAccessibility<M>>,
+            pub init: Option<super::super::expression::Expression<M, T>>,
             pub comments: Option<Syntax<M, ()>>,
         }
 
@@ -753,7 +754,7 @@ pub mod types {
             serde::Deserialize
         )]
         pub enum PropertyValue<M: Dupe, T: Dupe> {
-            Init(Type<M, T>),
+            Init(Option<Type<M, T>>),
             Get(M, Function<M, T>),
             Set(M, Function<M, T>),
         }

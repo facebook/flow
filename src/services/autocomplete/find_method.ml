@@ -52,7 +52,7 @@ let empty_method_of_property_type prop =
   let open Flow_ast.Type.Object.Property in
   let { key; value; static; _ } = prop in
   match value with
-  | Init (_, Flow_ast.Type.Function f)
+  | Init (Some (_, Flow_ast.Type.Function f))
   | Get (_, f)
   | Set (_, f) ->
     let value = Ast_builder.Functions.of_type f in
