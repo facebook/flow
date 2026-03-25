@@ -754,43 +754,48 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge =
    * 2. Send these files to the server
    * 3. Calculate the fanout of these files (we should have an updated dependency graph by now)
    * 4. That should actually be the right number, instead of just an estimate. But it costs
-   *    a little to compute the fanout
-   *
-   * This also treats dependencies, which are only merged, equally with focused/dependent
-   * files which are also checked. So, doing a priority update, which merges but doesn't
-   * check, throws off the estimate by making it seem like files get checked as quickly
-   * as they get merged. This makes us underestimate how long it will take to recheck. *)
+   *    a little to compute the fanout *)
   let files_already_checked = CheckedSet.cardinal env.ServerEnv.checked_files in
-  let files_about_to_recheck = CheckedSet.cardinal to_merge in
+  let files_to_merge = CheckedSet.cardinal to_merge in
+  let files_to_check =
+    CheckedSet.focused_cardinal to_merge + CheckedSet.dependents_cardinal to_merge
+  in
   Hh_logger.info
-    "We've already checked %d files. We're about to recheck %d files"
+    "We've already checked %d files. About to merge %d files and check %d files"
     files_already_checked
-    files_about_to_recheck;
+    files_to_merge
+    files_to_check;
 
   let init_time = Recheck_stats.get_init_time () in
-  let per_file_time = Recheck_stats.get_per_file_time () in
-  let time_to_restart = init_time +. (per_file_time *. float_of_int files_already_checked) in
-  let time_to_recheck = per_file_time *. float_of_int files_about_to_recheck in
+  let per_merge_file_time = Recheck_stats.get_per_merge_file_time () in
+  let per_check_file_time = Recheck_stats.get_per_check_file_time () in
+  (* After a reinit, we load a saved state close to the target commit, so the restart cost
+     is approximately just the init time. The saved state already has most files merged and
+     checked — we only pay for the small delta between the saved state and the target. *)
+  let time_to_restart = init_time in
+  (* For a recheck, all files in to_merge get merged, but only focused+dependents get checked *)
+  let time_to_recheck =
+    (per_merge_file_time *. float_of_int files_to_merge)
+    +. (per_check_file_time *. float_of_int files_to_check)
+  in
+  let per_file_time = per_merge_file_time +. per_check_file_time in
   let estimates =
     {
       Recheck_stats.estimated_time_to_recheck = time_to_recheck;
       estimated_time_to_restart = time_to_restart;
       estimated_time_to_init = init_time;
       estimated_time_per_file = per_file_time;
-      estimated_files_to_recheck = files_about_to_recheck;
+      estimated_files_to_recheck = files_to_merge;
       estimated_files_to_init = files_already_checked;
     }
   in
+  Hh_logger.debug "Estimated restart time: %fs (init from saved state)" time_to_restart;
   Hh_logger.debug
-    "Estimated restart time: %fs to init + (%fs * %d files) = %fs"
-    init_time
-    per_file_time
-    files_already_checked
-    time_to_restart;
-  Hh_logger.debug
-    "Estimated recheck time: %fs * %d files = %fs"
-    per_file_time
-    files_about_to_recheck
+    "Estimated recheck time: %fs * %d merge files + %fs * %d check files = %fs"
+    per_merge_file_time
+    files_to_merge
+    per_check_file_time
+    files_to_check
     time_to_recheck;
 
   Hh_logger.info
@@ -1484,8 +1489,11 @@ end = struct
     let record_recheck_time () =
       Recheck_stats.record_recheck_time
         ~options
-        ~total_time:(time_to_merge +. time_to_check_merged)
-        ~rechecked_files:(CheckedSet.cardinal to_merge)
+        ~merge_time:time_to_merge
+        ~check_time:time_to_check_merged
+        ~merged_files:(CheckedSet.cardinal to_merge)
+        ~checked_files:
+          (CheckedSet.focused_cardinal to_check + CheckedSet.dependents_cardinal to_check)
     in
     let checked_files = CheckedSet.union unchanged_checked to_merge in
     Hh_logger.info "Checked set: %s" (CheckedSet.debug_counts_to_string checked_files);
