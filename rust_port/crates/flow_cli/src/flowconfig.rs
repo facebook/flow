@@ -130,6 +130,7 @@ pub(super) mod opts {
         pub(crate) log_saving: BTreeMap<String, LogSaving>,
         pub(crate) long_lived_workers: bool,
         pub(crate) max_files_checked_per_worker: u32,
+        pub(crate) max_files_checked_per_worker_rust_port: Option<u32>,
         pub(crate) max_header_tokens: u32,
         pub(crate) max_seconds_for_check_per_worker: f64,
         pub(crate) max_workers: Option<u32>,
@@ -274,6 +275,7 @@ pub(super) mod opts {
             log_saving: BTreeMap::new(),
             long_lived_workers: false,
             max_files_checked_per_worker: 100,
+            max_files_checked_per_worker_rust_port: None,
             max_header_tokens: 10,
             max_seconds_for_check_per_worker: 5.0,
             max_workers: None,
@@ -728,6 +730,22 @@ pub(super) mod opts {
         parse_uint(
             |opts, v| {
                 opts.max_files_checked_per_worker = v;
+                Ok(())
+            },
+            None,
+            false,
+            values,
+            config,
+        )
+    }
+
+    fn max_files_checked_per_worker_rust_port_parser(
+        values: RawValues,
+        config: &mut Opts,
+    ) -> Result<(), OptError> {
+        parse_uint(
+            |opts, v| {
+                opts.max_files_checked_per_worker_rust_port = Some(v);
                 Ok(())
             },
             None,
@@ -2586,6 +2604,9 @@ pub(super) mod opts {
                 "types_first.max_files_checked_per_worker" => {
                     Some(max_files_checked_per_worker_parser(values, config))
                 }
+                "types_first.max_files_checked_per_worker.rust_port" => Some(
+                    max_files_checked_per_worker_rust_port_parser(values, config),
+                ),
                 "types_first.max_seconds_for_check_per_worker" => {
                     Some(max_seconds_for_check_per_worker_parser(values, config))
                 }

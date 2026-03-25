@@ -467,6 +467,8 @@ module Opts = struct
   let max_files_checked_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_files_checked_per_worker = v })
 
+  let max_files_checked_per_worker_rust_port_parser = uint (fun opts _v -> Ok opts)
+
   let max_seconds_for_check_per_worker_parser =
     uint (fun opts v -> Ok { opts with max_seconds_for_check_per_worker = float v })
 
@@ -1321,6 +1323,9 @@ module Opts = struct
         string (fun opts v -> Ok { opts with stylex_shorthand_prop = Some v })
       );
       ("types_first.max_files_checked_per_worker", max_files_checked_per_worker_parser);
+      ( "types_first.max_files_checked_per_worker.rust_port",
+        max_files_checked_per_worker_rust_port_parser
+      );
       ("types_first.max_seconds_for_check_per_worker", max_seconds_for_check_per_worker_parser);
       ("unsuppressable_error_codes", unsuppressable_error_codes_parser);
       ("use_unknown_in_catch_variables", use_unknown_in_catch_variables_parser);
