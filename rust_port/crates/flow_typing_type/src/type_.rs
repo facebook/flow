@@ -4366,10 +4366,10 @@ pub mod union_rep {
         t1: Type,
         ts: Rc<[Type]>,
     ) -> UnionRep {
-        fn mk_enum(
-            mut tset: UnionEnumSet,
+        fn mk_enum<'a>(
+            mut tset: BTreeSet<UnionEnum>,
             mut tag: Option<UnionEnumTag>,
-            types: &[Type],
+            types: impl IntoIterator<Item = &'a Type>,
         ) -> Option<(UnionEnumSet, Option<UnionEnumTag>)> {
             for t in types {
                 match canon(t) {
@@ -4381,14 +4381,17 @@ pub mod union_rep {
                     _ => return None,
                 }
             }
-            Some((tset, tag))
+            Some((tset.into_iter().collect(), tag))
         }
 
-        let mut all_members = vec![t0.dupe(), t1.dupe()];
-        all_members.extend(ts.iter().map(|t| t.dupe()));
-
-        let enum_opt = mk_enum(FlowOrdSet::new(), tag_of_member(&t0), &all_members)
-            .map(|(tset, tag)| FinallyOptimizedRep::EnumUnion(tset, tag));
+        let enum_opt = mk_enum(
+            BTreeSet::new(),
+            tag_of_member(&t0),
+            std::iter::once(&t0)
+                .chain(std::iter::once(&t1))
+                .chain(ts.iter()),
+        )
+        .map(|(tset, tag)| FinallyOptimizedRep::EnumUnion(tset, tag));
 
         UnionRep(Rc::new(UnionRepInner {
             t0,
@@ -4430,7 +4433,7 @@ pub mod union_rep {
                 return (FlowOrdSet::new(), None, false);
             }
 
-            let mut tset = FlowOrdSet::new();
+            let mut tset = BTreeSet::new();
             let mut acc_tag = tag_of_member(&ts[0]);
             let mut partial = false;
 
@@ -4448,7 +4451,7 @@ pub mod union_rep {
                 }
             }
 
-            (tset, acc_tag, partial)
+            (tset.into_iter().collect(), acc_tag, partial)
         }
         match ts.len() {
             0 => Ok(FinallyOptimizedRep::Empty),
@@ -4566,9 +4569,9 @@ pub mod union_rep {
             F1: Fn(&Type, &Type) -> bool,
         {
             for (enum_val, t) in values {
-                hybrid_idx
-                    .entry(enum_val)
-                    .and_modify(|existing: &mut Vec1<Type>| {
+                match hybrid_idx.entry(enum_val) {
+                    std::collections::btree_map::Entry::Occupied(mut entry) => {
+                        let existing = entry.get_mut();
                         let exists = existing
                             .iter()
                             .any(|existing_t| reasonless_eq(&t, existing_t));
@@ -4578,10 +4581,13 @@ pub mod union_rep {
                             // type Union = T | T;
                             // Don't add duplicate
                         } else {
-                            existing.insert(0, t.dupe());
+                            existing.push(t);
                         }
-                    })
-                    .or_insert_with(|| Vec1::new(t.dupe()));
+                    }
+                    std::collections::btree_map::Entry::Vacant(entry) => {
+                        entry.insert(Vec1::new(t));
+                    }
+                }
             }
             hybrid_idx
         }

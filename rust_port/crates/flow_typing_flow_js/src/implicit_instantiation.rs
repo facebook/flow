@@ -2194,7 +2194,12 @@ pub mod instantiation_solver {
         let mut preserved = false;
         let result = cx.run_and_rolled_back_cache(|| {
             let init_errors = cx.errors();
-            let cache_snapshot = cx.take_cache_snapshot();
+            let mut cache_snapshot = match &return_hint {
+                Some((_, flow_common::hint::HintKind::BestEffortHint)) => {
+                    Some(cx.take_cache_snapshot())
+                }
+                _ => None,
+            };
 
             let (inferred_targ_list, marked_tparams, tparams_map, tout) =
                 implicitly_instantiate::<MainObserver>(cx, check)?;
@@ -2235,7 +2240,9 @@ pub mod instantiation_solver {
                             && *kind == flow_common::hint::HintKind::BestEffortHint
                         {
                             // Restore state
-                            cx.restore_cache_snapshot(cache_snapshot);
+                            cx.restore_cache_snapshot(cache_snapshot.take().expect(
+                                "best-effort return hints should have captured a cache snapshot",
+                            ));
                             cx.reset_errors(init_errors.dupe());
                             // Clear the preservation level before retry so the
                             // re-run starts from the same base state as the original.

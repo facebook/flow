@@ -305,7 +305,7 @@ mod full_env {
         }
     }
 
-    pub(super) struct FunctionScopeLocalEnvSnapshot(FlowOrdMap<FlowSmolStr, FlowVector<EnvVal>>);
+    pub(super) struct FunctionScopeLocalEnvSnapshot(Vec<(FlowSmolStr, Option<FlowVector<EnvVal>>)>);
 
     fn copy_env_val_from_env_below(
         should_havoc: impl Fn(&EnvVal) -> bool,
@@ -473,8 +473,9 @@ mod full_env {
             bindings: BTreeMap<FlowSmolStr, EnvVal>,
         ) -> FunctionScopeLocalEnvSnapshot {
             let scope = self.scopes.last_mut().unwrap();
-            let snapshot = FunctionScopeLocalEnvSnapshot(scope.local_stacked_env.dupe());
+            let mut snapshot = Vec::with_capacity(bindings.len());
             for (x, v) in bindings {
+                snapshot.push((x.dupe(), scope.local_stacked_env.get(&x).duped()));
                 match scope.local_stacked_env.get(&x) {
                     Some(stack) => {
                         let mut new_stack = stack.dupe();
@@ -486,12 +487,21 @@ mod full_env {
                     }
                 }
             }
-            snapshot
+            FunctionScopeLocalEnvSnapshot(snapshot)
         }
 
         pub(super) fn pop_bindings(&mut self, snapshot: FunctionScopeLocalEnvSnapshot) {
             let scope = self.scopes.last_mut().unwrap();
-            scope.local_stacked_env = snapshot.0;
+            for (name, old_stack) in snapshot.0 {
+                match old_stack {
+                    Some(old_stack) => {
+                        scope.local_stacked_env.insert(name, old_stack);
+                    }
+                    None => {
+                        scope.local_stacked_env.remove(&name);
+                    }
+                }
+            }
         }
 
         pub(super) fn push_new_function_scope(&mut self) {
@@ -1970,8 +1980,6 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         invalidation_reason: flow_common::refinement_invalidation::Reason,
         loc: ALoc,
     ) {
-        use std::collections::BTreeSet;
-
         use flow_common::refinement_invalidation::Reason;
 
         let cache = &mut *self.cache.borrow_mut();

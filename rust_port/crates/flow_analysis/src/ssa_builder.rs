@@ -36,10 +36,8 @@ use flow_parser::ast::statement::StatementInner;
 use flow_parser::ast_utils;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
-use vec1::Vec1;
 
 use crate::bindings::Bindings;
-use crate::bindings::Kind;
 use crate::hoister::Hoister;
 use crate::hoister::LexicalHoister;
 use crate::scope_builder;
@@ -469,44 +467,33 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
         }
     }
 
-    fn mk_ssa_env<V>(
-        &mut self,
-        bindings: &BTreeMap<FlowSmolStr, V>,
-    ) -> FlowOrdMap<FlowSmolStr, Ssa<Loc>> {
-        bindings
-            .keys()
-            .map(|k| {
-                let ssa = Ssa {
-                    val_ref: Rc::new(RefCell::new(Val::uninitialized())),
-                    havoc: Havoc {
-                        unresolved: self.mk_unresolved(),
-                        locs: Rc::new(RefCell::new(Vec::new())),
-                    },
-                };
-                (k.dupe(), ssa)
-            })
-            .collect()
-    }
-
     /// Push new bindings onto the SSA environment.
     fn push_ssa_env(
         &mut self,
         bindings: &Bindings<Loc>,
-    ) -> (
-        BTreeMap<FlowSmolStr, (Kind, Vec1<Loc>)>,
-        FlowOrdMap<FlowSmolStr, Ssa<Loc>>,
-    ) {
-        let old_ssa_env = self.ssa_env.dupe();
-        let bindings_map = bindings.to_map();
-        let new_ssa = self.mk_ssa_env(&bindings_map);
-        for (k, v) in new_ssa {
-            self.ssa_env.insert(k, v);
+    ) -> (Vec<FlowSmolStr>, Vec<(FlowSmolStr, Option<Ssa<Loc>>)>) {
+        let binding_names: Vec<_> = bindings
+            .to_assoc()
+            .into_iter()
+            .map(|(name, _)| name)
+            .collect();
+        let mut old_bindings = Vec::with_capacity(binding_names.len());
+        for name in &binding_names {
+            old_bindings.push((name.dupe(), self.ssa_env.get(name).cloned()));
+            let ssa = Ssa {
+                val_ref: Rc::new(RefCell::new(Val::uninitialized())),
+                havoc: Havoc {
+                    unresolved: self.mk_unresolved(),
+                    locs: Rc::new(RefCell::new(Vec::new())),
+                },
+            };
+            self.ssa_env.insert(name.dupe(), ssa);
         }
-        (bindings_map, old_ssa_env)
+        (binding_names, old_bindings)
     }
 
-    fn resolve_havocs<V>(&mut self, bindings: &BTreeMap<FlowSmolStr, V>) {
-        for x in bindings.keys() {
+    fn resolve_havocs(&mut self, binding_names: &[FlowSmolStr]) {
+        for x in binding_names {
             if let Some(ssa) = self.ssa_env.get(x) {
                 let all_locs = Val::all(ssa.havoc.locs.borrow().iter().duped());
                 Val::resolve(&ssa.havoc.unresolved, &all_locs);
@@ -514,13 +501,22 @@ impl<Loc: Dupe + Clone + Eq + Ord + Hash + Default> SsaBuilder<Loc> {
         }
     }
 
-    fn pop_ssa_env<V>(
+    fn pop_ssa_env(
         &mut self,
-        bindings: BTreeMap<FlowSmolStr, V>,
-        old_ssa_env: FlowOrdMap<FlowSmolStr, Ssa<Loc>>,
+        binding_names: Vec<FlowSmolStr>,
+        old_bindings: Vec<(FlowSmolStr, Option<Ssa<Loc>>)>,
     ) {
-        self.resolve_havocs(&bindings);
-        self.ssa_env = old_ssa_env;
+        self.resolve_havocs(&binding_names);
+        for (name, old_ssa) in old_bindings {
+            match old_ssa {
+                Some(old_ssa) => {
+                    self.ssa_env.insert(name, old_ssa);
+                }
+                None => {
+                    self.ssa_env.remove(&name);
+                }
+            }
+        }
     }
 
     /// Run a computation, catching any abrupt completions; do some final work,
