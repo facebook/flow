@@ -8,10 +8,10 @@ printf "\nStop any already-running server."
 assert_ok "$FLOW" stop .
 
 printf "\nFull check:\n"
-assert_errors "$FLOW" check .
+assert_errors "$FLOW" full-check .
 
 printf "\nFull focus-check:\n"
-assert_errors "$FLOW" check .
+assert_errors "$FLOW" full-check .
 
 printf "\nFocused check on a file with local errors but no dependency or reverse dependency:\n"
 assert_errors "$FLOW" focus-check test.js

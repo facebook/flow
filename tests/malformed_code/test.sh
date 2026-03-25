@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 printf "\nCheck without --all doesn't read malformed @flow file\n"
-assert_ok "$FLOW" check --strip-root .
+assert_ok "$FLOW" full-check --strip-root .
 
 printf "\nCheck with --all sees a parse error\n"
-assert_errors "$FLOW" check --all --strip-root .
+assert_errors "$FLOW" full-check --all --strip-root .

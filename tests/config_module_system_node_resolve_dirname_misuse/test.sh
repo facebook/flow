@@ -5,4 +5,4 @@
 # LICENSE file in the root directory of this source tree.
 
 printf "\nFlowconfig should not be valid:\n";
-assert_exit 8 "$FLOW" check --strip-root --no-flowlib . 2>&1
+assert_exit 8 "$FLOW" full-check --strip-root --no-flowlib . 2>&1

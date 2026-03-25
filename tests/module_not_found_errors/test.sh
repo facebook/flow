@@ -5,4 +5,4 @@
 # LICENSE file in the root directory of this source tree.
 
 cd src || exit
-assert_errors "$FLOW" check --strip-root
+assert_errors "$FLOW" full-check --strip-root

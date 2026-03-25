@@ -6,17 +6,17 @@
 
 
 echo "flow check --json-version=2"
-assert_errors "$FLOW" check . --strip-root --json-version=2
+assert_errors "$FLOW" full-check . --strip-root --json-version=2
 echo ""
 echo ""
 
 echo "flow check --json-version=2 --json"
-assert_errors "$FLOW" check . --strip-root --json-version=2 --json
+assert_errors "$FLOW" full-check . --strip-root --json-version=2 --json
 echo ""
 echo ""
 
 echo "flow check --json-version=2 --pretty"
-assert_errors "$FLOW" check . --strip-root --json-version=2 --pretty
+assert_errors "$FLOW" full-check . --strip-root --json-version=2 --pretty
 echo ""
 echo ""
 

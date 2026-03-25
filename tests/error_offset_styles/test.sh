@@ -14,13 +14,13 @@ printf "\nInvoking status with js-indices offset-style:\n"
 assert_errors "$FLOW" status --pretty --strip-root --offset-style js-indices
 
 printf "\nInvoking check with no offset-style argument:\n"
-assert_errors "$FLOW" check --pretty --strip-root
+assert_errors "$FLOW" full-check --pretty --strip-root
 
 printf "\nInvoking check with utf8-bytes offset-style:\n"
-assert_errors "$FLOW" check --pretty --strip-root --offset-style utf8-bytes
+assert_errors "$FLOW" full-check --pretty --strip-root --offset-style utf8-bytes
 
 printf "\nInvoking check with js-indices offset-style:\n"
-assert_errors "$FLOW" check --pretty --strip-root --offset-style js-indices
+assert_errors "$FLOW" full-check --pretty --strip-root --offset-style js-indices
 
 printf "\nInvoking check-contents with no offset-style argument:\n"
 # check-contents returns 0 even when errors are present

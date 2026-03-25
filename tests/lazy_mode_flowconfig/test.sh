@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 printf "\\nA full check should ignore the lazy mode in the .flowconfig\\n"
-assert_errors "$FLOW" check --strip-root
+assert_errors "$FLOW" full-check --strip-root
 
 printf "\\nServer should start in fs lazy mode\\n"
 start_flow .

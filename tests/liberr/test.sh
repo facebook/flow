@@ -7,10 +7,10 @@
 echo "============================================"
 echo "No warnings:"
 echo "============================================"
-assert_errors "$FLOW" check --no-flowlib
+assert_errors "$FLOW" full-check --no-flowlib
 
 echo ""
 echo "============================================"
 echo "With warnings:"
 echo "============================================"
-assert_errors "$FLOW" check --no-flowlib --include-warnings
+assert_errors "$FLOW" full-check --no-flowlib --include-warnings

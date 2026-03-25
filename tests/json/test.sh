@@ -6,11 +6,11 @@
 
 assert_ok "$FLOW" stop
 
-assert_errors "$FLOW" check --no-flowlib .
+assert_errors "$FLOW" full-check --no-flowlib .
 
 echo "{" > package.json
 echo
 echo "============================================"
 echo "Parse error in package.json will be reported"
 echo "============================================"
-assert_errors "$FLOW" check --no-flowlib .
+assert_errors "$FLOW" full-check --no-flowlib .

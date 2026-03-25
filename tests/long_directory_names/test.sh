@@ -10,7 +10,7 @@ really_long_path/really_long_path/really_long_path/really_long_path/\
 really_long_path/really_long_path/really_long_path"
 
 printf "\nFlow check:\n"
-assert_errors "$FLOW" check --strip-root "$LONG_PATH"
+assert_errors "$FLOW" full-check --strip-root "$LONG_PATH"
 
 printf "\nFlow status:\n"
 start_flow "$LONG_PATH"
