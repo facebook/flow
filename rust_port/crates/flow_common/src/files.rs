@@ -448,7 +448,7 @@ pub fn make_path_absolute(root: &Path, path_str: &str) -> PathBuf {
 }
 
 lazy_static! {
-    static ref ABSOLUTE_PATH_REGEXP: Regex = Regex::new(r"^(/|[A-Za-z]:[/\\])").unwrap();
+    pub static ref ABSOLUTE_PATH_REGEXP: Regex = Regex::new(r"^(/|[A-Za-z]:[/\\])").unwrap();
 }
 
 pub const PROJECT_ROOT_TOKEN: &str = "<PROJECT_ROOT>";
@@ -635,6 +635,18 @@ pub fn get_all(next: &mut dyn FnMut() -> Vec<String>) -> BTreeSet<String> {
         }
     }
     get_all_rec(next, BTreeSet::new())
+}
+
+lazy_static! {
+    pub static ref DIR_SEP: Regex = Regex::new(r"[/\\]").unwrap();
+}
+
+lazy_static! {
+    pub static ref CURRENT_DIR_NAME: Regex = Regex::new(r"\.").unwrap();
+}
+
+lazy_static! {
+    pub static ref PARENT_DIR_NAME: Regex = Regex::new(r"\.\.").unwrap();
 }
 
 pub fn watched_paths(options: &FileOptions) -> Vec<PathBuf> {
@@ -838,13 +850,28 @@ pub fn expand_project_root_token(root: &Path, s: &str) -> String {
     s.replace(PROJECT_ROOT_TOKEN, &root)
 }
 
+pub fn expand_project_root_token_as_relative(s: &str) -> String {
+    let s = s.replace(PROJECT_ROOT_TOKEN, "");
+    if s.starts_with('/') || s.starts_with('\\') {
+        s[1..].to_string()
+    } else {
+        s
+    }
+}
+
 pub fn expand_builtin_root_token(flowlib_dir: &Path, s: &str) -> String {
     let flowlib_str = flowlib_dir.to_string_lossy();
     let flowlib_dir_str = normalize_filename_dir_sep(&flowlib_str);
     s.replace(BUILTIN_ROOT_TOKEN, &flowlib_dir_str)
 }
 
-// OCaml: let dir_sep = Str.regexp "[/\\\\]"
+fn is_windows_root(root: &str) -> bool {
+    cfg!(windows)
+        && root.len() == 2
+        && root.as_bytes()[1] == b':'
+        && root.as_bytes()[0].is_ascii_alphabetic()
+}
+
 // Split on both '/' and '\\' to match OCaml behavior
 pub fn normalize_path(dir: &str, file: &str) -> String {
     let parts: Vec<&str> = file.split(&['/', '\\'][..]).collect();
@@ -868,6 +895,11 @@ fn normalize_path_parts(dir: &str, parts: &[&str]) -> String {
         ["", rest @ ..] if !rest.is_empty() => {
             // /<names> => /<names>
             construct_path(std::path::MAIN_SEPARATOR_STR, rest)
+        }
+        [root, rest @ ..] if is_windows_root(root) => {
+            // c:\<names> => C:\<names>
+            let root = root.to_uppercase();
+            construct_path(&format!("{}{}", root, std::path::MAIN_SEPARATOR), rest)
         }
         _ => {
             // <names> => dir/<names>
@@ -973,6 +1005,11 @@ pub fn absolute_path(root: &Path, file: &str) -> String {
     make_absolute(&root_components_rev, &file_components).join(std::path::MAIN_SEPARATOR_STR)
 }
 
+// helper to get the full path to the "flow-typed" library dir
+pub fn get_flowtyped_path(root: &Path) -> PathBuf {
+    make_path_absolute(root, "flow-typed")
+}
+
 pub fn filename_from_string(
     options: &FileOptions,
     consider_libdefs: bool,
@@ -1002,6 +1039,53 @@ pub fn filename_from_string(
     }
 }
 
+pub fn mkdirp(path_str: &str, _perm: u32) {
+    let parts: Vec<&str> = path_str
+        .split(&['/', '\\'][..])
+        .filter(|s| !s.is_empty())
+        .collect();
+    // If path_str is absolute, then path_prefix will be something like C:\ on
+    // Windows and / on Linux
+    let path_prefix = ABSOLUTE_PATH_REGEXP
+        .find(path_str)
+        .map(|m| m.as_str().to_string())
+        .unwrap_or_default();
+    // On Windows, the Str.split above will mean the first part of an absolute
+    // path will be something like C:, so let's remove that
+    let parts: &[&str] = match parts.as_slice() {
+        [first_part, rest @ ..]
+            if format!("{}{}", first_part, std::path::MAIN_SEPARATOR) == path_prefix =>
+        {
+            rest
+        }
+        _ => &parts,
+    };
+    parts.iter().fold(path_prefix, |path_str, part| {
+        let new_path_str = Path::new(&path_str)
+            .join(part)
+            .to_string_lossy()
+            .into_owned();
+        #[cfg(unix)]
+        {
+            use std::os::unix::fs::DirBuilderExt;
+            match std::fs::DirBuilder::new().mode(_perm).create(&new_path_str) {
+                Ok(()) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+                Err(e) => panic!("mkdirp: mkdir {} failed: {}", new_path_str, e),
+            }
+        }
+        #[cfg(not(unix))]
+        {
+            match std::fs::create_dir(&new_path_str) {
+                Ok(()) => {}
+                Err(e) if e.kind() == std::io::ErrorKind::AlreadyExists => {}
+                Err(e) => panic!("mkdirp: mkdir {} failed: {}", new_path_str, e),
+            }
+        }
+        new_path_str
+    });
+}
+
 pub fn generate_is_within_node_modules_fn(
     root: &Path,
     options: &FileOptions,
@@ -1022,6 +1106,40 @@ pub fn generate_is_within_node_modules_fn(
 pub fn is_within_node_modules(root: &Path, options: &FileOptions, path: &str) -> bool {
     let checker = generate_is_within_node_modules_fn(root, options);
     checker(path)
+}
+
+pub fn imaginary_realpath(path: &str) -> String {
+    // Realpath fails on non-existent paths. So let's find the longest prefix which exists. We
+    // recurse using Path::exists, which is just a single stat, as opposed to canonicalize which
+    // stats /foo, then /foo/bar, then /foo/bar/baz, etc
+    fn find_real_prefix(path: &str, rev_suffix: &mut Vec<String>) -> String {
+        let basename = Path::new(path)
+            .file_name()
+            .map(|s| s.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        rev_suffix.insert(0, basename);
+        let prefix = Path::new(path)
+            .parent()
+            .map(|p| p.to_string_lossy().into_owned())
+            .unwrap_or_default();
+        // Sys.file_exists should always return true for / and for . so we should never get into
+        // infinite recursion. Let's assert that
+        assert!(prefix != path);
+        if Path::new(&prefix).exists() {
+            prefix
+        } else {
+            find_real_prefix(&prefix, rev_suffix)
+        }
+    }
+
+    let mut rev_suffix = Vec::new();
+    let real_prefix = find_real_prefix(path, &mut rev_suffix);
+    let abs = std::fs::canonicalize(&real_prefix)
+        .unwrap_or_else(|_| panic!("Realpath failed for existent path {}", real_prefix));
+    let abs_str = abs.to_string_lossy().into_owned();
+    rev_suffix.iter().fold(abs_str, |acc, part| {
+        Path::new(&acc).join(part).to_string_lossy().into_owned()
+    })
 }
 
 pub fn module_file_exts(options: &FileOptions) -> Vec<&str> {

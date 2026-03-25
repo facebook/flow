@@ -474,7 +474,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] enclosing_context.ml →
         - [x] `EnclosingContext` enum with variants
         - [x] `is_conditional_test_context`
-    - [ ] files.ml → `flow_common/src/files.rs`
+    - [x] files.ml → `flow_common/src/files.rs`
         - [x] `absolute_path`
         - [x] `chop_flow_ext`
         - [x] `chop_platform_suffix_for_file`
@@ -509,31 +509,31 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `split_path`
         - [x] `wanted`
         - [x] `watched_paths`
-        - [ ] `absolute_path_regexp`
-        - [ ] `canonicalize_filenames`
-        - [ ] `current_dir_name`
-        - [ ] `default_lib_dir`
-        - [ ] `default_options`
-        - [ ] `dir_sep`
-        - [ ] `eponymous_module`
+        - [x] `absolute_path_regexp` → `ABSOLUTE_PATH_REGEXP` lazy_static
+        - [x] `canonicalize_filenames` → `canonicalize_filenames()`
+        - [x] `current_dir_name` → `CURRENT_DIR_NAME` lazy_static
+        - [x] `default_lib_dir` → pub field on `FileOptions`
+        - [x] `default_options` → `Default::default()` impl for `FileOptions`
+        - [x] `dir_sep` → `DIR_SEP` lazy_static
+        - [x] `eponymous_module` → in `flow_common_modulename` crate (circular dep)
         - [x] `flow_ext` → `pub const FLOW_EXT`
-        - [ ] `get_all`
-        - [ ] `get_flowtyped_path`
+        - [x] `get_all` → `get_all()`
+        - [x] `get_flowtyped_path` → `get_flowtyped_path()`
         - [x] `global_file_name` → `pub const GLOBAL_FILE_NAME`
-        - [ ] `ignores`
-        - [ ] `imaginary_realpath`
-        - [ ] `implicitly_include_root`
-        - [ ] `includes`
-        - [ ] `mk_options`
-        - [ ] `mkdirp`
-        - [ ] `module_resource_exts`
-        - [ ] `multi_platform`
-        - [ ] `multi_platform_extension_group_mapping`
-        - [ ] `multi_platform_extensions`
-        - [ ] `node_modules_containers`
+        - [x] `ignores` → pub field on `FileOptions`
+        - [x] `imaginary_realpath` → `imaginary_realpath()`
+        - [x] `implicitly_include_root` → pub field on `FileOptions`
+        - [x] `includes` → pub field on `FileOptions`
+        - [x] `mk_options` → pub struct construction for `FileOptions`
+        - [x] `mkdirp` → `mkdirp()`
+        - [x] `module_resource_exts` → pub field on `FileOptions`
+        - [x] `multi_platform` → pub field on `FileOptions`
+        - [x] `multi_platform_extension_group_mapping` → pub field on `FileOptions`
+        - [x] `multi_platform_extensions` → pub field on `FileOptions`
+        - [x] `node_modules_containers` → parameter passing (intentional Rust idiom)
         - [x] `ordered_and_unordered_lib_paths`
-        - [ ] `parent_dir_name`
-        - [ ] `untyped`
+        - [x] `parent_dir_name` → `PARENT_DIR_NAME` lazy_static
+        - [x] `untyped` → pub field on `FileOptions`
     - [x] flowSymbol.ml → `flow_common/src/flow_symbol.rs` (100% complete)
         - [x] `kind` type → `SymbolKind` enum (all 16 variants)
         - [x] `string_of_kind` → `SymbolKind::as_str()`
