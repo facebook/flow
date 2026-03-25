@@ -5,11 +5,11 @@
 # LICENSE file in the root directory of this source tree.
 
 echo "Invalid flowconfig should fail"
-assert_exit 8 "$FLOW" check 2>&1
+assert_exit 8 "$FLOW" full-check 2>&1
 
 echo
 echo "Invalid flowconfig should pass"
-assert_ok "$FLOW" check --quiet --ignore-version 2>&1
+assert_ok "$FLOW" full-check --quiet --ignore-version 2>&1
 
 echo
 echo "flow config check:"

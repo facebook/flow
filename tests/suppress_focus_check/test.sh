@@ -28,7 +28,7 @@ printf "\nStop any already-running server."
 assert_ok "$FLOW" stop .
 
 printf "\nFull check shows the two unused suppressions:\n"
-assert_ok "$FLOW" check .
+assert_ok "$FLOW" full-check .
 
 printf "\nFull focus-check shows the two unused suppressions:\n"
 assert_ok "$FLOW" focus-check .

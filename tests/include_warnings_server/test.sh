@@ -11,10 +11,10 @@ cp empty_flowconfig .flowconfig
 start_flow .
 
 printf "\n\nCheck Without --include-warnings\n"
-assert_errors "$FLOW" check --strip-root
+assert_errors "$FLOW" full-check --strip-root
 
 printf "\n\nCheck With --include-warnings\n"
-assert_errors "$FLOW" check --strip-root --include-warnings
+assert_errors "$FLOW" full-check --strip-root --include-warnings
 
 printf "\n\nCheck-contents Without --include-warnings\n"
 assert_errors "$FLOW" check-contents test.js --strip-root < test.js
@@ -36,10 +36,10 @@ cp include_warnings_flowconfig .flowconfig
 start_flow .
 
 printf "\n\nCheck Without --include-warnings\n"
-assert_errors "$FLOW" check --strip-root
+assert_errors "$FLOW" full-check --strip-root
 
 printf "\n\nCheck With --include-warnings\n"
-assert_errors "$FLOW" check --strip-root --include-warnings
+assert_errors "$FLOW" full-check --strip-root --include-warnings
 
 printf "\n\nCheck-contents Without --include-warnings\n"
 assert_errors "$FLOW" check-contents test.js --strip-root < test.js

@@ -5,19 +5,19 @@
 # LICENSE file in the root directory of this source tree.
 
 printf "Without --include-suppressed\n"
-assert_errors "$FLOW" check --all --strip-root
+assert_errors "$FLOW" full-check --all --strip-root
 
 printf "\n\nWith --include-suppressed\n"
-assert_errors "$FLOW" check --all --strip-root --include-suppressed
+assert_errors "$FLOW" full-check --all --strip-root --include-suppressed
 
 printf "\n\nJSON without --include-suppressed\n"
 assert_errors \
-  "$FLOW" check --all --strip-root --json --pretty \
+  "$FLOW" full-check --all --strip-root --json --pretty \
   | grep -v '^ *"flowVersion":.*'
 
 printf "\n\nJSON with --include-suppressed\n"
 assert_errors \
-  "$FLOW" check --all --strip-root --include-suppressed --json --pretty \
+  "$FLOW" full-check --all --strip-root --include-suppressed --json --pretty \
   | grep -v '^ *"flowVersion":.*'
 
 printf "\n\nServer without --include-suppressed\n"

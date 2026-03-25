@@ -8,7 +8,7 @@ assert_ok "$FLOW" stop
 assert_ok "$FLOW" stop --flowconfig-name configure-flow
 
 printf "\\nWe should use the all flag from configure-flow to find an error:\\n"
-assert_errors "$FLOW" check --flowconfig-name configure-flow
+assert_errors "$FLOW" full-check --flowconfig-name configure-flow
 
 printf "\\nWe can start a server using the configure-flow file:\\n"
 start_flow . --flowconfig-name configure-flow

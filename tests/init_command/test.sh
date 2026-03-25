@@ -8,7 +8,7 @@ rm .flowconfig
 assert_ok "$FLOW" init
 
 printf "Default .flowconfig should typecheck:\n"
-assert_ok "$FLOW" check
+assert_ok "$FLOW" full-check
 
 printf "\nDefault .flowconfig looks like this:\n"
 cat .flowconfig

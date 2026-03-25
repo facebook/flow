@@ -5,6 +5,6 @@
 # LICENSE file in the root directory of this source tree.
 
 printf "Without --include-suppressed:\n"
-assert_ok "$FLOW" check
+assert_ok "$FLOW" full-check
 printf "With --include-suppressed:\n"
-assert_errors "$FLOW" check --include-suppressed --strip-root
+assert_errors "$FLOW" full-check --include-suppressed --strip-root

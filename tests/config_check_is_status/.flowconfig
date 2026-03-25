@@ -6,4 +6,4 @@
 
 [options]
 all=true
-check_is_status=true
+check_is_status=false

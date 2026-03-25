@@ -231,7 +231,7 @@ pub(super) mod opts {
             casting_syntax: None,
             casting_syntax_only_support_as_excludes: Vec::new(),
             channel_mode: None,
-            check_is_status: false,
+            check_is_status: true,
             component_syntax: false,
             async_component_syntax: false,
             dev_only_refinement_info_as_errors: false,
