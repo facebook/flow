@@ -111,6 +111,8 @@ let recheck
     ~scm_changed_mergebase:_ =
   ()
 
+let log_typing_errors ~data:_ = ()
+
 let recheck_canceled
     ~priority:_ ~num_files_to_prioritize:_ ~num_files_to_recheck:_ ~num_files_to_force:_ =
   ()

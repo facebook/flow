@@ -1555,6 +1555,7 @@ let make_options
     opt_lazy_mode;
     opt_lint_severities = lint_severities;
     opt_llm_context_include_imports = FlowConfig.llm_context_include_imports flowconfig;
+    opt_log_per_error_typing_telemetry = FlowConfig.log_per_error_typing_telemetry flowconfig;
     opt_log_file;
     opt_log_saving = FlowConfig.log_saving flowconfig;
     opt_long_lived_workers =
