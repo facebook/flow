@@ -43,10 +43,23 @@ type error_resolution_stat = {
   time_to_resolve_all_subtyping_errors_in_one_file: float option;
 }
 
+type per_error_info = {
+  error_code: string;
+  line_agnostic_hash: string;
+  error_message: string option;
+}
+
+type per_file_errors = {
+  file_path: string;
+  errors: per_error_info list;
+}
+
 (* Update error_state_timestamps,
  * and return a collection of times to resolve different kinds of errors
  * under different initial conditions *)
 val update_error_state_timestamps : Collated_errors.t -> Collated_errors.t * error_resolution_stat
+
+val compute_per_file_errors : with_context_limit:int -> Collated_errors.t -> per_file_errors list
 
 val get_without_suppressed :
   ServerEnv.env ->

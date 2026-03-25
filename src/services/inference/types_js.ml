@@ -1694,6 +1694,49 @@ let recheck_impl
       ~first_internal_error
       ~scm_changed_mergebase:changed_mergebase
       ~profiling;
+    if Options.log_per_error_typing_telemetry options then begin
+      let per_file_errors =
+        ErrorCollator.compute_per_file_errors ~with_context_limit:10 collated_errors
+      in
+      let typing_errors_data =
+        let open Hh_json in
+        let error_info_to_json (info : ErrorCollator.per_error_info) =
+          let props =
+            [
+              ("error_code", JSON_String info.ErrorCollator.error_code);
+              ("line_agnostic_hash", JSON_String info.ErrorCollator.line_agnostic_hash);
+            ]
+          in
+          let props =
+            match info.ErrorCollator.error_message with
+            | Some msg -> ("error_context", JSON_String msg) :: props
+            | None -> props
+          in
+          JSON_Object props
+        in
+        let by_file =
+          List.map
+            (fun ({ ErrorCollator.file_path; errors } : ErrorCollator.per_file_errors) ->
+              (file_path, JSON_Array (List.map error_info_to_json errors)))
+            per_file_errors
+        in
+        let total_count =
+          List.fold_left
+            (fun acc ({ ErrorCollator.errors; _ } : ErrorCollator.per_file_errors) ->
+              acc + List.length errors)
+            0
+            per_file_errors
+        in
+        json_to_string
+          (JSON_Object
+             [
+               ("total_count", JSON_Number (string_of_int total_count));
+               ("by_file", JSON_Object by_file);
+             ]
+          )
+      in
+      FlowEventLogger.log_typing_errors ~data:typing_errors_data
+    end;
     record_recheck_time ()
   in
 

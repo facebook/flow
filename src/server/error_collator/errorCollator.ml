@@ -264,6 +264,62 @@ type error_resolution_stat = {
   time_to_resolve_all_subtyping_errors_in_one_file: float option;
 }
 
+type per_error_info = {
+  error_code: string;
+  line_agnostic_hash: string;
+  error_message: string option;
+}
+
+type per_file_errors = {
+  file_path: string;
+  errors: per_error_info list;
+}
+
+let compute_per_file_errors ~with_context_limit collated_errors =
+  let open Flow_errors_utils in
+  let context_count = ref 0 in
+  let process_errors filename errors acc =
+    if ConcreteLocPrintableErrorSet.is_empty errors then
+      acc
+    else
+      let file_path =
+        match filename with
+        | File_key.SourceFile s
+        | File_key.JsonFile s
+        | File_key.ResourceFile s
+        | File_key.LibFile s ->
+          s
+      in
+      let error_infos =
+        ConcreteLocPrintableErrorSet.fold
+          (fun error acc ->
+            let lsp = Lsp_output.lsp_of_error ~has_detailed_diagnostics:false error in
+            let code_str = lsp.Lsp_output.code in
+            let hash_input = code_str ^ ":" ^ lsp.Lsp_output.message in
+            let hash = Printf.sprintf "%x" (Hashtbl.hash hash_input) in
+            let error_message =
+              if !context_count < with_context_limit then begin
+                context_count := !context_count + 1;
+                let msg = lsp.Lsp_output.message in
+                let msg =
+                  if String.length msg > 400 then
+                    String.sub msg 0 400 ^ "..."
+                  else
+                    msg
+                in
+                Some msg
+              end else
+                None
+            in
+            { error_code = code_str; line_agnostic_hash = hash; error_message } :: acc)
+          errors
+          []
+      in
+      { file_path; errors = error_infos } :: acc
+  in
+  let acc = FilenameMap.fold process_errors collated_errors.collated_merge_errors [] in
+  FilenameMap.fold process_errors collated_errors.collated_local_errors acc
+
 let update_error_state_timestamps collated_errors =
   let current_time = Unix.gettimeofday () in
   let init_timestamps = collated_errors.error_state_timestamps in
