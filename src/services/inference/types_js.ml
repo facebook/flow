@@ -797,11 +797,14 @@ let restart_if_faster_than_recheck ~options ~env ~to_merge =
     "Estimating a recheck would take %.2fs and a restart would take %.2fs"
     time_to_recheck
     time_to_restart;
-  if time_to_restart < time_to_recheck then
+  if time_to_restart < time_to_recheck then begin
+    Hh_logger.info "Recheck too slow: choosing to REINIT from saved state";
     let%lwt () = Recheck_stats.record_last_estimates ~options ~estimates in
     raise Recheck_too_slow
-  else
+  end else begin
+    Hh_logger.info "Recheck fast enough: choosing to RECHECK incrementally";
     Lwt.return_unit
+  end
 
 type determine_what_to_recheck_result =
   | Determine_what_to_recheck_result of {
