@@ -321,6 +321,7 @@ let from_flag =
         )
     in
     FlowEventLogger.set_from from;
+    FlowEventLogger.set_agent_id (Sys.getenv_opt "META_3PAI_INVOCATION_ID");
     main
   in
   fun prev ->
