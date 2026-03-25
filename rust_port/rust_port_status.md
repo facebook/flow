@@ -1811,30 +1811,30 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
             - [ ] `create`
             - [ ] `get_aloc_table`
             - [ ] `get_ast`
-            - [ ] `get_docblock`
-            - [ ] `get_exports`
+            - [x] `get_docblock`
+            - [x] `get_exports`
             - [ ] `get_file_addr`
             - [ ] `get_file_addr_unsafe`
-            - [ ] `get_file_hash`
-            - [ ] `get_file_sig`
-            - [ ] `get_file_sig_unsafe`
+            - [x] `get_file_hash`
+            - [x] `get_file_sig`
+            - [x] `get_file_sig_unsafe`
             - [ ] `get_haste_info`
-            - [ ] `get_haste_module_info`
-            - [ ] `get_imports`
-            - [ ] `get_leader`
+            - [x] `get_haste_module_info`
+            - [x] `get_imports`
+            - [x] `get_leader`
             - [ ] `get_leader_unsafe`
-            - [ ] `get_old_exports`
-            - [ ] `get_old_file_hash`
+            - [x] `get_old_exports`
+            - [x] `get_old_file_hash`
             - [ ] `get_old_haste_info`
-            - [ ] `get_old_imports`
+            - [x] `get_old_imports`
             - [ ] `get_old_parse`
-            - [ ] `get_old_provider`
-            - [ ] `get_old_resolved_modules_unsafe`
-            - [ ] `get_old_resolved_requires_unsafe`
+            - [x] `get_old_provider`
+            - [x] `get_old_resolved_modules_unsafe`
+            - [x] `get_old_resolved_requires_unsafe`
             - [ ] `get_old_typed_parse`
-            - [ ] `get_resolved_modules_unsafe`
-            - [ ] `get_tolerable_file_sig`
-            - [ ] `get_type_sig`
+            - [x] `get_resolved_modules_unsafe`
+            - [x] `get_tolerable_file_sig`
+            - [x] `get_type_sig`
             - [x] `loc_of_aloc`
             - [ ] `read_aloc_table_unsafe`
             - [ ] `read_ast_unsafe`
@@ -1857,7 +1857,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
             - [ ] `read_type_sig_unsafe`
             - [ ] `record_not_found`
             - [ ] `record_unchanged`
-            - [ ] `typed_component`
+            - [x] `typed_component`
   - [ ] readers/
       - [ ] abstract_state_reader.ml
       - [ ] mutator_state_reader.ml

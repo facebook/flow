@@ -6,6 +6,7 @@
  */
 
 use std::cell::LazyCell;
+use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::rc::Rc;
 use std::sync::Arc;
@@ -65,6 +66,10 @@ impl SharedMem {
         self.file_heap
             .get(file)
             .and_then(|entry| entry.get_haste_info_committed())
+    }
+
+    pub fn get_haste_module_info(&self, file: &FileKey) -> Option<HasteModuleInfo> {
+        self.get_haste_info(file)
     }
 
     pub fn get_haste_module(&self, info: &HasteModuleInfo) -> Option<HasteModule> {
@@ -128,6 +133,31 @@ impl SharedMem {
         }
     }
 
+    pub fn get_provider_committed(&self, dependency: &Dependency) -> Option<FileKey> {
+        match dependency {
+            Dependency::HasteModule(Modulename::Haste(haste_info)) => self
+                .get_haste_module(haste_info)
+                .and_then(|module| module.get_provider_committed()),
+            Dependency::HasteModule(Modulename::Filename(_)) => None,
+            Dependency::File(file_key) => {
+                if let Some(file_entry) = self.file_heap.get(file_key) {
+                    if let Some(alternate) = file_entry.get_alternate_file() {
+                        if self.get_parse_committed(&alternate).is_some() {
+                            return Some(alternate);
+                        }
+                    }
+                    if self.get_parse_committed(file_key).is_some() {
+                        Some(file_key.dupe())
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                }
+            }
+        }
+    }
+
     pub fn get_parse(&self, file: &FileKey) -> Option<Parse> {
         self.file_heap
             .get(file)
@@ -169,6 +199,11 @@ impl SharedMem {
         self.get_parse(file).is_some_and(|p| p.is_package())
     }
 
+    pub fn get_leader(&self, file: &FileKey) -> Option<FileKey> {
+        self.get_typed_parse(file)
+            .and_then(|typed| typed.leader.read_latest())
+    }
+
     pub fn has_ast(&self, file: &FileKey) -> bool {
         self.get_typed_parse(file).is_some_and(|t| t.ast.is_some())
     }
@@ -202,6 +237,10 @@ impl SharedMem {
         self.get_parse_unsafe(file).get_file_hash()
     }
 
+    pub fn get_file_hash(&self, file: &FileKey) -> Option<u64> {
+        self.get_parse(file).map(|p| p.get_file_hash())
+    }
+
     pub fn get_ast_unsafe(&self, file: &FileKey) -> Arc<Program<Loc, Loc>> {
         if let Some(cached) = self.reader_cache.get_ast(file) {
             return cached;
@@ -223,6 +262,15 @@ impl SharedMem {
                 }
                 None => None,
             })
+    }
+
+    pub fn get_docblock(&self, file: &FileKey) -> Option<Arc<Docblock>> {
+        self.get_typed_parse(file).and_then(|typed| {
+            typed
+                .docblock
+                .as_ref()
+                .map(|bytes| flow_heap_serialization::deserialize_docblock(file, bytes))
+        })
     }
 
     pub fn get_docblock_unsafe(&self, file: &FileKey) -> Arc<Docblock> {
@@ -265,6 +313,41 @@ impl SharedMem {
         }
     }
 
+    pub fn get_type_sig(&self, file: &FileKey) -> Option<Arc<TypeSigModule<Loc>>> {
+        self.get_typed_parse(file).and_then(|typed| {
+            typed
+                .type_sig
+                .as_ref()
+                .map(|bytes| flow_heap_serialization::deserialize_type_sig(file, bytes))
+        })
+    }
+
+    pub fn get_exports(&self, file: &FileKey) -> Option<Arc<Exports>> {
+        self.get_typed_parse(file)
+            .map(|typed| flow_heap_serialization::deserialize_exports(&typed.exports))
+    }
+
+    pub fn get_imports(&self, file: &FileKey) -> Option<Arc<Imports>> {
+        self.get_typed_parse(file)
+            .map(|typed| flow_heap_serialization::deserialize_imports(&typed.imports))
+    }
+
+    pub fn get_tolerable_file_sig(
+        &self,
+        file: &FileKey,
+    ) -> Option<(Arc<FileSig>, Arc<[TolerableError<Loc>]>)> {
+        self.get_typed_parse(file).and_then(|typed| {
+            typed
+                .file_sig
+                .as_ref()
+                .map(|bytes| flow_heap_serialization::deserialize_file_sig_with_errors(file, bytes))
+        })
+    }
+
+    pub fn get_file_sig(&self, file: &FileKey) -> Option<Arc<FileSig>> {
+        self.get_tolerable_file_sig(file).map(|(sig, _)| sig)
+    }
+
     pub fn get_type_sig_unsafe(&self, file: &FileKey) -> Arc<TypeSigModule<Loc>> {
         let typed = self.get_typed_parse_unsafe(file);
         typed.type_sig_unsafe(file)
@@ -288,9 +371,18 @@ impl SharedMem {
         typed.tolerable_file_sig_unsafe(file)
     }
 
+    pub fn get_file_sig_unsafe(&self, file: &FileKey) -> Arc<FileSig> {
+        self.get_tolerable_file_sig_unsafe(file).0
+    }
+
     pub fn get_requires_unsafe(&self, file: &FileKey) -> Arc<[FlowImportSpecifier]> {
         let typed = self.get_typed_parse_unsafe(file);
         typed.requires.dupe()
+    }
+
+    pub fn get_requires(&self, file: &FileKey) -> Option<Arc<[FlowImportSpecifier]>> {
+        self.get_typed_parse(file)
+            .map(|typed| typed.requires.dupe())
     }
 
     pub fn get_resolved_requires_unsafe(&self, file: &FileKey) -> ResolvedRequires {
@@ -299,6 +391,21 @@ impl SharedMem {
             .resolved_requires
             .read_latest_clone()
             .expect("ResolvedRequires should be set")
+    }
+
+    pub fn get_resolved_modules_unsafe(
+        &self,
+        file: &FileKey,
+    ) -> BTreeMap<FlowImportSpecifier, Result<Dependency, Option<FlowImportSpecifier>>> {
+        let typed = self.get_typed_parse_unsafe(file);
+        let requires = &typed.requires;
+        let resolved_requires = typed.resolved_requires_unsafe();
+        let resolved_modules = resolved_requires.get_resolved_modules();
+        requires
+            .iter()
+            .zip(resolved_modules.iter())
+            .map(|(req, module)| (req.dupe(), module.to_result()))
+            .collect()
     }
 
     pub fn get_leader_unsafe(&self, file: &FileKey) -> FileKey {
@@ -325,6 +432,93 @@ impl SharedMem {
                 f(&file);
             }
         }
+    }
+
+    pub fn get_file_hash_committed(&self, file: &FileKey) -> Option<u64> {
+        self.get_parse_committed(file).map(|p| p.get_file_hash())
+    }
+
+    pub fn get_exports_committed(&self, file: &FileKey) -> Option<Arc<Exports>> {
+        self.get_typed_parse_committed(file)
+            .map(|typed| flow_heap_serialization::deserialize_exports(&typed.exports))
+    }
+
+    pub fn get_imports_committed(&self, file: &FileKey) -> Option<Arc<Imports>> {
+        self.get_typed_parse_committed(file)
+            .map(|typed| flow_heap_serialization::deserialize_imports(&typed.imports))
+    }
+
+    pub fn get_resolved_requires_committed_unsafe(&self, file: &FileKey) -> ResolvedRequires {
+        let typed = self.get_typed_parse_committed(file).unwrap_or_else(|| {
+            panic!(
+                "Committed typed parse not found for file: {}",
+                file.as_str()
+            )
+        });
+        typed
+            .resolved_requires
+            .read_committed_clone()
+            .unwrap_or_else(|| {
+                panic!(
+                    "Committed resolved requires not found for file: {}",
+                    file.as_str()
+                )
+            })
+    }
+
+    pub fn get_resolved_modules_committed_unsafe(
+        &self,
+        file: &FileKey,
+    ) -> BTreeMap<FlowImportSpecifier, Result<Dependency, Option<FlowImportSpecifier>>> {
+        let typed = self.get_typed_parse_committed(file).unwrap_or_else(|| {
+            panic!(
+                "Committed typed parse not found for file: {}",
+                file.as_str()
+            )
+        });
+        let resolved_requires = typed
+            .resolved_requires
+            .read_committed_clone()
+            .unwrap_or_else(|| {
+                panic!(
+                    "Committed resolved requires not found for file: {}",
+                    file.as_str()
+                )
+            });
+        let requires = &typed.requires;
+        let resolved_modules = resolved_requires.get_resolved_modules();
+        requires
+            .iter()
+            .zip(resolved_modules.iter())
+            .map(|(req, module)| (req.dupe(), module.to_result()))
+            .collect()
+    }
+
+    /// We choose the head file as the leader, and the tail as followers. It is *)
+    /// always OK to choose the head as leader, as explained below. *)
+    ///  
+    /// Note that cycles cannot happen between untyped files. Why? Because files *)
+    /// in cycles must have their dependencies recorded, yet dependencies are never *)
+    /// recorded for untyped files.
+    ///
+    /// It follows that when the head is untyped, there are no other files! We *)
+    /// don't have to worry that some other file may be typed when the head is *)
+    /// untyped.  
+    ///   
+    /// It also follows when the head is typed, the tail must be typed too!  
+    pub fn typed_component(
+        &self,
+        leader_key: &FileKey,
+        rest: &[FileKey],
+    ) -> Option<Vec<(FileKey, TypedParse)>> {
+        let leader_parse = self.get_typed_parse(leader_key)?;
+        let mut component = Vec::with_capacity(1 + rest.len());
+        component.push((leader_key.dupe(), leader_parse));
+        for key in rest {
+            let parse = self.get_typed_parse_unsafe(key);
+            component.push((key.dupe(), parse));
+        }
+        Some(component)
     }
 
     pub fn file_has_changed(&self, _file: &FileKey) -> bool {
