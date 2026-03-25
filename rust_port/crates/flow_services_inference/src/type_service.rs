@@ -43,6 +43,7 @@ use flow_parsing::parsing_service;
 use flow_server_env::collated_errors::CollatedErrors;
 use flow_server_env::dependency_info::DependencyInfo;
 use flow_server_env::error_collator;
+use flow_server_env::persistent_connection::PersistentConnection;
 use flow_server_env::server_env::Env;
 use flow_server_env::server_env::Errors;
 use flow_server_env::server_monitor_listener_state;
@@ -1642,6 +1643,7 @@ pub(crate) mod recheck {
             all_unordered_libs: env.all_unordered_libs,
             errors: env.errors,
             collated_errors: env.collated_errors,
+            connections: env.connections,
             exports: env.exports,
             master_cx: env.master_cx,
         };
@@ -2103,6 +2105,7 @@ pub(crate) fn recheck_impl(
         ordered_libs: env.ordered_libs,
         all_unordered_libs: env.all_unordered_libs,
         coverage: env.coverage,
+        connections: env.connections,
         exports: env.exports,
         master_cx: env.master_cx,
     };
@@ -2192,6 +2195,7 @@ fn mk_env(
         errors,
         coverage: BTreeMap::new(),
         collated_errors,
+        connections: PersistentConnection::empty(),
         exports,
         master_cx,
     }
@@ -2477,12 +2481,6 @@ pub fn load_saved_state(_options: &Arc<Options>) -> Result<(), String> {
     panic!("saved state not yet ported")
 }
 
-#[allow(dead_code)]
-fn init() {
-    // TODO: saved state not yet ported
-    panic!("saved state not yet ported")
-}
-
 #[allow(clippy::too_many_arguments)]
 #[allow(dead_code)]
 pub fn reinit(
@@ -2621,6 +2619,7 @@ pub fn check_files_for_init(
             ordered_libs,
             all_unordered_libs,
             unparsed,
+            connections,
             exports,
         } = env;
 
@@ -2768,6 +2767,7 @@ pub fn check_files_for_init(
             errors,
             coverage,
             collated_errors,
+            connections,
             exports,
             master_cx,
         };

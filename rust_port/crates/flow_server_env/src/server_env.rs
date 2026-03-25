@@ -25,6 +25,7 @@ use vec1::Vec1;
 
 use crate::collated_errors::CollatedErrors;
 use crate::dependency_info::DependencyInfo;
+use crate::persistent_connection::PersistentConnection;
 
 // *******************************************************************
 // The "static" environment, initialized first and then doesn't change
@@ -76,7 +77,7 @@ pub struct Env {
     pub errors: Errors,
     pub coverage: BTreeMap<FileKey, FileCoverage>,
     pub collated_errors: CollatedErrors,
-    // TODO: connections: Persistent_connection.t - not needed for full-check-only
+    pub connections: PersistentConnection,
     /// None means auto-imports are not enabled
     pub exports: Option<ExportSearch>,
     pub master_cx: Arc<MasterContext>,

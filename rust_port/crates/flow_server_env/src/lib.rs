@@ -8,6 +8,7 @@
 pub mod collated_errors;
 pub mod dependency_info;
 pub mod error_collator;
+pub mod persistent_connection;
 pub mod server_env;
 pub mod server_monitor_listener_state;
 pub mod workload_stream;

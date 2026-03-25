@@ -1360,10 +1360,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `of_map`
           - [x] `sig_dependency_graph`
           - [x] `update`
-      - [ ] serverEnv.ml → `flow_server_env/src/server_env.rs`
+      - [x] serverEnv.ml → `flow_server_env/src/server_env.rs`
           - [x] `genv` type → `Genv`
           - [x] `errors` type → `Errors`
-          - [ ] `env` type → `Env` (missing `connections` and `exports`)
+          - [x] `env` type → `Env`
   - [x] error_collator/
       - [x] errorCollator.ml → `flow_server_env/src/error_collator.rs`
           - [x] `add_suppression_warnings` (private)
@@ -1412,7 +1412,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `wait_for_workload`
           - [x] `wait_for_parallelizable_workload`
   - [ ] persistent_connection/
-      - [ ] persistent_connection.ml
+      - [ ] persistent_connection.ml → `flow_server_env/src/persistent_connection.rs`
+          - [x] `client_id` type → `ClientId`
+          - [x] `t` type → `PersistentConnection`
+          - [x] `empty`
   - [ ] protocol/
       - [ ] lspProt.ml
       - [ ] monitorProt.ml
