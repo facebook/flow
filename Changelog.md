@@ -9,7 +9,7 @@ Parser:
 * It is now a parse error to have a `?` optional modifier in various places this does not make sense, e.g. `const x? = 1;`
 
 Misc:
-* API change: `flow check` becomes an alias of `flow status``. You can use `flow full-check` to trigger a full foreground check of a Flow root.
+* API change: `flow check` becomes an alias of `flow status`. You can use `flow full-check` to trigger a full foreground check of a Flow root.
 
 ### 0.306.1
 
