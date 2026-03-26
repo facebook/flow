@@ -53,7 +53,7 @@ This flag is in the form of a normal JavaScript comment annotated with `@flow`. 
 
 > You can also use the form `/* @flow */` for the flag as well.
 
-> For files in your project without this flag, the Flow background process skips and ignores the code (unless you call `flow check --all`, which is beyond the scope of basic usage).
+> For files in your project without this flag, the Flow background process skips and ignores the code (unless you call `flow full-check --all`, which is beyond the scope of basic usage).
 
 ### Write Flow Code {#toc-write-flow-code}
 
