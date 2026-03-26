@@ -237,6 +237,29 @@ pub fn new_name(name: &SubstName, fvs: &FlowOrdSet<SubstName>) -> SubstName {
     }
 }
 
+fn new_name_avoiding_map(
+    name: &SubstName,
+    fvs: &FlowOrdSet<SubstName>,
+    map: &FlowOrdMap<SubstName, Replacement>,
+) -> SubstName {
+    let (ct, n): (i32, FlowSmolStr) = match name.deref() {
+        SubstNameInner::Synthetic { name, .. } => {
+            panic!("Cannot rename synthetic name {}", name)
+        }
+        SubstNameInner::Name(n) => (0, n.dupe()),
+        SubstNameInner::Id(ct, n) => (*ct, n.dupe()),
+    };
+
+    let mut ct = ct + 1;
+    loop {
+        let candidate = SubstName::id(ct, n.dupe());
+        if !fvs.contains(&candidate) && !map.contains_key(&candidate) {
+            return candidate;
+        }
+        ct += 1;
+    }
+}
+
 fn fvs_of_map(map: &FlowOrdMap<SubstName, Replacement>) -> FlowOrdSet<SubstName> {
     let mut acc = FlowOrdSet::new();
     for replacement in map.values() {
@@ -250,24 +273,29 @@ fn fvs_of_map(map: &FlowOrdMap<SubstName, Replacement>) -> FlowOrdSet<SubstName>
     acc
 }
 
+fn map_contains_free_var(map: &FlowOrdMap<SubstName, Replacement>, name: &SubstName) -> bool {
+    map.values().any(|replacement| match replacement {
+        Replacement::TypeSubst(_, fvs) => fvs.deref().deref().contains(name),
+        Replacement::AlphaRename(_) => false,
+    })
+}
+
 fn avoid_capture(
     map: FlowOrdMap<SubstName, Replacement>,
     name: SubstName,
 ) -> (SubstName, FlowOrdMap<SubstName, Replacement>) {
-    let fvs = fvs_of_map(&map);
-    if fvs.contains(&name) {
-        let mut all_names = fvs.dupe();
-        for n in map.keys() {
-            all_names.insert(n.dupe());
-        }
-        let new_name_val = new_name(&name, &all_names);
+    if map_contains_free_var(&map, &name) {
+        let fvs = fvs_of_map(&map);
+        let new_name_val = new_name_avoiding_map(&name, &fvs, &map);
         let mut new_map = map;
         new_map.insert(name, Replacement::AlphaRename(new_name_val.dupe()));
         (new_name_val, new_map)
-    } else {
+    } else if map.contains_key(&name) {
         let mut new_map = map;
         new_map.remove(&name);
         (name, new_map)
+    } else {
+        (name, map)
     }
 }
 

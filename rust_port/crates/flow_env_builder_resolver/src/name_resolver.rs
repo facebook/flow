@@ -1663,9 +1663,12 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
             }
         }
 
+        let head = self.env_state.latest_refinements.last().unwrap();
+        if head.applied.is_empty() {
+            return self.env_snapshot();
+        }
+        let refinements_by_key = refinements_by_key(head);
         self.env_state.env.to_partial_env_snapshot(|name, env_val| {
-            let head = self.env_state.latest_refinements.last().unwrap();
-            let refinements_by_key = refinements_by_key(head);
             let lookup_key = refinement_key::Lookup::of_name(name.dupe());
             let unrefined_env_val = unrefine(
                 &refinements_by_key,
@@ -1947,6 +1950,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
     }
 
     fn havoc_heap_refinements(heap_refinements: &Rc<RefCell<HeapRefinementMap>>) {
+        if heap_refinements.borrow().is_empty() {
+            return;
+        }
         thread_local! {
             static CACHED: HeapRefinementMap = FlowOrdMap::new();
         }
@@ -1957,12 +1963,16 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         heap_refinements: &Rc<RefCell<HeapRefinementMap>>,
         invalidation_info: flow_common::refinement_invalidation::RefinementInvalidation,
     ) {
-        let mut map = heap_refinements.borrow_mut();
+        let map = heap_refinements.borrow();
+        if map.is_empty() {
+            return;
+        }
         let new_map: HeapRefinementMap = map
             .iter()
             .map(|(k, _)| (k.dupe(), Err(invalidation_info.dupe())))
             .collect();
-        *map = new_map;
+        drop(map);
+        *heap_refinements.borrow_mut() = new_map;
     }
 
     fn invalidate_all_heap_refinements_for_property_assignment(&mut self, loc: ALoc) {
@@ -1983,6 +1993,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         use flow_common::refinement_invalidation::Reason;
 
         let cache = &mut *self.cache.borrow_mut();
+        let invalidate_all = matches!(invalidation_reason, Reason::Yield);
+        let invalidation_info =
+            flow_common::refinement_invalidation::singleton(loc.dupe(), invalidation_reason);
 
         let havoced_ids: BTreeSet<usize> = self.env_state.env.fold_current_function_scope_values(
             BTreeSet::new(),
@@ -1990,15 +2003,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 if env_val.kind == BindingsKind::Internal {
                     return acc;
                 }
-                let all = match invalidation_reason {
-                    Reason::Yield => true,
-                    Reason::FunctionCall
-                    | Reason::ConstructorCall
-                    | Reason::Await
-                    | Reason::PropertyAssignment => false,
-                };
 
-                if self.should_invalidate(all, &env_val.def_loc) {
+                if self.should_invalidate(invalidate_all, &env_val.def_loc) {
                     let val_is_undeclared_or_skipped =
                         ssa_val::is_undeclared_or_skipped(&env_val.val_ref.borrow());
 
@@ -2012,7 +2018,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                             )
                         };
 
-                        let havoc = match (all, &env_val.writes_by_closure_provider_val) {
+                        let havoc = match (invalidate_all, &env_val.writes_by_closure_provider_val)
+                        {
                             (false, Some(writes_by_closure_provider_val)) => ssa_val::merge(
                                 cache,
                                 env_val.val_ref.borrow().dupe(),
@@ -2031,11 +2038,10 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     *env_val.val_ref.borrow_mut() = havoc_ref.dupe();
                     acc.insert(ssa_val::base_id_of_val(&havoc_ref));
                 } else {
-                    let invalidation_info = flow_common::refinement_invalidation::singleton(
-                        loc.dupe(),
-                        invalidation_reason,
+                    Self::invalidate_heap_refinements(
+                        &env_val.heap_refinements,
+                        invalidation_info.dupe(),
                     );
-                    Self::invalidate_heap_refinements(&env_val.heap_refinements, invalidation_info);
                 }
                 acc
             },
@@ -3131,9 +3137,11 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         );
 
         self.env_state.env.update_env(|_, env_val| {
-            let new_heap: FlowOrdMap<_, _> = env_val
-                .heap_refinements
-                .borrow()
+            let heap_refinements = env_val.heap_refinements.borrow();
+            if heap_refinements.is_empty() {
+                return;
+            }
+            let new_heap: FlowOrdMap<_, _> = heap_refinements
                 .iter()
                 .map(|(projections, entry)| {
                     let new_entry = match entry {
@@ -3158,6 +3166,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                     (projections.dupe(), new_entry)
                 })
                 .collect();
+            drop(heap_refinements);
             *env_val.heap_refinements.borrow_mut() = new_heap;
         });
     }
