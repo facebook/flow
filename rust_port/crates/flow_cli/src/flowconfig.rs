@@ -80,7 +80,6 @@ pub(super) mod opts {
         pub(crate) casting_syntax: Option<CastingSyntax>,
         pub(crate) casting_syntax_only_support_as_excludes: Vec<String>,
         pub(crate) channel_mode: Option<ChannelMode>,
-        pub(crate) check_is_status: bool,
         pub(crate) component_syntax: bool,
         pub(crate) async_component_syntax: bool,
         pub(crate) dev_only_refinement_info_as_errors: bool,
@@ -231,7 +230,6 @@ pub(super) mod opts {
             casting_syntax: None,
             casting_syntax_only_support_as_excludes: Vec::new(),
             channel_mode: None,
-            check_is_status: true,
             component_syntax: false,
             async_component_syntax: false,
             dev_only_refinement_info_as_errors: false,
@@ -2020,14 +2018,8 @@ pub(super) mod opts {
                 "babel_loose_array_spread" => Some(babel_loose_array_spread_parser(values, config)),
                 "ban_spread_key_props" => Some(ban_spread_key_props_parser(values, config)),
                 "casting_syntax" => Some(casting_syntax_parser(values, config)),
-                "check_is_status" => Some(parse_boolean(
-                    |opts, v| {
-                        opts.check_is_status = v;
-                        Ok(())
-                    },
-                    values,
-                    config,
-                )),
+                // check_is_status is deprecated and ignored. `flow check` is always an alias for `flow status`.
+                "check_is_status" => Some(parse_boolean(|_opts, _v| Ok(()), values, config)),
                 "component_syntax" => Some(component_syntax_parser(values, config)),
                 "dev_only.refinement_info_as_errors" => Some(parse_boolean(
                     |opts, v| {

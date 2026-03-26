@@ -103,7 +103,6 @@ pub(super) fn make_options(
                 casting_syntax,
                 casting_syntax_only_support_as_excludes,
                 channel_mode,
-                check_is_status: _,
                 component_syntax,
                 async_component_syntax,
                 dev_only_refinement_info_as_errors,

@@ -91,8 +91,6 @@ val casting_syntax_only_support_as_excludes : config -> string list
 
 val channel_mode : config -> [ `pipe | `socket ] option
 
-val check_is_status : config -> bool
-
 val async_component_syntax : config -> bool
 
 val component_syntax : config -> bool

@@ -19,7 +19,6 @@ end = struct
       AstCommand.command;
       AutocompleteCommand.command;
       AutofixCommand.command;
-      CheckCommands.CheckCommand.command;
       CheckCommands.FullCheckCommand.command;
       CheckCommands.FocusCheckCommand.command;
       CheckContentsCommand.command;
@@ -57,6 +56,13 @@ end = struct
   end)
 
   let commands = StatusCommand.command :: commands
+
+  (* check is an alias for status *)
+  module CheckCommand = StatusCommands.Check (struct
+    let commands = commands
+  end)
+
+  let commands = CheckCommand.command :: commands
 
   module DefaultCommand = StatusCommands.Default (struct
     let commands = commands

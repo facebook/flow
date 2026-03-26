@@ -211,6 +211,19 @@ module Status (CommandList : COMMAND_LIST) = struct
   let command = CommandSpec.command Main.spec Main.main
 end
 
+module Check (CommandList : COMMAND_LIST) = struct
+  module Main =
+    Impl
+      (CommandList)
+      (struct
+        let explicit = true
+      end)
+
+  let spec = { Main.spec with CommandSpec.name = "check" }
+
+  let command = CommandSpec.command spec Main.main
+end
+
 module Default (CommandList : COMMAND_LIST) = struct
   module Main =
     Impl
