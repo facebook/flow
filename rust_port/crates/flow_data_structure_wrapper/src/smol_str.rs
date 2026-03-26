@@ -5,17 +5,17 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-//! A wrapper around SmolStr that implements Dupe for cheap cloning.
+//! A wrapper around ArcStr that implements Dupe for cheap cloning.
 //!
-//! SmolStr is an efficient small string type that stores short strings inline.
-//! This wrapper adds the Dupe trait, allowing cheap reference-counted copies
-//! via `.dupe()` instead of `.clone()`.
+//! ArcStr is a reference-counted string type with zero-cost literals and
+//! cheap cloning via Arc.
 
 use std::borrow::Borrow;
 use std::fmt;
 use std::fmt::Debug;
 use std::ops::Deref;
 
+use arcstr::ArcStr;
 use dupe::Dupe;
 use serde::Deserialize;
 use serde::Deserializer;
@@ -23,33 +23,34 @@ use serde::Serialize;
 use serde::Serializer;
 use smol_str::SmolStr;
 
-/// A wrapper around SmolStr that implements Dupe for cheap cloning.
+/// A wrapper around ArcStr that implements Dupe for cheap cloning.
 ///
-/// This type provides the same functionality as SmolStr but also implements
-/// the Dupe trait, making it consistent with other types in the Flow codebase
-/// that use `.dupe()` for cheap copies.
+/// ArcStr is a single-pointer-width reference-counted string. Cloning is
+/// an atomic increment (8 bytes), much cheaper than SmolStr's 24-byte memcpy.
+/// The smaller struct size (8 bytes vs 24) also improves cache utilization
+/// and reduces memory usage for types that contain FlowSmolStr.
 #[derive(Clone, PartialEq, Eq, PartialOrd, Ord, Hash, Default)]
-pub struct FlowSmolStr(SmolStr);
+pub struct FlowSmolStr(ArcStr);
 
 impl Dupe for FlowSmolStr {}
 
 impl Debug for FlowSmolStr {
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        self.0.fmt(f)
+        Debug::fmt(self.0.as_str(), f)
     }
 }
 
 impl FlowSmolStr {
-    pub fn new(s: impl Into<SmolStr>) -> Self {
-        FlowSmolStr(s.into())
+    pub fn new(s: impl AsRef<str>) -> Self {
+        FlowSmolStr(ArcStr::from(s.as_ref()))
     }
 
     pub fn into_inner(self) -> SmolStr {
-        self.0
+        SmolStr::from(self.0.as_str())
     }
 
-    pub fn as_smol_str(&self) -> &SmolStr {
-        &self.0
+    pub fn as_smol_str(&self) -> &FlowSmolStr {
+        self
     }
 
     pub fn as_str(&self) -> &str {
@@ -64,10 +65,9 @@ impl FlowSmolStr {
         self.0.is_empty()
     }
 
-    /// Creates a new FlowSmolStr from a static string slice.
-    /// This is efficient for short strings that can be stored inline.
+    /// Creates a new FlowSmolStr from a string slice.
     pub fn new_inline(s: &str) -> Self {
-        FlowSmolStr(SmolStr::new_inline(s))
+        FlowSmolStr(ArcStr::from(s))
     }
 }
 
@@ -81,7 +81,7 @@ impl Deref for FlowSmolStr {
 
 impl AsRef<str> for FlowSmolStr {
     fn as_ref(&self) -> &str {
-        self.0.as_ref()
+        self.0.as_str()
     }
 }
 
@@ -99,25 +99,25 @@ impl fmt::Display for FlowSmolStr {
 
 impl From<&str> for FlowSmolStr {
     fn from(s: &str) -> Self {
-        FlowSmolStr(SmolStr::from(s))
+        FlowSmolStr(ArcStr::from(s))
     }
 }
 
 impl From<&String> for FlowSmolStr {
     fn from(s: &String) -> Self {
-        FlowSmolStr(SmolStr::from(s.as_str()))
+        FlowSmolStr(ArcStr::from(s.as_str()))
     }
 }
 
 impl From<String> for FlowSmolStr {
     fn from(s: String) -> Self {
-        FlowSmolStr(SmolStr::from(s))
+        FlowSmolStr(ArcStr::from(s.as_str()))
     }
 }
 
 impl From<SmolStr> for FlowSmolStr {
     fn from(s: SmolStr) -> Self {
-        FlowSmolStr(s)
+        FlowSmolStr(ArcStr::from(s.as_str()))
     }
 }
 
@@ -147,7 +147,7 @@ impl PartialEq<String> for FlowSmolStr {
 
 impl PartialEq<SmolStr> for FlowSmolStr {
     fn eq(&self, other: &SmolStr) -> bool {
-        self.0 == *other
+        self.0.as_str() == other.as_str()
     }
 }
 
@@ -156,7 +156,7 @@ impl Serialize for FlowSmolStr {
     where
         S: Serializer,
     {
-        self.0.serialize(serializer)
+        self.0.as_str().serialize(serializer)
     }
 }
 
@@ -165,6 +165,6 @@ impl<'de> Deserialize<'de> for FlowSmolStr {
     where
         D: Deserializer<'de>,
     {
-        SmolStr::deserialize(deserializer).map(FlowSmolStr)
+        String::deserialize(deserializer).map(|s| FlowSmolStr(ArcStr::from(s.as_str())))
     }
 }
