@@ -10,6 +10,7 @@ use std::ops::Deref;
 use std::sync::Arc;
 
 use dupe::Dupe;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 
 use crate::ast;
 use crate::ast::expression::ExpressionInner;
@@ -59,6 +60,36 @@ pub fn parse_expression(
         TokenKind::TComma => expression_parser::sequence(env, start_loc, vec![expr]),
         _ => Ok(expr),
     }
+}
+
+/// Returns the string and location of the first identifier in [input] for which
+/// [predicate] holds.
+pub fn find_ident(predicate: impl Fn(&str) -> bool, input: &str) -> Option<(Loc, FlowSmolStr)> {
+    let mut env = init_env::<()>(None, None, None, Ok(input));
+    fn loop_token(
+        env: &mut ParserEnv,
+        predicate: &impl Fn(&str) -> bool,
+        token: &TokenKind,
+    ) -> Option<(Loc, FlowSmolStr)> {
+        match token {
+            TokenKind::TEof => None,
+            _ => {
+                let loc = peek::loc(env).dupe();
+                match token {
+                    TokenKind::TIdentifier { value, .. } if predicate(value.as_str()) => {
+                        Some((loc, value.dupe()))
+                    }
+                    _ => {
+                        eat::token(env).ok()?;
+                        let next_token = peek::token(env).clone();
+                        loop_token(env, predicate, &next_token)
+                    }
+                }
+            }
+        }
+    }
+    let token = peek::token(&mut env).clone();
+    loop_token(&mut env, &predicate, &token)
 }
 
 pub(super) fn parse_expression_or_pattern(env: &mut ParserEnv) -> Result<PatternCover, Rollback> {

@@ -5,6 +5,8 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#![feature(if_let_guard)]
+
 pub mod check_cache;
 pub mod check_service;
 pub mod dep_service;
@@ -13,7 +15,10 @@ pub mod init;
 pub mod job_utils;
 pub mod merge_service;
 pub mod merge_stream;
+pub mod obj_to_obj_hook;
 pub mod pure_dep_graph_operations;
 pub mod recheck_stats;
 pub mod transaction;
+pub mod type_contents;
 pub mod type_service;
+pub mod types_js_types;

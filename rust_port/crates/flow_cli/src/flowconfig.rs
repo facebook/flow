@@ -41,7 +41,6 @@ pub(super) enum FileWatcher {
 pub(super) enum LazyMode {
     Lazy,
     NonLazy,
-    /// lazy_mode=watchman is deprecated, but implies file_watcher=Watchman
     WatchmanDeprecated,
 }
 
@@ -97,23 +96,14 @@ pub(super) mod opts {
         pub(crate) file_watcher_mergebase_with_hg: Option<String>,
         pub(crate) file_watcher_timeout: Option<u32>,
         pub(crate) files_implicitly_include_root: bool,
-        /// Print spaces between brackets in object literals
         pub(crate) format_bracket_spacing: Option<bool>,
-        /// Prefer single-quoted strings
         pub(crate) format_single_quotes: Option<bool>,
-        /// Gc.control's custom_major_ratio
         pub(crate) gc_worker_custom_major_ratio: Option<u32>,
-        /// Gc.control's custom_minor_max_size
         pub(crate) gc_worker_custom_minor_max_size: Option<u32>,
-        /// Gc.control's custom_minor_ratio
         pub(crate) gc_worker_custom_minor_ratio: Option<u32>,
-        /// Gc.control's major_heap_increment
         pub(crate) gc_worker_major_heap_increment: Option<u32>,
-        /// Gc.control's minor_heap_size
         pub(crate) gc_worker_minor_heap_size: Option<u32>,
-        /// Gc.control's space_overhead
         pub(crate) gc_worker_space_overhead: Option<u32>,
-        /// Gc.control's window_size
         pub(crate) gc_worker_window_size: Option<u32>,
         pub(crate) haste_module_ref_prefix: Option<String>,
         pub(crate) haste_paths_excludes: Vec<String>,
@@ -210,7 +200,6 @@ pub(super) mod opts {
         ".webp",
     ];
 
-    /// Returns the default options configuration
     pub(super) fn default_options() -> Opts {
         let module_resource_exts = MODULE_RESOURCE_EXTS
             .iter()
@@ -375,14 +364,6 @@ pub(super) mod opts {
         Ok(RawOptions(result))
     }
 
-    /// `init` gets called on the options object immediately before
-    /// parsing the *first* occurrence of the user-specified config option. This
-    /// is useful in cases where the user's value should blow away the default
-    /// value (rather than being aggregated to it).
-    ///
-    /// For example: We want the default value of 'module.file_ext' to be
-    /// ['.js'; '.jsx'], but if the user specifies any 'module.file_ext'
-    /// settings, we want to start from a clean list.
     fn opt<T>(
         parser: impl Fn(&str) -> Result<T, String>,
         setter: fn(&mut Opts, T) -> Result<(), String>,
@@ -412,9 +393,6 @@ pub(super) mod opts {
         unescape_ocaml_string(s)
     }
 
-    /// Port of OCaml's Scanf.unescaped: process OCaml string escape sequences.
-    /// Handles \\, \n, \r, \t, \b, \', \", \xNN, \NNN (octal).
-    /// Unknown escapes are preserved as-is.
     fn unescape_ocaml_string(s: &str) -> Result<String, String> {
         let mut result = String::with_capacity(s.len());
         let chars: Vec<char> = s.chars().collect();
@@ -454,7 +432,6 @@ pub(super) mod opts {
                         i += 2;
                     }
                     _ => {
-                        // Unknown escape: preserve as-is
                         result.push(chars[i]);
                         result.push(chars[i + 1]);
                         i += 2;
@@ -468,9 +445,6 @@ pub(super) mod opts {
         Ok(result)
     }
 
-    /// Convert OCaml Str.regexp BRE-like syntax to Rust regex ERE syntax.
-    /// In OCaml Str: \( \) for groups, \| for alternation, bare ( ) | are literals.
-    /// In Rust regex: ( ) for groups, | for alternation, \( \) \| are literals.
     pub(super) fn ocaml_str_to_rust_regex(pattern: &str) -> String {
         let mut result = String::with_capacity(pattern.len());
         let chars: Vec<char> = pattern.chars().collect();
@@ -518,9 +492,6 @@ pub(super) mod opts {
         Regex::new(&converted).map_err(|e| format!("Invalid regular expression: {}", e))
     }
 
-    /// Convert OCaml Str replacement template syntax to Rust regex replacement syntax.
-    /// OCaml uses \1, \2 etc. for backreferences; Rust uses $1, $2 etc.
-    /// OCaml \\ produces literal \; OCaml \X for non-digit, non-backslash X preserves both chars.
     fn ocaml_replacement_to_rust(template: &str) -> String {
         let mut result = String::with_capacity(template.len());
         let chars: Vec<char> = template.chars().collect();
@@ -533,13 +504,9 @@ pub(super) mod opts {
                 result.push('}');
                 i += 2;
             } else if chars[i] == '\\' && i + 1 < chars.len() && chars[i + 1] == '\\' {
-                // \\\\ in OCaml replacement -> literal backslash
                 result.push('\\');
                 i += 2;
             } else if chars[i] == '\\' && i + 1 < chars.len() {
-                // \X for non-digit, non-backslash X -> in OCaml Str, the backslash
-                // is kept along with X. In Rust regex replacement, backslash is not
-                // special (only $ is), so we keep both characters.
                 result.push('\\');
                 result.push(chars[i + 1]);
                 i += 2;
@@ -874,7 +841,6 @@ pub(super) mod opts {
     fn projects_path_mapping_parser(values: RawValues, config: &mut Opts) -> Result<(), OptError> {
         parse_mapping(
             |(path, projects_str)| {
-                // Split by comma and trim each project name
                 let projects: Vec<_> = projects_str
                     .split(',')
                     .map(|s| FlowSmolStr::new(s.trim()))
@@ -882,7 +848,6 @@ pub(super) mod opts {
                 Ok((ocaml_str_to_rust_regex(&path), projects))
             },
             |opts, (path, projects)| {
-                // Validate that all projects are known
                 for project in &projects {
                     if !opts.projects.contains(project) {
                         return Err(format!(
@@ -919,7 +884,6 @@ pub(super) mod opts {
                     }
                 }
 
-                // Add the mapping
                 opts.projects_path_mapping.push((path, projects));
                 Ok(())
             },
@@ -1627,8 +1591,6 @@ pub(super) mod opts {
     fn name_mapper_extension_parser(values: RawValues, config: &mut Opts) -> Result<(), OptError> {
         parse_mapping(
             |(file_ext, template)| {
-                // ^\\(.*\\)\\. ^ Str.quote file_ext ^ "$"
-                // Build OCaml Str-style regex: \( for capture group, \. for literal dot
                 let pattern_str = format!("^\\(.*\\)\\.{}$", regex::escape(&file_ext));
                 let pattern = optparse_regexp(&pattern_str)?;
                 let template = ocaml_replacement_to_rust(&template);
@@ -2677,8 +2639,8 @@ pub(super) mod opts {
 
 #[derive(Debug)]
 pub(super) struct Rollout {
-    enabled_group: String,
-    disabled_groups: BTreeSet<String>,
+    pub(super) enabled_group: String,
+    pub(super) disabled_groups: BTreeSet<String>,
 }
 
 #[derive(Debug)]
@@ -2752,7 +2714,6 @@ fn trim_numbered_lines(lines: &[(u32, String)]) -> Vec<(u32, String)> {
         .collect()
 }
 
-/// parse `[include]` lines
 fn parse_includes(config: &mut FlowConfig, lines: &[(u32, String)]) {
     config.includes = trim_lines(lines);
 }
@@ -2845,10 +2806,23 @@ fn parse_options(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<Vec
 }
 
 fn parse_version(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
-    // TODO: decide whether we want to support semver or just exact version
     fn is_valid_semver_range(s: &str) -> bool {
-        let semver_re = Regex::new(r"^\^?\d+\.\d+\.\d+$").unwrap();
-        semver_re.is_match(s)
+        fn parse_version(s: &str) -> Option<(u64, u64, u64)> {
+            let parts: Vec<&str> = s.split('.').collect();
+            if parts.len() != 3 {
+                return None;
+            }
+            Some((
+                parts[0].parse().ok()?,
+                parts[1].parse().ok()?,
+                parts[2].parse().ok()?,
+            ))
+        }
+
+        match s.strip_prefix('^') {
+            Some(range) => parse_version(range).is_some(),
+            None => parse_version(s).is_some(),
+        }
     }
     let potential_versions = trim_numbered_lines(lines);
     if let Some((ln, version_str)) = potential_versions.first() {
@@ -2890,12 +2864,6 @@ fn parse_strict(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), 
     Ok(())
 }
 
-/// Rollouts are based on randomness, but we want it to be stable from run to run. So we seed our
-/// pseudo random number generator with
-///
-/// 1. The hostname
-/// 2. The user
-/// 3. The name of the rollout
 fn calculate_rollout_percentage(rollout_name: &str) -> u32 {
     use std::hash::Hash;
     use std::hash::Hasher;
@@ -2910,21 +2878,6 @@ fn calculate_rollout_percentage(rollout_name: &str) -> u32 {
     (hasher.finish() % 100) as u32
 }
 
-/// Parse the `[rollouts]` section
-///
-/// The optional rollout section has 0 or more lines. Each line defines a single rollout. For example:
-///
-/// ```
-/// [rollouts]
-///
-/// testA=40% on, 60% off
-/// testB=50% blue, 20% yellow, 30% pink
-/// ```
-///
-/// The first line defines a rollout named "testA" with two groups.
-/// The second line defines a rollout named "testB" with three groups.
-///
-/// Each rollout's groups must sum to 100.
 fn parse_rollouts(config: &mut FlowConfig, lines: &[(u32, String)]) -> Result<(), Error> {
     let lines = trim_numbered_lines(lines);
     let mut rollouts = BTreeMap::new();
@@ -3079,11 +3032,6 @@ fn parse_section(config: &mut FlowConfig, section: Section) -> Result<Vec<Warnin
     }
 }
 
-/// Filter every section (except the rollouts section) for disabled rollouts. For example, if a
-/// line starts with (my_rollout=on) and the "on" group is not enabled for the "my_rollout"
-/// rollout, then drop the line completely.
-///
-/// Lines with enabled rollouts just have the prefix stripped
 fn filter_sections_by_rollout(
     sections: Vec<Section>,
     config: &FlowConfig,
@@ -3181,12 +3129,10 @@ fn read(filename: &str) -> Result<(Vec<(u32, String)>, u64), std::io::Error> {
 
     let contents = std::fs::read_to_string(filename)?;
 
-    // Calculate hash of the file contents
     let mut hasher = DefaultHasher::new();
     contents.hash(&mut hasher);
     let hash = hasher.finish();
 
-    // Split into lines, enumerate with 1-based line numbers, trim, and filter meaningful lines
     let lines: Vec<(u32, String)> = contents
         .lines()
         .enumerate()
@@ -3203,7 +3149,6 @@ fn read(filename: &str) -> Result<(Vec<(u32, String)>, u64), std::io::Error> {
     Ok((lines, hash))
 }
 
-/// Create an empty config
 pub(super) fn empty_config() -> FlowConfig {
     FlowConfig {
         rollouts: BTreeMap::new(),

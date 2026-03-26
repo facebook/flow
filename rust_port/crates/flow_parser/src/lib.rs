@@ -12,7 +12,7 @@ pub mod ast;
 pub mod ast_utils;
 pub mod ast_visitor;
 pub mod comment_attachment;
-mod comment_utils;
+pub mod comment_utils;
 mod declaration_parser;
 mod enum_common;
 mod enum_parser;
@@ -46,6 +46,7 @@ mod type_parser;
 mod wtf8;
 
 pub use main_parser::do_parse;
+pub use main_parser::find_ident;
 pub use main_parser::parse_annotation;
 pub use main_parser::parse_expression;
 pub use main_parser::parse_json_file;

@@ -103,21 +103,21 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] options/
       - [ ] autofix_options.ml
     - [ ] applyCodeActionCommand.ml
-    - [ ] astCommand.ml
+    - [x] astCommand.ml → `flow_cli/src/ast_command.rs`
     - [ ] autocompleteCommand.ml
     - [ ] autofixCommand.ml
     - [ ] batchCoverageCommand.ml
-    - [ ] checkCommands.ml
+    - [x] checkCommands.ml → `flow_cli/src/check_commands.rs`
     - [ ] checkContentsCommand.ml
     - [ ] codemodCommand.ml
     - [ ] commandConnect.ml
     - [ ] commandConnectSimple.ml
     - [ ] commandInfo.ml
     - [ ] commandMeanKill.ml
-    - [ ] commandSpec.ml
+    - [x] commandSpec.ml → `flow_cli/src/command_spec.rs`
     - [x] commandUtils.ml → `flow_cli/src/command_utils.rs`
         - [x] `make_options` → `make_options()`
-    - [ ] configCommand.ml
+    - [x] configCommand.ml → `flow_cli/src/config_command.rs`
     - [ ] coverageCommand.ml
     - [ ] cycleCommand.ml
     - [ ] dumpTypesCommand.ml
@@ -129,22 +129,22 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] graphCommand.ml
     - [ ] initCommand.ml
     - [ ] inlayHintCommand.ml
-    - [ ] lsCommand.ml
+    - [x] lsCommand.ml → `flow_cli/src/ls_command.rs`
     - [ ] lspCommand.ml
     - [ ] saveStateCommand.ml
     - [ ] serverCommand.ml
     - [ ] shellCompleteCommand.ml
     - [ ] startCommand.ml
     - [ ] statusCommands.ml
-    - [ ] stopCommand.ml
+    - [x] stopCommand.ml → `flow_cli/src/main.rs` (no-op in Rust, handled inline)
     - [ ] typeAtPosCommand.ml
     - [ ] typeOfNameCommand.ml
-    - [ ] versionCommand.ml
+    - [x] versionCommand.ml → `flow_cli/src/version_command.rs`
 - [ ] common/
   - [ ] audit/
       - [ ] expensive.ml
   - [ ] bitset/
-      - [ ] bitset.ml → `flow_common/src/bitset.rs`
+      - [x] bitset.ml → `flow_common/src/bitset.rs`
           - [x] `all_one`
           - [x] `all_zero`
           - [x] `from_int_unchecked`
@@ -317,11 +317,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] tarjan/
     - [ ] __tests__/
         - [ ] tarjan_test.ml
-      - [ ] tarjan.ml → `flow_common_tarjan/src/lib.rs`
+      - [x] tarjan.ml → `flow_common_tarjan/src/lib.rs`
           - [x] `topsort`
-          - [ ] `compare`
-          - [ ] `find`
-          - [ ] `to_string`
+          - [x] `compare` (TarjanNode trait method)
+          - [x] `find` (TarjanMap trait method + Graph impl)
+          - [x] `to_string` (TarjanNode trait method)
   - [ ] test_utils/
       - [ ] test_utils.ml
   - [x] transaction/
@@ -439,7 +439,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] graph.ml → `flow_common_utils/src/graph.rs`
       - [ ] graph_sig.ml
       - [ ] json_rpc.ml
-      - [ ] line.ml
+      - [x] line.ml → `flow_common_utils/src/line.rs`
       - [ ] listUtils.ml
       - [x] nel.ml → unnecessary in rust, use Vec1
       - [ ] optionUtils.ml
@@ -1293,7 +1293,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `require_set` → `FileSig::require_set()`
         - [x] `requires` → `FileSig::requires()`
         - [x] `to_string` → `to_debug_string()`
-    - [ ] flow_ast_contains_mapper.ml
+    - [x] flow_ast_contains_mapper.ml → `flow_services_code_action/src/contains_mapper.rs` (ported as composition helper)
     - [x] flow_ast_differ.ml → `flow_parser_utils/src/flow_ast_differ.rs`
     - [x] flow_ast_visitor.ml → `flow_parser/src/ast_visitor.rs`
         - [x] `AstVisitor` trait with comprehensive visitor pattern
@@ -1417,10 +1417,27 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `t` type → `PersistentConnection`
           - [x] `empty`
   - [ ] protocol/
-      - [ ] lspProt.ml
+      - [ ] lspProt.ml → autocomplete-facing pieces currently use `fbsource//third-party/rust:lsp-types`
       - [ ] monitorProt.ml
       - [ ] serverCommandWithContext.ml
-      - [ ] serverProt.ml
+      - [x] serverProt.ml → `flow_services_autocomplete/src/server_prot.rs`
+          - [x] `Infer_type_options`
+          - [x] `Inlay_hint_options`
+          - [x] `Type_of_name_options`
+          - [x] `Llm_context_options`
+          - [x] `Code_action`
+          - [x] `Request.command`
+          - [x] `Request.to_string`
+          - [x] `Response.lazy_stats`
+          - [x] `Response.func_param_result`
+          - [x] `Response.func_details_result`
+          - [x] `Response.Completion`
+          - [x] `Response.InferTypeOfName`
+          - [x] `Response.InferType`
+          - [x] `Response.InlayHint`
+          - [x] `Response.status_response`
+          - [x] `Response.response`
+          - [x] `Response.to_string`
       - [ ] socketHandshake.ml
   - [ ] rechecker/
       - [ ] recheck_updates.ml
@@ -1458,16 +1475,16 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] serverWorker.ml
     - [ ] server_daemon.ml
 - [ ] services/
-  - [ ] autocomplete/
+  - [ ] autocomplete/ → `flow_services_autocomplete`
     - [ ] __tests__/
         - [ ] autocomplete_sigil_tests.ml
         - [ ] autocomplete_tests.ml
-      - [ ] autocompleteService_js.ml
-      - [ ] autocomplete_js.ml
-      - [ ] autocomplete_sigil.ml
-      - [ ] find_method.ml
-      - [ ] keywords.ml
-  - [ ] code_action/
+      - [x] autocompleteService_js.ml → `flow_services_autocomplete/src/autocomplete_service_js.rs`
+      - [x] autocomplete_js.ml → `flow_services_autocomplete/src/autocomplete_js.rs`
+      - [x] autocomplete_sigil.ml → `flow_services_autocomplete/src/autocomplete_sigil.rs`
+      - [x] find_method.ml → `flow_services_autocomplete/src/find_method.rs`
+      - [x] keywords.ml → `flow_services_autocomplete/src/keywords.rs`
+  - [ ] code_action/ → `flow_services_code_action`
     - [ ] __tests__/
         - [ ] autofix_imports_tests.ml
         - [ ] autofix_type_to_value_import_tests.ml
@@ -1478,43 +1495,44 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] refactor_extract_utils_tests.ml
         - [ ] validation_tests.ml
       - [ ] ast_extraction_utils.ml
-      - [ ] autofix_casting_syntax.ml
+      - [x] autofix_casting_syntax.ml → `flow_services_code_action/src/autofix_casting_syntax.rs`
       - [ ] autofix_class_member_access.ml
+      - [x] autofix_enum_member_name.ml → `flow_services_code_action/src/autofix_enum_member_name.rs`
       - [ ] autofix_exports.ml
-      - [ ] autofix_imports.ml
-      - [ ] autofix_interface.ml
-      - [ ] autofix_legacy_flow_syntax.ml
-      - [ ] autofix_match_syntax.ml
-      - [ ] autofix_method.ml
+      - [x] autofix_imports.ml → `flow_services_code_action/src/autofix_imports.rs`
+      - [x] autofix_interface.ml → `flow_services_code_action/src/autofix_interface.rs`
+      - [x] autofix_legacy_flow_syntax.ml → `flow_services_code_action/src/autofix_legacy_flow_syntax.rs`
+      - [x] autofix_match_syntax.ml → `flow_services_code_action/src/autofix_match_syntax.rs`
+      - [x] autofix_method.ml → `flow_services_code_action/src/autofix_method.rs`
       - [ ] autofix_missing_local_annots.ml
-      - [ ] autofix_new_to_record.ml
-      - [ ] autofix_object_to_record.ml
-      - [ ] autofix_optional_chaining.ml
-      - [ ] autofix_prop_typo.ml
-      - [ ] autofix_record_declaration.ml
-      - [ ] autofix_renders_variant.ml
-      - [ ] autofix_replace_type.ml
-      - [ ] autofix_ts_syntax.ml
-      - [ ] autofix_type_name.ml
-      - [ ] autofix_type_to_value_import.ml
-      - [ ] autofix_unused_promise.ml
+      - [x] autofix_new_to_record.ml → `flow_services_code_action/src/autofix_new_to_record.rs`
+      - [x] autofix_object_to_record.ml → `flow_services_code_action/src/autofix_object_to_record.rs`
+      - [x] autofix_optional_chaining.ml → `flow_services_code_action/src/autofix_optional_chaining.rs`
+      - [x] autofix_prop_typo.ml → `flow_services_code_action/src/autofix_prop_typo.rs`
+      - [x] autofix_record_declaration.ml → `flow_services_code_action/src/autofix_record_declaration.rs`
+      - [x] autofix_renders_variant.ml → `flow_services_code_action/src/autofix_renders_variant.rs`
+      - [x] autofix_replace_type.ml → `flow_services_code_action/src/autofix_replace_type.rs`
+      - [x] autofix_ts_syntax.ml → `flow_services_code_action/src/autofix_ts_syntax.rs`
+      - [x] autofix_type_name.ml → `flow_services_code_action/src/autofix_type_name.rs`
+      - [x] autofix_type_to_value_import.ml → `flow_services_code_action/src/autofix_type_to_value_import.rs`
+      - [x] autofix_unused_promise.ml → `flow_services_code_action/src/autofix_unused_promise.rs`
       - [ ] code_action_service.ml
-      - [ ] code_action_text_edits.ml
-      - [ ] code_action_utils.ml
-      - [ ] convert_type_to_readonly_form.ml
+      - [x] code_action_text_edits.ml → `flow_services_code_action/src/code_action_text_edits.rs` (shared copy in `flow_services_autocomplete/src/code_action_text_edits.rs`)
+      - [x] code_action_utils.ml → `flow_services_code_action/src/code_action_utils.rs`
+      - [x] convert_type_to_readonly_form.ml → `flow_services_code_action/src/convert_type_to_readonly_form.rs`
       - [ ] document_paste.ml
       - [ ] insert_inferred_render_type.ml
       - [ ] insert_type.ml
       - [ ] insert_type_imports.ml
       - [ ] insert_type_utils.ml
-      - [ ] lsp_import_edits.ml
-      - [ ] lsp_module_system_info.ml
+      - [x] lsp_import_edits.ml → `flow_services_autocomplete/src/lsp_import_edits.rs` (shared helper used by autocomplete)
+      - [x] lsp_module_system_info.ml → `flow_services_code_action/src/lsp_module_system_info.rs` (shared copy in `flow_services_autocomplete/src/module_system_info.rs`)
       - [ ] refactor_add_jsx_props.ml
-      - [ ] refactor_arrow_functions.ml
+      - [x] refactor_arrow_functions.ml → `flow_services_code_action/src/refactor_arrow_functions.rs`
       - [ ] refactor_extract.ml
       - [ ] refactor_extract_utils.ml
-      - [ ] refactor_match_discriminant.ml
-      - [ ] refactor_switch_to_match_statement.ml
+      - [x] refactor_match_discriminant.ml → `flow_services_code_action/src/refactor_match_discriminant.rs`
+      - [x] refactor_switch_to_match_statement.ml → `flow_services_code_action/src/refactor_switch_to_match_statement.rs`
       - [ ] stub_unbound_name.ml
   - [x] coverage/
       - [x] coverage.ml → `flow_services_coverage/src/coverage.rs` (fully ported)
@@ -1596,7 +1614,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] pure_dep_graph_operations_test.ml
         - [ ] types_js_test.ml
     - [ ] types/
-        - [ ] types_js_types.ml
+        - [x] types_js_types.ml → `flow_services_inference/src/types_js_types.rs`
       - [x] check_cache.ml → `flow_services_inference/src/check_cache.rs`
           - [x] `create`
           - [x] `release_ccx`
@@ -1645,12 +1663,17 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `total_files` → `MergeStream::total_files()`
           - [x] `skipped_count` → `MergeStream::skipped_count()`
           - [x] `sig_new_or_changed` → `MergeStream::sig_new_or_changed()`
-      - [ ] obj_to_obj_hook.ml
+      - [x] obj_to_obj_hook.ml → `flow_services_inference/src/obj_to_obj_hook.rs`
+          - [x] `get_object_literal_loc`
+          - [x] `obj_to_obj_hook` (as `obj_to_obj_hook_fn`)
+          - [x] `with_obj_to_obj_hook`
       - [x] pure_dep_graph_operations.ml → `flow_services_inference/src/pure_dep_graph_operations.rs`
           - [x] `calc_all_dependents`
           - [x] `calc_direct_dependencies`
           - [x] `calc_direct_dependents`
       - [x] recheck_stats.ml → `flow_services_inference/src/recheck_stats.rs`
+          - [x] `Estimates` type
+          - [x] `Averages` type (private)
           - [x] `moving_average`
           - [x] `get_file`
           - [x] `load_per_file_time`
@@ -1660,16 +1683,27 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `record_last_estimates`
           - [x] `get_init_time`
           - [x] `get_per_file_time`
-      - [ ] type_contents.ml
-      - [ ] types_js.ml → `flow_services_inference/src/type_service.rs`
-          - [x] `with_memory_timer`
-          - [x] `clear_errors`
-          - [x] `filter_errors`
-          - [x] `parse`
-          - [x] `reparse`
-          - [x] `commit_modules`
-          - [x] `resolve_requires`
-          - [x] `calc_deps`
+      - [x] type_contents.ml → `flow_services_inference/src/type_contents.rs`
+          - [x] `ParseContentsReturn` type
+          - [x] `do_parse_wrapper`
+          - [x] `with_timer`
+          - [x] `parse_contents`
+          - [x] `errors_of_file_artifacts`
+          - [x] `printable_errors_of_file_artifacts_result`
+          - [x] `unchecked_dependencies`
+          - [x] `ensure_checked_dependencies`
+          - [x] `check_contents`
+          - [x] `compute_env_of_contents`
+          - [x] `type_parse_artifacts`
+      - [ ] types_js.ml → `flow_services_inference/src/type_service.rs` (9/10 functions, 90% complete)
+          - [x] `calc_deps` → `calc_deps()`
+          - [x] `clear_errors` → `clear_errors()`
+          - [x] `filter_errors` → `filter_errors()`
+          - [x] `ensure_parsed_or_trigger_recheck` → `ensure_parsed_or_trigger_recheck()`
+          - [ ] `full_check_for_init` → `full_check_from_scratch()`
+          - [ ] `init` → `init()`
+          - [ ] `recheck` → `recheck()`
+          - [x] `libdef_check_for_lazy_init` → `libdef_check_for_lazy_init()`
           - [x] `include_dependencies_and_dependents`
           - [x] `run_merge_service`
           - [x] `merge`
@@ -1706,9 +1740,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [ ] `init_from_saved_state` (not yet ported)
           - [ ] `handle_updates_since_saved_state` (not yet ported)
   - [ ] jsdoc/
-      - [ ] find_documentation.ml
-      - [ ] insert_jsdoc.ml
-      - [ ] jsdoc_stub.ml
+      - [x] find_documentation.ml → `flow_services_autocomplete/src/find_documentation.rs`
+      - [x] insert_jsdoc.ml → `flow_services_autocomplete/src/insert_jsdoc.rs`
+      - [x] jsdoc_stub.ml → `flow_services_autocomplete/src/jsdoc_stub.rs`
   - [ ] jsx/
       - [ ] auto_close_jsx.ml
       - [ ] linked_editing_jsx.ml

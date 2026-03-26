@@ -8283,7 +8283,7 @@ pub fn optional_chain(
                     && inner.targs.is_none()
                     && !type_env::local_scope_entry_exists(cx, callee_id_loc.dupe()) =>
             {
-                todo!("raise (Error_message.EDebugThrow loc) is not yet ported to Rust");
+                panic!("EDebugThrow:{:?}", loc);
             }
             // See ~/www/static_upstream/core/
             ExpressionInner::Call { inner, .. }

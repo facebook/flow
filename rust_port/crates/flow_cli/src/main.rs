@@ -30,13 +30,16 @@ use flow_utils_concurrency::thread_pool;
 use flow_utils_concurrency::thread_pool::ThreadCount;
 use flow_utils_concurrency::thread_pool::ThreadPool;
 
+mod ast_command;
 mod check_commands;
+mod command_spec;
 mod command_utils;
+mod config_command;
 mod env_builder_debug_command;
 mod flowconfig;
+mod ls_command;
+mod version_command;
 
-/// Simple semver range satisfaction check.
-/// Supports exact versions (e.g., "0.1.0") and caret ranges (e.g., "^0.1.0").
 fn semver_satisfies(range: &str, version: &str) -> bool {
     fn parse_version(s: &str) -> Option<(u64, u64, u64)> {
         let parts: Vec<&str> = s.split('.').collect();
@@ -54,24 +57,18 @@ fn semver_satisfies(range: &str, version: &str) -> bool {
         None => return false,
     };
     if let Some(caret_range) = range.strip_prefix('^') {
-        // Caret range: ^X.Y.Z allows changes that do not modify
-        // the left-most non-zero digit.
         let (rmaj, rmin, rpatch) = match parse_version(caret_range) {
             Some(v) => v,
             None => return false,
         };
         if rmaj > 0 {
-            // ^1.2.3 := >=1.2.3 <2.0.0
             major == rmaj && (minor > rmin || (minor == rmin && patch >= rpatch))
         } else if rmin > 0 {
-            // ^0.2.3 := >=0.2.3 <0.3.0
             major == 0 && minor == rmin && patch >= rpatch
         } else {
-            // ^0.0.3 := >=0.0.3 <0.0.4
             major == 0 && minor == 0 && patch == rpatch
         }
     } else {
-        // Exact version
         let (rmaj, rmin, rpatch) = match parse_version(range) {
             Some(v) => v,
             None => return false,
@@ -81,20 +78,25 @@ fn semver_satisfies(range: &str, version: &str) -> bool {
 }
 
 pub(crate) fn get_options(cli_no_flowlib: bool, ignore_version: bool) -> Arc<Options> {
-    get_options_with_root(cli_no_flowlib, ignore_version, Path::new("."))
+    get_options_with_root_and_flowconfig_name(
+        cli_no_flowlib,
+        ignore_version,
+        Path::new("."),
+        ".flowconfig",
+    )
 }
 
-pub(crate) fn get_options_with_root(
+pub(crate) fn get_options_with_root_and_flowconfig_name(
     cli_no_flowlib: bool,
     ignore_version: bool,
     root: &Path,
+    flowconfig_name: &str,
 ) -> Arc<Options> {
-    let flowconfig_path = root.join(".flowconfig");
+    let flowconfig_path = root.join(flowconfig_name);
     let flowconfig_path_str = flowconfig_path.to_string_lossy();
     let (flowconfig, warnings, flowconfig_hash) = match flowconfig::get(&flowconfig_path_str) {
         Ok(r) => r,
         Err(flowconfig::Error(line, message)) => {
-            // OCaml: spf ".flowconfig:%d %s" ln msg
             eprintln!(".flowconfig:{} {}", line, message);
             std::process::exit(1);
         }
@@ -121,7 +123,7 @@ pub(crate) fn get_options_with_root(
     let options = command_utils::make_options(
         flowconfig,
         flowconfig_hash,
-        ".flowconfig".to_owned(),
+        flowconfig_name.to_owned(),
         root,
         std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned()),
         cli_no_flowlib,
@@ -166,7 +168,6 @@ fn dump_impl_deps(
     let receiver_for_next = receiver.dupe();
     let next: parsing_service::Next = Box::new(move || receiver_for_next.recv().ok());
 
-    // Parsing stage
     let results = parsing_service::parse_with_defaults(pool, shared_mem, &options, &[], next);
     handle.join().unwrap();
 
@@ -175,11 +176,9 @@ fn dump_impl_deps(
     let dirty_modules_ordered: flow_common_modulename::ModulenameSet =
         results.dirty_modules.into_iter().collect();
 
-    // Commit modules stage
     let (_changed_modules, _duplicate_providers) =
         flow_services_module::commit_modules(pool, &options, shared_mem, dirty_modules_ordered);
 
-    // Filter to files that have typed parses (some files may fail type sig extraction)
     let parsed_with_typed: FlowOrdSet<FileKey> = results
         .parsed
         .iter()
@@ -196,20 +195,18 @@ fn dump_impl_deps(
     let nmc_for_resolve = node_modules_containers.clone();
     map_reduce::iter(pool, next, move |batch| {
         for file in batch {
-            let _ = flow_services_module::add_parsed_resolved_requires(
+            if let Err(_e) = flow_services_module::add_parsed_resolved_requires(
                 &options_clone,
                 &shared_mem_clone,
                 &nmc_for_resolve,
                 &file,
-            );
+            ) {}
         }
     });
 
-    // Calculate dependency info
     let dependency_info = dep_service::calc_dependency_info(pool, shared_mem, &parsed_with_typed);
     let implementation_dependency_graph = dependency_info.implementation_dependency_graph();
 
-    // Convert to JSON-serializable format
     let graph_map = implementation_dependency_graph.to_map();
     let json_map: BTreeMap<String, Vec<String>> = graph_map
         .into_iter()
@@ -256,7 +253,6 @@ fn parse_dir(options: Arc<Options>, pool: &ThreadPool, shared_mem: &Arc<SharedMe
     let receiver_for_next = receiver.dupe();
     let next: parsing_service::Next = Box::new(move || receiver_for_next.recv().ok());
 
-    // Parsing stage
     let results = parsing_service::parse_with_defaults(pool, shared_mem, &options, &[], next);
     handle.join().unwrap();
 
@@ -299,6 +295,131 @@ fn parse_dir(options: Arc<Options>, pool: &ThreadPool, shared_mem: &Arc<SharedMe
     }
 }
 
+#[derive(Clone)]
+enum RootSubcommand {
+    Version,
+    Stop,
+    Config,
+    Ast,
+    Ls,
+    Check,
+    FullCheck,
+    FocusCheck,
+    DumpImplDeps,
+    ParseDir,
+    EnvBuilderDebug,
+}
+
+fn root_command() -> command_spec::Command {
+    let spec = command_spec::Spec::new(
+        "flow",
+        "Flow CLI",
+        "Usage: flow COMMAND [ARGS]...".to_string(),
+    )
+    .anon(
+        "subcommand",
+        &command_spec::required(
+            None,
+            command_spec::command_flag(vec![
+                ("version", RootSubcommand::Version),
+                ("stop", RootSubcommand::Stop),
+                ("config", RootSubcommand::Config),
+                ("ast", RootSubcommand::Ast),
+                ("ls", RootSubcommand::Ls),
+                ("check", RootSubcommand::Check),
+                ("full-check", RootSubcommand::FullCheck),
+                ("focus-check", RootSubcommand::FocusCheck),
+                ("dump-impl-deps", RootSubcommand::DumpImplDeps),
+                ("parse-dir", RootSubcommand::ParseDir),
+                ("env-builder-debug", RootSubcommand::EnvBuilderDebug),
+            ]),
+        ),
+    );
+    command_spec::command(spec, |args| {
+        let (subcommand, argv) = command_spec::get(
+            args,
+            "subcommand",
+            &command_spec::required(
+                None,
+                command_spec::command_flag(vec![
+                    ("version", RootSubcommand::Version),
+                    ("stop", RootSubcommand::Stop),
+                    ("config", RootSubcommand::Config),
+                    ("ast", RootSubcommand::Ast),
+                    ("ls", RootSubcommand::Ls),
+                    ("check", RootSubcommand::Check),
+                    ("full-check", RootSubcommand::FullCheck),
+                    ("focus-check", RootSubcommand::FocusCheck),
+                    ("dump-impl-deps", RootSubcommand::DumpImplDeps),
+                    ("parse-dir", RootSubcommand::ParseDir),
+                    ("env-builder-debug", RootSubcommand::EnvBuilderDebug),
+                ]),
+            ),
+        )
+        .unwrap();
+        match subcommand {
+            RootSubcommand::Version => {
+                command_utils::run_command(&version_command::command(), &argv)
+            }
+            RootSubcommand::Stop => {
+                flow_common_exit_status::exit(flow_common_exit_status::FlowExitStatus::NoError)
+            }
+            RootSubcommand::Config => command_utils::run_command(&config_command::command(), &argv),
+            RootSubcommand::Ast => command_utils::run_command(&ast_command::command(), &argv),
+            RootSubcommand::Ls => command_utils::run_command(&ls_command::command(), &argv),
+            RootSubcommand::Check => {
+                command_utils::run_command(&check_commands::check_command(), &argv)
+            }
+            RootSubcommand::FullCheck => {
+                command_utils::run_command(&check_commands::full_check_command(), &argv)
+            }
+            RootSubcommand::FocusCheck => {
+                command_utils::run_command(&check_commands::focus_check_command(), &argv)
+            }
+            RootSubcommand::DumpImplDeps => {
+                let root = Path::new(".").canonicalize().unwrap();
+                let options = get_options(false, false);
+                let shared_mem = Arc::new(SharedMem::new());
+                let pool = ThreadPool::new();
+                dump_impl_deps(options, &pool, &shared_mem, &root);
+            }
+            RootSubcommand::ParseDir => {
+                let root = Path::new(".").canonicalize().unwrap();
+                let options = get_options(false, false);
+                let shared_mem = Arc::new(SharedMem::new());
+                let pool = ThreadPool::new();
+                parse_dir(options, &pool, &shared_mem, &root);
+            }
+            RootSubcommand::EnvBuilderDebug => {
+                if argv.len() != 1 {
+                    eprintln!("Usage: flow env-builder-debug FILE");
+                    flow_common_exit_status::exit(
+                        flow_common_exit_status::FlowExitStatus::CommandlineUsageError,
+                    );
+                }
+                env_builder_debug_command::main(&argv[0]);
+            }
+        }
+    })
+}
+
+fn is_root_command(name: &str) -> bool {
+    matches!(
+        name,
+        "version"
+            | "stop"
+            | "config"
+            | "ast"
+            | "ls"
+            | "check"
+            | "full-check"
+            | "focus-check"
+            | "dump-impl-deps"
+            | "parse-dir"
+            | "env-builder-debug"
+    )
+}
+
 fn main() {
     let arguments = std::env::args().skip(1).collect::<Vec<_>>();
 
@@ -308,52 +429,14 @@ fn main() {
         }
     }
 
-    // Handle "version" command (used by test runner)
-    if !arguments.is_empty() && arguments[0].as_str() == "version" {
-        // The test runner calls `flow version --semver` and uses the output.
-        println!("{}", flow_common::flow_version::VERSION);
-        std::process::exit(0)
-    }
-
-    // Handle "stop" command as a no-op (test runner calls `flow stop .` after tests)
-    if !arguments.is_empty() && arguments[0].as_str() == "stop" {
-        std::process::exit(0)
-    }
-
-    if !arguments.is_empty()
-        && (arguments[0].as_str() == "check" || arguments[0].as_str() == "full-check")
+    if arguments
+        .first()
+        .is_some_and(|arg| arg.starts_with('-') || is_root_command(arg))
     {
-        check_commands::full_check_main(&arguments[1..])
+        command_utils::run_command(&root_command(), &arguments);
+        return;
     }
-    if !arguments.is_empty() && arguments[0].as_str() == "focus-check" {
-        check_commands::focus_check_main(&arguments[1..])
-    }
-    if !arguments.is_empty() && arguments[0].as_str() == "dump-impl-deps" {
-        let root = Path::new(".").canonicalize().unwrap();
-        let options = get_options(false, false);
-        let shared_mem = Arc::new(SharedMem::new());
-        let pool = ThreadPool::new();
 
-        dump_impl_deps(options, &pool, &shared_mem, &root);
-        std::process::exit(0)
-    }
-    if !arguments.is_empty() && arguments[0].as_str() == "parse-dir" {
-        let root = Path::new(".").canonicalize().unwrap();
-        let options = get_options(false, false);
-        let shared_mem = Arc::new(SharedMem::new());
-        let pool = ThreadPool::new();
-
-        parse_dir(options, &pool, &shared_mem, &root);
-        std::process::exit(0);
-    }
-    if !arguments.is_empty() && arguments[0].as_str() == "env-builder-debug" {
-        if arguments.len() < 2 {
-            eprintln!("Usage: flow env-builder-debug FILE");
-            std::process::exit(1);
-        }
-        env_builder_debug_command::main(&arguments[1]);
-        std::process::exit(0);
-    }
     for filename in &arguments {
         let content = fs::read_to_string(filename).unwrap();
         let json = flow_parser::parse_to_json(

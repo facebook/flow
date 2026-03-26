@@ -97,7 +97,6 @@ fn load_per_file_time(options: &Options) -> f64 {
     match result {
         Ok(per_file_time) => per_file_time,
         Err(reason) => {
-            // Hh_logger.info "Failed to load recheck stats from %S. Reason: %S" file reason;
             eprintln!(
                 "Failed to load recheck stats from {:?}. Reason: {:?}",
                 file.display(),
@@ -206,7 +205,6 @@ fn with_averages<T>(f: impl FnOnce(&Averages) -> T) -> T {
 }
 
 pub fn record_recheck_time(options: &Options, total_time: f64, rechecked_files: i64) {
-    // rechecked_files should be non-negative. If it's 0, then we have no new information to add
     if rechecked_files > 0 {
         let (init_time, per_file_time, parsed_count) = with_averages(|averages| {
             let Averages {

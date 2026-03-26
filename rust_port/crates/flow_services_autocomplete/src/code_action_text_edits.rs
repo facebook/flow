@@ -5,8 +5,10 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-pub mod checked_set;
-pub mod graph;
-pub mod line;
-pub mod utils_js;
-pub mod utils_jsx;
+use lsp_types::TextEdit;
+
+pub struct CodeActionTextEdits {
+    pub title: String,
+    pub edits: Vec<TextEdit>,
+    pub from: String,
+}

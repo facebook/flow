@@ -52,7 +52,7 @@ pub enum ParseResult {
     ParseOk {
         ast: Program<Loc, Loc>,
         requires: Vec<FlowImportSpecifier>,
-        file_sig: FileSig,
+        file_sig: Arc<FileSig>,
         locs: flow_type_sig::compact_table::Table<Loc>,
         type_sig: flow_type_sig::packed_type_sig::Module<Loc>,
         tolerable_errors: Vec<TolerableError<Loc>>,
@@ -62,7 +62,7 @@ pub enum ParseResult {
     ParseRecovered {
         ast: Program<Loc, Loc>,
         requires: Vec<FlowImportSpecifier>,
-        file_sig: FileSig,
+        file_sig: Arc<FileSig>,
         tolerable_errors: Vec<TolerableError<Loc>>,
         parse_errors: Vec1<(Loc, ParseError)>,
     },
@@ -260,7 +260,7 @@ pub fn do_parse(
                 ParseResult::ParseSkip(ParseSkipReason::SkipNonFlowFile)
             } else {
                 let (ast, parse_errors) = parse_source_file(options, content, file);
-                let file_sig = parse_file_sig(options, file, docblock, &ast);
+                let file_sig = Arc::new(parse_file_sig(options, file, docblock, &ast));
                 let requires: Vec<FlowImportSpecifier> =
                     file_sig.require_set().into_iter().collect();
 
@@ -467,7 +467,7 @@ fn reducer(
                 Some(Arc::new(docblock)),
                 Some(Arc::new(packed_aloc_table)),
                 Some(Arc::new(type_sig)),
-                Some((Arc::new(file_sig), Arc::from(tolerable_errors))),
+                Some((file_sig, Arc::from(tolerable_errors))),
                 Arc::new(exports),
                 Arc::from(requires_vec),
                 Arc::new(imports),

@@ -24,6 +24,8 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_flowlib::LibDir as FlowlibDir;
 use regex::Regex;
 
+use crate::command_spec;
+use crate::command_spec::Command;
 use crate::flowconfig;
 use crate::flowconfig::FlowConfig;
 use crate::flowconfig::LazyMode;
@@ -70,8 +72,6 @@ fn make_includes(
     matcher
 }
 
-/// Convert FlowConfig to flow_common::options::Options
-/// This ignores CLI arguments and environment variables for now
 pub(super) fn make_options(
     flowconfig: FlowConfig,
     flowconfig_hash: String,
@@ -81,7 +81,7 @@ pub(super) fn make_options(
     cli_no_flowlib: bool,
 ) -> Options {
     let FlowConfig {
-        rollouts: _rollouts,
+        rollouts,
         ignores,
         untyped,
         declarations,
@@ -249,11 +249,9 @@ pub(super) fn make_options(
     let use_unknown_in_catch_variables = use_unknown_in_catch_variables.unwrap_or(false);
     let type_expansion_recursion_limit = type_expansion_recursion_limit as i32;
 
-    // Compute derived boolean fields
     let enable_jest_integration = jest_integration;
     let enable_relay_integration = relay_integration;
 
-    // Convert HashSet (already owned)
     let unsuppressable_error_codes: Arc<HashSet<FlowSmolStr>> = Arc::new(
         unsuppressable_error_codes
             .into_iter()
@@ -261,7 +259,6 @@ pub(super) fn make_options(
             .collect(),
     );
 
-    // Convert log_saving BTreeMap (already owned)
     let log_saving: Arc<BTreeMap<String, LogSaving>> = Arc::new(
         log_saving
             .into_iter()
@@ -285,7 +282,6 @@ pub(super) fn make_options(
     flow_flowlib::extract(&flowlib_dir);
     let flowlib_path = flow_flowlib::path_of_libdir(&flowlib_dir).to_path_buf();
 
-    // Convert regex patterns (casting_syntax_only_support_as_excludes)
     let casting_syntax_only_support_as_excludes: Arc<[Regex]> =
         casting_syntax_only_support_as_excludes
             .iter()
@@ -293,7 +289,6 @@ pub(super) fn make_options(
             .collect::<Vec<_>>()
             .into();
 
-    // Convert hook compatibility excludes/includes
     let hook_compatibility_excludes: Arc<[Regex]> = hook_compatibility_excludes
         .iter()
         .map(|s| expand_and_make_regexp(&root, s))
@@ -306,7 +301,6 @@ pub(super) fn make_options(
         .collect::<Vec<_>>()
         .into();
 
-    // Convert relay integration excludes/includes
     let relay_integration_excludes: Arc<[Regex]> = relay_integration_excludes
         .iter()
         .map(|s| expand_and_make_regexp(&root, s))
@@ -342,10 +336,12 @@ pub(super) fn make_options(
         .collect::<Vec<_>>()
         .into();
 
-    // TODO: Convert enabled_rollouts - requires access to Rollout::enabled_group field
-    // which is currently private. For now, use empty BTreeMap.
-    let enabled_rollouts: Arc<BTreeMap<String, String>> = Arc::new(BTreeMap::new());
-    // Create GC control structure
+    let enabled_rollouts: Arc<BTreeMap<String, String>> = Arc::new(
+        rollouts
+            .into_iter()
+            .map(|(rollout, config)| (rollout, config.enabled_group))
+            .collect(),
+    );
     let gc_worker = GcControl {
         minor_heap_size: gc_worker_minor_heap_size.or(Some(1024 * 1024 * 2)),
         major_heap_increment: gc_worker_major_heap_increment,
@@ -356,7 +352,6 @@ pub(super) fn make_options(
         custom_minor_max_size: gc_worker_custom_minor_max_size,
     };
 
-    // Create format structure
     let format = Format {
         bracket_spacing: format_bracket_spacing.unwrap_or(true),
         single_quotes: format_single_quotes.unwrap_or(false),
@@ -376,13 +371,11 @@ pub(super) fn make_options(
         .unwrap_or_else(|| config_max_workers.map(|w| w as usize).unwrap_or(available))
         as i32;
 
-    // Create log file path
     let log_file = std::path::PathBuf::from(&temp_dir).join(format!("{}.log", flowconfig_name));
 
     let file_options = {
         use flow_common::files::FileOptions;
 
-        // Process ignores with regexes
         let ignores_processed = ignores
             .into_iter()
             .map(|(path, backup)| {
@@ -391,7 +384,6 @@ pub(super) fn make_options(
             })
             .collect();
 
-        // Process untyped patterns
         let untyped_processed = untyped
             .into_iter()
             .map(|pattern| {
@@ -400,7 +392,6 @@ pub(super) fn make_options(
             })
             .collect();
 
-        // Process declarations patterns
         let declarations_processed = declarations
             .into_iter()
             .map(|pattern| {
@@ -409,7 +400,6 @@ pub(super) fn make_options(
             })
             .collect();
 
-        // Process lib_paths
         let flowtyped_path = flow_common::files::make_path_absolute(&root, "flow-typed");
         let mut has_explicit_flowtyped_lib = false;
         let mut lib_paths_processed = libs
@@ -427,7 +417,6 @@ pub(super) fn make_options(
             lib_paths_processed.insert(0, (None, flowtyped_path));
         }
 
-        // Process includes
         let includes_processed = make_includes(
             &root,
             files_implicitly_include_root,
@@ -435,13 +424,11 @@ pub(super) fn make_options(
             includes,
         );
 
-        // Process haste_paths_excludes
         let haste_paths_excludes_processed = haste_paths_excludes
             .into_iter()
             .map(|s| expand_and_make_regexp(&root, &s))
             .collect();
 
-        // Process haste_paths_includes
         let haste_paths_includes_processed = haste_paths_includes
             .into_iter()
             .map(|s| expand_and_make_regexp(&root, &s))
@@ -478,7 +465,6 @@ pub(super) fn make_options(
         })
     };
 
-    // Create projects_options using ProjectsOptions::mk
     let projects_options = {
         use flow_common::flow_projects::*;
 
@@ -681,13 +667,25 @@ pub(super) fn get_filenames_from_input(
     input_file: Option<&str>,
     filenames: Option<&[String]>,
 ) -> Vec<String> {
+    get_filenames_from_input_with_allow_imaginary(input_file, filenames, false)
+}
+
+pub(super) fn get_filenames_from_input_with_allow_imaginary(
+    input_file: Option<&str>,
+    filenames: Option<&[String]>,
+    allow_imaginary: bool,
+) -> Vec<String> {
     let cwd = std::env::current_dir()
         .expect("failed to get current directory")
         .to_string_lossy()
         .to_string();
     let handle_imaginary = |filename: &str| -> String {
-        eprintln!("File not found: {:?}", filename);
-        flow_common_exit_status::exit(FlowExitStatus::NoInput);
+        if allow_imaginary {
+            flow_common::files::imaginary_realpath(filename)
+        } else {
+            eprintln!("File not found: {:?}", filename);
+            flow_common_exit_status::exit(FlowExitStatus::NoInput);
+        }
     };
     let input_file_filenames = match input_file {
         Some("-") => {
@@ -720,6 +718,62 @@ pub(super) fn get_filenames_from_input(
     let mut result = cli_filenames;
     result.extend(input_file_filenames);
     result
+}
+
+pub(super) fn print_version() {
+    println!(
+        "Flow, a static type checker for JavaScript, version {}",
+        flow_common::flow_version::VERSION
+    );
+}
+
+pub(super) fn guess_root(flowconfig_name: &str, dir_or_file: Option<&str>) -> std::path::PathBuf {
+    let dir_or_file = dir_or_file.unwrap_or(".");
+    let path = Path::new(dir_or_file);
+    if !path.exists() {
+        eprintln!(
+            "Could not find file or directory {}; canceling search for {}.\nSee \"flow init --help\" for more info",
+            dir_or_file, flowconfig_name
+        );
+        flow_common_exit_status::exit(FlowExitStatus::CouldNotFindFlowconfig);
+    }
+    let dir = if path.is_dir() {
+        path.to_path_buf()
+    } else {
+        path.parent()
+            .map(|p| p.to_path_buf())
+            .unwrap_or_else(|| Path::new(".").to_path_buf())
+    };
+    let dir = dir.canonicalize().unwrap_or_else(|_| dir.to_path_buf());
+    let mut current = dir.clone();
+    for _ in 0..50 {
+        if current.join(flowconfig_name).exists() {
+            return current;
+        }
+        if !current.pop() {
+            break;
+        }
+    }
+    eprintln!(
+        "Could not find a {} in {} or any of its parent directories.\nSee \"flow init --help\" for more info",
+        flowconfig_name,
+        dir.display()
+    );
+    flow_common_exit_status::exit(FlowExitStatus::CouldNotFindFlowconfig);
+}
+
+pub(super) fn run_command(command: &Command, argv: &[String]) {
+    match command_spec::parse_or_show_help(command, argv) {
+        Ok(Err(_)) => {
+            println!("{}", command.string_of_usage());
+            flow_common_exit_status::exit(FlowExitStatus::NoError);
+        }
+        Ok(Ok(args)) => command.run(&args),
+        Err(error) => {
+            eprintln!("{}", command_spec::error_message(&error));
+            flow_common_exit_status::exit(FlowExitStatus::CommandlineUsageError);
+        }
+    }
 }
 
 pub(super) fn get_check_or_status_exit_code(

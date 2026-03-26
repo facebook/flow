@@ -5959,6 +5959,26 @@ pub mod match_pattern {
                 Self::AsPattern { loc, .. } => loc,
             }
         }
+
+        pub fn loc_mut(&mut self) -> &mut M {
+            match self {
+                Self::WildcardPattern { loc, .. } => loc,
+                Self::NumberPattern { loc, .. } => loc,
+                Self::BigIntPattern { loc, .. } => loc,
+                Self::StringPattern { loc, .. } => loc,
+                Self::BooleanPattern { loc, .. } => loc,
+                Self::NullPattern { loc, .. } => loc,
+                Self::UnaryPattern { loc, .. } => loc,
+                Self::BindingPattern { loc, .. } => loc,
+                Self::IdentifierPattern { loc, .. } => loc,
+                Self::MemberPattern { loc, .. } => loc,
+                Self::ObjectPattern { loc, .. } => loc,
+                Self::ArrayPattern { loc, .. } => loc,
+                Self::InstancePattern { loc, .. } => loc,
+                Self::OrPattern { loc, .. } => loc,
+                Self::AsPattern { loc, .. } => loc,
+            }
+        }
     }
 }
 

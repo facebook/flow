@@ -1028,7 +1028,7 @@ fn combine_directives_and_comments(
 // Set `pretty_semicolon` when a semicolon is only required in pretty mode. For example,
 // a semicolon is never required on the last statement of a statement list, so we can set
 // `pretty_semicolon: true` to only print the unnecessary semicolon in pretty mode.
-pub(crate) fn statement(
+pub fn statement(
     opts: &Opts,
     pretty_semicolon: bool,
     root_stmt: &ast::statement::Statement<Loc, Loc>,
