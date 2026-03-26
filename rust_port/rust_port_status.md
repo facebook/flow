@@ -21,7 +21,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] env_builder/
     - [x] __tests__/
         - [x] env_builder_refinement_test.ml → `flow_env_builder_resolver/src/env_builder_refinement_test.rs`
-        - [ ] env_builder_tests.ml
+        - [x] env_builder_tests.ml → irrelevant (OUnit runner for find_provider_test)
         - [x] find_provider_test.ml → `flow_env_builder/src/find_provider_test.rs`
         - [x] name_def_test.ml → `flow_env_builder_resolver/src/name_def_test.rs`
       - [x] dependency_sigs.ml → `flow_env_builder_resolver/src/dependency_sigs.rs`
@@ -206,12 +206,12 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `text`
   - [ ] exit/
       - [ ] exit.ml
-  - [ ] exit_status/
-      - [ ] flowExitStatus.ml
-  - [ ] fuzzy_score/
+  - [x] exit_status/
+      - [x] flowExitStatus.ml → `flow_common_exit_status/src/lib.rs`
+  - [x] fuzzy_score/
     - [ ] __tests__/
         - [ ] fuzzy_score_test.ml
-      - [ ] fuzzy_score.ml
+      - [x] fuzzy_score.ml → `flow_services_export/src/fuzzy_path/score_match.rs`
   - [ ] leb128/
     - [ ] __tests__/
         - [ ] leb128_tests.ml
@@ -446,7 +446,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] resizableArray.ml
       - [ ] sMapUtils.ml
       - [ ] tree.ml
-      - [ ] utils_js.ml
+      - [x] utils_js.ml → `flow_common_utils/src/utils_js.rs`
       - [x] utils_jsx.ml → `flow_common_utils/src/utils_jsx.rs`
   - [ ] vcs/
       - [ ] eden.ml
@@ -731,8 +731,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [ ] tools_infra/
     - [ ] runners/
         - [ ] command_runner.ml
-- [ ] flowlib/
-    - [ ] flowlib.ml
+- [x] flowlib/
+    - [x] flowlib.ml → `flow_flowlib/src/lib.rs`
 - [ ] hack_forked/
   - [ ] dfind/
       - [ ] dfindAddFile.ml
@@ -1031,7 +1031,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [x] jsdoc.ml → `flow_parser/src/jsdoc.rs`
     - [x] jsx_parser.ml → `flow_parser/src/jsx_parser.rs`
     - [x] lex_env.ml → `flow_parser/src/lex_env.rs`
-    - [ ] lex_result.ml
+    - [x] lex_result.ml → absorbed into `flow_parser/src/flow_lexer.rs` (LexResult struct)
     - [x] loc.ml → `flow_parser/src/loc.rs`
         - [x] `char_before` → `char_before()`
         - [x] `compare_ignore_source` → `compare_ignore_source()`
@@ -1065,7 +1065,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `line_lengths`
         - [x] `offset`
     - [x] parse_error.ml → `flow_parser/src/parse_error.rs`
-    - [ ] parse_error_utils.ml
+    - [x] parse_error_utils.ml → absorbed into `flow_parser/src/parse_error.rs` (camelize function)
     - [x] parser_common.ml → `flow_parser/src/parser_common.rs`
     - [x] parser_env.ml → `flow_parser/src/parser_env.rs`
     - [x] parser_flow.ml → `flow_parser/src/main_parser.rs`
@@ -1129,38 +1129,35 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `ILoc` type (tuple struct with `Loc` and `u32`)
           - [x] `Display`, `Ord`, `PartialOrd` impls
           - [x] `LocSig` impl
-  - [ ] output/
-    - [ ] __tests__/
-      - [ ] js_layout_generator/
-          - [ ] assignment_precedence_test.ml
-          - [ ] comment_test.ml
-          - [ ] component_test.ml
-          - [ ] import_test.ml
-          - [ ] jsx_test.ml
-          - [ ] object_test.ml
-          - [ ] operator_precedence_test.ml
-          - [ ] pattern_test.ml
-          - [ ] program_test.ml
-          - [ ] trailing_commas_test.ml
-          - [ ] variable_declaration_precedence_test.ml
-        - [ ] js_layout_generator_test.ml
-        - [ ] layout_generator_test_utils.ml
-        - [ ] layout_test.ml
-        - [ ] layout_test_utils.ml
-        - [ ] parser_utils_output_tests.ml
+  - [x] output/
+    - [x] __tests__/
+      - [x] js_layout_generator/
+          - [x] assignment_precedence_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+          - [x] comment_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+          - [x] component_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+          - [x] import_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+          - [x] jsx_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+          - [x] object_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+          - [x] operator_precedence_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+          - [x] pattern_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+          - [x] program_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+          - [x] trailing_commas_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+          - [x] variable_declaration_precedence_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] js_layout_generator_test.ml → `flow_parser_utils_output/src/js_layout_generator_test.rs`
+        - [x] layout_generator_test_utils.ml → `flow_parser_utils_output/src/layout_generator_test_utils.rs`
+        - [x] layout_test.ml → `flow_parser_utils_output/src/layout_test.rs`
+        - [x] layout_test_utils.ml → `flow_parser_utils_output/src/layout_test_utils.rs`
+        - [x] parser_utils_output_tests.ml → irrelevant (OUnit runner)
         - [ ] source_test.ml
-    - [ ] printers/
-      - [ ] __tests__/
-          - [ ] parser_utils_output_printers_tests.ml
-          - [ ] pretty_printer_test.ml
-        - [ ] ast_diff_printer.ml
-        - [ ] compact_printer.ml
-        - [ ] pretty_printer.ml
-        - [ ] replacement_printer.ml
-      - [ ] js_layout_generator.ml (partially ported)
-          - [x] `better_quote` → `flow_parser_utils_output/src/js_layout_generator.rs`
-          - [x] `utf8_escape` → `flow_parser_utils_output/src/js_layout_generator.rs`
-          - [x] `quote_string` → `flow_parser_utils_output/src/js_layout_generator.rs`
+    - [x] printers/
+      - [x] __tests__/
+          - [x] parser_utils_output_printers_tests.ml → irrelevant (OUnit runner)
+          - [x] pretty_printer_test.ml → `flow_parser_utils_output/src/pretty_printer_test.rs`
+        - [x] ast_diff_printer.ml → `flow_parser_utils_output/src/ast_diff_printer.rs`
+        - [x] compact_printer.ml → `flow_parser_utils_output/src/compact_printer.rs`
+        - [x] pretty_printer.ml → `flow_parser_utils_output/src/pretty_printer.rs`
+        - [x] replacement_printer.ml → `flow_parser_utils_output/src/replacement_printer.rs`
+      - [x] js_layout_generator.ml → `flow_parser_utils_output/src/js_layout_generator.rs` (fully ported)
       - [x] layout.ml → `flow_parser_utils_output/src/layout.rs`
           - [x] `LayoutNode` enum
           - [x] `WhenToBreak` enum
@@ -1691,14 +1688,13 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `check_contents`
           - [x] `compute_env_of_contents`
           - [x] `type_parse_artifacts`
-      - [ ] types_js.ml → `flow_services_inference/src/type_service.rs` (9/10 functions, 90% complete)
+      - [ ] types_js.ml → `flow_services_inference/src/type_service.rs`
           - [x] `calc_deps` → `calc_deps()`
           - [x] `clear_errors` → `clear_errors()`
           - [x] `filter_errors` → `filter_errors()`
           - [x] `ensure_parsed_or_trigger_recheck` → `ensure_parsed_or_trigger_recheck()`
-          - [ ] `full_check_for_init` → `full_check_from_scratch()`
-          - [ ] `init` → `init()`
-          - [ ] `recheck` → `recheck()`
+          - [x] `full_check_for_init` → `full_check_for_init()`
+          - [x] `recheck` → `recheck()`
           - [x] `libdef_check_for_lazy_init` → `libdef_check_for_lazy_init()`
           - [x] `include_dependencies_and_dependents`
           - [x] `run_merge_service`
@@ -1706,7 +1702,6 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `update_merge_results`
           - [x] `check_files`
           - [x] `ensure_parsed`
-          - [x] `ensure_parsed_or_trigger_recheck`
           - [x] `handle_unexpected_file_changes`
           - [x] `init_libs`
           - [x] `filter_out_node_modules`
@@ -1727,10 +1722,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `exit_if_no_fallback`
           - [x] `reinit` (stub — saved state not yet ported)
           - [x] `reinit_full_check`
-          - [x] `recheck`
           - [x] `check_files_for_init`
-          - [x] `libdef_check_for_lazy_init`
-          - [x] `full_check_for_init`
           - [x] `check_once` (Rust-only convenience)
           - [ ] `init` (saved state init — not yet ported)
           - [ ] `init_from_saved_state` (not yet ported)
@@ -1839,32 +1831,32 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
             - [x] `is_package_file`
             - [x] `is_typed_file`
             - [x] `iter_dependents`
-            - [ ] `add_resolved_requires`
+            - [x] `add_resolved_requires` → `set_resolved_requires()`
             - [ ] `clear_not_found`
-            - [ ] `create`
-            - [ ] `get_aloc_table`
-            - [ ] `get_ast`
+            - [x] `create` → `SharedMem::new()`
+            - [x] `get_aloc_table`
+            - [x] `get_ast`
             - [x] `get_docblock`
             - [x] `get_exports`
-            - [ ] `get_file_addr`
-            - [ ] `get_file_addr_unsafe`
+            - [ ] `get_file_addr` (OCaml shared-memory internal, not needed in Rust)
+            - [ ] `get_file_addr_unsafe` (OCaml shared-memory internal, not needed in Rust)
             - [x] `get_file_hash`
             - [x] `get_file_sig`
             - [x] `get_file_sig_unsafe`
-            - [ ] `get_haste_info`
+            - [x] `get_haste_info`
             - [x] `get_haste_module_info`
             - [x] `get_imports`
             - [x] `get_leader`
-            - [ ] `get_leader_unsafe`
+            - [x] `get_leader_unsafe`
             - [x] `get_old_exports`
             - [x] `get_old_file_hash`
-            - [ ] `get_old_haste_info`
+            - [x] `get_old_haste_info` → `get_haste_info_committed()`
             - [x] `get_old_imports`
-            - [ ] `get_old_parse`
+            - [x] `get_old_parse` → `get_parse_committed()`
             - [x] `get_old_provider`
             - [x] `get_old_resolved_modules_unsafe`
             - [x] `get_old_resolved_requires_unsafe`
-            - [ ] `get_old_typed_parse`
+            - [x] `get_old_typed_parse` → `get_typed_parse_committed()`
             - [x] `get_resolved_modules_unsafe`
             - [x] `get_tolerable_file_sig`
             - [x] `get_type_sig`
