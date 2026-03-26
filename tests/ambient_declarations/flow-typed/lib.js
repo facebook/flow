@@ -10,3 +10,6 @@ declare module 'test-module' {
   declare export function getBar(): typeof bar;
   declare export function getBaz(): typeof baz;
 }
+
+// Test shorthand ambient module declaration (no body)
+declare module 'shorthand-module'

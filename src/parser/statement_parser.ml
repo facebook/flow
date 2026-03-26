@@ -1511,9 +1511,26 @@ module Statement
             (string_literal_remove_trailing env (string_literal env str))
         | _ -> Statement.DeclareModule.Identifier (id_remove_trailing env (Parse.identifier env))
       in
-      let body = declare_module_or_namespace_body env in
-      let comments = Flow_ast_utils.mk_comments_opt ~leading () in
-      Statement.(DeclareModule DeclareModule.{ id; body; comments })
+      if Peek.token env <> T_LCURLY && Peek.is_implicit_semicolon env then begin
+        (* Shorthand ambient module: `declare module 'name'` — desugar to empty body. *)
+        let trailing =
+          match semicolon env with
+          | Explicit trailing -> trailing
+          | Implicit { trailing; _ } -> trailing
+        in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading ~trailing () in
+        let body_loc =
+          match last_loc env with
+          | Some loc -> Loc.end_loc loc
+          | None -> Peek.loc env |> Loc.start_loc
+        in
+        let body = (body_loc, { Statement.Block.body = []; comments = None }) in
+        Statement.(DeclareModule DeclareModule.{ id; body; comments })
+      end else begin
+        let body = declare_module_or_namespace_body env in
+        let comments = Flow_ast_utils.mk_comments_opt ~leading () in
+        Statement.(DeclareModule DeclareModule.{ id; body; comments })
+      end
     in
     fun env ->
       let start_loc = Peek.loc env in

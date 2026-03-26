@@ -2165,9 +2165,30 @@ fn declare_module(env: &mut ParserEnv) -> Result<statement::Statement<Loc, Loc>,
                 statement::declare_module::Id::Identifier(id)
             }
         };
-        let body = declare_module_or_namespace_body(env)?;
-        let comments = ast_utils::mk_comments_opt(Some(leading.into()), None);
-        Ok(statement::DeclareModule { id, body, comments })
+        if peek::token(env) != &TokenKind::TLcurly && peek::is_implicit_semicolon(env) {
+            // Shorthand ambient module: `declare module 'name'` — desugar to empty body.
+            let trailing = match semicolon(env, None, false)? {
+                SemicolonType::Explicit(trailing) => trailing,
+                SemicolonType::Implicit(result) => result.trailing,
+            };
+            let comments = ast_utils::mk_comments_opt(Some(leading.into()), Some(trailing.into()));
+            let body_loc = match env.last_loc() {
+                Some(loc) => loc.end_loc(),
+                None => peek::loc(env).start_loc(),
+            };
+            let body = (
+                body_loc,
+                statement::Block {
+                    body: Vec::new().into(),
+                    comments: None,
+                },
+            );
+            Ok(statement::DeclareModule { id, body, comments })
+        } else {
+            let body = declare_module_or_namespace_body(env)?;
+            let comments = ast_utils::mk_comments_opt(Some(leading.into()), None);
+            Ok(statement::DeclareModule { id, body, comments })
+        }
     }
     let start_loc = peek::loc(env).dupe();
     let leading = peek::comments(env);

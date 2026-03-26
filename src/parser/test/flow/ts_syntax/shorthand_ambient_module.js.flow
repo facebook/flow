@@ -1,0 +1,6 @@
+declare module 'foo'
+declare module 'bar'
+
+declare module 'next' {
+  export function getServerSideProps(): void;
+}
