@@ -19,8 +19,8 @@ end = struct
       AstCommand.command;
       AutocompleteCommand.command;
       AutofixCommand.command;
-      CheckCommands.FullCheckCommand.command;
-      CheckCommands.FocusCheckCommand.command;
+      ForegroundCheckCommands.FullCheckCommand.command;
+      ForegroundCheckCommands.FocusCheckCommand.command;
       CheckContentsCommand.command;
       CodemodCommand.command;
       ConfigCommand.command;
