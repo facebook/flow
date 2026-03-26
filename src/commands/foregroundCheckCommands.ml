@@ -159,7 +159,7 @@ module FullCheckCommand = struct
   let spec =
     {
       CommandSpec.name = "full-check";
-      doc = "Does a full Flow check in the foreground and prints the results";
+      doc = "Type-checks all files in the foreground (no server, can be slow on large codebases)";
       args =
         CommandSpec.ArgSpec.(
           empty
@@ -187,10 +187,7 @@ module FocusCheckCommand = struct
   let spec =
     {
       CommandSpec.name = "focus-check";
-      doc =
-        "EXPERIMENTAL: "
-        ^ "Does a focused Flow check on a file (and its dependents and their dependencies) "
-        ^ "and prints the results";
+      doc = "Type-checks specific files and their dependents in the foreground (no server)";
       args =
         CommandSpec.ArgSpec.(
           empty
@@ -211,7 +208,7 @@ module FocusCheckCommand = struct
         );
       usage =
         Printf.sprintf
-          "Usage: %s focus-check [OPTION]... [FILES/DIRS]\n\nEXPERIMENTAL: Does a focused Flow check on the input files/directories (and each of their dependents and dependencies) and prints the results.\n\nIf --root is not specified, Flow will search upward for a .flowconfig file from the first file or dir in FILES/DIR.\nIf --root is not specified and FILES/DIR is omitted, a focus check is ran on the current directory.\n"
+          "Usage: %s focus-check [OPTION]... [FILES/DIRS]\n\nType-checks the input files/directories and their dependents in the foreground (no server).\n\nIf --root is not specified, Flow will search upward for a .flowconfig file from the first file or dir in FILES/DIR.\nIf --root is not specified and FILES/DIR is omitted, a focus check is ran on the current directory.\n"
           exe_name;
     }
 
