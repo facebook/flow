@@ -12,7 +12,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
 
 ## Source Files (`~/fbsource/fbcode/flow/src`)
 
-- [ ] analysis/
+- [x] analysis/
   - [x] __tests__/
       - [x] analysis_tests.ml → irrelevant since it's just a collector of the other tests
       - [x] scope_builder_test.ml → `flow_analysis/src/scope_builder_tests.rs`
@@ -52,7 +52,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `to_assoc`
         - [x] `to_map`
     - [x] hoister.ml → `flow_analysis/src/hoister.rs`
-    - [ ] property_assignment.ml → `flow_analysis/src/property_assignment.rs` (types only: Error, Errors)
+    - [x] property_assignment.ml → `flow_analysis/src/property_assignment.rs`
     - [x] scope_api.ml → `flow_analysis/src/scope_api.rs`
     - [x] scope_api_sig.ml → unnecessary in rust
     - [x] scope_builder.ml → `flow_analysis/src/scope_builder.rs`
@@ -274,8 +274,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] lwtSysUtils.ml
       - [ ] lwtTimeout.ml
       - [ ] lwtUtils.ml
-  - [ ] lz4/
-      - [ ] lz4.ml
+  - [x] lz4/
+      - [x] lz4.ml → `lz4_flex` crate
   - [ ] modulename/
       - [x] haste_module_info.ml → `flow_common_modulename/src/haste_module_info.rs`
           - [x] `mk`
@@ -290,9 +290,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `ModulenameMap` type alias
   - [ ] monad/
       - [ ] stateResult.ml
-  - [ ] packed_locs/
-    - [ ] __tests__/
-        - [ ] packed_locs_tests.ml
+  - [x] packed_locs/
+    - [x] __tests__/
+        - [x] packed_locs_tests.ml → `flow_packed_locs/src/packed_locs.rs` (inline tests)
       - [x] packed_locs.ml → `flow_packed_locs/src/packed_locs.rs`
           - [x] `compare_locs`
           - [x] `pack`
@@ -314,9 +314,9 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] semver_version.ml
   - [x] span/
       - [x] spanMap.ml → `flow_common/src/span_map.rs`
-  - [ ] tarjan/
-    - [ ] __tests__/
-        - [ ] tarjan_test.ml
+  - [x] tarjan/
+    - [x] __tests__/
+        - [x] tarjan_test.ml → `flow_common_tarjan/src/tarjan_test.rs`
       - [x] tarjan.ml → `flow_common_tarjan/src/lib.rs`
           - [x] `topsort`
           - [x] `compare` (TarjanNode trait method)
@@ -397,10 +397,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] cache_test.ml
         - [ ] common_utils_tests.ml
         - [ ] graph_test.ml
-        - [ ] line_test.ml
-        - [ ] nel_test.ml
-        - [ ] resizableArray_test.ml
-    - [ ] checked_set/
+        - [x] line_test.ml → `flow_common_utils/src/line.rs` (inline tests)
+        - [x] nel_test.ml → `irrelevant`
+        - [x] resizableArray_test.ml → `irrelevant`
+    - [x] checked_set/
         - [x] checkedSet.ml → `flow_common_utils/src/checked_set.rs`
             - [x] `add`
             - [x] `all`
@@ -587,7 +587,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `is_float_safe_integer`
         - [x] `max_safe_integer` → `pub const MAX_SAFE_INTEGER`
         - [x] `min_safe_integer` → `pub const MIN_SAFE_INTEGER`
-    - [ ] nameUtils.ml
+    - [x] nameUtils.ml → `irrelevant` (directly use BTreeMap)
     - [x] options.ml → `flow_common/src/options.rs`
     - [x] path_matcher.ml → `flow_common/src/path_matcher.rs`
         - [x] `empty`
@@ -1161,7 +1161,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `better_quote` → `flow_parser_utils_output/src/js_layout_generator.rs`
           - [x] `utf8_escape` → `flow_parser_utils_output/src/js_layout_generator.rs`
           - [x] `quote_string` → `flow_parser_utils_output/src/js_layout_generator.rs`
-      - [x] layout.ml → `flow_parser_utils_output/src/layout.rs` (679 lines, 100% complete)
+      - [x] layout.ml → `flow_parser_utils_output/src/layout.rs`
           - [x] `LayoutNode` enum
           - [x] `WhenToBreak` enum
           - [x] `ListConfig` struct
@@ -1173,12 +1173,12 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
   - [x] signature_builder/
       - [x] expected_annotation_sort.ml → `flow_type_sig/src/expected_annotation_sort.rs` (1/1 function, 100% complete)
           - [x] `to_string` → `Display` trait implementation (idiomatic Rust)
-      - [x] signature_error.ml → `flow_type_sig/src/signature_error.rs` (234 lines, 100% complete)
+      - [x] signature_error.ml → `flow_type_sig/src/signature_error.rs`
   - [ ] type_sig/
     - [x] __tests__/
         - [x] compact_table_tests.ml
         - [x] type_sig_tests.ml
-      - [x] compact_table.ml → `flow_type_sig/src/compact_table.rs` (23/23 functions, 100% complete)
+      - [x] compact_table.ml → `flow_type_sig/src/compact_table.rs`
           - [x] `create` → `Builder::new()`
           - [x] `push` → `Builder::push()`
           - [x] `tail_exn` → `Builder::tail_exn()`
@@ -1208,11 +1208,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `Arg` type
           - [x] `TypeGuard` type
           - [x] `TParam` type with polymorphic mapping
-      - [ ] type_sig_bin.ml → **MISSING ENTIRELY** (0/34 functions, CRITICAL GAP)
-          - **Status:** No Rust implementation exists
-          - **Missing:** Complete binary serialization/deserialization API (34 functions)
-          - **Impact:** Critical for compact signature storage in shared memory
-          - **Functions needed:** write, read, module_kind, module_refs, local_defs, remote_refs, pattern_defs, patterns, dirty_local_defs, dirty_pattern_defs, cjs_module_*, es_module_*, read_str, read_tbl*, iter_tbl, fold_tbl, read_opt, read_hashed, read_hash, read_type_export, read_packed, read_cjs_info, read_es_export, read_es_info, read_local_def, read_remote_ref, read_pattern, read_local_def_index, read_pattern_def_index, read_cjs_module, read_es_module, read_module_kind, hash_serialized, write_hash
+      - [x] type_sig_bin.ml → `irrelevant` (Rust heap stores type sigs in-memory)
       - [x] type_sig_collections.ml → `irrelevant` (just use `Table<T>` directly)
       - [x] type_sig_hash.ml → `flow_type_sig/src/type_sig_hash.rs`
           - [x] `checked_dep` type (CJS/ES)
@@ -1327,8 +1323,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `procedure_decider` module
         - [x] `this_finder` module with AstVisitor implementations
     - [x] this_finder.ml → `flow_parser_utils/src/this_finder.rs`
-- [ ] parsing/
-    - [x] docblock_parser.ml → `flow_parsing/src/docblock_parser.rs` (2/2 functions, 100% complete)
+- [x] parsing/
+    - [x] docblock_parser.ml → `flow_parsing/src/docblock_parser.rs`
         - [x] `docblock_max_tokens` → `DOCBLOCK_MAX_TOKENS` constant
         - [x] `parse_docblock` → `parse_docblock()`
     - [x] parsing_service_js.ml → `flow_parsing/src/parsing_service.rs`
@@ -1341,8 +1337,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `parse_with_defaults`
         - [x] `reparse_with_defaults`
         - [ ] `next_of_filename_set`
-- [ ] procs/
-    - [ ] multiWorkerLwt.ml
+- [x] procs/
+    - [x] multiWorkerLwt.ml → `irrelevant`
 - [ ] server/
   - [ ] command_handler/
       - [ ] commandHandler.ml
@@ -1917,8 +1913,8 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] core_hashtbl_intf.ml → `irrelevant` (rust port uses LinkedHashMap)
       - [x] core_union_find.ml → `irrelevant` (rust port uses LinkedHashMap)
   - [ ] fuzzy-path/
-    - [ ] src/
-        - [ ] fuzzy_path.ml
+    - [x] src/
+        - [x] fuzzy_path.ml → `flow_services_export/src/fuzzy_path/`
     - [ ] test/
         - [ ] expect_test.ml
         - [ ] test.ml
@@ -2456,12 +2452,3 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [x] `typed_ast_to_list`
   - [ ] flow.ml
   - [ ] flow_dot_js.ml
-
-## Latest ported commit
-
-Currently, the last ported over commit is:
-
-```
-D93045361
-[flow] Make free_var_finder lazy and reorder condition checks
-```
