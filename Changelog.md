@@ -1,3 +1,16 @@
+### 0.307.0
+
+Notable bug fixes:
+* Support numeric literal object keys when importing/exporting object literals
+* Allow type keywords like `infer` to appear as member names in qualified type access (e.g. `type S = O.infer;`).
+* Allow type keywords (`readonly`, `keyof`, `infer`, etc.) as function type parameter names
+
+Parser:
+* It is now a parse error to have a `?` optional modifier in various places this does not make sense, e.g. `const x? = 1;`
+
+Misc:
+* API change: `flow check` becomes an alias of `flow status``. You can use `flow full-check` to trigger a full foreground check of a Flow root.
+
 ### 0.306.1
 
 * Fix in Meta-internal saved state logic

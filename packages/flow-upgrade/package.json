@@ -1,6 +1,6 @@
 {
   "name": "flow-upgrade",
-  "version": "2.16.0",
+  "version": "2.17.0",
   "description": "A utility for upgrading your codebase to the latest version of Flow.",
   "engines": {
     "node": ">=14"
