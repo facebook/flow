@@ -7801,6 +7801,7 @@ fn class_def<'arena: 'ast, 'ast>(
                         annotation,
                     },
                 static_: is_static,
+                optional,
                 ..
             }) => {
                 if let TypeInner::Function { inner: f, .. } = annotation.deref() {
@@ -7810,54 +7811,66 @@ fn class_def<'arena: 'ast, 'ast>(
                         continue;
                     }
                     let name = id.name.dupe();
-                    match kind {
-                        class::MethodKind::Get => {
-                            let id_loc_node = tbls.push_loc(id.loc.dupe());
-                            let getter = getter_type(
-                                opts,
-                                scope,
-                                scopes,
-                                tbls,
-                                &mut xs,
-                                id_loc_node,
-                                f.as_ref(),
-                            );
-                            acc.add_accessor(*is_static, name, getter);
-                        }
-                        class::MethodKind::Set => {
-                            let id_loc_node = tbls.push_loc(id.loc.dupe());
-                            let setter = setter_type(
-                                opts,
-                                scope,
-                                scopes,
-                                tbls,
-                                &mut xs,
-                                id_loc_node,
-                                f.as_ref(),
-                            );
-                            acc.add_accessor(*is_static, name, setter);
-                        }
-                        class::MethodKind::Method | class::MethodKind::Constructor => {
-                            let id_loc_node = tbls.push_loc(id.loc.dupe());
-                            let fn_loc_node = tbls.push_loc(annot_loc.dupe());
-                            let def = function_type(
-                                name.as_str() == "constructor",
-                                opts,
-                                scope,
-                                scopes,
-                                tbls,
-                                &mut xs,
-                                f.as_ref(),
-                            );
-                            acc.add_method(
-                                *is_static,
-                                name,
-                                id_loc_node,
-                                fn_loc_node,
-                                false,
-                                false,
-                                def,
-                            );
+                    if *optional {
+                        let id_loc_node = tbls.push_loc(id.loc.dupe());
+                        let fn_loc_node = tbls.push_loc(annot_loc.dupe());
+                        let def =
+                            function_type(false, opts, scope, scopes, tbls, &mut xs, f.as_ref());
+                        let t = Parsed::Annot(Box::new(ParsedAnnot::Optional(Parsed::Annot(
+                            Box::new(ParsedAnnot::FunAnnot(fn_loc_node, def)),
+                        ))));
+                        let polarity = Polarity::Neutral;
+                        acc.add_field(*is_static, name, id_loc_node, polarity, t);
+                    } else {
+                        match kind {
+                            class::MethodKind::Get => {
+                                let id_loc_node = tbls.push_loc(id.loc.dupe());
+                                let getter = getter_type(
+                                    opts,
+                                    scope,
+                                    scopes,
+                                    tbls,
+                                    &mut xs,
+                                    id_loc_node,
+                                    f.as_ref(),
+                                );
+                                acc.add_accessor(*is_static, name, getter);
+                            }
+                            class::MethodKind::Set => {
+                                let id_loc_node = tbls.push_loc(id.loc.dupe());
+                                let setter = setter_type(
+                                    opts,
+                                    scope,
+                                    scopes,
+                                    tbls,
+                                    &mut xs,
+                                    id_loc_node,
+                                    f.as_ref(),
+                                );
+                                acc.add_accessor(*is_static, name, setter);
+                            }
+                            class::MethodKind::Method | class::MethodKind::Constructor => {
+                                let id_loc_node = tbls.push_loc(id.loc.dupe());
+                                let fn_loc_node = tbls.push_loc(annot_loc.dupe());
+                                let def = function_type(
+                                    name.as_str() == "constructor",
+                                    opts,
+                                    scope,
+                                    scopes,
+                                    tbls,
+                                    &mut xs,
+                                    f.as_ref(),
+                                );
+                                acc.add_method(
+                                    *is_static,
+                                    name,
+                                    id_loc_node,
+                                    fn_loc_node,
+                                    false,
+                                    false,
+                                    def,
+                                );
+                            }
                         }
                     }
                 }

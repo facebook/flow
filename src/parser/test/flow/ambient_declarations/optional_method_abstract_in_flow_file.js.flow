@@ -1,0 +1,3 @@
+abstract class C {
+  abstract optionalMethod?(x: number): void;
+}

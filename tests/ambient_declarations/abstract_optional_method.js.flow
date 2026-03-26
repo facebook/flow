@@ -1,0 +1,6 @@
+abstract class AbstractOptionalMethods {
+  abstract optionalMethod?(x: number): void; // ERROR: optional can't be abstract
+  regularMethod(x: number): void;
+}
+
+export {AbstractOptionalMethods};

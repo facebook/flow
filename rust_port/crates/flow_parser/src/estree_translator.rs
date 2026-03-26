@@ -3276,6 +3276,7 @@ fn class_declare_method(
             type_annotation(offset_table, config, &decl_meth.annot),
         ),
         ("static", Value::Bool(decl_meth.static_)),
+        ("optional", Value::Bool(decl_meth.optional)),
         ("computed", Value::Bool(computed)),
     ];
     match decl_meth.kind {

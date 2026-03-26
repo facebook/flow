@@ -3050,6 +3050,7 @@ fn class_declare_method<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         key,
         annot,
         static_,
+        optional,
         comments,
     } = decl_meth;
     let loc_ = mapper.on_type_annot(loc)?;
@@ -3062,6 +3063,7 @@ fn class_declare_method<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         key: key_,
         annot: annot_,
         static_: *static_,
+        optional: *optional,
         comments: comments_,
     })
 }

@@ -68,6 +68,7 @@
               }
             },
             "static":false,
+            "optional":false,
             "computed":false
           }
         ]
@@ -147,6 +148,7 @@
               }
             },
             "static":false,
+            "optional":false,
             "computed":false
           }
         ]
@@ -206,6 +208,7 @@
               }
             },
             "static":false,
+            "optional":false,
             "computed":false
           }
         ]

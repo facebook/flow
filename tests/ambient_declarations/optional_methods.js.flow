@@ -1,0 +1,8 @@
+class OptionalMethods {
+  optionalMethod?(x: number): void;
+  static optionalStaticMethod?(): string;
+  optionalGeneric?<T>(x: T): T;
+  regularMethod(x: number): void;
+}
+
+export {OptionalMethods};

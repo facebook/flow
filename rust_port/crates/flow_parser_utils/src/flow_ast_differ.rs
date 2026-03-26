@@ -2272,7 +2272,11 @@ fn class_declare_method(
     m1: &ast::class::DeclareMethod<Loc, Loc>,
     m2: &ast::class::DeclareMethod<Loc, Loc>,
 ) -> Option<Vec<NodeChange>> {
-    if m1.key != m2.key || m1.static_ != m2.static_ || m1.kind != m2.kind {
+    if m1.key != m2.key
+        || m1.static_ != m2.static_
+        || m1.kind != m2.kind
+        || m1.optional != m2.optional
+    {
         return None;
     }
     let annot_diff = Some(diff_if_changed(type_annotation, &m1.annot, &m2.annot));

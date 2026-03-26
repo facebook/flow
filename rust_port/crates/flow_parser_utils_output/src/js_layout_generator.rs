@@ -7342,10 +7342,15 @@ fn class_declare_method(
         ast::class::MethodKind::Set => fuse(vec![atom("set"), space()]),
         ast::class::MethodKind::Method | ast::class::MethodKind::Constructor => LayoutNode::empty(),
     };
+    let s_optional = if decl_meth.optional {
+        atom("?")
+    } else {
+        LayoutNode::empty()
+    };
     source_location_with_comments(
         &decl_meth.loc,
         decl_meth.comments.as_ref(),
-        with_semicolon(fuse(vec![s_static, s_kind, s_key, s_annot])),
+        with_semicolon(fuse(vec![s_static, s_kind, s_key, s_optional, s_annot])),
     )
 }
 

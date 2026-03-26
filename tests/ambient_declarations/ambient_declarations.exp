@@ -1,3 +1,11 @@
+Error ---------------------------------------------------------------------------- abstract_optional_method.js.flow:2:27
+
+Optional methods can't be abstract. [ParseError]
+
+   2|   abstract optionalMethod?(x: number): void; // ERROR: optional can't be abstract
+                                ^
+
+
 Error ------------------------------------------------------------------------------------------- declare_methods.js:3:3
 
 Declare methods in classes are not supported. [unsupported-syntax]
@@ -625,6 +633,60 @@ References:
                                             ^^^^^^ [2]
 
 
+Error -------------------------------------------------------------------------------------- use_optional_methods.js:7:1
+
+Cannot cast `instance.optionalMethod` to function type because undefined [1] is incompatible with function type [2].
+[incompatible-type]
+
+   use_optional_methods.js:7:1
+   7| instance.optionalMethod as (x: number) => void; // ERROR: could be void
+      ^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   optional_methods.js.flow:2:18
+   2|   optionalMethod?(x: number): void;
+                       ^^^^^^^^^^^ [1]
+   use_optional_methods.js:7:28
+   7| instance.optionalMethod as (x: number) => void; // ERROR: could be void
+                                 ^^^^^^^^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- use_optional_methods.js:11:1
+
+Cannot cast `OptionalMethods.optionalStaticMethod` to function type because undefined [1] is incompatible with function
+type [2]. [incompatible-type]
+
+   use_optional_methods.js:11:1
+   11| OptionalMethods.optionalStaticMethod as () => string; // ERROR: could be void
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   optional_methods.js.flow:3:31
+    3|   static optionalStaticMethod?(): string;
+                                     ^^ [1]
+   use_optional_methods.js:11:41
+   11| OptionalMethods.optionalStaticMethod as () => string; // ERROR: could be void
+                                               ^^^^^^^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------------- use_optional_methods.js:15:1
+
+Cannot cast `instance.optionalGeneric` to function type because undefined [1] is incompatible with function type [2].
+[incompatible-type]
+
+   use_optional_methods.js:15:1
+   15| instance.optionalGeneric as <T>(x: T) => T; // ERROR: could be void
+       ^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   optional_methods.js.flow:4:19
+    4|   optionalGeneric?<T>(x: T): T;
+                         ^^^ [1]
+   use_optional_methods.js:15:29
+   15| instance.optionalGeneric as <T>(x: T) => T; // ERROR: could be void
+                                   ^^^^^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------- use_variables.js:17:22
 
 Cannot assign `foo` to `badX` because string [1] is incompatible with number [2]. [incompatible-type]
@@ -723,4 +785,4 @@ References:
 
 
 
-Found 44 errors
+Found 48 errors

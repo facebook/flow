@@ -2482,8 +2482,8 @@ and class_method
         ]
     )
 
-and class_declare_method ~opts (loc, { Ast.Class.DeclareMethod.kind; key; annot; static; comments })
-    =
+and class_declare_method
+    ~opts (loc, { Ast.Class.DeclareMethod.kind; key; annot; static; optional; comments }) =
   let s_key =
     match key with
     | Ast.Expression.Object.Property.PrivateName
@@ -2516,9 +2516,15 @@ and class_declare_method ~opts (loc, { Ast.Class.DeclareMethod.kind; key; annot;
     | Constructor ->
       Empty
   in
+  let s_optional =
+    if optional then
+      Atom "?"
+    else
+      Empty
+  in
   source_location_with_comments
     ?comments
-    (loc, with_semicolon (fuse [s_static; s_kind; s_key; s_annot]))
+    (loc, with_semicolon (fuse [s_static; s_kind; s_key; s_optional; s_annot]))
 
 and class_abstract_method
     ~opts

@@ -1584,9 +1584,27 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (m1 : (Loc.t, Loc.t) Ast.Class.DeclareMethod.t')
       (m2 : (Loc.t, Loc.t) Ast.Class.DeclareMethod.t') : node change list option =
     let open Ast.Class.DeclareMethod in
-    let { kind = kind1; key = key1; annot = annot1; static = static1; comments = comments1 } = m1 in
-    let { kind = kind2; key = key2; annot = annot2; static = static2; comments = comments2 } = m2 in
-    if key1 != key2 || static1 != static2 || kind1 != kind2 then
+    let {
+      kind = kind1;
+      key = key1;
+      annot = annot1;
+      static = static1;
+      optional = optional1;
+      comments = comments1;
+    } =
+      m1
+    in
+    let {
+      kind = kind2;
+      key = key2;
+      annot = annot2;
+      static = static2;
+      optional = optional2;
+      comments = comments2;
+    } =
+      m2
+    in
+    if key1 != key2 || static1 != static2 || kind1 != kind2 || optional1 != optional2 then
       None
     else
       let annot_diff = Some (diff_if_changed type_annotation annot1 annot2) in

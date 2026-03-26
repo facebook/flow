@@ -618,6 +618,22 @@ module Object
   (* In the ES6 draft, all elements are methods. No properties (though there
    * are getter and setters allowed *)
   let class_element =
+    let method_kind_of_key env ~static ~async ~generator key =
+      match (static, string_value_of_key key) with
+      | (false, Some (key_loc, "constructor")) ->
+        if async then error_at env (key_loc, Parse_error.ConstructorCannotBeAsync);
+        if generator then error_at env (key_loc, Parse_error.ConstructorCannotBeGenerator);
+        Ast.Class.Method.Constructor
+      | (true, Some (key_loc, "prototype")) ->
+        error_at
+          env
+          ( key_loc,
+            Parse_error.InvalidClassMemberName
+              { name = "prototype"; static; method_ = true; private_ = false }
+          );
+        Ast.Class.Method.Method
+      | _ -> Ast.Class.Method.Method
+    in
     let make_bodyless_declare_accessor
         env ~start_loc ~sig_loc ~kind ~key ~tparams ~params ~return ~static ~leading =
       match Declaration.convert_function_params_to_type_params params with
@@ -660,6 +676,54 @@ module Object
                  key;
                  annot;
                  static;
+                 optional = false;
+                 comments = Flow_ast_utils.mk_comments_opt ~leading ();
+               }
+             )
+          )
+      | Error _ -> None
+    in
+    let make_bodyless_declare_method
+        env ~start_loc ~sig_loc ~kind ~key ~tparams ~params ~return ~static ~optional ~leading =
+      match Declaration.convert_function_params_to_type_params params with
+      | Ok type_params ->
+        let return_annot =
+          match return with
+          | Function.ReturnAnnot.Available (_, (ret_loc, t)) ->
+            Ast.Type.Function.Available (ret_loc, t)
+          | Function.ReturnAnnot.TypeGuard (_, tg) -> Ast.Type.Function.TypeGuard tg
+          | Function.ReturnAnnot.Missing loc ->
+            if kind = Ast.Class.Method.Constructor then
+              Ast.Type.Function.Missing loc
+            else
+              Ast.Type.Function.Available (loc, Ast.Type.Any None)
+        in
+        let func =
+          {
+            Ast.Type.Function.tparams;
+            params = type_params;
+            return = return_annot;
+            comments = None;
+            effect_ = Function.Arbitrary;
+          }
+        in
+        let annot_loc =
+          match tparams with
+          | Some (tparams_loc, _) -> tparams_loc
+          | None -> fst params
+        in
+        let annot = (annot_loc, (annot_loc, Ast.Type.Function func)) in
+        ignore (Eat.maybe env T_SEMICOLON);
+        let open Ast.Class in
+        Some
+          (Body.DeclareMethod
+             ( Loc.btwn start_loc sig_loc,
+               {
+                 DeclareMethod.kind;
+                 key;
+                 annot;
+                 static;
+                 optional;
                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
                }
              )
@@ -990,6 +1054,15 @@ module Object
       | _ when Peek.is_implicit_semicolon env -> true
       | _ -> false
     in
+    let is_optional_method_in_ambient env =
+      in_ambient_context env
+      &&
+      match Peek.ith_token ~i:1 env with
+      | T_LPAREN
+      | T_LESS_THAN ->
+        true
+      | _ -> false
+    in
     let init
         env
         start_loc
@@ -1021,6 +1094,74 @@ module Object
           ~abstract
           ~optional:false
           leading
+      | T_PLING when (not async) && (not generator) && is_optional_method_in_ambient env ->
+        (* Optional method in ambient context: eat ? and parse as declare method *)
+        Eat.token env;
+        error_unsupported_declare env declare;
+        error_unsupported_variance env variance;
+        let key = object_key_remove_trailing env key in
+        let kind = method_kind_of_key env ~static ~async ~generator key in
+        if kind = Ast.Class.Method.Constructor then
+          error env Parse_error.ConstructorCannotBeOptional;
+        if abstract then error env Parse_error.OptionalMethodCannotBeAbstract;
+        let (sig_loc, (tparams, params, return)) =
+          with_loc
+            (fun env ->
+              let tparams =
+                type_params_remove_trailing
+                  env
+                  ~kind:Flow_ast_mapper.FunctionTP
+                  (Type.type_params env)
+              in
+              let params =
+                let params = Declaration.function_params ~await:false ~yield:false env in
+                if Peek.token env = T_COLON then
+                  params
+                else
+                  function_params_remove_trailing env params
+              in
+              let return =
+                return_annotation_remove_trailing env (Type.function_return_annotation_opt env)
+              in
+              (tparams, params, return))
+            env
+        in
+        begin
+          match
+            make_bodyless_declare_method
+              env
+              ~start_loc
+              ~sig_loc
+              ~kind
+              ~key
+              ~tparams
+              ~params
+              ~return
+              ~static
+              ~optional:true
+              ~leading
+          with
+          | Some element -> element
+          | None ->
+            (* Params couldn't be converted; this shouldn't happen in ambient context.
+               Produce an error and emit a property as recovery. *)
+            error_unexpected env;
+            ignore (Eat.maybe env T_SEMICOLON);
+            Class.Body.Property
+              ( Loc.btwn start_loc sig_loc,
+                {
+                  Class.Property.key;
+                  value = Class.Property.Declared;
+                  annot = Ast.Type.Missing (Peek.loc env);
+                  static;
+                  optional = true;
+                  variance = None;
+                  ts_accessibility;
+                  decorators;
+                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
+                }
+              )
+        end
       | T_PLING when (not async) && not generator ->
         Eat.token env;
         property
@@ -1052,21 +1193,11 @@ module Object
       | _ ->
         error_unsupported_declare env declare;
         error_unsupported_variance env variance;
-        let (kind, env) =
-          match (static, string_value_of_key key) with
-          | (false, Some (key_loc, "constructor")) ->
-            if async then error_at env (key_loc, Parse_error.ConstructorCannotBeAsync);
-            if generator then error_at env (key_loc, Parse_error.ConstructorCannotBeGenerator);
-            (Ast.Class.Method.Constructor, env |> with_allow_super Super_prop_or_call)
-          | (true, Some (key_loc, "prototype")) ->
-            error_at
-              env
-              ( key_loc,
-                Parse_error.InvalidClassMemberName
-                  { name = "prototype"; static; method_ = true; private_ = false }
-              );
-            (Ast.Class.Method.Method, env |> with_allow_super Super_prop)
-          | _ -> (Ast.Class.Method.Method, env |> with_allow_super Super_prop)
+        let kind = method_kind_of_key env ~static ~async ~generator key in
+        let env =
+          match kind with
+          | Ast.Class.Method.Constructor -> env |> with_allow_super Super_prop_or_call
+          | _ -> env |> with_allow_super Super_prop
         in
         let key = object_key_remove_trailing env key in
         (* Parse method signature: type params, params, return annotation *)
@@ -1131,11 +1262,6 @@ module Object
             | None -> fst params
           in
           (annot_loc, func)
-        in
-        (* Wrap function type as Type.annotation for DeclareMethod *)
-        let make_method_annot type_params =
-          let (annot_loc, func) = make_method_func_type type_params in
-          (annot_loc, (annot_loc, Ast.Type.Function func))
         in
         (* Check for bodyless method: semicolon instead of body.
            Also accept implicit semicolons (ASI) in ambient contexts. *)
@@ -1218,20 +1344,22 @@ module Object
             | _ -> true
           then
           (* Implicit declare method *)
-          match Declaration.convert_function_params_to_type_params params with
-          | Ok type_params ->
-            ignore (Eat.maybe env T_SEMICOLON);
-            Class.Body.DeclareMethod
-              ( Loc.btwn start_loc sig_loc,
-                {
-                  Class.DeclareMethod.kind = Class.Method.Method;
-                  key;
-                  annot = make_method_annot type_params;
-                  static;
-                  comments = Flow_ast_utils.mk_comments_opt ~leading ();
-                }
-              )
-          | Error _ ->
+          match
+            make_bodyless_declare_method
+              env
+              ~start_loc
+              ~sig_loc
+              ~kind
+              ~key
+              ~tparams
+              ~params
+              ~return
+              ~static
+              ~optional:false
+              ~leading
+          with
+          | Some element -> element
+          | None ->
             (* Normal method with body *)
             make_method env
         else

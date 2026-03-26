@@ -21,6 +21,7 @@ type t =
   | ConstructorCannotBeAccessor
   | ConstructorCannotBeAsync
   | ConstructorCannotBeGenerator
+  | ConstructorCannotBeOptional
   | DeclareAsync
   | DeclareAsyncComponent
   | DeclareAsyncHook
@@ -126,6 +127,7 @@ type t =
   | NullishCoalescingUnexpectedLogical of string
   | OptionalChainNew
   | OptionalChainTemplate
+  | OptionalMethodCannotBeAbstract
   | ParameterAfterRestParameter
   | PrivateDelete
   | PrivateNotInClass
@@ -224,6 +226,7 @@ module PP = struct
     | ConstructorCannotBeAccessor -> "Constructor can't be an accessor."
     | ConstructorCannotBeAsync -> "Constructor can't be an async function."
     | ConstructorCannotBeGenerator -> "Constructor can't be a generator."
+    | ConstructorCannotBeOptional -> "Constructor can't be optional."
     | DeclareAsync ->
       "async is an implementation detail and isn't necessary for your declare function statement. "
       ^ "It is sufficient for your declare function to just have a Promise return type."
@@ -450,6 +453,7 @@ module PP = struct
         operator
     | OptionalChainNew -> "An optional chain may not be used in a `new` expression."
     | OptionalChainTemplate -> "Template literals may not be used in an optional chain."
+    | OptionalMethodCannotBeAbstract -> "Optional methods can't be abstract."
     | ParameterAfterRestParameter -> "Rest parameter must be final parameter of an argument list"
     | PrivateDelete -> "Private fields may not be deleted."
     | PrivateNotInClass -> "Private fields can only be referenced from within a class."

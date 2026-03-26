@@ -8010,6 +8010,7 @@ pub fn class_declare_method_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         key,
         annot,
         static_: _,
+        optional: _,
         comments,
     } = decl_meth;
     visitor.object_key(key)?;
@@ -8028,6 +8029,7 @@ pub fn map_class_declare_method_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         key,
         annot,
         static_,
+        optional,
         comments,
     } = decl_meth;
 
@@ -8041,6 +8043,7 @@ pub fn map_class_declare_method_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         key: key_,
         annot: annot_,
         static_: *static_,
+        optional: *optional,
         comments: comments_,
     }
 }

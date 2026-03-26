@@ -994,6 +994,40 @@ fn string_value_of_key(key: &expression::object::Key<Loc, Loc>) -> Option<(&Loc,
 // In the ES6 draft, all elements are methods. No properties (though there
 // are getter and setters allowed
 fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Rollback> {
+    fn method_kind_of_key(
+        env: &mut ParserEnv,
+        static_: bool,
+        async_: bool,
+        generator: bool,
+        key: &expression::object::Key<Loc, Loc>,
+    ) -> Result<class::MethodKind, Rollback> {
+        match (static_, string_value_of_key(key)) {
+            (false, Some((key_loc, "constructor"))) => {
+                if async_ {
+                    env.error_at(key_loc.dupe(), ParseError::ConstructorCannotBeAsync)?;
+                }
+                if generator {
+                    env.error_at(key_loc.dupe(), ParseError::ConstructorCannotBeGenerator)?;
+                }
+                Ok(class::MethodKind::Constructor)
+            }
+            (true, Some((key_loc, name))) if name == "prototype" => {
+                let name = name.to_owned();
+                env.error_at(
+                    key_loc.dupe(),
+                    ParseError::InvalidClassMemberName {
+                        name,
+                        static_: true,
+                        method_: true,
+                        private_: false,
+                    },
+                )?;
+                Ok(class::MethodKind::Method)
+            }
+            _ => Ok(class::MethodKind::Method),
+        }
+    }
+
     fn make_bodyless_declare_accessor(
         env: &mut ParserEnv,
         start_loc: &Loc,
@@ -1058,6 +1092,79 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                         key: key.clone(),
                         annot,
                         static_,
+                        optional: false,
+                        comments: ast_utils::mk_comments_opt(Some(leading.to_vec().into()), None),
+                    },
+                )))
+            }
+            Err(_) => Ok(None),
+        }
+    }
+
+    #[allow(clippy::too_many_arguments)]
+    fn make_bodyless_declare_method(
+        env: &mut ParserEnv,
+        start_loc: &Loc,
+        sig_loc: &Loc,
+        kind: class::MethodKind,
+        key: &expression::object::Key<Loc, Loc>,
+        tparams: &Option<types::TypeParams<Loc, Loc>>,
+        params: &function::Params<Loc, Loc>,
+        return_annot: &function::ReturnAnnot<Loc, Loc>,
+        static_: bool,
+        optional: bool,
+        leading: &[Comment<Loc>],
+    ) -> Result<Option<class::BodyElement<Loc, Loc>>, Rollback> {
+        match declaration_parser::convert_function_params_to_type_params(params) {
+            Ok(type_params) => {
+                let return_ = match return_annot {
+                    function::ReturnAnnot::Available(annot) => {
+                        types::function::ReturnAnnotation::Available(annot.clone())
+                    }
+                    function::ReturnAnnot::TypeGuard(tg) => {
+                        types::function::ReturnAnnotation::TypeGuard(tg.guard.clone())
+                    }
+                    function::ReturnAnnot::Missing(loc) => {
+                        if kind == class::MethodKind::Constructor {
+                            types::function::ReturnAnnotation::Missing(loc.dupe())
+                        } else {
+                            types::function::ReturnAnnotation::Available(types::Annotation {
+                                loc: loc.dupe(),
+                                annotation: types::Type::new(types::TypeInner::Any {
+                                    loc: loc.dupe(),
+                                    comments: None,
+                                }),
+                            })
+                        }
+                    }
+                };
+                let func = types::Function {
+                    tparams: tparams.clone(),
+                    params: type_params,
+                    return_,
+                    comments: None,
+                    effect: function::Effect::Arbitrary,
+                };
+                let annot_loc = match tparams {
+                    Some(tp) => tp.loc.dupe(),
+                    None => params.loc.dupe(),
+                };
+                let annot = types::Annotation {
+                    loc: annot_loc.dupe(),
+                    annotation: types::Type::new(types::TypeInner::Function {
+                        loc: annot_loc.dupe(),
+                        inner: Arc::new(func),
+                    }),
+                };
+                eat::maybe(env, TokenKind::TSemicolon)?;
+                Ok(Some(class::BodyElement::DeclareMethod(
+                    class::DeclareMethod {
+                        loc: Loc::between(start_loc, sig_loc),
+                        kind,
+                        key: key.clone(),
+                        annot,
+                        static_,
+                        optional,
                         comments: ast_utils::mk_comments_opt(Some(leading.to_vec().into()), None),
                     },
                 )))
@@ -1448,6 +1555,14 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         }
     }
 
+    fn is_optional_method_in_ambient(env: &mut ParserEnv) -> bool {
+        env.in_ambient_context()
+            && matches!(
+                peek::ith_token(env, 1),
+                TokenKind::TLparen | TokenKind::TLessThan
+            )
+    }
+
     #[allow(clippy::too_many_arguments)]
     fn init(
         env: &mut ParserEnv,
@@ -1486,6 +1601,65 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 leading,
             );
         }
+        if !async_
+            && !generator
+            && peek::token(env) == &TokenKind::TPling
+            && is_optional_method_in_ambient(env)
+        {
+            eat::token(env)?;
+            error_unsupported_declare(env, &declare)?;
+            error_unsupported_variance(env, &variance)?;
+            comment_attachment::object_key_remove_trailing(env, &mut key);
+            let kind = method_kind_of_key(env, static_, async_, generator, &key)?;
+            if kind == class::MethodKind::Constructor {
+                env.error(ParseError::ConstructorCannotBeOptional)?;
+            }
+            if abstract_ {
+                env.error(ParseError::OptionalMethodCannotBeAbstract)?;
+            }
+            let (sig_loc, (tparams, params, return_annot)) = with_loc(None, env, |env| {
+                let mut tparams = type_parser::parse_type_params(env)?;
+                comment_attachment::type_params_remove_trailing(env, tparams.as_mut());
+                let mut params = declaration_parser::parse_function_params(env, false, false)?;
+                if peek::token(env) != &TokenKind::TColon {
+                    comment_attachment::function_params_remove_trailing(env, &mut params);
+                }
+                let mut return_annot = type_parser::parse_function_return_annotation_opt(env)?;
+                comment_attachment::return_annotation_remove_trailing(env, &mut return_annot);
+                Ok((tparams, params, return_annot))
+            })?;
+            return match make_bodyless_declare_method(
+                env,
+                &start_loc,
+                &sig_loc,
+                kind,
+                &key,
+                &tparams,
+                &params,
+                &return_annot,
+                static_,
+                true,
+                &leading,
+            )? {
+                Some(element) => Ok(element),
+                None => {
+                    env.error_unexpected(None)?;
+                    eat::maybe(env, TokenKind::TSemicolon)?;
+                    Ok(class::BodyElement::Property(class::Property {
+                        loc: Loc::between(&start_loc, &sig_loc),
+                        key,
+                        value: class::property::Value::Declared,
+                        annot: types::AnnotationOrHint::Missing(peek::loc(env).dupe()),
+                        static_,
+                        optional: true,
+                        variance: None,
+                        ts_accessibility,
+                        decorators: decorators.into(),
+                        comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
+                    }))
+                }
+            };
+        }
         if !async_ && !generator && peek::token(env) == &TokenKind::TPling {
             eat::token(env)?;
             return property(
@@ -1522,33 +1696,10 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
         error_unsupported_declare(env, &declare)?;
         error_unsupported_variance(env, &variance)?;
 
-        let (kind, allow_super) = match (static_, string_value_of_key(&key)) {
-            (false, Some((key_loc, "constructor"))) => {
-                if async_ {
-                    env.error_at(key_loc.dupe(), ParseError::ConstructorCannotBeAsync)?;
-                }
-                if generator {
-                    env.error_at(key_loc.dupe(), ParseError::ConstructorCannotBeGenerator)?;
-                }
-                (
-                    class::MethodKind::Constructor,
-                    AllowedSuper::SuperPropOrCall,
-                )
-            }
-            (true, Some((key_loc, name))) if name == "prototype" => {
-                let name = name.to_owned();
-                env.error_at(
-                    key_loc.dupe(),
-                    ParseError::InvalidClassMemberName {
-                        name,
-                        static_: true,
-                        method_: true,
-                        private_: false,
-                    },
-                )?;
-                (class::MethodKind::Method, AllowedSuper::SuperProp)
-            }
-            _ => (class::MethodKind::Method, AllowedSuper::SuperProp),
+        let kind = method_kind_of_key(env, static_, async_, generator, &key)?;
+        let allow_super = match kind {
+            class::MethodKind::Constructor => AllowedSuper::SuperPropOrCall,
+            _ => AllowedSuper::SuperProp,
         };
         env.with_allow_super(allow_super, |env| {
             comment_attachment::object_key_remove_trailing(env, &mut key);
@@ -1707,30 +1858,22 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                 }
             {
                 // Implicit declare method
-                match declaration_parser::convert_function_params_to_type_params(&params) {
-                    Ok(type_params) => {
-                        eat::maybe(env, TokenKind::TSemicolon)?;
-                        let (annot_loc, func) = make_method_func_type(type_params);
-                        let fn_type = types::Type::new(types::TypeInner::Function {
-                            loc: annot_loc.dupe(),
-                            inner: Arc::new(func),
-                        });
-                        let annot = types::Annotation {
-                            loc: annot_loc.dupe(),
-                            annotation: fn_type,
-                        };
-                        let loc = Loc::between(&start_loc, &sig_loc);
-                        Ok(class::BodyElement::DeclareMethod(class::DeclareMethod {
-                            loc,
-                            kind: class::MethodKind::Method,
-                            key,
-                            annot,
-                            static_,
-                            comments: ast_utils::mk_comments_opt(Some(leading.into()), None),
-                        }))
-                    }
+                match make_bodyless_declare_method(
+                    env,
+                    &start_loc,
+                    &sig_loc,
+                    kind,
+                    &key,
+                    &tparams,
+                    &params,
+                    &return_annot,
+                    static_,
+                    false,
+                    &leading,
+                )? {
+                    Some(element) => Ok(element),
                     // Normal method with body
-                    Err(_) => make_method(env),
+                    None => make_method(env),
                 }
             } else {
                 // Normal method with body

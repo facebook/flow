@@ -568,7 +568,7 @@ class ['loc] mapper =
 
     method class_declare_method _loc (decl_meth : ('loc, 'loc) Ast.Class.DeclareMethod.t') =
       let open Ast.Class.DeclareMethod in
-      let { kind = _; key; annot; static = _; comments } = decl_meth in
+      let { kind = _; key; annot; static = _; optional = _; comments } = decl_meth in
       let key' = this#object_key key in
       let annot' = this#type_annotation annot in
       let comments' = this#syntax_opt comments in

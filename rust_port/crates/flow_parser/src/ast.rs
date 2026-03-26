@@ -6421,6 +6421,7 @@ pub mod class {
         pub key: super::expression::object::Key<M, T>,
         pub annot: super::types::Annotation<M, T>,
         pub static_: bool,
+        pub optional: bool,
         pub comments: Option<Syntax<M, ()>>,
     }
 

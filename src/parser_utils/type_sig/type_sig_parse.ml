@@ -4400,11 +4400,22 @@ and class_def =
                 key = P.Identifier (id_loc, { Ast.Identifier.name; comments = _ });
                 annot = (_, (fn_loc, T.Function f));
                 static;
+                optional;
                 comments = _;
               }
             ) ->
           if opts.munge && Signature_utils.is_munged_property_string name then
             acc
+          else if optional then
+            (* Optional method in class body: treat as optional field with function type.
+               Unlike optional_method_as_field, here id_loc starts before fn_loc,
+               so we push id_loc first to maintain location ordering. *)
+            let id_loc = push_loc tbls id_loc in
+            let fn_loc = push_loc tbls fn_loc in
+            let def = function_type opts scope tbls xs f in
+            let t = Annot (Optional (Annot (FunAnnot (fn_loc, def)))) in
+            let polarity = Polarity.Neutral in
+            Acc.add_field ~static name id_loc polarity t acc
           else begin
             match kind with
             | C.Method.Get ->

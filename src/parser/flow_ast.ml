@@ -2505,6 +2505,7 @@ and Class : sig
       key: ('M, 'T) Expression.Object.Property.key;
       annot: ('M, 'T) Type.annotation;
       static: bool;
+      optional: bool;
       comments: ('M, unit) Syntax.t option;
     }
     [@@deriving show]

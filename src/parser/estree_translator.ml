@@ -1535,7 +1535,8 @@ with type t = Impl.t = struct
         | Some v -> [("tsAccessibility", string v)]
         | None -> []
         )
-    and class_declare_method (loc, { Class.DeclareMethod.kind; key; annot; static; comments }) =
+    and class_declare_method
+        (loc, { Class.DeclareMethod.kind; key; annot; static; optional; comments }) =
       let (key, computed, comments) =
         let open Expression.Object.Property in
         match key with
@@ -1567,6 +1568,7 @@ with type t = Impl.t = struct
            ("key", key);
            ("value", type_annotation annot);
            ("static", bool static);
+           ("optional", bool optional);
            ("computed", bool computed);
          ]
         @ kind_prop

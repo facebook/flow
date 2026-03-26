@@ -39,6 +39,7 @@ pub enum ParseError {
     ConstructorCannotBeAccessor,
     ConstructorCannotBeAsync,
     ConstructorCannotBeGenerator,
+    ConstructorCannotBeOptional,
     DeclareAsync,
     DeclareAsyncComponent,
     DeclareAsyncHook,
@@ -159,6 +160,7 @@ pub enum ParseError {
     NullishCoalescingUnexpectedLogical(String),
     OptionalChainNew,
     OptionalChainTemplate,
+    OptionalMethodCannotBeAbstract,
     ParameterAfterRestParameter,
     PrivateDelete,
     PrivateNotInClass,
@@ -300,6 +302,9 @@ impl fmt::Display for ParseError {
             }
             Self::ConstructorCannotBeGenerator => {
                 write!(f, "Constructor can't be a generator.")
+            }
+            Self::ConstructorCannotBeOptional => {
+                write!(f, "Constructor can't be optional.")
             }
             Self::DeclareAsync => {
                 write!(
@@ -751,6 +756,9 @@ impl fmt::Display for ParseError {
             }
             Self::OptionalChainTemplate => {
                 write!(f, "Template literals may not be used in an optional chain.")
+            }
+            Self::OptionalMethodCannotBeAbstract => {
+                write!(f, "Optional methods can't be abstract.")
             }
             Self::ParameterAfterRestParameter => {
                 write!(
