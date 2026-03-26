@@ -75,6 +75,10 @@
   text-align: right;
   padding-right: 1em;
   user-select: none;
+  position: relative;
+}
+
+.lineNumberText {
   opacity: 0.5;
 }
 
@@ -83,31 +87,110 @@
   position: relative;
 }
 
-.flowErrors {
-  word-break: break-word;
-  white-space: normal;
-  margin: 0;
-  border-radius: 0;
-  padding: 0.5rem 1rem;
-  background-color: #d5382f;
-  color: white;
-}
-
-.flowErrorUnderlineContainer {
+/* VS Code-style red left edge bar for lines with errors */
+.gutterMarker {
   position: absolute;
+  left: 0;
+  top: -1px;
+  bottom: -1px;
+  width: 3px;
+  background-color: #d5382f;
+  border-radius: 0 2px 2px 0;
+}
+
+/* Squiggly underline for error ranges */
+.flowErrorHighlight {
+  position: absolute;
+  top: 0;
   bottom: 0;
-  height: 0;
-  line-height: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='3'%3E%3Cpath d='M0 2 Q1 0 2 2 Q3 4 4 2' fill='none' stroke='%23d5382f' stroke-width='0.8'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: bottom;
+  background-size: 4px 3px;
+  z-index: 1;
+  pointer-events: none;
 }
 
-.flowErrorUnderlineLeftPadding {
-  display: inline-block;
+/* Inline error message row */
+.inlineErrorRow {
+  display: table-row;
+  background: rgba(213, 56, 47, 0.08);
 }
 
-.flowErrorUnderline {
+.inlineErrorGutter {
+  display: table-cell;
+  width: 2.5em;
+  padding-right: 1em;
+  position: relative;
+}
+
+.inlineErrorGutter::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background-color: #d5382f;
+  border-radius: 0 2px 2px 0;
+}
+
+.inlineErrorContent {
+  display: table-cell;
+  padding: 4px 0;
+  font-size: 0.85em;
+  line-height: 1.5;
+  color: #b71c1c;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+[data-theme='dark'] .inlineErrorRow {
+  background: rgba(213, 56, 47, 0.12);
+}
+
+.inlineErrorSpacer {
+  display: table-row;
+  height: 2px;
+}
+
+[data-theme='dark'] .inlineErrorContent {
+  color: #ff8a80;
+}
+
+/* Error code badge */
+.errorCodeBadge {
   display: inline-block;
-  border-bottom: 2px dotted #d5382f;
-  line-height: 2px;
-  user-select: none;
-  cursor: help;
+  background: rgba(213, 56, 47, 0.15);
+  color: #d5382f;
+  font-size: 0.85em;
+  padding: 0 5px;
+  border-radius: 3px;
+  margin-right: 6px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+[data-theme='dark'] .errorCodeBadge {
+  background: rgba(213, 56, 47, 0.25);
+  color: #ff8a80;
+}
+
+.errorMessageText {
+  display: inline;
+}
+
+/* Muted [N] reference markers */
+.errorRefMarker {
+  opacity: 0.4;
+  font-size: 0.65em;
+  margin-left: 1px;
+  font-weight: normal;
+}
+
+/* Highlighted identifiers in error messages */
+.errorHighlightedCode {
+  font-size: inherit;
+  font-family: inherit;
+  font-weight: 600;
 }

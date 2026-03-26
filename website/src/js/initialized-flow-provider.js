@@ -31,14 +31,30 @@ export default async function getFlowErrors(
     return '[]';
   }
   return JSON.stringify(
-    (await checkContents(code)).errors
-      .flatMap(({message}) => message)
-      .map(({loc, descr}) => ({
-        startLine: loc.start.line,
-        startColumn: loc.start.column,
-        endLine: loc.end.line,
-        endColumn: loc.end.column,
-        description: descr,
-      })),
+    (await checkContents(code)).errors.map(({message, error_codes}) => {
+      const errorCode = (error_codes && error_codes[0]) || null;
+      let fullDescription = message.map(({descr}) => descr).join(' ');
+
+      // Strip error code tag from description text — Flow includes it inline
+      // but we display it separately as a badge
+      if (errorCode) {
+        fullDescription = fullDescription
+          .replace(`. [${errorCode}]`, '.')
+          .replace(`[${errorCode}] `, '')
+          .replace(`[${errorCode}]`, '');
+      }
+
+      return {
+        messages: message.map(({loc, descr}) => ({
+          startLine: loc.start.line,
+          startColumn: loc.start.column,
+          endLine: loc.end.line,
+          endColumn: loc.end.column,
+          description: descr,
+        })),
+        fullDescription,
+        errorCode,
+      };
+    }),
   );
 }

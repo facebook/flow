@@ -17,28 +17,99 @@ import Translate, {translate} from '@docusaurus/Translate';
 import styles from './FlowCheckCodeBlock.module.css';
 import {useThemeConfig} from '@docusaurus/theme-common';
 
-type FlowError = {
+type FlowErrorMessage = {
   startLine: number,
   startColumn: number,
   endLine: number,
   endColumn: number,
-  description: number,
+  description: string,
 };
 
-function getErrorsUnderlineRangesOnLine(
+type FlowError = {
+  messages: Array<FlowErrorMessage>,
+  fullDescription: string,
+  errorCode: string | null,
+};
+
+type HighlightRange = {
+  start: number,
+  end: number,
+};
+
+function formatErrorMessage(
+  text: string,
+  errorCode: string | null,
+): React.MixedElement {
+  // Extract and strip URLs from the message
+  const cleanText = text
+    .replace(/\.\s*See \d+\.\s*in\s*https?:\/\/[^\s,)]+\.?/g, '.')
+    .replace(/\.\s*See\s+https?:\/\/[^\s,)]+\.?/g, '.')
+    .replace(/\s*https?:\/\/[^\s,)]+/g, '')
+    .trim();
+
+  // Split by backtick-quoted segments and [N] reference markers
+  const parts = cleanText.split(/(`[^`]+`|\[\d+\])/g);
+
+  const badge = errorCode ? (
+    <span className={styles.errorCodeBadge}>{errorCode}</span>
+  ) : null;
+
+  return (
+    <>
+      {badge}
+      <span className={styles.errorMessageText}>
+        {parts.map((part, i) => {
+          if (part.startsWith('`') && part.endsWith('`')) {
+            return (
+              <code key={i} className={styles.errorHighlightedCode}>
+                {part.slice(1, -1)}
+              </code>
+            );
+          }
+          if (/^\[\d+\]$/.test(part)) {
+            return (
+              <sup key={i} className={styles.errorRefMarker}>
+                {part}
+              </sup>
+            );
+          }
+          return part;
+        })}
+      </span>
+    </>
+  );
+}
+
+function mergeRanges(ranges: Array<HighlightRange>): Array<HighlightRange> {
+  if (ranges.length === 0) return [];
+  const sorted = [...ranges].sort((a, b) => a.start - b.start);
+  const merged: Array<HighlightRange> = [sorted[0]];
+  for (let i = 1; i < sorted.length; i++) {
+    const last = merged[merged.length - 1];
+    if (sorted[i].start <= last.end) {
+      last.end = Math.max(last.end, sorted[i].end);
+    } else {
+      merged.push(sorted[i]);
+    }
+  }
+  return merged;
+}
+
+function getHighlightRangesOnLine(
   errors: Array<FlowError>,
   line: number,
   lineWidth: number,
-): Array<{start: number, end: number}> {
-  return errors
-    .map(error => {
-      if (!(error.startLine <= line && line <= error.endLine)) return null;
-      const range = {start: error.startColumn - 1, end: error.endColumn};
-      if (error.startLine < line) range.start = 1;
-      if (line < error.endLine) range.end = lineWidth;
-      return range;
-    })
-    .filter(Boolean);
+): Array<HighlightRange> {
+  const ranges: Array<HighlightRange> = [];
+  for (const error of errors) {
+    for (const msg of error.messages) {
+      if (!(msg.startLine <= line && line <= msg.endLine)) continue;
+      const start = msg.startLine < line ? 0 : msg.startColumn - 1;
+      const end = line < msg.endLine ? lineWidth : msg.endColumn;
+      ranges.push({start, end});
+    }
+  }
+  return mergeRanges(ranges);
 }
 
 export default component FlowCheckCodeBlock(
@@ -70,6 +141,22 @@ export default component FlowCheckCodeBlock(
   const language = 'tsx';
   const code = content.replace(/\n$/, '');
   const lineWidths = code.split('\n').map(line => line.length);
+
+  // Compute which lines have error indicators (based on primary error location)
+  const errorsByPrimaryLine: Map<
+    number,
+    Array<{error: FlowError, errorIndex: number}>,
+  > = new Map();
+  flowErrors.forEach((error, errorIndex) => {
+    const primaryMsg = error.messages[0];
+    if (primaryMsg) {
+      const line = primaryMsg.startLine;
+      if (!errorsByPrimaryLine.has(line)) {
+        errorsByPrimaryLine.set(line, []);
+      }
+      errorsByPrimaryLine.get(line)?.push({error, errorIndex});
+    }
+  });
 
   const handleCopyCode = () => {
     copy(code);
@@ -104,36 +191,67 @@ export default component FlowCheckCodeBlock(
 
                   lineProps.className += ' ' + styles.codeBlockLine;
 
+                  const lineNum = i + 1;
+                  const lineErrors = errorsByPrimaryLine.get(lineNum);
+                  const hasError = lineErrors != null && lineErrors.length > 0;
+
                   return (
-                    <span key={i} {...lineProps}>
-                      <span className={styles.codeBlockLineNumber}>
-                        {i + 1}
-                      </span>
-                      <span className={styles.codeBlockLineContent}>
-                        {line.map((token, key) => (
-                          <span key={key} {...getTokenProps({token, key})} />
-                        ))}
-                        {getErrorsUnderlineRangesOnLine(
-                          flowErrors,
-                          i + 1,
-                          lineWidths[i],
-                        ).map((error, key) => (
-                          <div
-                            key={key}
-                            className={styles.flowErrorUnderlineContainer}>
-                            <span
-                              className={styles.flowErrorUnderlineLeftPadding}>
-                              {' '.repeat(error.start)}
-                            </span>
+                    <React.Fragment key={i}>
+                      <span {...lineProps}>
+                        <span className={styles.codeBlockLineNumber}>
+                          {hasError && <span className={styles.gutterMarker} />}
+                          <span className={styles.lineNumberText}>
+                            {lineNum}
+                          </span>
+                        </span>
+                        <span className={styles.codeBlockLineContent}>
+                          {line.map((token, key) => (
+                            <span key={key} {...getTokenProps({token, key})} />
+                          ))}
+                          {getHighlightRangesOnLine(
+                            flowErrors,
+                            lineNum,
+                            lineWidths[i],
+                          ).map((range, key) => (
                             <span
                               key={key}
-                              className={styles.flowErrorUnderline}>
-                              {' '.repeat(error.end - error.start)}
-                            </span>
-                          </div>
-                        ))}
+                              className={styles.flowErrorHighlight}
+                              style={{
+                                left: `${range.start}ch`,
+                                width: `${range.end - range.start}ch`,
+                              }}
+                            />
+                          ))}
+                        </span>
                       </span>
-                    </span>
+                      {hasError && (
+                        <>
+                          <span className={styles.inlineErrorSpacer} />
+                          {lineErrors.map(({error}, errorIdx) => {
+                            // Show only the primary message (first line)
+                            const primaryMessage =
+                              error.fullDescription.split('\n')[0];
+                            return (
+                              <React.Fragment key={`err-${errorIdx}`}>
+                                {errorIdx > 0 && (
+                                  <span className={styles.inlineErrorSpacer} />
+                                )}
+                                <span className={styles.inlineErrorRow}>
+                                  <span className={styles.inlineErrorGutter} />
+                                  <span className={styles.inlineErrorContent}>
+                                    {formatErrorMessage(
+                                      primaryMessage,
+                                      error.errorCode,
+                                    )}
+                                  </span>
+                                </span>
+                              </React.Fragment>
+                            );
+                          })}
+                          <span className={styles.inlineErrorSpacer} />
+                        </>
+                      )}
+                    </React.Fragment>
                   );
                 })}
               </code>
@@ -163,22 +281,6 @@ export default component FlowCheckCodeBlock(
                 </Translate>
               )}
             </button>
-
-            {flowErrors.length > 0 && (
-              <pre className={styles.flowErrors}>
-                {flowErrors.map(
-                  (
-                    {startLine, startColumn, endLine, endColumn, description},
-                    index,
-                  ) => (
-                    <div
-                      key={
-                        index
-                      }>{`${startLine}:${startColumn}-${endLine}:${endColumn}: ${description}`}</div>
-                  ),
-                )}
-              </pre>
-            )}
           </div>
         </div>
       )}
