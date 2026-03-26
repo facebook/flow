@@ -1,3 +1,0 @@
-// @flow
-
-(require('./b'): number);

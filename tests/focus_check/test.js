@@ -1,3 +1,3 @@
 // @flow
 
-("": number);
+"" as number;
