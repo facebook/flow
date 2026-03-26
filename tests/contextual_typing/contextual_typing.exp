@@ -22,8 +22,8 @@ expression to your expected type. [underconstrained-implicit-instantiation]
                             ^^^
 
 References:
-   <BUILTINS>/core.js:2239:19
-   2239| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2240:19
+   2240| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [1]
    arr_rest.js:9:16
       9| const [...y] = new Set() // still error
@@ -339,8 +339,8 @@ Property `@@iterator` is missing in function [1] but exists in `$Iterable` [2]. 
                 ^^^^^^^^^^^ [1]
 
 References:
-   <BUILTINS>/core.js:2006:11
-   2006| interface $Iterable<+Yield,+Return,-Next> {
+   <BUILTINS>/core.js:2007:11
+   2007| interface $Iterable<+Yield,+Return,-Next> {
                    ^^^^^^^^^ [2]
 
 
@@ -485,8 +485,8 @@ Cannot cast `a` to `Set` because in type argument `T` [1]: string [2] is incompa
             ^
 
 References:
-   <BUILTINS>/core.js:2239:19
-   2239| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2240:19
+   2240| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [1]
    implicit_instantiation.js:144:29
     144| function test12(foo: ?Array<string>) {
@@ -506,8 +506,8 @@ Cannot cast `b` to `Set` because in type argument `T` [1]: string [2] is incompa
             ^
 
 References:
-   <BUILTINS>/core.js:2239:19
-   2239| declare class Set<T> extends $ReadOnlySet<T> {
+   <BUILTINS>/core.js:2240:19
+   2240| declare class Set<T> extends $ReadOnlySet<T> {
                            ^ [1]
    implicit_instantiation.js:144:29
     144| function test12(foo: ?Array<string>) {
@@ -762,8 +762,8 @@ string [3]. [incompatible-type]
            ^^^^^^^^^^^
 
 References:
-   <BUILTINS>/core.js:1889:25
-   1889| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
+   <BUILTINS>/core.js:1890:25
+   1890| declare class Iterator<+Yield,+Return=void,-Next=void> implements $IteratorProtocol<Yield,Return,Next>, $Iterable<Yield,Return,Next> {
                                  ^^^^^ [1]
    lits.js:50:17
      50|   const s2: Set<number> = new Set([]);
