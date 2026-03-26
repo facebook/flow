@@ -1189,6 +1189,7 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
                 ast::class::BodyElement::DeclareMethod(_) => {}
                 ast::class::BodyElement::AbstractMethod(_) => {}
                 ast::class::BodyElement::AbstractProperty(_) => {}
+                ast::class::BodyElement::IndexSignature(_) => {}
             }
         }
         let saved_available_private_names = std::mem::replace(

@@ -235,6 +235,7 @@ type ('loc, 'a) class_sig =
       static_props: ('loc, 'a) obj_value_prop smap;
       proto_props: ('loc, 'a) obj_value_prop smap;
       own_props: ('loc, 'a) obj_value_prop smap;
+      dict: 'a obj_annot_dict option;
     }
 [@@deriving iter, map, show { with_path = false }]
 

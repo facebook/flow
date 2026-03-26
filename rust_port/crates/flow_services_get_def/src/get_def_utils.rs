@@ -258,6 +258,7 @@ mod def_kind_search {
                     ast::class::BodyElement::DeclareMethod(_) => {}
                     ast::class::BodyElement::AbstractMethod(_) => {}
                     ast::class::BodyElement::AbstractProperty(_) => {}
+                    ast::class::BodyElement::IndexSignature(_) => {}
                 }
             }
 

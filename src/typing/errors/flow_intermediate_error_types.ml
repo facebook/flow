@@ -78,6 +78,7 @@ type unsupported_syntax =
   | ClassPropertyComputed
   | ClassStaticBlock
   | ClassDeclareMethod
+  | ClassIndexSignature
   | RequireDynamicArgument
   | CatchParameterDeclaration
   | DestructuringObjectPropertyInvalidLiteral

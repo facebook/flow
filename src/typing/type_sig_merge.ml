@@ -1695,7 +1695,9 @@ and merge_class_mixin =
       TypeUtil.this_typeapp ~annot_loc:loc t this (Some targs)
 
 and merge_this_class_t file reason class_name id def this_reason inst_kind =
-  let (ClassSig { extends; implements; static_props; own_props; proto_props; tparams = _ }) = def in
+  let (ClassSig { extends; implements; static_props; own_props; proto_props; dict; tparams = _ }) =
+    def
+  in
   fun env targs rec_type ->
     let this =
       let this_tp =
@@ -1756,7 +1758,7 @@ and merge_this_class_t file reason class_name id def this_reason inst_kind =
         initialized_fields = SSet.empty;
         initialized_static_fields = SSet.empty;
         inst_kind;
-        inst_dict = None;
+        inst_dict = Option.map ~f:(merge_dict env file ~as_const:false) dict;
         class_private_fields = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_methods = Context.generate_property_map file.cx NameUtils.Map.empty;
         class_private_static_fields = Context.generate_property_map file.cx NameUtils.Map.empty;

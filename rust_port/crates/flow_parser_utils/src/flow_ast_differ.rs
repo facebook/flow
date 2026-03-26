@@ -2143,6 +2143,7 @@ fn class_element(
         (DeclareMethod(_), _) | (_, DeclareMethod(_)) => None,
         (AbstractMethod(_), _) | (_, AbstractMethod(_)) => None,
         (AbstractProperty(_), _) | (_, AbstractProperty(_)) => None,
+        (IndexSignature(_), _) | (_, IndexSignature(_)) => None,
     }
 }
 

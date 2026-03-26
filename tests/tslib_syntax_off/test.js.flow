@@ -116,3 +116,8 @@ declare class PVI {
 declare class PrivatePVI {
   private readonly x = 42; // ERROR
 }
+
+// Index signature in class
+class ClassIdx {
+  [key: string]: any; // ERROR
+}

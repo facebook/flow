@@ -617,7 +617,7 @@ pub fn parse_to_json(
             if !errors.is_empty() {
                 obj.insert(
                     "errors".to_owned(),
-                    estree_translator::errors(&offset_table, &errors),
+                    estree_translator::errors(&offset_table, true, &errors),
                 );
             }
         }

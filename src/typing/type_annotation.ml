@@ -3013,6 +3013,22 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
     in
     (typeapp, (loc, { Ast.Type.Generic.id; targs; comments }))
 
+  and convert_indexer_internal env indexer =
+    let { Ast.Type.Object.Indexer.id; key; value; variance; optional; _ } = indexer in
+    let (((_, k), _) as key_ast) = convert env key in
+    let (((annot_loc, v), _) as value_ast) = convert env value in
+    let p = polarity env.cx variance in
+    let v =
+      if optional then
+        TypeUtil.optional ~annot_loc v
+      else
+        v
+    in
+    let dict =
+      { Type.dict_name = Base.Option.map ~f:ident_name id; key = k; value = v; dict_polarity = p }
+    in
+    (dict, { indexer with Ast.Type.Object.Indexer.key = key_ast; value = value_ast })
+
   and add_interface_properties env ~this properties s =
     let (x, rev_prop_asts) =
       List.fold_left
@@ -3032,7 +3048,7 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 );
               (x, Tast_utils.error_mapper#object_type_property indexer_prop :: rev_prop_asts)
             | Indexer (loc, indexer) ->
-              let { Indexer.id; key; value; static; variance; optional; _ } = indexer in
+              let { Indexer.optional; static; _ } = indexer in
               if optional && not (Context.tslib_syntax env.cx) then (
                 Flow_js_utils.add_output
                   env.cx
@@ -3044,25 +3060,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   :: rev_prop_asts
                 )
               ) else begin
-                let (((_, k), _) as key) = convert env key in
-                let (((annot_loc, v), _) as value) = convert env value in
-                let polarity = polarity env.cx variance in
-                let v =
-                  if optional then
-                    TypeUtil.optional ~annot_loc v
-                  else
-                    v
-                in
-                let dict =
-                  {
-                    Type.dict_name = Base.Option.map ~f:ident_name id;
-                    key = k;
-                    value = v;
-                    dict_polarity = polarity;
-                  }
-                in
+                let (dict, indexer_ast) = convert_indexer_internal env indexer in
                 ( Class_type_sig.add_indexer ~static dict x,
-                  Indexer (loc, { indexer with Indexer.key; value }) :: rev_prop_asts
+                  Indexer (loc, indexer_ast) :: rev_prop_asts
                 )
               end
             | Ast.Type.Object.MappedType (loc, _) as prop ->
@@ -4170,6 +4170,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
   let convert_render_type cx tparams_map = convert_render_type (mk_convert_env cx tparams_map)
 
   let convert_type_guard cx tparams_map = convert_type_guard (mk_convert_env cx tparams_map)
+
+  let convert_indexer cx tparams_map = convert_indexer_internal (mk_convert_env cx tparams_map)
 
   let mk_empty_interface_type cx loc =
     let ((_, t), _) =

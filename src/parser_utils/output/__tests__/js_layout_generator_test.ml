@@ -1699,6 +1699,13 @@ let tests =
              ~pretty:true
              "declare abstract class C {\n  abstract a(): void,\n}"
          );
+         ( "class_index_signatures" >:: fun ctxt ->
+           let amb cls = "declare namespace NS{" ^ cls ^ "}" in
+           assert_statement_string ~ctxt (amb "class C{[key:string]:any;}");
+           assert_statement_string ~ctxt (amb "class C{[index:number]:string;}");
+           assert_statement_string ~ctxt (amb "class C{readonly [key:string]:boolean;}");
+           assert_statement_string ~ctxt (amb "class C{[key:string]?:string;}")
+         );
          ( "forin_statement_declaration" >:: fun ctxt ->
            let mk_layout a b =
              Js_layout_generator.statement

@@ -32,6 +32,23 @@ References:
                ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------------- class_index_signature_usage.js:5:1
+
+Cannot cast `obj["foo"]` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   class_index_signature_usage.js:5:1
+   5| obj["foo"] as string; // ERROR: number is not string
+      ^^^^^^^^^^
+
+References:
+   class_index_signature.d.ts:2:18
+   2|   [key: string]: number;
+                       ^^^^^^ [1]
+   class_index_signature_usage.js:5:15
+   5| obj["foo"] as string; // ERROR: number is not string
+                    ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------- computed_property_key.d.ts:86:29
 
 Unsupported key in object type. Only identifier, string literal, and number literal keys are allowed. [illegal-key]
@@ -1353,4 +1370,4 @@ References:
 
 
 
-Found 89 errors
+Found 90 errors

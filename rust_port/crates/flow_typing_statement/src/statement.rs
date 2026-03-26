@@ -15727,6 +15727,55 @@ pub fn mk_class_sig(
                                 v
                             }));
                         }
+                        BodyElement::IndexSignature(indexer) => {
+                            let loc = &indexer.loc;
+                            if !(cx.tslib_syntax() && cx.under_declaration_context()) {
+                                flow_js::add_output_non_speculating(
+                                    cx,
+                                    ErrorMessage::EUnsupportedSyntax(
+                                        loc.dupe(),
+                                        UnsupportedSyntax::ClassIndexSignature,
+                                    ),
+                                );
+                                let elem_c = elem.clone();
+                                rev_elements.push(Box::new(move || {
+                                    let Ok(v) = polymorphic_ast_mapper::class_element(
+                                        &mut typed_ast_utils::ErrorMapper,
+                                        &elem_c,
+                                    );
+                                    v
+                                }));
+                            } else {
+                                let static_ = indexer.static_;
+                                if class_sig::has_indexer(static_, &class_sig) {
+                                    flow_js_utils::add_output_non_speculating(
+                                        cx,
+                                        ErrorMessage::EUnsupportedSyntax(
+                                            loc.dupe(),
+                                            UnsupportedSyntax::MultipleIndexers,
+                                        ),
+                                    );
+                                    let elem_c = elem.clone();
+                                    rev_elements.push(Box::new(move || {
+                                        let Ok(v) = polymorphic_ast_mapper::class_element(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            &elem_c,
+                                        );
+                                        v
+                                    }));
+                                } else {
+                                    let (dict, indexer_ast) = type_annotation::convert_indexer(
+                                        cx,
+                                        &tparams_map_with_this,
+                                        indexer,
+                                    );
+                                    class_sig::add_indexer(static_, dict, &mut class_sig);
+                                    rev_elements.push(Box::new(move || {
+                                        BodyElement::IndexSignature(indexer_ast)
+                                    }));
+                                }
+                            }
+                        }
                     }
                 }
                 {

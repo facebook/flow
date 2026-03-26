@@ -6539,6 +6539,7 @@ pub mod class {
         DeclareMethod(DeclareMethod<M, T>),
         AbstractMethod(AbstractMethod<M, T>),
         AbstractProperty(AbstractProperty<M, T>),
+        IndexSignature(super::types::object::Indexer<M, T>),
     }
 
     #[derive(

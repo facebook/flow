@@ -110,11 +110,15 @@ fn format_internal_comments(
     }
 }
 
-pub fn errors(offset_table: &OffsetTable, errors: &[(Loc, ParseError)]) -> Value {
+pub fn errors(
+    offset_table: &OffsetTable,
+    include_filename: bool,
+    errors: &[(Loc, ParseError)],
+) -> Value {
     let error_values: Vec<Value> = errors
         .iter()
         .map(|(location, e)| {
-            let (loc, _) = loc_and_range(offset_table, true, location);
+            let (loc, _) = loc_and_range(offset_table, include_filename, location);
             json!({
                 "loc": loc,
                 "message": format!("{e}")
@@ -3141,6 +3145,7 @@ fn class_element(
         BodyElement::DeclareMethod(dm) => class_declare_method(offset_table, config, dm),
         BodyElement::AbstractMethod(am) => class_abstract_method(offset_table, config, am),
         BodyElement::AbstractProperty(ap) => class_abstract_property(offset_table, config, ap),
+        BodyElement::IndexSignature(i) => object_type_indexer(offset_table, config, i),
     }
 }
 

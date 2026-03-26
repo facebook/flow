@@ -107,6 +107,7 @@ pub enum ParseError {
     ImportAttributeMissingComma,
     ImportSpecifierMissingComma,
     ImportTypeShorthandOnlyInPureImport,
+    IndexSignatureInvalidModifier(String),
     InexactInsideExact,
     InexactInsideNonObject,
     InvalidClassMemberName {
@@ -559,6 +560,13 @@ impl fmt::Display for ParseError {
                 write!(
                     f,
                     "The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. It cannot be used with `import type` or `import typeof` statements"
+                )
+            }
+            Self::IndexSignatureInvalidModifier(modifier) => {
+                write!(
+                    f,
+                    "`{}` modifier cannot be used with index signatures.",
+                    modifier
                 )
             }
             Self::InexactInsideExact => {

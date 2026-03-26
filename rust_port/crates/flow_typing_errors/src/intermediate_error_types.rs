@@ -131,6 +131,7 @@ pub enum UnsupportedSyntax {
     ClassPropertyComputed,
     ClassStaticBlock,
     ClassDeclareMethod,
+    ClassIndexSignature,
     RequireDynamicArgument,
     CatchParameterDeclaration,
     DestructuringObjectPropertyInvalidLiteral,

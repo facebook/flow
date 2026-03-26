@@ -759,6 +759,7 @@ class virtual ['T] searcher _cx ~is_local_use ~is_legit_require ~covers_target ~
           | Body.DeclareMethod _ -> acc
           | Body.AbstractMethod _ -> acc
           | Body.AbstractProperty _ -> acc
+          | Body.IndexSignature _ -> acc
         )
       in
       let saved_available_private_names = available_private_names in

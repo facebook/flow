@@ -865,6 +865,7 @@ pub struct ClassSig<Loc, T> {
     pub static_props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
     pub proto_props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
     pub own_props: BTreeMap<FlowSmolStr, ObjValueProp<Loc, T>>,
+    pub dict: Option<ObjAnnotDict<T>>,
 }
 
 impl<Loc, T> ClassSig<Loc, T> {
@@ -887,6 +888,10 @@ impl<Loc, T> ClassSig<Loc, T> {
         }
         for v in self.own_props.values() {
             v.iter(cx, f_loc, f_t);
+        }
+        if let Some(ref d) = self.dict {
+            f_t(cx, &d.key);
+            f_t(cx, &d.value);
         }
     }
 
@@ -915,6 +920,7 @@ impl<Loc, T> ClassSig<Loc, T> {
                 .iter()
                 .map(|(k, v)| (k.dupe(), v.map(cx, &f_loc, &f_t)))
                 .collect(),
+            dict: self.dict.as_ref().map(|d| d.map(cx, &f_t)),
         }
     }
 }

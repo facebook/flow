@@ -4272,6 +4272,13 @@ fn class_body(opts: &Opts, body: &ast::class::Body<Loc, Loc>) -> LayoutNode {
                 });
                 (loc, bounds, class_abstract_property(opts, abs_prop))
             }
+            ast::class::BodyElement::IndexSignature(indexer) => {
+                let loc = indexer.loc.dupe();
+                let bounds = comment_attachment::comment_bounds(&indexer.loc, |collector| {
+                    collector.object_indexer_property_type(indexer)
+                });
+                (loc, bounds, class_index_signature(opts, indexer))
+            }
         })
         .collect();
     let layout = list_with_newlines(&elements);
@@ -6691,29 +6698,7 @@ fn type_object_property(
         ast::types::object::Property::Indexer(indexer) => source_location_with_comments(
             &indexer.loc,
             indexer.comments.as_ref(),
-            fuse(vec![
-                if indexer.static_ {
-                    fuse(vec![atom("static"), space()])
-                } else {
-                    LayoutNode::empty()
-                },
-                option_layout(variance, indexer.variance.as_ref()),
-                atom("["),
-                match &indexer.id {
-                    Some(id) => fuse(vec![identifier(id), atom(":"), pretty_space()]),
-                    None => LayoutNode::empty(),
-                },
-                type_(opts, &indexer.key),
-                atom("]"),
-                if indexer.optional {
-                    atom("?")
-                } else {
-                    LayoutNode::empty()
-                },
-                atom(":"),
-                pretty_space(),
-                type_(opts, &indexer.value),
-            ]),
+            indexer_property_layout(opts, indexer),
         ),
         ast::types::object::Property::MappedType(mapped) => {
             let optional_token = match mapped.optional {
@@ -7412,6 +7397,46 @@ fn class_abstract_property(
             s_key,
             hint(|a| type_annotation(opts, false, a), &abs_prop.annot),
         ])),
+    )
+}
+
+fn indexer_property_layout(
+    opts: &Opts,
+    indexer: &ast::types::object::Indexer<Loc, Loc>,
+) -> LayoutNode {
+    fuse(vec![
+        if indexer.static_ {
+            fuse(vec![atom("static"), space()])
+        } else {
+            LayoutNode::empty()
+        },
+        option_layout(variance, indexer.variance.as_ref()),
+        atom("["),
+        match &indexer.id {
+            Some(id) => fuse(vec![identifier(id), atom(":"), pretty_space()]),
+            None => LayoutNode::empty(),
+        },
+        type_(opts, &indexer.key),
+        atom("]"),
+        if indexer.optional {
+            atom("?")
+        } else {
+            LayoutNode::empty()
+        },
+        atom(":"),
+        pretty_space(),
+        type_(opts, &indexer.value),
+    ])
+}
+
+fn class_index_signature(
+    opts: &Opts,
+    indexer: &ast::types::object::Indexer<Loc, Loc>,
+) -> LayoutNode {
+    source_location_with_comments(
+        &indexer.loc,
+        indexer.comments.as_ref(),
+        with_semicolon(indexer_property_layout(opts, indexer)),
     )
 }
 

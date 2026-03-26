@@ -309,5 +309,13 @@ Property value initializer in declaration is not enabled. [unsupported-syntax]
           ^^^^^^^^^^^^^^^^^^^^^^^
 
 
+Error ----------------------------------------------------------------------------------------------- test.js.flow:122:3
 
-Found 38 errors
+Index signatures in classes are not supported. [unsupported-syntax]
+
+   122|   [key: string]: any; // ERROR
+          ^^^^^^^^^^^^^^^^^^^
+
+
+
+Found 39 errors

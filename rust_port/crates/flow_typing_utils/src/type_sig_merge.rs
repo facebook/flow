@@ -3442,6 +3442,7 @@ fn merge_this_class_t(
         static_props,
         own_props,
         proto_props,
+        dict,
         tparams: _,
     } = def;
     let class_name_owned = class_name;
@@ -3530,7 +3531,7 @@ fn merge_this_class_t(
             initialized_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
             initialized_static_fields: flow_data_structure_wrapper::ord_set::FlowOrdSet::new(),
             inst_kind,
-            inst_dict: None,
+            inst_dict: dict.as_ref().map(|d| merge_dict(&env, file, d, false)),
             class_private_fields: file
                 .cx
                 .generate_property_map(type_::properties::PropertiesMap::new()),

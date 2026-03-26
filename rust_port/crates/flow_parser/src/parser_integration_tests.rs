@@ -1434,7 +1434,7 @@ mod hardcoded_tests {
                     if !errors.is_empty() {
                         obj.insert(
                             "errors".to_owned(),
-                            estree_translator::errors(&offset_table, &errors),
+                            estree_translator::errors(&offset_table, false, &errors),
                         );
                     }
                 }

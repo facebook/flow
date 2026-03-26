@@ -8271,6 +8271,9 @@ where
                     ClassDeclareMethod => friendly::Message(vec![text(
                         "Declare methods in classes are not supported.",
                     )]),
+                    ClassIndexSignature => friendly::Message(vec![text(
+                        "Index signatures in classes are not supported.",
+                    )]),
                     ComponentSyntax => friendly::Message(vec![
                         text("Component syntax is not enabled. "),
                         text("You may opt-in to using component syntax by putting "),

@@ -1492,6 +1492,7 @@ with type t = Impl.t = struct
         | DeclareMethod dm -> class_declare_method dm
         | AbstractMethod am -> class_abstract_method am
         | AbstractProperty ap -> class_abstract_property ap
+        | IndexSignature i -> object_type_indexer i
       )
     and class_method
         (loc, { Class.Method.key; value; kind; static; ts_accessibility; decorators; comments }) =

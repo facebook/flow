@@ -5586,6 +5586,52 @@ fn mk_interface_super(
     )
 }
 
+fn convert_indexer_internal(
+    cx: &Context,
+    env: &mut ConvertEnv,
+    indexer: &ast::types::object::Indexer<ALoc, ALoc>,
+) -> (
+    type_::DictType,
+    ast::types::object::Indexer<ALoc, (ALoc, Type)>,
+) {
+    let key_ast = convert_inner(cx, env, &indexer.key);
+    let (_, k) = key_ast.loc();
+    let k = k.dupe();
+    let value_ast = convert_inner(cx, env, &indexer.value);
+    let (annot_loc, v) = value_ast.loc();
+    let annot_loc = annot_loc.dupe();
+    let v = v.dupe();
+    let p = polarity(cx, indexer.variance.as_ref());
+    let v = if indexer.optional {
+        type_util::optional(v, Some(annot_loc), false)
+    } else {
+        v
+    };
+    let dict = type_::DictType {
+        dict_name: indexer.id.as_ref().map(|id| id.name.dupe()),
+        key: k,
+        value: v.dupe(),
+        dict_polarity: p,
+    };
+    let indexer_ast = ast::types::object::Indexer {
+        loc: indexer.loc.dupe(),
+        id: indexer.id.as_ref().map(|id| {
+            ast::Identifier::new(ast::IdentifierInner {
+                loc: (id.loc.dupe(), v.dupe()),
+                name: id.name.dupe(),
+                comments: id.comments.dupe(),
+            })
+        }),
+        key: key_ast,
+        value: value_ast,
+        static_: indexer.static_,
+        variance: indexer.variance.clone(),
+        optional: indexer.optional,
+        comments: indexer.comments.dupe(),
+    };
+    (dict, indexer_ast)
+}
+
 fn add_interface_properties(
     cx: &Context,
     env: &mut ConvertEnv,
@@ -5646,42 +5692,9 @@ fn add_interface_properties(
                     );
                     prop_asts.push(error_prop);
                 } else {
-                    let key_ast = convert_inner(cx, env, &idx.key);
-                    let (_, k) = key_ast.loc();
-                    let k = k.dupe();
-                    let value_ast = convert_inner(cx, env, &idx.value);
-                    let (annot_loc, v) = value_ast.loc();
-                    let annot_loc = annot_loc.dupe();
-                    let v = v.dupe();
-                    let polarity = polarity(cx, idx.variance.as_ref());
-                    let v = if idx.optional {
-                        type_util::optional(v, Some(annot_loc), false)
-                    } else {
-                        v
-                    };
-                    let dict = type_::DictType {
-                        dict_name: idx.id.as_ref().map(|id| id.name.dupe()),
-                        key: k,
-                        value: v.dupe(),
-                        dict_polarity: polarity,
-                    };
+                    let (dict, indexer_ast) = convert_indexer_internal(cx, env, idx);
                     class_sig::add_indexer(idx.static_, dict, &mut s);
-                    prop_asts.push(Property::Indexer(ast::types::object::Indexer {
-                        loc: idx.loc.dupe(),
-                        id: idx.id.as_ref().map(|id| {
-                            ast::Identifier::new(ast::IdentifierInner {
-                                loc: (id.loc.dupe(), v.dupe()),
-                                name: id.name.dupe(),
-                                comments: id.comments.dupe(),
-                            })
-                        }),
-                        key: key_ast,
-                        value: value_ast,
-                        static_: idx.static_,
-                        variance: idx.variance.clone(),
-                        optional: idx.optional,
-                        comments: idx.comments.dupe(),
-                    }));
+                    prop_asts.push(Property::Indexer(indexer_ast));
                 }
             }
             Property::MappedType(mt) => {
@@ -7703,6 +7716,18 @@ pub fn convert_type_guard(
 ) {
     let mut env = ConvertEnv::new(None, None, None, tparams_map);
     convert_type_guard_inner(cx, &mut env, fparams, gloc, kind, id_name, t, comments)
+}
+
+pub fn convert_indexer(
+    cx: &Context,
+    tparams_map: &FlowOrdMap<SubstName, Type>,
+    indexer: &ast::types::object::Indexer<ALoc, ALoc>,
+) -> (
+    type_::DictType,
+    ast::types::object::Indexer<ALoc, (ALoc, Type)>,
+) {
+    let mut env = ConvertEnv::new(None, None, None, tparams_map.dupe());
+    convert_indexer_internal(cx, &mut env, indexer)
 }
 
 pub fn mk_empty_interface_type(cx: &Context, loc: ALoc) -> Type {

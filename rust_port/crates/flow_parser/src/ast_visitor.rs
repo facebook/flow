@@ -828,6 +828,22 @@ pub trait AstVisitor<'ast, Loc: Dupe, Type: Dupe = Loc, C = &'ast Loc, E = !> {
         map_class_abstract_property_default(self, abs_prop)
     }
 
+    fn class_indexer(
+        &mut self,
+        indexer: &'ast ast::types::object::Indexer<Loc, Type>,
+    ) -> Result<(), E> {
+        self.object_indexer_property_type(indexer)
+    }
+    fn map_class_indexer(
+        &mut self,
+        indexer: &'ast ast::types::object::Indexer<Loc, Loc>,
+    ) -> ast::types::object::Indexer<Loc, Loc>
+    where
+        Loc: Dupe,
+    {
+        self.map_object_indexer_property_type(indexer)
+    }
+
     fn default_opt(
         &mut self,
         default: Option<&'ast ast::expression::Expression<Loc, Type>>,
@@ -7632,6 +7648,9 @@ pub fn class_element_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         ast::class::BodyElement::AbstractProperty(abs_prop) => {
             visitor.class_abstract_property(abs_prop)?;
         }
+        ast::class::BodyElement::IndexSignature(indexer) => {
+            visitor.object_indexer_property_type(indexer)?;
+        }
     }
     Ok(())
 }
@@ -7665,6 +7684,11 @@ pub fn map_class_element_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         //     AbstractProperty (this#on_type_annot annot, this#class_abstract_property abs_prop)
         ast::class::BodyElement::AbstractProperty(abs_prop) => {
             ast::class::BodyElement::AbstractProperty(visitor.map_class_abstract_property(abs_prop))
+        }
+        ast::class::BodyElement::IndexSignature(indexer) => {
+            ast::class::BodyElement::IndexSignature(
+                visitor.map_object_indexer_property_type(indexer),
+            )
         }
     }
 }

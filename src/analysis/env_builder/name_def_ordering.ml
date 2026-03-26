@@ -704,6 +704,7 @@ struct
           | DeclareMethod _ -> () (* DeclareMethod is a type annotation, no runtime def *)
           | AbstractMethod _ -> () (* AbstractMethod is a type annotation, no runtime def *)
           | AbstractProperty _ -> () (* AbstractProperty is a type annotation, no runtime def *)
+          | IndexSignature _ -> () (* IndexSignature is a type annotation, no runtime def *)
 
         method class_method_annotated (meth : ('loc, 'loc) Ast.Class.Method.t') =
           let open Ast.Class.Method in

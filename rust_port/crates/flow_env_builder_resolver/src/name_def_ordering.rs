@@ -775,6 +775,8 @@ where
             ast::class::BodyElement::AbstractMethod(_) => {}
             // AbstractProperty is a type annotation, no runtime def
             ast::class::BodyElement::AbstractProperty(_) => {}
+            // IndexSignature is a type annotation, no runtime def
+            ast::class::BodyElement::IndexSignature(_) => {}
         }
     }
 

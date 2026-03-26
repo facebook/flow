@@ -2971,6 +2971,9 @@ pub fn class_element<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
         BodyElement::AbstractProperty(abs_prop) => {
             BodyElement::AbstractProperty(class_abstract_property(mapper, abs_prop)?)
         }
+        BodyElement::IndexSignature(indexer) => {
+            BodyElement::IndexSignature(object_indexer_property_type(mapper, indexer)?)
+        }
     })
 }
 fn class_key<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(

@@ -2075,6 +2075,7 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
     ]
     .concat();
 
+    let in_ambient_context = env.in_ambient_context();
     match (async_, generator, peek::token(env)) {
         (false, false, TokenKind::TIdentifier { raw, .. }) if raw == "get" => {
             let leading_get = peek::comments(env);
@@ -2145,6 +2146,92 @@ fn class_element(env: &mut ParserEnv) -> Result<class::BodyElement<Loc, Loc>, Ro
                     ts_accessibility,
                     [leading, leading_set].concat(),
                     false,
+                )
+            }
+        }
+        (false, false, TokenKind::TLbracket) if in_ambient_context => {
+            // Consume `[`, then disambiguate: index signature vs computed property.
+            // Index signature: [id: type]: type — the token after the identifier is T_COLON.
+            // Computed property: [expr] — anything else.
+            let leading_lbracket = peek::comments(env);
+            expect::token(env, TokenKind::TLbracket)?;
+            if peek::ith_token(env, 1) == &TokenKind::TColon {
+                // Index signature: [key: type]: type
+                // Reject modifiers that are not valid on index signatures.
+                error_unsupported_declare(env, &declare)?;
+                if let Some(ref accessibility) = ts_accessibility {
+                    let keyword = match accessibility.kind {
+                        class::ts_accessibility::Kind::Public => "public",
+                        class::ts_accessibility::Kind::Protected => "protected",
+                        class::ts_accessibility::Kind::Private => "private",
+                    };
+                    env.error_at(
+                        accessibility.loc.dupe(),
+                        ParseError::IndexSignatureInvalidModifier(keyword.to_owned()),
+                    )?;
+                }
+                if abstract_ {
+                    env.error_at(
+                        start_loc.dupe(),
+                        ParseError::IndexSignatureInvalidModifier("abstract".to_owned()),
+                    )?;
+                }
+                let (loc, mut indexer) = with_loc(Some(start_loc.dupe()), env, |env| {
+                    let id = identifier_name(env)?;
+                    expect::token(env, TokenKind::TColon)?;
+                    let key_type = type_parser::parse_type(env)?;
+                    expect::token(env, TokenKind::TRbracket)?;
+                    let optional = eat::maybe(env, TokenKind::TPling)?;
+                    let trailing = eat::trailing_comments(env);
+                    expect::token(env, TokenKind::TColon)?;
+                    let value = type_parser::parse_type(env)?;
+                    eat::maybe(env, TokenKind::TSemicolon)?;
+                    Ok(types::object::Indexer {
+                        loc: LOC_NONE,
+                        id: Some(id),
+                        key: key_type,
+                        value,
+                        static_,
+                        variance,
+                        optional,
+                        comments: ast_utils::mk_comments_opt(
+                            Some([leading.clone(), leading_lbracket.clone()].concat().into()),
+                            Some(trailing.into()),
+                        ),
+                    })
+                })?;
+                indexer.loc = loc;
+                Ok(class::BodyElement::IndexSignature(indexer))
+            } else {
+                // Computed property — `[` already consumed, parse expression and `]`
+                let (loc, mut computed_key) = with_loc(Some(start_loc.dupe()), env, |env| {
+                    let expr = env.with_no_in(false, expression_parser::assignment)?;
+                    expect::token(env, TokenKind::TRbracket)?;
+                    let trailing = eat::trailing_comments(env);
+                    Ok(ComputedKey {
+                        loc: LOC_NONE,
+                        expression: expr,
+                        comments: ast_utils::mk_comments_opt(
+                            Some(leading_lbracket.clone().into()),
+                            Some(trailing.into()),
+                        ),
+                    })
+                })?;
+                computed_key.loc = loc;
+                let key = expression::object::Key::Computed(computed_key);
+                init(
+                    env,
+                    start_loc,
+                    decorators,
+                    key,
+                    async_,
+                    generator,
+                    static_,
+                    abstract_,
+                    declare,
+                    variance,
+                    ts_accessibility,
+                    leading,
                 )
             }
         }
@@ -2278,6 +2365,7 @@ fn class_body(
                                 )?;
                             }
                         }
+                        class::BodyElement::IndexSignature(_) => {}
                     }
 
                     elements.push(element);

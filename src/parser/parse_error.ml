@@ -78,6 +78,7 @@ type t =
   | ImportAttributeMissingComma
   | ImportSpecifierMissingComma
   | ImportTypeShorthandOnlyInPureImport
+  | IndexSignatureInvalidModifier of string
   | InexactInsideExact
   | InexactInsideNonObject
   | InvalidClassMemberName of {
@@ -358,6 +359,8 @@ module PP = struct
     | ImportTypeShorthandOnlyInPureImport ->
       "The `type` and `typeof` keywords on named imports can only be used on regular `import` statements. "
       ^ "It cannot be used with `import type` or `import typeof` statements"
+    | IndexSignatureInvalidModifier modifier ->
+      Printf.sprintf "`%s` modifier cannot be used with index signatures." modifier
     | InexactInsideExact ->
       "Explicit inexact syntax cannot appear inside an explicit exact object type"
     | InexactInsideNonObject -> "Explicit inexact syntax can only appear inside an object type"

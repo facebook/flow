@@ -9515,6 +9515,7 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
                 BodyElement::StaticBlock(_) => true,
                 BodyElement::AbstractMethod(_) => false,
                 BodyElement::AbstractProperty(_) => false,
+                BodyElement::IndexSignature(idx) => idx.static_,
             });
 
         let mut this_super_bindings = bindings::Bindings::empty();

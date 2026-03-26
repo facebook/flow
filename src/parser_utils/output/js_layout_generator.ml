@@ -2587,6 +2587,39 @@ and class_abstract_property
         )
     )
 
+and indexer_property_layout
+    ~opts { Ast.Type.Object.Indexer.id; key; value; static; variance = variance_; optional; _ } =
+  fuse
+    [
+      ( if static then
+        fuse [Atom "static"; space]
+      else
+        Empty
+      );
+      option variance variance_;
+      Atom "[";
+      begin
+        match id with
+        | Some id -> fuse [identifier id; Atom ":"; pretty_space]
+        | None -> Empty
+      end;
+      type_ ~opts key;
+      Atom "]";
+      ( if optional then
+        Atom "?"
+      else
+        Empty
+      );
+      Atom ":";
+      pretty_space;
+      type_ ~opts value;
+    ]
+
+and class_index_signature ~opts (loc, indexer) =
+  source_location_with_comments
+    ?comments:indexer.Ast.Type.Object.Indexer.comments
+    (loc, with_semicolon (indexer_property_layout ~opts indexer))
+
 and class_property_helper
     ~opts loc key value static annot variance_ ts_accessibility decorators comments ~optional =
   let (declare, value) =
@@ -2769,6 +2802,13 @@ and class_body ~opts (loc, { Ast.Class.Body.body; comments }) =
             )
           in
           (loc, comment_bounds, class_abstract_property ~opts abs_prop)
+        | Ast.Class.Body.IndexSignature ((loc, _) as indexer) ->
+          let comment_bounds =
+            comment_bounds loc indexer (fun collector indexer ->
+                collector#object_indexer_property_type indexer
+            )
+          in
+          (loc, comment_bounds, class_index_signature ~opts indexer)
         )
       body
     |> list_with_newlines
@@ -4692,36 +4732,10 @@ and type_object_property ~opts =
       )
   | SpreadProperty (loc, { SpreadProperty.argument; comments }) ->
     source_location_with_comments ?comments (loc, fuse [Atom "..."; type_ ~opts argument])
-  | Indexer (loc, { Indexer.id; key; value; static; variance = variance_; optional; comments }) ->
+  | Indexer (loc, indexer) ->
     source_location_with_comments
-      ?comments
-      ( loc,
-        fuse
-          [
-            ( if static then
-              fuse [Atom "static"; space]
-            else
-              Empty
-            );
-            option variance variance_;
-            Atom "[";
-            begin
-              match id with
-              | Some id -> fuse [identifier id; Atom ":"; pretty_space]
-              | None -> Empty
-            end;
-            type_ ~opts key;
-            Atom "]";
-            ( if optional then
-              Atom "?"
-            else
-              Empty
-            );
-            Atom ":";
-            pretty_space;
-            type_ ~opts value;
-          ]
-      )
+      ?comments:indexer.Indexer.comments
+      (loc, indexer_property_layout ~opts indexer)
   | MappedType
       ( loc,
         {

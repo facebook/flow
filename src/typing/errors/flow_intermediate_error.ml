@@ -5051,6 +5051,8 @@ let to_printable_error :
     | MessageUnsupportedSyntax ClassStaticBlock -> [text "Class static blocks are not supported."]
     | MessageUnsupportedSyntax ClassDeclareMethod ->
       [text "Declare methods in classes are not supported."]
+    | MessageUnsupportedSyntax ClassIndexSignature ->
+      [text "Index signatures in classes are not supported."]
     | MessageUnsupportedSyntax ComponentSyntax ->
       [
         text "Component syntax is not enabled. ";

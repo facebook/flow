@@ -1061,7 +1061,8 @@ let%expect_test "export_class_reference" =
                  return = (Annot (Number [3:16-22]));
                  type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
-           { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
+           { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) };
+           dict = None}}
   |}]
 
 let%expect_test "export_class_reference_check1" =
@@ -1102,7 +1103,8 @@ let%expect_test "export_class_reference_check1" =
                  type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
            { "f" ->
-             (ObjValueField ([2:2-3], (Value (NumberLit ([2:6-7], 0., "0"))), Polarity.Neutral)) }}}
+             (ObjValueField ([2:2-3], (Value (NumberLit ([2:6-7], 0., "0"))), Polarity.Neutral)) };
+           dict = None}}
   |}]
 
 let%expect_test "export_class_reference_check2" =
@@ -1142,7 +1144,8 @@ let%expect_test "export_class_reference_check2" =
                  return = (Annot (Number [3:8-14]));
                  type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
-           { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
+           { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) };
+           dict = None}}
 
     Errors:
     (SigError (Signature_error.ExpectedAnnotation ([3:4-5], Expected_annotation_sort.Identifier)))
@@ -1185,7 +1188,8 @@ let%expect_test "export_class_reference_check3" =
                  return = (Err [3:14]);
                  type_guard = None; effect_ = ArbitraryEffect}} };
            own_props =
-           { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) }}}
+           { "f" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Neutral)) };
+           dict = None}}
 
     Errors:
     (SigError
@@ -1246,7 +1250,8 @@ let%expect_test "type_alias_dependencies" =
            own_props =
            { "f" ->
              (ObjValueField ([5:2-3],
-                (TyRef (Unqualified LocalRef {ref_loc = [5:5-7]; index = 0})), Polarity.Neutral)) }}}
+                (TyRef (Unqualified LocalRef {ref_loc = [5:5-7]; index = 0})), Polarity.Neutral)) };
+           dict = None}}
   |}]
 
 let%expect_test "class_dependencies" =
@@ -1277,7 +1282,8 @@ let%expect_test "class_dependencies" =
            implements = []; static_props = {};
            proto_props = {};
            own_props =
-           { "f" -> (ObjValueField ([1:10-11], (Annot (Number [1:13-19])), Polarity.Neutral)) }}}
+           { "f" -> (ObjValueField ([1:10-11], (Annot (Number [1:13-19])), Polarity.Neutral)) };
+           dict = None}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
          def =
@@ -1300,7 +1306,8 @@ let%expect_test "class_dependencies" =
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
-                (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) }}}
+                (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) };
+           dict = None}}
   |}]
 
 let%expect_test "class_dependencies_check" =
@@ -1333,7 +1340,8 @@ let%expect_test "class_dependencies_check" =
            own_props =
            { "f" ->
              (ObjValueField ([1:10-11], (
-                Value (NumberLit ([1:14-15], 0., "0"))), Polarity.Neutral)) }}}
+                Value (NumberLit ([1:14-15], 0., "0"))), Polarity.Neutral)) };
+           dict = None}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
          def =
@@ -1356,7 +1364,8 @@ let%expect_test "class_dependencies_check" =
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
-                (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) }}}
+                (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) };
+           dict = None}}
   |}]
 
 let%expect_test "export_new_typecast" =
@@ -1387,7 +1396,8 @@ let%expect_test "export_new_typecast" =
            implements = []; static_props = {};
            proto_props = {};
            own_props =
-           { "f" -> (ObjValueField ([1:10-11], (Annot (Number [1:13-19])), Polarity.Neutral)) }}}
+           { "f" -> (ObjValueField ([1:10-11], (Annot (Number [1:13-19])), Polarity.Neutral)) };
+           dict = None}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
          def =
@@ -1410,7 +1420,8 @@ let%expect_test "export_new_typecast" =
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
-                (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) }}}
+                (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) };
+           dict = None}}
   |}]
 
 let%expect_test "export_new_typecast_check" =
@@ -1443,7 +1454,8 @@ let%expect_test "export_new_typecast_check" =
            own_props =
            { "f" ->
              (ObjValueField ([1:10-11], (
-                Value (NumberLit ([1:14-15], 0., "0"))), Polarity.Neutral)) }}}
+                Value (NumberLit ([1:14-15], 0., "0"))), Polarity.Neutral)) };
+           dict = None}}
     1. ClassBinding {id_loc = [2:6-7];
          name = "C";
          def =
@@ -1466,7 +1478,8 @@ let%expect_test "export_new_typecast_check" =
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
-                (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) }}}
+                (TyRef (Unqualified LocalRef {ref_loc = [3:5-6]; index = 0})), Polarity.Neutral)) };
+           dict = None}}
   |}]
 
 let%expect_test "recursive_dependencies" =
@@ -1511,7 +1524,8 @@ let%expect_test "recursive_dependencies" =
            own_props =
            { "f" ->
              (ObjValueField ([2:2-3],
-                (TyRef (Unqualified LocalRef {ref_loc = [2:5-6]; index = 0})), Polarity.Neutral)) }}}
+                (TyRef (Unqualified LocalRef {ref_loc = [2:5-6]; index = 0})), Polarity.Neutral)) };
+           dict = None}}
   |}]
 
 let%expect_test "recursive_dependencies_check" =
@@ -1553,7 +1567,8 @@ let%expect_test "recursive_dependencies_check" =
                  rest_param = None; this_param = None;
                  return = (TyRef (Unqualified LocalRef {ref_loc = [3:11-12]; index = 0}));
                  type_guard = None; effect_ = ArbitraryEffect}} };
-           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:6-11]), Polarity.Neutral)) }}}
+           own_props = { "f" -> (ObjValueField ([2:2-3], (Err [2:6-11]), Polarity.Neutral)) };
+           dict = None}}
 
     Errors:
     (SigError (Signature_error.UnexpectedExpression ([2:6-11], Flow_ast_utils.ExpressionSort.New)))
@@ -1593,7 +1608,8 @@ let%expect_test "typeof_dependencies" =
                    Typeof {loc = [3:5-13];
                      qname = ["x"]; t = (Ref LocalRef {ref_loc = [3:12-13]; index = 0});
                      targs = None}),
-                Polarity.Neutral)) }}}
+                Polarity.Neutral)) };
+           dict = None}}
   |}]
 
 let%expect_test "typeof_dependencies_check" =
@@ -1630,7 +1646,8 @@ let%expect_test "typeof_dependencies_check" =
                    Typeof {loc = [3:5-13];
                      qname = ["x"]; t = (Ref LocalRef {ref_loc = [3:12-13]; index = 0});
                      targs = None}),
-                Polarity.Neutral)) }}}
+                Polarity.Neutral)) };
+           dict = None}}
 
     Errors:
     (SigError
@@ -1807,7 +1824,8 @@ let%expect_test "import_default_dependencies" =
                    Typeof {loc = [3:5-13];
                      qname = ["x"]; t = (Ref RemoteRef {ref_loc = [3:12-13]; index = 0});
                      targs = None}),
-                Polarity.Neutral)) }}}
+                Polarity.Neutral)) };
+           dict = None}}
 
     Remote refs:
     0. Import {id_loc = [1:7-8]; name = "x"; index = 0; remote = "default"}
@@ -1859,7 +1877,8 @@ let%expect_test "import_type_dependencies" =
            own_props =
            { "f" ->
              (ObjValueField ([3:2-3],
-                (TyRef (Unqualified RemoteRef {ref_loc = [3:5-7]; index = 0})), Polarity.Neutral)) }}}
+                (TyRef (Unqualified RemoteRef {ref_loc = [3:5-7]; index = 0})), Polarity.Neutral)) };
+           dict = None}}
 
     Remote refs:
     0. ImportType {id_loc = [1:14-16]; name = "T1"; index = 0; remote = "T1"}
@@ -1920,7 +1939,7 @@ let%expect_test "qualified_references" =
                       name = "T";
                       qualification = (Unqualified RemoteRef {ref_loc = [4:14-16]; index = 1})});
                  type_guard = None; effect_ = ArbitraryEffect}} };
-           own_props = {}}}
+           own_props = {}; dict = None}}
 
     Remote refs:
     0. Import {id_loc = [1:7-9]; name = "M1"; index = 0; remote = "default"}
@@ -1995,7 +2014,8 @@ let%expect_test "hoisted_requires" =
            own_props =
            { "f" ->
              (ObjValueField ([9:2-3],
-                (TyRef (Unqualified LocalRef {ref_loc = [9:5-6]; index = 1})), Polarity.Neutral)) }}}
+                (TyRef (Unqualified LocalRef {ref_loc = [9:5-6]; index = 1})), Polarity.Neutral)) };
+           dict = None}}
 
     Pattern defs:
     0. (Err [3:11])
@@ -2047,7 +2067,8 @@ let%expect_test "hoisted_locals" =
            own_props =
            { "f" ->
              (ObjValueField ([8:2-3],
-                (TyRef (Unqualified LocalRef {ref_loc = [8:5-6]; index = 1})), Polarity.Neutral)) }}}
+                (TyRef (Unqualified LocalRef {ref_loc = [8:5-6]; index = 1})), Polarity.Neutral)) };
+           dict = None}}
 
     Errors:
     (SigError
@@ -2204,7 +2225,8 @@ let%expect_test "scope_extrusion" =
          def =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
-           proto_props = {}; own_props = {}}}
+           proto_props = {}; own_props = {};
+           dict = None}}
     1. Variable {id_loc = [3:6-7]; name = "x";
          def = (TyRef (Unqualified LocalRef {ref_loc = [3:9-10]; index = 0}))}
   |}]
@@ -2248,7 +2270,8 @@ let%expect_test "scope_extrusion_nested" =
          def =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
-           proto_props = {}; own_props = {}}}
+           proto_props = {}; own_props = {};
+           dict = None}}
     1. Variable {id_loc = [5:8-9]; name = "x";
          def = (TyRef (Unqualified LocalRef {ref_loc = [5:11-12]; index = 0}))}
   |}]
@@ -2316,7 +2339,8 @@ let%expect_test "report_all_errors" =
                        type_guard = None;
                        effect_ = ArbitraryEffect};
                      statics = {}}),
-                Polarity.Neutral)) }}}
+                Polarity.Neutral)) };
+           dict = None}}
 
     Errors:
     (SigError
@@ -2349,7 +2373,8 @@ let%expect_test "munged_methods_ignored_if_directive" =
          def =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
-           proto_props = {}; own_props = {}}}
+           proto_props = {}; own_props = {};
+           dict = None}}
   |}]
 
 let%expect_test "munged_methods_not_ignored" =
@@ -2386,7 +2411,7 @@ let%expect_test "munged_methods_not_ignored" =
                  params = []; rest_param = None;
                  this_param = None; return = (Err [2:11]);
                  type_guard = None; effect_ = ArbitraryEffect}} };
-           own_props = {}}}
+           own_props = {}; dict = None}}
 
     Errors:
     (SigError
@@ -2417,7 +2442,8 @@ let%expect_test "munged_fields_ignored_if_directive" =
          def =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
-           proto_props = {}; own_props = {}}}
+           proto_props = {}; own_props = {};
+           dict = None}}
   |}]
 
 let%expect_test "munged_fields_not_ignored" =
@@ -2459,7 +2485,8 @@ let%expect_test "munged_fields_not_ignored" =
                        type_guard = None;
                        effect_ = ArbitraryEffect};
                      statics = {}}),
-                Polarity.Neutral)) }}}
+                Polarity.Neutral)) };
+           dict = None}}
 
     Errors:
     (SigError
@@ -2495,7 +2522,8 @@ let%expect_test "propTypes_static_failure" =
              (ObjValueField ([2:9-18],
                 (Value ObjLit {loc = [2:21-23]; frozen = false; proto = None; props = {}}),
                 Polarity.Neutral)) };
-           proto_props = {}; own_props = {}}}
+           proto_props = {}; own_props = {};
+           dict = None}}
   |}]
 
 let%expect_test "array_spread" =
@@ -2708,7 +2736,8 @@ let%expect_test "named_class_expression" =
          def =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
-           proto_props = {}; own_props = {}}}
+           proto_props = {}; own_props = {};
+           dict = None}}
   |}]
 
 let%expect_test "named_function_expression" =
@@ -2846,7 +2875,8 @@ let%expect_test "recursive_class_coverage" =
            own_props =
            { "x" ->
              (ObjValueField ([1:27-28],
-                (TyRef (Unqualified LocalRef {ref_loc = [1:30-31]; index = 0})), Polarity.Neutral)) }}}
+                (TyRef (Unqualified LocalRef {ref_loc = [1:30-31]; index = 0})), Polarity.Neutral)) };
+           dict = None}}
   |}]
 
 let%expect_test "shadowed_class_expression" =
@@ -2868,7 +2898,8 @@ let%expect_test "shadowed_class_expression" =
          def =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
-           proto_props = {}; own_props = {}}}
+           proto_props = {}; own_props = {};
+           dict = None}}
   |}]
 
 let%expect_test "frozen_object" =
@@ -4085,7 +4116,8 @@ let%expect_test "class_extends" =
            ClassExplicitExtends {loc = [3:24-25];
              t = (Ref LocalRef {ref_loc = [3:24-25]; index = 0})};
            implements = []; static_props = {};
-           proto_props = {}; own_props = {}}}
+           proto_props = {}; own_props = {};
+           dict = None}}
     3. ClassBinding {id_loc = [4:13-15];
          name = "C2";
          def =
@@ -4094,7 +4126,8 @@ let%expect_test "class_extends" =
            ClassExplicitExtends {loc = [4:24-27];
              t = (Eval ([4:24-27], (Ref LocalRef {ref_loc = [4:24-25]; index = 1}), (GetProp "C")))};
            implements = []; static_props = {};
-           proto_props = {}; own_props = {}}}
+           proto_props = {}; own_props = {};
+           dict = None}}
     4. DeclareClassBinding {id_loc = [5:21-23];
          nominal_id_loc = [5:21-23];
          name = "C3";
@@ -4155,7 +4188,7 @@ let%expect_test "class_this" =
                  params = []; rest_param = None;
                  this_param = None; return = (Annot Bound {ref_loc = [2:7-11]; name = "this"});
                  type_guard = None; effect_ = ArbitraryEffect}} };
-           own_props = {}}} |}]
+           own_props = {}; dict = None}} |}]
 
 let%expect_test "declare_class_this" =
   print_sig {|
@@ -4232,7 +4265,8 @@ let%expect_test "existential" =
            implements = []; static_props = {};
            proto_props = {};
            own_props =
-           { "p" -> (ObjValueField ([2:2-3], (Annot (Exists [2:5-6])), Polarity.Neutral)) }}} |}]
+           { "p" -> (ObjValueField ([2:2-3], (Annot (Exists [2:5-6])), Polarity.Neutral)) };
+           dict = None}} |}]
 
 let%expect_test "exact_by_default" =
   print_sig ~exact_by_default:true {|
@@ -4677,7 +4711,8 @@ let%expect_test "export_default_class_binding" =
          def =
          ClassSig {tparams = Mono; extends = ClassImplicitExtends;
            implements = []; static_props = {};
-           proto_props = {}; own_props = {}}} |}]
+           proto_props = {}; own_props = {};
+           dict = None}} |}]
 
 let%expect_test "declared_export_default_function_binding" =
   print_sig {|
@@ -5741,7 +5776,7 @@ let%expect_test "this_param_2" =
                  this_param = (Some (Annot (Mixed [2:13-18])));
                  return = (Annot (Void [2:22-26]));
                  type_guard = None; effect_ = ArbitraryEffect}} };
-           own_props = {}}} |}]
+           own_props = {}; dict = None}} |}]
 
 let%expect_test "this_param_3" =
   print_sig {|
@@ -6977,7 +7012,8 @@ let%expect_test "record_named_export" =
            proto_props = {};
            own_props =
            { "a" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Positive));
-             "b" -> (ObjValueField ([3:2-3], (Annot (String [3:5-11])), Polarity.Positive)) }};
+             "b" -> (ObjValueField ([3:2-3], (Annot (String [3:5-11])), Polarity.Positive)) };
+           dict = None};
          defaulted_props = { "b" }}
   |}]
 
@@ -7005,7 +7041,8 @@ let%expect_test "record_default_export" =
            proto_props = {};
            own_props =
            { "a" -> (ObjValueField ([2:2-3], (Annot (Number [2:5-11])), Polarity.Positive));
-             "b" -> (ObjValueField ([3:2-3], (Annot (String [3:5-11])), Polarity.Positive)) }};
+             "b" -> (ObjValueField ([3:2-3], (Annot (String [3:5-11])), Polarity.Positive)) };
+           dict = None};
          defaulted_props = { "b" }}
   |}]
 

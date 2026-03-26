@@ -1539,9 +1539,10 @@ module ClassAcc = struct
     static: 'loc prop SMap.t;
     proto: 'loc prop SMap.t;
     own: 'loc prop SMap.t;
+    dict: 'loc parsed obj_annot_dict option;
   }
 
-  let empty = { static = SMap.empty; proto = SMap.empty; own = SMap.empty }
+  let empty = { static = SMap.empty; proto = SMap.empty; own = SMap.empty; dict = None }
 
   let map_static f acc = { acc with static = f acc.static }
 
@@ -1574,9 +1575,26 @@ module ClassAcc = struct
     else
       map_proto f acc
 
-  let class_def tparams extends implements { static; proto; own } =
+  let add_indexer ~static dict acc =
+    if static then
+      acc
+    (* static indexers not yet supported *)
+    else
+      match acc.dict with
+      | Some _ -> acc
+      | None -> { acc with dict = Some dict }
+
+  let class_def tparams extends implements { static; proto; own; dict } =
     ClassSig
-      { tparams; extends; implements; static_props = static; proto_props = proto; own_props = own }
+      {
+        tparams;
+        extends;
+        implements;
+        static_props = static;
+        proto_props = proto;
+        own_props = own;
+        dict;
+      }
 end
 
 module DeclareClassAcc = struct
@@ -4443,7 +4461,11 @@ and class_def =
         (* unexpected non-private method/field with private name *)
         | C.Body.StaticBlock _ -> acc (* static blocks are unreachable from exports *)
         | C.Body.AbstractMethod _ -> acc (* abstract methods are not supported *)
-        | C.Body.AbstractProperty _ -> acc (* abstract properties are not supported *))
+        | C.Body.AbstractProperty _ -> acc (* abstract properties are not supported *)
+        | C.Body.IndexSignature (_, p) ->
+          let { Ast.Type.Object.Indexer.static; _ } = p in
+          let i = indexer opts scope tbls xs p in
+          Acc.add_indexer ~static i acc)
       acc
       elements
   in

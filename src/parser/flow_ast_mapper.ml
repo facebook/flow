@@ -533,6 +533,11 @@ class ['loc] mapper =
         id_loc this#class_abstract_property loc abs_prop elem (fun abs_prop ->
             AbstractProperty (loc, abs_prop)
         )
+      | IndexSignature indexer ->
+        id this#class_indexer indexer elem (fun indexer -> IndexSignature indexer)
+
+    method class_indexer (indexer : ('loc, 'loc) Ast.Type.Object.Indexer.t) =
+      this#object_indexer_property_type indexer
 
     method class_implements (implements : ('loc, 'loc) Ast.Class.Implements.t) =
       let open Ast.Class.Implements in

@@ -2837,6 +2837,7 @@ mod class_acc {
         pub(super) proto:
             BTreeMap<FlowSmolStr, ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>>>,
         pub(super) own: BTreeMap<FlowSmolStr, ObjValueProp<LocNode<'arena>, Parsed<'arena, 'ast>>>,
+        pub(super) dict: Option<ObjAnnotDict<Parsed<'arena, 'ast>>>,
     }
 
     impl<'arena, 'ast> ClassAcc<'arena, 'ast> {
@@ -2845,6 +2846,7 @@ mod class_acc {
                 static_: BTreeMap::new(),
                 proto: BTreeMap::new(),
                 own: BTreeMap::new(),
+                dict: None,
             }
         }
 
@@ -2919,6 +2921,20 @@ mod class_acc {
             }
         }
 
+        pub(super) fn add_indexer(
+            &mut self,
+            static_: bool,
+            dict: ObjAnnotDict<Parsed<'arena, 'ast>>,
+        ) {
+            if static_ {
+                // static indexers not yet supported
+                return;
+            }
+            if self.dict.is_none() {
+                self.dict = Some(dict);
+            }
+        }
+
         pub(super) fn class_def(
             self,
             tparams: TParams<LocNode<'arena>, Parsed<'arena, 'ast>>,
@@ -2932,6 +2948,7 @@ mod class_acc {
                 static_props: self.static_,
                 proto_props: self.proto,
                 own_props: self.own,
+                dict: self.dict,
             }
         }
     }
@@ -7882,6 +7899,11 @@ fn class_def<'arena: 'ast, 'ast>(
             class::BodyElement::AbstractMethod(_) => {}
             // abstract properties are not supported
             class::BodyElement::AbstractProperty(_) => {}
+            class::BodyElement::IndexSignature(p) => {
+                let static_ = p.static_;
+                let i = indexer(opts, scope, scopes, tbls, &mut xs, p);
+                acc.add_indexer(static_, i);
+            }
         }
     }
 

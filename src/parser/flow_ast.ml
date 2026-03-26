@@ -2632,6 +2632,7 @@ and Class : sig
       | DeclareMethod of ('M, 'T) DeclareMethod.t
       | AbstractMethod of ('M, 'T) AbstractMethod.t
       | AbstractProperty of ('M, 'T) AbstractProperty.t
+      | IndexSignature of ('M, 'T) Type.Object.Indexer.t
     [@@deriving show]
   end
 

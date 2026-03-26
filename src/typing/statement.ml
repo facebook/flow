@@ -8937,6 +8937,41 @@ module Make
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
                 )
+              | Body.IndexSignature (loc, indexer) ->
+                if not (Context.tslib_syntax cx && Context.under_declaration_context cx) then (
+                  Flow.add_output
+                    cx
+                    (Error_message.EUnsupportedSyntax
+                       (loc, Flow_intermediate_error_types.ClassIndexSignature)
+                    );
+                  ( c,
+                    (fun () ->
+                      Tast_utils.error_mapper#class_element (Body.IndexSignature (loc, indexer)))
+                    :: rev_elements,
+                    public_seen_names
+                  )
+                ) else
+                  let { Ast.Type.Object.Indexer.static; _ } = indexer in
+                  if Class_stmt_sig.has_indexer ~static c then (
+                    Flow_js_utils.add_output
+                      cx
+                      (Error_message.EUnsupportedSyntax
+                         (loc, Flow_intermediate_error_types.MultipleIndexers)
+                      );
+                    ( c,
+                      (fun () ->
+                        Tast_utils.error_mapper#class_element (Body.IndexSignature (loc, indexer)))
+                      :: rev_elements,
+                      public_seen_names
+                    )
+                  ) else
+                    let (dict, indexer_ast) =
+                      Anno.convert_indexer cx tparams_map_with_this indexer
+                    in
+                    ( Class_stmt_sig.add_indexer ~static dict c,
+                      (fun () -> Body.IndexSignature (loc, indexer_ast)) :: rev_elements,
+                      public_seen_names
+                    )
             )
             (class_sig, [], empty_seen_names)
             elements

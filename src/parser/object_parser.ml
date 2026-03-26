@@ -1572,6 +1572,88 @@ module Object
               (leading @ leading_set)
               ~is_getter:false
           )
+        | (false, false, T_LBRACKET) when in_ambient_context env ->
+          (* Consume `[`, then disambiguate: index signature vs computed property.
+             Index signature: [id: type]: type — the token after the identifier is T_COLON.
+             Computed property: [expr] — anything else. *)
+          let leading_lbracket = Peek.comments env in
+          Expect.token env T_LBRACKET;
+          if Peek.ith_token ~i:1 env = T_COLON then begin
+            (* Index signature: [key: type]: type
+               Reject modifiers that are not valid on index signatures. *)
+            error_unsupported_declare env declare;
+            (match ts_accessibility with
+            | Some (loc, { Ast.Class.TSAccessibility.kind; _ }) ->
+              let keyword =
+                match kind with
+                | Ast.Class.TSAccessibility.Public -> "public"
+                | Ast.Class.TSAccessibility.Protected -> "protected"
+                | Ast.Class.TSAccessibility.Private -> "private"
+              in
+              error_at env (loc, Parse_error.IndexSignatureInvalidModifier keyword)
+            | None -> ());
+            if abstract then
+              error_at env (start_loc, Parse_error.IndexSignatureInvalidModifier "abstract");
+            let indexer =
+              with_loc
+                ~start_loc
+                (fun env ->
+                  let id = identifier_name env in
+                  Expect.token env T_COLON;
+                  let key_type = Type._type env in
+                  Expect.token env T_RBRACKET;
+                  let optional = Eat.maybe env T_PLING in
+                  let trailing = Eat.trailing_comments env in
+                  Expect.token env T_COLON;
+                  let value = Type._type env in
+                  ignore (Eat.maybe env T_SEMICOLON);
+                  {
+                    Ast.Type.Object.Indexer.id = Some id;
+                    key = key_type;
+                    value;
+                    static;
+                    variance;
+                    optional;
+                    comments =
+                      Flow_ast_utils.mk_comments_opt
+                        ~leading:(leading @ leading_lbracket)
+                        ~trailing
+                        ();
+                  })
+                env
+            in
+            Ast.Class.Body.IndexSignature indexer
+          end else begin
+            (* Computed property — `[` already consumed, parse expression and `]` *)
+            let open Ast.Expression.Object.Property in
+            let (loc, computed_key) =
+              with_loc
+                ~start_loc
+                (fun env ->
+                  let expr = Parse.assignment (env |> with_no_in false) in
+                  Expect.token env T_RBRACKET;
+                  let trailing = Eat.trailing_comments env in
+                  {
+                    ComputedKey.expression = expr;
+                    comments = Flow_ast_utils.mk_comments_opt ~leading:leading_lbracket ~trailing ();
+                  })
+                env
+            in
+            let key = Computed (loc, computed_key) in
+            init
+              env
+              start_loc
+              decorators
+              key
+              ~async
+              ~generator
+              ~static
+              ~abstract
+              ~declare
+              variance
+              ts_accessibility
+              leading
+          end
         | (_, _, _) ->
           let (_, key) = key ~class_body:true env in
           init
@@ -1665,6 +1747,7 @@ module Object
           | Ast.Class.Body.AbstractProperty (loc, _) ->
             if not abstract then error_at env (loc, Parse_error.AbstractPropertyInNonAbstractClass);
             (seen_constructor, private_names)
+          | Ast.Class.Body.IndexSignature _ -> (seen_constructor, private_names)
         in
         elements env ~abstract seen_constructor' private_names' (element :: acc)
     in

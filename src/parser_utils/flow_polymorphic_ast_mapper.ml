@@ -448,6 +448,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         AbstractMethod (this#on_type_annot annot, this#class_abstract_method abs_meth)
       | AbstractProperty (annot, abs_prop) ->
         AbstractProperty (this#on_type_annot annot, this#class_abstract_property abs_prop)
+      | IndexSignature indexer -> IndexSignature (this#object_indexer_property_type indexer)
 
     method class_key key = this#object_key key
 
