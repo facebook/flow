@@ -7,6 +7,14 @@
 
 #![feature(never_type)]
 
+// Configure jemalloc at initialization: disable page decay to avoid expensive
+// page faults. The checking phase allocates/frees at high rates; returning pages
+// to the OS causes re-fault overhead when those pages are needed again shortly.
+#[allow(non_upper_case_globals)]
+#[unsafe(no_mangle)]
+#[used]
+static malloc_conf: &str = "metadata_thp:always,dirty_decay_ms:-1,muzzy_decay_ms:-1\0";
+
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::fs;
