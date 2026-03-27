@@ -21,6 +21,7 @@ use flow_common::reason::Reason;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::flow_error;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -2048,7 +2049,9 @@ pub mod type_assertions {
             Some(_) => {}
             None => flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EMatchInvalidInstancePattern(reason_of_t(t).loc().dupe()),
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidInstancePattern(
+                    reason_of_t(t).loc().dupe(),
+                )),
             )
             .unwrap(),
         }

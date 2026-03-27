@@ -84,7 +84,9 @@ end = struct
       if raise_errors then
         Flow_js.add_output
           cx
-          (Error_message.EMatchUnusedPattern { reason; already_seen = Some already_seen });
+          (Error_message.EMatchError
+             (Error_message.MatchUnusedPattern { reason; already_seen = Some already_seen })
+          );
       false
     | None -> true
 
@@ -99,7 +101,9 @@ end = struct
         if raise_errors then
           Flow_js.add_output
             cx
-            (Error_message.EMatchUnusedPattern { reason; already_seen = Some already_seen });
+            (Error_message.EMatchError
+               (Error_message.MatchUnusedPattern { reason; already_seen = Some already_seen })
+            );
         pattern_union
       | None ->
         if guarded then
@@ -122,7 +126,10 @@ end = struct
           let loc = Reason.loc_of_reason reason in
           (* We avoid more complex analysis by simply erroring when there is a
              guarded wilcard which is in the last case. *)
-          if raise_errors then Flow_js.add_output cx (Error_message.EMatchInvalidGuardedWildcard loc)
+          if raise_errors then
+            Flow_js.add_output
+              cx
+              (Error_message.EMatchError (Error_message.MatchInvalidGuardedWildcard loc))
         );
         pattern_union
       ) else
@@ -220,8 +227,10 @@ end = struct
       if raise_errors then
         Flow_js.add_output
           cx
-          (Error_message.EMatchInvalidIdentOrMemberPattern
-             { loc; type_reason = TypeUtil.reason_of_t t }
+          (Error_message.EMatchError
+             (Error_message.MatchInvalidIdentOrMemberPattern
+                { loc; type_reason = TypeUtil.reason_of_t t }
+             )
           );
       None
 
@@ -1270,16 +1279,19 @@ and filter_object_by_pattern
                   if raise_errors then
                     Flow_js.add_output
                       cx
-                      (Error_message.EMatchNonExhaustiveObjectPattern
-                         {
-                           loc = Reason.loc_of_reason reason_pattern;
-                           rest = value_rest;
-                           missing_props;
-                           pattern_kind =
-                             (match pattern_class_info with
-                             | Some _ -> Flow_intermediate_error_types.MatchObjPatternKind.Instance
-                             | None -> Flow_intermediate_error_types.MatchObjPatternKind.Object);
-                         }
+                      (Error_message.EMatchError
+                         (Error_message.MatchNonExhaustiveObjectPattern
+                            {
+                              loc = Reason.loc_of_reason reason_pattern;
+                              rest = value_rest;
+                              missing_props;
+                              pattern_kind =
+                                (match pattern_class_info with
+                                | Some _ ->
+                                  Flow_intermediate_error_types.MatchObjPatternKind.Instance
+                                | None -> Flow_intermediate_error_types.MatchObjPatternKind.Object);
+                            }
+                         )
                       )
                 );
                 used_pattern_locs
@@ -1424,7 +1436,9 @@ let rec check_for_unused_patterns cx (pattern_union : PatternUnion.t) (used_patt
     ALocSet.mem loc used_pattern_locs
   in
   let error reason =
-    Flow_js.add_output cx (Error_message.EMatchUnusedPattern { reason; already_seen = None })
+    Flow_js.add_output
+      cx
+      (Error_message.EMatchError (Error_message.MatchUnusedPattern { reason; already_seen = None }))
   in
   LeafSet.iter (fun (reason, _) -> if not @@ check reason then error reason) leafs;
   Base.List.iter guarded_leafs ~f:(fun (reason, _) -> if not @@ check reason then error reason);
@@ -1469,8 +1483,10 @@ let analyze cx ~match_loc patterns arg_t =
               in
               Flow_js.add_output
                 cx
-                (Error_message.EMatchNonExplicitEnumCheck
-                   { loc = match_loc; wildcard_reason; unchecked_members }
+                (Error_message.EMatchError
+                   (Error_message.MatchNonExplicitEnumCheck
+                      { loc = match_loc; wildcard_reason; unchecked_members }
+                   )
                 )
         )
     )
@@ -1585,7 +1601,11 @@ let analyze cx ~match_loc patterns arg_t =
     in
     Flow_js.add_output
       cx
-      (Error_message.EMatchNotExhaustive { loc = match_loc; examples; missing_pattern_asts = asts })
+      (Error_message.EMatchError
+         (Error_message.MatchNotExhaustive
+            { loc = match_loc; examples; missing_pattern_asts = asts }
+         )
+      )
   );
   check_for_unused_patterns cx pattern_union used_pattern_locs
 

@@ -30,7 +30,6 @@ use flow_typing_default::Default;
 use flow_typing_errors::error_message::EIncompatibleDefsData;
 use flow_typing_errors::error_message::EIncompatibleSpeculationData;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
-use flow_typing_errors::error_message::EMatchNotExhaustiveData;
 use flow_typing_errors::error_message::EPropsNotFoundInInvariantSubtypingData;
 use flow_typing_errors::error_message::EUnionPartialOptimizationNonUniqueKeyData;
 use flow_typing_errors::error_message::EUnionSpeculationFailedData;
@@ -39,6 +38,7 @@ use flow_typing_errors::error_message::EnumKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::InvalidMappedTypeErrorKind;
+use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::UpperKind;
 use flow_typing_errors::error_message::string_of_invalid_render_type_kind;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
@@ -3512,125 +3512,127 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 dump_reason(cx, reason)
             )
         }
-        ErrorMessage::EMatchNotExhaustive(box EMatchNotExhaustiveData { loc, .. }) => {
-            format!("EMatchNotExhaustive ({})", string_of_aloc(None, loc))
-        }
-        ErrorMessage::EMatchUnusedPattern {
-            reason,
-            already_seen,
-        } => {
-            let already_str = match already_seen {
-                Some(r) => dump_reason(cx, r),
-                None => "".to_string(),
-            };
-            format!(
-                "EMatchUnusedPattern ({}) ({})",
-                dump_reason(cx, reason),
-                already_str
-            )
-        }
-        ErrorMessage::EMatchNonExhaustiveObjectPattern { loc, rest, .. } => {
-            let rest_str = match rest {
-                Some(r) => dump_reason(cx, r),
-                None => "".to_string(),
-            };
-            format!(
-                "EMatchNonExhaustiveObjectPattern ({}) ({})",
-                string_of_aloc(None, loc),
-                rest_str
-            )
-        }
-        ErrorMessage::EMatchNonExplicitEnumCheck {
-            loc,
-            wildcard_reason,
-            ..
-        } => {
-            format!(
-                "EMatchNonExplicitEnumCheck ({}) ({})",
-                string_of_aloc(None, loc),
-                dump_reason(cx, wildcard_reason)
-            )
-        }
-        ErrorMessage::EMatchInvalidGuardedWildcard(loc) => {
-            format!(
-                "EMatchInvalidGuardedWildcard ({})",
-                string_of_aloc(None, loc)
-            )
-        }
-        ErrorMessage::EMatchInvalidIdentOrMemberPattern { loc, type_reason } => {
-            format!(
-                "EMatchInvalidIdentOrMemberPattern ({}) ({})",
-                string_of_aloc(None, loc),
-                dump_reason(cx, type_reason)
-            )
-        }
-        ErrorMessage::EMatchInvalidBindingKind { loc, kind } => {
-            format!(
-                "EMatchInvalidBindingKind ({}) ({:?})",
-                string_of_aloc(None, loc),
-                kind
-            )
-        }
-        ErrorMessage::EMatchInvalidObjectPropertyLiteral { loc, .. } => {
-            format!(
-                "EMatchInvalidObjectPropertyLiteral ({})",
-                string_of_aloc(None, loc)
-            )
-        }
-        ErrorMessage::EMatchInvalidUnaryZero { loc } => {
-            format!("EMatchInvalidUnaryZero ({})", string_of_aloc(None, loc))
-        }
-        ErrorMessage::EMatchInvalidUnaryPlusBigInt { loc } => {
-            format!("EMatchInvalidUnaryBigInt ({})", string_of_aloc(None, loc))
-        }
-        ErrorMessage::EMatchDuplicateObjectProperty { loc, name, .. } => {
-            format!(
-                "EMatchDuplicateObjectProperty ({}) ({})",
-                string_of_aloc(None, loc),
-                name
-            )
-        }
-        ErrorMessage::EMatchBindingInOrPattern { loc } => {
-            format!("EMatchBindingInOrPattern ({})", string_of_aloc(None, loc))
-        }
-        ErrorMessage::EMatchInvalidAsPattern { loc } => {
-            format!("EMatchInvalidAsPattern ({})", string_of_aloc(None, loc))
-        }
-        ErrorMessage::EMatchInvalidPatternReference {
-            loc,
-            binding_reason,
-        } => {
-            format!(
-                "EMatchInvalidPatternReference ({}) ({})",
-                string_of_aloc(None, loc),
-                dump_reason(cx, binding_reason)
-            )
-        }
-        ErrorMessage::EMatchInvalidObjectShorthand { loc, name, .. } => {
-            format!(
-                "EMatchInvalidObjectShorthand ({}) ({})",
-                string_of_aloc(None, loc),
-                name
-            )
-        }
-        ErrorMessage::EMatchStatementInvalidBody { loc } => {
-            format!("EMatchStatementInvalidBody ({})", string_of_aloc(None, loc))
-        }
-        ErrorMessage::EMatchInvalidCaseSyntax { loc, .. } => {
-            format!("EMatchInvalidCaseSyntax ({})", string_of_aloc(None, loc))
-        }
-        ErrorMessage::EMatchInvalidWildcardSyntax(loc) => {
-            format!(
-                "EMatchInvalidWildcardSyntax ({})",
-                string_of_aloc(None, loc)
-            )
-        }
-        ErrorMessage::EMatchInvalidInstancePattern(loc) => {
-            format!(
-                "EMatchInvalidInstancePattern ({})",
-                string_of_aloc(None, loc)
-            )
-        }
+        ErrorMessage::EMatchError(e) => match e {
+            MatchErrorKind::MatchNotExhaustive { loc, .. } => {
+                format!("EMatchNotExhaustive ({})", string_of_aloc(None, loc))
+            }
+            MatchErrorKind::MatchUnusedPattern {
+                reason,
+                already_seen,
+            } => {
+                let already_str = match already_seen {
+                    Some(r) => dump_reason(cx, r),
+                    None => "".to_string(),
+                };
+                format!(
+                    "EMatchUnusedPattern ({}) ({})",
+                    dump_reason(cx, reason),
+                    already_str
+                )
+            }
+            MatchErrorKind::MatchNonExhaustiveObjectPattern { loc, rest, .. } => {
+                let rest_str = match rest {
+                    Some(r) => dump_reason(cx, r),
+                    None => "".to_string(),
+                };
+                format!(
+                    "EMatchNonExhaustiveObjectPattern ({}) ({})",
+                    string_of_aloc(None, loc),
+                    rest_str
+                )
+            }
+            MatchErrorKind::MatchNonExplicitEnumCheck {
+                loc,
+                wildcard_reason,
+                ..
+            } => {
+                format!(
+                    "EMatchNonExplicitEnumCheck ({}) ({})",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, wildcard_reason)
+                )
+            }
+            MatchErrorKind::MatchInvalidGuardedWildcard(loc) => {
+                format!(
+                    "EMatchInvalidGuardedWildcard ({})",
+                    string_of_aloc(None, loc)
+                )
+            }
+            MatchErrorKind::MatchInvalidIdentOrMemberPattern { loc, type_reason } => {
+                format!(
+                    "EMatchInvalidIdentOrMemberPattern ({}) ({})",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, type_reason)
+                )
+            }
+            MatchErrorKind::MatchInvalidBindingKind { loc, kind } => {
+                format!(
+                    "EMatchInvalidBindingKind ({}) ({:?})",
+                    string_of_aloc(None, loc),
+                    kind
+                )
+            }
+            MatchErrorKind::MatchInvalidObjectPropertyLiteral { loc, .. } => {
+                format!(
+                    "EMatchInvalidObjectPropertyLiteral ({})",
+                    string_of_aloc(None, loc)
+                )
+            }
+            MatchErrorKind::MatchInvalidUnaryZero { loc } => {
+                format!("EMatchInvalidUnaryZero ({})", string_of_aloc(None, loc))
+            }
+            MatchErrorKind::MatchInvalidUnaryPlusBigInt { loc } => {
+                format!("EMatchInvalidUnaryBigInt ({})", string_of_aloc(None, loc))
+            }
+            MatchErrorKind::MatchDuplicateObjectProperty { loc, name, .. } => {
+                format!(
+                    "EMatchDuplicateObjectProperty ({}) ({})",
+                    string_of_aloc(None, loc),
+                    name
+                )
+            }
+            MatchErrorKind::MatchBindingInOrPattern { loc } => {
+                format!("EMatchBindingInOrPattern ({})", string_of_aloc(None, loc))
+            }
+            MatchErrorKind::MatchInvalidAsPattern { loc } => {
+                format!("EMatchInvalidAsPattern ({})", string_of_aloc(None, loc))
+            }
+            MatchErrorKind::MatchInvalidPatternReference {
+                loc,
+                binding_reason,
+            } => {
+                format!(
+                    "EMatchInvalidPatternReference ({}) ({})",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, binding_reason)
+                )
+            }
+            MatchErrorKind::MatchInvalidObjectShorthand { loc, name, .. } => {
+                format!(
+                    "EMatchInvalidObjectShorthand ({}) ({})",
+                    string_of_aloc(None, loc),
+                    name
+                )
+            }
+            MatchErrorKind::MatchStatementInvalidBody { loc } => {
+                format!("EMatchStatementInvalidBody ({})", string_of_aloc(None, loc))
+            }
+            MatchErrorKind::MatchInvalidCaseSyntax { loc, .. } => {
+                format!("EMatchInvalidCaseSyntax ({})", string_of_aloc(None, loc))
+            }
+            MatchErrorKind::MatchInvalidWildcardSyntax(loc) => {
+                format!(
+                    "EMatchInvalidWildcardSyntax ({})",
+                    string_of_aloc(None, loc)
+                )
+            }
+            MatchErrorKind::MatchInvalidInstancePattern(loc) => {
+                format!(
+                    "EMatchInvalidInstancePattern ({})",
+                    string_of_aloc(None, loc)
+                )
+            }
+        },
         ErrorMessage::ERecordBannedTypeUtil {
             reason_op,
             reason_record,

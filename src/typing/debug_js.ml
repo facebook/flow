@@ -2042,57 +2042,59 @@ let dump_error_message =
       spf "ECannotCallReactComponent (%s)" (dump_reason cx reason)
     | ENegativeTypeGuardConsistency { reason; _ } ->
       spf "ENegativeTypeGuardConsistency (%s)" (dump_reason cx reason)
-    | EMatchNotExhaustive { loc; examples = _; missing_pattern_asts = _ } ->
-      spf "EMatchNotExhaustive (%s)" (string_of_aloc loc)
-    | EMatchUnusedPattern { reason; already_seen } ->
-      spf
-        "EMatchUnusedPattern (%s) (%s)"
-        (dump_reason cx reason)
-        (Base.Option.value_map ~default:"" ~f:(dump_reason cx) already_seen)
-    | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props = _; pattern_kind = _ } ->
-      spf
-        "EMatchNonExhaustiveObjectPattern (%s) (%s)"
-        (string_of_aloc loc)
-        (Base.Option.value_map ~default:"" ~f:(dump_reason cx) rest)
-    | EMatchNonExplicitEnumCheck { loc; wildcard_reason; unchecked_members = _ } ->
-      spf
-        "EMatchNonExplicitEnumCheck (%s) (%s)"
-        (string_of_aloc loc)
-        (dump_reason cx wildcard_reason)
-    | EMatchInvalidGuardedWildcard loc ->
-      spf "EMatchInvalidGuardedWildcard (%s)" (string_of_aloc loc)
-    | EMatchInvalidIdentOrMemberPattern { loc; type_reason } ->
-      spf
-        "EMatchInvalidIdentOrMemberPattern (%s) (%s)"
-        (string_of_aloc loc)
-        (dump_reason cx type_reason)
-    | EMatchInvalidBindingKind { loc; kind } ->
-      spf
-        "EMatchInvalidBindingKind (%s) (%s)"
-        (string_of_aloc loc)
-        (Flow_ast_utils.string_of_variable_kind kind)
-    | EMatchInvalidObjectPropertyLiteral { loc; pattern_kind = _ } ->
-      spf "EMatchInvalidObjectPropertyLiteral (%s)" (string_of_aloc loc)
-    | EMatchInvalidUnaryZero { loc } -> spf "EMatchInvalidUnaryZero (%s)" (string_of_aloc loc)
-    | EMatchInvalidUnaryPlusBigInt { loc } ->
-      spf "EMatchInvalidUnaryBigInt (%s)" (string_of_aloc loc)
-    | EMatchDuplicateObjectProperty { loc; name; pattern_kind = _ } ->
-      spf "EMatchDuplicateObjectProperty (%s) (%s)" (string_of_aloc loc) name
-    | EMatchBindingInOrPattern { loc } -> spf "EMatchBindingInOrPattern (%s)" (string_of_aloc loc)
-    | EMatchInvalidAsPattern { loc } -> spf "EMatchInvalidAsPattern (%s)" (string_of_aloc loc)
-    | EMatchInvalidPatternReference { loc; binding_reason } ->
-      spf
-        "EMatchInvalidPatternReference (%s) (%s)"
-        (string_of_aloc loc)
-        (dump_reason cx binding_reason)
-    | EMatchInvalidObjectShorthand { loc; name; pattern_kind = _ } ->
-      spf "EMatchInvalidObjectShorthand (%s) (%s)" (string_of_aloc loc) name
-    | EMatchStatementInvalidBody { loc } ->
-      spf "EMatchStatementInvalidBody (%s)" (string_of_aloc loc)
-    | EMatchInvalidCaseSyntax { loc; _ } -> spf "EMatchInvalidCaseSyntax (%s)" (string_of_aloc loc)
-    | EMatchInvalidWildcardSyntax loc -> spf "EMatchInvalidWildcardSyntax (%s)" (string_of_aloc loc)
-    | EMatchInvalidInstancePattern loc ->
-      spf "EMatchInvalidInstancePattern (%s)" (string_of_aloc loc)
+    | EMatchError e ->
+      (match e with
+      | MatchNotExhaustive { loc; examples = _; missing_pattern_asts = _ } ->
+        spf "EMatchNotExhaustive (%s)" (string_of_aloc loc)
+      | MatchUnusedPattern { reason; already_seen } ->
+        spf
+          "EMatchUnusedPattern (%s) (%s)"
+          (dump_reason cx reason)
+          (Base.Option.value_map ~default:"" ~f:(dump_reason cx) already_seen)
+      | MatchNonExhaustiveObjectPattern { loc; rest; missing_props = _; pattern_kind = _ } ->
+        spf
+          "EMatchNonExhaustiveObjectPattern (%s) (%s)"
+          (string_of_aloc loc)
+          (Base.Option.value_map ~default:"" ~f:(dump_reason cx) rest)
+      | MatchNonExplicitEnumCheck { loc; wildcard_reason; unchecked_members = _ } ->
+        spf
+          "EMatchNonExplicitEnumCheck (%s) (%s)"
+          (string_of_aloc loc)
+          (dump_reason cx wildcard_reason)
+      | MatchInvalidGuardedWildcard loc ->
+        spf "EMatchInvalidGuardedWildcard (%s)" (string_of_aloc loc)
+      | MatchInvalidIdentOrMemberPattern { loc; type_reason } ->
+        spf
+          "EMatchInvalidIdentOrMemberPattern (%s) (%s)"
+          (string_of_aloc loc)
+          (dump_reason cx type_reason)
+      | MatchInvalidBindingKind { loc; kind } ->
+        spf
+          "EMatchInvalidBindingKind (%s) (%s)"
+          (string_of_aloc loc)
+          (Flow_ast_utils.string_of_variable_kind kind)
+      | MatchInvalidObjectPropertyLiteral { loc; pattern_kind = _ } ->
+        spf "EMatchInvalidObjectPropertyLiteral (%s)" (string_of_aloc loc)
+      | MatchInvalidUnaryZero { loc } -> spf "EMatchInvalidUnaryZero (%s)" (string_of_aloc loc)
+      | MatchInvalidUnaryPlusBigInt { loc } ->
+        spf "EMatchInvalidUnaryBigInt (%s)" (string_of_aloc loc)
+      | MatchDuplicateObjectProperty { loc; name; pattern_kind = _ } ->
+        spf "EMatchDuplicateObjectProperty (%s) (%s)" (string_of_aloc loc) name
+      | MatchBindingInOrPattern { loc } -> spf "EMatchBindingInOrPattern (%s)" (string_of_aloc loc)
+      | MatchInvalidAsPattern { loc } -> spf "EMatchInvalidAsPattern (%s)" (string_of_aloc loc)
+      | MatchInvalidPatternReference { loc; binding_reason } ->
+        spf
+          "EMatchInvalidPatternReference (%s) (%s)"
+          (string_of_aloc loc)
+          (dump_reason cx binding_reason)
+      | MatchInvalidObjectShorthand { loc; name; pattern_kind = _ } ->
+        spf "EMatchInvalidObjectShorthand (%s) (%s)" (string_of_aloc loc) name
+      | MatchStatementInvalidBody { loc } ->
+        spf "EMatchStatementInvalidBody (%s)" (string_of_aloc loc)
+      | MatchInvalidCaseSyntax { loc; _ } -> spf "EMatchInvalidCaseSyntax (%s)" (string_of_aloc loc)
+      | MatchInvalidWildcardSyntax loc -> spf "EMatchInvalidWildcardSyntax (%s)" (string_of_aloc loc)
+      | MatchInvalidInstancePattern loc ->
+        spf "EMatchInvalidInstancePattern (%s)" (string_of_aloc loc))
     | ERecordBannedTypeUtil { reason_op; reason_record } ->
       spf "ERecordBannedTypeUtil (%s) (%s)" (dump_reason cx reason_op) (dump_reason cx reason_record)
     | ERecordInvalidName { name; loc } ->

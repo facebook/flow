@@ -24,9 +24,9 @@ use flow_data_structure_wrapper::vector::FlowVector;
 use flow_parser::ast;
 use flow_parser::loc::Loc;
 use flow_typing_context::Context;
-use flow_typing_errors::error_message::EMatchNotExhaustiveData;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_flow_common::concrete_type_eq;
 use flow_typing_flow_js::flow_js;
 use flow_typing_flow_js::flow_js::FlowJs;
@@ -127,10 +127,10 @@ pub mod pattern_union_builder {
                 if raise_errors {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchUnusedPattern {
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern {
                             reason: reason.dupe(),
                             already_seen: Some(already_seen.dupe()),
-                        },
+                        }),
                     );
                 }
                 false
@@ -157,10 +157,10 @@ pub mod pattern_union_builder {
                 if raise_errors {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchUnusedPattern {
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern {
                             reason: reason.dupe(),
                             already_seen: Some(already_seen),
-                        },
+                        }),
                     );
                 }
                 pattern_union
@@ -193,7 +193,9 @@ pub mod pattern_union_builder {
                     if raise_errors {
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EMatchInvalidGuardedWildcard(loc.dupe()),
+                            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidGuardedWildcard(
+                                loc.dupe(),
+                            )),
                         );
                     }
                 }
@@ -331,10 +333,10 @@ pub mod pattern_union_builder {
         if raise_errors {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchInvalidIdentOrMemberPattern {
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern {
                     loc: loc.dupe(),
                     type_reason: reason_of_t(t).dupe(),
-                },
+                }),
             );
         }
         None
@@ -1840,7 +1842,7 @@ fn filter_object_by_pattern(
                     if raise_errors {
                         flow_js::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EMatchNonExhaustiveObjectPattern {
+                            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern {
                                 loc: reason_pattern.loc().dupe(),
                                 rest: value_rest.as_ref().map(|r| r.dupe()),
                                 missing_props,
@@ -1848,7 +1850,7 @@ fn filter_object_by_pattern(
                                     Some(_) => flow_typing_errors::intermediate_error_types::MatchObjPatternKind::Instance,
                                     None => flow_typing_errors::intermediate_error_types::MatchObjPatternKind::Object,
                                 },
-                            },
+                            }),
                         );
                     }
                 }
@@ -2019,10 +2021,10 @@ fn check_for_unused_patterns(
     let error = |reason: Reason| {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EMatchUnusedPattern {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern {
                 reason,
                 already_seen: None,
-            },
+            }),
         )
     };
     for leaf_val in &pattern_union.leafs {
@@ -2100,11 +2102,11 @@ pub fn analyze(
                         .collect();
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchNonExplicitEnumCheck {
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck {
                             loc: match_loc.dupe(),
                             wildcard_reason: wildcard_reason.dupe(),
                             unchecked_members,
-                        },
+                        }),
                     );
                 }
             }
@@ -2241,11 +2243,11 @@ pub fn analyze(
             asts.into_iter().take(25).map(|(_, pat)| pat).collect();
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EMatchNotExhaustive(Box::new(EMatchNotExhaustiveData {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNotExhaustive {
                 loc: match_loc.dupe(),
                 examples,
                 missing_pattern_asts,
-            })),
+            }),
         );
     }
     check_for_unused_patterns(cx, &pattern_union, &used_pattern_locs);

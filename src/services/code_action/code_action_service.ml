@@ -1311,7 +1311,8 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EMatchInvalidObjectShorthand { loc = error_loc; name; pattern_kind = _ } ->
+  | Error_message.EMatchError
+      (Error_message.MatchInvalidObjectShorthand { loc = error_loc; name; pattern_kind = _ }) ->
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
@@ -1332,7 +1333,7 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EMatchStatementInvalidBody { loc = error_loc } ->
+  | Error_message.EMatchError (Error_message.MatchStatementInvalidBody { loc = error_loc }) ->
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
@@ -1345,7 +1346,8 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EMatchInvalidBindingKind { loc = error_loc; kind = current_kind } ->
+  | Error_message.EMatchError
+      (Error_message.MatchInvalidBindingKind { loc = error_loc; kind = current_kind }) ->
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
@@ -1361,7 +1363,7 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EMatchInvalidWildcardSyntax error_loc ->
+  | Error_message.EMatchError (Error_message.MatchInvalidWildcardSyntax error_loc) ->
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
@@ -1374,7 +1376,8 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EMatchInvalidCaseSyntax { loc = error_loc; kind = _ } ->
+  | Error_message.EMatchError (Error_message.MatchInvalidCaseSyntax { loc = error_loc; kind = _ })
+    ->
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
@@ -1387,8 +1390,10 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EMatchNonExhaustiveObjectPattern
-      { loc = error_loc; rest; missing_props; pattern_kind = _ } ->
+  | Error_message.EMatchError
+      (Error_message.MatchNonExhaustiveObjectPattern
+        { loc = error_loc; rest; missing_props; pattern_kind = _ }
+        ) ->
     if loc_opt_intersects ~error_loc ~loc then
       let add_only_rest =
         {
@@ -1444,7 +1449,8 @@ let ast_transforms_of_error
         ]
     else
       []
-  | Error_message.EMatchNotExhaustive { loc = error_loc; examples; missing_pattern_asts } ->
+  | Error_message.EMatchError
+      (Error_message.MatchNotExhaustive { loc = error_loc; examples; missing_pattern_asts }) ->
     if loc_opt_intersects ~error_loc ~loc then
       let num_examples = Base.List.length examples in
       let num_asts = Base.List.length missing_pattern_asts in
@@ -1472,7 +1478,7 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EMatchUnusedPattern { reason; already_seen = _ } ->
+  | Error_message.EMatchError (Error_message.MatchUnusedPattern { reason; already_seen = _ }) ->
     let error_loc = Reason.loc_of_reason reason in
     if loc_opt_intersects ~error_loc ~loc then
       [

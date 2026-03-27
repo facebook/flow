@@ -56,6 +56,7 @@ use flow_parser::ast_visitor::AstVisitor;
 use flow_parser::loc_sig::LocSig;
 use flow_typing_errors::error_message::BindingError;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::NullWrite;
 use flow_typing_errors::intermediate_error_types::AssignedConstLikeBindingType;
 use refinement_key::Lookup;
@@ -3565,10 +3566,12 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                         );
                         Fl::add_output(
                             self.resolver.cx,
-                            ErrorMessage::EMatchInvalidPatternReference {
-                                loc,
-                                binding_reason,
-                            },
+                            ErrorMessage::EMatchError(
+                                MatchErrorKind::MatchInvalidPatternReference {
+                                    loc,
+                                    binding_reason,
+                                },
+                            ),
                         );
                     }
                 }

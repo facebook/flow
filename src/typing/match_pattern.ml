@@ -57,11 +57,19 @@ let object_property_key cx acc ~pattern_kind key :
       let acc = object_named_property acc loc prop in
       (acc, Property.NumberLiteral (loc, lit), prop)
     else (
-      Flow_js.add_output cx (Error_message.EMatchInvalidObjectPropertyLiteral { loc; pattern_kind });
+      Flow_js.add_output
+        cx
+        (Error_message.EMatchError
+           (Error_message.MatchInvalidObjectPropertyLiteral { loc; pattern_kind })
+        );
       (acc, Property.NumberLiteral (loc, lit), prop)
     )
   | Property.BigIntLiteral (loc, { Ast.BigIntLiteral.raw; _ }) ->
-    Flow_js.add_output cx (Error_message.EMatchInvalidObjectPropertyLiteral { loc; pattern_kind });
+    Flow_js.add_output
+      cx
+      (Error_message.EMatchError
+         (Error_message.MatchInvalidObjectPropertyLiteral { loc; pattern_kind })
+      );
     (acc, Tast_utils.error_mapper#match_object_pattern_property_key key, raw)
 
 let binding cx ~on_binding ~kind acc name_loc name =
@@ -73,7 +81,7 @@ let binding cx ~on_binding ~kind acc name_loc name =
 let binding_identifier cx ~on_binding ~in_or_pattern ~kind acc id =
   let (loc, { Ast.Identifier.name; comments }) = id in
   if in_or_pattern then (
-    Flow_js.add_output cx (Error_message.EMatchBindingInOrPattern { loc });
+    Flow_js.add_output cx (Error_message.EMatchError (Error_message.MatchBindingInOrPattern { loc }));
     Tast_utils.error_mapper#t_identifier id
   ) else
     let t = binding cx ~on_binding ~kind acc loc name in
@@ -86,7 +94,9 @@ let binding_pattern cx ~on_binding ~in_or_pattern ~loc acc binding =
     match kind with
     | Ast.Variable.Var
     | Ast.Variable.Let ->
-      Flow_js.add_output cx (Error_message.EMatchInvalidBindingKind { loc; kind });
+      Flow_js.add_output
+        cx
+        (Error_message.EMatchError (Error_message.MatchInvalidBindingKind { loc; kind }));
       Tast_utils.error_mapper#t_identifier id
     | Ast.Variable.Const -> binding_identifier cx ~on_binding ~in_or_pattern ~kind acc id
   in
@@ -156,9 +166,13 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
       let { UnaryPattern.operator; argument; _ } = x in
       (match (operator, argument) with
       | (_, (_, UnaryPattern.NumberLiteral { Ast.NumberLiteral.value = 0.0; _ })) ->
-        Flow_js.add_output cx (Error_message.EMatchInvalidUnaryZero { loc })
+        Flow_js.add_output
+          cx
+          (Error_message.EMatchError (Error_message.MatchInvalidUnaryZero { loc }))
       | (UnaryPattern.Plus, (_, UnaryPattern.BigIntLiteral _)) ->
-        Flow_js.add_output cx (Error_message.EMatchInvalidUnaryPlusBigInt { loc })
+        Flow_js.add_output
+          cx
+          (Error_message.EMatchError (Error_message.MatchInvalidUnaryPlusBigInt { loc }))
       | _ -> ());
       UnaryPattern x
     | MemberPattern mem ->
@@ -173,7 +187,10 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
       OrPattern { OrPattern.patterns; comments }
     | AsPattern { AsPattern.pattern = p; target; comments } ->
       (match p with
-      | (_, BindingPattern _) -> Flow_js.add_output cx (Error_message.EMatchInvalidAsPattern { loc })
+      | (_, BindingPattern _) ->
+        Flow_js.add_output
+          cx
+          (Error_message.EMatchError (Error_message.MatchInvalidAsPattern { loc }))
       | _ -> ());
       let p = pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc p in
       let target =
@@ -191,7 +208,9 @@ let rec pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc
     | BindingPattern x -> BindingPattern (binding_pattern cx ~on_binding ~in_or_pattern ~loc acc x)
     | WildcardPattern ({ WildcardPattern.invalid_syntax_default_keyword; _ } as x) ->
       if invalid_syntax_default_keyword then
-        Flow_js.add_output cx (Error_message.EMatchInvalidWildcardSyntax loc);
+        Flow_js.add_output
+          cx
+          (Error_message.EMatchError (Error_message.MatchInvalidWildcardSyntax loc));
       WildcardPattern x
     | ArrayPattern pattern ->
       ArrayPattern
@@ -303,13 +322,19 @@ and object_properties
         in
         Flow_js.add_output
           cx
-          (Error_message.EMatchDuplicateObjectProperty { loc = key_loc; name; pattern_kind })
+          (Error_message.EMatchError
+             (Error_message.MatchDuplicateObjectProperty { loc = key_loc; name; pattern_kind })
+          )
       );
       let p = pattern_ cx ~on_identifier ~on_expression ~on_binding ~in_or_pattern acc p in
       let prop = (loc, Property.Valid { Property.key; pattern = p; shorthand; comments }) in
       loop acc (SSet.add name seen) (prop :: rev_props) props
     | ((loc, Property.InvalidShorthand (_, { Ast.Identifier.name; _ })) as prop) :: props ->
-      Flow_js.add_output cx (Error_message.EMatchInvalidObjectShorthand { loc; name; pattern_kind });
+      Flow_js.add_output
+        cx
+        (Error_message.EMatchError
+           (Error_message.MatchInvalidObjectShorthand { loc; name; pattern_kind })
+        );
       loop acc (SSet.add name seen) (prop :: rev_props) props
   in
   loop acc SSet.empty [] props

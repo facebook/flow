@@ -141,14 +141,6 @@ pub struct EUnionPartialOptimizationNonUniqueKeyData<L: Dupe + PartialOrd + Ord 
     pub non_unique_keys: BTreeMap<Name, BTreeMap<UnionEnum, Vec1<VirtualReason<L>>>>,
 }
 
-/// Data struct for boxed `ErrorMessage::EMatchNotExhaustive` variant.
-#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
-pub struct EMatchNotExhaustiveData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
-    pub loc: L,
-    pub examples: Vec<(FlowSmolStr, Vec<VirtualReason<L>>)>,
-    pub missing_pattern_asts: Vec<MatchPattern<Loc, Loc>>,
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum EnumKind {
     ConcreteEnumKind,
@@ -233,6 +225,78 @@ pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         enum_reason: VirtualReason<L>,
         member_name: String,
     },
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum MatchErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    MatchNotExhaustive {
+        loc: L,
+        examples: Vec<(FlowSmolStr, Vec<VirtualReason<L>>)>,
+        missing_pattern_asts: Vec<MatchPattern<Loc, Loc>>,
+    },
+    MatchUnusedPattern {
+        reason: VirtualReason<L>,
+        already_seen: Option<VirtualReason<L>>,
+    },
+    MatchNonExhaustiveObjectPattern {
+        loc: L,
+        rest: Option<VirtualReason<L>>,
+        missing_props: Vec<FlowSmolStr>,
+        pattern_kind: MatchObjPatternKind,
+    },
+    MatchNonExplicitEnumCheck {
+        loc: L,
+        wildcard_reason: VirtualReason<L>,
+        unchecked_members: Vec<FlowSmolStr>,
+    },
+    MatchInvalidGuardedWildcard(L),
+    MatchInvalidIdentOrMemberPattern {
+        loc: L,
+        type_reason: VirtualReason<L>,
+    },
+    MatchInvalidBindingKind {
+        loc: L,
+        kind: VariableKind,
+    },
+    MatchInvalidObjectPropertyLiteral {
+        loc: L,
+        pattern_kind: MatchObjPatternKind,
+    },
+    MatchInvalidUnaryZero {
+        loc: L,
+    },
+    MatchInvalidUnaryPlusBigInt {
+        loc: L,
+    },
+    MatchDuplicateObjectProperty {
+        loc: L,
+        name: FlowSmolStr,
+        pattern_kind: MatchObjPatternKind,
+    },
+    MatchBindingInOrPattern {
+        loc: L,
+    },
+    MatchInvalidAsPattern {
+        loc: L,
+    },
+    MatchInvalidPatternReference {
+        loc: L,
+        binding_reason: VirtualReason<L>,
+    },
+    MatchInvalidObjectShorthand {
+        loc: L,
+        name: FlowSmolStr,
+        pattern_kind: MatchObjPatternKind,
+    },
+    MatchStatementInvalidBody {
+        loc: L,
+    },
+    MatchInvalidCaseSyntax {
+        loc: L,
+        kind: MatchInvalidCaseSyntax<L>,
+    },
+    MatchInvalidWildcardSyntax(L),
+    MatchInvalidInstancePattern(L),
 }
 
 /// Error message types for Flow type errors.
@@ -1032,88 +1096,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         reason: VirtualReason<L>,
     },
 
-    EMatchNotExhaustive(Box<EMatchNotExhaustiveData<L>>),
-
-    EMatchUnusedPattern {
-        reason: VirtualReason<L>,
-        already_seen: Option<VirtualReason<L>>,
-    },
-
-    EMatchNonExhaustiveObjectPattern {
-        loc: L,
-        rest: Option<VirtualReason<L>>,
-        missing_props: Vec<FlowSmolStr>,
-        pattern_kind: MatchObjPatternKind,
-    },
-
-    EMatchNonExplicitEnumCheck {
-        loc: L,
-        wildcard_reason: VirtualReason<L>,
-        unchecked_members: Vec<FlowSmolStr>,
-    },
-
-    EMatchInvalidGuardedWildcard(L),
-
-    EMatchInvalidIdentOrMemberPattern {
-        loc: L,
-        type_reason: VirtualReason<L>,
-    },
-
-    EMatchInvalidBindingKind {
-        loc: L,
-        kind: VariableKind,
-    },
-
-    EMatchInvalidObjectPropertyLiteral {
-        loc: L,
-        pattern_kind: MatchObjPatternKind,
-    },
-
-    EMatchInvalidUnaryZero {
-        loc: L,
-    },
-
-    EMatchInvalidUnaryPlusBigInt {
-        loc: L,
-    },
-
-    EMatchDuplicateObjectProperty {
-        loc: L,
-        name: FlowSmolStr,
-        pattern_kind: MatchObjPatternKind,
-    },
-
-    EMatchBindingInOrPattern {
-        loc: L,
-    },
-
-    EMatchInvalidAsPattern {
-        loc: L,
-    },
-
-    EMatchInvalidPatternReference {
-        loc: L,
-        binding_reason: VirtualReason<L>,
-    },
-
-    EMatchInvalidObjectShorthand {
-        loc: L,
-        name: FlowSmolStr,
-        pattern_kind: MatchObjPatternKind,
-    },
-
-    EMatchStatementInvalidBody {
-        loc: L,
-    },
-
-    EMatchInvalidCaseSyntax {
-        loc: L,
-        kind: MatchInvalidCaseSyntax<L>,
-    },
-
-    EMatchInvalidWildcardSyntax(L),
-
-    EMatchInvalidInstancePattern(L),
+    EMatchError(MatchErrorKind<L>),
 
     ERecordBannedTypeUtil {
         reason_op: VirtualReason<L>,
@@ -3044,142 +3027,131 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 refining_locs: refining_locs.into_iter().map(&f).collect(),
             },
 
-            EMatchNotExhaustive(box EMatchNotExhaustiveData {
-                loc,
-                examples,
-                missing_pattern_asts,
-            }) => EMatchNotExhaustive(Box::new(EMatchNotExhaustiveData {
-                loc: f(loc),
-                examples: examples
-                    .into_iter()
-                    .map(|(pattern, reasons)| {
-                        (pattern, reasons.into_iter().map(&map_reason).collect())
-                    })
-                    .collect(),
-                missing_pattern_asts,
-            })),
-
-            EMatchUnusedPattern {
-                reason,
-                already_seen,
-            } => EMatchUnusedPattern {
-                reason: map_reason(reason),
-                already_seen: already_seen.map(map_reason),
-            },
-
-            EMatchNonExhaustiveObjectPattern {
-                loc,
-                rest,
-                missing_props,
-                pattern_kind,
-            } => EMatchNonExhaustiveObjectPattern {
-                loc: f(loc),
-                rest: rest.map(map_reason),
-                missing_props,
-                pattern_kind,
-            },
-
-            EMatchNonExplicitEnumCheck {
-                loc,
-                wildcard_reason,
-                unchecked_members,
-            } => EMatchNonExplicitEnumCheck {
-                loc: f(loc),
-                wildcard_reason: map_reason(wildcard_reason),
-                unchecked_members,
-            },
-
-            EMatchInvalidGuardedWildcard(loc) => EMatchInvalidGuardedWildcard(f(loc)),
-
-            EMatchInvalidIdentOrMemberPattern { loc, type_reason } => {
-                EMatchInvalidIdentOrMemberPattern {
-                    loc: f(loc),
-                    type_reason: map_reason(type_reason),
-                }
-            }
-
-            EMatchInvalidBindingKind { loc, kind } => {
-                EMatchInvalidBindingKind { loc: f(loc), kind }
-            }
-
-            EMatchInvalidObjectPropertyLiteral { loc, pattern_kind } => {
-                EMatchInvalidObjectPropertyLiteral {
-                    loc: f(loc),
-                    pattern_kind,
-                }
-            }
-
-            EMatchInvalidUnaryZero { loc } => EMatchInvalidUnaryZero { loc: f(loc) },
-            EMatchInvalidUnaryPlusBigInt { loc } => EMatchInvalidUnaryPlusBigInt { loc: f(loc) },
-
-            EMatchDuplicateObjectProperty {
-                loc,
-                name,
-                pattern_kind,
-            } => EMatchDuplicateObjectProperty {
-                loc: f(loc),
-                name,
-                pattern_kind,
-            },
-
-            EMatchBindingInOrPattern { loc } => EMatchBindingInOrPattern { loc: f(loc) },
-            EMatchInvalidAsPattern { loc } => EMatchInvalidAsPattern { loc: f(loc) },
-
-            EMatchInvalidPatternReference {
-                loc,
-                binding_reason,
-            } => EMatchInvalidPatternReference {
-                loc: f(loc),
-                binding_reason: map_reason(binding_reason),
-            },
-
-            EMatchInvalidObjectShorthand {
-                loc,
-                name,
-                pattern_kind,
-            } => EMatchInvalidObjectShorthand {
-                loc: f(loc),
-                name,
-                pattern_kind,
-            },
-
-            EMatchStatementInvalidBody { loc } => EMatchStatementInvalidBody { loc: f(loc) },
-
-            EMatchInvalidCaseSyntax { loc, kind } => {
-                let kind = match kind {
-                    MatchInvalidCaseSyntax::InvalidMatchCaseMultiple {
-                        invalid_prefix_case_locs,
-                        invalid_infix_colon_locs,
-                        invalid_suffix_semicolon_locs,
-                    } => MatchInvalidCaseSyntax::InvalidMatchCaseMultiple {
-                        invalid_prefix_case_locs: invalid_prefix_case_locs
+            EMatchError(match_error) => {
+                use MatchErrorKind::*;
+                EMatchError(match match_error {
+                    MatchNotExhaustive {
+                        loc,
+                        examples,
+                        missing_pattern_asts,
+                    } => MatchNotExhaustive {
+                        loc: f(loc),
+                        examples: examples
                             .into_iter()
-                            .map(&f)
+                            .map(|(pattern, reasons)| {
+                                (pattern, reasons.into_iter().map(&map_reason).collect())
+                            })
                             .collect(),
-                        invalid_infix_colon_locs: invalid_infix_colon_locs
-                            .into_iter()
-                            .map(&f)
-                            .collect(),
-                        invalid_suffix_semicolon_locs: invalid_suffix_semicolon_locs
-                            .into_iter()
-                            .map(&f)
-                            .collect(),
+                        missing_pattern_asts,
                     },
-                    MatchInvalidCaseSyntax::InvalidMatchCasePrefixCase => {
-                        MatchInvalidCaseSyntax::InvalidMatchCasePrefixCase
+                    MatchUnusedPattern {
+                        reason,
+                        already_seen,
+                    } => MatchUnusedPattern {
+                        reason: map_reason(reason),
+                        already_seen: already_seen.map(map_reason),
+                    },
+                    MatchNonExhaustiveObjectPattern {
+                        loc,
+                        rest,
+                        missing_props,
+                        pattern_kind,
+                    } => MatchNonExhaustiveObjectPattern {
+                        loc: f(loc),
+                        rest: rest.map(map_reason),
+                        missing_props,
+                        pattern_kind,
+                    },
+                    MatchNonExplicitEnumCheck {
+                        loc,
+                        wildcard_reason,
+                        unchecked_members,
+                    } => MatchNonExplicitEnumCheck {
+                        loc: f(loc),
+                        wildcard_reason: map_reason(wildcard_reason),
+                        unchecked_members,
+                    },
+                    MatchInvalidGuardedWildcard(loc) => MatchInvalidGuardedWildcard(f(loc)),
+                    MatchInvalidIdentOrMemberPattern { loc, type_reason } => {
+                        MatchInvalidIdentOrMemberPattern {
+                            loc: f(loc),
+                            type_reason: map_reason(type_reason),
+                        }
                     }
-                    MatchInvalidCaseSyntax::InvalidMatchCaseInfixColon => {
-                        MatchInvalidCaseSyntax::InvalidMatchCaseInfixColon
+                    MatchInvalidBindingKind { loc, kind } => {
+                        MatchInvalidBindingKind { loc: f(loc), kind }
                     }
-                    MatchInvalidCaseSyntax::InvalidMatchCaseSuffixSemicolon => {
-                        MatchInvalidCaseSyntax::InvalidMatchCaseSuffixSemicolon
+                    MatchInvalidObjectPropertyLiteral { loc, pattern_kind } => {
+                        MatchInvalidObjectPropertyLiteral {
+                            loc: f(loc),
+                            pattern_kind,
+                        }
                     }
-                };
-                EMatchInvalidCaseSyntax { loc: f(loc), kind }
+                    MatchInvalidUnaryZero { loc } => MatchInvalidUnaryZero { loc: f(loc) },
+                    MatchInvalidUnaryPlusBigInt { loc } => {
+                        MatchInvalidUnaryPlusBigInt { loc: f(loc) }
+                    }
+                    MatchDuplicateObjectProperty {
+                        loc,
+                        name,
+                        pattern_kind,
+                    } => MatchDuplicateObjectProperty {
+                        loc: f(loc),
+                        name,
+                        pattern_kind,
+                    },
+                    MatchBindingInOrPattern { loc } => MatchBindingInOrPattern { loc: f(loc) },
+                    MatchInvalidAsPattern { loc } => MatchInvalidAsPattern { loc: f(loc) },
+                    MatchInvalidPatternReference {
+                        loc,
+                        binding_reason,
+                    } => MatchInvalidPatternReference {
+                        loc: f(loc),
+                        binding_reason: map_reason(binding_reason),
+                    },
+                    MatchInvalidObjectShorthand {
+                        loc,
+                        name,
+                        pattern_kind,
+                    } => MatchInvalidObjectShorthand {
+                        loc: f(loc),
+                        name,
+                        pattern_kind,
+                    },
+                    MatchStatementInvalidBody { loc } => MatchStatementInvalidBody { loc: f(loc) },
+                    MatchInvalidCaseSyntax { loc, kind } => {
+                        use crate::intermediate_error_types::MatchInvalidCaseSyntax as MICS;
+                        let kind = match kind {
+                            MICS::InvalidMatchCaseMultiple {
+                                invalid_prefix_case_locs,
+                                invalid_infix_colon_locs,
+                                invalid_suffix_semicolon_locs,
+                            } => MICS::InvalidMatchCaseMultiple {
+                                invalid_prefix_case_locs: invalid_prefix_case_locs
+                                    .into_iter()
+                                    .map(&f)
+                                    .collect(),
+                                invalid_infix_colon_locs: invalid_infix_colon_locs
+                                    .into_iter()
+                                    .map(&f)
+                                    .collect(),
+                                invalid_suffix_semicolon_locs: invalid_suffix_semicolon_locs
+                                    .into_iter()
+                                    .map(&f)
+                                    .collect(),
+                            },
+                            MICS::InvalidMatchCasePrefixCase => MICS::InvalidMatchCasePrefixCase,
+                            MICS::InvalidMatchCaseInfixColon => MICS::InvalidMatchCaseInfixColon,
+                            MICS::InvalidMatchCaseSuffixSemicolon => {
+                                MICS::InvalidMatchCaseSuffixSemicolon
+                            }
+                        };
+                        MatchInvalidCaseSyntax { loc: f(loc), kind }
+                    }
+                    MatchInvalidWildcardSyntax(loc) => MatchInvalidWildcardSyntax(f(loc)),
+                    MatchInvalidInstancePattern(loc) => MatchInvalidInstancePattern(f(loc)),
+                })
             }
-
-            EMatchInvalidWildcardSyntax(loc) => EMatchInvalidWildcardSyntax(f(loc)),
-            EMatchInvalidInstancePattern(loc) => EMatchInvalidInstancePattern(f(loc)),
 
             ERecordBannedTypeUtil {
                 reason_op,
@@ -3658,7 +3630,6 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 ..
             }
             | Self::EIllegalAssertOperator { op: reason, .. }
-            | Self::EMatchUnusedPattern { reason, .. }
             | Self::ERecordBannedTypeUtil {
                 reason_record: reason,
                 ..
@@ -3820,25 +3791,27 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
 
             Self::ECannotCallReactComponent { reason } => Some(reason.loc.dupe()),
 
-            Self::EMatchNotExhaustive(box EMatchNotExhaustiveData { loc, .. }) => Some(loc.dupe()),
-
-            Self::EMatchNonExhaustiveObjectPattern { loc, .. }
-            | Self::EMatchNonExplicitEnumCheck { loc, .. }
-            | Self::EMatchInvalidBindingKind { loc, .. }
-            | Self::EMatchInvalidObjectPropertyLiteral { loc, .. }
-            | Self::EMatchInvalidUnaryZero { loc }
-            | Self::EMatchInvalidUnaryPlusBigInt { loc }
-            | Self::EMatchDuplicateObjectProperty { loc, .. }
-            | Self::EMatchBindingInOrPattern { loc }
-            | Self::EMatchInvalidAsPattern { loc }
-            | Self::EMatchInvalidPatternReference { loc, .. }
-            | Self::EMatchInvalidObjectShorthand { loc, .. }
-            | Self::EMatchStatementInvalidBody { loc }
-            | Self::EMatchInvalidCaseSyntax { loc, .. }
-            | Self::EMatchInvalidWildcardSyntax(loc)
-            | Self::EMatchInvalidInstancePattern(loc)
-            | Self::EMatchInvalidGuardedWildcard(loc)
-            | Self::EMatchInvalidIdentOrMemberPattern { loc, .. } => Some(loc.dupe()),
+            Self::EMatchError(e) => match e {
+                MatchErrorKind::MatchNotExhaustive { loc, .. }
+                | MatchErrorKind::MatchNonExhaustiveObjectPattern { loc, .. }
+                | MatchErrorKind::MatchNonExplicitEnumCheck { loc, .. }
+                | MatchErrorKind::MatchInvalidBindingKind { loc, .. }
+                | MatchErrorKind::MatchInvalidObjectPropertyLiteral { loc, .. }
+                | MatchErrorKind::MatchInvalidUnaryZero { loc }
+                | MatchErrorKind::MatchInvalidUnaryPlusBigInt { loc }
+                | MatchErrorKind::MatchDuplicateObjectProperty { loc, .. }
+                | MatchErrorKind::MatchBindingInOrPattern { loc }
+                | MatchErrorKind::MatchInvalidAsPattern { loc }
+                | MatchErrorKind::MatchInvalidPatternReference { loc, .. }
+                | MatchErrorKind::MatchInvalidObjectShorthand { loc, .. }
+                | MatchErrorKind::MatchStatementInvalidBody { loc }
+                | MatchErrorKind::MatchInvalidCaseSyntax { loc, .. }
+                | MatchErrorKind::MatchInvalidIdentOrMemberPattern { loc, .. } => Some(loc.dupe()),
+                MatchErrorKind::MatchInvalidWildcardSyntax(loc)
+                | MatchErrorKind::MatchInvalidInstancePattern(loc)
+                | MatchErrorKind::MatchInvalidGuardedWildcard(loc) => Some(loc.dupe()),
+                MatchErrorKind::MatchUnusedPattern { reason, .. } => Some(reason.loc.dupe()),
+            },
 
             Self::ERecordInvalidName { loc, .. }
             | Self::ERecordInvalidNew { loc, .. }
@@ -3926,7 +3899,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 default_case_loc: Some(_),
                 ..
             }) => LintError(RequireExplicitEnumSwitchCases),
-            ErrorMessage::EMatchNonExplicitEnumCheck { .. } => LintError(RequireExplicitEnumChecks),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck { .. }) => {
+                LintError(RequireExplicitEnumChecks)
+            }
             ErrorMessage::EUninitializedInstanceProperty(_, _) => {
                 LintError(UninitializedInstanceProperty)
             }
@@ -4679,35 +4654,35 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageInvalidComponentRestParam)
             }
 
-            ErrorMessage::EMatchInvalidGuardedWildcard(_) => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidGuardedWildcard(_)) => {
                 Normal(Message::MessageMatchInvalidGuardedWildcard)
             }
 
-            ErrorMessage::EMatchStatementInvalidBody { .. } => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchStatementInvalidBody { .. }) => {
                 Normal(Message::MessageMatchStatementInvalidBody)
             }
 
-            ErrorMessage::EMatchInvalidWildcardSyntax(_) => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidWildcardSyntax(_)) => {
                 Normal(Message::MessageMatchInvalidWildcardSyntax)
             }
 
-            ErrorMessage::EMatchInvalidInstancePattern(_) => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidInstancePattern(_)) => {
                 Normal(Message::MessageMatchInvalidInstancePattern)
             }
 
-            ErrorMessage::EMatchInvalidUnaryZero { .. } => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidUnaryZero { .. }) => {
                 Normal(Message::MessageMatchInvalidUnaryZero)
             }
 
-            ErrorMessage::EMatchInvalidUnaryPlusBigInt { .. } => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidUnaryPlusBigInt { .. }) => {
                 Normal(Message::MessageMatchInvalidUnaryPlusBigInt)
             }
 
-            ErrorMessage::EMatchBindingInOrPattern { .. } => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchBindingInOrPattern { .. }) => {
                 Normal(Message::MessageMatchBindingInOrPattern)
             }
 
-            ErrorMessage::EMatchInvalidAsPattern { .. } => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidAsPattern { .. }) => {
                 Normal(Message::MessageMatchInvalidAsPattern)
             }
 
@@ -4984,53 +4959,60 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotCallReactComponent(reason))
             }
 
-            ErrorMessage::EMatchNotExhaustive(box EMatchNotExhaustiveData { examples, .. }) => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNotExhaustive { examples, .. }) => {
                 Normal(Message::MessageMatchNotExhaustive { examples })
             }
-            ErrorMessage::EMatchUnusedPattern {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern {
                 reason,
                 already_seen,
-            } => Normal(Message::MessageMatchUnnecessaryPattern {
+            }) => Normal(Message::MessageMatchUnnecessaryPattern {
                 reason,
                 already_seen,
             }),
-            ErrorMessage::EMatchNonExhaustiveObjectPattern {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern {
                 rest,
                 missing_props,
                 pattern_kind,
                 ..
-            } => Normal(Message::MessageMatchNonExhaustiveObjectPattern {
+            }) => Normal(Message::MessageMatchNonExhaustiveObjectPattern {
                 rest,
                 missing_props: missing_props.to_vec(),
                 pattern_kind,
             }),
-            ErrorMessage::EMatchNonExplicitEnumCheck {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck {
                 wildcard_reason,
                 unchecked_members,
                 ..
-            } => Normal(Message::MessageMatchNonExplicitEnumCheck {
+            }) => Normal(Message::MessageMatchNonExplicitEnumCheck {
                 wildcard_reason,
                 unchecked_members: unchecked_members.to_vec(),
             }),
-            ErrorMessage::EMatchInvalidIdentOrMemberPattern { type_reason, .. } => {
-                Normal(Message::MessageMatchInvalidIdentOrMemberPattern { type_reason })
-            }
-            ErrorMessage::EMatchInvalidBindingKind { kind, .. } => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidIdentOrMemberPattern {
+                type_reason,
+                ..
+            }) => Normal(Message::MessageMatchInvalidIdentOrMemberPattern { type_reason }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidBindingKind { kind, .. }) => {
                 Normal(Message::MessageMatchInvalidBindingKind { kind })
             }
-            ErrorMessage::EMatchInvalidObjectPropertyLiteral { pattern_kind, .. } => {
-                Normal(Message::MessageMatchInvalidObjectPropertyLiteral { pattern_kind })
-            }
-            ErrorMessage::EMatchDuplicateObjectProperty {
-                name, pattern_kind, ..
-            } => Normal(Message::MessageMatchDuplicateObjectProperty { name, pattern_kind }),
-            ErrorMessage::EMatchInvalidPatternReference { binding_reason, .. } => {
-                Normal(Message::MessageMatchInvalidPatternReference { binding_reason })
-            }
-            ErrorMessage::EMatchInvalidObjectShorthand {
-                name, pattern_kind, ..
-            } => Normal(Message::MessageMatchInvalidObjectShorthand { name, pattern_kind }),
-            ErrorMessage::EMatchInvalidCaseSyntax { kind, .. } => {
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectPropertyLiteral {
+                pattern_kind,
+                ..
+            }) => Normal(Message::MessageMatchInvalidObjectPropertyLiteral { pattern_kind }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchDuplicateObjectProperty {
+                name,
+                pattern_kind,
+                ..
+            }) => Normal(Message::MessageMatchDuplicateObjectProperty { name, pattern_kind }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidPatternReference {
+                binding_reason,
+                ..
+            }) => Normal(Message::MessageMatchInvalidPatternReference { binding_reason }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand {
+                name,
+                pattern_kind,
+                ..
+            }) => Normal(Message::MessageMatchInvalidObjectShorthand { name, pattern_kind }),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax { kind, .. }) => {
                 Normal(Message::MessageMatchInvalidCaseSyntax(kind))
             }
 
@@ -6377,7 +6359,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             | Self::EUnnecessaryDeclareTypeOnlyExport(_)
             | Self::EImplicitInexactObject(_)
             | Self::EAmbiguousObjectType(_)
-            | Self::EMatchNonExplicitEnumCheck { .. }
+            | Self::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck { .. })
             | Self::EUninitializedInstanceProperty(_, _)
             | Self::ETrivialRecursiveDefinition(_, _)
             | Self::EAnyValueUsedAsType { .. }
@@ -6922,25 +6904,37 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EUnionOptimization { .. } => Some(UnionUnoptimizable),
             ErrorMessage::EUnionOptimizationOnNonUnion { .. } => Some(UnionUnoptimizable),
             ErrorMessage::ECannotCallReactComponent { .. } => Some(ReactRuleCallComponent),
-            ErrorMessage::EMatchNotExhaustive(..) => Some(MatchNotExhaustive),
-            ErrorMessage::EMatchNonExhaustiveObjectPattern { .. } => Some(MatchNotExhaustive),
-            ErrorMessage::EMatchNonExplicitEnumCheck { .. } => Some(RequireExplicitEnumChecks),
-            ErrorMessage::EMatchUnusedPattern { .. } => Some(MatchUnusedPattern),
-            ErrorMessage::EMatchInvalidGuardedWildcard { .. } => Some(MatchNotExhaustive),
-            ErrorMessage::EMatchInvalidIdentOrMemberPattern { .. } => Some(MatchInvalidPattern),
-            ErrorMessage::EMatchInvalidBindingKind { .. } => Some(MatchInvalidPattern),
-            ErrorMessage::EMatchInvalidObjectPropertyLiteral { .. } => Some(MatchInvalidPattern),
-            ErrorMessage::EMatchInvalidUnaryZero { .. } => Some(MatchInvalidPattern),
-            ErrorMessage::EMatchInvalidUnaryPlusBigInt { .. } => Some(MatchInvalidPattern),
-            ErrorMessage::EMatchDuplicateObjectProperty { .. } => Some(MatchInvalidPattern),
-            ErrorMessage::EMatchBindingInOrPattern { .. } => Some(MatchInvalidPattern),
-            ErrorMessage::EMatchInvalidAsPattern { .. } => Some(MatchInvalidPattern),
-            ErrorMessage::EMatchInvalidPatternReference { .. } => Some(MatchInvalidPattern),
-            ErrorMessage::EMatchInvalidObjectShorthand { .. } => Some(MatchInvalidPattern),
-            ErrorMessage::EMatchStatementInvalidBody { .. } => Some(MatchStatementInvalidBody),
-            ErrorMessage::EMatchInvalidCaseSyntax { .. } => Some(UnsupportedSyntax),
-            ErrorMessage::EMatchInvalidWildcardSyntax { .. } => Some(UnsupportedSyntax),
-            ErrorMessage::EMatchInvalidInstancePattern { .. } => Some(MatchInvalidPattern),
+            ErrorMessage::EMatchError(
+                MatchErrorKind::MatchNotExhaustive { .. }
+                | MatchErrorKind::MatchNonExhaustiveObjectPattern { .. }
+                | MatchErrorKind::MatchInvalidGuardedWildcard(_),
+            ) => Some(MatchNotExhaustive),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchNonExplicitEnumCheck { .. }) => {
+                Some(RequireExplicitEnumChecks)
+            }
+            ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern { .. }) => {
+                Some(MatchUnusedPattern)
+            }
+            ErrorMessage::EMatchError(
+                MatchErrorKind::MatchInvalidIdentOrMemberPattern { .. }
+                | MatchErrorKind::MatchInvalidBindingKind { .. }
+                | MatchErrorKind::MatchInvalidObjectPropertyLiteral { .. }
+                | MatchErrorKind::MatchInvalidUnaryZero { .. }
+                | MatchErrorKind::MatchInvalidUnaryPlusBigInt { .. }
+                | MatchErrorKind::MatchDuplicateObjectProperty { .. }
+                | MatchErrorKind::MatchBindingInOrPattern { .. }
+                | MatchErrorKind::MatchInvalidAsPattern { .. }
+                | MatchErrorKind::MatchInvalidPatternReference { .. }
+                | MatchErrorKind::MatchInvalidObjectShorthand { .. }
+                | MatchErrorKind::MatchInvalidInstancePattern(_),
+            ) => Some(MatchInvalidPattern),
+            ErrorMessage::EMatchError(MatchErrorKind::MatchStatementInvalidBody { .. }) => {
+                Some(MatchStatementInvalidBody)
+            }
+            ErrorMessage::EMatchError(
+                MatchErrorKind::MatchInvalidCaseSyntax { .. }
+                | MatchErrorKind::MatchInvalidWildcardSyntax(_),
+            ) => Some(UnsupportedSyntax),
             ErrorMessage::ERecordBannedTypeUtil { .. } => Some(RecordBannedTypeUtil),
             ErrorMessage::ERecordInvalidName { .. } => Some(RecordInvalidName),
             ErrorMessage::ERecordInvalidNew { .. } => Some(RecordInvalidNew),

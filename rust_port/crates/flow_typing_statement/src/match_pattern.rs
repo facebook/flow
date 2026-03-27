@@ -26,6 +26,7 @@ use flow_parser::ast::match_pattern::MemberPattern;
 use flow_parser::polymorphic_ast_mapper;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::MatchObjPatternKind;
 use flow_typing_flow_js::flow_js;
@@ -155,10 +156,10 @@ fn object_property_key(
             } else {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EMatchInvalidObjectPropertyLiteral {
+                    ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectPropertyLiteral {
                         loc: loc.dupe(),
                         pattern_kind,
-                    },
+                    }),
                 );
                 (
                     acc.dupe(),
@@ -171,10 +172,10 @@ fn object_property_key(
             let raw = lit.raw.dupe();
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchInvalidObjectPropertyLiteral {
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectPropertyLiteral {
                     loc: loc.dupe(),
                     pattern_kind,
-                },
+                }),
             );
             let mut mapper = ErrorMapper;
             let typed_key = {
@@ -223,7 +224,7 @@ fn binding_identifier(
     if in_or_pattern {
         flow_js::add_output_non_speculating(
             cx,
-            ErrorMessage::EMatchBindingInOrPattern { loc: loc.dupe() },
+            ErrorMessage::EMatchError(MatchErrorKind::MatchBindingInOrPattern { loc: loc.dupe() }),
         );
         let mut mapper = ErrorMapper;
         {
@@ -258,7 +259,7 @@ fn binding_pattern(
         VariableKind::Var | VariableKind::Let => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchInvalidBindingKind { loc, kind },
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidBindingKind { loc, kind }),
             );
             let mut mapper = ErrorMapper;
             {
@@ -494,7 +495,9 @@ fn pattern_(
                 {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchInvalidUnaryZero { loc: loc.dupe() },
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidUnaryZero {
+                            loc: loc.dupe(),
+                        }),
                     );
                 }
                 (
@@ -503,7 +506,9 @@ fn pattern_(
                 ) => {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchInvalidUnaryPlusBigInt { loc: loc.dupe() },
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidUnaryPlusBigInt {
+                            loc: loc.dupe(),
+                        }),
                     );
                 }
                 _ => {}
@@ -542,7 +547,9 @@ fn pattern_(
             ) {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EMatchInvalidAsPattern { loc: loc.dupe() },
+                    ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidAsPattern {
+                        loc: loc.dupe(),
+                    }),
                 );
             }
             let typed_p = pattern_(
@@ -613,7 +620,9 @@ fn pattern_(
             if inner.invalid_syntax_default_keyword {
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EMatchInvalidWildcardSyntax(loc.dupe()),
+                    ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidWildcardSyntax(
+                        loc.dupe(),
+                    )),
                 );
             }
             match_pattern::MatchPattern::WildcardPattern {
@@ -845,11 +854,11 @@ fn object_properties(
                     };
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchDuplicateObjectProperty {
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchDuplicateObjectProperty {
                             loc: key_loc,
                             name: FlowSmolStr::new(&name),
                             pattern_kind,
-                        },
+                        }),
                     );
                 }
                 let typed_p = pattern_(
@@ -879,11 +888,11 @@ fn object_properties(
                 let name = &id.name;
                 flow_js::add_output_non_speculating(
                     cx,
-                    ErrorMessage::EMatchInvalidObjectShorthand {
+                    ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand {
                         loc: loc.dupe(),
                         name: name.dupe(),
                         pattern_kind,
-                    },
+                    }),
                 );
                 result.push(match_pattern::object_pattern::Property::InvalidShorthand {
                     loc: loc.dupe(),

@@ -1393,7 +1393,10 @@ module Make
               let guard = Base.Option.map ~f:(expression cx) guard in
               (match body with
               | (_, Block _) -> ()
-              | (loc, _) -> Flow.add_output cx (Error_message.EMatchStatementInvalidBody { loc }));
+              | (loc, _) ->
+                Flow.add_output
+                  cx
+                  (Error_message.EMatchError (Error_message.MatchStatementInvalidBody { loc })));
               let body = statement cx body in
               let case =
                 ( case_loc,
@@ -10566,35 +10569,43 @@ module Make
     | ([loc], [], []) ->
       Flow.add_output
         cx
-        (Error_message.EMatchInvalidCaseSyntax
-           { loc; kind = Flow_intermediate_error_types.InvalidMatchCasePrefixCase }
+        (Error_message.EMatchError
+           (Error_message.MatchInvalidCaseSyntax
+              { loc; kind = Flow_intermediate_error_types.InvalidMatchCasePrefixCase }
+           )
         )
     | ([], [loc], []) ->
       Flow.add_output
         cx
-        (Error_message.EMatchInvalidCaseSyntax
-           { loc; kind = Flow_intermediate_error_types.InvalidMatchCaseInfixColon }
+        (Error_message.EMatchError
+           (Error_message.MatchInvalidCaseSyntax
+              { loc; kind = Flow_intermediate_error_types.InvalidMatchCaseInfixColon }
+           )
         )
     | ([], [], [loc]) ->
       Flow.add_output
         cx
-        (Error_message.EMatchInvalidCaseSyntax
-           { loc; kind = Flow_intermediate_error_types.InvalidMatchCaseSuffixSemicolon }
+        (Error_message.EMatchError
+           (Error_message.MatchInvalidCaseSyntax
+              { loc; kind = Flow_intermediate_error_types.InvalidMatchCaseSuffixSemicolon }
+           )
         )
     | (invalid_prefix_case_locs, invalid_infix_colon_locs, invalid_suffix_semicolon_locs) ->
       Flow.add_output
         cx
-        (Error_message.EMatchInvalidCaseSyntax
-           {
-             loc = match_keyword_loc;
-             kind =
-               Flow_intermediate_error_types.InvalidMatchCaseMultiple
-                 {
-                   invalid_prefix_case_locs;
-                   invalid_infix_colon_locs;
-                   invalid_suffix_semicolon_locs;
-                 };
-           }
+        (Error_message.EMatchError
+           (Error_message.MatchInvalidCaseSyntax
+              {
+                loc = match_keyword_loc;
+                kind =
+                  Flow_intermediate_error_types.InvalidMatchCaseMultiple
+                    {
+                      invalid_prefix_case_locs;
+                      invalid_infix_colon_locs;
+                      invalid_suffix_semicolon_locs;
+                    };
+              }
+           )
         )
 
   and error_on_record_declaration_invalid_syntax

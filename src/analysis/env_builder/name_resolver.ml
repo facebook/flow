@@ -3103,7 +3103,10 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           match SMap.find_opt name bindings with
           | Some ((_, (binding_loc, _)) :: _) ->
             let binding_reason = mk_reason (RIdentifier (OrdinaryName name)) binding_loc in
-            add_output (Error_message.EMatchInvalidPatternReference { loc; binding_reason })
+            add_output
+              (Error_message.EMatchError
+                 (Error_message.MatchInvalidPatternReference { loc; binding_reason })
+              )
           | _ -> ()
         in
         let rec needs_prop_exists_refi = function

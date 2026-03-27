@@ -54,6 +54,7 @@ use flow_typing_context::Context;
 use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
+use flow_typing_errors::error_message::MatchErrorKind;
 use flow_typing_errors::error_message::TSSyntaxKind;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::ContextDependentUnsupportedStatement;
@@ -2484,9 +2485,9 @@ fn statement_(
                 if !matches!(&*case.body, StatementInner::Block { .. }) {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::EMatchStatementInvalidBody {
+                        ErrorMessage::EMatchError(MatchErrorKind::MatchStatementInvalidBody {
                             loc: case.body.loc().dupe(),
-                        },
+                        }),
                     );
                 }
                 let body = statement(cx, &case.body)?;
@@ -18530,41 +18531,41 @@ fn error_on_match_case_invalid_syntax(
         ([loc], [], []) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchInvalidCaseSyntax {
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax {
                     loc: loc.dupe(),
                     kind: MatchInvalidCaseSyntax::InvalidMatchCasePrefixCase,
-                },
+                }),
             );
         }
         ([], [loc], []) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchInvalidCaseSyntax {
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax {
                     loc: loc.dupe(),
                     kind: MatchInvalidCaseSyntax::InvalidMatchCaseInfixColon,
-                },
+                }),
             );
         }
         ([], [], [loc]) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchInvalidCaseSyntax {
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax {
                     loc: loc.dupe(),
                     kind: MatchInvalidCaseSyntax::InvalidMatchCaseSuffixSemicolon,
-                },
+                }),
             );
         }
         _ => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::EMatchInvalidCaseSyntax {
+                ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax {
                     loc: match_keyword_loc,
                     kind: MatchInvalidCaseSyntax::InvalidMatchCaseMultiple {
                         invalid_prefix_case_locs: prefix_acc,
                         invalid_infix_colon_locs: infix_acc,
                         invalid_suffix_semicolon_locs: suffix_acc,
                     },
-                },
+                }),
             );
         }
     }

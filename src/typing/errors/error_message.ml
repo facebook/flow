@@ -96,6 +96,66 @@ type 'loc enum_error_kind =
       member_name: string;
     }
 
+type 'loc match_error_kind =
+  | MatchNotExhaustive of {
+      loc: 'loc;
+      examples: (string * 'loc virtual_reason list) list;
+      missing_pattern_asts: (Loc.t, Loc.t) Flow_ast.MatchPattern.t list;
+    }
+  | MatchUnusedPattern of {
+      reason: 'loc virtual_reason;
+      already_seen: 'loc virtual_reason option;
+    }
+  | MatchNonExhaustiveObjectPattern of {
+      loc: 'loc;
+      rest: 'loc virtual_reason option;
+      missing_props: string list;
+      pattern_kind: MatchObjPatternKind.t;
+    }
+  | MatchNonExplicitEnumCheck of {
+      loc: 'loc;
+      wildcard_reason: 'loc virtual_reason;
+      unchecked_members: string list;
+    }
+  | MatchInvalidGuardedWildcard of 'loc
+  | MatchInvalidIdentOrMemberPattern of {
+      loc: 'loc;
+      type_reason: 'loc virtual_reason;
+    }
+  | MatchInvalidBindingKind of {
+      loc: 'loc;
+      kind: Flow_ast.Variable.kind;
+    }
+  | MatchInvalidObjectPropertyLiteral of {
+      loc: 'loc;
+      pattern_kind: MatchObjPatternKind.t;
+    }
+  | MatchInvalidUnaryZero of { loc: 'loc }
+  | MatchInvalidUnaryPlusBigInt of { loc: 'loc }
+  | MatchDuplicateObjectProperty of {
+      loc: 'loc;
+      name: string;
+      pattern_kind: MatchObjPatternKind.t;
+    }
+  | MatchBindingInOrPattern of { loc: 'loc }
+  | MatchInvalidAsPattern of { loc: 'loc }
+  | MatchInvalidPatternReference of {
+      loc: 'loc;
+      binding_reason: 'loc virtual_reason;
+    }
+  | MatchInvalidObjectShorthand of {
+      loc: 'loc;
+      name: string;
+      pattern_kind: MatchObjPatternKind.t;
+    }
+  | MatchStatementInvalidBody of { loc: 'loc }
+  | MatchInvalidCaseSyntax of {
+      loc: 'loc;
+      kind: 'loc match_invalid_case_syntax;
+    }
+  | MatchInvalidWildcardSyntax of 'loc
+  | MatchInvalidInstancePattern of 'loc
+
 type t = ALoc.t t'
 
 and 'loc t' =
@@ -721,64 +781,7 @@ and 'loc t' =
     }
   | ECannotCallReactComponent of { reason: 'loc virtual_reason }
   (* Match *)
-  | EMatchNotExhaustive of {
-      loc: 'loc;
-      examples: (string * 'loc virtual_reason list) list;
-      missing_pattern_asts: (Loc.t, Loc.t) Flow_ast.MatchPattern.t list;
-    }
-  | EMatchUnusedPattern of {
-      reason: 'loc virtual_reason;
-      already_seen: 'loc virtual_reason option;
-    }
-  | EMatchNonExhaustiveObjectPattern of {
-      loc: 'loc;
-      rest: 'loc virtual_reason option;
-      missing_props: string list;
-      pattern_kind: MatchObjPatternKind.t;
-    }
-  | EMatchNonExplicitEnumCheck of {
-      loc: 'loc;
-      wildcard_reason: 'loc virtual_reason;
-      unchecked_members: string list;
-    }
-  | EMatchInvalidGuardedWildcard of 'loc
-  | EMatchInvalidIdentOrMemberPattern of {
-      loc: 'loc;
-      type_reason: 'loc virtual_reason;
-    }
-  | EMatchInvalidBindingKind of {
-      loc: 'loc;
-      kind: Flow_ast.Variable.kind;
-    }
-  | EMatchInvalidObjectPropertyLiteral of {
-      loc: 'loc;
-      pattern_kind: MatchObjPatternKind.t;
-    }
-  | EMatchInvalidUnaryZero of { loc: 'loc }
-  | EMatchInvalidUnaryPlusBigInt of { loc: 'loc }
-  | EMatchDuplicateObjectProperty of {
-      loc: 'loc;
-      name: string;
-      pattern_kind: MatchObjPatternKind.t;
-    }
-  | EMatchBindingInOrPattern of { loc: 'loc }
-  | EMatchInvalidAsPattern of { loc: 'loc }
-  | EMatchInvalidPatternReference of {
-      loc: 'loc;
-      binding_reason: 'loc virtual_reason;
-    }
-  | EMatchInvalidObjectShorthand of {
-      loc: 'loc;
-      name: string;
-      pattern_kind: MatchObjPatternKind.t;
-    }
-  | EMatchStatementInvalidBody of { loc: 'loc }
-  | EMatchInvalidCaseSyntax of {
-      loc: 'loc;
-      kind: 'loc match_invalid_case_syntax;
-    }
-  | EMatchInvalidWildcardSyntax of 'loc
-  | EMatchInvalidInstancePattern of 'loc
+  | EMatchError of 'loc match_error_kind
   | ERecordBannedTypeUtil of {
       reason_op: 'loc virtual_reason;
       reason_record: 'loc virtual_reason;
@@ -1868,60 +1871,64 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | ECannotCallReactComponent { reason } -> ECannotCallReactComponent { reason = map_reason reason }
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs } ->
     EDevOnlyRefinedLocInfo { refined_loc = f refined_loc; refining_locs = List.map f refining_locs }
-  | EMatchNotExhaustive { loc; examples; missing_pattern_asts } ->
-    EMatchNotExhaustive
-      {
-        loc = f loc;
-        examples =
-          Base.List.map examples ~f:(fun (pattern, reasons) ->
-              (pattern, Base.List.map ~f:map_reason reasons)
-          );
-        missing_pattern_asts;
-      }
-  | EMatchUnusedPattern { reason; already_seen } ->
-    EMatchUnusedPattern
-      { reason = map_reason reason; already_seen = Base.Option.map ~f:map_reason already_seen }
-  | EMatchNonExhaustiveObjectPattern { loc; rest; missing_props; pattern_kind } ->
-    EMatchNonExhaustiveObjectPattern
-      { loc = f loc; rest = Base.Option.map ~f:map_reason rest; missing_props; pattern_kind }
-  | EMatchNonExplicitEnumCheck { loc; wildcard_reason; unchecked_members } ->
-    EMatchNonExplicitEnumCheck
-      { loc = f loc; wildcard_reason = map_reason wildcard_reason; unchecked_members }
-  | EMatchInvalidGuardedWildcard loc -> EMatchInvalidGuardedWildcard (f loc)
-  | EMatchInvalidIdentOrMemberPattern { loc; type_reason } ->
-    EMatchInvalidIdentOrMemberPattern { loc = f loc; type_reason = map_reason type_reason }
-  | EMatchInvalidBindingKind { loc; kind } -> EMatchInvalidBindingKind { loc = f loc; kind }
-  | EMatchInvalidObjectPropertyLiteral { loc; pattern_kind } ->
-    EMatchInvalidObjectPropertyLiteral { loc = f loc; pattern_kind }
-  | EMatchInvalidUnaryZero { loc } -> EMatchInvalidUnaryZero { loc = f loc }
-  | EMatchInvalidUnaryPlusBigInt { loc } -> EMatchInvalidUnaryPlusBigInt { loc = f loc }
-  | EMatchDuplicateObjectProperty { loc; name; pattern_kind } ->
-    EMatchDuplicateObjectProperty { loc = f loc; name; pattern_kind }
-  | EMatchBindingInOrPattern { loc } -> EMatchBindingInOrPattern { loc = f loc }
-  | EMatchInvalidAsPattern { loc } -> EMatchInvalidAsPattern { loc = f loc }
-  | EMatchInvalidPatternReference { loc; binding_reason } ->
-    EMatchInvalidPatternReference { loc = f loc; binding_reason = map_reason binding_reason }
-  | EMatchInvalidObjectShorthand { loc; name; pattern_kind } ->
-    EMatchInvalidObjectShorthand { loc = f loc; name; pattern_kind }
-  | EMatchStatementInvalidBody { loc } -> EMatchStatementInvalidBody { loc = f loc }
-  | EMatchInvalidCaseSyntax { loc; kind } ->
-    let kind =
-      match kind with
-      | InvalidMatchCaseMultiple
-          { invalid_prefix_case_locs; invalid_infix_colon_locs; invalid_suffix_semicolon_locs } ->
-        InvalidMatchCaseMultiple
+  | EMatchError e ->
+    EMatchError
+      (match e with
+      | MatchNotExhaustive { loc; examples; missing_pattern_asts } ->
+        MatchNotExhaustive
           {
-            invalid_prefix_case_locs = Base.List.map ~f invalid_prefix_case_locs;
-            invalid_infix_colon_locs = Base.List.map ~f invalid_infix_colon_locs;
-            invalid_suffix_semicolon_locs = Base.List.map ~f invalid_suffix_semicolon_locs;
+            loc = f loc;
+            examples =
+              Base.List.map examples ~f:(fun (pattern, reasons) ->
+                  (pattern, Base.List.map ~f:map_reason reasons)
+              );
+            missing_pattern_asts;
           }
-      | InvalidMatchCasePrefixCase -> InvalidMatchCasePrefixCase
-      | InvalidMatchCaseInfixColon -> InvalidMatchCaseInfixColon
-      | InvalidMatchCaseSuffixSemicolon -> InvalidMatchCaseSuffixSemicolon
-    in
-    EMatchInvalidCaseSyntax { loc = f loc; kind }
-  | EMatchInvalidWildcardSyntax loc -> EMatchInvalidWildcardSyntax (f loc)
-  | EMatchInvalidInstancePattern loc -> EMatchInvalidInstancePattern (f loc)
+      | MatchUnusedPattern { reason; already_seen } ->
+        MatchUnusedPattern
+          { reason = map_reason reason; already_seen = Base.Option.map ~f:map_reason already_seen }
+      | MatchNonExhaustiveObjectPattern { loc; rest; missing_props; pattern_kind } ->
+        MatchNonExhaustiveObjectPattern
+          { loc = f loc; rest = Base.Option.map ~f:map_reason rest; missing_props; pattern_kind }
+      | MatchNonExplicitEnumCheck { loc; wildcard_reason; unchecked_members } ->
+        MatchNonExplicitEnumCheck
+          { loc = f loc; wildcard_reason = map_reason wildcard_reason; unchecked_members }
+      | MatchInvalidGuardedWildcard loc -> MatchInvalidGuardedWildcard (f loc)
+      | MatchInvalidIdentOrMemberPattern { loc; type_reason } ->
+        MatchInvalidIdentOrMemberPattern { loc = f loc; type_reason = map_reason type_reason }
+      | MatchInvalidBindingKind { loc; kind } -> MatchInvalidBindingKind { loc = f loc; kind }
+      | MatchInvalidObjectPropertyLiteral { loc; pattern_kind } ->
+        MatchInvalidObjectPropertyLiteral { loc = f loc; pattern_kind }
+      | MatchInvalidUnaryZero { loc } -> MatchInvalidUnaryZero { loc = f loc }
+      | MatchInvalidUnaryPlusBigInt { loc } -> MatchInvalidUnaryPlusBigInt { loc = f loc }
+      | MatchDuplicateObjectProperty { loc; name; pattern_kind } ->
+        MatchDuplicateObjectProperty { loc = f loc; name; pattern_kind }
+      | MatchBindingInOrPattern { loc } -> MatchBindingInOrPattern { loc = f loc }
+      | MatchInvalidAsPattern { loc } -> MatchInvalidAsPattern { loc = f loc }
+      | MatchInvalidPatternReference { loc; binding_reason } ->
+        MatchInvalidPatternReference { loc = f loc; binding_reason = map_reason binding_reason }
+      | MatchInvalidObjectShorthand { loc; name; pattern_kind } ->
+        MatchInvalidObjectShorthand { loc = f loc; name; pattern_kind }
+      | MatchStatementInvalidBody { loc } -> MatchStatementInvalidBody { loc = f loc }
+      | MatchInvalidCaseSyntax { loc; kind } ->
+        let kind =
+          match kind with
+          | InvalidMatchCaseMultiple
+              { invalid_prefix_case_locs; invalid_infix_colon_locs; invalid_suffix_semicolon_locs }
+            ->
+            InvalidMatchCaseMultiple
+              {
+                invalid_prefix_case_locs = Base.List.map ~f invalid_prefix_case_locs;
+                invalid_infix_colon_locs = Base.List.map ~f invalid_infix_colon_locs;
+                invalid_suffix_semicolon_locs = Base.List.map ~f invalid_suffix_semicolon_locs;
+              }
+          | InvalidMatchCasePrefixCase -> InvalidMatchCasePrefixCase
+          | InvalidMatchCaseInfixColon -> InvalidMatchCaseInfixColon
+          | InvalidMatchCaseSuffixSemicolon -> InvalidMatchCaseSuffixSemicolon
+        in
+        MatchInvalidCaseSyntax { loc = f loc; kind }
+      | MatchInvalidWildcardSyntax loc -> MatchInvalidWildcardSyntax (f loc)
+      | MatchInvalidInstancePattern loc -> MatchInvalidInstancePattern (f loc))
   | ERecordBannedTypeUtil { reason_op; reason_record } ->
     ERecordBannedTypeUtil
       { reason_op = map_reason reason_op; reason_record = map_reason reason_record }
@@ -2308,25 +2315,7 @@ let util_use_op_of_msg nope util = function
   | EUnionOptimization _
   | EUnionOptimizationOnNonUnion _
   | ECannotCallReactComponent _
-  | EMatchNotExhaustive _
-  | EMatchUnusedPattern _
-  | EMatchNonExhaustiveObjectPattern _
-  | EMatchNonExplicitEnumCheck _
-  | EMatchInvalidGuardedWildcard _
-  | EMatchInvalidIdentOrMemberPattern _
-  | EMatchInvalidBindingKind _
-  | EMatchInvalidObjectPropertyLiteral _
-  | EMatchInvalidUnaryZero _
-  | EMatchInvalidUnaryPlusBigInt _
-  | EMatchDuplicateObjectProperty _
-  | EMatchBindingInOrPattern _
-  | EMatchInvalidAsPattern _
-  | EMatchInvalidPatternReference _
-  | EMatchInvalidObjectShorthand _
-  | EMatchStatementInvalidBody _
-  | EMatchInvalidCaseSyntax _
-  | EMatchInvalidWildcardSyntax _
-  | EMatchInvalidInstancePattern _
+  | EMatchError _
   | ERecordBannedTypeUtil _
   | ERecordInvalidNew _
   | ERecordInvalidName _
@@ -2421,7 +2410,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENegativeTypeGuardConsistency { return_reason = reason; _ }
   | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ }
   | EIllegalAssertOperator { op = reason; _ }
-  | EMatchUnusedPattern { reason; _ }
   | ERecordBannedTypeUtil { reason_record = reason; _ } ->
     Some (loc_of_reason reason)
   | EExponentialSpread
@@ -2563,24 +2551,29 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EDuplicateClassMember { loc; _ } -> Some loc
   | EEmptyArrayNoProvider { loc } -> Some loc
   | EUnusedPromise { loc; _ } -> Some loc
-  | EMatchNotExhaustive { loc; _ } -> Some loc
-  | EMatchNonExhaustiveObjectPattern { loc; _ } -> Some loc
-  | EMatchNonExplicitEnumCheck { loc; _ } -> Some loc
-  | EMatchInvalidBindingKind { loc; _ } -> Some loc
-  | EMatchInvalidObjectPropertyLiteral { loc; _ } -> Some loc
-  | EMatchInvalidUnaryZero { loc } -> Some loc
-  | EMatchInvalidUnaryPlusBigInt { loc } -> Some loc
-  | EMatchDuplicateObjectProperty { loc; _ } -> Some loc
-  | EMatchBindingInOrPattern { loc } -> Some loc
-  | EMatchInvalidAsPattern { loc } -> Some loc
-  | EMatchInvalidPatternReference { loc; _ } -> Some loc
-  | EMatchInvalidObjectShorthand { loc; _ } -> Some loc
-  | EMatchStatementInvalidBody { loc } -> Some loc
-  | EMatchInvalidCaseSyntax { loc; _ } -> Some loc
-  | EMatchInvalidWildcardSyntax loc -> Some loc
-  | EMatchInvalidInstancePattern loc -> Some loc
-  | EMatchInvalidGuardedWildcard loc -> Some loc
-  | EMatchInvalidIdentOrMemberPattern { loc; _ } -> Some loc
+  | EMatchError e ->
+    (match e with
+    | MatchNotExhaustive { loc; _ }
+    | MatchNonExhaustiveObjectPattern { loc; _ }
+    | MatchNonExplicitEnumCheck { loc; _ }
+    | MatchInvalidBindingKind { loc; _ }
+    | MatchInvalidObjectPropertyLiteral { loc; _ }
+    | MatchInvalidUnaryZero { loc }
+    | MatchInvalidUnaryPlusBigInt { loc }
+    | MatchDuplicateObjectProperty { loc; _ }
+    | MatchBindingInOrPattern { loc }
+    | MatchInvalidAsPattern { loc }
+    | MatchInvalidPatternReference { loc; _ }
+    | MatchInvalidObjectShorthand { loc; _ }
+    | MatchStatementInvalidBody { loc }
+    | MatchInvalidCaseSyntax { loc; _ }
+    | MatchInvalidIdentOrMemberPattern { loc; _ } ->
+      Some loc
+    | MatchInvalidWildcardSyntax loc
+    | MatchInvalidInstancePattern loc
+    | MatchInvalidGuardedWildcard loc ->
+      Some loc
+    | MatchUnusedPattern { reason; _ } -> Some (loc_of_reason reason))
   | ERecordInvalidNew { loc; _ } -> Some loc
   | ERecordInvalidName { loc; _ } -> Some loc
   | ERecordDeclarationInvalidSyntax { loc; _ } -> Some loc
@@ -2658,7 +2651,7 @@ let kind_of_msg =
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
     | EEnumError (EnumNotAllChecked { default_case_loc = Some _; _ }) ->
       LintError Lints.RequireExplicitEnumSwitchCases
-    | EMatchNonExplicitEnumCheck _ -> LintError Lints.RequireExplicitEnumChecks
+    | EMatchError (MatchNonExplicitEnumCheck _) -> LintError Lints.RequireExplicitEnumChecks
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
     | EBadDefaultImportAccess _ -> LintError Lints.DefaultImportAccess
     | EBadDefaultImportDestructuring _ -> LintError Lints.DefaultImportAccess
@@ -3777,34 +3770,36 @@ let friendly_message_of_msg = function
   | EUnionOptimizationOnNonUnion { loc = _; arg } ->
     Normal (MessageInvalidUseOfFlowEnforceOptimized arg)
   | ECannotCallReactComponent { reason } -> Normal (MessageCannotCallReactComponent reason)
-  | EMatchNotExhaustive { examples; loc = _; missing_pattern_asts = _ } ->
-    Normal (MessageMatchNotExhaustive { examples })
-  | EMatchUnusedPattern { reason; already_seen } ->
-    Normal (MessageMatchUnnecessaryPattern { reason; already_seen })
-  | EMatchNonExhaustiveObjectPattern { loc = _; rest; missing_props; pattern_kind } ->
-    Normal (MessageMatchNonExhaustiveObjectPattern { rest; missing_props; pattern_kind })
-  | EMatchNonExplicitEnumCheck { loc = _; wildcard_reason; unchecked_members } ->
-    Normal (MessageMatchNonExplicitEnumCheck { wildcard_reason; unchecked_members })
-  | EMatchInvalidGuardedWildcard _ -> Normal MessageMatchInvalidGuardedWildcard
-  | EMatchInvalidIdentOrMemberPattern { loc = _; type_reason } ->
-    Normal (MessageMatchInvalidIdentOrMemberPattern { type_reason })
-  | EMatchInvalidBindingKind { loc = _; kind } -> Normal (MessageMatchInvalidBindingKind { kind })
-  | EMatchInvalidObjectPropertyLiteral { loc = _; pattern_kind } ->
-    Normal (MessageMatchInvalidObjectPropertyLiteral { pattern_kind })
-  | EMatchInvalidUnaryZero { loc = _ } -> Normal MessageMatchInvalidUnaryZero
-  | EMatchInvalidUnaryPlusBigInt { loc = _ } -> Normal MessageMatchInvalidUnaryPlusBigInt
-  | EMatchDuplicateObjectProperty { loc = _; name; pattern_kind } ->
-    Normal (MessageMatchDuplicateObjectProperty { name; pattern_kind })
-  | EMatchBindingInOrPattern { loc = _ } -> Normal MessageMatchBindingInOrPattern
-  | EMatchInvalidAsPattern { loc = _ } -> Normal MessageMatchInvalidAsPattern
-  | EMatchInvalidPatternReference { loc = _; binding_reason } ->
-    Normal (MessageMatchInvalidPatternReference { binding_reason })
-  | EMatchInvalidObjectShorthand { loc = _; name; pattern_kind } ->
-    Normal (MessageMatchInvalidObjectShorthand { name; pattern_kind })
-  | EMatchStatementInvalidBody _ -> Normal MessageMatchStatementInvalidBody
-  | EMatchInvalidCaseSyntax { kind; _ } -> Normal (MessageMatchInvalidCaseSyntax kind)
-  | EMatchInvalidWildcardSyntax _ -> Normal MessageMatchInvalidWildcardSyntax
-  | EMatchInvalidInstancePattern _ -> Normal MessageMatchInvalidInstancePattern
+  | EMatchError e ->
+    (match e with
+    | MatchNotExhaustive { examples; loc = _; missing_pattern_asts = _ } ->
+      Normal (MessageMatchNotExhaustive { examples })
+    | MatchUnusedPattern { reason; already_seen } ->
+      Normal (MessageMatchUnnecessaryPattern { reason; already_seen })
+    | MatchNonExhaustiveObjectPattern { loc = _; rest; missing_props; pattern_kind } ->
+      Normal (MessageMatchNonExhaustiveObjectPattern { rest; missing_props; pattern_kind })
+    | MatchNonExplicitEnumCheck { loc = _; wildcard_reason; unchecked_members } ->
+      Normal (MessageMatchNonExplicitEnumCheck { wildcard_reason; unchecked_members })
+    | MatchInvalidGuardedWildcard _ -> Normal MessageMatchInvalidGuardedWildcard
+    | MatchInvalidIdentOrMemberPattern { loc = _; type_reason } ->
+      Normal (MessageMatchInvalidIdentOrMemberPattern { type_reason })
+    | MatchInvalidBindingKind { loc = _; kind } -> Normal (MessageMatchInvalidBindingKind { kind })
+    | MatchInvalidObjectPropertyLiteral { loc = _; pattern_kind } ->
+      Normal (MessageMatchInvalidObjectPropertyLiteral { pattern_kind })
+    | MatchInvalidUnaryZero { loc = _ } -> Normal MessageMatchInvalidUnaryZero
+    | MatchInvalidUnaryPlusBigInt { loc = _ } -> Normal MessageMatchInvalidUnaryPlusBigInt
+    | MatchDuplicateObjectProperty { loc = _; name; pattern_kind } ->
+      Normal (MessageMatchDuplicateObjectProperty { name; pattern_kind })
+    | MatchBindingInOrPattern { loc = _ } -> Normal MessageMatchBindingInOrPattern
+    | MatchInvalidAsPattern { loc = _ } -> Normal MessageMatchInvalidAsPattern
+    | MatchInvalidPatternReference { loc = _; binding_reason } ->
+      Normal (MessageMatchInvalidPatternReference { binding_reason })
+    | MatchInvalidObjectShorthand { loc = _; name; pattern_kind } ->
+      Normal (MessageMatchInvalidObjectShorthand { name; pattern_kind })
+    | MatchStatementInvalidBody _ -> Normal MessageMatchStatementInvalidBody
+    | MatchInvalidCaseSyntax { kind; _ } -> Normal (MessageMatchInvalidCaseSyntax kind)
+    | MatchInvalidWildcardSyntax _ -> Normal MessageMatchInvalidWildcardSyntax
+    | MatchInvalidInstancePattern _ -> Normal MessageMatchInvalidInstancePattern)
   | ERecordBannedTypeUtil { reason_op; reason_record } ->
     Normal (MessageRecordBannedTypeUtil { reason_op; reason_record })
   | ERecordInvalidNew { record_name; loc = _ } -> Normal (MessageRecordInvalidNew { record_name })
@@ -3833,7 +3828,7 @@ let defered_in_speculation = function
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
   | EEnumError (EnumNotAllChecked { default_case_loc = Some _; _ })
-  | EMatchNonExplicitEnumCheck _
+  | EMatchError (MatchNonExplicitEnumCheck _)
   | EUninitializedInstanceProperty _
   | ETrivialRecursiveDefinition _
   | EAnyValueUsedAsType _
@@ -3848,6 +3843,8 @@ let defered_in_speculation = function
   | EBuiltinNameLookupFailed _ ->
     true
   | _ -> false
+
+[@@@warning "-45"]
 
 open Error_codes
 
@@ -4210,25 +4207,27 @@ let error_code_of_message err : error_code option =
   | EUnionOptimization _ -> Some UnionUnoptimizable
   | EUnionOptimizationOnNonUnion _ -> Some UnionUnoptimizable
   | ECannotCallReactComponent _ -> Some ReactRuleCallComponent
-  | EMatchNotExhaustive _ -> Some MatchNotExhaustive
-  | EMatchNonExhaustiveObjectPattern _ -> Some MatchNotExhaustive
-  | EMatchNonExplicitEnumCheck _ -> Some RequireExplicitEnumChecks
-  | EMatchUnusedPattern _ -> Some MatchUnusedPattern
-  | EMatchInvalidGuardedWildcard _ -> Some MatchNotExhaustive
-  | EMatchInvalidIdentOrMemberPattern _ -> Some MatchInvalidPattern
-  | EMatchInvalidBindingKind _ -> Some MatchInvalidPattern
-  | EMatchInvalidObjectPropertyLiteral _ -> Some MatchInvalidPattern
-  | EMatchInvalidUnaryZero _ -> Some MatchInvalidPattern
-  | EMatchInvalidUnaryPlusBigInt _ -> Some MatchInvalidPattern
-  | EMatchDuplicateObjectProperty _ -> Some MatchInvalidPattern
-  | EMatchBindingInOrPattern _ -> Some MatchInvalidPattern
-  | EMatchInvalidAsPattern _ -> Some MatchInvalidPattern
-  | EMatchInvalidPatternReference _ -> Some MatchInvalidPattern
-  | EMatchInvalidObjectShorthand _ -> Some MatchInvalidPattern
-  | EMatchStatementInvalidBody _ -> Some MatchStatementInvalidBody
-  | EMatchInvalidCaseSyntax _ -> Some UnsupportedSyntax
-  | EMatchInvalidWildcardSyntax _ -> Some UnsupportedSyntax
-  | EMatchInvalidInstancePattern _ -> Some MatchInvalidPattern
+  | EMatchError e ->
+    (match e with
+    | MatchNotExhaustive _ -> Some MatchNotExhaustive
+    | MatchNonExhaustiveObjectPattern _ -> Some MatchNotExhaustive
+    | MatchNonExplicitEnumCheck _ -> Some RequireExplicitEnumChecks
+    | MatchUnusedPattern _ -> Some MatchUnusedPattern
+    | MatchInvalidGuardedWildcard _ -> Some MatchNotExhaustive
+    | MatchInvalidIdentOrMemberPattern _ -> Some MatchInvalidPattern
+    | MatchInvalidBindingKind _ -> Some MatchInvalidPattern
+    | MatchInvalidObjectPropertyLiteral _ -> Some MatchInvalidPattern
+    | MatchInvalidUnaryZero _ -> Some MatchInvalidPattern
+    | MatchInvalidUnaryPlusBigInt _ -> Some MatchInvalidPattern
+    | MatchDuplicateObjectProperty _ -> Some MatchInvalidPattern
+    | MatchBindingInOrPattern _ -> Some MatchInvalidPattern
+    | MatchInvalidAsPattern _ -> Some MatchInvalidPattern
+    | MatchInvalidPatternReference _ -> Some MatchInvalidPattern
+    | MatchInvalidObjectShorthand _ -> Some MatchInvalidPattern
+    | MatchStatementInvalidBody _ -> Some MatchStatementInvalidBody
+    | MatchInvalidCaseSyntax _ -> Some UnsupportedSyntax
+    | MatchInvalidWildcardSyntax _ -> Some UnsupportedSyntax
+    | MatchInvalidInstancePattern _ -> Some MatchInvalidPattern)
   | ERecordBannedTypeUtil _ -> Some RecordBannedTypeUtil
   | ERecordInvalidNew _ -> Some RecordInvalidNew
   | ERecordInvalidName _ -> Some RecordInvalidName
