@@ -299,6 +299,26 @@ pub enum MatchErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     MatchInvalidInstancePattern(L),
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum RecordErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    RecordBannedTypeUtil {
+        reason_op: VirtualReason<L>,
+        reason_record: VirtualReason<L>,
+    },
+    RecordInvalidName {
+        loc: L,
+        name: FlowSmolStr,
+    },
+    RecordInvalidNew {
+        loc: L,
+        record_name: FlowSmolStr,
+    },
+    RecordDeclarationInvalidSyntax {
+        loc: L,
+        kind: RecordDeclarationInvalidSyntax<L>,
+    },
+}
+
 /// Error message types for Flow type errors.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
@@ -1098,25 +1118,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EMatchError(MatchErrorKind<L>),
 
-    ERecordBannedTypeUtil {
-        reason_op: VirtualReason<L>,
-        reason_record: VirtualReason<L>,
-    },
-
-    ERecordInvalidName {
-        loc: L,
-        name: FlowSmolStr,
-    },
-
-    ERecordInvalidNew {
-        loc: L,
-        record_name: FlowSmolStr,
-    },
-
-    ERecordDeclarationInvalidSyntax {
-        loc: L,
-        kind: RecordDeclarationInvalidSyntax<L>,
-    },
+    ERecordError(RecordErrorKind<L>),
 
     EReferenceInDefault(L, FlowSmolStr, L),
 
@@ -3153,49 +3155,52 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 })
             }
 
-            ERecordBannedTypeUtil {
-                reason_op,
-                reason_record,
-            } => ERecordBannedTypeUtil {
-                reason_op: map_reason(reason_op),
-                reason_record: map_reason(reason_record),
-            },
-
-            ERecordInvalidName { loc, name } => ERecordInvalidName { loc: f(loc), name },
-
-            ERecordInvalidNew { loc, record_name } => ERecordInvalidNew {
-                loc: f(loc),
-                record_name,
-            },
-
-            ERecordDeclarationInvalidSyntax { loc, kind } => {
-                let kind = match kind {
-                    RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxMultiple {
-                        invalid_infix_equals_loc,
-                        invalid_variance_locs,
-                        invalid_optional_locs,
-                        invalid_suffix_semicolon_locs,
-                    } => RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxMultiple {
-                        invalid_infix_equals_loc: invalid_infix_equals_loc.map(&f),
-                        invalid_variance_locs: invalid_variance_locs.into_iter().map(&f).collect(),
-                        invalid_optional_locs: invalid_optional_locs.into_iter().map(&f).collect(),
-                        invalid_suffix_semicolon_locs: invalid_suffix_semicolon_locs.into_iter().map(&f).collect(),
-                    },
-                    RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxVariance => {
-                        RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxVariance
-                    },
-                    RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxOptional => {
-                        RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxOptional
-                    },
-                    RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxSuffixSemicolon => {
-                        RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxSuffixSemicolon
-                    },
-                    RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxInfixEquals => {
-                        RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxInfixEquals
-                    },
-                };
-                ERecordDeclarationInvalidSyntax { loc: f(loc), kind }
-            }
+            ERecordError(record_error) => ERecordError(match record_error {
+                RecordErrorKind::RecordBannedTypeUtil {
+                    reason_op,
+                    reason_record,
+                } => RecordErrorKind::RecordBannedTypeUtil {
+                    reason_op: map_reason(reason_op),
+                    reason_record: map_reason(reason_record),
+                },
+                RecordErrorKind::RecordInvalidName { loc, name } => {
+                    RecordErrorKind::RecordInvalidName { loc: f(loc), name }
+                }
+                RecordErrorKind::RecordInvalidNew { loc, record_name } => {
+                    RecordErrorKind::RecordInvalidNew {
+                        loc: f(loc),
+                        record_name,
+                    }
+                }
+                RecordErrorKind::RecordDeclarationInvalidSyntax { loc, kind } => {
+                    let kind = match kind {
+                            RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxMultiple {
+                                invalid_infix_equals_loc,
+                                invalid_variance_locs,
+                                invalid_optional_locs,
+                                invalid_suffix_semicolon_locs,
+                            } => RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxMultiple {
+                                invalid_infix_equals_loc: invalid_infix_equals_loc.map(&f),
+                                invalid_variance_locs: invalid_variance_locs.into_iter().map(&f).collect(),
+                                invalid_optional_locs: invalid_optional_locs.into_iter().map(&f).collect(),
+                                invalid_suffix_semicolon_locs: invalid_suffix_semicolon_locs.into_iter().map(&f).collect(),
+                            },
+                            RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxVariance => {
+                                RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxVariance
+                            },
+                            RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxOptional => {
+                                RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxOptional
+                            },
+                            RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxSuffixSemicolon => {
+                                RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxSuffixSemicolon
+                            },
+                            RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxInfixEquals => {
+                                RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxInfixEquals
+                            },
+                        };
+                    RecordErrorKind::RecordDeclarationInvalidSyntax { loc: f(loc), kind }
+                }
+            }),
 
             EUndocumentedFeature { loc } => EUndocumentedFeature { loc: f(loc) },
 
@@ -3629,11 +3634,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 type_guard_reason: reason,
                 ..
             }
-            | Self::EIllegalAssertOperator { op: reason, .. }
-            | Self::ERecordBannedTypeUtil {
-                reason_record: reason,
-                ..
-            } => Some(reason.loc.dupe()),
+            | Self::EIllegalAssertOperator { op: reason, .. } => Some(reason.loc.dupe()),
 
             Self::EDefinitionCycle(dependencies) => Some(dependencies.first().0.loc.dupe()),
 
@@ -3813,9 +3814,15 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                 MatchErrorKind::MatchUnusedPattern { reason, .. } => Some(reason.loc.dupe()),
             },
 
-            Self::ERecordInvalidName { loc, .. }
-            | Self::ERecordInvalidNew { loc, .. }
-            | Self::ERecordDeclarationInvalidSyntax { loc, .. } => Some(loc.dupe()),
+            Self::ERecordError(e) => match e {
+                RecordErrorKind::RecordBannedTypeUtil {
+                    reason_record: reason,
+                    ..
+                } => Some(reason.loc.dupe()),
+                RecordErrorKind::RecordInvalidName { loc, .. }
+                | RecordErrorKind::RecordInvalidNew { loc, .. }
+                | RecordErrorKind::RecordDeclarationInvalidSyntax { loc, .. } => Some(loc.dupe()),
+            },
 
             Self::EUndocumentedFeature { loc } => Some(loc.dupe()),
             Self::EDevOnlyRefinedLocInfo { refined_loc, .. } => Some(refined_loc.dupe()),
@@ -5016,27 +5023,28 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageMatchInvalidCaseSyntax(kind))
             }
 
-            ErrorMessage::ERecordBannedTypeUtil {
-                reason_op,
-                reason_record,
-            } => Normal(Message::MessageRecordBannedTypeUtil {
-                reason_op,
-                reason_record,
-            }),
-            ErrorMessage::ERecordInvalidName { name, .. } => {
-                Normal(Message::MessageRecordInvalidName { name })
-            }
-            ErrorMessage::ERecordDeclarationInvalidSyntax { kind, .. } => {
-                Normal(Message::MessageRecordDeclarationInvalidSyntax(kind))
-            }
+            ErrorMessage::ERecordError(record_error) => match record_error {
+                RecordErrorKind::RecordBannedTypeUtil {
+                    reason_op,
+                    reason_record,
+                } => Normal(Message::MessageRecordBannedTypeUtil {
+                    reason_op,
+                    reason_record,
+                }),
+                RecordErrorKind::RecordInvalidName { name, .. } => {
+                    Normal(Message::MessageRecordInvalidName { name })
+                }
+                RecordErrorKind::RecordInvalidNew { record_name, .. } => {
+                    Normal(Message::MessageRecordInvalidNew { record_name })
+                }
+                RecordErrorKind::RecordDeclarationInvalidSyntax { kind, .. } => {
+                    Normal(Message::MessageRecordDeclarationInvalidSyntax(kind))
+                }
+            },
 
             ErrorMessage::EIllegalAssertOperator {
                 obj, specialized, ..
             } => Normal(Message::MessageIllegalAssertOperator { obj, specialized }),
-
-            ErrorMessage::ERecordInvalidNew { record_name, .. } => {
-                Normal(Message::MessageRecordInvalidNew { record_name })
-            }
 
             ErrorMessage::EReferenceInDefault(def_loc, name, ref_loc) => {
                 Normal(Message::MessageInvalidSelfReferencingDefault {
@@ -6935,10 +6943,12 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 MatchErrorKind::MatchInvalidCaseSyntax { .. }
                 | MatchErrorKind::MatchInvalidWildcardSyntax(_),
             ) => Some(UnsupportedSyntax),
-            ErrorMessage::ERecordBannedTypeUtil { .. } => Some(RecordBannedTypeUtil),
-            ErrorMessage::ERecordInvalidName { .. } => Some(RecordInvalidName),
-            ErrorMessage::ERecordInvalidNew { .. } => Some(RecordInvalidNew),
-            ErrorMessage::ERecordDeclarationInvalidSyntax { .. } => Some(RecordInvalidSyntax),
+            ErrorMessage::ERecordError(e) => match e {
+                RecordErrorKind::RecordBannedTypeUtil { .. } => Some(RecordBannedTypeUtil),
+                RecordErrorKind::RecordInvalidName { .. } => Some(RecordInvalidName),
+                RecordErrorKind::RecordInvalidNew { .. } => Some(RecordInvalidNew),
+                RecordErrorKind::RecordDeclarationInvalidSyntax { .. } => Some(RecordInvalidSyntax),
+            },
             ErrorMessage::EUndocumentedFeature { .. } => Some(UndocumentedFeature),
             ErrorMessage::EIllegalAssertOperator { .. } => Some(IllegalAssertOperator),
         }

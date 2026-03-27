@@ -1479,7 +1479,11 @@ let resolve
           | MakeExact -> replace_desc_reason (RType (OrdinaryName "$Exact")) reason
           | _ -> reason
         in
-        add_output cx (Error_message.ERecordBannedTypeUtil { reason_op; reason_record = r });
+        add_output
+          cx
+          (Error_message.ERecordError
+             (Error_message.RecordBannedTypeUtil { reason_op; reason_record = r })
+          );
         return cx use_op (AnyT.error reason)
       | _ -> recurse cx use_op reason resolve_tool tool super
     end

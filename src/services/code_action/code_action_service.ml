@@ -1492,7 +1492,8 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.ERecordDeclarationInvalidSyntax { loc = error_loc; kind = _ } ->
+  | Error_message.ERecordError
+      (Error_message.RecordDeclarationInvalidSyntax { loc = error_loc; kind = _ }) ->
     if loc_opt_intersects ~error_loc ~loc then
       [
         {
@@ -1529,7 +1530,7 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.ERecordInvalidNew { record_name; loc = error_loc } ->
+  | Error_message.ERecordError (Error_message.RecordInvalidNew { record_name; loc = error_loc }) ->
     if loc_opt_intersects ~error_loc ~loc then
       [
         {

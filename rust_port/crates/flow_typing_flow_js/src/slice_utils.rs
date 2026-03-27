@@ -20,6 +20,7 @@ use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_flow_common::flow_js_utils;
 use flow_typing_flow_common::flow_js_utils::FlowJsException;
@@ -2179,10 +2180,10 @@ pub fn resolve<A>(
                         };
                         add_output(
                             cx,
-                            ErrorMessage::ERecordBannedTypeUtil {
+                            ErrorMessage::ERecordError(RecordErrorKind::RecordBannedTypeUtil {
                                 reason_op,
                                 reason_record: r.dupe(),
-                            },
+                            }),
                         )?;
                         return_(cx, use_op, any_t::error(reason.dupe()))
                     }

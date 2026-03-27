@@ -55,6 +55,7 @@ use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::MatchErrorKind;
+use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::error_message::TSSyntaxKind;
 use flow_typing_errors::intermediate_error_types;
 use flow_typing_errors::intermediate_error_types::ContextDependentUnsupportedStatement;
@@ -3279,10 +3280,10 @@ fn statement_(
                 if !name_str.is_empty() && is_a_to_z(name_str.chars().next().unwrap()) {
                     flow_js::add_output_non_speculating(
                         cx,
-                        ErrorMessage::ERecordInvalidName {
+                        ErrorMessage::ERecordError(RecordErrorKind::RecordInvalidName {
                             loc: name_loc.dupe(),
                             name: name_str.dupe(),
-                        },
+                        }),
                     );
                 }
                 let name = Name::new(name_str.dupe());
@@ -6869,10 +6870,10 @@ fn expression_(
                         if let Some(record_name) = record_name_opt {
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::ERecordInvalidNew {
+                                ErrorMessage::ERecordError(RecordErrorKind::RecordInvalidNew {
                                     loc: loc.dupe(),
                                     record_name,
-                                },
+                                }),
                             );
                         }
                     }
@@ -18606,43 +18607,43 @@ fn error_on_record_declaration_invalid_syntax(
         (Some(loc), ([], [], [])) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::ERecordDeclarationInvalidSyntax {
+                ErrorMessage::ERecordError(RecordErrorKind::RecordDeclarationInvalidSyntax {
                     loc: loc.dupe(),
                     kind: RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxInfixEquals,
-                },
+                }),
             );
         }
         (None, ([loc], [], [])) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::ERecordDeclarationInvalidSyntax {
+                ErrorMessage::ERecordError(RecordErrorKind::RecordDeclarationInvalidSyntax {
                     loc: loc.dupe(),
                     kind: RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxVariance,
-                },
+                }),
             );
         }
         (None, ([], [loc], [])) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::ERecordDeclarationInvalidSyntax {
+                ErrorMessage::ERecordError(RecordErrorKind::RecordDeclarationInvalidSyntax {
                     loc: loc.dupe(),
                     kind: RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxOptional,
-                },
+                }),
             );
         }
         (None, ([], [], [loc])) => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::ERecordDeclarationInvalidSyntax {
+                ErrorMessage::ERecordError(RecordErrorKind::RecordDeclarationInvalidSyntax {
                     loc: loc.dupe(),
                     kind: RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxSuffixSemicolon,
-                },
+                }),
             );
         }
         _ => {
             flow_js::add_output_non_speculating(
                 cx,
-                ErrorMessage::ERecordDeclarationInvalidSyntax {
+                ErrorMessage::ERecordError(RecordErrorKind::RecordDeclarationInvalidSyntax {
                     loc: multiple_error_loc,
                     kind: RecordDeclarationInvalidSyntax::InvalidRecordDeclarationSyntaxMultiple {
                         invalid_infix_equals_loc: invalid_infix_equals,
@@ -18650,7 +18651,7 @@ fn error_on_record_declaration_invalid_syntax(
                         invalid_optional_locs: optional_acc,
                         invalid_suffix_semicolon_locs: suffix_acc,
                     },
-                },
+                }),
             );
         }
     }

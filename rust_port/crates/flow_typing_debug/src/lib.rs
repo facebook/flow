@@ -39,6 +39,7 @@ use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::InvalidMappedTypeErrorKind;
 use flow_typing_errors::error_message::MatchErrorKind;
+use flow_typing_errors::error_message::RecordErrorKind;
 use flow_typing_errors::error_message::UpperKind;
 use flow_typing_errors::error_message::string_of_invalid_render_type_kind;
 use flow_typing_errors::intermediate_error_types::ConstantConditionKind;
@@ -3633,36 +3634,38 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 )
             }
         },
-        ErrorMessage::ERecordBannedTypeUtil {
-            reason_op,
-            reason_record,
-        } => {
-            format!(
-                "ERecordBannedTypeUtil ({}) ({})",
-                dump_reason(cx, reason_op),
-                dump_reason(cx, reason_record)
-            )
-        }
-        ErrorMessage::ERecordInvalidName { name, loc } => {
-            format!(
-                "ERecordInvalidName {{ name = {}; loc = {} }}",
-                name,
-                string_of_aloc(None, loc)
-            )
-        }
-        ErrorMessage::ERecordInvalidNew { record_name, loc } => {
-            format!(
-                "ERecordInvalidNew {{ record_name = {}; loc = {} }}",
-                record_name,
-                string_of_aloc(None, loc)
-            )
-        }
-        ErrorMessage::ERecordDeclarationInvalidSyntax { loc, .. } => {
-            format!(
-                "ERecordDeclarationInvalidSyntax ({})",
-                string_of_aloc(None, loc)
-            )
-        }
+        ErrorMessage::ERecordError(e) => match e {
+            RecordErrorKind::RecordBannedTypeUtil {
+                reason_op,
+                reason_record,
+            } => {
+                format!(
+                    "ERecordBannedTypeUtil ({}) ({})",
+                    dump_reason(cx, reason_op),
+                    dump_reason(cx, reason_record)
+                )
+            }
+            RecordErrorKind::RecordInvalidName { name, loc } => {
+                format!(
+                    "ERecordInvalidName {{ name = {}; loc = {} }}",
+                    name,
+                    string_of_aloc(None, loc)
+                )
+            }
+            RecordErrorKind::RecordInvalidNew { record_name, loc } => {
+                format!(
+                    "ERecordInvalidNew {{ record_name = {}; loc = {} }}",
+                    record_name,
+                    string_of_aloc(None, loc)
+                )
+            }
+            RecordErrorKind::RecordDeclarationInvalidSyntax { loc, .. } => {
+                format!(
+                    "ERecordDeclarationInvalidSyntax ({})",
+                    string_of_aloc(None, loc)
+                )
+            }
+        },
         ErrorMessage::EUndocumentedFeature { loc } => {
             format!("EUndocumentedFeature ({})", string_of_aloc(None, loc))
         }

@@ -1893,7 +1893,9 @@ module Make
           invalid_properties_syntax;
         let is_a_to_z c = c >= 'a' && c <= 'z' in
         if name != "" && is_a_to_z name.[0] then
-          Flow_js_utils.add_output cx (Error_message.ERecordInvalidName { loc = name_loc; name });
+          Flow_js_utils.add_output
+            cx
+            (Error_message.ERecordError (Error_message.RecordInvalidName { loc = name_loc; name }));
         let name = OrdinaryName name in
         let reason = DescFormat.instance_reason name name_loc in
         let tast_record_type = Type_env.read_declared_type cx reason name_loc in
@@ -3958,7 +3960,9 @@ module Make
           | _ -> None
         in
         Base.Option.iter record_name_opt ~f:(fun record_name ->
-            Flow.add_output cx (Error_message.ERecordInvalidNew { loc; record_name })
+            Flow.add_output
+              cx
+              (Error_message.ERecordError (Error_message.RecordInvalidNew { loc; record_name }))
         )
       | _ -> ());
       ( (loc, t),
@@ -10658,47 +10662,60 @@ module Make
     | (Some loc, ([], [], [])) ->
       Flow.add_output
         cx
-        (Error_message.ERecordDeclarationInvalidSyntax
-           { loc; kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxInfixEquals }
+        (Error_message.ERecordError
+           (Error_message.RecordDeclarationInvalidSyntax
+              {
+                loc;
+                kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxInfixEquals;
+              }
+           )
         )
     | (None, ([loc], [], [])) ->
       Flow.add_output
         cx
-        (Error_message.ERecordDeclarationInvalidSyntax
-           { loc; kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxVariance }
+        (Error_message.ERecordError
+           (Error_message.RecordDeclarationInvalidSyntax
+              { loc; kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxVariance }
+           )
         )
     | (None, ([], [loc], [])) ->
       Flow.add_output
         cx
-        (Error_message.ERecordDeclarationInvalidSyntax
-           { loc; kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxOptional }
+        (Error_message.ERecordError
+           (Error_message.RecordDeclarationInvalidSyntax
+              { loc; kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxOptional }
+           )
         )
     | (None, ([], [], [loc])) ->
       Flow.add_output
         cx
-        (Error_message.ERecordDeclarationInvalidSyntax
-           {
-             loc;
-             kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxSuffixSemicolon;
-           }
+        (Error_message.ERecordError
+           (Error_message.RecordDeclarationInvalidSyntax
+              {
+                loc;
+                kind = Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxSuffixSemicolon;
+              }
+           )
         )
     | ( invalid_infix_equals_loc,
         (invalid_variance_locs, invalid_optional_locs, invalid_suffix_semicolon_locs)
       ) ->
       Flow.add_output
         cx
-        (Error_message.ERecordDeclarationInvalidSyntax
-           {
-             loc = multiple_error_loc;
-             kind =
-               Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxMultiple
-                 {
-                   invalid_infix_equals_loc;
-                   invalid_variance_locs = List.rev invalid_variance_locs;
-                   invalid_optional_locs = List.rev invalid_optional_locs;
-                   invalid_suffix_semicolon_locs = List.rev invalid_suffix_semicolon_locs;
-                 };
-           }
+        (Error_message.ERecordError
+           (Error_message.RecordDeclarationInvalidSyntax
+              {
+                loc = multiple_error_loc;
+                kind =
+                  Flow_intermediate_error_types.InvalidRecordDeclarationSyntaxMultiple
+                    {
+                      invalid_infix_equals_loc;
+                      invalid_variance_locs = List.rev invalid_variance_locs;
+                      invalid_optional_locs = List.rev invalid_optional_locs;
+                      invalid_suffix_semicolon_locs = List.rev invalid_suffix_semicolon_locs;
+                    };
+              }
+           )
         )
 
   let expression ?encl_ctx ?decl ?as_const cx (loc, e) =

@@ -156,6 +156,24 @@ type 'loc match_error_kind =
   | MatchInvalidWildcardSyntax of 'loc
   | MatchInvalidInstancePattern of 'loc
 
+type 'loc record_error_kind =
+  | RecordBannedTypeUtil of {
+      reason_op: 'loc virtual_reason;
+      reason_record: 'loc virtual_reason;
+    }
+  | RecordInvalidName of {
+      loc: 'loc;
+      name: string;
+    }
+  | RecordInvalidNew of {
+      loc: 'loc;
+      record_name: string;
+    }
+  | RecordDeclarationInvalidSyntax of {
+      loc: 'loc;
+      kind: 'loc record_declaration_invalid_syntax;
+    }
+
 type t = ALoc.t t'
 
 and 'loc t' =
@@ -782,22 +800,7 @@ and 'loc t' =
   | ECannotCallReactComponent of { reason: 'loc virtual_reason }
   (* Match *)
   | EMatchError of 'loc match_error_kind
-  | ERecordBannedTypeUtil of {
-      reason_op: 'loc virtual_reason;
-      reason_record: 'loc virtual_reason;
-    }
-  | ERecordInvalidName of {
-      loc: 'loc;
-      name: string;
-    }
-  | ERecordInvalidNew of {
-      loc: 'loc;
-      record_name: string;
-    }
-  | ERecordDeclarationInvalidSyntax of {
-      loc: 'loc;
-      kind: 'loc record_declaration_invalid_syntax;
-    }
+  | ERecordError of 'loc record_error_kind
   | EUndocumentedFeature of { loc: 'loc }
   | EIllegalAssertOperator of {
       op: 'loc virtual_reason;
@@ -1929,35 +1932,38 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         MatchInvalidCaseSyntax { loc = f loc; kind }
       | MatchInvalidWildcardSyntax loc -> MatchInvalidWildcardSyntax (f loc)
       | MatchInvalidInstancePattern loc -> MatchInvalidInstancePattern (f loc))
-  | ERecordBannedTypeUtil { reason_op; reason_record } ->
-    ERecordBannedTypeUtil
-      { reason_op = map_reason reason_op; reason_record = map_reason reason_record }
-  | ERecordInvalidNew { loc; record_name } -> ERecordInvalidNew { loc = f loc; record_name }
-  | ERecordInvalidName { loc; name } -> ERecordInvalidName { loc = f loc; name }
-  | ERecordDeclarationInvalidSyntax { loc; kind } ->
-    let kind =
-      match kind with
-      | InvalidRecordDeclarationSyntaxMultiple
-          {
-            invalid_infix_equals_loc;
-            invalid_variance_locs;
-            invalid_optional_locs;
-            invalid_suffix_semicolon_locs;
-          } ->
-        InvalidRecordDeclarationSyntaxMultiple
-          {
-            invalid_infix_equals_loc = Base.Option.map ~f invalid_infix_equals_loc;
-            invalid_variance_locs = List.map f invalid_variance_locs;
-            invalid_optional_locs = List.map f invalid_optional_locs;
-            invalid_suffix_semicolon_locs = List.map f invalid_suffix_semicolon_locs;
-          }
-      | InvalidRecordDeclarationSyntaxVariance -> InvalidRecordDeclarationSyntaxVariance
-      | InvalidRecordDeclarationSyntaxOptional -> InvalidRecordDeclarationSyntaxOptional
-      | InvalidRecordDeclarationSyntaxSuffixSemicolon ->
-        InvalidRecordDeclarationSyntaxSuffixSemicolon
-      | InvalidRecordDeclarationSyntaxInfixEquals -> InvalidRecordDeclarationSyntaxInfixEquals
-    in
-    ERecordDeclarationInvalidSyntax { loc = f loc; kind }
+  | ERecordError e ->
+    ERecordError
+      (match e with
+      | RecordBannedTypeUtil { reason_op; reason_record } ->
+        RecordBannedTypeUtil
+          { reason_op = map_reason reason_op; reason_record = map_reason reason_record }
+      | RecordInvalidNew { loc; record_name } -> RecordInvalidNew { loc = f loc; record_name }
+      | RecordInvalidName { loc; name } -> RecordInvalidName { loc = f loc; name }
+      | RecordDeclarationInvalidSyntax { loc; kind } ->
+        let kind =
+          match kind with
+          | InvalidRecordDeclarationSyntaxMultiple
+              {
+                invalid_infix_equals_loc;
+                invalid_variance_locs;
+                invalid_optional_locs;
+                invalid_suffix_semicolon_locs;
+              } ->
+            InvalidRecordDeclarationSyntaxMultiple
+              {
+                invalid_infix_equals_loc = Base.Option.map ~f invalid_infix_equals_loc;
+                invalid_variance_locs = List.map f invalid_variance_locs;
+                invalid_optional_locs = List.map f invalid_optional_locs;
+                invalid_suffix_semicolon_locs = List.map f invalid_suffix_semicolon_locs;
+              }
+          | InvalidRecordDeclarationSyntaxVariance -> InvalidRecordDeclarationSyntaxVariance
+          | InvalidRecordDeclarationSyntaxOptional -> InvalidRecordDeclarationSyntaxOptional
+          | InvalidRecordDeclarationSyntaxSuffixSemicolon ->
+            InvalidRecordDeclarationSyntaxSuffixSemicolon
+          | InvalidRecordDeclarationSyntaxInfixEquals -> InvalidRecordDeclarationSyntaxInfixEquals
+        in
+        RecordDeclarationInvalidSyntax { loc = f loc; kind })
   | EUndocumentedFeature { loc } -> EUndocumentedFeature { loc = f loc }
   | EIllegalAssertOperator { op; obj; specialized } ->
     EIllegalAssertOperator { op = map_reason op; obj = map_reason obj; specialized }
@@ -2316,10 +2322,7 @@ let util_use_op_of_msg nope util = function
   | EUnionOptimizationOnNonUnion _
   | ECannotCallReactComponent _
   | EMatchError _
-  | ERecordBannedTypeUtil _
-  | ERecordInvalidNew _
-  | ERecordInvalidName _
-  | ERecordDeclarationInvalidSyntax _
+  | ERecordError _
   | EUndocumentedFeature _
   | EIllegalAssertOperator _ ->
     nope
@@ -2409,8 +2412,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ETypeGuardFunctionInvalidWrites { reason; _ }
   | ENegativeTypeGuardConsistency { return_reason = reason; _ }
   | ETypeGuardFunctionParamHavoced { type_guard_reason = reason; _ }
-  | EIllegalAssertOperator { op = reason; _ }
-  | ERecordBannedTypeUtil { reason_record = reason; _ } ->
+  | EIllegalAssertOperator { op = reason; _ } ->
     Some (loc_of_reason reason)
   | EExponentialSpread
       {
@@ -2574,9 +2576,12 @@ let loc_of_msg : 'loc t' -> 'loc option = function
     | MatchInvalidGuardedWildcard loc ->
       Some loc
     | MatchUnusedPattern { reason; _ } -> Some (loc_of_reason reason))
-  | ERecordInvalidNew { loc; _ } -> Some loc
-  | ERecordInvalidName { loc; _ } -> Some loc
-  | ERecordDeclarationInvalidSyntax { loc; _ } -> Some loc
+  | ERecordError e ->
+    (match e with
+    | RecordBannedTypeUtil { reason_record = reason; _ } -> Some (loc_of_reason reason)
+    | RecordInvalidNew { loc; _ } -> Some loc
+    | RecordInvalidName { loc; _ } -> Some loc
+    | RecordDeclarationInvalidSyntax { loc; _ } -> Some loc)
   | EUndocumentedFeature { loc } -> Some loc
   | EDevOnlyRefinedLocInfo { refined_loc; refining_locs = _ } -> Some refined_loc
   | EDevOnlyInvalidatedRefinementInfo { read_loc; invalidation_info = _ } -> Some read_loc
@@ -3800,12 +3805,14 @@ let friendly_message_of_msg = function
     | MatchInvalidCaseSyntax { kind; _ } -> Normal (MessageMatchInvalidCaseSyntax kind)
     | MatchInvalidWildcardSyntax _ -> Normal MessageMatchInvalidWildcardSyntax
     | MatchInvalidInstancePattern _ -> Normal MessageMatchInvalidInstancePattern)
-  | ERecordBannedTypeUtil { reason_op; reason_record } ->
-    Normal (MessageRecordBannedTypeUtil { reason_op; reason_record })
-  | ERecordInvalidNew { record_name; loc = _ } -> Normal (MessageRecordInvalidNew { record_name })
-  | ERecordInvalidName { name; loc = _ } -> Normal (MessageRecordInvalidName { name })
-  | ERecordDeclarationInvalidSyntax { loc = _; kind } ->
-    Normal (MessageRecordDeclarationInvalidSyntax kind)
+  | ERecordError e ->
+    (match e with
+    | RecordBannedTypeUtil { reason_op; reason_record } ->
+      Normal (MessageRecordBannedTypeUtil { reason_op; reason_record })
+    | RecordInvalidNew { record_name; loc = _ } -> Normal (MessageRecordInvalidNew { record_name })
+    | RecordInvalidName { name; loc = _ } -> Normal (MessageRecordInvalidName { name })
+    | RecordDeclarationInvalidSyntax { loc = _; kind } ->
+      Normal (MessageRecordDeclarationInvalidSyntax kind))
   | EUndocumentedFeature { loc = _ } -> Normal MessageUndocumentedFeature
   | EIllegalAssertOperator { obj; specialized; _ } ->
     Normal (MessageIllegalAssertOperator { obj; specialized })
@@ -4228,9 +4235,11 @@ let error_code_of_message err : error_code option =
     | MatchInvalidCaseSyntax _ -> Some UnsupportedSyntax
     | MatchInvalidWildcardSyntax _ -> Some UnsupportedSyntax
     | MatchInvalidInstancePattern _ -> Some MatchInvalidPattern)
-  | ERecordBannedTypeUtil _ -> Some RecordBannedTypeUtil
-  | ERecordInvalidNew _ -> Some RecordInvalidNew
-  | ERecordInvalidName _ -> Some RecordInvalidName
-  | ERecordDeclarationInvalidSyntax _ -> Some RecordInvalidSyntax
+  | ERecordError e ->
+    (match e with
+    | RecordBannedTypeUtil _ -> Some RecordBannedTypeUtil
+    | RecordInvalidNew _ -> Some RecordInvalidNew
+    | RecordInvalidName _ -> Some RecordInvalidName
+    | RecordDeclarationInvalidSyntax _ -> Some RecordInvalidSyntax)
   | EUndocumentedFeature _ -> Some UndocumentedFeature
   | EIllegalAssertOperator _ -> Some IllegalAssertOperator

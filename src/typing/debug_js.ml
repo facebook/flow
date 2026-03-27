@@ -2095,14 +2095,19 @@ let dump_error_message =
       | MatchInvalidWildcardSyntax loc -> spf "EMatchInvalidWildcardSyntax (%s)" (string_of_aloc loc)
       | MatchInvalidInstancePattern loc ->
         spf "EMatchInvalidInstancePattern (%s)" (string_of_aloc loc))
-    | ERecordBannedTypeUtil { reason_op; reason_record } ->
-      spf "ERecordBannedTypeUtil (%s) (%s)" (dump_reason cx reason_op) (dump_reason cx reason_record)
-    | ERecordInvalidName { name; loc } ->
-      spf "ERecordInvalidName { name = %s; loc = %s }" name (string_of_aloc loc)
-    | ERecordInvalidNew { record_name; loc } ->
-      spf "ERecordInvalidNew { record_name = %s; loc = %s }" record_name (string_of_aloc loc)
-    | ERecordDeclarationInvalidSyntax { loc; _ } ->
-      spf "ERecordDeclarationInvalidSyntax (%s)" (string_of_aloc loc)
+    | ERecordError e ->
+      (match e with
+      | RecordBannedTypeUtil { reason_op; reason_record } ->
+        spf
+          "ERecordBannedTypeUtil (%s) (%s)"
+          (dump_reason cx reason_op)
+          (dump_reason cx reason_record)
+      | RecordInvalidName { name; loc } ->
+        spf "ERecordInvalidName { name = %s; loc = %s }" name (string_of_aloc loc)
+      | RecordInvalidNew { record_name; loc } ->
+        spf "ERecordInvalidNew { record_name = %s; loc = %s }" record_name (string_of_aloc loc)
+      | RecordDeclarationInvalidSyntax { loc; _ } ->
+        spf "ERecordDeclarationInvalidSyntax (%s)" (string_of_aloc loc))
     | EUndocumentedFeature { loc } -> spf "EUndocumentedFeature (%s)" (string_of_aloc loc)
     | EIllegalAssertOperator { obj; op; specialized } ->
       spf
