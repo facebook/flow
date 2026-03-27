@@ -32,6 +32,22 @@
   --flow-red: #dc2319;
 }
 
+/* Inline code: soft pill style */
+:root {
+  --ifm-code-background: rgba(0, 0, 0, 0.06);
+  --ifm-code-padding-vertical: 2px;
+  --ifm-code-padding-horizontal: 6px;
+  --ifm-code-border-radius: 4px;
+}
+
+code {
+  border: none;
+}
+
+[data-theme='dark'] {
+  --ifm-code-background: rgba(255, 255, 255, 0.1);
+}
+
 .docusaurus-highlight-code-line {
   background-color: rgb(72, 77, 91);
   display: block;
