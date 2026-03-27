@@ -234,8 +234,10 @@ pub(super) fn assert_identifier_name_is_identifier(
         _ if is_reserved(name) => {
             env.error_at(loc.dupe(), ParseError::UnexpectedReserved)?;
         }
+        /* In ambient contexts (e.g. declaration files), "eval" and "arguments" are
+        allowed as identifiers since they are type-level declarations, not runtime code. */
         _ => match restricted_error {
-            Some(err) if is_restricted(name) => {
+            Some(err) if is_restricted(name) && !env.in_ambient_context() => {
                 env.strict_error_at((loc.dupe(), err))?;
             }
             _ => {}

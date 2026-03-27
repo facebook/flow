@@ -497,7 +497,10 @@ let assert_identifier_name_is_identifier
   | _ when is_reserved name -> error_at env (loc, Parse_error.UnexpectedReserved)
   | _ -> begin
     match restricted_error with
-    | Some err when is_restricted name -> strict_error_at env (loc, err)
+    (* In ambient contexts (e.g. declaration files), "eval" and "arguments" are
+       allowed as identifiers since they are type-level declarations, not runtime code. *)
+    | Some err when is_restricted name && not (in_ambient_context env) ->
+      strict_error_at env (loc, err)
     | _ -> ()
   end
 
