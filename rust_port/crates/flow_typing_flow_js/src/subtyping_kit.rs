@@ -532,19 +532,26 @@ fn flow_obj_to_obj(
         let mut lhs_missing_props: LhsMissing = Vec::new();
         let mut polarity_mismatch_errs: PolMismatchErrs = Vec::new();
         for (name, up) in cx.find_props(uflds.dupe()).iter() {
-            let reason_prop = ureason
-                .dupe()
-                .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
-            let propref = type_util::mk_named_prop(reason_prop, false, name.dupe());
-            let use_op_prime = use_op.dupe();
-            let use_op = VirtualUseOp::Frame(
-                Arc::new(VirtualFrameUseOp::PropertyCompatibility {
-                    prop: Some(name.dupe()),
-                    lower: lreason.dupe(),
-                    upper: ureason.dupe(),
-                }),
-                Arc::new(use_op_prime.dupe()),
-            );
+            // Lazily construct reason_prop and propref - only needed in non-literal
+            // and non-invariant-subtyping branches.
+            let mk_propref = || {
+                let reason_prop = ureason
+                    .dupe()
+                    .replace_desc(VirtualReasonDesc::RProperty(Some(name.dupe())));
+                type_util::mk_named_prop(reason_prop, false, name.dupe())
+            };
+            // Lazily construct the Frame use_op - two Arc allocations per property.
+            // In the literal case where read_t returns None, this avoids wasted work.
+            let mk_use_op = || {
+                VirtualUseOp::Frame(
+                    Arc::new(VirtualFrameUseOp::PropertyCompatibility {
+                        prop: Some(name.dupe()),
+                        lower: lreason.dupe(),
+                        upper: ureason.dupe(),
+                    }),
+                    Arc::new(use_op.dupe()),
+                )
+            };
             match (cx.get_prop(lflds.dupe(), name), &ldict) {
                 (Some(lp), _) => {
                     if lit {
@@ -555,7 +562,7 @@ fn flow_obj_to_obj(
                                     cx,
                                     trace,
                                     &lt,
-                                    &UseT::new(UseTInner::UseT(use_op, ut)),
+                                    &UseT::new(UseTInner::UseT(mk_use_op(), ut)),
                                 )?;
                             }
                             _ => {}
@@ -585,7 +592,7 @@ fn flow_obj_to_obj(
                                         cx,
                                         trace,
                                         lt.dupe(),
-                                        use_op.dupe(),
+                                        mk_use_op(),
                                         ut.dupe(),
                                     ) {
                                         Ok(()) => false,
@@ -613,11 +620,11 @@ fn flow_obj_to_obj(
                                     rec_flow_p_inner(
                                         cx,
                                         Some(trace),
-                                        use_op.dupe(),
+                                        mk_use_op(),
                                         Some((&l_t, &u_t)),
                                         ureason,
                                         true,
-                                        &propref,
+                                        &mk_propref(),
                                         &lp_type,
                                         &up_type,
                                     )?
@@ -663,7 +670,7 @@ fn flow_obj_to_obj(
                                         cx,
                                         trace,
                                         &lt,
-                                        &UseT::new(UseTInner::UseT(use_op.dupe(), ut)),
+                                        &UseT::new(UseTInner::UseT(mk_use_op(), ut)),
                                     )?;
                                 }
                                 _ => {}
@@ -680,11 +687,11 @@ fn flow_obj_to_obj(
                             let additional = rec_flow_p_inner(
                                 cx,
                                 Some(trace),
-                                use_op.dupe(),
+                                mk_use_op(),
                                 Some((&l_t, &u_t)),
                                 ureason,
                                 true,
-                                &propref,
+                                &mk_propref(),
                                 &lp_for_idx,
                                 &up_for_idx,
                             )?;
@@ -739,7 +746,7 @@ fn flow_obj_to_obj(
                                             lower: lreason.dupe(),
                                             upper: ureason.dupe(),
                                         }),
-                                        Arc::new(use_op_prime.dupe()),
+                                        Arc::new(use_op.dupe()),
                                     ),
                                     key.dupe(),
                                 )),
@@ -770,9 +777,9 @@ fn flow_obj_to_obj(
                                         None, None,
                                     )),
                                     try_ts_on_failure: vec![].into(),
-                                    propref: Box::new(propref.clone()),
+                                    propref: Box::new(mk_propref()),
                                     lookup_action: Box::new(LookupAction::LookupPropForSubtyping {
-                                        use_op: use_op_prime.dupe(),
+                                        use_op: use_op.dupe(),
                                         prop: PropertyType::OrdinaryField {
                                             type_: opt_t.dupe(),
                                             polarity: Polarity::Positive,
@@ -811,10 +818,10 @@ fn flow_obj_to_obj(
                                         reason: ureason.dupe(),
                                         lookup_kind: Box::new(lookup_kind),
                                         try_ts_on_failure: vec![].into(),
-                                        propref: Box::new(propref.clone()),
+                                        propref: Box::new(mk_propref()),
                                         lookup_action: Box::new(
                                             LookupAction::LookupPropForSubtyping {
-                                                use_op: use_op_prime.dupe(),
+                                                use_op: use_op.dupe(),
                                                 prop: property::type_(up),
                                                 prop_name: name.dupe(),
                                                 reason_lower: lreason.dupe(),

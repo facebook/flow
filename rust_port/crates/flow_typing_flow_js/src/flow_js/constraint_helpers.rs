@@ -133,9 +133,9 @@ pub(super) fn add_lower(id: i32, l: &Type, trace: DepthTrace, use_op: UseOp, cx:
 /// so we don't want to redo that work. We also don't want to consider any tvar
 /// that has already been resolved, because the resolved type will be processed
 /// separately, too, as part of the bounds of skip_tvar.
-pub(super) fn iter_with_filter<F>(
+pub(super) fn iter_with_filter<F, S: std::hash::BuildHasher>(
     cx: &Context,
-    bindings: &HashMap<i32, (DepthTrace, UseOp)>,
+    bindings: &HashMap<i32, (DepthTrace, UseOp), S>,
     skip_id: i32,
     each: F,
 ) where

@@ -29,7 +29,6 @@ use std::borrow::Cow;
 use std::cell::RefCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
-use std::collections::HashMap;
 use std::collections::HashSet;
 use std::collections::VecDeque;
 use std::hash::Hash;
@@ -5414,7 +5413,10 @@ pub mod type_or_type_desc {
 }
 
 pub fn unknown_use() -> UseOp {
-    VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse))
+    thread_local! {
+        static CACHED: UseOp = VirtualUseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse));
+    }
+    CACHED.with(|c| c.dupe())
 }
 
 pub fn name_of_propref(propref: &PropRef) -> Option<Name> {
@@ -5749,8 +5751,8 @@ pub mod constraint {
     pub struct Bounds {
         pub lower: BTreeMap<Type, (DepthTrace, UseOp)>,
         pub upper: BTreeMap<UseTypeKey, DepthTrace>,
-        pub lowertvars: HashMap<i32, (DepthTrace, UseOp)>,
-        pub uppertvars: HashMap<i32, (DepthTrace, UseOp)>,
+        pub lowertvars: flow_data_structure_wrapper::int_map::IntHashMap<i32, (DepthTrace, UseOp)>,
+        pub uppertvars: flow_data_structure_wrapper::int_map::IntHashMap<i32, (DepthTrace, UseOp)>,
     }
 
     impl Default for Bounds {
@@ -5764,8 +5766,8 @@ pub mod constraint {
             Bounds {
                 lower: BTreeMap::new(),
                 upper: BTreeMap::new(),
-                lowertvars: HashMap::new(),
-                uppertvars: HashMap::new(),
+                lowertvars: flow_data_structure_wrapper::int_map::IntHashMap::default(),
+                uppertvars: flow_data_structure_wrapper::int_map::IntHashMap::default(),
             }
         }
     }
@@ -6135,7 +6137,7 @@ pub struct TypeContext {
     /// obj types point to mutable property maps
     pub property_maps: std::collections::HashMap<properties::Id, properties::PropertiesMap>,
     /// indirection to support context opt
-    pub call_props: std::collections::HashMap<i32, Type>,
+    pub call_props: flow_data_structure_wrapper::int_map::IntHashMap<i32, Type>,
     /// modules point to mutable export maps
     pub export_maps: std::collections::HashMap<exports::Id, exports::T>,
     /// map from evaluation ids to types

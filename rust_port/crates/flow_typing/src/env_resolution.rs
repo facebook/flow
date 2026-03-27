@@ -2939,10 +2939,13 @@ pub fn resolve_component(
                     match type_entry.t.deref() {
                         TypeInner::OpenT(tvar) => {
                             let id = tvar.id() as i32;
-                            let (root_id, constraints) = cx.find_constraints(id);
-                            if let type_::constraint::Constraints::FullyResolved(s) = constraints {
-                                cx.add_post_component_tvar_forcing_state(root_id, s);
-                            }
+                            cx.inspect_constraints(id, |root_id, constraints| {
+                                if let type_::constraint::Constraints::FullyResolved(s) =
+                                    constraints
+                                {
+                                    cx.add_post_component_tvar_forcing_state(root_id, s.clone());
+                                }
+                            });
                         }
                         _ => {}
                     }

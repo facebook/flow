@@ -703,7 +703,7 @@ pub fn empty_sig_cx() -> TypeContext {
             1024,
         ))),
         property_maps: HashMap::with_capacity(256),
-        call_props: HashMap::with_capacity(128),
+        call_props: IntHashMap::with_capacity_and_hasher(128, Default::default()),
         export_maps: HashMap::with_capacity(4),
         evaluated: CACHED_EVALUATED.with(|c| c.clone()),
     }
@@ -2331,6 +2331,20 @@ impl Context {
         &self,
         id: i32,
         f: impl FnOnce(i32, &mut type_::constraint::Constraints) -> R,
+    ) -> R {
+        let graph = self.graph();
+        let mut graph = graph.borrow_mut();
+        let (root_id, c) = graph.find_constraints(id).unwrap();
+        f(root_id, c)
+    }
+
+    /// Read-only inspection of constraints without cloning.
+    /// The closure receives (root_id, &Constraints) and must not call
+    /// other graph operations (the graph borrow is held).
+    pub fn inspect_constraints<R>(
+        &self,
+        id: i32,
+        f: impl FnOnce(i32, &type_::constraint::Constraints) -> R,
     ) -> R {
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
