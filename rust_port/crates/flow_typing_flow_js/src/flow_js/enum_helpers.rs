@@ -42,12 +42,12 @@ pub(super) fn enum_exhaustive_check(
             if !members_remaining.contains_key(member_name) {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EEnumMemberAlreadyChecked {
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked {
                         case_test_loc: case_test_loc.dupe(),
                         prev_check_loc: seen[member_name].dupe(),
                         enum_reason: enum_reason.dupe(),
                         member_name: member_name.dupe(),
-                    },
+                    }),
                 )?;
             }
             members_remaining.remove(member_name);
@@ -65,12 +65,12 @@ pub(super) fn enum_exhaustive_check(
             (false, default_case_loc, _) => {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EEnumNotAllChecked {
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked {
                         reason: check_reason.dupe(),
                         enum_reason: enum_reason.dupe(),
                         left_to_check: left_over.keys().duped().collect(),
                         default_case_loc,
-                    },
+                    }),
                 )?;
                 // enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
                 enum_exhaustive_check_incomplete(cx, trace, check_reason, None, incomplete_out)?;
@@ -80,10 +80,10 @@ pub(super) fn enum_exhaustive_check(
             (true, None, true) => {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EEnumUnknownNotChecked {
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked {
                         reason: check_reason.dupe(),
                         enum_reason: enum_reason.dupe(),
-                    },
+                    }),
                 )?;
                 enum_exhaustive_check_incomplete(cx, trace, check_reason, None, incomplete_out)?;
             }
@@ -91,10 +91,10 @@ pub(super) fn enum_exhaustive_check(
             (true, Some(default_case_loc), false) => {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EEnumAllMembersAlreadyChecked {
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked {
                         loc: default_case_loc,
                         enum_reason: enum_reason.dupe(),
-                    },
+                    }),
                 )?;
             }
             _ => {}

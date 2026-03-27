@@ -1263,7 +1263,9 @@ module ValueToTypeReferenceTransform = struct
       (* an enum object value annotation becomes the enum type *)
       enum_value_t
     | DefT (enum_reason, EnumValueT _) ->
-      add_output cx Error_message.(EEnumMemberUsedAsType { reason = reason_op; enum_reason });
+      add_output
+        cx
+        Error_message.(EEnumError (EnumMemberUsedAsType { reason = reason_op; enum_reason }));
       AnyT.error reason_op
     | DefT (reason_component, ReactAbstractComponentT _) as l ->
       run_on_abstract_component cx reason_component reason_op l
@@ -2571,8 +2573,10 @@ module GetPropT_kit (F : Get_prop_helper_sig) = struct
       let member_reason = replace_desc_reason (RIdentifier member_name) prop_reason in
       add_output
         cx
-        (Error_message.EEnumInvalidMemberAccess
-           { member_name = Some member_name; suggestion; reason = member_reason; enum_reason }
+        (Error_message.EEnumError
+           (Error_message.EnumInvalidMemberAccess
+              { member_name = Some member_name; suggestion; reason = member_reason; enum_reason }
+           )
         );
       F.return cx trace ~use_op:unknown_use (AnyT.error access_reason)
     in

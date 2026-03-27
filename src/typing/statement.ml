@@ -10302,7 +10302,7 @@ module Make
     let open Ast.Statement.EnumDeclaration in
     let { id = (name_loc, ident); body; const_; comments } = enum in
     let { Ast.Identifier.name; _ } = ident in
-    if const_ then Flow.add_output cx (Error_message.EEnumConstNotSupported loc);
+    if const_ then Flow.add_output cx Error_message.(EEnumError (EnumConstNotSupported loc));
     let reason = mk_reason (REnum { name = Some name }) name_loc in
     let t =
       if Context.enable_enums cx then (
@@ -10317,7 +10317,7 @@ module Make
         Type_env.init_implicit_const cx ~use_op t name_loc;
         t
       ) else (
-        Flow.add_output cx (Error_message.EEnumsNotEnabled loc);
+        Flow.add_output cx Error_message.(EEnumError (EnumsNotEnabled loc));
         AnyT.error reason
       )
     in
@@ -10331,8 +10331,8 @@ module Make
       if String.length name > 0 && is_a_to_z name.[0] then
         Flow.add_output
           cx
-          (Error_message.EEnumInvalidMemberName
-             { loc = member_loc; enum_reason; member_name = name }
+          Error_message.(
+            EEnumError (EnumInvalidMemberName { loc = member_loc; enum_reason; member_name = name })
           )
     in
     let defaulted_members =
@@ -10369,8 +10369,9 @@ module Make
                 | Some prev_use_loc ->
                   Flow.add_output
                     cx
-                    (Error_message.EEnumMemberDuplicateValue
-                       { loc = init_loc; prev_use_loc; enum_reason }
+                    Error_message.(
+                      EEnumError
+                        (EnumMemberDuplicateValue { loc = init_loc; prev_use_loc; enum_reason })
                     );
                   seen_values
                 | None -> BoolMap.add init_value member_loc seen_values
@@ -10407,8 +10408,9 @@ module Make
                 | Some prev_use_loc ->
                   Flow.add_output
                     cx
-                    (Error_message.EEnumMemberDuplicateValue
-                       { loc = init_loc; prev_use_loc; enum_reason }
+                    Error_message.(
+                      EEnumError
+                        (EnumMemberDuplicateValue { loc = init_loc; prev_use_loc; enum_reason })
                     );
                   seen_values
                 | None -> NumberMap.add init_value member_loc seen_values
@@ -10440,8 +10442,9 @@ module Make
                 | Some prev_use_loc ->
                   Flow.add_output
                     cx
-                    (Error_message.EEnumMemberDuplicateValue
-                       { loc = init_loc; prev_use_loc; enum_reason }
+                    Error_message.(
+                      EEnumError
+                        (EnumMemberDuplicateValue { loc = init_loc; prev_use_loc; enum_reason })
                     );
                   seen_values
                 | None -> BigIntOptionMap.add init_value member_loc seen_values
@@ -10475,8 +10478,9 @@ module Make
                 | Some prev_use_loc ->
                   Flow.add_output
                     cx
-                    (Error_message.EEnumMemberDuplicateValue
-                       { loc = init_loc; prev_use_loc; enum_reason }
+                    Error_message.(
+                      EEnumError
+                        (EnumMemberDuplicateValue { loc = init_loc; prev_use_loc; enum_reason })
                     );
                   seen_values
                 | None -> SMap.add init_value member_loc seen_values

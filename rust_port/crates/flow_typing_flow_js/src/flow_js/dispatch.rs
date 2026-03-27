@@ -7348,12 +7348,12 @@ fn __flow_impl(
             let reason = reason_of_t(key_t);
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumInvalidMemberAccess {
+                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess {
                     member_name: None,
                     suggestion: None,
                     reason: reason.dupe(),
                     enum_reason: enum_reason.dupe(),
-                },
+                }),
             )?;
             let any = any_t::error(reason.dupe());
             let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
@@ -7365,10 +7365,10 @@ fn __flow_impl(
         ) if matches!(def_t.deref(), DefTInner::EnumObjectT { .. }) => {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumModification {
+                ErrorMessage::EEnumError(EnumErrorKind::EnumModification {
                     loc: op_reason.loc().dupe(),
                     enum_reason: enum_reason.dupe(),
-                },
+                }),
             )?;
             if let Some(tout) = tout {
                 let any = any_t::error(op_reason.dupe());
@@ -7380,10 +7380,10 @@ fn __flow_impl(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumModification {
+                ErrorMessage::EEnumError(EnumErrorKind::EnumModification {
                     loc: op_reason.loc().dupe(),
                     enum_reason: enum_reason.dupe(),
-                },
+                }),
             )?;
             if let Some(tout) = tout {
                 let any = any_t::error(op_reason.dupe());
@@ -7395,10 +7395,10 @@ fn __flow_impl(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumInvalidObjectUtilType {
+                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType {
                     reason: op_reason.dupe(),
                     enum_reason: enum_reason.dupe(),
-                },
+                }),
             )?;
             let any = any_t::error(op_reason.dupe());
             rec_flow_t(cx, trace, unknown_use(), (&any, tout))?;
@@ -7408,10 +7408,10 @@ fn __flow_impl(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumInvalidObjectFunction {
+                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction {
                     reason: reason.dupe(),
                     enum_reason: enum_reason.dupe(),
-                },
+                }),
             )?;
             let any = any_t::error(reason.dupe());
             rec_flow(cx, trace, (&any, result))?;
@@ -7840,10 +7840,10 @@ fn __flow_impl(
         {
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumInvalidAbstractUse {
+                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse {
                     reason: reason.dupe(),
                     enum_reason: enum_reason.dupe(),
-                },
+                }),
             )?;
         }
         // Resolving the case tests.
@@ -7925,12 +7925,12 @@ fn __flow_impl(
             for loc in reasons.iter() {
                 flow_js_utils::add_output(
                     cx,
-                    ErrorMessage::EEnumInvalidCheck {
+                    ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck {
                         loc: loc.dupe(),
                         enum_reason: enum_reason.dupe(),
                         example_member: example_member.dupe(),
                         from_match: false,
-                    },
+                    }),
                 )?;
             }
             enum_helpers::enum_exhaustive_check_incomplete(

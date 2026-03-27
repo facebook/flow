@@ -1570,8 +1570,6 @@ let dump_error_message =
             "PropertyFunctionCallBeforeEverythingInitialized"
           | ThisBeforeEverythingInitialized -> "ThisBeforeEverythingInitialized"
         )
-    | EEnumsNotEnabled loc -> spf "EEnumsNotEnabled (%s)" (string_of_aloc loc)
-    | EEnumConstNotSupported loc -> spf "EEnumConstNotSupported (%s)" (string_of_aloc loc)
     | EIndeterminateModuleType loc -> spf "EIndeterminateModuleType (%s)" (string_of_aloc loc)
     | EBadExportPosition loc -> spf "EBadExportPosition (%s)" (string_of_aloc loc)
     | EBadExportContext (name, loc) -> spf "EBadExportContext (%s, %s)" name (string_of_aloc loc)
@@ -1822,74 +1820,104 @@ let dump_error_message =
         (format_reason_group reasons_for_operand2)
     | EComputedPropertyWithUnion reason ->
       spf "EComputedPropertyWithUnion (%s)" (dump_reason cx reason)
-    | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
-      spf
-        "EEnumInvalidMemberAccess (%s) (%s) (%s) (%s)"
-        (Base.Option.value_map ~default:"<None>" ~f:display_string_of_name member_name)
-        (Base.Option.value ~default:"<None>" suggestion)
-        (dump_reason cx reason)
-        (dump_reason cx enum_reason)
-    | EEnumModification { loc; enum_reason } ->
-      spf "EEnumModification (%s) (%s)" (string_of_aloc loc) (dump_reason cx enum_reason)
-    | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
-      spf
-        "EEnumMemberDuplicateValue (%s) (%s) (%s)"
-        (string_of_aloc loc)
-        (string_of_aloc prev_use_loc)
-        (dump_reason cx enum_reason)
-    | EEnumInvalidObjectUtilType { reason; enum_reason } ->
-      spf "EEnumInvalidObjectUtilType (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
-    | EEnumInvalidObjectFunction { reason; enum_reason } ->
-      spf "EEnumInvalidObjectFunction (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
-    | EEnumNotIterable { reason; for_in } ->
-      spf "EEnumNotIterable (%s) (%s)" (dump_reason cx reason) (spf "for_in = %B" for_in)
-    | EEnumMemberAlreadyChecked { case_test_loc; prev_check_loc; enum_reason; member_name } ->
-      spf
-        "EEnumMemberAlreadyChecked (%s) (%s) (%s) (%s)"
-        (string_of_aloc case_test_loc)
-        (string_of_aloc prev_check_loc)
-        (dump_reason cx enum_reason)
-        member_name
-    | EEnumAllMembersAlreadyChecked { loc; enum_reason } ->
-      spf "EEnumAllMembersAlreadyChecked (%s) (%s)" (string_of_aloc loc) (dump_reason cx enum_reason)
-    | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case_loc } ->
-      spf
-        "EEnumNotAllChecked (%s) (%s) (%s) (%s)"
-        (dump_reason cx reason)
-        (dump_reason cx enum_reason)
-        (String.concat ", " left_to_check)
-        (Base.Option.value_map ~default:"<None>" ~f:string_of_aloc default_case_loc)
-    | EEnumUnknownNotChecked { reason; enum_reason } ->
-      spf "EEnumUnknownNotChecked (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
-    | EEnumInvalidCheck { loc; enum_reason; example_member; from_match } ->
-      spf
-        "EEnumInvalidCheck (%s) (%s) (%s) (%s)"
-        (string_of_aloc loc)
-        (dump_reason cx enum_reason)
-        (Base.Option.value ~default:"<None>" example_member)
-        (string_of_bool from_match)
-    | EEnumMemberUsedAsType { reason; enum_reason } ->
-      spf "EEnumMemberUsedAsType (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
-    | EEnumIncompatible
-        { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax = _ }
-      ->
-      spf
-        "EEnumIncompatible { reason_lower = %s; reason_upper = %s; use_op = %s; enum_kind = %s; representation_type = %s }"
-        (dump_reason cx reason_lower)
-        (dump_reason cx reason_upper)
-        (string_of_use_op use_op)
-        (match enum_kind with
-        | ConcreteEnumKind -> "concrete"
-        | AbstractEnumKind -> "abstract")
-        (Base.Option.value ~default:"<None>" representation_type)
-    | EEnumInvalidAbstractUse { reason; enum_reason } ->
-      spf "EEnumInvalidAbstractUse (%s) (%s)" (dump_reason cx reason) (dump_reason cx enum_reason)
-    | EEnumInvalidMemberName { loc; enum_reason; member_name } ->
-      spf
-        "EEnumInvalidMemberName (%s) (%s) (%s)"
-        (string_of_aloc loc)
-        (dump_reason cx enum_reason)
-        member_name
+    | EEnumError enum_error -> begin
+      match enum_error with
+      | EnumsNotEnabled loc -> spf "EEnumError (EnumsNotEnabled (%s))" (string_of_aloc loc)
+      | EnumConstNotSupported loc ->
+        spf "EEnumError (EnumConstNotSupported (%s))" (string_of_aloc loc)
+      | EnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
+        spf
+          "EEnumError (EnumInvalidMemberAccess (%s) (%s) (%s) (%s))"
+          (Base.Option.value_map ~default:"<None>" ~f:display_string_of_name member_name)
+          (Base.Option.value ~default:"<None>" suggestion)
+          (dump_reason cx reason)
+          (dump_reason cx enum_reason)
+      | EnumModification { loc; enum_reason } ->
+        spf
+          "EEnumError (EnumModification (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
+      | EnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
+        spf
+          "EEnumError (EnumMemberDuplicateValue (%s) (%s) (%s))"
+          (string_of_aloc loc)
+          (string_of_aloc prev_use_loc)
+          (dump_reason cx enum_reason)
+      | EnumInvalidObjectUtilType { reason; enum_reason } ->
+        spf
+          "EEnumError (EnumInvalidObjectUtilType (%s) (%s))"
+          (dump_reason cx reason)
+          (dump_reason cx enum_reason)
+      | EnumInvalidObjectFunction { reason; enum_reason } ->
+        spf
+          "EEnumError (EnumInvalidObjectFunction (%s) (%s))"
+          (dump_reason cx reason)
+          (dump_reason cx enum_reason)
+      | EnumNotIterable { reason; for_in } ->
+        spf
+          "EEnumError (EnumNotIterable (%s) (%s))"
+          (dump_reason cx reason)
+          (spf "for_in = %B" for_in)
+      | EnumMemberAlreadyChecked { case_test_loc; prev_check_loc; enum_reason; member_name } ->
+        spf
+          "EEnumError (EnumMemberAlreadyChecked (%s) (%s) (%s) (%s))"
+          (string_of_aloc case_test_loc)
+          (string_of_aloc prev_check_loc)
+          (dump_reason cx enum_reason)
+          member_name
+      | EnumAllMembersAlreadyChecked { loc; enum_reason } ->
+        spf
+          "EEnumError (EnumAllMembersAlreadyChecked (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
+      | EnumNotAllChecked { reason; enum_reason; left_to_check; default_case_loc } ->
+        spf
+          "EEnumError (EnumNotAllChecked (%s) (%s) (%s) (%s))"
+          (dump_reason cx reason)
+          (dump_reason cx enum_reason)
+          (String.concat ", " left_to_check)
+          (Base.Option.value_map ~default:"<None>" ~f:string_of_aloc default_case_loc)
+      | EnumUnknownNotChecked { reason; enum_reason } ->
+        spf
+          "EEnumError (EnumUnknownNotChecked (%s) (%s))"
+          (dump_reason cx reason)
+          (dump_reason cx enum_reason)
+      | EnumInvalidCheck { loc; enum_reason; example_member; from_match } ->
+        spf
+          "EEnumError (EnumInvalidCheck (%s) (%s) (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
+          (Base.Option.value ~default:"<None>" example_member)
+          (string_of_bool from_match)
+      | EnumMemberUsedAsType { reason; enum_reason } ->
+        spf
+          "EEnumError (EnumMemberUsedAsType (%s) (%s))"
+          (dump_reason cx reason)
+          (dump_reason cx enum_reason)
+      | EnumIncompatible
+          { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax = _ }
+        ->
+        spf
+          "EEnumError (EnumIncompatible { reason_lower = %s; reason_upper = %s; use_op = %s; enum_kind = %s; representation_type = %s })"
+          (dump_reason cx reason_lower)
+          (dump_reason cx reason_upper)
+          (string_of_use_op use_op)
+          (match enum_kind with
+          | ConcreteEnumKind -> "concrete"
+          | AbstractEnumKind -> "abstract")
+          (Base.Option.value ~default:"<None>" representation_type)
+      | EnumInvalidAbstractUse { reason; enum_reason } ->
+        spf
+          "EEnumError (EnumInvalidAbstractUse (%s) (%s))"
+          (dump_reason cx reason)
+          (dump_reason cx enum_reason)
+      | EnumInvalidMemberName { loc; enum_reason; member_name } ->
+        spf
+          "EEnumError (EnumInvalidMemberName (%s) (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
+          member_name
+    end
     | EAssignConstLikeBinding { loc; definition; binding_kind } ->
       spf
         "EAssignConstLikeBinding (%s) (%s) (%s)"

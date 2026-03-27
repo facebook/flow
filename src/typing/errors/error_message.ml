@@ -14,6 +14,88 @@ exception EDebugThrow of ALoc.t
 
 exception ECheckTimeout of float * string
 
+type enum_kind =
+  | ConcreteEnumKind
+  | AbstractEnumKind
+
+type 'loc enum_error_kind =
+  | EnumsNotEnabled of 'loc
+  | EnumConstNotSupported of 'loc
+  | EnumInvalidMemberAccess of {
+      member_name: name option;
+      suggestion: string option;
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EnumModification of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EnumMemberDuplicateValue of {
+      loc: 'loc;
+      prev_use_loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EnumInvalidObjectUtilType of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EnumInvalidObjectFunction of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EnumNotIterable of {
+      reason: 'loc virtual_reason;
+      for_in: bool;
+    }
+  | EnumMemberAlreadyChecked of {
+      case_test_loc: 'loc;
+      prev_check_loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+      member_name: string;
+    }
+  | EnumAllMembersAlreadyChecked of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EnumNotAllChecked of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+      left_to_check: string list;
+      default_case_loc: 'loc option;
+    }
+  | EnumUnknownNotChecked of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EnumInvalidCheck of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+      example_member: string option;
+      from_match: bool;
+    }
+  | EnumMemberUsedAsType of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EnumIncompatible of {
+      use_op: 'loc virtual_use_op;
+      reason_lower: 'loc virtual_reason;
+      reason_upper: 'loc virtual_reason;
+      enum_kind: enum_kind;
+      representation_type: string option;
+      casting_syntax: Options.CastingSyntax.t;
+    }
+  | EnumInvalidAbstractUse of {
+      reason: 'loc virtual_reason;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EnumInvalidMemberName of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+      member_name: string;
+    }
+
 type t = ALoc.t t'
 
 and 'loc t' =
@@ -329,8 +411,6 @@ and 'loc t' =
   | EBindingError of binding_error * 'loc * name * ALoc.t
   | ERecursionLimit of ('loc virtual_reason * 'loc virtual_reason)
   | EUninitializedInstanceProperty of 'loc * Lints.property_assignment_kind
-  | EEnumsNotEnabled of 'loc
-  | EEnumConstNotSupported of 'loc
   | EIndeterminateModuleType of 'loc
   | EBadExportPosition of 'loc
   | EBadExportContext of string * 'loc
@@ -479,82 +559,7 @@ and 'loc t' =
       reasons_for_operand2: 'loc exponential_spread_reason_group;
     }
   | EComputedPropertyWithUnion of 'loc virtual_reason
-  (* enums *)
-  | EEnumInvalidMemberAccess of {
-      member_name: name option;
-      suggestion: string option;
-      reason: 'loc virtual_reason;
-      enum_reason: 'loc virtual_reason;
-    }
-  | EEnumModification of {
-      loc: 'loc;
-      enum_reason: 'loc virtual_reason;
-    }
-  | EEnumMemberDuplicateValue of {
-      loc: 'loc;
-      prev_use_loc: 'loc;
-      enum_reason: 'loc virtual_reason;
-    }
-  | EEnumInvalidObjectUtilType of {
-      reason: 'loc virtual_reason;
-      enum_reason: 'loc virtual_reason;
-    }
-  | EEnumInvalidObjectFunction of {
-      reason: 'loc virtual_reason;
-      enum_reason: 'loc virtual_reason;
-    }
-  | EEnumNotIterable of {
-      reason: 'loc virtual_reason;
-      for_in: bool;
-    }
-  | EEnumMemberAlreadyChecked of {
-      case_test_loc: 'loc;
-      prev_check_loc: 'loc;
-      enum_reason: 'loc virtual_reason;
-      member_name: string;
-    }
-  | EEnumAllMembersAlreadyChecked of {
-      loc: 'loc;
-      enum_reason: 'loc virtual_reason;
-    }
-  | EEnumNotAllChecked of {
-      reason: 'loc virtual_reason;
-      enum_reason: 'loc virtual_reason;
-      left_to_check: string list;
-      default_case_loc: 'loc option;
-    }
-  | EEnumUnknownNotChecked of {
-      reason: 'loc virtual_reason;
-      enum_reason: 'loc virtual_reason;
-    }
-  | EEnumInvalidCheck of {
-      loc: 'loc;
-      enum_reason: 'loc virtual_reason;
-      example_member: string option;
-      from_match: bool;
-    }
-  | EEnumMemberUsedAsType of {
-      reason: 'loc virtual_reason;
-      enum_reason: 'loc virtual_reason;
-    }
-  | EEnumIncompatible of {
-      use_op: 'loc virtual_use_op;
-      reason_lower: 'loc virtual_reason;
-      reason_upper: 'loc virtual_reason;
-      enum_kind: enum_kind;
-      representation_type: string option;
-      casting_syntax: Options.CastingSyntax.t;
-    }
-  | EEnumInvalidAbstractUse of {
-      reason: 'loc virtual_reason;
-      enum_reason: 'loc virtual_reason;
-    }
-  | EEnumInvalidMemberName of {
-      loc: 'loc;
-      enum_reason: 'loc virtual_reason;
-      member_name: string;
-    }
-  (* end enum error messages *)
+  | EEnumError of 'loc enum_error_kind
   | EAssignConstLikeBinding of {
       loc: 'loc;
       definition: 'loc virtual_reason;
@@ -808,10 +813,6 @@ and 'loc t' =
   (* As the name suggest, don't use this for production purposes, but feel free to use it to
    * quickly test out some ideas. *)
   | ETemporaryHardcodedErrorForPrototyping of 'loc virtual_reason * string
-
-and enum_kind =
-  | ConcreteEnumKind
-  | AbstractEnumKind
 
 and 'loc null_write = {
   null_loc: 'loc;
@@ -1501,8 +1502,6 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
   | EBindingError (b, loc, s, scope) -> EBindingError (b, f loc, s, scope)
   | ERecursionLimit (r1, r2) -> ERecursionLimit (map_reason r1, map_reason r2)
   | EUninitializedInstanceProperty (loc, e) -> EUninitializedInstanceProperty (f loc, e)
-  | EEnumsNotEnabled loc -> EEnumsNotEnabled (f loc)
-  | EEnumConstNotSupported loc -> EEnumConstNotSupported (f loc)
   | EIndeterminateModuleType loc -> EIndeterminateModuleType (f loc)
   | EBadExportPosition loc -> EBadExportPosition (f loc)
   | EBadExportContext (s, loc) -> EBadExportContext (s, f loc)
@@ -1620,59 +1619,71 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
           map_loc_of_exponential_spread_reason_group map_reason reasons_for_operand2;
       }
   | EComputedPropertyWithUnion reason -> EComputedPropertyWithUnion (map_reason reason)
-  | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
-    EEnumInvalidMemberAccess
-      { member_name; suggestion; reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumModification { loc; enum_reason } ->
-    EEnumModification { loc = f loc; enum_reason = map_reason enum_reason }
-  | EEnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
-    EEnumMemberDuplicateValue
-      { loc = f loc; prev_use_loc = f prev_use_loc; enum_reason = map_reason enum_reason }
-  | EEnumInvalidObjectUtilType { reason; enum_reason } ->
-    EEnumInvalidObjectUtilType { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumInvalidObjectFunction { reason; enum_reason } ->
-    EEnumInvalidObjectFunction { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumNotIterable { reason; for_in } -> EEnumNotIterable { reason = map_reason reason; for_in }
-  | EEnumMemberAlreadyChecked { case_test_loc; prev_check_loc; enum_reason; member_name } ->
-    EEnumMemberAlreadyChecked
-      {
-        case_test_loc = f case_test_loc;
-        prev_check_loc = f prev_check_loc;
-        enum_reason = map_reason enum_reason;
-        member_name;
-      }
-  | EEnumAllMembersAlreadyChecked { loc; enum_reason } ->
-    EEnumAllMembersAlreadyChecked { loc = f loc; enum_reason = map_reason enum_reason }
-  | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case_loc } ->
-    EEnumNotAllChecked
-      {
-        reason = map_reason reason;
-        enum_reason = map_reason enum_reason;
-        left_to_check;
-        default_case_loc = Option.map f default_case_loc;
-      }
-  | EEnumUnknownNotChecked { reason; enum_reason } ->
-    EEnumUnknownNotChecked { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumInvalidCheck { loc; enum_reason; example_member; from_match } ->
-    EEnumInvalidCheck
-      { loc = f loc; enum_reason = map_reason enum_reason; example_member; from_match }
-  | EEnumMemberUsedAsType { reason; enum_reason } ->
-    EEnumMemberUsedAsType { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumIncompatible
-      { use_op; reason_lower; reason_upper; enum_kind; representation_type; casting_syntax } ->
-    EEnumIncompatible
-      {
-        use_op = map_use_op use_op;
-        reason_lower = map_reason reason_lower;
-        reason_upper = map_reason reason_upper;
-        enum_kind;
-        representation_type;
-        casting_syntax;
-      }
-  | EEnumInvalidAbstractUse { reason; enum_reason } ->
-    EEnumInvalidAbstractUse { reason = map_reason reason; enum_reason = map_reason enum_reason }
-  | EEnumInvalidMemberName { loc; enum_reason; member_name } ->
-    EEnumInvalidMemberName { loc = f loc; enum_reason = map_reason enum_reason; member_name }
+  | EEnumError enum_error ->
+    EEnumError
+      (match enum_error with
+      | EnumsNotEnabled loc -> EnumsNotEnabled (f loc)
+      | EnumConstNotSupported loc -> EnumConstNotSupported (f loc)
+      | EnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
+        EnumInvalidMemberAccess
+          {
+            member_name;
+            suggestion;
+            reason = map_reason reason;
+            enum_reason = map_reason enum_reason;
+          }
+      | EnumModification { loc; enum_reason } ->
+        EnumModification { loc = f loc; enum_reason = map_reason enum_reason }
+      | EnumMemberDuplicateValue { loc; prev_use_loc; enum_reason } ->
+        EnumMemberDuplicateValue
+          { loc = f loc; prev_use_loc = f prev_use_loc; enum_reason = map_reason enum_reason }
+      | EnumInvalidObjectUtilType { reason; enum_reason } ->
+        EnumInvalidObjectUtilType
+          { reason = map_reason reason; enum_reason = map_reason enum_reason }
+      | EnumInvalidObjectFunction { reason; enum_reason } ->
+        EnumInvalidObjectFunction
+          { reason = map_reason reason; enum_reason = map_reason enum_reason }
+      | EnumNotIterable { reason; for_in } -> EnumNotIterable { reason = map_reason reason; for_in }
+      | EnumMemberAlreadyChecked { case_test_loc; prev_check_loc; enum_reason; member_name } ->
+        EnumMemberAlreadyChecked
+          {
+            case_test_loc = f case_test_loc;
+            prev_check_loc = f prev_check_loc;
+            enum_reason = map_reason enum_reason;
+            member_name;
+          }
+      | EnumAllMembersAlreadyChecked { loc; enum_reason } ->
+        EnumAllMembersAlreadyChecked { loc = f loc; enum_reason = map_reason enum_reason }
+      | EnumNotAllChecked { reason; enum_reason; left_to_check; default_case_loc } ->
+        EnumNotAllChecked
+          {
+            reason = map_reason reason;
+            enum_reason = map_reason enum_reason;
+            left_to_check;
+            default_case_loc = Option.map f default_case_loc;
+          }
+      | EnumUnknownNotChecked { reason; enum_reason } ->
+        EnumUnknownNotChecked { reason = map_reason reason; enum_reason = map_reason enum_reason }
+      | EnumInvalidCheck { loc; enum_reason; example_member; from_match } ->
+        EnumInvalidCheck
+          { loc = f loc; enum_reason = map_reason enum_reason; example_member; from_match }
+      | EnumMemberUsedAsType { reason; enum_reason } ->
+        EnumMemberUsedAsType { reason = map_reason reason; enum_reason = map_reason enum_reason }
+      | EnumIncompatible
+          { use_op; reason_lower; reason_upper; enum_kind; representation_type; casting_syntax } ->
+        EnumIncompatible
+          {
+            use_op = map_use_op use_op;
+            reason_lower = map_reason reason_lower;
+            reason_upper = map_reason reason_upper;
+            enum_kind;
+            representation_type;
+            casting_syntax;
+          }
+      | EnumInvalidAbstractUse { reason; enum_reason } ->
+        EnumInvalidAbstractUse { reason = map_reason reason; enum_reason = map_reason enum_reason }
+      | EnumInvalidMemberName { loc; enum_reason; member_name } ->
+        EnumInvalidMemberName { loc = f loc; enum_reason = map_reason enum_reason; member_name })
   | EAssignConstLikeBinding { loc; definition; binding_kind } ->
     EAssignConstLikeBinding { loc = f loc; definition = map_reason definition; binding_kind }
   | EMalformedCode loc -> EMalformedCode (f loc)
@@ -2126,7 +2137,7 @@ let util_use_op_of_msg nope util = function
   | EInvalidObjectKit { use_op; _ } -> util use_op
   | EIncompatibleWithUseOp { use_op; _ } -> util use_op
   | EInvariantSubtypingWithUseOp { use_op; _ } -> util use_op
-  | EEnumIncompatible { use_op; _ } -> util use_op
+  | EEnumError (EnumIncompatible { use_op; _ }) -> util use_op
   | ENotAReactComponent { use_op; _ } -> util use_op
   | EFunctionCallExtraArg (_, _, _, use_op) -> util use_op
   | EPrimitiveAsInterface { use_op; _ } -> util use_op
@@ -2183,8 +2194,6 @@ let util_use_op_of_msg nope util = function
   | EBindingError (_, _, _, _)
   | ERecursionLimit (_, _)
   | EUninitializedInstanceProperty _
-  | EEnumsNotEnabled _
-  | EEnumConstNotSupported _
   | EIndeterminateModuleType _
   | EBadExportPosition _
   | EBadExportContext _
@@ -2240,20 +2249,7 @@ let util_use_op_of_msg nope util = function
   | ESignatureVerification _
   | EExponentialSpread _
   | EComputedPropertyWithUnion _
-  | EEnumInvalidMemberAccess _
-  | EEnumModification _
-  | EEnumMemberDuplicateValue _
-  | EEnumInvalidObjectUtilType _
-  | EEnumInvalidObjectFunction _
-  | EEnumNotIterable _
-  | EEnumMemberAlreadyChecked _
-  | EEnumAllMembersAlreadyChecked _
-  | EEnumNotAllChecked _
-  | EEnumUnknownNotChecked _
-  | EEnumInvalidAbstractUse _
-  | EEnumInvalidMemberName _
-  | EEnumInvalidCheck _
-  | EEnumMemberUsedAsType _
+  | EEnumError _
   | EAssignConstLikeBinding _
   | EMalformedCode _
   | EClassToObject _
@@ -2384,20 +2380,30 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EComputedPropertyWithUnion reason
   | ETypeParamConstInvalidPosition reason ->
     Some (loc_of_reason reason)
-  | EObjectComputedPropertyPotentialOverwrite { key_loc = loc; overwritten_locs = _ }
-  | EEnumAllMembersAlreadyChecked { loc; _ }
-  | EEnumMemberAlreadyChecked { case_test_loc = loc; _ }
-  | EEnumInvalidCheck { loc; _ }
-  | EEnumInvalidMemberName { loc; _ } ->
-    Some loc
-  | EEnumNotAllChecked { reason; _ }
-  | EEnumUnknownNotChecked { reason; _ }
-  | EEnumInvalidAbstractUse { reason; _ }
-  | EEnumMemberUsedAsType { reason; _ }
-  | EEnumInvalidMemberAccess { reason; _ }
-  | EEnumInvalidObjectUtilType { reason; _ }
-  | EEnumInvalidObjectFunction { reason; _ }
-  | EEnumNotIterable { reason; _ }
+  | EObjectComputedPropertyPotentialOverwrite { key_loc = loc; overwritten_locs = _ } -> Some loc
+  | EEnumError enum_error -> begin
+    match enum_error with
+    | EnumsNotEnabled loc
+    | EnumConstNotSupported loc ->
+      Some loc
+    | EnumAllMembersAlreadyChecked { loc; _ }
+    | EnumMemberAlreadyChecked { case_test_loc = loc; _ }
+    | EnumInvalidCheck { loc; _ }
+    | EnumInvalidMemberName { loc; _ }
+    | EnumModification { loc; _ }
+    | EnumMemberDuplicateValue { loc; _ } ->
+      Some loc
+    | EnumNotAllChecked { reason; _ }
+    | EnumUnknownNotChecked { reason; _ }
+    | EnumInvalidAbstractUse { reason; _ }
+    | EnumMemberUsedAsType { reason; _ }
+    | EnumInvalidMemberAccess { reason; _ }
+    | EnumInvalidObjectUtilType { reason; _ }
+    | EnumInvalidObjectFunction { reason; _ }
+    | EnumNotIterable { reason; _ } ->
+      Some (loc_of_reason reason)
+    | EnumIncompatible _ -> None
+  end
   | ERecursiveDefinition { reason; _ }
   | EDefinitionCycle ((reason, _, _), _)
   | EInvalidConstructor reason
@@ -2483,8 +2489,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | EUnsupportedVarianceAnnotation (loc, _)
   | EExportRenamedDefault { loc; _ }
   | EIndeterminateModuleType loc
-  | EEnumsNotEnabled loc
-  | EEnumConstNotSupported loc
   | EUninitializedInstanceProperty (loc, _)
   | EUseArrayLiteral loc
   | EUnsupportedSyntax (loc, _)
@@ -2551,8 +2555,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
     )
   | EDuplicateModuleProvider { conflict; _ } -> Some conflict
   | EBindingError (_, loc, _, _) -> Some loc
-  | EEnumModification { loc; _ } -> Some loc
-  | EEnumMemberDuplicateValue { loc; _ } -> Some loc
   | EBuiltinNameLookupFailed { loc; _ } -> Some loc
   | EBuiltinModuleLookupFailed { loc; _ } -> Some loc
   | EExpectedModuleLookupFailed { loc; _ } -> Some loc
@@ -2593,7 +2595,6 @@ let loc_of_msg : 'loc t' -> 'loc option = function
   | ENotAReactComponent _
   | EIncompatibleWithUseOp _
   | EInvariantSubtypingWithUseOp _
-  | EEnumIncompatible _
   | EIncompatibleDefs _
   | EInvalidObjectKit _
   | EIncompatibleWithExact _
@@ -2655,7 +2656,7 @@ let kind_of_msg =
     | EUnnecessaryInvariant _ -> LintError Lints.UnnecessaryInvariant
     | EImplicitInexactObject _ -> LintError Lints.ImplicitInexactObject
     | EAmbiguousObjectType _ -> LintError Lints.AmbiguousObjectType
-    | EEnumNotAllChecked { default_case_loc = Some _; _ } ->
+    | EEnumError (EnumNotAllChecked { default_case_loc = Some _; _ }) ->
       LintError Lints.RequireExplicitEnumSwitchCases
     | EMatchNonExplicitEnumCheck _ -> LintError Lints.RequireExplicitEnumChecks
     | EUninitializedInstanceProperty _ -> LintError Lints.UninitializedInstanceProperty
@@ -2676,8 +2677,7 @@ let kind_of_msg =
     | EBadExportPosition _
     | EBadExportContext _ ->
       InferWarning ExportKind
-    | EEnumsNotEnabled _
-    | EEnumConstNotSupported _
+    | EEnumError (EnumsNotEnabled _ | EnumConstNotSupported _)
     | EIndeterminateModuleType _
     | EUnreachable _
     | EInvalidTypeof _ ->
@@ -3285,8 +3285,6 @@ let friendly_message_of_msg = function
     Normal msg
   | ERecursionLimit _ -> Normal MessageRecursionLimitExceeded
   | EUninitializedInstanceProperty (_loc, err) -> Normal (MessageUninitializedInstanceProperty err)
-  | EEnumsNotEnabled _ -> Normal MessageEnumsNotEnabled
-  | EEnumConstNotSupported _ -> Normal MessageEnumConstNotSupported
   | EIndeterminateModuleType _ -> Normal MessageCannotDetermineModuleType
   | EBadExportPosition _ -> Normal MessageNonToplevelExport
   | EBadExportContext (name, _) -> Normal (MessageCannotUseExportInNonLegalToplevelContext name)
@@ -3524,53 +3522,58 @@ let friendly_message_of_msg = function
   | EExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
     Normal (MessageExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 })
   | EComputedPropertyWithUnion reason -> Normal (MessageCannotUseComputedPropertyWithUnion reason)
-  | EEnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
-    Normal
-      (MessageCannotAccessEnumMember
-         { member_name; suggestion; description = desc_of_reason reason; enum_reason }
-      )
-  | EEnumModification { enum_reason; _ } -> Normal (MessageCannotChangeEnumMember enum_reason)
-  | EEnumMemberDuplicateValue { prev_use_loc; enum_reason; _ } ->
-    Normal (MessageDuplicateEnumMember { prev_use_loc; enum_reason })
-  | EEnumInvalidObjectUtilType { reason; enum_reason } ->
-    Normal
-      (MessageCannotInstantiateObjectUtilTypeWithEnum
-         { description = desc_of_reason reason; enum_reason }
-      )
-  | EEnumInvalidObjectFunction { reason; enum_reason } ->
-    Normal (MessageCannotCallObjectFunctionOnEnum { reason; enum_reason })
-  | EEnumNotIterable { reason; for_in } -> Normal (MessageCannotIterateEnum { reason; for_in })
-  | EEnumMemberAlreadyChecked { case_test_loc = _; prev_check_loc; enum_reason; member_name } ->
-    Normal
-      (MessageAlreadyExhaustivelyCheckOneEnumMember { prev_check_loc; enum_reason; member_name })
-  | EEnumAllMembersAlreadyChecked { loc = _; enum_reason } ->
-    Normal (MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_reason })
-  | EEnumNotAllChecked { reason; enum_reason; left_to_check; default_case_loc } ->
-    Normal
-      (MessageIncompleteExhausiveCheckEnum
-         { description = desc_of_reason reason; enum_reason; left_to_check; default_case_loc }
-      )
-  | EEnumUnknownNotChecked { reason; enum_reason } ->
-    Normal
-      (MessageCannotExhaustivelyCheckEnumWithUnknowns
-         { description = desc_of_reason reason; enum_reason }
-      )
-  | EEnumInvalidCheck { loc = _; enum_reason; example_member; from_match } ->
-    Normal (MessageInvalidEnumMemberCheck { enum_reason; example_member; from_match })
-  | EEnumMemberUsedAsType { reason; enum_reason } ->
-    Normal
-      (MessageCannotUseEnumMemberUsedAsType { description = desc_of_reason reason; enum_reason })
-  | EEnumIncompatible
-      { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax } ->
-    IncompatibleEnum
-      { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax }
-  | EEnumInvalidAbstractUse { reason; enum_reason } ->
-    Normal
-      (MessageCannotExhaustivelyCheckAbstractEnums
-         { description = desc_of_reason reason; enum_reason }
-      )
-  | EEnumInvalidMemberName { enum_reason; member_name; _ } ->
-    Normal (MessageInvalidEnumMemberName { member_name; enum_reason })
+  | EEnumError enum_error -> begin
+    match enum_error with
+    | EnumsNotEnabled _ -> Normal MessageEnumsNotEnabled
+    | EnumConstNotSupported _ -> Normal MessageEnumConstNotSupported
+    | EnumInvalidMemberAccess { member_name; suggestion; reason; enum_reason } ->
+      Normal
+        (MessageCannotAccessEnumMember
+           { member_name; suggestion; description = desc_of_reason reason; enum_reason }
+        )
+    | EnumModification { enum_reason; _ } -> Normal (MessageCannotChangeEnumMember enum_reason)
+    | EnumMemberDuplicateValue { prev_use_loc; enum_reason; _ } ->
+      Normal (MessageDuplicateEnumMember { prev_use_loc; enum_reason })
+    | EnumInvalidObjectUtilType { reason; enum_reason } ->
+      Normal
+        (MessageCannotInstantiateObjectUtilTypeWithEnum
+           { description = desc_of_reason reason; enum_reason }
+        )
+    | EnumInvalidObjectFunction { reason; enum_reason } ->
+      Normal (MessageCannotCallObjectFunctionOnEnum { reason; enum_reason })
+    | EnumNotIterable { reason; for_in } -> Normal (MessageCannotIterateEnum { reason; for_in })
+    | EnumMemberAlreadyChecked { case_test_loc = _; prev_check_loc; enum_reason; member_name } ->
+      Normal
+        (MessageAlreadyExhaustivelyCheckOneEnumMember { prev_check_loc; enum_reason; member_name })
+    | EnumAllMembersAlreadyChecked { loc = _; enum_reason } ->
+      Normal (MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_reason })
+    | EnumNotAllChecked { reason; enum_reason; left_to_check; default_case_loc } ->
+      Normal
+        (MessageIncompleteExhausiveCheckEnum
+           { description = desc_of_reason reason; enum_reason; left_to_check; default_case_loc }
+        )
+    | EnumUnknownNotChecked { reason; enum_reason } ->
+      Normal
+        (MessageCannotExhaustivelyCheckEnumWithUnknowns
+           { description = desc_of_reason reason; enum_reason }
+        )
+    | EnumInvalidCheck { loc = _; enum_reason; example_member; from_match } ->
+      Normal (MessageInvalidEnumMemberCheck { enum_reason; example_member; from_match })
+    | EnumMemberUsedAsType { reason; enum_reason } ->
+      Normal
+        (MessageCannotUseEnumMemberUsedAsType { description = desc_of_reason reason; enum_reason })
+    | EnumIncompatible
+        { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax } ->
+      IncompatibleEnum
+        { reason_lower; reason_upper; use_op; enum_kind; representation_type; casting_syntax }
+    | EnumInvalidAbstractUse { reason; enum_reason } ->
+      Normal
+        (MessageCannotExhaustivelyCheckAbstractEnums
+           { description = desc_of_reason reason; enum_reason }
+        )
+    | EnumInvalidMemberName { enum_reason; member_name; _ } ->
+      Normal (MessageInvalidEnumMemberName { member_name; enum_reason })
+  end
   | EAssignConstLikeBinding { definition; binding_kind; _ } ->
     Normal (MessageCannotReassignConstantLikeBinding { definition; binding_kind })
   | EMalformedCode _ -> Normal MessageSuppressionMalformedCode
@@ -3829,7 +3832,7 @@ let defered_in_speculation = function
   | EUnnecessaryDeclareTypeOnlyExport _
   | EImplicitInexactObject _
   | EAmbiguousObjectType _
-  | EEnumNotAllChecked { default_case_loc = Some _; _ }
+  | EEnumError (EnumNotAllChecked { default_case_loc = Some _; _ })
   | EMatchNonExplicitEnumCheck _
   | EUninitializedInstanceProperty _
   | ETrivialRecursiveDefinition _
@@ -3959,31 +3962,36 @@ let error_code_of_message err : error_code option =
     | DisallowedSupportsPlatform -> Some InvalidSupportsPlatformDecl
   end
   | EDuplicateModuleProvider _ -> Some DuplicateModule
-  | EEnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
-  | EEnumInvalidAbstractUse _ -> Some InvalidExhaustiveCheck
-  | EEnumInvalidMemberName _ -> Some InvalidEnumMemberName
-  | EEnumInvalidCheck { from_match; _ } ->
-    if from_match then
-      Some MatchInvalidPattern
-    else
-      Some InvalidExhaustiveCheck
-  | EEnumInvalidMemberAccess _ -> Some InvalidEnumAccess
-  | EEnumInvalidObjectUtilType _ -> Some NotAnObject
-  | EEnumInvalidObjectFunction _ -> Some NotAnObject
-  | EEnumNotIterable _ -> Some NotIterable
-  | EEnumMemberAlreadyChecked _ -> Some InvalidExhaustiveCheck
-  | EEnumMemberDuplicateValue _ -> Some DuplicateEnumInit
-  | EEnumMemberUsedAsType _ -> Some EnumValueAsType
-  | EEnumModification _ -> Some CannotWriteEnum
-  | EEnumNotAllChecked { default_case_loc = None; _ } -> Some InvalidExhaustiveCheck
-  | EEnumNotAllChecked { default_case_loc = Some _; _ } -> Some RequireExplicitEnumSwitchCases
-  | EEnumUnknownNotChecked _ -> Some InvalidExhaustiveCheck
+  | EEnumError enum_error -> begin
+    match enum_error with
+    | EnumsNotEnabled _
+    | EnumConstNotSupported _ ->
+      Some IllegalEnum
+    | EnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
+    | EnumInvalidAbstractUse _ -> Some InvalidExhaustiveCheck
+    | EnumInvalidMemberName _ -> Some InvalidEnumMemberName
+    | EnumInvalidCheck { from_match; _ } ->
+      if from_match then
+        Some MatchInvalidPattern
+      else
+        Some InvalidExhaustiveCheck
+    | EnumInvalidMemberAccess _ -> Some InvalidEnumAccess
+    | EnumInvalidObjectUtilType _ -> Some NotAnObject
+    | EnumInvalidObjectFunction _ -> Some NotAnObject
+    | EnumNotIterable _ -> Some NotIterable
+    | EnumMemberAlreadyChecked _ -> Some InvalidExhaustiveCheck
+    | EnumMemberDuplicateValue _ -> Some DuplicateEnumInit
+    | EnumMemberUsedAsType _ -> Some EnumValueAsType
+    | EnumModification _ -> Some CannotWriteEnum
+    | EnumNotAllChecked { default_case_loc = None; _ } -> Some InvalidExhaustiveCheck
+    | EnumNotAllChecked { default_case_loc = Some _; _ } -> Some RequireExplicitEnumSwitchCases
+    | EnumUnknownNotChecked _ -> Some InvalidExhaustiveCheck
+    | EnumIncompatible { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+  end
   | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedStringLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedBigIntLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
-  | EEnumsNotEnabled _ -> Some IllegalEnum
-  | EEnumConstNotSupported _ -> Some IllegalEnum
   | EExponentialSpread _ -> Some ExponentialSpread
   | EExportsAnnot _ -> Some InvalidExportsTypeArg
   | EExportValueAsType (_, _) -> Some ExportValueAsType
@@ -4018,7 +4026,6 @@ let error_code_of_message err : error_code option =
   | EIncompatibleWithExact (_, _, UnexpectedInexact) -> Some IncompatibleExact
   | EIncompatibleWithExact (_, _, UnexpectedIndexer) -> Some IncompatibleIndexer
   | EFunctionIncompatibleWithIndexer _ -> Some IncompatibleFunctionIndexer
-  | EEnumIncompatible { use_op; _ }
   | EIncompatibleWithUseOp { use_op; _ }
   | EInvariantSubtypingWithUseOp { use_op; _ } ->
     error_code_of_use_op use_op ~default:IncompatibleType

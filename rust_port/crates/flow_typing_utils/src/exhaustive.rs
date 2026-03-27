@@ -25,6 +25,7 @@ use flow_parser::ast;
 use flow_parser::loc::Loc;
 use flow_typing_context::Context;
 use flow_typing_errors::error_message::EMatchNotExhaustiveData;
+use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_flow_common::concrete_type_eq;
 use flow_typing_flow_js::flow_js;
@@ -295,12 +296,12 @@ pub mod pattern_union_builder {
                         if raise_errors {
                             flow_js::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EEnumInvalidCheck {
+                                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck {
                                     loc: loc.dupe(),
                                     enum_reason: reason_of_t(t).dupe(),
                                     example_member,
                                     from_match: true,
-                                },
+                                }),
                             );
                         }
                         return None;

@@ -1022,10 +1022,10 @@ fn elab_t_concrete(cx: &Context, seen: FlowOrdSet<i32>, t: Type, op: Op) -> Type
                     let enum_reason = def_reason.dupe();
                     flow_js_utils::add_output_non_speculating(
                         cx,
-                        flow_typing_errors::error_message::ErrorMessage::EEnumMemberUsedAsType {
+                        flow_typing_errors::error_message::ErrorMessage::EEnumError(flow_typing_errors::error_message::EnumErrorKind::EnumMemberUsedAsType {
                             reason: reason.dupe(),
                             enum_reason,
-                        },
+                        }),
                     );
                     any_t::error(reason.dupe())
                 }
@@ -2478,12 +2478,14 @@ fn elab_t_concrete(cx: &Context, seen: FlowOrdSet<i32>, t: Type, op: Op) -> Type
             let reason = type_util::reason_of_t(&elem_type);
             flow_js_utils::add_output_non_speculating(
                 cx,
-                flow_typing_errors::error_message::ErrorMessage::EEnumInvalidMemberAccess {
-                    member_name: None,
-                    suggestion: None,
-                    reason: reason.dupe(),
-                    enum_reason: enum_reason.dupe(),
-                },
+                flow_typing_errors::error_message::ErrorMessage::EEnumError(
+                    flow_typing_errors::error_message::EnumErrorKind::EnumInvalidMemberAccess {
+                        member_name: None,
+                        suggestion: None,
+                        reason: reason.dupe(),
+                        enum_reason: enum_reason.dupe(),
+                    },
+                ),
             );
             any_t::error(reason_op.dupe())
         }

@@ -38,6 +38,7 @@ use flow_typing_context::Context;
 use flow_typing_context::SubstCacheErr;
 use flow_typing_context::type_app_expansion;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
+use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::UpperKind;

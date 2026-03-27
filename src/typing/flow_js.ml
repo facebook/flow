@@ -4325,25 +4325,34 @@ struct
           let reason = reason_of_t key_t in
           add_output
             cx
-            (Error_message.EEnumInvalidMemberAccess
-               { member_name = None; suggestion = None; reason; enum_reason }
+            Error_message.(
+              EEnumError
+                (EnumInvalidMemberAccess
+                   { member_name = None; suggestion = None; reason; enum_reason }
+                )
             );
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.error reason, OpenT tout)
         | (DefT (enum_reason, EnumObjectT _), SetPropT (_, op_reason, _, _, _, _, tout))
         | (DefT (enum_reason, EnumObjectT _), SetElemT (_, op_reason, _, _, _, tout)) ->
           add_output
             cx
-            (Error_message.EEnumModification { loc = loc_of_reason op_reason; enum_reason });
+            Error_message.(
+              EEnumError (EnumModification { loc = loc_of_reason op_reason; enum_reason })
+            );
           Base.Option.iter tout ~f:(fun tout ->
               rec_flow_t cx trace ~use_op:unknown_use (AnyT.error op_reason, tout)
           )
         | (DefT (enum_reason, EnumObjectT _), GetValuesT (op_reason, tout)) ->
           add_output
             cx
-            (Error_message.EEnumInvalidObjectUtilType { reason = op_reason; enum_reason });
+            Error_message.(
+              EEnumError (EnumInvalidObjectUtilType { reason = op_reason; enum_reason })
+            );
           rec_flow_t cx trace ~use_op:unknown_use (AnyT.error op_reason, tout)
         | (DefT (enum_reason, EnumObjectT _), GetDictValuesT (reason, result)) ->
-          add_output cx (Error_message.EEnumInvalidObjectFunction { reason; enum_reason });
+          add_output
+            cx
+            Error_message.(EEnumError (EnumInvalidObjectFunction { reason; enum_reason }));
           rec_flow cx trace (AnyT.error reason, result)
         | ( DefT
               ( _,
@@ -4574,7 +4583,7 @@ struct
             ~incomplete_out
             ~discriminant_after_check
         | (DefT (enum_reason, EnumValueT (AbstractEnum _)), EnumExhaustiveCheckT { reason; _ }) ->
-          add_output cx (Error_message.EEnumInvalidAbstractUse { reason; enum_reason })
+          add_output cx Error_message.(EEnumError (EnumInvalidAbstractUse { reason; enum_reason }))
         (* Resolving the case tests. *)
         | ( _,
             EnumExhaustiveCheckT
@@ -4633,8 +4642,9 @@ struct
             (fun loc ->
               add_output
                 cx
-                (Error_message.EEnumInvalidCheck
-                   { loc; enum_reason; example_member; from_match = false }
+                Error_message.(
+                  EEnumError
+                    (EnumInvalidCheck { loc; enum_reason; example_member; from_match = false })
                 ))
             reasons;
           enum_exhaustive_check_incomplete cx ~trace ~reason incomplete_out
@@ -7201,13 +7211,16 @@ struct
         if not @@ SMap.mem member_name members_remaining then
           add_output
             cx
-            (Error_message.EEnumMemberAlreadyChecked
-               {
-                 case_test_loc;
-                 prev_check_loc = SMap.find member_name seen;
-                 enum_reason;
-                 member_name;
-               }
+            Error_message.(
+              EEnumError
+                (EnumMemberAlreadyChecked
+                   {
+                     case_test_loc;
+                     prev_check_loc = SMap.find member_name seen;
+                     enum_reason;
+                     member_name;
+                   }
+                )
             );
         (SMap.remove member_name members_remaining, SMap.add member_name case_test_loc seen)
       in
@@ -7216,24 +7229,31 @@ struct
       | (false, _, _) ->
         add_output
           cx
-          (Error_message.EEnumNotAllChecked
-             {
-               reason = check_reason;
-               enum_reason;
-               left_to_check = SMap.keys left_over;
-               default_case_loc;
-             }
+          Error_message.(
+            EEnumError
+              (EnumNotAllChecked
+                 {
+                   reason = check_reason;
+                   enum_reason;
+                   left_to_check = SMap.keys left_over;
+                   default_case_loc;
+                 }
+              )
           );
         enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
       (* When we have unknown members, a default is required even when we've checked all known members. *)
       | (true, None, true) ->
-        add_output cx (Error_message.EEnumUnknownNotChecked { reason = check_reason; enum_reason });
+        add_output
+          cx
+          Error_message.(EEnumError (EnumUnknownNotChecked { reason = check_reason; enum_reason }));
         enum_exhaustive_check_incomplete cx ~trace ~reason:check_reason incomplete_out
       | (true, Some _, true) -> ()
       | (true, Some default_case_loc, false) ->
         add_output
           cx
-          (Error_message.EEnumAllMembersAlreadyChecked { loc = default_case_loc; enum_reason })
+          Error_message.(
+            EEnumError (EnumAllMembersAlreadyChecked { loc = default_case_loc; enum_reason })
+          )
       | _ -> ())
     (* There are still possible checks to resolve, continue to resolve them. *)
     | (obj_t, check) :: rest_possible_checks ->

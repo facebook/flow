@@ -34,6 +34,7 @@ use flow_typing_errors::error_message::EMatchNotExhaustiveData;
 use flow_typing_errors::error_message::EPropsNotFoundInInvariantSubtypingData;
 use flow_typing_errors::error_message::EUnionPartialOptimizationNonUniqueKeyData;
 use flow_typing_errors::error_message::EUnionSpeculationFailedData;
+use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::EnumKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
@@ -2552,12 +2553,6 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                 err_str
             )
         }
-        ErrorMessage::EEnumsNotEnabled(loc) => {
-            format!("EEnumsNotEnabled ({})", string_of_aloc(None, loc))
-        }
-        ErrorMessage::EEnumConstNotSupported(loc) => {
-            format!("EEnumConstNotSupported ({})", string_of_aloc(None, loc))
-        }
         ErrorMessage::EIndeterminateModuleType(loc) => {
             format!("EIndeterminateModuleType ({})", string_of_aloc(None, loc))
         }
@@ -3037,198 +3032,212 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
         ErrorMessage::EComputedPropertyWithUnion(reason) => {
             format!("EComputedPropertyWithUnion ({})", dump_reason(cx, reason))
         }
-        ErrorMessage::EEnumInvalidMemberAccess {
-            member_name,
-            suggestion,
-            reason,
-            enum_reason,
-        } => {
-            let member_str = match member_name {
-                Some(n) => n.as_str(),
-                None => "<None>",
-            };
-            let suggestion_str = match suggestion {
-                Some(s) => s.as_str(),
-                None => "<None>",
-            };
-            format!(
-                "EEnumInvalidMemberAccess ({}) ({}) ({}) ({})",
-                member_str,
-                suggestion_str,
-                dump_reason(cx, reason),
-                dump_reason(cx, enum_reason)
-            )
-        }
-        ErrorMessage::EEnumModification { loc, enum_reason } => {
-            format!(
-                "EEnumModification ({}) ({})",
-                string_of_aloc(None, loc),
-                dump_reason(cx, enum_reason)
-            )
-        }
-        ErrorMessage::EEnumMemberDuplicateValue {
-            loc,
-            prev_use_loc,
-            enum_reason,
-        } => {
-            format!(
-                "EEnumMemberDuplicateValue ({}) ({}) ({})",
-                string_of_aloc(None, loc),
-                string_of_aloc(None, prev_use_loc),
-                dump_reason(cx, enum_reason)
-            )
-        }
-        ErrorMessage::EEnumInvalidObjectUtilType {
-            reason,
-            enum_reason,
-        } => {
-            format!(
-                "EEnumInvalidObjectUtilType ({}) ({})",
-                dump_reason(cx, reason),
-                dump_reason(cx, enum_reason)
-            )
-        }
-        ErrorMessage::EEnumInvalidObjectFunction {
-            reason,
-            enum_reason,
-        } => {
-            format!(
-                "EEnumInvalidObjectFunction ({}) ({})",
-                dump_reason(cx, reason),
-                dump_reason(cx, enum_reason)
-            )
-        }
-        ErrorMessage::EEnumNotIterable { reason, for_in } => {
-            format!(
-                "EEnumNotIterable ({}) (for_in = {})",
-                dump_reason(cx, reason),
-                for_in
-            )
-        }
-        ErrorMessage::EEnumMemberAlreadyChecked {
-            case_test_loc,
-            prev_check_loc,
-            enum_reason,
-            member_name,
-        } => {
-            format!(
-                "EEnumMemberAlreadyChecked ({}) ({}) ({}) ({})",
-                string_of_aloc(None, case_test_loc),
-                string_of_aloc(None, prev_check_loc),
-                dump_reason(cx, enum_reason),
-                member_name
-            )
-        }
-        ErrorMessage::EEnumAllMembersAlreadyChecked { loc, enum_reason } => {
-            format!(
-                "EEnumAllMembersAlreadyChecked ({}) ({})",
-                string_of_aloc(None, loc),
-                dump_reason(cx, enum_reason)
-            )
-        }
-        ErrorMessage::EEnumNotAllChecked {
-            reason,
-            enum_reason,
-            left_to_check,
-            default_case_loc,
-        } => {
-            let default_str = match default_case_loc {
-                Some(loc) => string_of_aloc(None, loc),
-                None => "<None>".to_string(),
-            };
-            format!(
-                "EEnumNotAllChecked ({}) ({}) ({}) ({})",
-                dump_reason(cx, reason),
-                dump_reason(cx, enum_reason),
-                left_to_check.join(", "),
-                default_str
-            )
-        }
-        ErrorMessage::EEnumUnknownNotChecked {
-            reason,
-            enum_reason,
-        } => {
-            format!(
-                "EEnumUnknownNotChecked ({}) ({})",
-                dump_reason(cx, reason),
-                dump_reason(cx, enum_reason)
-            )
-        }
-        ErrorMessage::EEnumInvalidCheck {
-            loc,
-            enum_reason,
-            example_member,
-            from_match,
-        } => {
-            let member_str = match example_member {
-                Some(m) => m.to_string(),
-                None => "<None>".to_string(),
-            };
-            format!(
-                "EEnumInvalidCheck ({}) ({}) ({}) ({})",
-                string_of_aloc(None, loc),
-                dump_reason(cx, enum_reason),
-                member_str,
-                from_match
-            )
-        }
-        ErrorMessage::EEnumMemberUsedAsType {
-            reason,
-            enum_reason,
-        } => {
-            format!(
-                "EEnumMemberUsedAsType ({}) ({})",
-                dump_reason(cx, reason),
-                dump_reason(cx, enum_reason)
-            )
-        }
-        ErrorMessage::EEnumIncompatible {
-            reason_lower,
-            reason_upper,
-            use_op,
-            enum_kind,
-            representation_type,
-            casting_syntax: _,
-        } => {
-            let enum_kind_str = match enum_kind {
-                EnumKind::ConcreteEnumKind => "concrete",
-                EnumKind::AbstractEnumKind => "abstract",
-            };
-            let repr_str = match representation_type {
-                Some(r) => r.to_string(),
-                None => "<None>".to_string(),
-            };
-            format!(
-                "EEnumIncompatible {{ reason_lower = {}; reason_upper = {}; use_op = {}; enum_kind = {}; representation_type = {} }}",
-                dump_reason(cx, reason_lower),
-                dump_reason(cx, reason_upper),
-                string_of_use_op(use_op),
-                enum_kind_str,
-                repr_str
-            )
-        }
-        ErrorMessage::EEnumInvalidAbstractUse {
-            reason,
-            enum_reason,
-        } => {
-            format!(
-                "EEnumInvalidAbstractUse ({}) ({})",
-                dump_reason(cx, reason),
-                dump_reason(cx, enum_reason)
-            )
-        }
-        ErrorMessage::EEnumInvalidMemberName {
-            loc,
-            enum_reason,
-            member_name,
-        } => {
-            format!(
-                "EEnumInvalidMemberName ({}) ({}) ({})",
-                string_of_aloc(None, loc),
-                dump_reason(cx, enum_reason),
-                member_name
-            )
-        }
+        ErrorMessage::EEnumError(enum_error) => match enum_error {
+            EnumErrorKind::EnumsNotEnabled(loc) => {
+                format!(
+                    "EEnumError (EnumsNotEnabled ({}))",
+                    string_of_aloc(None, loc)
+                )
+            }
+            EnumErrorKind::EnumConstNotSupported(loc) => {
+                format!(
+                    "EEnumError (EnumConstNotSupported ({}))",
+                    string_of_aloc(None, loc)
+                )
+            }
+            EnumErrorKind::EnumInvalidMemberAccess {
+                member_name,
+                suggestion,
+                reason,
+                enum_reason,
+            } => {
+                let member_str = match member_name {
+                    Some(n) => n.as_str(),
+                    None => "<None>",
+                };
+                let suggestion_str = match suggestion {
+                    Some(s) => s.as_str(),
+                    None => "<None>",
+                };
+                format!(
+                    "EEnumError (EnumInvalidMemberAccess ({}) ({}) ({}) ({}))",
+                    member_str,
+                    suggestion_str,
+                    dump_reason(cx, reason),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::EnumModification { loc, enum_reason } => {
+                format!(
+                    "EEnumError (EnumModification ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::EnumMemberDuplicateValue {
+                loc,
+                prev_use_loc,
+                enum_reason,
+            } => {
+                format!(
+                    "EEnumError (EnumMemberDuplicateValue ({}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    string_of_aloc(None, prev_use_loc),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::EnumInvalidObjectUtilType {
+                reason,
+                enum_reason,
+            } => {
+                format!(
+                    "EEnumError (EnumInvalidObjectUtilType ({}) ({}))",
+                    dump_reason(cx, reason),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::EnumInvalidObjectFunction {
+                reason,
+                enum_reason,
+            } => {
+                format!(
+                    "EEnumError (EnumInvalidObjectFunction ({}) ({}))",
+                    dump_reason(cx, reason),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::EnumNotIterable { reason, for_in } => {
+                format!(
+                    "EEnumError (EnumNotIterable ({}) (for_in = {}))",
+                    dump_reason(cx, reason),
+                    for_in
+                )
+            }
+            EnumErrorKind::EnumMemberAlreadyChecked {
+                case_test_loc,
+                prev_check_loc,
+                enum_reason,
+                member_name,
+            } => {
+                format!(
+                    "EEnumError (EnumMemberAlreadyChecked ({}) ({}) ({}) ({}))",
+                    string_of_aloc(None, case_test_loc),
+                    string_of_aloc(None, prev_check_loc),
+                    dump_reason(cx, enum_reason),
+                    member_name
+                )
+            }
+            EnumErrorKind::EnumAllMembersAlreadyChecked { loc, enum_reason } => {
+                format!(
+                    "EEnumError (EnumAllMembersAlreadyChecked ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::EnumNotAllChecked {
+                reason,
+                enum_reason,
+                left_to_check,
+                default_case_loc,
+            } => {
+                let default_str = match default_case_loc {
+                    Some(loc) => string_of_aloc(None, loc),
+                    None => "<None>".to_string(),
+                };
+                format!(
+                    "EEnumError (EnumNotAllChecked ({}) ({}) ({}) ({}))",
+                    dump_reason(cx, reason),
+                    dump_reason(cx, enum_reason),
+                    left_to_check.join(", "),
+                    default_str
+                )
+            }
+            EnumErrorKind::EnumUnknownNotChecked {
+                reason,
+                enum_reason,
+            } => {
+                format!(
+                    "EEnumError (EnumUnknownNotChecked ({}) ({}))",
+                    dump_reason(cx, reason),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::EnumInvalidCheck {
+                loc,
+                enum_reason,
+                example_member,
+                from_match,
+            } => {
+                let member_str = match example_member {
+                    Some(m) => m.to_string(),
+                    None => "<None>".to_string(),
+                };
+                format!(
+                    "EEnumError (EnumInvalidCheck ({}) ({}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason),
+                    member_str,
+                    from_match
+                )
+            }
+            EnumErrorKind::EnumMemberUsedAsType {
+                reason,
+                enum_reason,
+            } => {
+                format!(
+                    "EEnumError (EnumMemberUsedAsType ({}) ({}))",
+                    dump_reason(cx, reason),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::EnumIncompatible {
+                reason_lower,
+                reason_upper,
+                use_op,
+                enum_kind,
+                representation_type,
+                casting_syntax: _,
+            } => {
+                let enum_kind_str = match enum_kind {
+                    EnumKind::ConcreteEnumKind => "concrete",
+                    EnumKind::AbstractEnumKind => "abstract",
+                };
+                let repr_str = match representation_type {
+                    Some(r) => r.to_string(),
+                    None => "<None>".to_string(),
+                };
+                format!(
+                    "EEnumError (EnumIncompatible {{ reason_lower = {}; reason_upper = {}; use_op = {}; enum_kind = {}; representation_type = {} }})",
+                    dump_reason(cx, reason_lower),
+                    dump_reason(cx, reason_upper),
+                    string_of_use_op(use_op),
+                    enum_kind_str,
+                    repr_str
+                )
+            }
+            EnumErrorKind::EnumInvalidAbstractUse {
+                reason,
+                enum_reason,
+            } => {
+                format!(
+                    "EEnumError (EnumInvalidAbstractUse ({}) ({}))",
+                    dump_reason(cx, reason),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::EnumInvalidMemberName {
+                loc,
+                enum_reason,
+                member_name,
+            } => {
+                format!(
+                    "EEnumError (EnumInvalidMemberName ({}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason),
+                    member_name
+                )
+            }
+        },
         ErrorMessage::EAssignConstLikeBinding {
             loc,
             definition,

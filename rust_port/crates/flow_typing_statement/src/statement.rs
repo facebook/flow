@@ -51,6 +51,7 @@ use flow_parser::polymorphic_ast_mapper;
 use flow_parser::polymorphic_ast_mapper::LocMapper;
 use flow_parser_utils::graphql;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_message::InternalError;
 use flow_typing_errors::error_message::TSSyntaxKind;
@@ -18136,7 +18137,7 @@ fn enum_declaration(
     if const_ {
         flow_js_utils::add_output_non_speculating(
             cx,
-            ErrorMessage::EEnumConstNotSupported(loc.dupe()),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumConstNotSupported(loc.dupe())),
         );
     }
     let reason = mk_reason(
@@ -18161,7 +18162,10 @@ fn enum_declaration(
         type_env::init_implicit_const(cx, &use_op, &t, name_loc.dupe());
         t
     } else {
-        flow_js_utils::add_output_non_speculating(cx, ErrorMessage::EEnumsNotEnabled(loc.dupe()));
+        flow_js_utils::add_output_non_speculating(
+            cx,
+            ErrorMessage::EEnumError(EnumErrorKind::EnumsNotEnabled(loc.dupe())),
+        );
         any_t::error(reason)
     };
     statement::EnumDeclaration {
@@ -18189,11 +18193,11 @@ pub fn mk_enum(
         if !name.is_empty() && is_a_to_z(name.as_bytes()[0]) {
             flow_js_utils::add_output_non_speculating(
                 cx,
-                ErrorMessage::EEnumInvalidMemberName {
+                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName {
                     loc: member_loc,
                     enum_reason: enum_reason.dupe(),
                     member_name: name.to_string(),
-                },
+                }),
             );
         }
     };
@@ -18240,11 +18244,11 @@ pub fn mk_enum(
                     Some(prev_use_loc) => {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EEnumMemberDuplicateValue {
+                            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue {
                                 loc: init_loc.dupe(),
                                 prev_use_loc: prev_use_loc.dupe(),
                                 enum_reason: enum_reason.dupe(),
-                            },
+                            }),
                         );
                     }
                     None => {
@@ -18291,11 +18295,11 @@ pub fn mk_enum(
                     Some(prev_use_loc) => {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EEnumMemberDuplicateValue {
+                            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue {
                                 loc: init_loc.dupe(),
                                 prev_use_loc: prev_use_loc.dupe(),
                                 enum_reason: enum_reason.dupe(),
-                            },
+                            }),
                         );
                     }
                     None => {
@@ -18338,11 +18342,11 @@ pub fn mk_enum(
                     Some(prev_use_loc) => {
                         flow_js_utils::add_output_non_speculating(
                             cx,
-                            ErrorMessage::EEnumMemberDuplicateValue {
+                            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue {
                                 loc: init_loc.dupe(),
                                 prev_use_loc: prev_use_loc.dupe(),
                                 enum_reason: enum_reason.dupe(),
-                            },
+                            }),
                         );
                     }
                     None => {
@@ -18385,11 +18389,11 @@ pub fn mk_enum(
                         Some(prev_use_loc) => {
                             flow_js_utils::add_output_non_speculating(
                                 cx,
-                                ErrorMessage::EEnumMemberDuplicateValue {
+                                ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue {
                                     loc: init_loc.dupe(),
                                     prev_use_loc: prev_use_loc.dupe(),
                                     enum_reason: enum_reason.dupe(),
-                                },
+                                }),
                             );
                         }
                         None => {

@@ -2599,6 +2599,7 @@ pub mod value_to_type_reference_transform {
         t: Type,
     ) -> Result<Type, FlowJsException> {
         use flow_data_structure_wrapper::ord_map::FlowOrdMap;
+        use flow_typing_errors::error_message::EnumErrorKind;
         use flow_typing_errors::error_message::ErrorMessage;
         use flow_typing_type::type_::AnySource;
 
@@ -2692,10 +2693,10 @@ pub mod value_to_type_reference_transform {
                 DefTInner::EnumValueT(_) => {
                     add_output(
                         cx,
-                        ErrorMessage::EEnumMemberUsedAsType {
+                        ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType {
                             reason: reason_op.dupe(),
                             enum_reason: reason.dupe(),
-                        },
+                        }),
                     )?;
                     Ok(Type::new(TypeInner::AnyT(
                         reason_op.dupe(),
@@ -5125,12 +5126,14 @@ pub mod get_prop_t_kit {
                 );
                 add_output(
                     cx,
-                    flow_typing_errors::error_message::ErrorMessage::EEnumInvalidMemberAccess {
-                        member_name: Some(member_name.dupe()),
-                        suggestion,
-                        reason: member_reason,
-                        enum_reason: enum_reason.dupe(),
-                    },
+                    flow_typing_errors::error_message::ErrorMessage::EEnumError(
+                        flow_typing_errors::error_message::EnumErrorKind::EnumInvalidMemberAccess {
+                            member_name: Some(member_name.dupe()),
+                            suggestion,
+                            reason: member_reason,
+                            enum_reason: enum_reason.dupe(),
+                        },
+                    ),
                 )?;
                 F::return_(
                     cx,

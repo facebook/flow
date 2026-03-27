@@ -200,8 +200,11 @@ end = struct
         if raise_errors then
           Flow_js.add_output
             cx
-            (Error_message.EEnumInvalidCheck
-               { loc; enum_reason = TypeUtil.reason_of_t t; example_member; from_match = true }
+            Error_message.(
+              EEnumError
+                (EnumInvalidCheck
+                   { loc; enum_reason = TypeUtil.reason_of_t t; example_member; from_match = true }
+                )
             );
         None)
     | Type.DefT (_, Type.SingletonBoolT { value; _ }) -> Some (reason, Leaf.BoolC value)

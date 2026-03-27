@@ -852,7 +852,8 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EEnumInvalidMemberAccess { reason; suggestion = Some fixed_prop_name; _ } ->
+  | Error_message.EEnumError
+      (Error_message.EnumInvalidMemberAccess { reason; suggestion = Some fixed_prop_name; _ }) ->
     let error_loc = Reason.loc_of_reason reason in
     if loc_opt_intersects ~error_loc ~loc then
       let original_prop_name = reason |> Reason.desc_of_reason |> Reason.string_of_desc in
@@ -869,7 +870,8 @@ let ast_transforms_of_error
       ]
     else
       []
-  | Error_message.EEnumInvalidMemberName { loc = error_loc; member_name; _ } ->
+  | Error_message.EEnumError
+      (Error_message.EnumInvalidMemberName { loc = error_loc; member_name; _ }) ->
     if loc_opt_intersects ~error_loc ~loc then
       let fixed_name = String.capitalize_ascii member_name in
       let title = Printf.sprintf "Replace `%s` with `%s`" member_name fixed_name in

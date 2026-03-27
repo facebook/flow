@@ -1154,7 +1154,7 @@ let resolve_enum cx id_loc enum_reason enum_loc name enum =
     let enum_info = ConcreteEnum (Statement.mk_enum cx ~enum_reason id_loc name enum) in
     mk_enum_object_type enum_reason enum_info
   else (
-    Flow_js_utils.add_output cx (Error_message.EEnumsNotEnabled enum_loc);
+    Flow_js_utils.add_output cx Error_message.(EEnumError (EnumsNotEnabled enum_loc));
     AnyT.error enum_reason
   )
 

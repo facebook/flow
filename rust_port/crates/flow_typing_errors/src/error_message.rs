@@ -149,6 +149,92 @@ pub struct EMatchNotExhaustiveData<L: Dupe + PartialOrd + Ord + PartialEq + Eq> 
     pub missing_pattern_asts: Vec<MatchPattern<Loc, Loc>>,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
+pub enum EnumKind {
+    ConcreteEnumKind,
+    AbstractEnumKind,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
+pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
+    EnumsNotEnabled(L),
+    EnumConstNotSupported(L),
+    EnumInvalidMemberAccess {
+        member_name: Option<Name>,
+        suggestion: Option<FlowSmolStr>,
+        reason: VirtualReason<L>,
+        enum_reason: VirtualReason<L>,
+    },
+    EnumModification {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+    },
+    EnumMemberDuplicateValue {
+        loc: L,
+        prev_use_loc: L,
+        enum_reason: VirtualReason<L>,
+    },
+    EnumInvalidObjectUtilType {
+        reason: VirtualReason<L>,
+        enum_reason: VirtualReason<L>,
+    },
+    EnumInvalidObjectFunction {
+        reason: VirtualReason<L>,
+        enum_reason: VirtualReason<L>,
+    },
+    EnumNotIterable {
+        reason: VirtualReason<L>,
+        for_in: bool,
+    },
+    EnumMemberAlreadyChecked {
+        case_test_loc: L,
+        prev_check_loc: L,
+        enum_reason: VirtualReason<L>,
+        member_name: FlowSmolStr,
+    },
+    EnumAllMembersAlreadyChecked {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+    },
+    EnumNotAllChecked {
+        reason: VirtualReason<L>,
+        enum_reason: VirtualReason<L>,
+        left_to_check: Vec<FlowSmolStr>,
+        default_case_loc: Option<L>,
+    },
+    EnumUnknownNotChecked {
+        reason: VirtualReason<L>,
+        enum_reason: VirtualReason<L>,
+    },
+    EnumInvalidCheck {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+        example_member: Option<FlowSmolStr>,
+        from_match: bool,
+    },
+    EnumMemberUsedAsType {
+        reason: VirtualReason<L>,
+        enum_reason: VirtualReason<L>,
+    },
+    EnumIncompatible {
+        use_op: VirtualUseOp<L>,
+        reason_lower: VirtualReason<L>,
+        reason_upper: VirtualReason<L>,
+        enum_kind: EnumKind,
+        representation_type: Option<FlowSmolStr>,
+        casting_syntax: CastingSyntax,
+    },
+    EnumInvalidAbstractUse {
+        reason: VirtualReason<L>,
+        enum_reason: VirtualReason<L>,
+    },
+    EnumInvalidMemberName {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+        member_name: String,
+    },
+}
+
 /// Error message types for Flow type errors.
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
 pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
@@ -532,9 +618,7 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EUninitializedInstanceProperty(L, PropertyAssignmentKind),
 
-    EEnumsNotEnabled(L),
-
-    EEnumConstNotSupported(L),
+    EEnumError(EnumErrorKind<L>),
 
     EIndeterminateModuleType(L),
 
@@ -742,97 +826,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
 
     EComputedPropertyWithUnion(VirtualReason<L>),
 
-    // Enums
-    EEnumInvalidMemberAccess {
-        member_name: Option<Name>,
-        suggestion: Option<FlowSmolStr>,
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-
-    EEnumModification {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-    },
-
-    EEnumMemberDuplicateValue {
-        loc: L,
-        prev_use_loc: L,
-        enum_reason: VirtualReason<L>,
-    },
-
-    EEnumInvalidObjectUtilType {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-
-    EEnumInvalidObjectFunction {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-
-    EEnumNotIterable {
-        reason: VirtualReason<L>,
-        for_in: bool,
-    },
-
-    EEnumMemberAlreadyChecked {
-        case_test_loc: L,
-        prev_check_loc: L,
-        enum_reason: VirtualReason<L>,
-        member_name: FlowSmolStr,
-    },
-
-    EEnumAllMembersAlreadyChecked {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-    },
-
-    EEnumNotAllChecked {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-        left_to_check: Vec<FlowSmolStr>,
-        default_case_loc: Option<L>,
-    },
-
-    EEnumUnknownNotChecked {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-
-    EEnumInvalidCheck {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-        example_member: Option<FlowSmolStr>,
-        from_match: bool,
-    },
-
-    EEnumMemberUsedAsType {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-
-    EEnumIncompatible {
-        use_op: VirtualUseOp<L>,
-        reason_lower: VirtualReason<L>,
-        reason_upper: VirtualReason<L>,
-        enum_kind: EnumKind,
-        representation_type: Option<FlowSmolStr>,
-        casting_syntax: CastingSyntax,
-    },
-
-    EEnumInvalidAbstractUse {
-        reason: VirtualReason<L>,
-        enum_reason: VirtualReason<L>,
-    },
-
-    EEnumInvalidMemberName {
-        loc: L,
-        enum_reason: VirtualReason<L>,
-        member_name: String,
-    },
-
-    // end enum error messages
     EAssignConstLikeBinding {
         loc: L,
         definition: VirtualReason<L>,
@@ -1168,12 +1161,6 @@ pub enum ErrorMessage<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
     // As the name suggest, don't use this for production purposes, but feel free to use it to
     // quickly test out some ideas.
     ETemporaryHardcodedErrorForPrototyping(VirtualReason<L>, FlowSmolStr),
-}
-
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum EnumKind {
-    ConcreteEnumKind,
-    AbstractEnumKind,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -2331,8 +2318,139 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             EUninitializedInstanceProperty(loc, e) => EUninitializedInstanceProperty(f(loc), e),
 
-            EEnumsNotEnabled(loc) => EEnumsNotEnabled(f(loc)),
-            EEnumConstNotSupported(loc) => EEnumConstNotSupported(f(loc)),
+            EEnumError(enum_error) => {
+                use EnumErrorKind::*;
+                EEnumError(match enum_error {
+                    EnumsNotEnabled(loc) => EnumsNotEnabled(f(loc)),
+                    EnumConstNotSupported(loc) => EnumConstNotSupported(f(loc)),
+                    EnumInvalidMemberAccess {
+                        member_name,
+                        suggestion,
+                        reason,
+                        enum_reason,
+                    } => EnumInvalidMemberAccess {
+                        member_name,
+                        suggestion,
+                        reason: map_reason(reason),
+                        enum_reason: map_reason(enum_reason),
+                    },
+                    EnumModification { loc, enum_reason } => EnumModification {
+                        loc: f(loc),
+                        enum_reason: map_reason(enum_reason),
+                    },
+                    EnumMemberDuplicateValue {
+                        loc,
+                        prev_use_loc,
+                        enum_reason,
+                    } => EnumMemberDuplicateValue {
+                        loc: f(loc),
+                        prev_use_loc: f(prev_use_loc),
+                        enum_reason: map_reason(enum_reason),
+                    },
+                    EnumInvalidObjectUtilType {
+                        reason,
+                        enum_reason,
+                    } => EnumInvalidObjectUtilType {
+                        reason: map_reason(reason),
+                        enum_reason: map_reason(enum_reason),
+                    },
+                    EnumInvalidObjectFunction {
+                        reason,
+                        enum_reason,
+                    } => EnumInvalidObjectFunction {
+                        reason: map_reason(reason),
+                        enum_reason: map_reason(enum_reason),
+                    },
+                    EnumNotIterable { reason, for_in } => EnumNotIterable {
+                        reason: map_reason(reason),
+                        for_in,
+                    },
+                    EnumMemberAlreadyChecked {
+                        case_test_loc,
+                        prev_check_loc,
+                        enum_reason,
+                        member_name,
+                    } => EnumMemberAlreadyChecked {
+                        case_test_loc: f(case_test_loc),
+                        prev_check_loc: f(prev_check_loc),
+                        enum_reason: map_reason(enum_reason),
+                        member_name,
+                    },
+                    EnumAllMembersAlreadyChecked { loc, enum_reason } => {
+                        EnumAllMembersAlreadyChecked {
+                            loc: f(loc),
+                            enum_reason: map_reason(enum_reason),
+                        }
+                    }
+                    EnumNotAllChecked {
+                        reason,
+                        enum_reason,
+                        left_to_check,
+                        default_case_loc,
+                    } => EnumNotAllChecked {
+                        reason: map_reason(reason),
+                        enum_reason: map_reason(enum_reason),
+                        left_to_check,
+                        default_case_loc: default_case_loc.map(&f),
+                    },
+                    EnumUnknownNotChecked {
+                        reason,
+                        enum_reason,
+                    } => EnumUnknownNotChecked {
+                        reason: map_reason(reason),
+                        enum_reason: map_reason(enum_reason),
+                    },
+                    EnumInvalidCheck {
+                        loc,
+                        enum_reason,
+                        example_member,
+                        from_match,
+                    } => EnumInvalidCheck {
+                        loc: f(loc),
+                        enum_reason: map_reason(enum_reason),
+                        example_member,
+                        from_match,
+                    },
+                    EnumMemberUsedAsType {
+                        reason,
+                        enum_reason,
+                    } => EnumMemberUsedAsType {
+                        reason: map_reason(reason),
+                        enum_reason: map_reason(enum_reason),
+                    },
+                    EnumIncompatible {
+                        use_op,
+                        reason_lower,
+                        reason_upper,
+                        enum_kind,
+                        representation_type,
+                        casting_syntax,
+                    } => EnumIncompatible {
+                        use_op: map_use_op(use_op),
+                        reason_lower: map_reason(reason_lower),
+                        reason_upper: map_reason(reason_upper),
+                        enum_kind,
+                        representation_type,
+                        casting_syntax,
+                    },
+                    EnumInvalidAbstractUse {
+                        reason,
+                        enum_reason,
+                    } => EnumInvalidAbstractUse {
+                        reason: map_reason(reason),
+                        enum_reason: map_reason(enum_reason),
+                    },
+                    EnumInvalidMemberName {
+                        loc,
+                        enum_reason,
+                        member_name,
+                    } => EnumInvalidMemberName {
+                        loc: f(loc),
+                        enum_reason: map_reason(enum_reason),
+                        member_name,
+                    },
+                })
+            }
             EIndeterminateModuleType(loc) => EIndeterminateModuleType(f(loc)),
             EBadExportPosition(loc) => EBadExportPosition(f(loc)),
             EBadExportContext(s, loc) => EBadExportContext(s, f(loc)),
@@ -2539,145 +2657,6 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             },
 
             EComputedPropertyWithUnion(reason) => EComputedPropertyWithUnion(map_reason(reason)),
-
-            EEnumInvalidMemberAccess {
-                member_name,
-                suggestion,
-                reason,
-                enum_reason,
-            } => EEnumInvalidMemberAccess {
-                member_name,
-                suggestion,
-                reason: map_reason(reason),
-                enum_reason: map_reason(enum_reason),
-            },
-
-            EEnumModification { loc, enum_reason } => EEnumModification {
-                loc: f(loc),
-                enum_reason: map_reason(enum_reason),
-            },
-
-            EEnumMemberDuplicateValue {
-                loc,
-                prev_use_loc,
-                enum_reason,
-            } => EEnumMemberDuplicateValue {
-                loc: f(loc),
-                prev_use_loc: f(prev_use_loc),
-                enum_reason: map_reason(enum_reason),
-            },
-
-            EEnumInvalidObjectUtilType {
-                reason,
-                enum_reason,
-            } => EEnumInvalidObjectUtilType {
-                reason: map_reason(reason),
-                enum_reason: map_reason(enum_reason),
-            },
-
-            EEnumInvalidObjectFunction {
-                reason,
-                enum_reason,
-            } => EEnumInvalidObjectFunction {
-                reason: map_reason(reason),
-                enum_reason: map_reason(enum_reason),
-            },
-
-            EEnumNotIterable { reason, for_in } => EEnumNotIterable {
-                reason: map_reason(reason),
-                for_in,
-            },
-
-            EEnumMemberAlreadyChecked {
-                case_test_loc,
-                prev_check_loc,
-                enum_reason,
-                member_name,
-            } => EEnumMemberAlreadyChecked {
-                case_test_loc: f(case_test_loc),
-                prev_check_loc: f(prev_check_loc),
-                enum_reason: map_reason(enum_reason),
-                member_name,
-            },
-
-            EEnumAllMembersAlreadyChecked { loc, enum_reason } => EEnumAllMembersAlreadyChecked {
-                loc: f(loc),
-                enum_reason: map_reason(enum_reason),
-            },
-
-            EEnumNotAllChecked {
-                reason,
-                enum_reason,
-                left_to_check,
-                default_case_loc,
-            } => EEnumNotAllChecked {
-                reason: map_reason(reason),
-                enum_reason: map_reason(enum_reason),
-                left_to_check,
-                default_case_loc: default_case_loc.map(&f),
-            },
-
-            EEnumUnknownNotChecked {
-                reason,
-                enum_reason,
-            } => EEnumUnknownNotChecked {
-                reason: map_reason(reason),
-                enum_reason: map_reason(enum_reason),
-            },
-
-            EEnumInvalidCheck {
-                loc,
-                enum_reason,
-                example_member,
-                from_match,
-            } => EEnumInvalidCheck {
-                loc: f(loc),
-                enum_reason: map_reason(enum_reason),
-                example_member,
-                from_match,
-            },
-
-            EEnumMemberUsedAsType {
-                reason,
-                enum_reason,
-            } => EEnumMemberUsedAsType {
-                reason: map_reason(reason),
-                enum_reason: map_reason(enum_reason),
-            },
-
-            EEnumIncompatible {
-                use_op,
-                reason_lower,
-                reason_upper,
-                enum_kind,
-                representation_type,
-                casting_syntax,
-            } => EEnumIncompatible {
-                use_op: map_use_op(use_op),
-                reason_lower: map_reason(reason_lower),
-                reason_upper: map_reason(reason_upper),
-                enum_kind,
-                representation_type,
-                casting_syntax,
-            },
-
-            EEnumInvalidAbstractUse {
-                reason,
-                enum_reason,
-            } => EEnumInvalidAbstractUse {
-                reason: map_reason(reason),
-                enum_reason: map_reason(enum_reason),
-            },
-
-            EEnumInvalidMemberName {
-                loc,
-                enum_reason,
-                member_name,
-            } => EEnumInvalidMemberName {
-                loc: f(loc),
-                enum_reason: map_reason(enum_reason),
-                member_name,
-            },
 
             EAssignConstLikeBinding {
                 loc,
@@ -3547,7 +3526,7 @@ where
             use_op,
             ..
         }) => util(use_op),
-        ErrorMessage::EEnumIncompatible { use_op, .. } => util(use_op),
+        ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible { use_op, .. }) => util(use_op),
         ErrorMessage::ENotAReactComponent { use_op, .. } => util(use_op),
         ErrorMessage::EFunctionCallExtraArg(_, _, _, use_op) => util(use_op),
         ErrorMessage::EPrimitiveAsInterface { use_op, .. } => util(use_op),
@@ -3621,23 +3600,28 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EComputedPropertyWithUnion(reason)
             | Self::ETypeParamConstInvalidPosition(reason) => Some(reason.loc.dupe()),
 
-            Self::EObjectComputedPropertyPotentialOverwrite { key_loc, .. }
-            | Self::EEnumAllMembersAlreadyChecked { loc: key_loc, .. }
-            | Self::EEnumMemberAlreadyChecked {
-                case_test_loc: key_loc,
-                ..
-            }
-            | Self::EEnumInvalidCheck { loc: key_loc, .. }
-            | Self::EEnumInvalidMemberName { loc: key_loc, .. } => Some(key_loc.dupe()),
+            Self::EObjectComputedPropertyPotentialOverwrite { key_loc, .. } => Some(key_loc.dupe()),
 
-            Self::EEnumNotAllChecked { reason, .. }
-            | Self::EEnumUnknownNotChecked { reason, .. }
-            | Self::EEnumInvalidAbstractUse { reason, .. }
-            | Self::EEnumMemberUsedAsType { reason, .. }
-            | Self::EEnumInvalidMemberAccess { reason, .. }
-            | Self::EEnumInvalidObjectUtilType { reason, .. }
-            | Self::EEnumInvalidObjectFunction { reason, .. }
-            | Self::EEnumNotIterable { reason, .. }
+            Self::EEnumError(
+                EnumErrorKind::EnumAllMembersAlreadyChecked { loc: key_loc, .. }
+                | EnumErrorKind::EnumMemberAlreadyChecked {
+                    case_test_loc: key_loc,
+                    ..
+                }
+                | EnumErrorKind::EnumInvalidCheck { loc: key_loc, .. }
+                | EnumErrorKind::EnumInvalidMemberName { loc: key_loc, .. },
+            ) => Some(key_loc.dupe()),
+
+            Self::EEnumError(
+                EnumErrorKind::EnumNotAllChecked { reason, .. }
+                | EnumErrorKind::EnumUnknownNotChecked { reason, .. }
+                | EnumErrorKind::EnumInvalidAbstractUse { reason, .. }
+                | EnumErrorKind::EnumMemberUsedAsType { reason, .. }
+                | EnumErrorKind::EnumInvalidMemberAccess { reason, .. }
+                | EnumErrorKind::EnumInvalidObjectUtilType { reason, .. }
+                | EnumErrorKind::EnumInvalidObjectFunction { reason, .. }
+                | EnumErrorKind::EnumNotIterable { reason, .. },
+            )
             | Self::ERecursiveDefinition { reason, .. }
             | Self::EInvalidConstructor(reason)
             | Self::EInvalidDeclaration {
@@ -3751,8 +3735,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::EUnsupportedVarianceAnnotation(loc, _)
             | Self::EExportRenamedDefault { loc, .. }
             | Self::EIndeterminateModuleType(loc)
-            | Self::EEnumsNotEnabled(loc)
-            | Self::EEnumConstNotSupported(loc)
+            | Self::EEnumError(
+                EnumErrorKind::EnumsNotEnabled(loc) | EnumErrorKind::EnumConstNotSupported(loc),
+            )
             | Self::EUninitializedInstanceProperty(loc, _)
             | Self::EUseArrayLiteral(loc)
             | Self::EUnsupportedSyntax(loc, _)
@@ -3821,8 +3806,10 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             },
 
             Self::EDuplicateModuleProvider { conflict, .. } => Some(conflict.dupe()),
-            Self::EEnumModification { loc, .. }
-            | Self::EEnumMemberDuplicateValue { loc, .. }
+            Self::EEnumError(
+                EnumErrorKind::EnumModification { loc, .. }
+                | EnumErrorKind::EnumMemberDuplicateValue { loc, .. },
+            )
             | Self::EBuiltinNameLookupFailed { loc, .. }
             | Self::EBuiltinModuleLookupFailed { loc, .. }
             | Self::EExpectedModuleLookupFailed { loc, .. }
@@ -3869,7 +3856,7 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             | Self::ENotAReactComponent { .. }
             | Self::EIncompatibleWithUseOp { .. }
             | Self::EInvariantSubtypingWithUseOp(..)
-            | Self::EEnumIncompatible { .. }
+            | Self::EEnumError(EnumErrorKind::EnumIncompatible { .. })
             | Self::EIncompatibleDefs(..)
             | Self::EInvalidObjectKit { .. }
             | Self::EIncompatibleWithExact { .. }
@@ -3935,10 +3922,10 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             ErrorMessage::EUnnecessaryInvariant(_, _) => LintError(UnnecessaryInvariant),
             ErrorMessage::EImplicitInexactObject(_) => LintError(ImplicitInexactObject),
             ErrorMessage::EAmbiguousObjectType(_) => LintError(AmbiguousObjectType),
-            ErrorMessage::EEnumNotAllChecked {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked {
                 default_case_loc: Some(_),
                 ..
-            } => LintError(RequireExplicitEnumSwitchCases),
+            }) => LintError(RequireExplicitEnumSwitchCases),
             ErrorMessage::EMatchNonExplicitEnumCheck { .. } => LintError(RequireExplicitEnumChecks),
             ErrorMessage::EUninitializedInstanceProperty(_, _) => {
                 LintError(UninitializedInstanceProperty)
@@ -3965,8 +3952,9 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             ErrorMessage::EBadExportPosition(_) | ErrorMessage::EBadExportContext(_, _) => {
                 InferWarning(InferWarningKind::ExportKind)
             }
-            ErrorMessage::EEnumsNotEnabled(_)
-            | ErrorMessage::EEnumConstNotSupported(_)
+            ErrorMessage::EEnumError(
+                EnumErrorKind::EnumsNotEnabled(_) | EnumErrorKind::EnumConstNotSupported(_),
+            )
             | ErrorMessage::EIndeterminateModuleType(_)
             | ErrorMessage::EUnreachable(_)
             | ErrorMessage::EInvalidTypeof(_, _) => InferWarning(InferWarningKind::OtherKind),
@@ -4533,9 +4521,11 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             ErrorMessage::ERecursionLimit(..) => Normal(Message::MessageRecursionLimitExceeded),
 
-            ErrorMessage::EEnumsNotEnabled(_) => Normal(Message::MessageEnumsNotEnabled),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumsNotEnabled(_)) => {
+                Normal(Message::MessageEnumsNotEnabled)
+            }
 
-            ErrorMessage::EEnumConstNotSupported(_) => {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumConstNotSupported(_)) => {
                 Normal(Message::MessageEnumConstNotSupported)
             }
 
@@ -4635,14 +4625,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Message::MessageCannotUseInstanceOfOperatorDueToBadRHS(reason),
             ),
 
-            ErrorMessage::EEnumIncompatible {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible {
                 reason_lower,
                 reason_upper,
                 use_op,
                 enum_kind,
                 representation_type,
                 casting_syntax,
-            } => IncompatibleEnum {
+            }) => IncompatibleEnum {
                 reason_lower,
                 reason_upper,
                 use_op,
@@ -4749,91 +4739,92 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Normal(Message::MessageCannotUseComputedPropertyWithUnion(reason))
             }
 
-            ErrorMessage::EEnumInvalidMemberAccess {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess {
                 member_name,
                 suggestion,
                 reason,
                 enum_reason,
-            } => Normal(Message::MessageCannotAccessEnumMember {
+            }) => Normal(Message::MessageCannotAccessEnumMember {
                 member_name,
                 suggestion,
                 description: reason.desc.clone(),
                 enum_reason,
             }),
-            ErrorMessage::EEnumModification { enum_reason, .. } => {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumModification { enum_reason, .. }) => {
                 Normal(Message::MessageCannotChangeEnumMember(enum_reason))
             }
-            ErrorMessage::EEnumMemberDuplicateValue {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue {
                 prev_use_loc,
                 enum_reason,
                 ..
-            } => Normal(Message::MessageDuplicateEnumMember {
+            }) => Normal(Message::MessageDuplicateEnumMember {
                 prev_use_loc,
                 enum_reason,
             }),
-            ErrorMessage::EEnumNotIterable { reason, for_in } => {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable { reason, for_in }) => {
                 Normal(Message::MessageCannotIterateEnum { reason, for_in })
             }
-            ErrorMessage::EEnumMemberAlreadyChecked {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked {
                 prev_check_loc,
                 enum_reason,
                 member_name,
                 ..
-            } => Normal(Message::MessageAlreadyExhaustivelyCheckOneEnumMember {
+            }) => Normal(Message::MessageAlreadyExhaustivelyCheckOneEnumMember {
                 prev_check_loc,
                 enum_reason,
                 member_name,
             }),
-            ErrorMessage::EEnumAllMembersAlreadyChecked { enum_reason, .. } => {
-                Normal(Message::MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_reason })
-            }
-            ErrorMessage::EEnumNotAllChecked {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked {
+                enum_reason,
+                ..
+            }) => Normal(Message::MessageAlreadyExhaustivelyCheckAllEnumMembers { enum_reason }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked {
                 reason,
                 enum_reason,
                 left_to_check,
                 default_case_loc,
-            } => Normal(Message::MessageIncompleteExhausiveCheckEnum {
+            }) => Normal(Message::MessageIncompleteExhausiveCheckEnum {
                 description: reason.desc.clone(),
                 enum_reason,
                 left_to_check,
                 default_case_loc,
             }),
-            ErrorMessage::EEnumUnknownNotChecked {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked {
                 reason,
                 enum_reason,
-            } => Normal(Message::MessageCannotExhaustivelyCheckEnumWithUnknowns {
+            }) => Normal(Message::MessageCannotExhaustivelyCheckEnumWithUnknowns {
                 description: reason.desc.clone(),
                 enum_reason,
             }),
-            ErrorMessage::EEnumInvalidCheck {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck {
                 enum_reason,
                 example_member,
                 from_match,
                 ..
-            } => Normal(Message::MessageInvalidEnumMemberCheck {
+            }) => Normal(Message::MessageInvalidEnumMemberCheck {
                 enum_reason,
                 example_member,
                 from_match,
             }),
-            ErrorMessage::EEnumMemberUsedAsType {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType {
                 reason,
                 enum_reason,
-            } => Normal(Message::MessageCannotUseEnumMemberUsedAsType {
+            }) => Normal(Message::MessageCannotUseEnumMemberUsedAsType {
                 description: reason.desc.clone(),
                 enum_reason,
             }),
-            ErrorMessage::EEnumInvalidAbstractUse {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse {
                 reason,
                 enum_reason,
-            } => Normal(Message::MessageCannotExhaustivelyCheckAbstractEnums {
+            }) => Normal(Message::MessageCannotExhaustivelyCheckAbstractEnums {
                 description: reason.desc.clone(),
                 enum_reason,
             }),
-            ErrorMessage::EEnumInvalidMemberName {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName {
                 enum_reason,
                 member_name,
                 ..
-            } => Normal(Message::MessageInvalidEnumMemberName {
+            }) => Normal(Message::MessageInvalidEnumMemberName {
                 member_name,
                 enum_reason,
             }),
@@ -5978,18 +5969,18 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 }
             }
 
-            ErrorMessage::EEnumInvalidObjectUtilType {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType {
                 reason,
                 enum_reason,
-            } => Normal(Message::MessageCannotInstantiateObjectUtilTypeWithEnum {
+            }) => Normal(Message::MessageCannotInstantiateObjectUtilTypeWithEnum {
                 description: reason.desc.clone(),
                 enum_reason,
             }),
 
-            ErrorMessage::EEnumInvalidObjectFunction {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction {
                 reason,
                 enum_reason,
-            } => Normal(Message::MessageCannotCallObjectFunctionOnEnum {
+            }) => Normal(Message::MessageCannotCallObjectFunctionOnEnum {
                 reason,
                 enum_reason,
             }),
@@ -6400,10 +6391,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
 
             Self::EBindingError(BindingError::EReferencedBeforeDeclaration, _, _, _) => true,
 
-            Self::EEnumNotAllChecked {
+            Self::EEnumError(EnumErrorKind::EnumNotAllChecked {
                 default_case_loc: Some(_),
                 ..
-            } => true,
+            }) => true,
 
             Self::EPropNotReadable { use_op, .. } => {
                 matches!(
@@ -6578,33 +6569,55 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 DocblockError::DisallowedSupportsPlatform => Some(InvalidSupportsPlatformDecl),
             },
             ErrorMessage::EDuplicateModuleProvider { .. } => Some(DuplicateModule),
-            ErrorMessage::EEnumAllMembersAlreadyChecked { .. } => Some(InvalidExhaustiveCheck),
-            ErrorMessage::EEnumInvalidAbstractUse { .. } => Some(InvalidExhaustiveCheck),
-            ErrorMessage::EEnumInvalidMemberName { .. } => Some(InvalidEnumMemberName),
-            ErrorMessage::EEnumInvalidCheck { from_match, .. } => {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumAllMembersAlreadyChecked { .. }) => {
+                Some(InvalidExhaustiveCheck)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidAbstractUse { .. }) => {
+                Some(InvalidExhaustiveCheck)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName { .. }) => {
+                Some(InvalidEnumMemberName)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck { from_match, .. }) => {
                 if *from_match {
                     Some(MatchInvalidPattern)
                 } else {
                     Some(InvalidExhaustiveCheck)
                 }
             }
-            ErrorMessage::EEnumInvalidMemberAccess { .. } => Some(InvalidEnumAccess),
-            ErrorMessage::EEnumInvalidObjectUtilType { .. } => Some(NotAnObject),
-            ErrorMessage::EEnumInvalidObjectFunction { .. } => Some(NotAnObject),
-            ErrorMessage::EEnumNotIterable { .. } => Some(NotIterable),
-            ErrorMessage::EEnumMemberAlreadyChecked { .. } => Some(InvalidExhaustiveCheck),
-            ErrorMessage::EEnumMemberDuplicateValue { .. } => Some(DuplicateEnumInit),
-            ErrorMessage::EEnumMemberUsedAsType { .. } => Some(EnumValueAsType),
-            ErrorMessage::EEnumModification { .. } => Some(CannotWriteEnum),
-            ErrorMessage::EEnumNotAllChecked {
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess { .. }) => {
+                Some(InvalidEnumAccess)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectUtilType { .. }) => {
+                Some(NotAnObject)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidObjectFunction { .. }) => {
+                Some(NotAnObject)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable { .. }) => Some(NotIterable),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberAlreadyChecked { .. }) => {
+                Some(InvalidExhaustiveCheck)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue { .. }) => {
+                Some(DuplicateEnumInit)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberUsedAsType { .. }) => {
+                Some(EnumValueAsType)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumModification { .. }) => {
+                Some(CannotWriteEnum)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked {
                 default_case_loc: None,
                 ..
-            } => Some(InvalidExhaustiveCheck),
-            ErrorMessage::EEnumNotAllChecked {
+            }) => Some(InvalidExhaustiveCheck),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNotAllChecked {
                 default_case_loc: Some(_),
                 ..
-            } => Some(RequireExplicitEnumSwitchCases),
-            ErrorMessage::EEnumUnknownNotChecked { .. } => Some(InvalidExhaustiveCheck),
+            }) => Some(RequireExplicitEnumSwitchCases),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumUnknownNotChecked { .. }) => {
+                Some(InvalidExhaustiveCheck)
+            }
             ErrorMessage::EExpectedBooleanLit { use_op, .. } => {
                 Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
             }
@@ -6617,8 +6630,10 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EExpectedBigIntLit { use_op, .. } => {
                 Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
             }
-            ErrorMessage::EEnumsNotEnabled { .. } => Some(IllegalEnum),
-            ErrorMessage::EEnumConstNotSupported { .. } => Some(IllegalEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumsNotEnabled { .. }) => Some(IllegalEnum),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumConstNotSupported { .. }) => {
+                Some(IllegalEnum)
+            }
             ErrorMessage::EExponentialSpread { .. } => Some(ExponentialSpread),
             ErrorMessage::EExportsAnnot { .. } => Some(InvalidExportsTypeArg),
             ErrorMessage::EExportValueAsType(_, _) => Some(ExportValueAsType),
@@ -6668,7 +6683,7 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EFunctionIncompatibleWithIndexer { .. } => {
                 Some(IncompatibleFunctionIndexer)
             }
-            ErrorMessage::EEnumIncompatible { use_op, .. }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible { use_op, .. })
             | ErrorMessage::EIncompatibleWithUseOp { use_op, .. } => {
                 Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
             }

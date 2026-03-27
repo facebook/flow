@@ -2849,15 +2849,18 @@ module Make (Flow : INPUT) : OUTPUT = struct
       let casting_syntax = Context.casting_syntax cx in
       add_output
         cx
-        (Error_message.EEnumIncompatible
-           {
-             reason_lower = enum_reason;
-             reason_upper = reason_of_t t;
-             use_op;
-             enum_kind;
-             representation_type;
-             casting_syntax;
-           }
+        Error_message.(
+          EEnumError
+            (EnumIncompatible
+               {
+                 reason_lower = enum_reason;
+                 reason_upper = reason_of_t t;
+                 use_op;
+                 enum_kind;
+                 representation_type;
+                 casting_syntax;
+               }
+            )
         )
     | ( GenericT ({ bound = bound1; id = id1; reason = reason1; _ } as g1),
         GenericT ({ bound = bound2; id = id2; reason = reason2; _ } as g2)

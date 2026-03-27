@@ -826,7 +826,9 @@ module TypeAssertions = struct
       (* null/undefined are allowed *)
       | DefT (_, (NullT | VoidT)) -> ()
       | DefT (enum_reason, EnumObjectT _) ->
-        add_output cx (Error_message.EEnumNotIterable { reason = enum_reason; for_in = true })
+        add_output
+          cx
+          Error_message.(EEnumError (EnumNotIterable { reason = enum_reason; for_in = true }))
       | l -> add_output cx (Error_message.EForInRHS (TypeUtil.reason_of_t l))
     )
 
@@ -888,7 +890,9 @@ module TypeAssertions = struct
     Flow.possible_concrete_types_for_operators_checking cx (TypeUtil.reason_of_t t) t
     |> Base.List.iter ~f:(function
            | DefT (enum_reason, EnumObjectT _) ->
-             add_output cx (Error_message.EEnumNotIterable { reason = enum_reason; for_in = false });
+             add_output
+               cx
+               Error_message.(EEnumError (EnumNotIterable { reason = enum_reason; for_in = false }));
              let any = AnyT.at (AnyError None) loc in
              Base.List.iter targs_to_infer ~f:(fun t -> Flow.unify cx ~use_op any t)
            | AnyT (reason, src) ->

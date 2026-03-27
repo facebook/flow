@@ -2159,7 +2159,9 @@ fn resolve_enum(
     } else {
         flow_js_utils::add_output_non_speculating(
             cx,
-            flow_typing_errors::error_message::ErrorMessage::EEnumsNotEnabled(enum_loc),
+            flow_typing_errors::error_message::ErrorMessage::EEnumError(
+                flow_typing_errors::error_message::EnumErrorKind::EnumsNotEnabled(enum_loc),
+            ),
         );
         any_t::error(enum_reason)
     }

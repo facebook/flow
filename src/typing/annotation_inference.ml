@@ -646,7 +646,9 @@ module rec ConsGen : S = struct
       (* an enum object value annotation becomes the enum value type *)
       enum_value_t
     | (DefT (enum_reason, EnumValueT _), Annot_UseT_TypeT (reason, _)) ->
-      Flow_js_utils.add_output cx Error_message.(EEnumMemberUsedAsType { reason; enum_reason });
+      Flow_js_utils.add_output
+        cx
+        Error_message.(EEnumError (EnumMemberUsedAsType { reason; enum_reason }));
       AnyT.error reason
     | (l, Annot_UseT_TypeT (reason_use, _)) ->
       (match l with
@@ -1199,8 +1201,9 @@ module rec ConsGen : S = struct
       let reason = reason_of_t elem in
       Flow_js_utils.add_output
         cx
-        (Error_message.EEnumInvalidMemberAccess
-           { member_name = None; suggestion = None; reason; enum_reason }
+        Error_message.(
+          EEnumError
+            (EnumInvalidMemberAccess { member_name = None; suggestion = None; reason; enum_reason })
         );
       AnyT.error reason_op
     (***************)

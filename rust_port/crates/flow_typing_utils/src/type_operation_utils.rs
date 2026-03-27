@@ -19,6 +19,7 @@ use flow_common::enclosing_context::EnclosingContext;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_typing_context::Context;
+use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::flow_error;
 use flow_typing_flow_common::flow_js_utils;
@@ -1925,10 +1926,10 @@ pub mod type_assertions {
                     {
                         flow_js_utils::add_output(
                             cx,
-                            ErrorMessage::EEnumNotIterable {
+                            ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable {
                                 reason: enum_reason.dupe(),
                                 for_in: true,
-                            },
+                            }),
                         )
                     }
                     _ => flow_js_utils::add_output(
@@ -2070,10 +2071,10 @@ pub mod type_assertions {
                 {
                     flow_js_utils::add_output(
                         cx,
-                        ErrorMessage::EEnumNotIterable {
+                        ErrorMessage::EEnumError(EnumErrorKind::EnumNotIterable {
                             reason: enum_reason.dupe(),
                             for_in: false,
-                        },
+                        }),
                     )
                     .unwrap();
                     let any = flow_typing_type::type_::any_t::at(

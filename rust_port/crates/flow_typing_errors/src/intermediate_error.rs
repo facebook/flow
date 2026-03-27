@@ -39,6 +39,7 @@ use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
 use vec1::Vec1;
 
 use super::error_message::EIncompatibleDefsData;
+use super::error_message::EnumErrorKind;
 use super::error_message::ErrorMessage as FlowErrorMessage;
 use super::error_message::util_use_op_of_msg;
 use super::flow_error::ErrorSet;
@@ -506,25 +507,27 @@ pub fn post_process_errors(original_errors: ErrorSet) -> ErrorSet {
                         explanation: explanation.clone(),
                     })
             }
-            FlowErrorMessage::EEnumIncompatible {
+            FlowErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible {
                 use_op,
                 reason_lower,
                 reason_upper,
                 enum_kind,
                 representation_type,
                 casting_syntax,
-            } => {
+            }) => {
                 let ((reason_lower_new, reason_upper_new), use_op_new) =
                     dedupe_by_flip(reason_lower.dupe(), reason_upper.dupe(), use_op.clone());
                 reason_lower == &reason_lower_new
-                    || is_not_duplicate(FlowErrorMessage::EEnumIncompatible {
-                        use_op: use_op_new,
-                        reason_lower: reason_lower_new,
-                        reason_upper: reason_upper_new,
-                        enum_kind: enum_kind.clone(),
-                        representation_type: representation_type.clone(),
-                        casting_syntax: *casting_syntax,
-                    })
+                    || is_not_duplicate(FlowErrorMessage::EEnumError(
+                        EnumErrorKind::EnumIncompatible {
+                            use_op: use_op_new,
+                            reason_lower: reason_lower_new,
+                            reason_upper: reason_upper_new,
+                            enum_kind: enum_kind.clone(),
+                            representation_type: representation_type.clone(),
+                            casting_syntax: *casting_syntax,
+                        },
+                    ))
             }
             FlowErrorMessage::EPropNotFoundInLookup {
                 prop_name,

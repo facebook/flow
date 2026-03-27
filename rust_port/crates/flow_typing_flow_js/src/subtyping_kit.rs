@@ -22,6 +22,7 @@ use flow_typing_context::Context;
 use flow_typing_context::type_app_expansion;
 use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
 use flow_typing_errors::error_message::EPropsNotFoundInInvariantSubtypingData;
+use flow_typing_errors::error_message::EnumErrorKind;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::flow_error::ordered_reasons;
 use flow_typing_errors::intermediate_error_types;
@@ -5153,14 +5154,14 @@ pub fn rec_sub_t(
             let casting_syntax = cx.casting_syntax();
             flow_js_utils::add_output(
                 cx,
-                ErrorMessage::EEnumIncompatible {
+                ErrorMessage::EEnumError(EnumErrorKind::EnumIncompatible {
                     reason_lower: enum_reason.dupe(),
                     reason_upper: type_util::reason_of_t(u).clone(),
                     use_op,
                     enum_kind,
                     representation_type,
                     casting_syntax,
-                },
+                }),
             )
         }
 
