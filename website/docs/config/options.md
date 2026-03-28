@@ -147,6 +147,54 @@ with refinements.
 
 The default value is `false`.
 
+### format.bracket_spacing {#toc-format-bracket-spacing}
+
+Type: `boolean`
+
+Controls whether Flow inserts spaces between brackets and content in object
+literals, object type annotations, and import/export specifiers in generated
+code (such as autofixes and code actions).
+
+When `true` (the default), Flow generates code with spaces inside braces:
+
+```js
+import { Foo } from "./foo";
+type T = { bar: number };
+```
+
+When `false`, Flow omits those spaces:
+
+```js
+import {Foo} from "./foo";
+type T = {bar: number};
+```
+
+The default value for `format.bracket_spacing` is `true`.
+
+### format.single_quotes {#toc-format-single-quotes}
+
+Type: `boolean`
+
+Controls whether Flow prefers single-quoted strings over double-quoted strings
+in generated code (such as autofixes and code actions).
+
+When `true`, Flow generates string literals with single quotes:
+
+```js
+import Foo from './foo';
+```
+
+When `false` (the default), Flow uses double quotes:
+
+```js
+import Foo from "./foo";
+```
+
+If the chosen quote character appears in the string value, Flow automatically
+uses the other quote style to minimize escaping.
+
+The default value for `format.single_quotes` is `false`.
+
 ### include_warnings {#toc-include-warnings}
 
 Type: `boolean`
