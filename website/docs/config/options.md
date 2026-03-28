@@ -56,6 +56,38 @@ const values = [...set]; // Valid ES2015, but Set is not compatible with Readonl
 
 The default value for `babel_loose_array_spread` is `false`.
 
+### ban_spread_key_props <SinceVersion version="0.240.0" /> {#toc-ban-spread-key-props}
+
+Type: `boolean`
+
+Set this to `true` to error when a JSX spread attribute contains an object with a
+`key` property. React does not support spreading `key` — it is always determined by
+the call site, so a `key` inside a spread object is silently ignored at runtime. Enabling
+this option surfaces those cases as Flow errors with the `invalid-spread-prop` error code.
+
+For example:
+
+```js
+const props = {key: 'item-1', name: 'Alice'};
+<Component {...props} />; // Error: Cannot spread an object that contains a `key` property
+```
+
+Flow also detects `key` properties inside union types and nested objects that are spread:
+
+```js
+declare const props: {name: string} | {key: string};
+<Component {...props} />; // Error
+```
+
+To fix these errors, pass `key` directly as a JSX attribute instead of spreading it:
+
+```js
+const props = {name: 'Alice'};
+<Component key="item-1" {...props} />; // OK
+```
+
+The default value for `ban_spread_key_props` is `false`.
+
 ### emoji {#toc-emoji}
 
 Type: `boolean`
