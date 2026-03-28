@@ -477,6 +477,30 @@ which enforces the same privacy at runtime.
 
 The default value is `false`.
 
+### name {#toc-name}
+
+Type: `string`
+
+Set the name of your Flow project. The name is used to distinguish between
+different Flow projects in editor status messages. When set, LSP status
+messages are prefixed with `Flow (<name>)` instead of just `Flow`.
+
+For example, if you set:
+
+```
+[options]
+name=my-app
+```
+
+Then LSP status messages will appear as `Flow (my-app): ...` instead of
+`Flow: ...`. This is useful when you work on multiple Flow projects at the same
+time in your editor, as it makes it clear which project each status message
+refers to.
+
+The name is also included in Flow's internal logging for diagnostic purposes.
+
+There is no default value for `name`.
+
 ### no_flowlib {#toc-no-flowlib}
 
 Type: `boolean`
