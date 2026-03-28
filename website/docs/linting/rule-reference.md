@@ -35,6 +35,47 @@ type A = Array<bool>; // Error
 ### `implicit-inexact-object` {#toc-implicit-inexact-object}
 Like [`ambiguous-object-type`](#toc-ambiguous-object-type), except triggers even when the `exact_by_default` option is set to `false`.
 
+### `nested-component` {#toc-nested-component}
+Triggers when a [component](../../react/component-syntax) is defined directly inside another component or hook. Nested components are problematic because React cannot preserve the state of a nested component across re-renders of the parent — each render creates a brand new component type, so React always unmounts and remounts it.
+
+This lint is enabled as an error by default. It applies to [component syntax](../../react/component-syntax) declarations, which require `component_syntax=true` in your `.flowconfig`.
+
+```js flow-check
+import * as React from 'react';
+
+component Outer() {
+  component Inner() { // Error
+    return null;
+  }
+  return <Inner />;
+}
+```
+
+The lint also fires when a component is defined inside a hook:
+```js flow-check
+import * as React from 'react';
+
+hook useItems() {
+  component ItemView() { // Error
+    return null;
+  }
+  return ItemView;
+}
+```
+
+To fix, move the nested component to the top level:
+```js flow-check
+import * as React from 'react';
+
+component Inner() {
+  return null;
+}
+
+component Outer() {
+  return <Inner />;
+}
+```
+
 ### `nonstrict-import` {#toc-nonstrict-import}
 Used in conjunction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
 
