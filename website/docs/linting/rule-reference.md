@@ -367,6 +367,29 @@ const o = {
 };
 ```
 
+### `unsafe-object-assign` {#toc-unsafe-object-assign}
+Triggers on any use of `Object.assign`. Flow's support for `Object.assign` is unsafe, and you should use object spreads instead.
+
+This lint is enabled as an error by default.
+
+`Object.assign` mutates the first argument in place, which is difficult to track through the type system. The spread syntax (`{...obj1, ...obj2}`) is a safer alternative because it always creates a new object, and Flow can type it precisely.
+
+```js flow-check
+const defaults = {color: 'red', size: 10};
+const overrides = {color: 'blue'};
+
+const config = Object.assign(defaults, overrides); // Error
+```
+
+Use the spread syntax instead:
+
+```js flow-check
+const defaults = {color: 'red', size: 10};
+const overrides = {color: 'blue'};
+
+const config = {...defaults, ...overrides}; // Ok
+```
+
 ### `untyped-import` {#toc-untyped-import}
 Triggers when you import from an untyped file. Importing from an untyped file
 results in those imports being typed as `any`, which is unsafe.
