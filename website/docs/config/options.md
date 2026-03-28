@@ -205,6 +205,41 @@ much better interface to show warnings.)
 
 The default value is `false`.
 
+### jest_integration <SinceVersion version="0.237.0" /> {#toc-jest-integration}
+
+Type: `boolean`
+
+Set this to `true` to enable special support for
+[Jest module mocking functions](https://jestjs.io/docs/jest-object#mock-modules).
+When enabled, Flow resolves the module name argument passed to the following
+`jest` methods, just like it does for `require()` and `import`:
+
+- `jest.createMockFromModule`
+- `jest.mock`
+- `jest.unmock`
+- `jest.deepUnmock`
+- `jest.doMock`
+- `jest.dontMock`
+- `jest.setMock`
+- `jest.requireActual`
+- `jest.requireMock`
+
+If the module cannot be resolved, Flow reports a `cannot-resolve-module` error:
+
+```js
+jest.mock('./utils'); // OK — module exists
+jest.mock('./nonexistent'); // Error: Cannot resolve module `./nonexistent`.
+```
+
+Without this option, Flow treats `jest` as a regular value and does not perform
+any module resolution on the string arguments passed to these functions.
+
+> **Note:** This option only takes effect when `jest` is a global (not a local
+> variable). If you have a local binding named `jest` (e.g. `const jest = ...`),
+> Flow will not apply module resolution to its method calls.
+
+The default value for `jest_integration` is `false`.
+
 ### lazy_mode {#toc-lazy-mode}
 
 Type: `boolean`
