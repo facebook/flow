@@ -157,6 +157,29 @@ You can also disable this lint for an entire project in your `.flowconfig`:
 libdef-override=off
 ```
 
+### `internal-type` {#toc-internal-type}
+Triggers when you use an internal Flow type directly in your code. Internal types are implementation details that have public-facing alternatives you should use instead.
+
+This lint is enabled as an error by default.
+
+There are two categories of internal types that trigger this lint:
+
+**Dollar-prefixed utility types** such as `$Omit`, `$Enum`, and `$EnumValue` have non-dollar equivalents (`Omit`, `Enum`, `EnumValue`):
+
+```js flow-check
+type A = $Omit<{x: number, y: number}, 'x'>; // Error
+type B = Omit<{x: number, y: number}, 'x'>; // Ok
+```
+
+**`React$` types** such as `React$Node` and `React$ElementConfig` should be accessed via the `React` namespace using dot syntax (`React.Node`, `React.ElementConfig`):
+
+```js flow-check
+import * as React from 'react';
+
+type A = React$Node; // Error
+type B = React.Node; // Ok
+```
+
 ### `nonstrict-import` {#toc-nonstrict-import}
 Used in conjunction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
 
