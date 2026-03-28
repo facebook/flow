@@ -187,6 +187,21 @@ docblock.
 
 The default value of `max_header_tokens` is 10.
 
+### merge_timeout {#toc-merge-timeout}
+
+Type: `unsigned integer`
+
+The maximum time in seconds to attempt to typecheck a file or cycle of files.
+If a file exceeds this timeout during the merge (type checking) phase, Flow
+will skip it and log a timeout error.
+
+Setting this to `0` disables the timeout entirely.
+
+The default value for `merge_timeout` is `100`.
+
+This can be overridden from the CLI using the `--merge-timeout` flag or the
+`FLOW_MERGE_TIMEOUT` environment variable.
+
 ### module.file_ext {#toc-module-file-ext}
 
 By default, Flow will look for files with the extensions `.js`, `.jsx`, `.mjs`,
