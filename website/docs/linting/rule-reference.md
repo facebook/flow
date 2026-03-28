@@ -3,6 +3,8 @@ title: Lint Rule Reference
 slug: /linting/rule-reference
 ---
 
+import {SinceVersion} from '../../components/VersionTags';
+
 ### `all` {#toc-all}
 While `all` isn't technically a lint rule, it's worth mentioning here. `all` sets the default
 level for lint rules that don't have a level set explicitly. `all` can only
@@ -118,6 +120,41 @@ component Foo() {
   useNested();
   return null;
 }
+```
+
+### `libdef-override` <SinceVersion version="0.265" /> {#toc-libdef-override}
+Triggers when a [library definition](../../libdefs/) overrides an existing built-in definition. This can happen when a `.js.flow` library file or a `flow-typed` stub re-declares a global variable, type, or module that Flow already provides in its builtins. Overriding built-in definitions can lead to surprising behaviors, because the order in which library files are loaded affects which definition wins.
+
+This lint is enabled as an error by default.
+
+There are two forms of this error. The first is a **name override**, which fires when a library definition re-declares a global variable or type that already exists:
+```js
+// In a library definition file (.js.flow or [libs])
+declare const globalThis: mixed; // Error: overrides built-in globalThis
+
+declare type React$Node = string; // Error: overrides built-in React$Node
+```
+
+The second is a **module override**, which fires when a library definition re-declares a module that is already declared elsewhere:
+```js
+// In a library definition file
+declare module 'react' { // Error: overrides built-in react module
+  declare module.exports: any;
+}
+```
+
+This error also fires when the same library file is included twice (for example, if both a directory and its subdirectory are listed in the `[libs]` section of `.flowconfig`), causing all declarations in that file to conflict with themselves.
+
+To fix the error, remove the redundant declaration from your library definition. If you intentionally need to override a built-in, you can suppress the error with a `$FlowFixMe` comment:
+```js
+// $FlowFixMe[libdef-override]
+declare type React$Node = string | number | null;
+```
+
+You can also disable this lint for an entire project in your `.flowconfig`:
+```
+[lints]
+libdef-override=off
 ```
 
 ### `nonstrict-import` {#toc-nonstrict-import}
