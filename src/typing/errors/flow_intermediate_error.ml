@@ -3644,6 +3644,88 @@ let to_printable_error :
         ref enum_reason;
         text ".";
       ]
+    | MessageEnumDuplicateMemberName { member_name; prev_use_loc; enum_reason } ->
+      [
+        text "Enum member names need to be unique, but the name ";
+        code member_name;
+        text " has already been used for a ";
+        hardcoded_string_desc_ref "previous member" prev_use_loc;
+        text " of ";
+        ref enum_reason;
+        text ".";
+      ]
+    | MessageEnumInconsistentMemberValues { enum_reason } ->
+      [
+        ref enum_reason;
+        text
+          " has been specified with inconsistent member initializers. All members need to consistently either use no initializer, or have a literal (boolean, number, bigint, or string) initializer.";
+      ]
+    | MessageEnumInvalidMemberInitializer { member_name; explicit_type; enum_reason } ->
+      (match explicit_type with
+      | Some Flow_ast.Statement.EnumDeclaration.Symbol ->
+        [
+          text "Symbol enum members cannot be initialized. Use ";
+          code (member_name ^ ",");
+          text " in ";
+          ref enum_reason;
+          text ".";
+        ]
+      | Some t ->
+        let type_str = Flow_ast_utils.string_of_enum_explicit_type t in
+        [
+          text "The enum member initializer for ";
+          code member_name;
+          text " needs to be a ";
+          code type_str;
+          text " literal in ";
+          ref enum_reason;
+          text ".";
+        ]
+      | None ->
+        [
+          text "The enum member initializer for ";
+          code member_name;
+          text " needs to be a literal (either a boolean, number, bigint, or string) in ";
+          ref enum_reason;
+          text ".";
+        ])
+    | MessageEnumBooleanMemberNotInitialized { member_name; enum_reason } ->
+      [
+        text "The enum member ";
+        code member_name;
+        text " of boolean ";
+        ref enum_reason;
+        text " has been left uninitialized. Boolean enum members need to be initialized, e.g. ";
+        code (member_name ^ " = true,");
+        text ".";
+      ]
+    | MessageEnumNumberMemberNotInitialized { member_name; enum_reason } ->
+      [
+        text "The enum member ";
+        code member_name;
+        text " of number ";
+        ref enum_reason;
+        text " has been left uninitialized. Number enum members need to be initialized, e.g. ";
+        code (member_name ^ " = 1,");
+        text ".";
+      ]
+    | MessageEnumBigIntMemberNotInitialized { member_name; enum_reason } ->
+      [
+        text "The enum member ";
+        code member_name;
+        text " of bigint ";
+        ref enum_reason;
+        text " has been left uninitialized. BigInt enum members need to be initialized, e.g. ";
+        code (member_name ^ " = 1n,");
+        text ".";
+      ]
+    | MessageEnumStringMemberInconsistentlyInitialized { enum_reason } ->
+      [
+        text "String ";
+        ref enum_reason;
+        text
+          " has been specified with inconsistent member initializers. Either all members need a string literal initializer, or none.";
+      ]
     | MessageExponentialSpread { reason; reasons_for_operand1; reasons_for_operand2 } ->
       let format_reason_group { first_reason; second_reason } =
         match second_reason with

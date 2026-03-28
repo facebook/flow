@@ -1089,6 +1089,41 @@ pub enum Message<L: Dupe> {
 
     MessageEnumConstNotSupported,
 
+    MessageEnumDuplicateMemberName {
+        member_name: String,
+        prev_use_loc: L,
+        enum_reason: VirtualReason<L>,
+    },
+
+    MessageEnumInconsistentMemberValues {
+        enum_reason: VirtualReason<L>,
+    },
+
+    MessageEnumInvalidMemberInitializer {
+        member_name: String,
+        explicit_type: Option<flow_parser::ast::statement::enum_declaration::ExplicitType>,
+        enum_reason: VirtualReason<L>,
+    },
+
+    MessageEnumBooleanMemberNotInitialized {
+        member_name: String,
+        enum_reason: VirtualReason<L>,
+    },
+
+    MessageEnumNumberMemberNotInitialized {
+        member_name: String,
+        enum_reason: VirtualReason<L>,
+    },
+
+    MessageEnumBigIntMemberNotInitialized {
+        member_name: String,
+        enum_reason: VirtualReason<L>,
+    },
+
+    MessageEnumStringMemberInconsistentlyInitialized {
+        enum_reason: VirtualReason<L>,
+    },
+
     MessageInvalidEnumMemberName {
         member_name: String,
         enum_reason: VirtualReason<L>,

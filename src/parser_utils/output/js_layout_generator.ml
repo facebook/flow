@@ -3015,52 +3015,16 @@ and enum_declaration ~def loc { Ast.Statement.EnumDeclaration.id; body; const_; 
     else
       def
   in
-  let representation_type name explicit =
-    if explicit then
-      fuse [space; Atom "of"; space; Atom name]
-    else
-      Empty
-  in
   let wrap_body members =
     wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [join pretty_hardline members]
   in
-  let defaulted_member (_, { DefaultedMember.id }) = fuse [identifier id; Atom ","] in
   let initialized_member id value =
     fuse [identifier id; pretty_space; Atom "="; pretty_space; value; Atom ","]
   in
-  let boolean_member
-      ( _,
-        { InitializedMember.id; init = (loc, { Ast.BooleanLiteral.value = init_value; comments }) }
-      ) =
-    initialized_member
-      id
-      (layout_node_with_comments_opt
-         loc
-         comments
-         ( if init_value then
-           Atom "true"
-         else
-           Atom "false"
-         )
-      )
-  in
-  let number_member
-      (_, { InitializedMember.id; init = (loc, { Ast.NumberLiteral.raw; comments; _ }) }) =
-    initialized_member id (layout_node_with_comments_opt loc comments (Atom raw))
-  in
-  let string_member
-      (_, { InitializedMember.id; init = (loc, { Ast.StringLiteral.raw; comments; _ }) }) =
-    initialized_member id (layout_node_with_comments_opt loc comments (Atom raw))
-  in
-  let bigint_member
-      (_, { InitializedMember.id; init = (loc, { Ast.BigIntLiteral.raw; comments; _ }) }) =
-    initialized_member id (layout_node_with_comments_opt loc comments (Atom raw))
-  in
   let unknown_members has_unknown_members =
-    if has_unknown_members then
-      [Atom "..."]
-    else
-      []
+    match has_unknown_members with
+    | Some _ -> [Atom "..."]
+    | None -> []
   in
   let enum_internal_comments comments =
     Base.Option.value_map
@@ -3069,70 +3033,56 @@ and enum_declaration ~def loc { Ast.Statement.EnumDeclaration.id; body; const_; 
       (internal_comments comments)
   in
   let body =
-    match body with
-    | (loc, BooleanBody { BooleanBody.members; explicit_type; has_unknown_members; comments }) ->
-      fuse
-        [
-          representation_type "boolean" explicit_type;
-          pretty_space;
-          layout_node_with_comments_opt loc comments
-          @@ wrap_body
-          @@ Base.List.map ~f:boolean_member members
-          @ enum_internal_comments comments
-          @ unknown_members has_unknown_members;
-        ]
-    | (loc, NumberBody { NumberBody.members; explicit_type; has_unknown_members; comments }) ->
-      fuse
-        [
-          representation_type "number" explicit_type;
-          pretty_space;
-          layout_node_with_comments_opt loc comments
-          @@ wrap_body
-          @@ Base.List.map ~f:number_member members
-          @ enum_internal_comments comments
-          @ unknown_members has_unknown_members;
-        ]
-    | (loc, StringBody { StringBody.members; explicit_type; has_unknown_members; comments }) ->
-      fuse
-        [
-          representation_type "string" explicit_type;
-          pretty_space;
-          (layout_node_with_comments_opt loc comments
-          @@ wrap_body
-          @@
-          match members with
-          | StringBody.Defaulted members ->
-            Base.List.map ~f:defaulted_member members
-            @ enum_internal_comments comments
-            @ unknown_members has_unknown_members
-          | StringBody.Initialized members ->
-            Base.List.map ~f:string_member members
-            @ enum_internal_comments comments
-            @ unknown_members has_unknown_members
-          );
-        ]
-    | (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments }) ->
-      fuse
-        [
-          representation_type "symbol" true;
-          pretty_space;
-          layout_node_with_comments_opt loc comments
-          @@ wrap_body
-          @@ Base.List.map ~f:defaulted_member members
-          @ enum_internal_comments comments
-          @ unknown_members has_unknown_members;
-        ]
-    | (loc, BigIntBody { BigIntBody.members; explicit_type; has_unknown_members; comments }) ->
-      fuse
-        [
-          representation_type "bigint" explicit_type;
-          pretty_space;
-          layout_node_with_comments_opt loc comments
-          @@ wrap_body
-          @@ Base.List.map ~f:bigint_member members
-          @ enum_internal_comments comments
-          @ unknown_members has_unknown_members;
-        ]
+    let (loc, { Body.members; explicit_type; has_unknown_members; comments }) = body in
+    let rep_type =
+      match explicit_type with
+      | Some (_, et) ->
+        fuse [space; Atom "of"; space; Atom (Flow_ast_utils.string_of_enum_explicit_type et)]
+      | None -> Empty
+    in
+    let member_layout = function
+      | BooleanMember
+          ( _,
+            {
+              InitializedMember.id;
+              init = (init_loc, { Ast.BooleanLiteral.value = init_value; comments });
+            }
+          ) ->
+        initialized_member
+          id
+          (layout_node_with_comments_opt
+             init_loc
+             comments
+             ( if init_value then
+               Atom "true"
+             else
+               Atom "false"
+             )
+          )
+      | NumberMember
+          (_, { InitializedMember.id; init = (init_loc, { Ast.NumberLiteral.raw; comments; _ }) })
+        ->
+        initialized_member id (layout_node_with_comments_opt init_loc comments (Atom raw))
+      | StringMember
+          (_, { InitializedMember.id; init = (init_loc, { Ast.StringLiteral.raw; comments; _ }) })
+        ->
+        initialized_member id (layout_node_with_comments_opt init_loc comments (Atom raw))
+      | BigIntMember
+          (_, { InitializedMember.id; init = (init_loc, { Ast.BigIntLiteral.raw; comments; _ }) })
+        ->
+        initialized_member id (layout_node_with_comments_opt init_loc comments (Atom raw))
+      | DefaultedMember (_, { DefaultedMember.id }) -> fuse [identifier id; Atom ","]
+    in
+    fuse
+      [
+        rep_type;
+        pretty_space;
+        layout_node_with_comments_opt loc comments
+        @@ wrap_body
+        @@ Base.List.map ~f:member_layout members
+        @ enum_internal_comments comments
+        @ unknown_members has_unknown_members;
+      ]
   in
   layout_node_with_comments_opt loc comments (fuse [def; space; identifier id; body])
 

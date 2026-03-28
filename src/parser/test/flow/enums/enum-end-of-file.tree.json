@@ -30,11 +30,11 @@
         "optional":false
       },
       "body":{
-        "type":"EnumStringBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":2,"column":0},"end":{"line":2,"column":0}},
         "range":[5,5],
         "members":[],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     }

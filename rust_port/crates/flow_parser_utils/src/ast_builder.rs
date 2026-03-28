@@ -1631,107 +1631,49 @@ pub mod statements {
             enum_declaration::DefaultedMember { loc, id }
         }
 
-        pub fn boolean_body(
-            loc: Option<Loc>,
-            explicit_type: Option<bool>,
-            has_unknown_members: Option<bool>,
-            comments: Option<ast::Syntax<Loc, Arc<[ast::Comment<Loc>]>>>,
-            members: Vec<enum_declaration::InitializedMember<ast::BooleanLiteral<Loc>, Loc>>,
-        ) -> enum_declaration::Body<Loc> {
-            let loc = loc.unwrap_or_else(Loc::none);
-            let explicit_type = explicit_type.unwrap_or(false);
-            let has_unknown_members = has_unknown_members.unwrap_or(false);
-            enum_declaration::Body::BooleanBody {
-                loc,
-                body: enum_declaration::BooleanBody {
-                    members: members.into(),
-                    explicit_type,
-                    has_unknown_members,
-                    comments,
-                },
-            }
+        pub fn boolean_member(
+            m: enum_declaration::InitializedMember<ast::BooleanLiteral<Loc>, Loc>,
+        ) -> enum_declaration::Member<Loc> {
+            enum_declaration::Member::BooleanMember(m)
         }
 
-        pub fn number_body(
-            loc: Option<Loc>,
-            explicit_type: Option<bool>,
-            has_unknown_members: Option<bool>,
-            comments: Option<ast::Syntax<Loc, Arc<[ast::Comment<Loc>]>>>,
-            members: Vec<enum_declaration::InitializedMember<ast::NumberLiteral<Loc>, Loc>>,
-        ) -> enum_declaration::Body<Loc> {
-            let loc = loc.unwrap_or_else(Loc::none);
-            let explicit_type = explicit_type.unwrap_or(false);
-            let has_unknown_members = has_unknown_members.unwrap_or(false);
-            enum_declaration::Body::NumberBody {
-                loc,
-                body: enum_declaration::NumberBody {
-                    members: members.into(),
-                    explicit_type,
-                    has_unknown_members,
-                    comments,
-                },
-            }
+        pub fn number_member(
+            m: enum_declaration::InitializedMember<ast::NumberLiteral<Loc>, Loc>,
+        ) -> enum_declaration::Member<Loc> {
+            enum_declaration::Member::NumberMember(m)
         }
 
-        pub fn string_defaulted_body(
-            loc: Option<Loc>,
-            explicit_type: Option<bool>,
-            has_unknown_members: Option<bool>,
-            comments: Option<ast::Syntax<Loc, Arc<[ast::Comment<Loc>]>>>,
-            members: Vec<enum_declaration::DefaultedMember<Loc>>,
-        ) -> enum_declaration::Body<Loc> {
-            let loc = loc.unwrap_or_else(Loc::none);
-            let explicit_type = explicit_type.unwrap_or(false);
-            let has_unknown_members = has_unknown_members.unwrap_or(false);
-            let members = enum_declaration::StringBodyMembers::Defaulted(members.into());
-            enum_declaration::Body::StringBody {
-                loc,
-                body: enum_declaration::StringBody {
-                    members,
-                    explicit_type,
-                    has_unknown_members,
-                    comments,
-                },
-            }
+        pub fn string_member(
+            m: enum_declaration::InitializedMember<ast::StringLiteral<Loc>, Loc>,
+        ) -> enum_declaration::Member<Loc> {
+            enum_declaration::Member::StringMember(m)
         }
 
-        pub fn string_initialized_body(
-            loc: Option<Loc>,
-            explicit_type: Option<bool>,
-            has_unknown_members: Option<bool>,
-            comments: Option<ast::Syntax<Loc, Arc<[ast::Comment<Loc>]>>>,
-            members: Vec<enum_declaration::InitializedMember<ast::StringLiteral<Loc>, Loc>>,
-        ) -> enum_declaration::Body<Loc> {
-            let loc = loc.unwrap_or_else(Loc::none);
-            let explicit_type = explicit_type.unwrap_or(false);
-            let has_unknown_members = has_unknown_members.unwrap_or(false);
-            let members = enum_declaration::StringBodyMembers::Initialized(members.into());
-            enum_declaration::Body::StringBody {
-                loc,
-                body: enum_declaration::StringBody {
-                    members,
-                    explicit_type,
-                    has_unknown_members,
-                    comments,
-                },
-            }
+        pub fn bigint_member(
+            m: enum_declaration::InitializedMember<ast::BigIntLiteral<Loc>, Loc>,
+        ) -> enum_declaration::Member<Loc> {
+            enum_declaration::Member::BigIntMember(m)
         }
 
-        pub fn symbol_body(
-            loc: Option<Loc>,
-            has_unknown_members: Option<bool>,
+        pub fn defaulted_member_of(
+            m: enum_declaration::DefaultedMember<Loc>,
+        ) -> enum_declaration::Member<Loc> {
+            enum_declaration::Member::DefaultedMember(m)
+        }
+
+        pub fn body(
+            loc: Loc,
+            members: Arc<[enum_declaration::Member<Loc>]>,
+            explicit_type: Option<(Loc, enum_declaration::ExplicitType)>,
+            has_unknown_members: Option<Loc>,
             comments: Option<ast::Syntax<Loc, Arc<[ast::Comment<Loc>]>>>,
-            members: Vec<enum_declaration::DefaultedMember<Loc>>,
         ) -> enum_declaration::Body<Loc> {
-            let loc = loc.unwrap_or_else(Loc::none);
-            let has_unknown_members = has_unknown_members.unwrap_or(false);
-            enum_declaration::Body::SymbolBody {
+            enum_declaration::Body {
                 loc,
-                body: enum_declaration::SymbolBody {
-                    members: members.into(),
-                    has_unknown_members,
-                    comments,
-                },
+                members,
+                explicit_type,
+                has_unknown_members,
+                comments,
             }
         }
     }

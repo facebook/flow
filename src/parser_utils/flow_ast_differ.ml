@@ -3521,105 +3521,33 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
       (body1 : Loc.t Ast.Statement.EnumDeclaration.body)
       (body2 : Loc.t Ast.Statement.EnumDeclaration.body) : node change list option =
     let open Ast.Statement.EnumDeclaration in
-    match (body1, body2) with
-    | ((loc, BooleanBody b1), (_, BooleanBody b2)) ->
-      let {
-        members = members1;
-        explicit_type = explicit_type1;
-        has_unknown_members = has_unknown_members1;
-        BooleanBody.comments = comments1;
-      } =
-        b1
-      in
-      let {
-        members = members2;
-        explicit_type = explicit_type2;
-        has_unknown_members = has_unknown_members2;
-        BooleanBody.comments = comments2;
-      } =
-        b2
-      in
-      let members_diff = diff_and_recurse_no_trivial enum_boolean_member members1 members2 in
-      let comments_diff = syntax_opt loc comments1 comments2 in
-      if has_unknown_members1 != has_unknown_members2 || explicit_type1 != explicit_type2 then
-        None
-      else
-        join_diff_list [members_diff; comments_diff]
-    | ((loc, NumberBody b1), (_, NumberBody b2)) ->
-      let {
-        members = members1;
-        explicit_type = explicit_type1;
-        has_unknown_members = has_unknown_members1;
-        NumberBody.comments = comments1;
-      } =
-        b1
-      in
-      let {
-        members = members2;
-        explicit_type = explicit_type2;
-        has_unknown_members = has_unknown_members2;
-        NumberBody.comments = comments2;
-      } =
-        b2
-      in
-      let members_diff = diff_and_recurse_no_trivial enum_number_member members1 members2 in
-      let comments_diff = syntax_opt loc comments1 comments2 in
-      if has_unknown_members1 != has_unknown_members2 || explicit_type1 != explicit_type2 then
-        None
-      else
-        join_diff_list [members_diff; comments_diff]
-    | ((loc, StringBody b1), (_, StringBody b2)) ->
-      let {
-        members = members1;
-        explicit_type = explicit_type1;
-        has_unknown_members = has_unknown_members1;
-        StringBody.comments = comments1;
-      } =
-        b1
-      in
-      let {
-        members = members2;
-        explicit_type = explicit_type2;
-        has_unknown_members = has_unknown_members2;
-        StringBody.comments = comments2;
-      } =
-        b2
-      in
-      let members_diff =
-        match (members1, members2) with
-        | (StringBody.Defaulted m1, StringBody.Defaulted m2) ->
-          diff_and_recurse_no_trivial enum_defaulted_member m1 m2
-        | (StringBody.Initialized m1, StringBody.Initialized m2) ->
-          diff_and_recurse_no_trivial enum_string_member m1 m2
-        | _ -> None
-      in
-      let comments_diff = syntax_opt loc comments1 comments2 in
-      if has_unknown_members1 != has_unknown_members2 || explicit_type1 != explicit_type2 then
-        None
-      else
-        join_diff_list [members_diff; comments_diff]
-    | ((loc, SymbolBody b1), (_, SymbolBody b2)) ->
-      let {
-        members = members1;
-        has_unknown_members = has_unknown_members1;
-        SymbolBody.comments = comments1;
-      } =
-        b1
-      in
-      let {
-        members = members2;
-        has_unknown_members = has_unknown_members2;
-        SymbolBody.comments = comments2;
-      } =
-        b2
-      in
-      let members_diff = diff_and_recurse_no_trivial enum_defaulted_member members1 members2 in
-      let comments_diff = syntax_opt loc comments1 comments2 in
-      if has_unknown_members1 != has_unknown_members2 then
-        None
-      else
-        join_diff_list [members_diff; comments_diff]
-    | (_, _) -> None
+    let ( loc,
+          { Body.members = members1; explicit_type = et1; has_unknown_members = u1; comments = c1 }
+        ) =
+      body1
+    in
+    let ( _,
+          { Body.members = members2; explicit_type = et2; has_unknown_members = u2; comments = c2 }
+        ) =
+      body2
+    in
+    if Base.Option.equal (fun (_, e1) (_, e2) -> e1 = e2) et1 et2 && u1 = u2 then
+      let members_diff = diff_and_recurse_no_trivial enum_member members1 members2 in
+      let comments_diff = syntax_opt loc c1 c2 in
+      join_diff_list [members_diff; comments_diff]
+    else
+      None
+  and enum_member
+      (member1 : Loc.t Ast.Statement.EnumDeclaration.member)
+      (member2 : Loc.t Ast.Statement.EnumDeclaration.member) : node change list option =
+    let open Ast.Statement.EnumDeclaration in
+    match (member1, member2) with
+    | (DefaultedMember m1, DefaultedMember m2) -> enum_defaulted_member m1 m2
+    | (BooleanMember m1, BooleanMember m2) -> enum_boolean_member m1 m2
+    | (NumberMember m1, NumberMember m2) -> enum_number_member m1 m2
+    | (StringMember m1, StringMember m2) -> enum_string_member m1 m2
+    | (BigIntMember m1, BigIntMember m2) -> enum_bigint_member m1 m2
+    | _ -> None
   and enum_defaulted_member
       (member1 : Loc.t Ast.Statement.EnumDeclaration.DefaultedMember.t)
       (member2 : Loc.t Ast.Statement.EnumDeclaration.DefaultedMember.t) : node change list option =
@@ -3665,6 +3593,19 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let (_, { id = id2; init = (loc2, lit2) }) = member2 in
     let id_diff = Some (diff_if_changed identifier id1 id2) in
     let value_diff = diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2 in
+    join_diff_list [id_diff; value_diff]
+  and enum_bigint_member
+      (member1 :
+        (Loc.t Ast.BigIntLiteral.t, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t
+        )
+      (member2 :
+        (Loc.t Ast.BigIntLiteral.t, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t
+        ) =
+    let open Ast.Statement.EnumDeclaration.InitializedMember in
+    let (_, { id = id1; init = (loc1, lit1) }) = member1 in
+    let (_, { id = id2; init = (loc2, lit2) }) = member2 in
+    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let value_diff = diff_if_changed_ret_opt (bigint_literal loc1 loc2) lit1 lit2 in
     join_diff_list [id_diff; value_diff]
   and type_params
       (pd1 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) (pd2 : (Loc.t, Loc.t) Ast.Type.TypeParams.t) :

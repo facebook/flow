@@ -2384,6 +2384,7 @@ pub mod statement {
         #[derive(
             Debug,
             Clone,
+            Copy,
             PartialEq,
             Eq,
             Hash,
@@ -2392,138 +2393,71 @@ pub mod statement {
             serde::Serialize,
             serde::Deserialize
         )]
-        pub struct BooleanBody<M: Dupe> {
-            pub members: Arc<[InitializedMember<super::super::BooleanLiteral<M>, M>]>,
-            pub explicit_type: bool,
-            pub has_unknown_members: bool,
+        pub enum ExplicitType {
+            Boolean,
+            Number,
+            String,
+            Symbol,
+            BigInt,
+        }
+
+        impl ExplicitType {
+            pub fn as_str(&self) -> &'static str {
+                match self {
+                    Self::Boolean => "boolean",
+                    Self::Number => "number",
+                    Self::String => "string",
+                    Self::Symbol => "symbol",
+                    Self::BigInt => "bigint",
+                }
+            }
+        }
+
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
+        pub enum Member<M: Dupe> {
+            BooleanMember(InitializedMember<super::super::BooleanLiteral<M>, M>),
+            NumberMember(InitializedMember<super::super::NumberLiteral<M>, M>),
+            StringMember(InitializedMember<super::super::StringLiteral<M>, M>),
+            BigIntMember(InitializedMember<super::super::BigIntLiteral<M>, M>),
+            DefaultedMember(DefaultedMember<M>),
+        }
+
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
+        pub struct Body<M: Dupe> {
+            pub loc: M,
+            pub members: Arc<[Member<M>]>,
+            pub explicit_type: Option<(M, ExplicitType)>,
+            pub has_unknown_members: Option<M>,
             pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
-        }
-
-        #[derive(
-            Debug,
-            Clone,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            serde::Serialize,
-            serde::Deserialize
-        )]
-        pub struct NumberBody<M: Dupe> {
-            pub members: Arc<[InitializedMember<super::super::NumberLiteral<M>, M>]>,
-            pub explicit_type: bool,
-            pub has_unknown_members: bool,
-            pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
-        }
-
-        #[derive(
-            Debug,
-            Clone,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            serde::Serialize,
-            serde::Deserialize
-        )]
-        pub enum StringBodyMembers<I, M: Dupe> {
-            Defaulted(Arc<[DefaultedMember<M>]>),
-            Initialized(Arc<[InitializedMember<I, M>]>),
-        }
-
-        #[derive(
-            Debug,
-            Clone,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            serde::Serialize,
-            serde::Deserialize
-        )]
-        pub struct StringBody<M: Dupe> {
-            pub members: StringBodyMembers<StringLiteral<M>, M>,
-            pub explicit_type: bool,
-            pub has_unknown_members: bool,
-            pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
-        }
-
-        #[derive(
-            Debug,
-            Clone,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            serde::Serialize,
-            serde::Deserialize
-        )]
-        pub struct SymbolBody<M: Dupe> {
-            pub members: Arc<[DefaultedMember<M>]>,
-            pub has_unknown_members: bool,
-            pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
-        }
-
-        #[derive(
-            Debug,
-            Clone,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            serde::Serialize,
-            serde::Deserialize
-        )]
-        pub struct BigIntBody<M: Dupe> {
-            pub members: Arc<[InitializedMember<super::super::BigIntLiteral<M>, M>]>,
-            pub explicit_type: bool,
-            pub has_unknown_members: bool,
-            pub comments: Option<Syntax<M, Arc<[Comment<M>]>>>,
-        }
-
-        #[derive(
-            Debug,
-            Clone,
-            PartialEq,
-            Eq,
-            Hash,
-            PartialOrd,
-            Ord,
-            serde::Serialize,
-            serde::Deserialize
-        )]
-        pub enum Body<M: Dupe> {
-            BooleanBody { loc: M, body: BooleanBody<M> },
-            NumberBody { loc: M, body: NumberBody<M> },
-            StringBody { loc: M, body: StringBody<M> },
-            SymbolBody { loc: M, body: SymbolBody<M> },
-            BigIntBody { loc: M, body: BigIntBody<M> },
         }
 
         impl<M: Dupe> Body<M> {
             pub fn loc(&self) -> &M {
-                match self {
-                    Self::BooleanBody { loc, .. } => loc,
-                    Self::NumberBody { loc, .. } => loc,
-                    Self::StringBody { loc, .. } => loc,
-                    Self::SymbolBody { loc, .. } => loc,
-                    Self::BigIntBody { loc, .. } => loc,
-                }
+                &self.loc
             }
 
             pub fn loc_mut(&mut self) -> &mut M {
-                match self {
-                    Self::BooleanBody { loc, .. } => loc,
-                    Self::NumberBody { loc, .. } => loc,
-                    Self::StringBody { loc, .. } => loc,
-                    Self::SymbolBody { loc, .. } => loc,
-                    Self::BigIntBody { loc, .. } => loc,
-                }
+                &mut self.loc
             }
         }
     }

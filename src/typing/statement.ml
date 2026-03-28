@@ -10333,181 +10333,97 @@ module Make
 
   and mk_enum cx ~enum_reason name_loc enum_name body =
     let open Ast.Statement.EnumDeclaration in
-    let is_a_to_z c = c >= 'a' && c <= 'z' in
-    let check_member_name member_loc name =
-      if String.length name > 0 && is_a_to_z name.[0] then
-        Flow.add_output
-          cx
-          Error_message.(
-            EEnumError (EnumInvalidMemberName { loc = member_loc; enum_reason; member_name = name })
-          )
-    in
-    let defaulted_members =
-      Base.List.fold
-        ~init:SMap.empty
-        ~f:(fun acc (member_loc, { DefaultedMember.id = (id_loc, { Ast.Identifier.name; _ }) }) ->
-          check_member_name id_loc name;
-          SMap.add name member_loc acc
-      )
+    let (body_loc, body_t) = body in
+    let result = Enum_validate.classify_enum_body body_t ~body_loc in
+    (* Report validation errors *)
+    List.iter
+      (fun err ->
+        let error =
+          match err with
+          | Enum_validate.DuplicateMemberName { loc; prev_use_loc; member_name } ->
+            Error_message.EnumDuplicateMemberName { loc; prev_use_loc; enum_reason; member_name }
+          | Enum_validate.InconsistentMemberValues { loc } ->
+            Error_message.EnumInconsistentMemberValues { loc; enum_reason }
+          | Enum_validate.InvalidMemberInitializer { loc; explicit_type; member_name } ->
+            Error_message.EnumInvalidMemberInitializer
+              { loc; enum_reason; explicit_type; member_name }
+          | Enum_validate.BooleanMemberNotInitialized { loc; member_name } ->
+            Error_message.EnumBooleanMemberNotInitialized { loc; enum_reason; member_name }
+          | Enum_validate.NumberMemberNotInitialized { loc; member_name } ->
+            Error_message.EnumNumberMemberNotInitialized { loc; enum_reason; member_name }
+          | Enum_validate.BigIntMemberNotInitialized { loc; member_name } ->
+            Error_message.EnumBigIntMemberNotInitialized { loc; enum_reason; member_name }
+          | Enum_validate.StringMemberInconsistentlyInitialized { loc } ->
+            Error_message.EnumStringMemberInconsistentlyInitialized { loc; enum_reason }
+          | Enum_validate.SymbolMemberWithInitializer { loc; member_name } ->
+            Error_message.EnumInvalidMemberInitializer
+              { loc; enum_reason; explicit_type = Some Symbol; member_name }
+          | Enum_validate.DuplicateMemberValue { loc; prev_use_loc } ->
+            Error_message.EnumMemberDuplicateValue { loc; prev_use_loc; enum_reason }
+          | Enum_validate.InvalidMemberName { loc; member_name } ->
+            Error_message.EnumInvalidMemberName { loc; enum_reason; member_name }
+        in
+        Flow.add_output cx (Error_message.EEnumError error))
+      result.Enum_validate.errors;
+    let members =
+      List.fold_left
+        (fun acc (name, loc) -> SMap.add name loc acc)
+        SMap.empty
+        result.Enum_validate.members
     in
     let enum_id = Context.make_aloc_id cx name_loc in
-    let (representation_t, members, has_unknown_members) =
-      match body with
-      | (_, BooleanBody { BooleanBody.members; has_unknown_members; _ }) ->
+    let representation_t =
+      match result.Enum_validate.rep with
+      | Some (Enum_validate.BoolRep lit) ->
         let reason = mk_reason RBoolean (loc_of_reason enum_reason) in
-        let (members, bool_type, _) =
-          Base.List.fold_left
-            ~f:
-              (fun (members_map, bool_type, seen_values)
-                   ( member_loc,
-                     { InitializedMember.id = (id_loc, { Ast.Identifier.name; _ }); init }
-                   ) ->
-              check_member_name id_loc name;
-              let (init_loc, { Ast.BooleanLiteral.value = init_value; _ }) = init in
-              let bool_type =
-                match bool_type with
-                (* we have seen one value *)
-                | None -> Some init_value
-                (* we have now seen both values *)
-                | Some _ -> None
-              in
-              let seen_values =
-                match BoolMap.find_opt init_value seen_values with
-                | Some prev_use_loc ->
-                  Flow.add_output
-                    cx
-                    Error_message.(
-                      EEnumError
-                        (EnumMemberDuplicateValue { loc = init_loc; prev_use_loc; enum_reason })
-                    );
-                  seen_values
-                | None -> BoolMap.add init_value member_loc seen_values
-              in
-              (SMap.add name member_loc members_map, bool_type, seen_values))
-            ~init:(SMap.empty, None, BoolMap.empty)
-            members
-        in
         let boolt =
-          match bool_type with
+          match lit with
           | Some b -> SingletonBoolT { value = b; from_annot = false }
           | None -> BoolGeneralT
         in
-        (DefT (reason, boolt), members, has_unknown_members)
-      | (_, NumberBody { NumberBody.members; has_unknown_members; _ }) ->
+        DefT (reason, boolt)
+      | Some (Enum_validate.NumberRep { truthy }) ->
         let reason = mk_reason RNumber (loc_of_reason enum_reason) in
-        let (members, num_type, _) =
-          Base.List.fold_left
-            ~f:
-              (fun (members_map, num_type, seen_values)
-                   ( member_loc,
-                     { InitializedMember.id = (id_loc, { Ast.Identifier.name; _ }); init }
-                   ) ->
-              check_member_name id_loc name;
-              let (init_loc, { Ast.NumberLiteral.value = init_value; _ }) = init in
-              let num_type =
-                if init_value = 0.0 then
-                  AnyLiteral
-                else
-                  num_type
-              in
-              let seen_values =
-                match NumberMap.find_opt init_value seen_values with
-                | Some prev_use_loc ->
-                  Flow.add_output
-                    cx
-                    Error_message.(
-                      EEnumError
-                        (EnumMemberDuplicateValue { loc = init_loc; prev_use_loc; enum_reason })
-                    );
-                  seen_values
-                | None -> NumberMap.add init_value member_loc seen_values
-              in
-              (SMap.add name member_loc members_map, num_type, seen_values))
-            ~init:(SMap.empty, Truthy, NumberMap.empty)
-            members
-        in
-        (DefT (reason, NumGeneralT num_type), members, has_unknown_members)
-      | (_, BigIntBody { BigIntBody.members; has_unknown_members; _ }) ->
-        let reason = mk_reason RBigInt (loc_of_reason enum_reason) in
-        let (members, num_type, _) =
-          Base.List.fold_left
-            ~f:
-              (fun (members_map, bigint_type, seen_values)
-                   ( member_loc,
-                     { InitializedMember.id = (id_loc, { Ast.Identifier.name; _ }); init }
-                   ) ->
-              check_member_name id_loc name;
-              let (init_loc, { Ast.BigIntLiteral.value = init_value; _ }) = init in
-              let bigint_type =
-                if init_value = Some 0L then
-                  AnyLiteral
-                else
-                  bigint_type
-              in
-              let seen_values =
-                match BigIntOptionMap.find_opt init_value seen_values with
-                | Some prev_use_loc ->
-                  Flow.add_output
-                    cx
-                    Error_message.(
-                      EEnumError
-                        (EnumMemberDuplicateValue { loc = init_loc; prev_use_loc; enum_reason })
-                    );
-                  seen_values
-                | None -> BigIntOptionMap.add init_value member_loc seen_values
-              in
-              (SMap.add name member_loc members_map, bigint_type, seen_values))
-            ~init:(SMap.empty, Truthy, BigIntOptionMap.empty)
-            members
-        in
-        (DefT (reason, BigIntGeneralT num_type), members, has_unknown_members)
-      | ( _,
-          StringBody { StringBody.members = StringBody.Initialized members; has_unknown_members; _ }
-        ) ->
+        DefT
+          ( reason,
+            NumGeneralT
+              ( if truthy then
+                Truthy
+              else
+                AnyLiteral
+              )
+          )
+      | Some (Enum_validate.StringRep { truthy }) ->
         let reason = mk_reason RString (loc_of_reason enum_reason) in
-        let (members, str_type, _) =
-          Base.List.fold_left
-            ~f:
-              (fun (members_map, str_type, seen_values)
-                   ( member_loc,
-                     { InitializedMember.id = (id_loc, { Ast.Identifier.name; _ }); init }
-                   ) ->
-              check_member_name id_loc name;
-              let (init_loc, { Ast.StringLiteral.value = init_value; _ }) = init in
-              let str_type =
-                if init_value = "" then
-                  AnyLiteral
-                else
-                  str_type
-              in
-              let seen_values =
-                match SMap.find_opt init_value seen_values with
-                | Some prev_use_loc ->
-                  Flow.add_output
-                    cx
-                    Error_message.(
-                      EEnumError
-                        (EnumMemberDuplicateValue { loc = init_loc; prev_use_loc; enum_reason })
-                    );
-                  seen_values
-                | None -> SMap.add init_value member_loc seen_values
-              in
-              (SMap.add name member_loc members_map, str_type, seen_values))
-            ~init:(SMap.empty, Truthy, SMap.empty)
-            members
-        in
-        (DefT (reason, StrGeneralT str_type), members, has_unknown_members)
-      | (_, StringBody { StringBody.members = StringBody.Defaulted members; has_unknown_members; _ })
-        ->
-        let reason = mk_reason RString (loc_of_reason enum_reason) in
-        ( DefT (reason, StrGeneralT Truthy (* Member names can't be the empty string *)),
-          defaulted_members members,
-          has_unknown_members
-        )
-      | (_, SymbolBody { SymbolBody.members; has_unknown_members; comments = _ }) ->
+        DefT
+          ( reason,
+            StrGeneralT
+              ( if truthy then
+                Truthy
+              else
+                AnyLiteral
+              )
+          )
+      | Some Enum_validate.SymbolRep ->
         let reason = mk_reason RSymbol (loc_of_reason enum_reason) in
-        (DefT (reason, SymbolT), defaulted_members members, has_unknown_members)
+        DefT (reason, SymbolT)
+      | Some (Enum_validate.BigIntRep { truthy }) ->
+        let reason = mk_reason RBigInt (loc_of_reason enum_reason) in
+        DefT
+          ( reason,
+            BigIntGeneralT
+              ( if truthy then
+                Truthy
+              else
+                AnyLiteral
+              )
+          )
+      | None ->
+        (* Fallback for invalid enums *)
+        let reason = mk_reason RString (loc_of_reason enum_reason) in
+        DefT (reason, StrGeneralT Truthy)
     in
+    let has_unknown_members = Option.is_some body_t.Body.has_unknown_members in
     { enum_name; enum_id; members; representation_t; has_unknown_members }
 
   and match_pattern cx case_match_root_loc ~has_guard pattern =

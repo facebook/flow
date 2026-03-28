@@ -1170,71 +1170,23 @@ class ['loc] mapper =
 
     method enum_body (body : 'loc Ast.Statement.EnumDeclaration.body) =
       let open Ast.Statement.EnumDeclaration in
-      match body with
-      | (loc, BooleanBody boolean_body) ->
-        id this#enum_boolean_body boolean_body body (fun body -> (loc, BooleanBody body))
-      | (loc, NumberBody number_body) ->
-        id this#enum_number_body number_body body (fun body -> (loc, NumberBody body))
-      | (loc, StringBody string_body) ->
-        id this#enum_string_body string_body body (fun body -> (loc, StringBody body))
-      | (loc, SymbolBody symbol_body) ->
-        id this#enum_symbol_body symbol_body body (fun body -> (loc, SymbolBody body))
-      | (loc, BigIntBody bigint_body) ->
-        id this#enum_bigint_body bigint_body body (fun body -> (loc, BigIntBody body))
-
-    method enum_boolean_body (body : 'loc Ast.Statement.EnumDeclaration.BooleanBody.t) =
-      let open Ast.Statement.EnumDeclaration.BooleanBody in
-      let { members; explicit_type = _; has_unknown_members = _; comments } = body in
-      let members' = map_list this#enum_boolean_member members in
+      let (loc, body_t) = body in
+      let { Body.members; explicit_type = _; has_unknown_members = _; comments } = body_t in
+      let members' = map_list this#enum_member members in
       let comments' = this#syntax_opt comments in
       if members == members' && comments == comments' then
         body
       else
-        { body with members = members'; comments = comments' }
+        (loc, { body_t with Body.members = members'; comments = comments' })
 
-    method enum_number_body (body : 'loc Ast.Statement.EnumDeclaration.NumberBody.t) =
-      let open Ast.Statement.EnumDeclaration.NumberBody in
-      let { members; explicit_type = _; has_unknown_members = _; comments } = body in
-      let members' = map_list this#enum_number_member members in
-      let comments' = this#syntax_opt comments in
-      if members == members' && comments == comments' then
-        body
-      else
-        { body with members = members'; comments = comments' }
-
-    method enum_string_body (body : 'loc Ast.Statement.EnumDeclaration.StringBody.t) =
-      let open Ast.Statement.EnumDeclaration.StringBody in
-      let { members; explicit_type = _; has_unknown_members = _; comments } = body in
-      let members' =
-        match members with
-        | Defaulted m -> id (map_list this#enum_defaulted_member) m members (fun m -> Defaulted m)
-        | Initialized m -> id (map_list this#enum_string_member) m members (fun m -> Initialized m)
-      in
-      let comments' = this#syntax_opt comments in
-      if members == members' && comments == comments' then
-        body
-      else
-        { body with members = members'; comments = comments' }
-
-    method enum_symbol_body (body : 'loc Ast.Statement.EnumDeclaration.SymbolBody.t) =
-      let open Ast.Statement.EnumDeclaration.SymbolBody in
-      let { members; has_unknown_members = _; comments } = body in
-      let members' = map_list this#enum_defaulted_member members in
-      let comments' = this#syntax_opt comments in
-      if members == members' && comments == comments' then
-        body
-      else
-        { body with members = members'; comments = comments' }
-
-    method enum_bigint_body (body : 'loc Ast.Statement.EnumDeclaration.BigIntBody.t) =
-      let open Ast.Statement.EnumDeclaration.BigIntBody in
-      let { members; explicit_type = _; has_unknown_members = _; comments } = body in
-      let members' = map_list this#enum_bigint_member members in
-      let comments' = this#syntax_opt comments in
-      if members == members' && comments == comments' then
-        body
-      else
-        { body with members = members'; comments = comments' }
+    method enum_member (member : 'loc Ast.Statement.EnumDeclaration.member) =
+      let open Ast.Statement.EnumDeclaration in
+      match member with
+      | BooleanMember m -> id this#enum_boolean_member m member (fun m -> BooleanMember m)
+      | NumberMember m -> id this#enum_number_member m member (fun m -> NumberMember m)
+      | StringMember m -> id this#enum_string_member m member (fun m -> StringMember m)
+      | BigIntMember m -> id this#enum_bigint_member m member (fun m -> BigIntMember m)
+      | DefaultedMember m -> id this#enum_defaulted_member m member (fun m -> DefaultedMember m)
 
     method enum_defaulted_member (member : 'loc Ast.Statement.EnumDeclaration.DefaultedMember.t) =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in

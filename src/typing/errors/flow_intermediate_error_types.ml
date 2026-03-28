@@ -857,6 +857,30 @@ type 'loc message =
       member_name: string;
       enum_reason: 'loc virtual_reason;
     }
+  | MessageEnumDuplicateMemberName of {
+      member_name: string;
+      prev_use_loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageEnumInconsistentMemberValues of { enum_reason: 'loc virtual_reason }
+  | MessageEnumInvalidMemberInitializer of {
+      member_name: string;
+      explicit_type: Flow_ast.Statement.EnumDeclaration.explicit_type option;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageEnumBooleanMemberNotInitialized of {
+      member_name: string;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageEnumNumberMemberNotInitialized of {
+      member_name: string;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageEnumBigIntMemberNotInitialized of {
+      member_name: string;
+      enum_reason: 'loc virtual_reason;
+    }
+  | MessageEnumStringMemberInconsistentlyInitialized of { enum_reason: 'loc virtual_reason }
   | MessageExponentialSpread of {
       reason: 'loc virtual_reason;
       reasons_for_operand1: 'loc exponential_spread_reason_group;

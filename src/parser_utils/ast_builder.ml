@@ -597,30 +597,18 @@ module Statements = struct
 
     let defaulted_member ?(loc = Loc.none) id = (loc, { DefaultedMember.id })
 
-    let boolean_body
-        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
-        =
-      (loc, BooleanBody { BooleanBody.members; explicit_type; has_unknown_members; comments })
+    let boolean_member m = BooleanMember m
 
-    let number_body
-        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
-        =
-      (loc, NumberBody { NumberBody.members; explicit_type; has_unknown_members; comments })
+    let number_member m = NumberMember m
 
-    let string_defaulted_body
-        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
-        =
-      let members = StringBody.Defaulted members in
-      (loc, StringBody { StringBody.members; explicit_type; has_unknown_members; comments })
+    let string_member m = StringMember m
 
-    let string_initialized_body
-        ?(loc = Loc.none) ?(explicit_type = false) ?(has_unknown_members = false) ?comments members
-        =
-      let members = StringBody.Initialized members in
-      (loc, StringBody { StringBody.members; explicit_type; has_unknown_members; comments })
+    let bigint_member m = BigIntMember m
 
-    let symbol_body ?(loc = Loc.none) ?(has_unknown_members = false) ?comments members =
-      (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments })
+    let defaulted_member_of m = DefaultedMember m
+
+    let body ?(loc = Loc.none) ?explicit_type ?has_unknown_members ?comments members =
+      (loc, { Body.members; explicit_type; has_unknown_members; comments })
   end
 
   let component_id_param ?(loc = Loc.none) ?default ?local name =

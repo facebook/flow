@@ -22,11 +22,11 @@
         "optional":false
       },
       "body":{
-        "type":"EnumStringBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":1,"column":11},"end":{"line":2,"column":1}},
         "range":[11,14],
         "members":[],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     }

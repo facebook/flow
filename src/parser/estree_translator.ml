@@ -1782,92 +1782,33 @@ with type t = Impl.t = struct
         [("name", name'); ("local", local'); ("shorthand", bool shorthand)]
     and enum_body body =
       let open Statement.EnumDeclaration in
-      match body with
-      | (loc, BooleanBody { BooleanBody.members; explicit_type; has_unknown_members; comments }) ->
-        node
-          ?comments:(format_internal_comments comments)
-          "EnumBooleanBody"
-          loc
-          [
-            ( "members",
-              array_of_list
-                (fun (loc, { InitializedMember.id; init }) ->
-                  node
-                    "EnumBooleanMember"
-                    loc
-                    [("id", identifier id); ("init", boolean_literal init)])
-                members
-            );
-            ("explicitType", bool explicit_type);
-            ("hasUnknownMembers", bool has_unknown_members);
-          ]
-      | (loc, NumberBody { NumberBody.members; explicit_type; has_unknown_members; comments }) ->
-        node
-          ?comments:(format_internal_comments comments)
-          "EnumNumberBody"
-          loc
-          [
-            ( "members",
-              array_of_list
-                (fun (loc, { InitializedMember.id; init }) ->
-                  node "EnumNumberMember" loc [("id", identifier id); ("init", number_literal init)])
-                members
-            );
-            ("explicitType", bool explicit_type);
-            ("hasUnknownMembers", bool has_unknown_members);
-          ]
-      | (loc, StringBody { StringBody.members; explicit_type; has_unknown_members; comments }) ->
-        let members =
-          match members with
-          | StringBody.Defaulted defaulted_members ->
-            List.map
-              (fun (loc, { DefaultedMember.id }) ->
-                node "EnumDefaultedMember" loc [("id", identifier id)])
-              defaulted_members
-          | StringBody.Initialized initialized_members ->
-            List.map
-              (fun (loc, { InitializedMember.id; init }) ->
-                node "EnumStringMember" loc [("id", identifier id); ("init", string_literal init)])
-              initialized_members
-        in
-        node
-          ?comments:(format_internal_comments comments)
-          "EnumStringBody"
-          loc
-          [
-            ("members", array members);
-            ("explicitType", bool explicit_type);
-            ("hasUnknownMembers", bool has_unknown_members);
-          ]
-      | (loc, SymbolBody { SymbolBody.members; has_unknown_members; comments }) ->
-        node
-          ?comments:(format_internal_comments comments)
-          "EnumSymbolBody"
-          loc
-          [
-            ( "members",
-              array_of_list
-                (fun (loc, { DefaultedMember.id }) ->
-                  node "EnumDefaultedMember" loc [("id", identifier id)])
-                members
-            );
-            ("hasUnknownMembers", bool has_unknown_members);
-          ]
-      | (loc, BigIntBody { BigIntBody.members; explicit_type; has_unknown_members; comments }) ->
-        node
-          ?comments:(format_internal_comments comments)
-          "EnumBigIntBody"
-          loc
-          [
-            ( "members",
-              array_of_list
-                (fun (loc, { InitializedMember.id; init }) ->
-                  node "EnumBigIntMember" loc [("id", identifier id); ("init", bigint_literal init)])
-                members
-            );
-            ("explicitType", bool explicit_type);
-            ("hasUnknownMembers", bool has_unknown_members);
-          ]
+      let (loc, { Body.members; explicit_type; has_unknown_members; comments }) = body in
+      let enum_member = function
+        | BooleanMember (loc, { InitializedMember.id; init }) ->
+          node "EnumBooleanMember" loc [("id", identifier id); ("init", boolean_literal init)]
+        | NumberMember (loc, { InitializedMember.id; init }) ->
+          node "EnumNumberMember" loc [("id", identifier id); ("init", number_literal init)]
+        | StringMember (loc, { InitializedMember.id; init }) ->
+          node "EnumStringMember" loc [("id", identifier id); ("init", string_literal init)]
+        | BigIntMember (loc, { InitializedMember.id; init }) ->
+          node "EnumBigIntMember" loc [("id", identifier id); ("init", bigint_literal init)]
+        | DefaultedMember (loc, { DefaultedMember.id }) ->
+          node "EnumDefaultedMember" loc [("id", identifier id)]
+      in
+      let explicit_type_str =
+        match explicit_type with
+        | Some (_, et) -> string (Flow_ast_utils.string_of_enum_explicit_type et)
+        | None -> null
+      in
+      node
+        ?comments:(format_internal_comments comments)
+        "EnumBody"
+        loc
+        [
+          ("members", array_of_list enum_member members);
+          ("explicitType", explicit_type_str);
+          ("hasUnknownMembers", bool (has_unknown_members <> None));
+        ]
     and enum_declaration (loc, { Statement.EnumDeclaration.id; body; const_; comments }) =
       let props = [("id", identifier id); ("body", enum_body body)] in
       let props =

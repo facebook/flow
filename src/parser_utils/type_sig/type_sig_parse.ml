@@ -252,7 +252,7 @@ and 'loc local_binding =
   | EnumBinding of {
       id_loc: 'loc loc_node;
       name: string;
-      def: (enum_rep * 'loc loc_node smap * bool) Lazy.t option;
+      def: (enum_rep option * 'loc loc_node smap * bool) Lazy.t option;
     }
   | NamespaceBinding of {
       id_loc: 'loc loc_node;
@@ -5219,84 +5219,35 @@ let interface_decl opts scope tbls decl =
 
 let enum_decl =
   let module E = Ast.Statement.EnumDeclaration in
-  let defaulted_member tbls members member =
-    let (loc, { E.DefaultedMember.id }) = member in
-    let (_, { Ast.Identifier.name; comments = _ }) = id in
-    let loc = push_loc tbls loc in
-    SMap.add name loc members
+  let enum_rep_to_type_sig_rep = function
+    | Enum_validate.BoolRep lit -> BoolRep lit
+    | Enum_validate.NumberRep { truthy } -> NumberRep { truthy }
+    | Enum_validate.StringRep { truthy } -> StringRep { truthy }
+    | Enum_validate.SymbolRep -> SymbolRep
+    | Enum_validate.BigIntRep { truthy } -> BigIntRep { truthy }
   in
-  let initialized_member f tbls (rep, members) member =
-    let (loc, { E.InitializedMember.id; init }) = member in
-    let (_, { Ast.Identifier.name; comments = _ }) = id in
-    let loc = push_loc tbls loc in
-    let rep = f rep init in
-    let members = SMap.add name loc members in
-    (rep, members)
-  in
-  let boolean_rep lit init =
-    let (_, { Ast.BooleanLiteral.value; _ }) = init in
-    match lit with
-    | None -> Some value
-    | Some _ -> None
-  in
-  let string_rep truthy init =
-    let (_, { Ast.StringLiteral.value; _ }) = init in
-    if value = "" then
-      false
-    else
-      truthy
-  in
-  let number_rep truthy init =
-    let (_, { Ast.NumberLiteral.value; _ }) = init in
-    if value = 0. then
-      false
-    else
-      truthy
-  in
-  let bigint_rep truthy init =
-    let (_, { Ast.BigIntLiteral.value; _ }) = init in
-    if value = Some 0L then
-      false
-    else
-      truthy
-  in
-  let boolean_member = initialized_member boolean_rep in
-  let string_member = initialized_member string_rep in
-  let number_member = initialized_member number_rep in
-  let bigint_member = initialized_member bigint_rep in
-  let defaulted_members tbls = List.fold_left (defaulted_member tbls) SMap.empty in
-  let initialized_members tbls f rep = List.fold_left (f tbls) (rep, SMap.empty) in
-  let string_enum_def tbls has_unknown_members = function
-    | E.StringBody.Initialized members ->
-      let (truthy, members) = initialized_members tbls string_member true members in
-      (StringRep { truthy }, members, has_unknown_members)
-    | E.StringBody.Defaulted members ->
-      let members = defaulted_members tbls members in
-      (StringRep { truthy = true }, members, has_unknown_members)
-  in
-  let enum_def tbls = function
-    | E.BooleanBody { E.BooleanBody.members; has_unknown_members; _ } ->
-      let (lit, members) = initialized_members tbls boolean_member None members in
-      (BoolRep lit, members, has_unknown_members)
-    | E.NumberBody { E.NumberBody.members; has_unknown_members; _ } ->
-      let (truthy, members) = initialized_members tbls number_member true members in
-      (NumberRep { truthy }, members, has_unknown_members)
-    | E.StringBody { E.StringBody.members; has_unknown_members; _ } ->
-      string_enum_def tbls has_unknown_members members
-    | E.SymbolBody { E.SymbolBody.members; has_unknown_members; _ } ->
-      let members = defaulted_members tbls members in
-      (SymbolRep, members, has_unknown_members)
-    | E.BigIntBody { E.BigIntBody.members; has_unknown_members; _ } ->
-      let (truthy, members) = initialized_members tbls bigint_member true members in
-      (BigIntRep { truthy }, members, has_unknown_members)
+  let enum_def tbls body_loc body =
+    let result = Enum_validate.classify_enum_body body ~body_loc in
+    let members =
+      List.fold_left
+        (fun acc (name, loc) ->
+          let loc = push_loc tbls loc in
+          SMap.add name loc acc)
+        SMap.empty
+        result.Enum_validate.members
+    in
+    let has_unknown_members = Option.is_some result.Enum_validate.has_unknown_members in
+    match result.Enum_validate.rep with
+    | Some rep -> (Some (enum_rep_to_type_sig_rep rep), members, has_unknown_members)
+    | None -> (None, members, has_unknown_members)
   in
   fun opts scope tbls decl ->
-    let { E.id; body = (_, body); const_ = _; comments = _ } = decl in
+    let { E.id; body = (body_loc, body); const_ = _; comments = _ } = decl in
     let (id_loc, { Ast.Identifier.name; comments = _ }) = id in
     let id_loc = push_loc tbls id_loc in
     let def =
       if opts.enable_enums then
-        Some (lazy (splice tbls id_loc (fun tbls -> enum_def tbls body)))
+        Some (lazy (splice tbls id_loc (fun tbls -> enum_def tbls body_loc body)))
       else
         None
     in

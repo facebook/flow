@@ -18189,252 +18189,158 @@ pub fn mk_enum(
     enum_name: &str,
     body: &statement::enum_declaration::Body<ALoc>,
 ) -> type_::EnumConcreteInfoInner {
-    use ast::statement::enum_declaration;
-    let is_a_to_z = |c: u8| c >= b'a' && c <= b'z';
-    let check_member_name = |member_loc: ALoc, name: &FlowSmolStr| {
-        if !name.is_empty() && is_a_to_z(name.as_bytes()[0]) {
-            flow_js_utils::add_output_non_speculating(
-                cx,
-                ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName {
-                    loc: member_loc,
+    use flow_parser_utils::enum_validate;
+    let result = enum_validate::classify_enum_body(body, &body.loc);
+    // Report validation errors
+    for err in &result.errors {
+        let error = match err {
+            enum_validate::ValidationError::DuplicateMemberName {
+                loc,
+                prev_use_loc,
+                member_name,
+            } => EnumErrorKind::EnumDuplicateMemberName {
+                loc: loc.dupe(),
+                prev_use_loc: prev_use_loc.dupe(),
+                enum_reason: enum_reason.dupe(),
+                member_name: member_name.clone(),
+            },
+            enum_validate::ValidationError::InconsistentMemberValues { loc } => {
+                EnumErrorKind::EnumInconsistentMemberValues {
+                    loc: loc.dupe(),
                     enum_reason: enum_reason.dupe(),
-                    member_name: name.to_string(),
-                }),
-            );
-        }
-    };
-    let defaulted_members =
-        |members: &[enum_declaration::DefaultedMember<ALoc>]| -> FlowOrdMap<FlowSmolStr, ALoc> {
-            let mut acc = FlowOrdMap::new();
-            for member in members {
-                let enum_declaration::DefaultedMember {
-                    loc: ref member_loc,
-                    ref id,
-                } = *member;
-                let id_loc = id.loc.dupe();
-                let name = &id.name;
-                check_member_name(id_loc, name);
-                acc.insert(name.dupe(), member_loc.dupe());
-            }
-            acc
-        };
-    let enum_id = cx.make_aloc_id(&name_loc);
-    let (representation_t, members, has_unknown_members) = match body {
-        enum_declaration::Body::BooleanBody { body, .. } => {
-            let reason = mk_reason(VirtualReasonDesc::RBoolean, enum_reason.loc().dupe());
-            let mut members_map: FlowOrdMap<FlowSmolStr, ALoc> = FlowOrdMap::new();
-            let mut bool_type: Option<bool> = None;
-            let mut seen_values: BTreeMap<bool, ALoc> = BTreeMap::new();
-            for member in body.members.iter() {
-                let enum_declaration::InitializedMember {
-                    loc: ref member_loc,
-                    ref id,
-                    ref init,
-                } = *member;
-                let id_loc = id.loc.dupe();
-                let name = &id.name;
-                check_member_name(id_loc, name);
-                let (init_loc, init_lit) = init;
-                let init_value = init_lit.value;
-                bool_type = match bool_type {
-                    // we have seen one value
-                    None => Some(init_value),
-                    // we have now seen both values
-                    Some(_) => None,
-                };
-                match seen_values.get(&init_value) {
-                    Some(prev_use_loc) => {
-                        flow_js_utils::add_output_non_speculating(
-                            cx,
-                            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue {
-                                loc: init_loc.dupe(),
-                                prev_use_loc: prev_use_loc.dupe(),
-                                enum_reason: enum_reason.dupe(),
-                            }),
-                        );
-                    }
-                    None => {
-                        seen_values.insert(init_value, member_loc.dupe());
-                    }
                 }
-                members_map.insert(name.dupe(), member_loc.dupe());
             }
-            let boolt = match bool_type {
+            enum_validate::ValidationError::InvalidMemberInitializer {
+                loc,
+                explicit_type,
+                member_name,
+            } => EnumErrorKind::EnumInvalidMemberInitializer {
+                loc: loc.dupe(),
+                enum_reason: enum_reason.dupe(),
+                explicit_type: *explicit_type,
+                member_name: member_name.clone(),
+            },
+            enum_validate::ValidationError::BooleanMemberNotInitialized { loc, member_name } => {
+                EnumErrorKind::EnumBooleanMemberNotInitialized {
+                    loc: loc.dupe(),
+                    enum_reason: enum_reason.dupe(),
+                    member_name: member_name.clone(),
+                }
+            }
+            enum_validate::ValidationError::NumberMemberNotInitialized { loc, member_name } => {
+                EnumErrorKind::EnumNumberMemberNotInitialized {
+                    loc: loc.dupe(),
+                    enum_reason: enum_reason.dupe(),
+                    member_name: member_name.clone(),
+                }
+            }
+            enum_validate::ValidationError::BigIntMemberNotInitialized { loc, member_name } => {
+                EnumErrorKind::EnumBigIntMemberNotInitialized {
+                    loc: loc.dupe(),
+                    enum_reason: enum_reason.dupe(),
+                    member_name: member_name.clone(),
+                }
+            }
+            enum_validate::ValidationError::StringMemberInconsistentlyInitialized { loc } => {
+                EnumErrorKind::EnumStringMemberInconsistentlyInitialized {
+                    loc: loc.dupe(),
+                    enum_reason: enum_reason.dupe(),
+                }
+            }
+            enum_validate::ValidationError::SymbolMemberWithInitializer { loc, member_name } => {
+                EnumErrorKind::EnumInvalidMemberInitializer {
+                    loc: loc.dupe(),
+                    enum_reason: enum_reason.dupe(),
+                    explicit_type: Some(
+                        flow_parser::ast::statement::enum_declaration::ExplicitType::Symbol,
+                    ),
+                    member_name: member_name.clone(),
+                }
+            }
+            enum_validate::ValidationError::DuplicateMemberValue { loc, prev_use_loc } => {
+                EnumErrorKind::EnumMemberDuplicateValue {
+                    loc: loc.dupe(),
+                    prev_use_loc: prev_use_loc.dupe(),
+                    enum_reason: enum_reason.dupe(),
+                }
+            }
+            enum_validate::ValidationError::InvalidMemberName { loc, member_name } => {
+                EnumErrorKind::EnumInvalidMemberName {
+                    loc: loc.dupe(),
+                    enum_reason: enum_reason.dupe(),
+                    member_name: member_name.clone(),
+                }
+            }
+        };
+        flow_js_utils::add_output_non_speculating(cx, ErrorMessage::EEnumError(error));
+    }
+    let members = result
+        .members
+        .into_iter()
+        .fold(FlowOrdMap::new(), |mut acc, (name, loc)| {
+            acc.insert(FlowSmolStr::from(name), loc);
+            acc
+        });
+    let enum_id = cx.make_aloc_id(&name_loc);
+    let representation_t = match result.rep {
+        Some(enum_validate::EnumRep::BoolRep(lit)) => {
+            let reason = mk_reason(VirtualReasonDesc::RBoolean, enum_reason.loc().dupe());
+            let boolt = match lit {
                 Some(b) => DefTInner::SingletonBoolT {
                     value: b,
                     from_annot: false,
                 },
-                _ => DefTInner::BoolGeneralT,
+                None => DefTInner::BoolGeneralT,
             };
-            (
-                Type::new(TypeInner::DefT(reason, DefT::new(boolt))),
-                members_map,
-                body.has_unknown_members,
-            )
+            Type::new(TypeInner::DefT(reason, DefT::new(boolt)))
         }
-        enum_declaration::Body::NumberBody { body, .. } => {
+        Some(enum_validate::EnumRep::NumberRep { truthy }) => {
             let reason = mk_reason(VirtualReasonDesc::RNumber, enum_reason.loc().dupe());
-            let mut members_map: FlowOrdMap<FlowSmolStr, ALoc> = FlowOrdMap::new();
-            let mut num_type = Literal::Truthy;
-            let mut seen_values: std::collections::BTreeMap<u64, ALoc> =
-                std::collections::BTreeMap::new();
-            for member in body.members.iter() {
-                let enum_declaration::InitializedMember {
-                    loc: ref member_loc,
-                    ref id,
-                    ref init,
-                } = *member;
-                let id_loc = id.loc.dupe();
-                let name = &id.name;
-                check_member_name(id_loc, name);
-                let (init_loc, init_lit) = init;
-                let init_value = init_lit.value;
-                if init_value == 0.0 {
-                    num_type = Literal::AnyLiteral;
-                }
-                let init_bits = init_value.to_bits();
-                match seen_values.get(&init_bits) {
-                    Some(prev_use_loc) => {
-                        flow_js_utils::add_output_non_speculating(
-                            cx,
-                            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue {
-                                loc: init_loc.dupe(),
-                                prev_use_loc: prev_use_loc.dupe(),
-                                enum_reason: enum_reason.dupe(),
-                            }),
-                        );
-                    }
-                    None => {
-                        seen_values.insert(init_bits, member_loc.dupe());
-                    }
-                }
-                members_map.insert(name.dupe(), member_loc.dupe());
-            }
-            (
-                Type::new(TypeInner::DefT(
-                    reason,
-                    DefT::new(DefTInner::NumGeneralT(num_type)),
-                )),
-                members_map,
-                body.has_unknown_members,
-            )
+            Type::new(TypeInner::DefT(
+                reason,
+                DefT::new(DefTInner::NumGeneralT(if truthy {
+                    Literal::Truthy
+                } else {
+                    Literal::AnyLiteral
+                })),
+            ))
         }
-        enum_declaration::Body::BigIntBody { body, .. } => {
-            let reason = mk_reason(VirtualReasonDesc::RBigInt, enum_reason.loc().dupe());
-            let mut members_map: FlowOrdMap<FlowSmolStr, ALoc> = FlowOrdMap::new();
-            let mut bigint_type = Literal::Truthy;
-            let mut seen_values: std::collections::BTreeMap<Option<i64>, ALoc> =
-                std::collections::BTreeMap::new();
-            for member in body.members.iter() {
-                let enum_declaration::InitializedMember {
-                    loc: ref member_loc,
-                    ref id,
-                    ref init,
-                } = *member;
-                let id_loc = id.loc.dupe();
-                let name = &id.name;
-                check_member_name(id_loc, name);
-                let (init_loc, init_lit) = init;
-                let init_value = init_lit.value;
-                //           let bigint_type = if init_value = Some 0L then AnyLiteral else bigint_type in
-                if init_value == Some(0i64) {
-                    bigint_type = Literal::AnyLiteral;
-                }
-                match seen_values.get(&init_value) {
-                    Some(prev_use_loc) => {
-                        flow_js_utils::add_output_non_speculating(
-                            cx,
-                            ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue {
-                                loc: init_loc.dupe(),
-                                prev_use_loc: prev_use_loc.dupe(),
-                                enum_reason: enum_reason.dupe(),
-                            }),
-                        );
-                    }
-                    None => {
-                        seen_values.insert(init_value, member_loc.dupe());
-                    }
-                }
-                members_map.insert(name.dupe(), member_loc.dupe());
-            }
-            (
-                Type::new(TypeInner::DefT(
-                    reason,
-                    DefT::new(DefTInner::BigIntGeneralT(bigint_type)),
-                )),
-                members_map,
-                body.has_unknown_members,
-            )
+        Some(enum_validate::EnumRep::StringRep { truthy }) => {
+            let reason = mk_reason(VirtualReasonDesc::RString, enum_reason.loc().dupe());
+            Type::new(TypeInner::DefT(
+                reason,
+                DefT::new(DefTInner::StrGeneralT(if truthy {
+                    Literal::Truthy
+                } else {
+                    Literal::AnyLiteral
+                })),
+            ))
         }
-        enum_declaration::Body::StringBody { body, .. } => match &body.members {
-            enum_declaration::StringBodyMembers::Initialized(members) => {
-                let reason = mk_reason(VirtualReasonDesc::RString, enum_reason.loc().dupe());
-                let mut members_map: FlowOrdMap<FlowSmolStr, ALoc> = FlowOrdMap::new();
-                let mut str_type = Literal::Truthy;
-                let mut seen_values: std::collections::BTreeMap<FlowSmolStr, ALoc> =
-                    std::collections::BTreeMap::new();
-                for member in members.iter() {
-                    let enum_declaration::InitializedMember {
-                        loc: ref member_loc,
-                        ref id,
-                        ref init,
-                    } = *member;
-                    let id_loc = id.loc.dupe();
-                    let name = &id.name;
-                    check_member_name(id_loc, name);
-                    let (init_loc, init_lit) = init;
-                    let init_value = &init_lit.value;
-                    if init_value.is_empty() {
-                        str_type = Literal::AnyLiteral;
-                    }
-                    match seen_values.get(init_value) {
-                        Some(prev_use_loc) => {
-                            flow_js_utils::add_output_non_speculating(
-                                cx,
-                                ErrorMessage::EEnumError(EnumErrorKind::EnumMemberDuplicateValue {
-                                    loc: init_loc.dupe(),
-                                    prev_use_loc: prev_use_loc.dupe(),
-                                    enum_reason: enum_reason.dupe(),
-                                }),
-                            );
-                        }
-                        None => {
-                            seen_values.insert(init_value.dupe(), member_loc.dupe());
-                        }
-                    }
-                    members_map.insert(name.dupe(), member_loc.dupe());
-                }
-                (
-                    Type::new(TypeInner::DefT(
-                        reason,
-                        DefT::new(DefTInner::StrGeneralT(str_type)),
-                    )),
-                    members_map,
-                    body.has_unknown_members,
-                )
-            }
-            enum_declaration::StringBodyMembers::Defaulted(members) => {
-                let reason = mk_reason(VirtualReasonDesc::RString, enum_reason.loc().dupe());
-                (
-                    Type::new(TypeInner::DefT(
-                        reason,
-                        DefT::new(DefTInner::StrGeneralT(Literal::Truthy)),
-                    )),
-                    defaulted_members(members),
-                    body.has_unknown_members,
-                )
-            }
-        },
-        enum_declaration::Body::SymbolBody { body, .. } => {
-            //       let reason = mk_reason RSymbol (loc_of_reason enum_reason) in
+        Some(enum_validate::EnumRep::SymbolRep) => {
             let reason = mk_reason(VirtualReasonDesc::RSymbol, enum_reason.loc().dupe());
-            (
-                Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::SymbolT))),
-                defaulted_members(&body.members),
-                body.has_unknown_members,
-            )
+            Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::SymbolT)))
+        }
+        Some(enum_validate::EnumRep::BigIntRep { truthy }) => {
+            let reason = mk_reason(VirtualReasonDesc::RBigInt, enum_reason.loc().dupe());
+            Type::new(TypeInner::DefT(
+                reason,
+                DefT::new(DefTInner::BigIntGeneralT(if truthy {
+                    Literal::Truthy
+                } else {
+                    Literal::AnyLiteral
+                })),
+            ))
+        }
+        None => {
+            // Fallback for invalid enums
+            let reason = mk_reason(VirtualReasonDesc::RString, enum_reason.loc().dupe());
+            Type::new(TypeInner::DefT(
+                reason,
+                DefT::new(DefTInner::StrGeneralT(Literal::Truthy)),
+            ))
         }
     };
+    let has_unknown_members = result.has_unknown_members.is_some();
     type_::EnumConcreteInfoInner {
         enum_name: FlowSmolStr::from(enum_name),
         enum_id,

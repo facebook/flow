@@ -848,61 +848,31 @@ class virtual ['M, 'T, 'N, 'U] mapper =
     method enum_body (body : 'M Ast.Statement.EnumDeclaration.body)
         : 'N Ast.Statement.EnumDeclaration.body =
       let open Ast.Statement.EnumDeclaration in
-      match body with
-      | (annot, BooleanBody boolean_body) ->
-        (this#on_loc_annot annot, BooleanBody (this#enum_boolean_body boolean_body))
-      | (annot, NumberBody number_body) ->
-        (this#on_loc_annot annot, NumberBody (this#enum_number_body number_body))
-      | (annot, StringBody string_body) ->
-        (this#on_loc_annot annot, StringBody (this#enum_string_body string_body))
-      | (annot, SymbolBody symbol_body) ->
-        (this#on_loc_annot annot, SymbolBody (this#enum_symbol_body symbol_body))
-      | (annot, BigIntBody bigint_body) ->
-        (this#on_loc_annot annot, BigIntBody (this#enum_bigint_body bigint_body))
-
-    method enum_boolean_body (body : 'M Ast.Statement.EnumDeclaration.BooleanBody.t)
-        : 'N Ast.Statement.EnumDeclaration.BooleanBody.t =
-      let open Ast.Statement.EnumDeclaration.BooleanBody in
-      let { members; explicit_type; has_unknown_members; comments } = body in
-      let members' = List.map ~f:this#enum_boolean_member members in
-      let comments' = this#syntax_with_internal_opt comments in
-      { members = members'; explicit_type; has_unknown_members; comments = comments' }
-
-    method enum_number_body (body : 'M Ast.Statement.EnumDeclaration.NumberBody.t)
-        : 'N Ast.Statement.EnumDeclaration.NumberBody.t =
-      let open Ast.Statement.EnumDeclaration.NumberBody in
-      let { members; explicit_type; has_unknown_members; comments } = body in
-      let members' = List.map ~f:this#enum_number_member members in
-      let comments' = this#syntax_with_internal_opt comments in
-      { members = members'; explicit_type; has_unknown_members; comments = comments' }
-
-    method enum_string_body (body : 'M Ast.Statement.EnumDeclaration.StringBody.t)
-        : 'N Ast.Statement.EnumDeclaration.StringBody.t =
-      let open Ast.Statement.EnumDeclaration.StringBody in
-      let { members; explicit_type; has_unknown_members; comments } = body in
-      let members' =
-        match members with
-        | Defaulted members -> Defaulted (List.map ~f:this#enum_defaulted_member members)
-        | Initialized members -> Initialized (List.map ~f:this#enum_string_member members)
+      let (annot, body_t) = body in
+      let { Body.members; explicit_type; has_unknown_members; comments } = body_t in
+      let members' = List.map ~f:this#enum_member members in
+      let explicit_type' =
+        Base.Option.map explicit_type ~f:(fun (loc, et) -> (this#on_loc_annot loc, et))
       in
       let comments' = this#syntax_with_internal_opt comments in
-      { members = members'; explicit_type; has_unknown_members; comments = comments' }
+      ( this#on_loc_annot annot,
+        {
+          Body.members = members';
+          explicit_type = explicit_type';
+          has_unknown_members = Base.Option.map has_unknown_members ~f:this#on_loc_annot;
+          comments = comments';
+        }
+      )
 
-    method enum_symbol_body (body : 'M Ast.Statement.EnumDeclaration.SymbolBody.t)
-        : 'N Ast.Statement.EnumDeclaration.SymbolBody.t =
-      let open Ast.Statement.EnumDeclaration.SymbolBody in
-      let { members; has_unknown_members; comments } = body in
-      let members' = List.map ~f:this#enum_defaulted_member members in
-      let comments' = this#syntax_with_internal_opt comments in
-      { members = members'; has_unknown_members; comments = comments' }
-
-    method enum_bigint_body (body : 'M Ast.Statement.EnumDeclaration.BigIntBody.t)
-        : 'N Ast.Statement.EnumDeclaration.BigIntBody.t =
-      let open Ast.Statement.EnumDeclaration.BigIntBody in
-      let { members; explicit_type; has_unknown_members; comments } = body in
-      let members' = List.map ~f:this#enum_bigint_member members in
-      let comments' = this#syntax_with_internal_opt comments in
-      { members = members'; explicit_type; has_unknown_members; comments = comments' }
+    method enum_member (member : 'M Ast.Statement.EnumDeclaration.member)
+        : 'N Ast.Statement.EnumDeclaration.member =
+      let open Ast.Statement.EnumDeclaration in
+      match member with
+      | BooleanMember m -> BooleanMember (this#enum_boolean_member m)
+      | NumberMember m -> NumberMember (this#enum_number_member m)
+      | StringMember m -> StringMember (this#enum_string_member m)
+      | BigIntMember m -> BigIntMember (this#enum_bigint_member m)
+      | DefaultedMember m -> DefaultedMember (this#enum_defaulted_member m)
 
     method enum_defaulted_member (member : 'M Ast.Statement.EnumDeclaration.DefaultedMember.t)
         : 'N Ast.Statement.EnumDeclaration.DefaultedMember.t =

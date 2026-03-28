@@ -31,7 +31,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumStringBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":1,"column":21},"end":{"line":4,"column":1}},
         "range":[21,34],
         "members":[
@@ -62,7 +62,7 @@
             }
           }
         ],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     }

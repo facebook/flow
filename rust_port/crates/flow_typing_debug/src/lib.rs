@@ -3238,6 +3238,83 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     member_name
                 )
             }
+            EnumErrorKind::EnumDuplicateMemberName {
+                loc,
+                prev_use_loc,
+                enum_reason,
+                member_name,
+            } => {
+                format!(
+                    "EEnumError (EnumDuplicateMemberName ({}) ({}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    string_of_aloc(None, prev_use_loc),
+                    dump_reason(cx, enum_reason),
+                    member_name
+                )
+            }
+            EnumErrorKind::EnumInconsistentMemberValues { loc, enum_reason } => {
+                format!(
+                    "EEnumError (EnumInconsistentMemberValues ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason)
+                )
+            }
+            EnumErrorKind::EnumInvalidMemberInitializer {
+                loc,
+                enum_reason,
+                member_name,
+                ..
+            } => {
+                format!(
+                    "EEnumError (EnumInvalidMemberInitializer ({}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason),
+                    member_name
+                )
+            }
+            EnumErrorKind::EnumBooleanMemberNotInitialized {
+                loc,
+                enum_reason,
+                member_name,
+            } => {
+                format!(
+                    "EEnumError (EnumBooleanMemberNotInitialized ({}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason),
+                    member_name
+                )
+            }
+            EnumErrorKind::EnumNumberMemberNotInitialized {
+                loc,
+                enum_reason,
+                member_name,
+            } => {
+                format!(
+                    "EEnumError (EnumNumberMemberNotInitialized ({}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason),
+                    member_name
+                )
+            }
+            EnumErrorKind::EnumBigIntMemberNotInitialized {
+                loc,
+                enum_reason,
+                member_name,
+            } => {
+                format!(
+                    "EEnumError (EnumBigIntMemberNotInitialized ({}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason),
+                    member_name
+                )
+            }
+            EnumErrorKind::EnumStringMemberInconsistentlyInitialized { loc, enum_reason } => {
+                format!(
+                    "EEnumError (EnumStringMemberInconsistentlyInitialized ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason)
+                )
+            }
         },
         ErrorMessage::EAssignConstLikeBinding {
             loc,

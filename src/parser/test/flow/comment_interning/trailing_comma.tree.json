@@ -83,12 +83,12 @@
         "range":[115,117],
         "body":[]
       },
+      "returnType":null,
+      "typeParameters":null,
       "async":false,
       "generator":false,
       "predicate":null,
-      "expression":false,
-      "returnType":null,
-      "typeParameters":null
+      "expression":false
     },
     {
       "type":"ExpressionStatement",
@@ -599,8 +599,10 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           },
           {
             "type":"ObjectTypeProperty",
@@ -639,8 +641,10 @@
             "optional":false,
             "static":false,
             "proto":false,
+            "abstract":false,
             "variance":null,
-            "kind":"init"
+            "kind":"init",
+            "init":null
           }
         ],
         "indexers":[],
@@ -661,7 +665,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumStringBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":39,"column":9},"end":{"line":42,"column":1}},
         "range":[709,782],
         "members":[
@@ -724,7 +728,7 @@
             }
           }
         ],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     }

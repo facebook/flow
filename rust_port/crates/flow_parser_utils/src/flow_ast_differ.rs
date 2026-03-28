@@ -5531,71 +5531,40 @@ fn enum_body(
     body1: &ast::statement::enum_declaration::Body<Loc>,
     body2: &ast::statement::enum_declaration::Body<Loc>,
 ) -> Option<Vec<NodeChange>> {
-    use ast::statement::enum_declaration::Body::*;
-    match (body1, body2) {
-        (BooleanBody { loc, body: b1 }, BooleanBody { body: b2, .. }) => {
-            let members_diff = diff_and_recurse_no_trivial(
-                &|m1, m2| enum_boolean_member(m1, m2),
-                &b1.members,
-                &b2.members,
-            );
-            let comments_diff = syntax_opt(loc, &b1.comments, &b2.comments);
-            if b1.has_unknown_members != b2.has_unknown_members
-                || b1.explicit_type != b2.explicit_type
-            {
-                None
-            } else {
-                join_diff_list(vec![members_diff, comments_diff])
-            }
-        }
-        (NumberBody { loc, body: b1 }, NumberBody { body: b2, .. }) => {
-            let members_diff = diff_and_recurse_no_trivial(
-                &|m1, m2| enum_number_member(m1, m2),
-                &b1.members,
-                &b2.members,
-            );
-            let comments_diff = syntax_opt(loc, &b1.comments, &b2.comments);
-            if b1.has_unknown_members != b2.has_unknown_members
-                || b1.explicit_type != b2.explicit_type
-            {
-                None
-            } else {
-                join_diff_list(vec![members_diff, comments_diff])
-            }
-        }
-        (StringBody { loc, body: b1 }, StringBody { body: b2, .. }) => {
-            use ast::statement::enum_declaration::StringBodyMembers;
-            let members_diff = match (&b1.members, &b2.members) {
-                (StringBodyMembers::Defaulted(m1), StringBodyMembers::Defaulted(m2)) => {
-                    diff_and_recurse_no_trivial(&|m1, m2| enum_defaulted_member(m1, m2), m1, m2)
-                }
-                (StringBodyMembers::Initialized(m1), StringBodyMembers::Initialized(m2)) => {
-                    diff_and_recurse_no_trivial(&|m1, m2| enum_string_member(m1, m2), m1, m2)
-                }
-                _ => None,
-            };
-            let comments_diff = syntax_opt(loc, &b1.comments, &b2.comments);
-            if b1.has_unknown_members != b2.has_unknown_members
-                || b1.explicit_type != b2.explicit_type
-            {
-                None
-            } else {
-                join_diff_list(vec![members_diff, comments_diff])
-            }
-        }
-        (SymbolBody { loc, body: b1 }, SymbolBody { body: b2, .. }) => {
-            let members_diff = diff_and_recurse_no_trivial(
-                &|m1, m2| enum_defaulted_member(m1, m2),
-                &b1.members,
-                &b2.members,
-            );
-            let comments_diff = syntax_opt(loc, &b1.comments, &b2.comments);
-            if b1.has_unknown_members != b2.has_unknown_members {
-                None
-            } else {
-                join_diff_list(vec![members_diff, comments_diff])
-            }
-        }
+    let ast::statement::enum_declaration::Body {
+        loc,
+        members: members1,
+        explicit_type: explicit_type1,
+        has_unknown_members: has_unknown_members1,
+        comments: comments1,
+    } = body1;
+    let ast::statement::enum_declaration::Body {
+        members: members2,
+        explicit_type: explicit_type2,
+        has_unknown_members: has_unknown_members2,
+        comments: comments2,
+        ..
+    } = body2;
+    if explicit_type1 != explicit_type2 || has_unknown_members1 != has_unknown_members2 {
+        return None;
+    }
+    let members_diff =
+        diff_and_recurse_no_trivial(&|m1, m2| enum_member(m1, m2), members1, members2);
+    let comments_diff = syntax_opt(loc, comments1, comments2);
+    join_diff_list(vec![members_diff, comments_diff])
+}
+
+fn enum_member(
+    member1: &ast::statement::enum_declaration::Member<Loc>,
+    member2: &ast::statement::enum_declaration::Member<Loc>,
+) -> Option<Vec<NodeChange>> {
+    use ast::statement::enum_declaration::Member::*;
+    match (member1, member2) {
+        (DefaultedMember(m1), DefaultedMember(m2)) => enum_defaulted_member(m1, m2),
+        (BooleanMember(m1), BooleanMember(m2)) => enum_boolean_member(m1, m2),
+        (NumberMember(m1), NumberMember(m2)) => enum_number_member(m1, m2),
+        (StringMember(m1), StringMember(m2)) => enum_string_member(m1, m2),
+        (BigIntMember(m1), BigIntMember(m2)) => enum_bigint_member(m1, m2),
         _ => None,
     }
 }
@@ -5640,6 +5609,18 @@ fn enum_string_member(
     let id_diff = Some(diff_if_changed(identifier, &member1.id, &member2.id));
     let value_diff =
         diff_if_changed_ret_opt(|l1, l2| string_literal(loc1, loc2, l1, l2), lit1, lit2);
+    join_diff_list(vec![id_diff, value_diff])
+}
+
+fn enum_bigint_member(
+    member1: &ast::statement::enum_declaration::InitializedMember<ast::BigIntLiteral<Loc>, Loc>,
+    member2: &ast::statement::enum_declaration::InitializedMember<ast::BigIntLiteral<Loc>, Loc>,
+) -> Option<Vec<NodeChange>> {
+    let (ref loc1, ref lit1) = member1.init;
+    let (ref loc2, ref lit2) = member2.init;
+    let id_diff = Some(diff_if_changed(identifier, &member1.id, &member2.id));
+    let value_diff =
+        diff_if_changed_ret_opt(|l1, l2| bigint_literal(loc1, loc2, l1, l2), lit1, lit2);
     join_diff_list(vec![id_diff, value_diff])
 }
 

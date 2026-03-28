@@ -638,6 +638,14 @@ fn optional_indexed_access() {
 #[test]
 fn enum_of_boolean() {
     let layout = |explicit_type: bool| {
+        let et = if explicit_type {
+            Some((
+                Loc::none(),
+                ast::statement::enum_declaration::ExplicitType::Boolean,
+            ))
+        } else {
+            None
+        };
         js_layout_generator::statement(
             &opts(),
             false,
@@ -646,23 +654,27 @@ fn enum_of_boolean() {
                 None,
                 None,
                 I::identifier(None, "E"),
-                S::enum_declarations::boolean_body(
-                    None,
-                    Some(explicit_type),
-                    None,
-                    None,
-                    vec![
-                        S::enum_declarations::initialized_member(
-                            None,
-                            I::identifier(None, "A"),
-                            ast_builder::boolean_literal(None, true),
+                S::enum_declarations::body(
+                    Loc::none(),
+                    Arc::from([
+                        S::enum_declarations::boolean_member(
+                            S::enum_declarations::initialized_member(
+                                None,
+                                I::identifier(None, "A"),
+                                ast_builder::boolean_literal(None, true),
+                            ),
                         ),
-                        S::enum_declarations::initialized_member(
-                            None,
-                            I::identifier(None, "B"),
-                            ast_builder::boolean_literal(None, false),
+                        S::enum_declarations::boolean_member(
+                            S::enum_declarations::initialized_member(
+                                None,
+                                I::identifier(None, "B"),
+                                ast_builder::boolean_literal(None, false),
+                            ),
                         ),
-                    ],
+                    ]),
+                    et,
+                    None,
+                    None,
                 ),
             ),
         )
@@ -680,6 +692,14 @@ fn enum_of_boolean() {
 #[test]
 fn enum_of_number() {
     let layout = |explicit_type: bool| {
+        let et = if explicit_type {
+            Some((
+                Loc::none(),
+                ast::statement::enum_declaration::ExplicitType::Number,
+            ))
+        } else {
+            None
+        };
         js_layout_generator::statement(
             &opts(),
             false,
@@ -688,23 +708,27 @@ fn enum_of_number() {
                 None,
                 None,
                 I::identifier(None, "E"),
-                S::enum_declarations::number_body(
-                    None,
-                    Some(explicit_type),
-                    None,
-                    None,
-                    vec![
-                        S::enum_declarations::initialized_member(
-                            None,
-                            I::identifier(None, "A"),
-                            ast_builder::number_literal(None, 1.0, "1"),
+                S::enum_declarations::body(
+                    Loc::none(),
+                    Arc::from([
+                        S::enum_declarations::number_member(
+                            S::enum_declarations::initialized_member(
+                                None,
+                                I::identifier(None, "A"),
+                                ast_builder::number_literal(None, 1.0, "1"),
+                            ),
                         ),
-                        S::enum_declarations::initialized_member(
-                            None,
-                            I::identifier(None, "B"),
-                            ast_builder::number_literal(None, 2.0, "2"),
+                        S::enum_declarations::number_member(
+                            S::enum_declarations::initialized_member(
+                                None,
+                                I::identifier(None, "B"),
+                                ast_builder::number_literal(None, 2.0, "2"),
+                            ),
                         ),
-                    ],
+                    ]),
+                    et,
+                    None,
+                    None,
                 ),
             ),
         )
@@ -722,6 +746,14 @@ fn enum_of_number() {
 #[test]
 fn enum_of_string_initialized() {
     let layout = |explicit_type: bool| {
+        let et = if explicit_type {
+            Some((
+                Loc::none(),
+                ast::statement::enum_declaration::ExplicitType::String,
+            ))
+        } else {
+            None
+        };
         js_layout_generator::statement(
             &opts(),
             false,
@@ -730,23 +762,27 @@ fn enum_of_string_initialized() {
                 None,
                 None,
                 I::identifier(None, "E"),
-                S::enum_declarations::string_initialized_body(
-                    None,
-                    Some(explicit_type),
-                    None,
-                    None,
-                    vec![
-                        S::enum_declarations::initialized_member(
-                            None,
-                            I::identifier(None, "A"),
-                            ast_builder::string_literal(None, "a"),
+                S::enum_declarations::body(
+                    Loc::none(),
+                    Arc::from([
+                        S::enum_declarations::string_member(
+                            S::enum_declarations::initialized_member(
+                                None,
+                                I::identifier(None, "A"),
+                                ast_builder::string_literal(None, "a"),
+                            ),
                         ),
-                        S::enum_declarations::initialized_member(
-                            None,
-                            I::identifier(None, "B"),
-                            ast_builder::string_literal(None, "b"),
+                        S::enum_declarations::string_member(
+                            S::enum_declarations::initialized_member(
+                                None,
+                                I::identifier(None, "B"),
+                                ast_builder::string_literal(None, "b"),
+                            ),
                         ),
-                    ],
+                    ]),
+                    et,
+                    None,
+                    None,
                 ),
             ),
         )
@@ -764,6 +800,14 @@ fn enum_of_string_initialized() {
 #[test]
 fn enum_of_string_defaulted() {
     let layout = |explicit_type: bool| {
+        let et = if explicit_type {
+            Some((
+                Loc::none(),
+                ast::statement::enum_declaration::ExplicitType::String,
+            ))
+        } else {
+            None
+        };
         js_layout_generator::statement(
             &opts(),
             false,
@@ -772,15 +816,19 @@ fn enum_of_string_defaulted() {
                 None,
                 None,
                 I::identifier(None, "E"),
-                S::enum_declarations::string_defaulted_body(
+                S::enum_declarations::body(
+                    Loc::none(),
+                    Arc::from([
+                        S::enum_declarations::defaulted_member_of(
+                            S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
+                        ),
+                        S::enum_declarations::defaulted_member_of(
+                            S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
+                        ),
+                    ]),
+                    et,
                     None,
-                    Some(explicit_type),
                     None,
-                    None,
-                    vec![
-                        S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
-                        S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
-                    ],
                 ),
             ),
         )
@@ -805,14 +853,22 @@ fn enum_of_symbol() {
             None,
             None,
             I::identifier(None, "E"),
-            S::enum_declarations::symbol_body(
+            S::enum_declarations::body(
+                Loc::none(),
+                Arc::from([
+                    S::enum_declarations::defaulted_member_of(
+                        S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
+                    ),
+                    S::enum_declarations::defaulted_member_of(
+                        S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
+                    ),
+                ]),
+                Some((
+                    Loc::none(),
+                    ast::statement::enum_declaration::ExplicitType::Symbol,
+                )),
                 None,
                 None,
-                None,
-                vec![
-                    S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
-                    S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
-                ],
             ),
         ),
     );
@@ -831,14 +887,22 @@ fn enum_with_unknown_members() {
             None,
             None,
             I::identifier(None, "E"),
-            S::enum_declarations::symbol_body(
+            S::enum_declarations::body(
+                Loc::none(),
+                Arc::from([
+                    S::enum_declarations::defaulted_member_of(
+                        S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
+                    ),
+                    S::enum_declarations::defaulted_member_of(
+                        S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
+                    ),
+                ]),
+                Some((
+                    Loc::none(),
+                    ast::statement::enum_declaration::ExplicitType::Symbol,
+                )),
+                Some(Loc::none()),
                 None,
-                Some(true),
-                None,
-                vec![
-                    S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
-                    S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
-                ],
             ),
         ),
     );
@@ -858,18 +922,26 @@ fn enum_with_internal_comment() {
             None,
             None,
             I::identifier(None, "E"),
-            S::enum_declarations::symbol_body(
-                None,
+            S::enum_declarations::body(
+                Loc::none(),
+                Arc::from([
+                    S::enum_declarations::defaulted_member_of(
+                        S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
+                    ),
+                    S::enum_declarations::defaulted_member_of(
+                        S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
+                    ),
+                ]),
+                Some((
+                    Loc::none(),
+                    ast::statement::enum_declaration::ExplicitType::Symbol,
+                )),
                 None,
                 Some(ast::Syntax {
                     leading: Arc::from([]),
                     trailing: Arc::from([]),
                     internal: Arc::from([C::line(None, Some(true), " internal comment")]),
                 }),
-                vec![
-                    S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
-                    S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
-                ],
             ),
         ),
     );

@@ -648,23 +648,20 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
       let { id = ((aloc, type_), Ast.Identifier.{ name; _ }); body = (_, body); _ } = enum in
       let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
       add_type_info name loc type_;
-      let defaulted_member (aloc, { DefaultedMember.id = (_, Ast.Identifier.{ name; _ }); _ }) =
-        let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-        add_member_info name loc type_
-      in
-      let initialized_member (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ }) =
-        let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
-        add_member_info name loc type_
-      in
-      (match body with
-      | BooleanBody BooleanBody.{ members; _ } -> Base.List.iter members ~f:initialized_member
-      | NumberBody NumberBody.{ members; _ } -> Base.List.iter members ~f:initialized_member
-      | StringBody StringBody.{ members = Defaulted members; _ } ->
-        Base.List.iter members ~f:defaulted_member
-      | StringBody StringBody.{ members = Initialized members; _ } ->
-        Base.List.iter members ~f:initialized_member
-      | SymbolBody SymbolBody.{ members; _ } -> Base.List.iter members ~f:defaulted_member
-      | BigIntBody BigIntBody.{ members; _ } -> Base.List.iter members ~f:initialized_member);
+      List.iter
+        (fun member ->
+          let (aloc, name) =
+            match member with
+            | BooleanMember (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ })
+            | NumberMember (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ })
+            | StringMember (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ })
+            | BigIntMember (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ })
+            | DefaultedMember (aloc, { DefaultedMember.id = (_, Ast.Identifier.{ name; _ }); _ }) ->
+              (aloc, name)
+          in
+          let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
+          add_member_info name loc type_)
+        body.Body.members;
       super#enum_declaration enum
   end
 

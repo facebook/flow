@@ -19,18 +19,9 @@ module Enum (Parse : Parser_common.PARSER) : sig
 end = struct
   open Flow_ast.Statement.EnumDeclaration
 
-  type members = {
-    boolean_members: (Loc.t BooleanLiteral.t, Loc.t) InitializedMember.t list;
-    number_members: (Loc.t NumberLiteral.t, Loc.t) InitializedMember.t list;
-    string_members: (Loc.t StringLiteral.t, Loc.t) InitializedMember.t list;
-    bigint_members: (Loc.t BigIntLiteral.t, Loc.t) InitializedMember.t list;
-    defaulted_members: Loc.t DefaultedMember.t list;
-  }
-
   type acc = {
-    members: members;
-    seen_names: SSet.t;
-    has_unknown_members: bool;
+    members: Loc.t member list;
+    has_unknown_members: Loc.t option;
     internal_comments: Loc.t Comment.t list;
   }
 
@@ -42,22 +33,7 @@ end = struct
     | StringInit of Loc.t * Loc.t StringLiteral.t
     | BigIntInit of Loc.t * Loc.t BigIntLiteral.t
 
-  let empty_members =
-    {
-      boolean_members = [];
-      number_members = [];
-      string_members = [];
-      bigint_members = [];
-      defaulted_members = [];
-    }
-
-  let empty_acc =
-    {
-      members = empty_members;
-      seen_names = SSet.empty;
-      has_unknown_members = false;
-      internal_comments = [];
-    }
+  let empty_acc = { members = []; has_unknown_members = None; internal_comments = [] }
 
   let end_of_member_init env =
     match Peek.token env with
@@ -162,92 +138,40 @@ end = struct
         (id, init)
     )
 
-  let check_explicit_type_mismatch env ~enum_name ~explicit_type ~member_name literal_type loc =
-    match explicit_type with
-    | Some enum_type when enum_type <> literal_type ->
-      error_at
-        env
-        (loc, Parse_error.EnumInvalidMemberInitializer { enum_name; explicit_type; member_name })
-    | _ -> ()
-
   let enum_member ~enum_name ~explicit_type acc env =
-    let { members; seen_names; _ } = acc in
     let (member_loc, (id, init)) = member_raw env in
-    let (id_loc, { Identifier.name = member_name; _ }) = id in
+    let (_, { Identifier.name = member_name; _ }) = id in
     (* if we parsed an empty name, something has gone wrong and we should abort analysis *)
     if member_name = "" then
       acc
-    else (
-      if SSet.mem member_name seen_names then
-        error_at env (id_loc, Parse_error.EnumDuplicateMemberName { enum_name; member_name });
-      let acc = { acc with seen_names = SSet.add member_name seen_names } in
-      let check_explicit_type_mismatch =
-        check_explicit_type_mismatch env ~enum_name ~explicit_type ~member_name
-      in
+    else
       match init with
       | BooleanInit (loc, value) ->
-        check_explicit_type_mismatch Enum_common.Boolean loc;
-        let member = (member_loc, { InitializedMember.id; init = (loc, value) }) in
-        { acc with members = { members with boolean_members = member :: members.boolean_members } }
+        let member = BooleanMember (member_loc, { InitializedMember.id; init = (loc, value) }) in
+        { acc with members = member :: acc.members }
       | NumberInit (loc, value) ->
-        check_explicit_type_mismatch Enum_common.Number loc;
-        let member = (member_loc, { InitializedMember.id; init = (loc, value) }) in
-        { acc with members = { members with number_members = member :: members.number_members } }
+        let member = NumberMember (member_loc, { InitializedMember.id; init = (loc, value) }) in
+        { acc with members = member :: acc.members }
       | StringInit (loc, value) ->
-        check_explicit_type_mismatch Enum_common.String loc;
-        let member = (member_loc, { InitializedMember.id; init = (loc, value) }) in
-        { acc with members = { members with string_members = member :: members.string_members } }
+        let member = StringMember (member_loc, { InitializedMember.id; init = (loc, value) }) in
+        { acc with members = member :: acc.members }
       | BigIntInit (loc, value) ->
-        check_explicit_type_mismatch Enum_common.BigInt loc;
-        let member = (member_loc, { InitializedMember.id; init = (loc, value) }) in
-        { acc with members = { members with bigint_members = member :: members.bigint_members } }
+        let member = BigIntMember (member_loc, { InitializedMember.id; init = (loc, value) }) in
+        { acc with members = member :: acc.members }
       | InvalidInit loc ->
         error_at
           env
           (loc, Parse_error.EnumInvalidMemberInitializer { enum_name; explicit_type; member_name });
         acc
-      | NoInit -> begin
-        match explicit_type with
-        | Some Enum_common.Boolean ->
-          error_at
-            env
-            (member_loc, Parse_error.EnumBooleanMemberNotInitialized { enum_name; member_name });
-          acc
-        | Some Enum_common.Number ->
-          error_at
-            env
-            (member_loc, Parse_error.EnumNumberMemberNotInitialized { enum_name; member_name });
-          acc
-        | Some Enum_common.BigInt ->
-          error_at
-            env
-            (member_loc, Parse_error.EnumBigIntMemberNotInitialized { enum_name; member_name });
-          acc
-        | Some Enum_common.String
-        | Some Enum_common.Symbol
-        | None ->
-          let member = (member_loc, { DefaultedMember.id }) in
-          {
-            acc with
-            members = { members with defaulted_members = member :: members.defaulted_members };
-          }
-      end
-    )
+      | NoInit ->
+        let member = DefaultedMember (member_loc, { DefaultedMember.id }) in
+        { acc with members = member :: acc.members }
 
   let rec enum_members ~enum_name ~explicit_type acc env =
     match Peek.token env with
     | T_RCURLY
     | T_EOF ->
-      ( {
-          boolean_members = List.rev acc.members.boolean_members;
-          number_members = List.rev acc.members.number_members;
-          string_members = List.rev acc.members.string_members;
-          bigint_members = List.rev acc.members.bigint_members;
-          defaulted_members = List.rev acc.members.defaulted_members;
-        },
-        acc.has_unknown_members,
-        acc.internal_comments
-      )
+      (List.rev acc.members, acc.has_unknown_members, acc.internal_comments)
     | T_ELLIPSIS ->
       let loc = Peek.loc env in
       (* Internal comments may appear before the ellipsis *)
@@ -271,7 +195,7 @@ end = struct
       enum_members
         ~enum_name
         ~explicit_type
-        { acc with has_unknown_members = true; internal_comments }
+        { acc with has_unknown_members = Some loc; internal_comments }
         env
     | _ ->
       let acc = enum_member ~enum_name ~explicit_type acc env in
@@ -285,56 +209,17 @@ end = struct
       | _ -> Expect.token env T_COMMA);
       enum_members ~enum_name ~explicit_type acc env
 
-  let string_body
-      ~env ~enum_name ~is_explicit ~has_unknown_members string_members defaulted_members comments =
-    let initialized_len = List.length string_members in
-    let defaulted_len = List.length defaulted_members in
-    let defaulted_body () =
-      StringBody
-        {
-          StringBody.members = StringBody.Defaulted defaulted_members;
-          explicit_type = is_explicit;
-          has_unknown_members;
-          comments;
-        }
-    in
-    let initialized_body () =
-      StringBody
-        {
-          StringBody.members = StringBody.Initialized string_members;
-          explicit_type = is_explicit;
-          has_unknown_members;
-          comments;
-        }
-    in
-    match (initialized_len, defaulted_len) with
-    | (0, 0)
-    | (0, _) ->
-      defaulted_body ()
-    | (_, 0) -> initialized_body ()
-    | _ when defaulted_len > initialized_len ->
-      List.iter
-        (fun (loc, _) ->
-          error_at env (loc, Parse_error.EnumStringMemberInconsistentlyInitialized { enum_name }))
-        string_members;
-      defaulted_body ()
-    | _ ->
-      List.iter
-        (fun (loc, _) ->
-          error_at env (loc, Parse_error.EnumStringMemberInconsistentlyInitialized { enum_name }))
-        defaulted_members;
-      initialized_body ()
-
   let parse_explicit_type ~enum_name env =
     if Eat.maybe env T_OF then (
       Eat.push_lex_mode env Lex_mode.TYPE;
+      let type_loc = Peek.loc env in
       let result =
         match Peek.token env with
-        | T_BOOLEAN_TYPE BOOLEAN -> Some Enum_common.Boolean
-        | T_NUMBER_TYPE -> Some Enum_common.Number
-        | T_STRING_TYPE -> Some Enum_common.String
-        | T_SYMBOL_TYPE -> Some Enum_common.Symbol
-        | T_BIGINT_TYPE -> Some Enum_common.BigInt
+        | T_BOOLEAN_TYPE BOOLEAN -> Some (type_loc, Boolean)
+        | T_NUMBER_TYPE -> Some (type_loc, Number)
+        | T_STRING_TYPE -> Some (type_loc, String)
+        | T_SYMBOL_TYPE -> Some (type_loc, Symbol)
+        | T_BIGINT_TYPE -> Some (type_loc, BigInt)
         | T_IDENTIFIER { value; _ } ->
           let supplied_type = Some value in
           error env (Parse_error.EnumInvalidExplicitType { enum_name; supplied_type });
@@ -349,7 +234,7 @@ end = struct
     ) else
       None
 
-  let enum_body ~enum_name ~name_loc =
+  let enum_body ~enum_name =
     with_loc (fun env ->
         let explicit_type = parse_explicit_type ~enum_name env in
         let leading =
@@ -359,8 +244,9 @@ end = struct
             []
         in
         Expect.token env T_LCURLY;
+        let explicit_type_t = Option.map snd explicit_type in
         let (members, has_unknown_members, internal) =
-          enum_members ~enum_name ~explicit_type empty_acc env
+          enum_members ~enum_name ~explicit_type:explicit_type_t empty_acc env
         in
         let internal = internal @ Peek.comments env in
         Expect.token env T_RCURLY;
@@ -375,127 +261,15 @@ end = struct
         let comments =
           Flow_ast_utils.mk_comments_with_internal_opt ~leading ~trailing ~internal ()
         in
-        let body =
-          match explicit_type with
-          | Some Enum_common.Boolean ->
-            BooleanBody
-              {
-                BooleanBody.members = members.boolean_members;
-                explicit_type = true;
-                has_unknown_members;
-                comments;
-              }
-          | Some Enum_common.Number ->
-            NumberBody
-              {
-                NumberBody.members = members.number_members;
-                explicit_type = true;
-                has_unknown_members;
-                comments;
-              }
-          | Some Enum_common.String ->
-            string_body
-              ~env
-              ~enum_name
-              ~is_explicit:true
-              ~has_unknown_members
-              members.string_members
-              members.defaulted_members
-              comments
-          | Some Enum_common.Symbol ->
-            SymbolBody
-              { SymbolBody.members = members.defaulted_members; has_unknown_members; comments }
-          | Some Enum_common.BigInt ->
-            BigIntBody
-              {
-                BigIntBody.members = members.bigint_members;
-                explicit_type = true;
-                has_unknown_members;
-                comments;
-              }
-          | None ->
-            let bools_len = List.length members.boolean_members in
-            let nums_len = List.length members.number_members in
-            let bigints_len = List.length members.bigint_members in
-            let strs_len = List.length members.string_members in
-            let defaulted_len = List.length members.defaulted_members in
-            let empty () =
-              StringBody
-                {
-                  StringBody.members = StringBody.Defaulted [];
-                  explicit_type = false;
-                  has_unknown_members;
-                  comments;
-                }
-            in
-            begin
-              match (bools_len, nums_len, bigints_len, strs_len, defaulted_len) with
-              | (0, 0, 0, 0, 0) -> empty ()
-              | (0, 0, 0, _, _) ->
-                string_body
-                  ~env
-                  ~enum_name
-                  ~is_explicit:false
-                  ~has_unknown_members
-                  members.string_members
-                  members.defaulted_members
-                  comments
-              | (_, 0, 0, 0, _) when bools_len >= defaulted_len ->
-                List.iter
-                  (fun (loc, { DefaultedMember.id = (_, { Identifier.name = member_name; _ }) }) ->
-                    error_at
-                      env
-                      (loc, Parse_error.EnumBooleanMemberNotInitialized { enum_name; member_name }))
-                  members.defaulted_members;
-                BooleanBody
-                  {
-                    BooleanBody.members = members.boolean_members;
-                    explicit_type = false;
-                    has_unknown_members;
-                    comments;
-                  }
-              | (0, _, 0, 0, _) when nums_len >= defaulted_len ->
-                List.iter
-                  (fun (loc, { DefaultedMember.id = (_, { Identifier.name = member_name; _ }) }) ->
-                    error_at
-                      env
-                      (loc, Parse_error.EnumNumberMemberNotInitialized { enum_name; member_name }))
-                  members.defaulted_members;
-                NumberBody
-                  {
-                    NumberBody.members = members.number_members;
-                    explicit_type = false;
-                    has_unknown_members;
-                    comments;
-                  }
-              | (0, 0, _, 0, _) when bigints_len >= defaulted_len ->
-                List.iter
-                  (fun (loc, { DefaultedMember.id = (_, { Identifier.name = member_name; _ }) }) ->
-                    error_at
-                      env
-                      (loc, Parse_error.EnumNumberMemberNotInitialized { enum_name; member_name }))
-                  members.defaulted_members;
-                BigIntBody
-                  {
-                    BigIntBody.members = members.bigint_members;
-                    explicit_type = false;
-                    has_unknown_members;
-                    comments;
-                  }
-              | _ ->
-                error_at env (name_loc, Parse_error.EnumInconsistentMemberValues { enum_name });
-                empty ()
-            end
-        in
-        body
+        { Body.members; explicit_type; has_unknown_members; comments }
     )
 
   let declaration ?(leading = []) ~const_ env =
     let leading = leading @ Peek.comments env in
     Expect.token env T_ENUM;
     let id = Parse.identifier env in
-    let (name_loc, { Identifier.name = enum_name; _ }) = id in
-    let body = enum_body ~enum_name ~name_loc env in
+    let (_, { Identifier.name = enum_name; _ }) = id in
+    let body = enum_body ~enum_name env in
     let comments = Flow_ast_utils.mk_comments_opt ~leading () in
     { Statement.EnumDeclaration.id; body; const_; comments }
 end

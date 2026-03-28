@@ -22,7 +22,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumStringBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":1,"column":7},"end":{"line":4,"column":1}},
         "range":[7,23],
         "members":[
@@ -53,7 +53,7 @@
             }
           }
         ],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     }

@@ -702,7 +702,7 @@ References:
 Error ------------------------------------------------------------------------------------------------ const-enum.js:1:7
 
 `const` enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be
-part of the build system (whatever you use) rather than Flow itself. [illegal-enum]
+part of the build system (whatever you use) rather than Flow itself. [unsupported-syntax]
 
             v----------------
    1| const enum E { // ERROR
@@ -715,7 +715,7 @@ part of the build system (whatever you use) rather than Flow itself. [illegal-en
 Error ------------------------------------------------------------------------------------------------ const-enum.js:6:1
 
 `const` enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be
-part of the build system (whatever you use) rather than Flow itself. [illegal-enum]
+part of the build system (whatever you use) rather than Flow itself. [unsupported-syntax]
 
       v------------------------------
    6| declare const enum F { // ERROR
@@ -728,7 +728,7 @@ part of the build system (whatever you use) rather than Flow itself. [illegal-en
 Error ---------------------------------------------------------------------------------------------- const-enum.js:11:22
 
 `const` enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be
-part of the build system (whatever you use) rather than Flow itself. [illegal-enum]
+part of the build system (whatever you use) rather than Flow itself. [unsupported-syntax]
 
                             v----------------
    11| export declare const enum G { // ERROR
@@ -1767,6 +1767,234 @@ References:
    error-invalid-member-name.js:17:6
    17| enum H of boolean {
             ^ [1]
+
+
+Error ----------------------------------------------------------------------------------- error-member-validation.js:4:3
+
+Enum member names need to be unique, but the name `A` has already been used for a previous member [1] of enum `E1` [2].
+[invalid-enum]
+
+   error-member-validation.js:4:3
+   4|   A, // ERROR
+        ^
+
+References:
+   error-member-validation.js:3:3
+   3|   A,
+        ^ [1]
+   error-member-validation.js:2:6
+   2| enum E1 {
+           ^^ [2]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:10:3
+
+The enum member `B` of number enum `E2` [1] has been left uninitialized. Number enum members need to be initialized,
+e.g. `B = 1,`. [invalid-enum]
+
+   error-member-validation.js:10:3
+   10|   B, // ERROR
+         ^
+
+References:
+   error-member-validation.js:8:6
+    8| enum E2 {
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:15:3
+
+The enum member initializer for `A` needs to be a `boolean` literal in enum `E3` [1]. [invalid-enum]
+
+   error-member-validation.js:15:3
+   15|   A = "hello", // ERROR
+         ^^^^^^^^^^^
+
+References:
+   error-member-validation.js:14:6
+   14| enum E3 of boolean {
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:20:3
+
+The enum member initializer for `A` needs to be a `number` literal in enum `E4` [1]. [invalid-enum]
+
+   error-member-validation.js:20:3
+   20|   A = true, // ERROR
+         ^^^^^^^^
+
+References:
+   error-member-validation.js:19:6
+   19| enum E4 of number {
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:25:3
+
+The enum member initializer for `A` needs to be a `string` literal in enum `E5` [1]. [invalid-enum]
+
+   error-member-validation.js:25:3
+   25|   A = 1, // ERROR
+         ^^^^^
+
+References:
+   error-member-validation.js:24:6
+   24| enum E5 of string {
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:30:3
+
+The enum member `A` of boolean enum `E6` [1] has been left uninitialized. Boolean enum members need to be initialized,
+e.g. `A = true,`. [invalid-enum]
+
+   error-member-validation.js:30:3
+   30|   A, // ERROR
+         ^
+
+References:
+   error-member-validation.js:29:6
+   29| enum E6 of boolean {
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:36:3
+
+The enum member `B` of boolean enum `E7` [1] has been left uninitialized. Boolean enum members need to be initialized,
+e.g. `B = true,`. [invalid-enum]
+
+   error-member-validation.js:36:3
+   36|   B, // ERROR
+         ^
+
+References:
+   error-member-validation.js:34:6
+   34| enum E7 {
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:41:3
+
+The enum member `A` of number enum `E8` [1] has been left uninitialized. Number enum members need to be initialized,
+e.g. `A = 1,`. [invalid-enum]
+
+   error-member-validation.js:41:3
+   41|   A, // ERROR
+         ^
+
+References:
+   error-member-validation.js:40:6
+   40| enum E8 of number {
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:47:3
+
+The enum member `B` of number enum `E9` [1] has been left uninitialized. Number enum members need to be initialized,
+e.g. `B = 1,`. [invalid-enum]
+
+   error-member-validation.js:47:3
+   47|   B, // ERROR
+         ^
+
+References:
+   error-member-validation.js:45:6
+   45| enum E9 {
+            ^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:52:3
+
+The enum member `A` of bigint enum `E10` [1] has been left uninitialized. BigInt enum members need to be initialized,
+e.g. `A = 1n,`. [invalid-enum]
+
+   error-member-validation.js:52:3
+   52|   A, // ERROR
+         ^
+
+References:
+   error-member-validation.js:51:6
+   51| enum E10 of bigint {
+            ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:58:3
+
+The enum member `B` of bigint enum `E11` [1] has been left uninitialized. BigInt enum members need to be initialized,
+e.g. `B = 1n,`. [invalid-enum]
+
+   error-member-validation.js:58:3
+   58|   B, // ERROR
+         ^
+
+References:
+   error-member-validation.js:56:6
+   56| enum E11 {
+            ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:64:3
+
+String enum `E12` [1] has been specified with inconsistent member initializers. Either all members need a string literal
+initializer, or none. [invalid-enum]
+
+   error-member-validation.js:64:3
+   64|   B, // ERROR
+         ^
+
+References:
+   error-member-validation.js:62:6
+   62| enum E12 of string {
+            ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:70:3
+
+String enum `E13` [1] has been specified with inconsistent member initializers. Either all members need a string literal
+initializer, or none. [invalid-enum]
+
+   error-member-validation.js:70:3
+   70|   B, // ERROR
+         ^
+
+References:
+   error-member-validation.js:68:6
+   68| enum E13 {
+            ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- error-member-validation.js:74:10
+
+enum `E14` [1] has been specified with inconsistent member initializers. All members need to consistently either use no
+initializer, or have a literal (boolean, number, bigint, or string) initializer. [invalid-enum]
+
+   error-member-validation.js:74:10
+                v---------
+   74| enum E14 { // ERROR
+   75|   A = true,
+   76|   B = 1,
+   77| }
+       ^
+
+References:
+   error-member-validation.js:74:6
+   74| enum E14 { // ERROR
+            ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:81:3
+
+Symbol enum members cannot be initialized. Use `A,` in enum `E15` [1]. [invalid-enum]
+
+   error-member-validation.js:81:3
+   81|   A = "hello", // ERROR
+         ^^^^^^^^^^^
+
+References:
+   error-member-validation.js:80:6
+   80| enum E15 of symbol {
+            ^^^ [1]
 
 
 Error ---------------------------------------------------------------------------------------- error-modification.js:9:1
@@ -4628,7 +4856,7 @@ References:
 
 
 
-Found 271 errors
+Found 286 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

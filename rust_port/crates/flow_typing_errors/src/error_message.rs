@@ -225,6 +225,41 @@ pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         enum_reason: VirtualReason<L>,
         member_name: String,
     },
+    EnumDuplicateMemberName {
+        loc: L,
+        prev_use_loc: L,
+        enum_reason: VirtualReason<L>,
+        member_name: String,
+    },
+    EnumInconsistentMemberValues {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+    },
+    EnumInvalidMemberInitializer {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+        explicit_type: Option<flow_parser::ast::statement::enum_declaration::ExplicitType>,
+        member_name: String,
+    },
+    EnumBooleanMemberNotInitialized {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+        member_name: String,
+    },
+    EnumNumberMemberNotInitialized {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+        member_name: String,
+    },
+    EnumBigIntMemberNotInitialized {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+        member_name: String,
+    },
+    EnumStringMemberInconsistentlyInitialized {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+    },
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -2434,6 +2469,67 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         enum_reason: map_reason(enum_reason),
                         member_name,
                     },
+                    EnumDuplicateMemberName {
+                        loc,
+                        prev_use_loc,
+                        enum_reason,
+                        member_name,
+                    } => EnumDuplicateMemberName {
+                        loc: f(loc),
+                        prev_use_loc: f(prev_use_loc),
+                        enum_reason: map_reason(enum_reason),
+                        member_name,
+                    },
+                    EnumInconsistentMemberValues { loc, enum_reason } => {
+                        EnumInconsistentMemberValues {
+                            loc: f(loc),
+                            enum_reason: map_reason(enum_reason),
+                        }
+                    }
+                    EnumInvalidMemberInitializer {
+                        loc,
+                        enum_reason,
+                        explicit_type,
+                        member_name,
+                    } => EnumInvalidMemberInitializer {
+                        loc: f(loc),
+                        enum_reason: map_reason(enum_reason),
+                        explicit_type,
+                        member_name,
+                    },
+                    EnumBooleanMemberNotInitialized {
+                        loc,
+                        enum_reason,
+                        member_name,
+                    } => EnumBooleanMemberNotInitialized {
+                        loc: f(loc),
+                        enum_reason: map_reason(enum_reason),
+                        member_name,
+                    },
+                    EnumNumberMemberNotInitialized {
+                        loc,
+                        enum_reason,
+                        member_name,
+                    } => EnumNumberMemberNotInitialized {
+                        loc: f(loc),
+                        enum_reason: map_reason(enum_reason),
+                        member_name,
+                    },
+                    EnumBigIntMemberNotInitialized {
+                        loc,
+                        enum_reason,
+                        member_name,
+                    } => EnumBigIntMemberNotInitialized {
+                        loc: f(loc),
+                        enum_reason: map_reason(enum_reason),
+                        member_name,
+                    },
+                    EnumStringMemberInconsistentlyInitialized { loc, enum_reason } => {
+                        EnumStringMemberInconsistentlyInitialized {
+                            loc: f(loc),
+                            enum_reason: map_reason(enum_reason),
+                        }
+                    }
                 })
             }
             EIndeterminateModuleType(loc) => EIndeterminateModuleType(f(loc)),
@@ -3780,7 +3876,14 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
             Self::EDuplicateModuleProvider { conflict, .. } => Some(conflict.dupe()),
             Self::EEnumError(
                 EnumErrorKind::EnumModification { loc, .. }
-                | EnumErrorKind::EnumMemberDuplicateValue { loc, .. },
+                | EnumErrorKind::EnumMemberDuplicateValue { loc, .. }
+                | EnumErrorKind::EnumDuplicateMemberName { loc, .. }
+                | EnumErrorKind::EnumInconsistentMemberValues { loc, .. }
+                | EnumErrorKind::EnumInvalidMemberInitializer { loc, .. }
+                | EnumErrorKind::EnumBooleanMemberNotInitialized { loc, .. }
+                | EnumErrorKind::EnumNumberMemberNotInitialized { loc, .. }
+                | EnumErrorKind::EnumBigIntMemberNotInitialized { loc, .. }
+                | EnumErrorKind::EnumStringMemberInconsistentlyInitialized { loc, .. },
             )
             | Self::EBuiltinNameLookupFailed { loc, .. }
             | Self::EBuiltinModuleLookupFailed { loc, .. }
@@ -4810,6 +4913,57 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 member_name,
                 enum_reason,
             }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumDuplicateMemberName {
+                prev_use_loc,
+                enum_reason,
+                member_name,
+                ..
+            }) => Normal(Message::MessageEnumDuplicateMemberName {
+                member_name,
+                prev_use_loc,
+                enum_reason,
+            }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInconsistentMemberValues {
+                enum_reason,
+                ..
+            }) => Normal(Message::MessageEnumInconsistentMemberValues { enum_reason }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberInitializer {
+                enum_reason,
+                explicit_type,
+                member_name,
+                ..
+            }) => Normal(Message::MessageEnumInvalidMemberInitializer {
+                member_name,
+                explicit_type,
+                enum_reason,
+            }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumBooleanMemberNotInitialized {
+                enum_reason,
+                member_name,
+                ..
+            }) => Normal(Message::MessageEnumBooleanMemberNotInitialized {
+                member_name,
+                enum_reason,
+            }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNumberMemberNotInitialized {
+                enum_reason,
+                member_name,
+                ..
+            }) => Normal(Message::MessageEnumNumberMemberNotInitialized {
+                member_name,
+                enum_reason,
+            }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumBigIntMemberNotInitialized {
+                enum_reason,
+                member_name,
+                ..
+            }) => Normal(Message::MessageEnumBigIntMemberNotInitialized {
+                member_name,
+                enum_reason,
+            }),
+            ErrorMessage::EEnumError(
+                EnumErrorKind::EnumStringMemberInconsistentlyInitialized { enum_reason, .. },
+            ) => Normal(Message::MessageEnumStringMemberInconsistentlyInitialized { enum_reason }),
 
             ErrorMessage::EDuplicateClassMember {
                 name,
@@ -6620,10 +6774,33 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
             ErrorMessage::EExpectedBigIntLit { use_op, .. } => {
                 Self::error_code_of_use_op(&Some(use_op.dupe()), IncompatibleType)
             }
-            ErrorMessage::EEnumError(EnumErrorKind::EnumsNotEnabled { .. }) => Some(IllegalEnum),
-            ErrorMessage::EEnumError(EnumErrorKind::EnumConstNotSupported { .. }) => {
-                Some(IllegalEnum)
+            ErrorMessage::EEnumError(EnumErrorKind::EnumsNotEnabled { .. }) => {
+                Some(UnsupportedSyntax)
             }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumConstNotSupported { .. }) => {
+                Some(UnsupportedSyntax)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumDuplicateMemberName { .. }) => {
+                Some(InvalidEnum)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInconsistentMemberValues { .. }) => {
+                Some(InvalidEnum)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberInitializer { .. }) => {
+                Some(InvalidEnum)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumBooleanMemberNotInitialized { .. }) => {
+                Some(InvalidEnum)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNumberMemberNotInitialized { .. }) => {
+                Some(InvalidEnum)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumBigIntMemberNotInitialized { .. }) => {
+                Some(InvalidEnum)
+            }
+            ErrorMessage::EEnumError(
+                EnumErrorKind::EnumStringMemberInconsistentlyInitialized { .. },
+            ) => Some(InvalidEnum),
             ErrorMessage::EExponentialSpread { .. } => Some(ExponentialSpread),
             ErrorMessage::EExportsAnnot { .. } => Some(InvalidExportsTypeArg),
             ErrorMessage::EExportValueAsType(_, _) => Some(ExportValueAsType),

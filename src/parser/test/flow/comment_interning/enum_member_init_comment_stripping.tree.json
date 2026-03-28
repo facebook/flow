@@ -16,7 +16,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumNumberBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":1,"column":8},"end":{"line":3,"column":1}},
         "range":[8,44],
         "members":[
@@ -41,7 +41,7 @@
             }
           }
         ],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     },
@@ -58,7 +58,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumBooleanBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":5,"column":8},"end":{"line":7,"column":1}},
         "range":[54,95],
         "members":[
@@ -83,7 +83,7 @@
             }
           }
         ],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     },
@@ -100,7 +100,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumStringBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":9,"column":8},"end":{"line":11,"column":1}},
         "range":[105,157],
         "members":[
@@ -125,7 +125,7 @@
             }
           }
         ],
-        "explicitType":true,
+        "explicitType":"string",
         "hasUnknownMembers":false
       }
     },
@@ -142,7 +142,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumBigIntBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":13,"column":8},"end":{"line":15,"column":1}},
         "range":[167,220],
         "members":[
@@ -168,7 +168,7 @@
             }
           }
         ],
-        "explicitType":true,
+        "explicitType":"bigint",
         "hasUnknownMembers":false
       }
     }

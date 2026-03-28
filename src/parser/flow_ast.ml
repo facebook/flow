@@ -1017,54 +1017,27 @@ and Statement : sig
       [@@deriving show]
     end
 
-    module BooleanBody : sig
-      type 'M t = {
-        members: ('M BooleanLiteral.t, 'M) InitializedMember.t list;
-        explicit_type: bool;
-        has_unknown_members: bool;
-        comments: ('M, 'M Comment.t list) Syntax.t option;
-      }
-      [@@deriving show]
-    end
+    type explicit_type =
+      | Boolean
+      | Number
+      | String
+      | Symbol
+      | BigInt
+    [@@deriving ord, show]
 
-    module NumberBody : sig
-      type 'M t = {
-        members: ('M NumberLiteral.t, 'M) InitializedMember.t list;
-        explicit_type: bool;
-        has_unknown_members: bool;
-        comments: ('M, 'M Comment.t list) Syntax.t option;
-      }
-      [@@deriving show]
-    end
+    type 'M member =
+      | BooleanMember of ('M BooleanLiteral.t, 'M) InitializedMember.t
+      | NumberMember of ('M NumberLiteral.t, 'M) InitializedMember.t
+      | StringMember of ('M StringLiteral.t, 'M) InitializedMember.t
+      | BigIntMember of ('M BigIntLiteral.t, 'M) InitializedMember.t
+      | DefaultedMember of 'M DefaultedMember.t
+    [@@deriving show]
 
-    module StringBody : sig
+    module Body : sig
       type 'M t = {
-        members: ('M StringLiteral.t, 'M) members;
-        explicit_type: bool;
-        has_unknown_members: bool;
-        comments: ('M, 'M Comment.t list) Syntax.t option;
-      }
-
-      and ('I, 'M) members =
-        | Defaulted of 'M DefaultedMember.t list
-        | Initialized of ('I, 'M) InitializedMember.t list
-      [@@deriving show]
-    end
-
-    module SymbolBody : sig
-      type 'M t = {
-        members: 'M DefaultedMember.t list;
-        has_unknown_members: bool;
-        comments: ('M, 'M Comment.t list) Syntax.t option;
-      }
-      [@@deriving show]
-    end
-
-    module BigIntBody : sig
-      type 'M t = {
-        members: ('M BigIntLiteral.t, 'M) InitializedMember.t list;
-        explicit_type: bool;
-        has_unknown_members: bool;
+        members: 'M member list;
+        explicit_type: ('M * explicit_type) option;
+        has_unknown_members: 'M option;
         comments: ('M, 'M Comment.t list) Syntax.t option;
       }
       [@@deriving show]
@@ -1077,15 +1050,7 @@ and Statement : sig
       comments: ('M, unit) Syntax.t option;
     }
 
-    and 'M body = 'M * 'M body'
-
-    and 'M body' =
-      | BooleanBody of 'M BooleanBody.t
-      | NumberBody of 'M NumberBody.t
-      | StringBody of 'M StringBody.t
-      | SymbolBody of 'M SymbolBody.t
-      | BigIntBody of 'M BigIntBody.t
-    [@@deriving show]
+    and 'M body = 'M * 'M Body.t [@@deriving show]
   end
 
   module ComponentDeclaration : sig

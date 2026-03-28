@@ -1214,7 +1214,7 @@ pub enum Def<Loc, T> {
     EnumBinding {
         id_loc: Loc,
         name: FlowSmolStr,
-        rep: EnumRep,
+        rep: Option<EnumRep>,
         members: BTreeMap<FlowSmolStr, Loc>,
         has_unknown_members: bool,
     },

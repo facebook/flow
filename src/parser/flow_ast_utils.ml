@@ -900,6 +900,15 @@ let function_type_param_parts param =
     | Type.Available (_, annot) -> (None, annot, pattern_optional pattern)
     | Type.Missing _ -> failwith "Destructuring function type param must have annotation")
 
+let string_of_enum_explicit_type =
+  let open Statement.EnumDeclaration in
+  function
+  | Boolean -> "boolean"
+  | Number -> "number"
+  | String -> "string"
+  | Symbol -> "symbol"
+  | BigInt -> "bigint"
+
 let string_of_bigint { BigIntLiteral.value; raw; comments = _ } =
   (* https://github.com/estree/estree/blob/master/es2020.md#bigintliteral
    * `bigint` property is the string representation of the `BigInt` value.

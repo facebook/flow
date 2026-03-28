@@ -2244,7 +2244,8 @@ let merge_def ~const_decl file reason = function
   | DisabledEnumBinding _
   | DisabledRecordBinding _ ->
     Type.AnyT.error reason
-  | EnumBinding { id_loc; rep; members; has_unknown_members; name } ->
+  | EnumBinding { rep = None; _ } -> Type.AnyT.error reason
+  | EnumBinding { id_loc; rep = Some rep; members; has_unknown_members; name } ->
     merge_enum file reason id_loc name rep members has_unknown_members
   | NamespaceBinding { id_loc; name; values; types } ->
     let f smap =

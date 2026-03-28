@@ -16,11 +16,11 @@
         "optional":false
       },
       "body":{
-        "type":"EnumStringBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":1,"column":10},"end":{"line":2,"column":1}},
         "range":[10,13],
         "members":[],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     }

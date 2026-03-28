@@ -3676,213 +3676,107 @@ fn enum_body(
     config: &Config,
     body: &ast::statement::enum_declaration::Body<Loc>,
 ) -> Value {
-    use ast::statement::enum_declaration::Body;
-    use ast::statement::enum_declaration::StringBodyMembers;
+    use ast::statement::enum_declaration::Member;
 
-    match body {
-        Body::BooleanBody { loc, body } => {
-            let members: Vec<Value> = body
-                .members
-                .iter()
-                .map(|member| {
-                    node(
-                        offset_table,
-                        config,
-                        "EnumBooleanMember",
-                        &member.loc,
-                        None,
-                        vec![
-                            ("id", identifier(offset_table, config, &member.id)),
-                            (
-                                "init",
-                                boolean_literal(
-                                    offset_table,
-                                    config,
-                                    &member.init.0,
-                                    &member.init.1,
-                                ),
-                            ),
-                        ],
-                    )
-                })
-                .collect();
+    let ast::statement::enum_declaration::Body {
+        loc,
+        members,
+        explicit_type,
+        has_unknown_members,
+        comments,
+    } = body;
 
-            node(
+    let enum_member = |member: &Member<Loc>| -> Value {
+        match member {
+            Member::BooleanMember(member) => node(
                 offset_table,
                 config,
-                "EnumBooleanBody",
-                loc,
-                format_internal_comments(body.comments.as_ref()).as_ref(),
+                "EnumBooleanMember",
+                &member.loc,
+                None,
                 vec![
-                    ("members", Value::Array(members)),
-                    ("explicitType", bool_value(body.explicit_type)),
-                    ("hasUnknownMembers", bool_value(body.has_unknown_members)),
+                    ("id", identifier(offset_table, config, &member.id)),
+                    (
+                        "init",
+                        boolean_literal(offset_table, config, &member.init.0, &member.init.1),
+                    ),
                 ],
-            )
-        }
-        Body::NumberBody { loc, body } => {
-            let members: Vec<Value> = body
-                .members
-                .iter()
-                .map(|member| {
-                    node(
-                        offset_table,
-                        config,
-                        "EnumNumberMember",
-                        &member.loc,
-                        None,
-                        vec![
-                            ("id", identifier(offset_table, config, &member.id)),
-                            (
-                                "init",
-                                number_literal(
-                                    offset_table,
-                                    config,
-                                    &member.init.0,
-                                    &member.init.1,
-                                ),
-                            ),
-                        ],
-                    )
-                })
-                .collect();
-
-            node(
+            ),
+            Member::NumberMember(member) => node(
                 offset_table,
                 config,
-                "EnumNumberBody",
-                loc,
-                format_internal_comments(body.comments.as_ref()).as_ref(),
+                "EnumNumberMember",
+                &member.loc,
+                None,
                 vec![
-                    ("members", Value::Array(members)),
-                    ("explicitType", bool_value(body.explicit_type)),
-                    ("hasUnknownMembers", bool_value(body.has_unknown_members)),
+                    ("id", identifier(offset_table, config, &member.id)),
+                    (
+                        "init",
+                        number_literal(offset_table, config, &member.init.0, &member.init.1),
+                    ),
                 ],
-            )
-        }
-        Body::StringBody { loc, body } => {
-            let members = match &body.members {
-                StringBodyMembers::Defaulted(defaulted) => defaulted
-                    .iter()
-                    .map(|member| {
-                        node(
-                            offset_table,
-                            config,
-                            "EnumDefaultedMember",
-                            &member.loc,
-                            None,
-                            vec![("id", identifier(offset_table, config, &member.id))],
-                        )
-                    })
-                    .collect(),
-                StringBodyMembers::Initialized(initialized) => initialized
-                    .iter()
-                    .map(|member| {
-                        node(
-                            offset_table,
-                            config,
-                            "EnumStringMember",
-                            &member.loc,
-                            None,
-                            vec![
-                                ("id", identifier(offset_table, config, &member.id)),
-                                (
-                                    "init",
-                                    string_literal(
-                                        offset_table,
-                                        config,
-                                        &member.init.0,
-                                        &member.init.1,
-                                    ),
-                                ),
-                            ],
-                        )
-                    })
-                    .collect(),
-            };
-
-            node(
+            ),
+            Member::StringMember(member) => node(
                 offset_table,
                 config,
-                "EnumStringBody",
-                loc,
-                format_internal_comments(body.comments.as_ref()).as_ref(),
+                "EnumStringMember",
+                &member.loc,
+                None,
                 vec![
-                    ("members", Value::Array(members)),
-                    ("explicitType", bool_value(body.explicit_type)),
-                    ("hasUnknownMembers", bool_value(body.has_unknown_members)),
+                    ("id", identifier(offset_table, config, &member.id)),
+                    (
+                        "init",
+                        string_literal(offset_table, config, &member.init.0, &member.init.1),
+                    ),
                 ],
-            )
-        }
-        Body::SymbolBody { loc, body } => {
-            let members: Vec<Value> = body
-                .members
-                .iter()
-                .map(|member| {
-                    node(
-                        offset_table,
-                        config,
-                        "EnumDefaultedMember",
-                        &member.loc,
-                        None,
-                        vec![("id", identifier(offset_table, config, &member.id))],
-                    )
-                })
-                .collect();
-
-            node(
+            ),
+            Member::BigIntMember(member) => node(
                 offset_table,
                 config,
-                "EnumSymbolBody",
-                loc,
-                format_internal_comments(body.comments.as_ref()).as_ref(),
+                "EnumBigIntMember",
+                &member.loc,
+                None,
                 vec![
-                    ("members", Value::Array(members)),
-                    ("hasUnknownMembers", bool_value(body.has_unknown_members)),
+                    ("id", identifier(offset_table, config, &member.id)),
+                    (
+                        "init",
+                        bigint_literal(offset_table, config, &member.init.0, &member.init.1),
+                    ),
                 ],
-            )
-        }
-        Body::BigIntBody { loc, body } => {
-            let members: Vec<Value> = body
-                .members
-                .iter()
-                .map(|member| {
-                    node(
-                        offset_table,
-                        config,
-                        "EnumBigIntMember",
-                        &member.loc,
-                        None,
-                        vec![
-                            ("id", identifier(offset_table, config, &member.id)),
-                            (
-                                "init",
-                                bigint_literal(
-                                    offset_table,
-                                    config,
-                                    &member.init.0,
-                                    &member.init.1,
-                                ),
-                            ),
-                        ],
-                    )
-                })
-                .collect();
-
-            node(
+            ),
+            Member::DefaultedMember(member) => node(
                 offset_table,
                 config,
-                "EnumBigIntBody",
-                loc,
-                format_internal_comments(body.comments.as_ref()).as_ref(),
-                vec![
-                    ("members", Value::Array(members)),
-                    ("explicitType", bool_value(body.explicit_type)),
-                    ("hasUnknownMembers", bool_value(body.has_unknown_members)),
-                ],
-            )
+                "EnumDefaultedMember",
+                &member.loc,
+                None,
+                vec![("id", identifier(offset_table, config, &member.id))],
+            ),
         }
-    }
+    };
+
+    let members_value: Vec<Value> = members.iter().map(enum_member).collect();
+
+    let explicit_type_str = match explicit_type {
+        Some((_, t)) => Value::String(t.as_str().to_owned()),
+        None => Value::Null,
+    };
+
+    node(
+        offset_table,
+        config,
+        "EnumBody",
+        loc,
+        format_internal_comments(comments.as_ref()).as_ref(),
+        vec![
+            ("members", Value::Array(members_value)),
+            ("explicitType", explicit_type_str),
+            (
+                "hasUnknownMembers",
+                bool_value(has_unknown_members.is_some()),
+            ),
+        ],
+    )
 }
 
 fn enum_declaration(

@@ -2969,154 +2969,57 @@ let tests =
            assert_output ~ctxt "T?.[K]" layout
          );
          ( "enum_of_boolean" >:: fun ctxt ->
-           S.EnumDeclarations.(
-             let layout ~explicit_type =
-               Js_layout_generator.statement ~opts
-               @@ S.enum_declaration
-                    (I.identifier "E")
-                    (boolean_body
-                       ~explicit_type
-                       [
-                         initialized_member (I.identifier "A") (boolean_literal true);
-                         initialized_member (I.identifier "B") (boolean_literal false);
-                       ]
-                    )
-             in
-             assert_output ~ctxt "enum E{A=true,B=false,}" (layout ~explicit_type:false);
-             let pretty_output = "enum E {\n" ^ "  A = true,\n" ^ "  B = false,\n" ^ "}" in
-             assert_output ~ctxt ~pretty:true pretty_output (layout ~explicit_type:false);
-
-             assert_output ~ctxt "enum E of boolean{A=true,B=false,}" (layout ~explicit_type:true);
-             let explicit_type_pretty_output =
-               "enum E of boolean {\n" ^ "  A = true,\n" ^ "  B = false,\n" ^ "}"
-             in
-             assert_output
-               ~ctxt
-               ~pretty:true
-               explicit_type_pretty_output
-               (layout ~explicit_type:true)
-           )
+           assert_statement_string ~ctxt "enum E{A=true,B=false,}";
+           assert_statement_string ~ctxt ~pretty:true "enum E {\n  A = true,\n  B = false,\n}";
+           assert_statement_string ~ctxt "enum E of boolean{A=true,B=false,}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "enum E of boolean {\n  A = true,\n  B = false,\n}"
          );
          ( "enum_of_number" >:: fun ctxt ->
-           S.EnumDeclarations.(
-             let layout ~explicit_type =
-               Js_layout_generator.statement ~opts
-               @@ S.enum_declaration
-                    (I.identifier "E")
-                    (number_body
-                       ~explicit_type
-                       [
-                         initialized_member (I.identifier "A") (number_literal 1.0 "1");
-                         initialized_member (I.identifier "B") (number_literal 2.0 "2");
-                       ]
-                    )
-             in
-             assert_output ~ctxt "enum E{A=1,B=2,}" (layout ~explicit_type:false);
-             let pretty_output = "enum E {\n" ^ "  A = 1,\n" ^ "  B = 2,\n" ^ "}" in
-             assert_output ~ctxt ~pretty:true pretty_output (layout ~explicit_type:false);
-
-             assert_output ~ctxt "enum E of number{A=1,B=2,}" (layout ~explicit_type:true);
-             let explicit_type_pretty_output =
-               "enum E of number {\n" ^ "  A = 1,\n" ^ "  B = 2,\n" ^ "}"
-             in
-             assert_output
-               ~ctxt
-               ~pretty:true
-               explicit_type_pretty_output
-               (layout ~explicit_type:true)
-           )
+           assert_statement_string ~ctxt "enum E{A=1,B=2,}";
+           assert_statement_string ~ctxt ~pretty:true "enum E {\n  A = 1,\n  B = 2,\n}";
+           assert_statement_string ~ctxt "enum E of number{A=1,B=2,}";
+           assert_statement_string ~ctxt ~pretty:true "enum E of number {\n  A = 1,\n  B = 2,\n}"
          );
          ( "enum_of_string_initialized" >:: fun ctxt ->
-           S.EnumDeclarations.(
-             let layout ~explicit_type =
-               Js_layout_generator.statement ~opts
-               @@ S.enum_declaration
-                    (I.identifier "E")
-                    (string_initialized_body
-                       ~explicit_type
-                       [
-                         initialized_member (I.identifier "A") (string_literal "a");
-                         initialized_member (I.identifier "B") (string_literal "b");
-                       ]
-                    )
-             in
-             assert_output ~ctxt "enum E{A=\"a\",B=\"b\",}" (layout ~explicit_type:false);
-             let pretty_output = "enum E {\n" ^ "  A = \"a\",\n" ^ "  B = \"b\",\n" ^ "}" in
-             assert_output ~ctxt ~pretty:true pretty_output (layout ~explicit_type:false);
-
-             assert_output ~ctxt "enum E of string{A=\"a\",B=\"b\",}" (layout ~explicit_type:true);
-             let explicit_type_pretty_output =
-               "enum E of string {\n" ^ "  A = \"a\",\n" ^ "  B = \"b\",\n" ^ "}"
-             in
-             assert_output
-               ~ctxt
-               ~pretty:true
-               explicit_type_pretty_output
-               (layout ~explicit_type:true)
-           )
+           assert_statement_string ~ctxt "enum E{A=\"a\",B=\"b\",}";
+           assert_statement_string ~ctxt ~pretty:true "enum E {\n  A = \"a\",\n  B = \"b\",\n}";
+           assert_statement_string ~ctxt "enum E of string{A=\"a\",B=\"b\",}";
+           assert_statement_string
+             ~ctxt
+             ~pretty:true
+             "enum E of string {\n  A = \"a\",\n  B = \"b\",\n}"
          );
          ( "enum_of_string_defaulted" >:: fun ctxt ->
-           S.EnumDeclarations.(
-             let layout ~explicit_type =
-               Js_layout_generator.statement ~opts
-               @@ S.enum_declaration
-                    (I.identifier "E")
-                    (string_defaulted_body
-                       ~explicit_type
-                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")]
-                    )
-             in
-             assert_output ~ctxt "enum E{A,B,}" (layout ~explicit_type:false);
-             let pretty_output = "enum E {\n" ^ "  A,\n" ^ "  B,\n" ^ "}" in
-             assert_output ~ctxt ~pretty:true pretty_output (layout ~explicit_type:false);
-
-             assert_output ~ctxt "enum E of string{A,B,}" (layout ~explicit_type:true);
-             let explicit_type_pretty_output = "enum E of string {\n" ^ "  A,\n" ^ "  B,\n" ^ "}" in
-             assert_output
-               ~ctxt
-               ~pretty:true
-               explicit_type_pretty_output
-               (layout ~explicit_type:true)
-           )
+           assert_statement_string ~ctxt "enum E{A,B,}";
+           assert_statement_string ~ctxt ~pretty:true "enum E {\n  A,\n  B,\n}";
+           assert_statement_string ~ctxt "enum E of string{A,B,}";
+           assert_statement_string ~ctxt ~pretty:true "enum E of string {\n  A,\n  B,\n}"
          );
          ( "enum_of_symbol" >:: fun ctxt ->
-           S.EnumDeclarations.(
-             let layout =
-               Js_layout_generator.statement ~opts
-               @@ S.enum_declaration
-                    (I.identifier "E")
-                    (symbol_body
-                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")]
-                    )
-             in
-             assert_output ~ctxt "enum E of symbol{A,B,}" layout;
-             let pretty_output = "enum E of symbol {\n" ^ "  A,\n" ^ "  B,\n" ^ "}" in
-             assert_output ~ctxt ~pretty:true pretty_output layout
-           )
+           assert_statement_string ~ctxt "enum E of symbol{A,B,}";
+           assert_statement_string ~ctxt ~pretty:true "enum E of symbol {\n  A,\n  B,\n}"
          );
          ( "enum_with_unknown_members" >:: fun ctxt ->
-           S.EnumDeclarations.(
-             let layout =
-               Js_layout_generator.statement ~opts
-               @@ S.enum_declaration
-                    (I.identifier "E")
-                    (symbol_body
-                       ~has_unknown_members:true
-                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")]
-                    )
-             in
-             assert_output ~ctxt "enum E of symbol{A,B,...}" layout;
-             let pretty_output = "enum E of symbol {\n" ^ "  A,\n" ^ "  B,\n" ^ "  ...\n" ^ "}" in
-             assert_output ~ctxt ~pretty:true pretty_output layout
-           )
+           assert_statement_string ~ctxt "enum E of symbol{A,B,...}";
+           assert_statement_string ~ctxt ~pretty:true "enum E of symbol {\n  A,\n  B,\n  ...\n}"
          );
          ( "enum_with_internal_comment" >:: fun ctxt ->
            S.EnumDeclarations.(
+             let members =
+               [
+                 defaulted_member_of (defaulted_member (I.identifier "A"));
+                 defaulted_member_of (defaulted_member (I.identifier "B"));
+               ]
+             in
              let layout =
                Js_layout_generator.statement ~opts
                @@ S.enum_declaration
                     (I.identifier "E")
-                    (symbol_body
+                    (body
+                       ~explicit_type:(Loc.none, Flow_ast.Statement.EnumDeclaration.Symbol)
                        ~comments:
                          {
                            Flow_ast.Syntax.leading = [];
@@ -3124,12 +3027,15 @@ let tests =
                            internal =
                              [Ast_builder.Comments.line ~on_newline:true " internal comment"];
                          }
-                       [defaulted_member (I.identifier "A"); defaulted_member (I.identifier "B")]
+                       members
                     )
              in
              assert_output ~ctxt "enum E of symbol{A,B,// internal comment\n}" layout;
-             let pretty_output = "enum E of symbol {\n  A,\n  B,\n  // internal comment\n  \n}" in
-             assert_output ~ctxt ~pretty:true pretty_output layout
+             assert_output
+               ~ctxt
+               ~pretty:true
+               "enum E of symbol {\n  A,\n  B,\n  // internal comment\n  \n}"
+               layout
            )
          );
          ( "match_expression" >:: fun ctxt ->

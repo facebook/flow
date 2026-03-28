@@ -95,6 +95,41 @@ type 'loc enum_error_kind =
       enum_reason: 'loc virtual_reason;
       member_name: string;
     }
+  | EnumDuplicateMemberName of {
+      loc: 'loc;
+      prev_use_loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+      member_name: string;
+    }
+  | EnumInconsistentMemberValues of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+    }
+  | EnumInvalidMemberInitializer of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+      explicit_type: Flow_ast.Statement.EnumDeclaration.explicit_type option;
+      member_name: string;
+    }
+  | EnumBooleanMemberNotInitialized of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+      member_name: string;
+    }
+  | EnumNumberMemberNotInitialized of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+      member_name: string;
+    }
+  | EnumBigIntMemberNotInitialized of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+      member_name: string;
+    }
+  | EnumStringMemberInconsistentlyInitialized of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+    }
 
 type 'loc match_error_kind =
   | MatchNotExhaustive of {
@@ -1689,7 +1724,32 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
       | EnumInvalidAbstractUse { reason; enum_reason } ->
         EnumInvalidAbstractUse { reason = map_reason reason; enum_reason = map_reason enum_reason }
       | EnumInvalidMemberName { loc; enum_reason; member_name } ->
-        EnumInvalidMemberName { loc = f loc; enum_reason = map_reason enum_reason; member_name })
+        EnumInvalidMemberName { loc = f loc; enum_reason = map_reason enum_reason; member_name }
+      | EnumDuplicateMemberName { loc; prev_use_loc; enum_reason; member_name } ->
+        EnumDuplicateMemberName
+          {
+            loc = f loc;
+            prev_use_loc = f prev_use_loc;
+            enum_reason = map_reason enum_reason;
+            member_name;
+          }
+      | EnumInconsistentMemberValues { loc; enum_reason } ->
+        EnumInconsistentMemberValues { loc = f loc; enum_reason = map_reason enum_reason }
+      | EnumInvalidMemberInitializer { loc; enum_reason; explicit_type; member_name } ->
+        EnumInvalidMemberInitializer
+          { loc = f loc; enum_reason = map_reason enum_reason; explicit_type; member_name }
+      | EnumBooleanMemberNotInitialized { loc; enum_reason; member_name } ->
+        EnumBooleanMemberNotInitialized
+          { loc = f loc; enum_reason = map_reason enum_reason; member_name }
+      | EnumNumberMemberNotInitialized { loc; enum_reason; member_name } ->
+        EnumNumberMemberNotInitialized
+          { loc = f loc; enum_reason = map_reason enum_reason; member_name }
+      | EnumBigIntMemberNotInitialized { loc; enum_reason; member_name } ->
+        EnumBigIntMemberNotInitialized
+          { loc = f loc; enum_reason = map_reason enum_reason; member_name }
+      | EnumStringMemberInconsistentlyInitialized { loc; enum_reason } ->
+        EnumStringMemberInconsistentlyInitialized
+          { loc = f loc; enum_reason = map_reason enum_reason })
   | EAssignConstLikeBinding { loc; definition; binding_kind } ->
     EAssignConstLikeBinding { loc = f loc; definition = map_reason definition; binding_kind }
   | EMalformedCode loc -> EMalformedCode (f loc)
@@ -2383,7 +2443,14 @@ let loc_of_msg : 'loc t' -> 'loc option = function
     | EnumInvalidCheck { loc; _ }
     | EnumInvalidMemberName { loc; _ }
     | EnumModification { loc; _ }
-    | EnumMemberDuplicateValue { loc; _ } ->
+    | EnumMemberDuplicateValue { loc; _ }
+    | EnumDuplicateMemberName { loc; _ }
+    | EnumInconsistentMemberValues { loc; _ }
+    | EnumInvalidMemberInitializer { loc; _ }
+    | EnumBooleanMemberNotInitialized { loc; _ }
+    | EnumNumberMemberNotInitialized { loc; _ }
+    | EnumBigIntMemberNotInitialized { loc; _ }
+    | EnumStringMemberInconsistentlyInitialized { loc; _ } ->
       Some loc
     | EnumNotAllChecked { reason; _ }
     | EnumUnknownNotChecked { reason; _ }
@@ -3571,6 +3638,20 @@ let friendly_message_of_msg = function
         )
     | EnumInvalidMemberName { enum_reason; member_name; _ } ->
       Normal (MessageInvalidEnumMemberName { member_name; enum_reason })
+    | EnumDuplicateMemberName { prev_use_loc; enum_reason; member_name; _ } ->
+      Normal (MessageEnumDuplicateMemberName { member_name; prev_use_loc; enum_reason })
+    | EnumInconsistentMemberValues { enum_reason; _ } ->
+      Normal (MessageEnumInconsistentMemberValues { enum_reason })
+    | EnumInvalidMemberInitializer { enum_reason; explicit_type; member_name; _ } ->
+      Normal (MessageEnumInvalidMemberInitializer { member_name; explicit_type; enum_reason })
+    | EnumBooleanMemberNotInitialized { enum_reason; member_name; _ } ->
+      Normal (MessageEnumBooleanMemberNotInitialized { member_name; enum_reason })
+    | EnumNumberMemberNotInitialized { enum_reason; member_name; _ } ->
+      Normal (MessageEnumNumberMemberNotInitialized { member_name; enum_reason })
+    | EnumBigIntMemberNotInitialized { enum_reason; member_name; _ } ->
+      Normal (MessageEnumBigIntMemberNotInitialized { member_name; enum_reason })
+    | EnumStringMemberInconsistentlyInitialized { enum_reason; _ } ->
+      Normal (MessageEnumStringMemberInconsistentlyInitialized { enum_reason })
   end
   | EAssignConstLikeBinding { definition; binding_kind; _ } ->
     Normal (MessageCannotReassignConstantLikeBinding { definition; binding_kind })
@@ -3970,7 +4051,7 @@ let error_code_of_message err : error_code option =
     match enum_error with
     | EnumsNotEnabled _
     | EnumConstNotSupported _ ->
-      Some IllegalEnum
+      Some UnsupportedSyntax
     | EnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
     | EnumInvalidAbstractUse _ -> Some InvalidExhaustiveCheck
     | EnumInvalidMemberName _ -> Some InvalidEnumMemberName
@@ -3991,6 +4072,13 @@ let error_code_of_message err : error_code option =
     | EnumNotAllChecked { default_case_loc = Some _; _ } -> Some RequireExplicitEnumSwitchCases
     | EnumUnknownNotChecked _ -> Some InvalidExhaustiveCheck
     | EnumIncompatible { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
+    | EnumDuplicateMemberName _ -> Some InvalidEnum
+    | EnumInconsistentMemberValues _ -> Some InvalidEnum
+    | EnumInvalidMemberInitializer _ -> Some InvalidEnum
+    | EnumBooleanMemberNotInitialized _ -> Some InvalidEnum
+    | EnumNumberMemberNotInitialized _ -> Some InvalidEnum
+    | EnumBigIntMemberNotInitialized _ -> Some InvalidEnum
+    | EnumStringMemberInconsistentlyInitialized _ -> Some InvalidEnum
   end
   | EExpectedBooleanLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType
   | EExpectedNumberLit { use_op; _ } -> error_code_of_use_op use_op ~default:IncompatibleType

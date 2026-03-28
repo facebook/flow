@@ -1,7 +1,7 @@
 Error ------------------------------------------------------------------------------------------------------- lib.js:2:3
 
 Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
-`.flowconfig`. [illegal-enum]
+`.flowconfig`. [unsupported-syntax]
 
         v-------------------------------------------
    2|   declare enum G { // ERROR: enums not enabled
@@ -14,7 +14,7 @@ Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true
 Error ------------------------------------------------------------------------------------------------------ lib.js:6:18
 
 Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
-`.flowconfig`. [illegal-enum]
+`.flowconfig`. [unsupported-syntax]
 
                        v-----------------------------------
    6|   declare export enum H { // ERROR: enums not enabled
@@ -27,7 +27,7 @@ Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true
 Error -------------------------------------------------------------------------------------------------- declared.js:1:1
 
 Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
-`.flowconfig`. [illegal-enum]
+`.flowconfig`. [unsupported-syntax]
 
       v---------------------------------------
    1| declare enum E { // ERROR: enums are off
@@ -48,7 +48,7 @@ Cannot resolve name `E`. [cannot-resolve-name]
 Error ------------------------------------------------------------------------------------------------------ test.js:1:1
 
 Flow Enums are not enabled. You may opt-in to using enums by putting `enums=true` into the `[options]` section of your
-`.flowconfig`. [illegal-enum]
+`.flowconfig`. [unsupported-syntax]
 
       v-------------------------------
    1| enum E { // Error: enums are off

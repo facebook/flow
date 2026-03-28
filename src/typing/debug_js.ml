@@ -1917,6 +1917,47 @@ let dump_error_message =
           (string_of_aloc loc)
           (dump_reason cx enum_reason)
           member_name
+      | EnumDuplicateMemberName { loc; prev_use_loc; enum_reason; member_name } ->
+        spf
+          "EEnumError (EnumDuplicateMemberName (%s) (%s) (%s) (%s))"
+          (string_of_aloc loc)
+          (string_of_aloc prev_use_loc)
+          (dump_reason cx enum_reason)
+          member_name
+      | EnumInconsistentMemberValues { loc; enum_reason } ->
+        spf
+          "EEnumError (EnumInconsistentMemberValues (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
+      | EnumInvalidMemberInitializer { loc; enum_reason; member_name; _ } ->
+        spf
+          "EEnumError (EnumInvalidMemberInitializer (%s) (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
+          member_name
+      | EnumBooleanMemberNotInitialized { loc; enum_reason; member_name } ->
+        spf
+          "EEnumError (EnumBooleanMemberNotInitialized (%s) (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
+          member_name
+      | EnumNumberMemberNotInitialized { loc; enum_reason; member_name } ->
+        spf
+          "EEnumError (EnumNumberMemberNotInitialized (%s) (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
+          member_name
+      | EnumBigIntMemberNotInitialized { loc; enum_reason; member_name } ->
+        spf
+          "EEnumError (EnumBigIntMemberNotInitialized (%s) (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
+          member_name
+      | EnumStringMemberInconsistentlyInitialized { loc; enum_reason } ->
+        spf
+          "EEnumError (EnumStringMemberInconsistentlyInitialized (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
     end
     | EAssignConstLikeBinding { loc; definition; binding_kind } ->
       spf

@@ -11756,9 +11756,11 @@ Module {
         EnumBinding {
             id_loc: 0,
             name: "E",
-            rep: StringRep {
-                truthy: true,
-            },
+            rep: Some(
+                StringRep {
+                    truthy: true,
+                },
+            ),
             members: {
                 "A": 1,
                 "B": 2,
@@ -11812,9 +11814,11 @@ Module {
         EnumBinding {
             id_loc: 1,
             name: "E",
-            rep: StringRep {
-                truthy: true,
-            },
+            rep: Some(
+                StringRep {
+                    truthy: true,
+                },
+            ),
             members: {
                 "A": 2,
                 "B": 3,
@@ -11871,9 +11875,11 @@ Module {
         EnumBinding {
             id_loc: 0,
             name: "E",
-            rep: StringRep {
-                truthy: true,
-            },
+            rep: Some(
+                StringRep {
+                    truthy: true,
+                },
+            ),
             members: {
                 "A": 1,
                 "B": 2,
@@ -11925,9 +11931,11 @@ Module {
         EnumBinding {
             id_loc: 0,
             name: "E",
-            rep: BoolRep(
-                Some(
-                    true,
+            rep: Some(
+                BoolRep(
+                    Some(
+                        true,
+                    ),
                 ),
             ),
             members: {
@@ -11981,8 +11989,10 @@ Module {
         EnumBinding {
             id_loc: 0,
             name: "E",
-            rep: BoolRep(
-                None,
+            rep: Some(
+                BoolRep(
+                    None,
+                ),
             ),
             members: {
                 "A": 1,
@@ -12036,9 +12046,11 @@ Module {
         EnumBinding {
             id_loc: 0,
             name: "E",
-            rep: NumberRep {
-                truthy: true,
-            },
+            rep: Some(
+                NumberRep {
+                    truthy: true,
+                },
+            ),
             members: {
                 "A": 1,
                 "B": 2,
@@ -12091,9 +12103,11 @@ Module {
         EnumBinding {
             id_loc: 0,
             name: "E",
-            rep: NumberRep {
-                truthy: false,
-            },
+            rep: Some(
+                NumberRep {
+                    truthy: false,
+                },
+            ),
             members: {
                 "A": 1,
                 "B": 2,
@@ -12146,9 +12160,11 @@ Module {
         EnumBinding {
             id_loc: 0,
             name: "E",
-            rep: StringRep {
-                truthy: false,
-            },
+            rep: Some(
+                StringRep {
+                    truthy: false,
+                },
+            ),
             members: {
                 "A": 1,
                 "B": 2,
@@ -12201,7 +12217,9 @@ Module {
         EnumBinding {
             id_loc: 0,
             name: "E",
-            rep: SymbolRep,
+            rep: Some(
+                SymbolRep,
+            ),
             members: {
                 "A": 1,
                 "B": 2,
@@ -12254,9 +12272,11 @@ Module {
         EnumBinding {
             id_loc: 0,
             name: "E",
-            rep: StringRep {
-                truthy: true,
-            },
+            rep: Some(
+                StringRep {
+                    truthy: true,
+                },
+            ),
             members: {
                 "A": 1,
                 "B": 2,
@@ -12309,9 +12329,11 @@ Module {
         EnumBinding {
             id_loc: 0,
             name: "E",
-            rep: StringRep {
-                truthy: true,
-            },
+            rep: Some(
+                StringRep {
+                    truthy: true,
+                },
+            ),
             members: {
                 "A": 1,
                 "B": 2,
@@ -16755,9 +16777,11 @@ Local defs:
 6. EnumBinding {
     id_loc: 15,
     name: "A",
-    rep: StringRep {
-        truthy: true,
-    },
+    rep: Some(
+        StringRep {
+            truthy: true,
+        },
+    ),
     members: {
         "B": 16,
     },
@@ -17423,9 +17447,11 @@ Local defs:
 6. EnumBinding {
     id_loc: 17,
     name: "B",
-    rep: StringRep {
-        truthy: true,
-    },
+    rep: Some(
+        StringRep {
+            truthy: true,
+        },
+    ),
     members: {
         "C": 18,
         "D": 19,

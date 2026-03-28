@@ -228,4 +228,6 @@ val function_type_param_parts :
   ('M, 'T) Flow_ast.Type.Function.Param.t' ->
   ('M, 'T) Flow_ast.Identifier.t option * ('M, 'T) Flow_ast.Type.t * bool
 
+val string_of_enum_explicit_type : Flow_ast.Statement.EnumDeclaration.explicit_type -> string
+
 val string_of_bigint : 'm Flow_ast.BigIntLiteral.t -> string

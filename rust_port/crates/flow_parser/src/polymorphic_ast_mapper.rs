@@ -3824,262 +3824,122 @@ pub fn enum_body<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     mapper: &mut impl LocMapper<M, T, N, U, E>,
     body: &ast::statement::enum_declaration::Body<M>,
 ) -> Result<ast::statement::enum_declaration::Body<N>, E> {
-    Ok(match body {
-        ast::statement::enum_declaration::Body::BooleanBody {
-            loc,
-            body: boolean_body,
-        } => ast::statement::enum_declaration::Body::BooleanBody {
-            loc: mapper.on_loc_annot(loc)?,
-            body: enum_boolean_body(mapper, boolean_body)?,
-        },
-        ast::statement::enum_declaration::Body::NumberBody {
-            loc,
-            body: number_body,
-        } => ast::statement::enum_declaration::Body::NumberBody {
-            loc: mapper.on_loc_annot(loc)?,
-            body: enum_number_body(mapper, number_body)?,
-        },
-        ast::statement::enum_declaration::Body::StringBody {
-            loc,
-            body: string_body,
-        } => ast::statement::enum_declaration::Body::StringBody {
-            loc: mapper.on_loc_annot(loc)?,
-            body: enum_string_body(mapper, string_body)?,
-        },
-        ast::statement::enum_declaration::Body::SymbolBody {
-            loc,
-            body: symbol_body,
-        } => ast::statement::enum_declaration::Body::SymbolBody {
-            loc: mapper.on_loc_annot(loc)?,
-            body: enum_symbol_body(mapper, symbol_body)?,
-        },
-        ast::statement::enum_declaration::Body::BigIntBody {
-            loc,
-            body: bigint_body,
-        } => ast::statement::enum_declaration::Body::BigIntBody {
-            loc: mapper.on_loc_annot(loc)?,
-            body: enum_bigint_body(mapper, bigint_body)?,
-        },
-    })
-}
-
-pub fn enum_boolean_body<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
-    mapper: &mut impl LocMapper<M, T, N, U, E>,
-    body: &ast::statement::enum_declaration::BooleanBody<M>,
-) -> Result<ast::statement::enum_declaration::BooleanBody<N>, E> {
-    let ast::statement::enum_declaration::BooleanBody {
+    let ast::statement::enum_declaration::Body {
+        loc,
         members,
         explicit_type,
         has_unknown_members,
         comments,
     } = body;
+    let loc_ = mapper.on_loc_annot(loc)?;
     let members_ = members
         .iter()
-        .map(|m| enum_boolean_member(mapper, m))
+        .map(|m| enum_member(mapper, m))
         .collect::<Result<Vec<_>, E>>()?;
+    let explicit_type_ = explicit_type
+        .as_ref()
+        .map(|(loc, t)| Ok((mapper.on_loc_annot(loc)?, *t)))
+        .transpose()?;
+    let has_unknown_members_ = has_unknown_members
+        .as_ref()
+        .map(|loc| mapper.on_loc_annot(loc))
+        .transpose()?;
     let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
-    Ok(ast::statement::enum_declaration::BooleanBody {
+    Ok(ast::statement::enum_declaration::Body {
+        loc: loc_,
         members: members_.into(),
-        explicit_type: *explicit_type,
-        has_unknown_members: *has_unknown_members,
+        explicit_type: explicit_type_,
+        has_unknown_members: has_unknown_members_,
         comments: comments_,
     })
 }
 
-pub fn enum_number_body<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
+pub fn enum_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
     mapper: &mut impl LocMapper<M, T, N, U, E>,
-    body: &ast::statement::enum_declaration::NumberBody<M>,
-) -> Result<ast::statement::enum_declaration::NumberBody<N>, E> {
-    let ast::statement::enum_declaration::NumberBody {
-        members,
-        explicit_type,
-        has_unknown_members,
-        comments,
-    } = body;
-    let members_ = members
-        .iter()
-        .map(|m| enum_number_member(mapper, m))
-        .collect::<Result<Vec<_>, E>>()?;
-    let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
-    Ok(ast::statement::enum_declaration::NumberBody {
-        members: members_.into(),
-        explicit_type: *explicit_type,
-        has_unknown_members: *has_unknown_members,
-        comments: comments_,
-    })
-}
-
-pub fn enum_string_body<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
-    mapper: &mut impl LocMapper<M, T, N, U, E>,
-    body: &ast::statement::enum_declaration::StringBody<M>,
-) -> Result<ast::statement::enum_declaration::StringBody<N>, E> {
-    let ast::statement::enum_declaration::StringBody {
-        members,
-        explicit_type,
-        has_unknown_members,
-        comments,
-    } = body;
-    let members_ = match members {
-        ast::statement::enum_declaration::StringBodyMembers::Defaulted(members) => {
-            ast::statement::enum_declaration::StringBodyMembers::Defaulted(
-                members
-                    .iter()
-                    .map(|m| enum_defaulted_member(mapper, m))
-                    .collect::<Result<Vec<_>, E>>()?
-                    .into(),
+    member: &ast::statement::enum_declaration::Member<M>,
+) -> Result<ast::statement::enum_declaration::Member<N>, E> {
+    Ok(match member {
+        ast::statement::enum_declaration::Member::BooleanMember(m) => {
+            let ast::statement::enum_declaration::InitializedMember {
+                loc,
+                id,
+                init: (init_annot, init_val),
+            } = m;
+            let init_ = (
+                mapper.on_loc_annot(init_annot)?,
+                boolean_literal(mapper, init_val)?,
+            );
+            ast::statement::enum_declaration::Member::BooleanMember(
+                ast::statement::enum_declaration::InitializedMember {
+                    loc: mapper.on_loc_annot(loc)?,
+                    id: enum_member_identifier(mapper, id)?,
+                    init: init_,
+                },
             )
         }
-        ast::statement::enum_declaration::StringBodyMembers::Initialized(members) => {
-            ast::statement::enum_declaration::StringBodyMembers::Initialized(
-                members
-                    .iter()
-                    .map(|m| enum_string_member(mapper, m))
-                    .collect::<Result<Vec<_>, E>>()?
-                    .into(),
+        ast::statement::enum_declaration::Member::NumberMember(m) => {
+            let ast::statement::enum_declaration::InitializedMember {
+                loc,
+                id,
+                init: (init_annot, init_val),
+            } = m;
+            let init_ = (
+                mapper.on_loc_annot(init_annot)?,
+                number_literal(mapper, init_val)?,
+            );
+            ast::statement::enum_declaration::Member::NumberMember(
+                ast::statement::enum_declaration::InitializedMember {
+                    loc: mapper.on_loc_annot(loc)?,
+                    id: enum_member_identifier(mapper, id)?,
+                    init: init_,
+                },
             )
         }
-    };
-    let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
-    Ok(ast::statement::enum_declaration::StringBody {
-        members: members_,
-        explicit_type: *explicit_type,
-        has_unknown_members: *has_unknown_members,
-        comments: comments_,
-    })
-}
-
-pub fn enum_symbol_body<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
-    mapper: &mut impl LocMapper<M, T, N, U, E>,
-    body: &ast::statement::enum_declaration::SymbolBody<M>,
-) -> Result<ast::statement::enum_declaration::SymbolBody<N>, E> {
-    let ast::statement::enum_declaration::SymbolBody {
-        members,
-        has_unknown_members,
-        comments,
-    } = body;
-    let members_ = members
-        .iter()
-        .map(|m| enum_defaulted_member(mapper, m))
-        .collect::<Result<Vec<_>, E>>()?;
-    let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
-    Ok(ast::statement::enum_declaration::SymbolBody {
-        members: members_.into(),
-        has_unknown_members: *has_unknown_members,
-        comments: comments_,
-    })
-}
-
-pub fn enum_bigint_body<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
-    mapper: &mut impl LocMapper<M, T, N, U, E>,
-    body: &ast::statement::enum_declaration::BigIntBody<M>,
-) -> Result<ast::statement::enum_declaration::BigIntBody<N>, E> {
-    let ast::statement::enum_declaration::BigIntBody {
-        members,
-        explicit_type,
-        has_unknown_members,
-        comments,
-    } = body;
-    let members_ = members
-        .iter()
-        .map(|m| enum_bigint_member(mapper, m))
-        .collect::<Result<Vec<_>, E>>()?;
-    let comments_ = syntax_with_internal_opt(mapper, comments.as_ref())?;
-    Ok(ast::statement::enum_declaration::BigIntBody {
-        members: members_.into(),
-        explicit_type: *explicit_type,
-        has_unknown_members: *has_unknown_members,
-        comments: comments_,
-    })
-}
-
-pub fn enum_defaulted_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
-    mapper: &mut impl LocMapper<M, T, N, U, E>,
-    member: &ast::statement::enum_declaration::DefaultedMember<M>,
-) -> Result<ast::statement::enum_declaration::DefaultedMember<N>, E> {
-    let ast::statement::enum_declaration::DefaultedMember { loc, id } = member;
-    Ok(ast::statement::enum_declaration::DefaultedMember {
-        loc: mapper.on_loc_annot(loc)?,
-        id: enum_member_identifier(mapper, id)?,
-    })
-}
-
-pub fn enum_boolean_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
-    mapper: &mut impl LocMapper<M, T, N, U, E>,
-    member: &ast::statement::enum_declaration::InitializedMember<ast::BooleanLiteral<M>, M>,
-) -> Result<ast::statement::enum_declaration::InitializedMember<ast::BooleanLiteral<N>, N>, E> {
-    let ast::statement::enum_declaration::InitializedMember {
-        loc,
-        id,
-        init: (init_annot, init_val),
-    } = member;
-    let init_ = (
-        mapper.on_loc_annot(init_annot)?,
-        boolean_literal(mapper, init_val)?,
-    );
-    Ok(ast::statement::enum_declaration::InitializedMember {
-        loc: mapper.on_loc_annot(loc)?,
-        id: enum_member_identifier(mapper, id)?,
-        init: init_,
-    })
-}
-
-pub fn enum_number_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
-    mapper: &mut impl LocMapper<M, T, N, U, E>,
-    member: &ast::statement::enum_declaration::InitializedMember<ast::NumberLiteral<M>, M>,
-) -> Result<ast::statement::enum_declaration::InitializedMember<ast::NumberLiteral<N>, N>, E> {
-    let ast::statement::enum_declaration::InitializedMember {
-        loc,
-        id,
-        init: (init_annot, init_val),
-    } = member;
-    let init_ = (
-        mapper.on_loc_annot(init_annot)?,
-        number_literal(mapper, init_val)?,
-    );
-    Ok(ast::statement::enum_declaration::InitializedMember {
-        loc: mapper.on_loc_annot(loc)?,
-        id: enum_member_identifier(mapper, id)?,
-        init: init_,
-    })
-}
-
-pub fn enum_string_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
-    mapper: &mut impl LocMapper<M, T, N, U, E>,
-    member: &ast::statement::enum_declaration::InitializedMember<ast::StringLiteral<M>, M>,
-) -> Result<ast::statement::enum_declaration::InitializedMember<ast::StringLiteral<N>, N>, E> {
-    let ast::statement::enum_declaration::InitializedMember {
-        loc,
-        id,
-        init: (init_annot, init_val),
-    } = member;
-    let init_ = (
-        mapper.on_loc_annot(init_annot)?,
-        string_literal(mapper, init_val)?,
-    );
-    Ok(ast::statement::enum_declaration::InitializedMember {
-        loc: mapper.on_loc_annot(loc)?,
-        id: enum_member_identifier(mapper, id)?,
-        init: init_,
-    })
-}
-
-pub fn enum_bigint_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
-    mapper: &mut impl LocMapper<M, T, N, U, E>,
-    member: &ast::statement::enum_declaration::InitializedMember<ast::BigIntLiteral<M>, M>,
-) -> Result<ast::statement::enum_declaration::InitializedMember<ast::BigIntLiteral<N>, N>, E> {
-    let ast::statement::enum_declaration::InitializedMember {
-        loc,
-        id,
-        init: (init_annot, init_val),
-    } = member;
-    let init_ = (
-        mapper.on_loc_annot(init_annot)?,
-        bigint_literal(mapper, init_val)?,
-    );
-    Ok(ast::statement::enum_declaration::InitializedMember {
-        loc: mapper.on_loc_annot(loc)?,
-        id: enum_member_identifier(mapper, id)?,
-        init: init_,
+        ast::statement::enum_declaration::Member::StringMember(m) => {
+            let ast::statement::enum_declaration::InitializedMember {
+                loc,
+                id,
+                init: (init_annot, init_val),
+            } = m;
+            let init_ = (
+                mapper.on_loc_annot(init_annot)?,
+                string_literal(mapper, init_val)?,
+            );
+            ast::statement::enum_declaration::Member::StringMember(
+                ast::statement::enum_declaration::InitializedMember {
+                    loc: mapper.on_loc_annot(loc)?,
+                    id: enum_member_identifier(mapper, id)?,
+                    init: init_,
+                },
+            )
+        }
+        ast::statement::enum_declaration::Member::BigIntMember(m) => {
+            let ast::statement::enum_declaration::InitializedMember {
+                loc,
+                id,
+                init: (init_annot, init_val),
+            } = m;
+            let init_ = (
+                mapper.on_loc_annot(init_annot)?,
+                bigint_literal(mapper, init_val)?,
+            );
+            ast::statement::enum_declaration::Member::BigIntMember(
+                ast::statement::enum_declaration::InitializedMember {
+                    loc: mapper.on_loc_annot(loc)?,
+                    id: enum_member_identifier(mapper, id)?,
+                    init: init_,
+                },
+            )
+        }
+        ast::statement::enum_declaration::Member::DefaultedMember(m) => {
+            let ast::statement::enum_declaration::DefaultedMember { loc, id } = m;
+            ast::statement::enum_declaration::Member::DefaultedMember(
+                ast::statement::enum_declaration::DefaultedMember {
+                    loc: mapper.on_loc_annot(loc)?,
+                    id: enum_member_identifier(mapper, id)?,
+                },
+            )
+        }
     })
 }
 

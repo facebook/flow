@@ -3160,13 +3160,6 @@ fn enum_declaration(
     } else {
         def
     };
-    let representation_type = |name: &str, explicit: bool| -> LayoutNode {
-        if explicit {
-            fuse(vec![space(), atom("of"), space(), atom(name)])
-        } else {
-            LayoutNode::empty()
-        }
-    };
     let wrap_body = |members: Vec<LayoutNode>| -> LayoutNode {
         wrap_and_indent(
             (atom("{"), atom("}")),
@@ -3174,10 +3167,6 @@ fn enum_declaration(
             vec![join(pretty_hardline(), members)],
         )
     };
-    let defaulted_member =
-        |m: &ast::statement::enum_declaration::DefaultedMember<Loc>| -> LayoutNode {
-            fuse(vec![identifier(&m.id), atom(",")])
-        };
     let initialized_member = |id: &ast::Identifier<Loc, Loc>, value: LayoutNode| -> LayoutNode {
         fuse(vec![
             identifier(id),
@@ -3188,68 +3177,12 @@ fn enum_declaration(
             atom(","),
         ])
     };
-    let boolean_member = |m: &ast::statement::enum_declaration::InitializedMember<
-        ast::BooleanLiteral<Loc>,
-        Loc,
-    >|
-     -> LayoutNode {
-        initialized_member(
-            &m.id,
-            layout_node_with_comments_opt(
-                &m.init.0,
-                m.init.1.comments.as_ref(),
-                if m.init.1.value {
-                    atom("true")
-                } else {
-                    atom("false")
-                },
-            ),
-        )
+    let unknown_members = |has: Option<&Loc>| -> Vec<LayoutNode> {
+        match has {
+            Some(_) => vec![atom("...")],
+            None => vec![],
+        }
     };
-    let number_member = |m: &ast::statement::enum_declaration::InitializedMember<
-        ast::NumberLiteral<Loc>,
-        Loc,
-    >|
-     -> LayoutNode {
-        initialized_member(
-            &m.id,
-            layout_node_with_comments_opt(
-                &m.init.0,
-                m.init.1.comments.as_ref(),
-                atom(&m.init.1.raw),
-            ),
-        )
-    };
-    let string_member = |m: &ast::statement::enum_declaration::InitializedMember<
-        ast::StringLiteral<Loc>,
-        Loc,
-    >|
-     -> LayoutNode {
-        initialized_member(
-            &m.id,
-            layout_node_with_comments_opt(
-                &m.init.0,
-                m.init.1.comments.as_ref(),
-                atom(&m.init.1.raw),
-            ),
-        )
-    };
-    let bigint_member = |m: &ast::statement::enum_declaration::InitializedMember<
-        ast::BigIntLiteral<Loc>,
-        Loc,
-    >|
-     -> LayoutNode {
-        initialized_member(
-            &m.id,
-            layout_node_with_comments_opt(
-                &m.init.0,
-                m.init.1.comments.as_ref(),
-                atom(&m.init.1.raw),
-            ),
-        )
-    };
-    let unknown_members =
-        |has: bool| -> Vec<LayoutNode> { if has { vec![atom("...")] } else { vec![] } };
     let enum_internal_comments =
         |comments: Option<&ast::Syntax<Loc, Arc<[ast::Comment<Loc>]>>>| -> Vec<LayoutNode> {
             match internal_comments(comments) {
@@ -3257,112 +3190,76 @@ fn enum_declaration(
                 Some((_, _, layout)) => vec![layout],
             }
         };
-    let body_layout = match &enum_.body {
-        ast::statement::enum_declaration::Body::BooleanBody {
-            loc: bloc,
-            body: bb,
-        } => fuse(vec![
-            representation_type("boolean", bb.explicit_type),
+    let body_layout = {
+        let ast::statement::enum_declaration::Body {
+            loc: ref bloc,
+            ref members,
+            ref explicit_type,
+            ref has_unknown_members,
+            ref comments,
+        } = enum_.body;
+        let rep_type = match explicit_type {
+            Some((_loc, et)) => fuse(vec![space(), atom("of"), space(), atom(et.as_str())]),
+            None => LayoutNode::empty(),
+        };
+        let member_layout = |m: &ast::statement::enum_declaration::Member<Loc>| -> LayoutNode {
+            use ast::statement::enum_declaration::Member;
+            match m {
+                Member::BooleanMember(m) => initialized_member(
+                    &m.id,
+                    layout_node_with_comments_opt(
+                        &m.init.0,
+                        m.init.1.comments.as_ref(),
+                        if m.init.1.value {
+                            atom("true")
+                        } else {
+                            atom("false")
+                        },
+                    ),
+                ),
+                Member::NumberMember(m) => initialized_member(
+                    &m.id,
+                    layout_node_with_comments_opt(
+                        &m.init.0,
+                        m.init.1.comments.as_ref(),
+                        atom(&m.init.1.raw),
+                    ),
+                ),
+                Member::StringMember(m) => initialized_member(
+                    &m.id,
+                    layout_node_with_comments_opt(
+                        &m.init.0,
+                        m.init.1.comments.as_ref(),
+                        atom(&m.init.1.raw),
+                    ),
+                ),
+                Member::BigIntMember(m) => initialized_member(
+                    &m.id,
+                    layout_node_with_comments_opt(
+                        &m.init.0,
+                        m.init.1.comments.as_ref(),
+                        atom(&m.init.1.raw),
+                    ),
+                ),
+                Member::DefaultedMember(m) => fuse(vec![identifier(&m.id), atom(",")]),
+            }
+        };
+        fuse(vec![
+            rep_type,
             pretty_space(),
             layout_node_with_comments_opt(
                 bloc,
-                bb.comments.as_ref(),
+                comments.as_ref(),
                 wrap_body(
-                    bb.members
+                    members
                         .iter()
-                        .map(boolean_member)
-                        .chain(enum_internal_comments(bb.comments.as_ref()))
-                        .chain(unknown_members(bb.has_unknown_members))
+                        .map(member_layout)
+                        .chain(enum_internal_comments(comments.as_ref()))
+                        .chain(unknown_members(has_unknown_members.as_ref()))
                         .collect(),
                 ),
             ),
-        ]),
-        ast::statement::enum_declaration::Body::NumberBody {
-            loc: bloc,
-            body: nb,
-        } => fuse(vec![
-            representation_type("number", nb.explicit_type),
-            pretty_space(),
-            layout_node_with_comments_opt(
-                bloc,
-                nb.comments.as_ref(),
-                wrap_body(
-                    nb.members
-                        .iter()
-                        .map(number_member)
-                        .chain(enum_internal_comments(nb.comments.as_ref()))
-                        .chain(unknown_members(nb.has_unknown_members))
-                        .collect(),
-                ),
-            ),
-        ]),
-        ast::statement::enum_declaration::Body::StringBody {
-            loc: bloc,
-            body: sb,
-        } => fuse(vec![
-            representation_type("string", sb.explicit_type),
-            pretty_space(),
-            layout_node_with_comments_opt(
-                bloc,
-                sb.comments.as_ref(),
-                wrap_body(match &sb.members {
-                    ast::statement::enum_declaration::StringBodyMembers::Defaulted(members) => {
-                        members
-                            .iter()
-                            .map(&defaulted_member)
-                            .chain(enum_internal_comments(sb.comments.as_ref()))
-                            .chain(unknown_members(sb.has_unknown_members))
-                            .collect()
-                    }
-                    ast::statement::enum_declaration::StringBodyMembers::Initialized(members) => {
-                        members
-                            .iter()
-                            .map(string_member)
-                            .chain(enum_internal_comments(sb.comments.as_ref()))
-                            .chain(unknown_members(sb.has_unknown_members))
-                            .collect()
-                    }
-                }),
-            ),
-        ]),
-        ast::statement::enum_declaration::Body::SymbolBody {
-            loc: bloc,
-            body: symb,
-        } => fuse(vec![
-            representation_type("symbol", true),
-            pretty_space(),
-            layout_node_with_comments_opt(
-                bloc,
-                symb.comments.as_ref(),
-                wrap_body(
-                    symb.members
-                        .iter()
-                        .map(defaulted_member)
-                        .chain(enum_internal_comments(symb.comments.as_ref()))
-                        .chain(unknown_members(symb.has_unknown_members))
-                        .collect(),
-                ),
-            ),
-        ]),
-        ast::statement::enum_declaration::Body::BigIntBody {
-            loc: bloc,
-            body: bib,
-        } => fuse(vec![
-            representation_type("bigint", bib.explicit_type),
-            pretty_space(),
-            layout_node_with_comments_opt(
-                bloc,
-                bib.comments.as_ref(),
-                wrap_body(
-                    bib.members
-                        .iter()
-                        .map(bigint_member)
-                        .chain(enum_internal_comments(bib.comments.as_ref()))
-                        .chain(unknown_members(bib.has_unknown_members))
-                        .collect(),
-                ),
-            ),
-        ]),
+        ])
     };
     layout_node_with_comments_opt(
         loc,

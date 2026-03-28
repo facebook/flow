@@ -1438,89 +1438,21 @@ pub trait AstVisitor<'ast, Loc: Dupe, Type: Dupe = Loc, C = &'ast Loc, E = !> {
         map_enum_body_default(self, body)
     }
 
-    fn enum_boolean_body(
+    fn enum_member(
         &mut self,
-        body: &'ast ast::statement::enum_declaration::BooleanBody<Loc>,
+        member: &'ast ast::statement::enum_declaration::Member<Loc>,
     ) -> Result<(), E> {
-        enum_boolean_body_default(self, body)
+        enum_member_default(self, member)
     }
 
-    fn map_enum_boolean_body(
+    fn map_enum_member(
         &mut self,
-        body: &'ast ast::statement::enum_declaration::BooleanBody<Loc>,
-    ) -> ast::statement::enum_declaration::BooleanBody<Loc>
+        member: &'ast ast::statement::enum_declaration::Member<Loc>,
+    ) -> ast::statement::enum_declaration::Member<Loc>
     where
         Loc: Dupe,
     {
-        map_enum_boolean_body_default(self, body)
-    }
-
-    fn enum_number_body(
-        &mut self,
-        body: &'ast ast::statement::enum_declaration::NumberBody<Loc>,
-    ) -> Result<(), E> {
-        enum_number_body_default(self, body)
-    }
-
-    fn map_enum_number_body(
-        &mut self,
-        body: &'ast ast::statement::enum_declaration::NumberBody<Loc>,
-    ) -> ast::statement::enum_declaration::NumberBody<Loc>
-    where
-        Loc: Dupe,
-    {
-        map_enum_number_body_default(self, body)
-    }
-
-    fn enum_string_body(
-        &mut self,
-        body: &'ast ast::statement::enum_declaration::StringBody<Loc>,
-    ) -> Result<(), E> {
-        enum_string_body_default(self, body)
-    }
-
-    fn map_enum_string_body(
-        &mut self,
-        body: &'ast ast::statement::enum_declaration::StringBody<Loc>,
-    ) -> ast::statement::enum_declaration::StringBody<Loc>
-    where
-        Loc: Dupe,
-    {
-        map_enum_string_body_default(self, body)
-    }
-
-    fn enum_symbol_body(
-        &mut self,
-        body: &'ast ast::statement::enum_declaration::SymbolBody<Loc>,
-    ) -> Result<(), E> {
-        enum_symbol_body_default(self, body)
-    }
-
-    fn map_enum_symbol_body(
-        &mut self,
-        body: &'ast ast::statement::enum_declaration::SymbolBody<Loc>,
-    ) -> ast::statement::enum_declaration::SymbolBody<Loc>
-    where
-        Loc: Dupe,
-    {
-        map_enum_symbol_body_default(self, body)
-    }
-
-    fn enum_bigint_body(
-        &mut self,
-        body: &'ast ast::statement::enum_declaration::BigIntBody<Loc>,
-    ) -> Result<(), E> {
-        enum_bigint_body_default(self, body)
-    }
-
-    fn map_enum_bigint_body(
-        &mut self,
-        body: &'ast ast::statement::enum_declaration::BigIntBody<Loc>,
-    ) -> ast::statement::enum_declaration::BigIntBody<Loc>
-    where
-        Loc: Dupe,
-    {
-        map_enum_bigint_body_default(self, body)
+        map_enum_member_default(self, member)
     }
 
     fn enum_defaulted_member(
@@ -9430,23 +9362,17 @@ pub fn enum_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
     body: &'ast ast::statement::enum_declaration::Body<Loc>,
 ) -> Result<(), E> {
-    match body {
-        ast::statement::enum_declaration::Body::BooleanBody { loc: _, body } => {
-            visitor.enum_boolean_body(body)?;
-        }
-        ast::statement::enum_declaration::Body::NumberBody { loc: _, body } => {
-            visitor.enum_number_body(body)?;
-        }
-        ast::statement::enum_declaration::Body::StringBody { loc: _, body } => {
-            visitor.enum_string_body(body)?;
-        }
-        ast::statement::enum_declaration::Body::SymbolBody { loc: _, body } => {
-            visitor.enum_symbol_body(body)?;
-        }
-        ast::statement::enum_declaration::Body::BigIntBody { loc: _, body } => {
-            visitor.enum_bigint_body(body)?;
-        }
+    let ast::statement::enum_declaration::Body {
+        loc: _,
+        members,
+        explicit_type: _,
+        has_unknown_members: _,
+        comments,
+    } = body;
+    for member in members.iter() {
+        visitor.enum_member(member)?;
     }
+    visitor.syntax_opt(comments.as_ref())?;
     Ok(())
 }
 
@@ -9454,62 +9380,8 @@ pub fn map_enum_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
     body: &'ast ast::statement::enum_declaration::Body<Loc>,
 ) -> ast::statement::enum_declaration::Body<Loc> {
-    match body {
-        ast::statement::enum_declaration::Body::BooleanBody { loc, body } => {
-            ast::statement::enum_declaration::Body::BooleanBody {
-                loc: loc.dupe(),
-                body: visitor.map_enum_boolean_body(body),
-            }
-        }
-        ast::statement::enum_declaration::Body::NumberBody { loc, body } => {
-            ast::statement::enum_declaration::Body::NumberBody {
-                loc: loc.dupe(),
-                body: visitor.map_enum_number_body(body),
-            }
-        }
-        ast::statement::enum_declaration::Body::StringBody { loc, body } => {
-            ast::statement::enum_declaration::Body::StringBody {
-                loc: loc.dupe(),
-                body: visitor.map_enum_string_body(body),
-            }
-        }
-        ast::statement::enum_declaration::Body::SymbolBody { loc, body } => {
-            ast::statement::enum_declaration::Body::SymbolBody {
-                loc: loc.dupe(),
-                body: visitor.map_enum_symbol_body(body),
-            }
-        }
-        ast::statement::enum_declaration::Body::BigIntBody { loc, body } => {
-            ast::statement::enum_declaration::Body::BigIntBody {
-                loc: loc.dupe(),
-                body: visitor.map_enum_bigint_body(body),
-            }
-        }
-    }
-}
-
-pub fn enum_boolean_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
-    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    body: &'ast ast::statement::enum_declaration::BooleanBody<Loc>,
-) -> Result<(), E> {
-    let ast::statement::enum_declaration::BooleanBody {
-        members,
-        explicit_type: _,
-        has_unknown_members: _,
-        comments,
-    } = body;
-    for member in members.iter() {
-        visitor.enum_boolean_member(member)?;
-    }
-    visitor.syntax_opt(comments.as_ref())?;
-    Ok(())
-}
-
-pub fn map_enum_boolean_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
-    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    body: &'ast ast::statement::enum_declaration::BooleanBody<Loc>,
-) -> ast::statement::enum_declaration::BooleanBody<Loc> {
-    let ast::statement::enum_declaration::BooleanBody {
+    let ast::statement::enum_declaration::Body {
+        loc,
         members,
         explicit_type,
         has_unknown_members,
@@ -9518,199 +9390,73 @@ pub fn map_enum_boolean_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     let members_ = Arc::from(
         members
             .iter()
-            .map(|m| visitor.map_enum_boolean_member(m))
+            .map(|m| visitor.map_enum_member(m))
             .collect::<Vec<_>>(),
     );
     let comments_ = visitor.map_syntax_opt(comments.as_ref());
-    ast::statement::enum_declaration::BooleanBody {
+    ast::statement::enum_declaration::Body {
+        loc: loc.dupe(),
         members: members_,
-        explicit_type: *explicit_type,
-        has_unknown_members: *has_unknown_members,
+        explicit_type: explicit_type.as_ref().map(|(l, t)| (l.dupe(), *t)),
+        has_unknown_members: has_unknown_members.as_ref().map(|l| l.dupe()),
         comments: comments_,
     }
 }
 
-pub fn enum_number_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
+pub fn enum_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    body: &'ast ast::statement::enum_declaration::NumberBody<Loc>,
+    member: &'ast ast::statement::enum_declaration::Member<Loc>,
 ) -> Result<(), E> {
-    let ast::statement::enum_declaration::NumberBody {
-        members,
-        explicit_type: _,
-        has_unknown_members: _,
-        comments,
-    } = body;
-    for member in members.iter() {
-        visitor.enum_number_member(member)?;
+    match member {
+        ast::statement::enum_declaration::Member::BooleanMember(m) => {
+            visitor.enum_boolean_member(m)?;
+        }
+        ast::statement::enum_declaration::Member::NumberMember(m) => {
+            visitor.enum_number_member(m)?;
+        }
+        ast::statement::enum_declaration::Member::StringMember(m) => {
+            visitor.enum_string_member(m)?;
+        }
+        ast::statement::enum_declaration::Member::BigIntMember(m) => {
+            visitor.enum_bigint_member(m)?;
+        }
+        ast::statement::enum_declaration::Member::DefaultedMember(m) => {
+            visitor.enum_defaulted_member(m)?;
+        }
     }
-    visitor.syntax_opt(comments.as_ref())?;
     Ok(())
 }
 
-pub fn map_enum_number_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
+pub fn map_enum_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    body: &'ast ast::statement::enum_declaration::NumberBody<Loc>,
-) -> ast::statement::enum_declaration::NumberBody<Loc> {
-    let ast::statement::enum_declaration::NumberBody {
-        members,
-        explicit_type,
-        has_unknown_members,
-        comments,
-    } = body;
-    let members_ = Arc::from(
-        members
-            .iter()
-            .map(|m| visitor.map_enum_number_member(m))
-            .collect::<Vec<_>>(),
-    );
-    let comments_ = visitor.map_syntax_opt(comments.as_ref());
-    ast::statement::enum_declaration::NumberBody {
-        members: members_,
-        explicit_type: *explicit_type,
-        has_unknown_members: *has_unknown_members,
-        comments: comments_,
-    }
-}
-
-pub fn enum_string_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
-    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    body: &'ast ast::statement::enum_declaration::StringBody<Loc>,
-) -> Result<(), E> {
-    let ast::statement::enum_declaration::StringBody {
-        members,
-        explicit_type: _,
-        has_unknown_members: _,
-        comments,
-    } = body;
-    match members {
-        ast::statement::enum_declaration::StringBodyMembers::Defaulted(m) => {
-            for member in m.iter() {
-                visitor.enum_defaulted_member(member)?;
-            }
+    member: &'ast ast::statement::enum_declaration::Member<Loc>,
+) -> ast::statement::enum_declaration::Member<Loc> {
+    match member {
+        ast::statement::enum_declaration::Member::BooleanMember(m) => {
+            ast::statement::enum_declaration::Member::BooleanMember(
+                visitor.map_enum_boolean_member(m),
+            )
         }
-        ast::statement::enum_declaration::StringBodyMembers::Initialized(m) => {
-            for member in m.iter() {
-                visitor.enum_string_member(member)?;
-            }
+        ast::statement::enum_declaration::Member::NumberMember(m) => {
+            ast::statement::enum_declaration::Member::NumberMember(
+                visitor.map_enum_number_member(m),
+            )
         }
-    }
-    visitor.syntax_opt(comments.as_ref())?;
-    Ok(())
-}
-
-pub fn map_enum_string_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
-    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    body: &'ast ast::statement::enum_declaration::StringBody<Loc>,
-) -> ast::statement::enum_declaration::StringBody<Loc> {
-    let ast::statement::enum_declaration::StringBody {
-        members,
-        explicit_type,
-        has_unknown_members,
-        comments,
-    } = body;
-    let members_ = match members {
-        ast::statement::enum_declaration::StringBodyMembers::Defaulted(m) => {
-            ast::statement::enum_declaration::StringBodyMembers::Defaulted(Arc::from(
-                m.iter()
-                    .map(|member| visitor.map_enum_defaulted_member(member))
-                    .collect::<Vec<_>>(),
-            ))
+        ast::statement::enum_declaration::Member::StringMember(m) => {
+            ast::statement::enum_declaration::Member::StringMember(
+                visitor.map_enum_string_member(m),
+            )
         }
-        ast::statement::enum_declaration::StringBodyMembers::Initialized(m) => {
-            ast::statement::enum_declaration::StringBodyMembers::Initialized(Arc::from(
-                m.iter()
-                    .map(|member| visitor.map_enum_string_member(member))
-                    .collect::<Vec<_>>(),
-            ))
+        ast::statement::enum_declaration::Member::BigIntMember(m) => {
+            ast::statement::enum_declaration::Member::BigIntMember(
+                visitor.map_enum_bigint_member(m),
+            )
         }
-    };
-    let comments_ = visitor.map_syntax_opt(comments.as_ref());
-    ast::statement::enum_declaration::StringBody {
-        members: members_,
-        explicit_type: *explicit_type,
-        has_unknown_members: *has_unknown_members,
-        comments: comments_,
-    }
-}
-
-pub fn enum_symbol_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
-    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    body: &'ast ast::statement::enum_declaration::SymbolBody<Loc>,
-) -> Result<(), E> {
-    let ast::statement::enum_declaration::SymbolBody {
-        members,
-        has_unknown_members: _,
-        comments,
-    } = body;
-    for member in members.iter() {
-        visitor.enum_defaulted_member(member)?;
-    }
-    visitor.syntax_opt(comments.as_ref())?;
-    Ok(())
-}
-
-pub fn map_enum_symbol_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
-    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    body: &'ast ast::statement::enum_declaration::SymbolBody<Loc>,
-) -> ast::statement::enum_declaration::SymbolBody<Loc> {
-    let ast::statement::enum_declaration::SymbolBody {
-        members,
-        has_unknown_members,
-        comments,
-    } = body;
-    let members_ = Arc::from(
-        members
-            .iter()
-            .map(|m| visitor.map_enum_defaulted_member(m))
-            .collect::<Vec<_>>(),
-    );
-    let comments_ = visitor.map_syntax_opt(comments.as_ref());
-    ast::statement::enum_declaration::SymbolBody {
-        members: members_,
-        has_unknown_members: *has_unknown_members,
-        comments: comments_,
-    }
-}
-
-pub fn enum_bigint_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
-    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    body: &'ast ast::statement::enum_declaration::BigIntBody<Loc>,
-) -> Result<(), E> {
-    let ast::statement::enum_declaration::BigIntBody {
-        members,
-        explicit_type: _,
-        has_unknown_members: _,
-        comments,
-    } = body;
-    for member in members.iter() {
-        visitor.enum_bigint_member(member)?;
-    }
-    visitor.syntax_opt(comments.as_ref())?;
-    Ok(())
-}
-
-pub fn map_enum_bigint_body_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
-    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
-    body: &'ast ast::statement::enum_declaration::BigIntBody<Loc>,
-) -> ast::statement::enum_declaration::BigIntBody<Loc> {
-    let ast::statement::enum_declaration::BigIntBody {
-        members,
-        explicit_type,
-        has_unknown_members,
-        comments,
-    } = body;
-    let members_ = Arc::from(
-        members
-            .iter()
-            .map(|m| visitor.map_enum_bigint_member(m))
-            .collect::<Vec<_>>(),
-    );
-    let comments_ = visitor.map_syntax_opt(comments.as_ref());
-    ast::statement::enum_declaration::BigIntBody {
-        members: members_,
-        explicit_type: *explicit_type,
-        has_unknown_members: *has_unknown_members,
-        comments: comments_,
+        ast::statement::enum_declaration::Member::DefaultedMember(m) => {
+            ast::statement::enum_declaration::Member::DefaultedMember(
+                visitor.map_enum_defaulted_member(m),
+            )
+        }
     }
 }
 

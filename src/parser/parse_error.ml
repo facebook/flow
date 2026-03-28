@@ -32,19 +32,6 @@ type t =
   | DuplicateExport of string
   | DuplicatePrivateFields of string
   | ElementAfterRestElement
-  | EnumBigIntMemberNotInitialized of {
-      enum_name: string;
-      member_name: string;
-    }
-  | EnumBooleanMemberNotInitialized of {
-      enum_name: string;
-      member_name: string;
-    }
-  | EnumDuplicateMemberName of {
-      enum_name: string;
-      member_name: string;
-    }
-  | EnumInconsistentMemberValues of { enum_name: string }
   | EnumInvalidEllipsis of { trailing_comma: bool }
   | EnumInvalidExplicitType of {
       enum_name: string;
@@ -54,16 +41,10 @@ type t =
   | EnumInvalidInitializerSeparator of { member_name: string }
   | EnumInvalidMemberInitializer of {
       enum_name: string;
-      explicit_type: Enum_common.explicit_type option;
+      explicit_type: Flow_ast.Statement.EnumDeclaration.explicit_type option;
       member_name: string;
     }
   | EnumInvalidMemberSeparator
-  | EnumNumberMemberNotInitialized of {
-      enum_name: string;
-      member_name: string;
-    }
-  | EnumStringMemberInconsistentlyInitialized of { enum_name: string }
-  | EnumInvalidConstPrefix
   | ExpectedJSXClosingTag of string
   | ExpectedPatternFoundExpression
   | ExportSpecifierMissingComma
@@ -247,26 +228,6 @@ module PP = struct
         "Private fields may only be declared once. `#%s` is declared more than once."
         name
     | ElementAfterRestElement -> "Rest element must be final element of an array pattern"
-    | EnumBigIntMemberNotInitialized { enum_name; member_name } ->
-      Printf.sprintf
-        "bigint enum members need to be initialized, e.g. `%s = 1n,` in enum `%s`."
-        member_name
-        enum_name
-    | EnumBooleanMemberNotInitialized { enum_name; member_name } ->
-      Printf.sprintf
-        "Boolean enum members need to be initialized. Use either `%s = true,` or `%s = false,` in enum `%s`."
-        member_name
-        member_name
-        enum_name
-    | EnumDuplicateMemberName { enum_name; member_name } ->
-      Printf.sprintf
-        "Enum member names need to be unique, but the name `%s` has already been used before in enum `%s`."
-        member_name
-        enum_name
-    | EnumInconsistentMemberValues { enum_name } ->
-      Printf.sprintf
-        "Enum `%s` has inconsistent member initializers. Either use no initializers, or consistently use literals (either booleans, numbers, or strings) for all member initializers."
-        enum_name
     | EnumInvalidEllipsis { trailing_comma } ->
       if trailing_comma then
         "The `...` must come at the end of the enum body. Remove the trailing comma."
@@ -291,42 +252,27 @@ module PP = struct
         "Enum member names and initializers are separated with `=`. Replace `%s:` with `%s =`."
         member_name
         member_name
-    | EnumInvalidMemberInitializer { enum_name; explicit_type; member_name } -> begin
-      match explicit_type with
-      | Some (Enum_common.Boolean as explicit_type)
-      | Some (Enum_common.Number as explicit_type)
-      | Some (Enum_common.String as explicit_type)
-      | Some (Enum_common.BigInt as explicit_type) ->
-        let explicit_type_str = Enum_common.string_of_explicit_type explicit_type in
-        Printf.sprintf
-          "Enum `%s` has type `%s`, so the initializer of `%s` needs to be a %s literal."
-          enum_name
-          explicit_type_str
-          member_name
-          explicit_type_str
-      | Some Enum_common.Symbol ->
+    | EnumInvalidMemberInitializer { enum_name; explicit_type; member_name } ->
+      (match explicit_type with
+      | Some Flow_ast.Statement.EnumDeclaration.Symbol ->
         Printf.sprintf
           "Symbol enum members cannot be initialized. Use `%s,` in enum `%s`."
           member_name
           enum_name
+      | Some t ->
+        let type_str = Flow_ast_utils.string_of_enum_explicit_type t in
+        Printf.sprintf
+          "Enum `%s` has type `%s`, so the initializer of `%s` needs to be a %s literal."
+          enum_name
+          type_str
+          member_name
+          type_str
       | None ->
         Printf.sprintf
-          "The enum member initializer for `%s` needs to be a literal (either a boolean, number, or string) in enum `%s`."
+          "The enum member initializer for `%s` needs to be a literal (either a boolean, number, bigint, or string) in enum `%s`."
           member_name
-          enum_name
-    end
+          enum_name)
     | EnumInvalidMemberSeparator -> "Enum members are separated with `,`. Replace `;` with `,`."
-    | EnumNumberMemberNotInitialized { enum_name; member_name } ->
-      Printf.sprintf
-        "Number enum members need to be initialized, e.g. `%s = 1,` in enum `%s`."
-        member_name
-        enum_name
-    | EnumStringMemberInconsistentlyInitialized { enum_name } ->
-      Printf.sprintf
-        "String enum members need to consistently either all use initializers, or use no initializers, in enum %s."
-        enum_name
-    | EnumInvalidConstPrefix ->
-      "`const` enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be part of the build system (whatever you use) rather than Flow itself."
     | ExpectedJSXClosingTag name ->
       Printf.sprintf "Expected corresponding JSX closing tag for %s" name
     | ExpectedPatternFoundExpression ->

@@ -9,6 +9,7 @@
 
 pub mod ast_builder;
 pub mod ast_loc_utils;
+pub mod enum_validate;
 pub mod export_condition_map;
 pub mod file_sig;
 pub mod flow_ast_differ;

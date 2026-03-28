@@ -36,6 +36,7 @@ use flow_parser::ast::types::TypeInner;
 use flow_parser::ast_utils;
 use flow_parser::jsdoc;
 use flow_parser::loc::Loc;
+use flow_parser_utils::enum_validate;
 use flow_parser_utils::graphql;
 use flow_parser_utils::record_utils;
 use flow_parser_utils::signature_utils;
@@ -294,7 +295,17 @@ pub(super) enum LocalBinding<'arena, 'ast> {
     EnumBinding {
         id_loc: LocNode<'arena>,
         name: FlowSmolStr,
-        def: Option<Lazy<'arena, 'ast, (EnumRep, BTreeMap<FlowSmolStr, LocNode<'arena>>, bool)>>,
+        def: Option<
+            Lazy<
+                'arena,
+                'ast,
+                (
+                    Option<EnumRep>,
+                    BTreeMap<FlowSmolStr, LocNode<'arena>>,
+                    bool,
+                ),
+            >,
+        >,
     },
     NamespaceBinding {
         id_loc: LocNode<'arena>,
@@ -1438,7 +1449,17 @@ pub(super) mod scope {
         tbls: &mut Tables<'arena, 'ast>,
         id_loc: LocNode<'arena>,
         name: FlowSmolStr,
-        def: Option<Lazy<'arena, 'ast, (EnumRep, BTreeMap<FlowSmolStr, LocNode<'arena>>, bool)>>,
+        def: Option<
+            Lazy<
+                'arena,
+                'ast,
+                (
+                    Option<EnumRep>,
+                    BTreeMap<FlowSmolStr, LocNode<'arena>>,
+                    bool,
+                ),
+            >,
+        >,
         k: impl Fn(&mut Scopes<'arena, 'ast>, &FlowSmolStr, LocalDefNode<'arena, 'ast>),
     ) {
         bind_local(
@@ -9393,173 +9414,53 @@ fn enum_decl<'arena: 'ast, 'ast>(
     decl: &'ast ast::statement::EnumDeclaration<Loc, Loc>,
     k: &dyn Fn(&mut scope::Scopes<'arena, 'ast>, &FlowSmolStr, LocalDefNode<'arena, 'ast>),
 ) {
-    use ast::statement::enum_declaration as E;
-
-    fn defaulted_member<'arena, 'ast>(
-        tbls: &mut Tables<'arena, 'ast>,
-        members: &mut BTreeMap<FlowSmolStr, LocNode<'arena>>,
-        member: &E::DefaultedMember<Loc>,
-    ) {
-        let loc = &member.loc;
-        let name = &member.id.name;
-        let loc_node = tbls.push_loc(loc.clone());
-        members.insert(name.clone(), loc_node);
-    }
-
-    fn initialized_member<'arena, 'ast, I, R, F>(
-        f: F,
-        tbls: &mut Tables<'arena, 'ast>,
-        rep: &mut R,
-        members: &mut BTreeMap<FlowSmolStr, LocNode<'arena>>,
-        member: &E::InitializedMember<I, Loc>,
-    ) where
-        F: Fn(&mut R, &I),
-    {
-        let loc = &member.loc;
-        let name = &member.id.name;
-        let init = &member.init.1;
-        let loc_node = tbls.push_loc(loc.clone());
-        f(rep, init);
-        members.insert(name.clone(), loc_node);
-    }
-
-    fn boolean_rep(lit: &mut Option<bool>, init: &ast::BooleanLiteral<Loc>) {
-        let value = init.value;
-        *lit = match *lit {
-            None => Some(value),
-            Some(_) => None,
-        };
-    }
-
-    fn string_rep(truthy: &mut bool, init: &ast::StringLiteral<Loc>) {
-        let value = &init.value;
-        if value.is_empty() {
-            *truthy = false;
-        }
-    }
-
-    fn number_rep(truthy: &mut bool, init: &ast::NumberLiteral<Loc>) {
-        let value = init.value;
-        if value == 0.0 {
-            *truthy = false;
-        }
-    }
-
-    fn bigint_rep(truthy: &mut bool, init: &ast::BigIntLiteral<Loc>) {
-        let value = init.value;
-        if value == Some(0) {
-            *truthy = false;
-        }
-    }
-
-    fn defaulted_members<'arena, 'ast>(
-        tbls: &mut Tables<'arena, 'ast>,
-        members_list: &[E::DefaultedMember<Loc>],
-    ) -> BTreeMap<FlowSmolStr, LocNode<'arena>> {
-        let mut members = BTreeMap::new();
-        for member in members_list {
-            defaulted_member(tbls, &mut members, member);
-        }
-        members
-    }
-
-    fn initialized_members<'arena, 'ast, I, R, F>(
-        tbls: &mut Tables<'arena, 'ast>,
-        f: F,
-        init_rep: R,
-        members_list: &[E::InitializedMember<I, Loc>],
-    ) -> (R, BTreeMap<FlowSmolStr, LocNode<'arena>>)
-    where
-        F: Fn(&mut R, &I),
-    {
-        let mut rep = init_rep;
-        let mut members = BTreeMap::new();
-        for member in members_list {
-            initialized_member(&f, tbls, &mut rep, &mut members, member);
-        }
-        (rep, members)
-    }
-
-    fn string_enum_def<'arena, 'ast>(
-        tbls: &mut Tables<'arena, 'ast>,
-        has_unknown_members: bool,
-        members: &E::StringBodyMembers<ast::StringLiteral<Loc>, Loc>,
-    ) -> (EnumRep, BTreeMap<FlowSmolStr, LocNode<'arena>>, bool) {
-        match members {
-            E::StringBodyMembers::Initialized(members) => {
-                let (truthy, members) = initialized_members(tbls, string_rep, true, members);
-                (EnumRep::StringRep { truthy }, members, has_unknown_members)
-            }
-            E::StringBodyMembers::Defaulted(members) => {
-                let members = defaulted_members(tbls, members);
-                (
-                    EnumRep::StringRep { truthy: true },
-                    members,
-                    has_unknown_members,
-                )
-            }
+    fn enum_rep_to_type_sig_rep(rep: &enum_validate::EnumRep) -> EnumRep {
+        match rep {
+            enum_validate::EnumRep::BoolRep(lit) => EnumRep::BoolRep(*lit),
+            enum_validate::EnumRep::NumberRep { truthy } => EnumRep::NumberRep { truthy: *truthy },
+            enum_validate::EnumRep::StringRep { truthy } => EnumRep::StringRep { truthy: *truthy },
+            enum_validate::EnumRep::SymbolRep => EnumRep::SymbolRep,
+            enum_validate::EnumRep::BigIntRep { truthy } => EnumRep::BigIntRep { truthy: *truthy },
         }
     }
 
     fn enum_def<'arena, 'ast>(
         tbls: &mut Tables<'arena, 'ast>,
-        body: &E::Body<Loc>,
-    ) -> (EnumRep, BTreeMap<FlowSmolStr, LocNode<'arena>>, bool) {
-        match body {
-            E::Body::BooleanBody { body, .. } => {
-                let E::BooleanBody {
-                    members,
-                    has_unknown_members,
-                    ..
-                } = body;
-                let (lit, members) = initialized_members(tbls, boolean_rep, None, members);
-                (EnumRep::BoolRep(lit), members, *has_unknown_members)
-            }
-            E::Body::NumberBody { body, .. } => {
-                let E::NumberBody {
-                    members,
-                    has_unknown_members,
-                    ..
-                } = body;
-                let (truthy, members) = initialized_members(tbls, number_rep, true, members);
-                (EnumRep::NumberRep { truthy }, members, *has_unknown_members)
-            }
-            E::Body::StringBody { body, .. } => {
-                let E::StringBody {
-                    members,
-                    has_unknown_members,
-                    ..
-                } = body;
-                string_enum_def(tbls, *has_unknown_members, members)
-            }
-            E::Body::SymbolBody { body, .. } => {
-                let E::SymbolBody {
-                    members,
-                    has_unknown_members,
-                    ..
-                } = body;
-                let members = defaulted_members(tbls, members);
-                (EnumRep::SymbolRep, members, *has_unknown_members)
-            }
-            E::Body::BigIntBody { body, .. } => {
-                let E::BigIntBody {
-                    members,
-                    has_unknown_members,
-                    ..
-                } = body;
-                let (truthy, members) = initialized_members(tbls, bigint_rep, true, members);
-                (EnumRep::BigIntRep { truthy }, members, *has_unknown_members)
-            }
+        body_loc: &Loc,
+        body: &ast::statement::enum_declaration::Body<Loc>,
+    ) -> (
+        Option<EnumRep>,
+        BTreeMap<FlowSmolStr, LocNode<'arena>>,
+        bool,
+    ) {
+        let result = enum_validate::classify_enum_body(body, body_loc);
+        let members = result
+            .members
+            .iter()
+            .fold(BTreeMap::new(), |mut acc, (name, loc)| {
+                let loc = tbls.push_loc(loc.clone());
+                acc.insert(FlowSmolStr::new(name), loc);
+                acc
+            });
+        let has_unknown_members = result.has_unknown_members.is_some();
+        match &result.rep {
+            Some(rep) => (
+                Some(enum_rep_to_type_sig_rep(rep)),
+                members,
+                has_unknown_members,
+            ),
+            None => (None, members, has_unknown_members),
         }
     }
 
     let name = decl.id.name.dupe();
     let body = &decl.body;
+    let body_loc = body.loc.dupe();
     let id_loc_node = tbls.push_loc(decl.id.loc.dupe());
     let splice_loc = id_loc_node.dupe();
     let def = if opts.enable_enums {
         Some(Lazy::new(Box::new(move |_, _, tbls| {
-            tbls.splice(splice_loc, |tbls| enum_def(tbls, body))
+            tbls.splice(splice_loc, |tbls| enum_def(tbls, &body_loc, body))
         })))
     } else {
         None

@@ -7,7 +7,7 @@
 
 use std::fmt;
 
-use crate::enum_common::ExplicitType;
+use crate::ast::statement::enum_declaration;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub enum MatchNonLastRestKind {
@@ -50,21 +50,6 @@ pub enum ParseError {
     DuplicateExport(String),
     DuplicatePrivateFields(String),
     ElementAfterRestElement,
-    EnumBigIntMemberNotInitialized {
-        enum_name: String,
-        member_name: String,
-    },
-    EnumBooleanMemberNotInitialized {
-        enum_name: String,
-        member_name: String,
-    },
-    EnumDuplicateMemberName {
-        enum_name: String,
-        member_name: String,
-    },
-    EnumInconsistentMemberValues {
-        enum_name: String,
-    },
     EnumInvalidEllipsis {
         trailing_comma: bool,
     },
@@ -78,17 +63,10 @@ pub enum ParseError {
     },
     EnumInvalidMemberInitializer {
         enum_name: String,
-        explicit_type: Option<ExplicitType>,
+        explicit_type: Option<enum_declaration::ExplicitType>,
         member_name: String,
     },
     EnumInvalidMemberSeparator,
-    EnumNumberMemberNotInitialized {
-        enum_name: String,
-        member_name: String,
-    },
-    EnumStringMemberInconsistentlyInitialized {
-        enum_name: String,
-    },
     ExpectedJSXClosingTag(String),
     ExpectedPatternFoundExpression,
     ExportSpecifierMissingComma,
@@ -356,43 +334,6 @@ impl fmt::Display for ParseError {
             Self::ElementAfterRestElement => {
                 write!(f, "Rest element must be final element of an array pattern")
             }
-            Self::EnumBigIntMemberNotInitialized {
-                enum_name,
-                member_name,
-            } => {
-                write!(
-                    f,
-                    "bigint enum members need to be initialized, e.g. `{} = 1n,` in enum `{}`.",
-                    member_name, enum_name
-                )
-            }
-            Self::EnumBooleanMemberNotInitialized {
-                enum_name,
-                member_name,
-            } => {
-                write!(
-                    f,
-                    "Boolean enum members need to be initialized. Use either `{} = true,` or `{} = false,` in enum `{}`.",
-                    member_name, member_name, enum_name
-                )
-            }
-            Self::EnumDuplicateMemberName {
-                enum_name,
-                member_name,
-            } => {
-                write!(
-                    f,
-                    "Enum member names need to be unique, but the name `{}` has already been used before in enum `{}`.",
-                    member_name, enum_name
-                )
-            }
-            Self::EnumInconsistentMemberValues { enum_name } => {
-                write!(
-                    f,
-                    "Enum `{}` has inconsistent member initializers. Either use no initializers, or consistently use literals (either booleans, numbers, or strings) for all member initializers.",
-                    enum_name
-                )
-            }
             Self::EnumInvalidEllipsis { trailing_comma } => {
                 if *trailing_comma {
                     write!(
@@ -446,10 +387,14 @@ impl fmt::Display for ParseError {
                 member_name,
             } => match explicit_type.as_ref() {
                 Some(explicit_type) => match explicit_type {
-                    ExplicitType::Boolean
-                    | ExplicitType::Number
-                    | ExplicitType::String
-                    | ExplicitType::BigInt => {
+                    enum_declaration::ExplicitType::Symbol => {
+                        write!(
+                            f,
+                            "Symbol enum members cannot be initialized. Use `{},` in enum `{}`.",
+                            member_name, enum_name
+                        )
+                    }
+                    _ => {
                         let explicit_type_str = explicit_type.as_str();
                         write!(
                             f,
@@ -457,18 +402,11 @@ impl fmt::Display for ParseError {
                             enum_name, explicit_type_str, member_name, explicit_type_str
                         )
                     }
-                    ExplicitType::Symbol => {
-                        write!(
-                            f,
-                            "Symbol enum members cannot be initialized. Use `{},` in enum `{}`.",
-                            member_name, enum_name
-                        )
-                    }
                 },
                 None => {
                     write!(
                         f,
-                        "The enum member initializer for `{}` needs to be a literal (either a boolean, number, or string) in enum `{}`.",
+                        "The enum member initializer for `{}` needs to be a literal (either a boolean, number, bigint, or string) in enum `{}`.",
                         member_name, enum_name
                     )
                 }
@@ -477,23 +415,6 @@ impl fmt::Display for ParseError {
                 write!(
                     f,
                     "Enum members are separated with `,`. Replace `;` with `,`."
-                )
-            }
-            Self::EnumNumberMemberNotInitialized {
-                enum_name,
-                member_name,
-            } => {
-                write!(
-                    f,
-                    "Number enum members need to be initialized, e.g. `{} = 1,` in enum `{}`.",
-                    member_name, enum_name
-                )
-            }
-            Self::EnumStringMemberInconsistentlyInitialized { enum_name } => {
-                write!(
-                    f,
-                    "String enum members need to consistently either all use initializers, or use no initializers, in enum {}.",
-                    enum_name
                 )
             }
             Self::ExpectedJSXClosingTag(name) => {

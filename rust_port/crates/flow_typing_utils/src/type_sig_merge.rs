@@ -4455,9 +4455,10 @@ pub fn merge_def(
         Def::DisabledComponentBinding { .. }
         | Def::DisabledEnumBinding { .. }
         | Def::DisabledRecordBinding { .. } => type_::any_t::error(reason),
+        Def::EnumBinding { rep: None, .. } => type_::any_t::error(reason),
         Def::EnumBinding {
             id_loc,
-            rep,
+            rep: Some(rep),
             members,
             has_unknown_members,
             name,

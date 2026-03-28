@@ -366,7 +366,7 @@ type ('loc, 'a) def =
   | EnumBinding of {
       id_loc: 'loc;
       name: string;
-      rep: enum_rep;
+      rep: enum_rep option; (* None if invalid *)
       members: 'loc smap;
       has_unknown_members: bool;
     }

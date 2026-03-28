@@ -4790,7 +4790,7 @@ let%expect_test "enum_export" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
-         name = "E"; rep = StringRep {truthy = true};
+         name = "E"; rep = (Some StringRep {truthy = true});
          members = { "A" -> [1:16-17]; "B" -> [1:19-20] };
          has_unknown_members = false} |}]
 
@@ -4808,7 +4808,7 @@ let%expect_test "enum_default_export" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:20-21];
-         name = "E"; rep = StringRep {truthy = true};
+         name = "E"; rep = (Some StringRep {truthy = true});
          members = { "A" -> [1:24-25]; "B" -> [1:27-28] };
          has_unknown_members = false}
   |}]
@@ -4828,7 +4828,7 @@ let%expect_test "enum_stmt" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:5-6];
-         name = "E"; rep = StringRep {truthy = true};
+         name = "E"; rep = (Some StringRep {truthy = true});
          members = { "A" -> [1:9-10]; "B" -> [1:12-13] };
          has_unknown_members = false} |}]
 
@@ -4845,7 +4845,7 @@ let%expect_test "enum_bool_lit" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
-         name = "E"; rep = (BoolRep (Some true));
+         name = "E"; rep = (Some (BoolRep (Some true)));
          members = { "A" -> [1:16-24] };
          has_unknown_members = false} |}]
 
@@ -4862,7 +4862,7 @@ let%expect_test "enum_bool" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
-         name = "E"; rep = (BoolRep None);
+         name = "E"; rep = (Some (BoolRep None));
          members = { "A" -> [1:16-24]; "B" -> [1:26-35] };
          has_unknown_members = false} |}]
 
@@ -4879,7 +4879,7 @@ let%expect_test "enum_number_truthy" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
-         name = "E"; rep = NumberRep {truthy = true};
+         name = "E"; rep = (Some NumberRep {truthy = true});
          members = { "A" -> [1:16-21]; "B" -> [1:23-28] };
          has_unknown_members = false} |}]
 
@@ -4896,7 +4896,7 @@ let%expect_test "enum_number_any" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
-         name = "E"; rep = NumberRep {truthy = false};
+         name = "E"; rep = (Some NumberRep {truthy = false});
          members = { "A" -> [1:16-21]; "B" -> [1:23-28] };
          has_unknown_members = false} |}]
 
@@ -4913,7 +4913,7 @@ let%expect_test "enum_string_any" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
-         name = "E"; rep = StringRep {truthy = false};
+         name = "E"; rep = (Some StringRep {truthy = false});
          members = { "A" -> [1:16-22]; "B" -> [1:24-31] };
          has_unknown_members = false} |}]
 
@@ -4930,7 +4930,7 @@ let%expect_test "enum_symbol" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
-         name = "E"; rep = SymbolRep;
+         name = "E"; rep = (Some SymbolRep);
          members = { "A" -> [1:26-27]; "B" -> [1:29-30] };
          has_unknown_members = false} |}]
 
@@ -4947,7 +4947,7 @@ let%expect_test "enum_unknown_members" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:12-13];
-         name = "E"; rep = StringRep {truthy = true};
+         name = "E"; rep = (Some StringRep {truthy = true});
          members = { "A" -> [1:16-17]; "B" -> [1:19-20] };
          has_unknown_members = true} |}]
 
@@ -4964,7 +4964,7 @@ let%expect_test "enum_declared" =
 
     Local defs:
     0. EnumBinding {id_loc = [1:20-21];
-         name = "E"; rep = StringRep {truthy = true};
+         name = "E"; rep = (Some StringRep {truthy = true});
          members = { "A" -> [1:24-25]; "B" -> [1:27-28] };
          has_unknown_members = false} |}]
 
@@ -5308,7 +5308,7 @@ let%expect_test "builtin_cjs_module_with_implicit_exports" =
            tparams = Mono; params = [];
            rest_param = None; renders = (Annot (ComponentMissingRenders [9:25]))}}
     6. EnumBinding {id_loc = [10:15-16];
-         name = "A"; rep = StringRep {truthy = true};
+         name = "A"; rep = (Some StringRep {truthy = true});
          members = { "B" -> [10:19-20] };
          has_unknown_members = false}
     7. TypeAlias {id_loc = [11:15-16];
@@ -5556,7 +5556,7 @@ let%expect_test "builtin_declare_namespace" =
          name = "Boz"; tparams = Mono;
          body = (Annot (String [8:20-26]))}
     6. EnumBinding {id_loc = [9:7-8];
-         name = "B"; rep = StringRep {truthy = true};
+         name = "B"; rep = (Some StringRep {truthy = true});
          members = { "C" -> [10:4-5]; "D" -> [11:4-5] };
          has_unknown_members = false}
     7. NamespaceBinding {id_loc = [1:18-20];

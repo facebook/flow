@@ -40,7 +40,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumStringBody",
+        "type":"EnumBody",
         "trailingComments":[
           {
             "type":"Block",
@@ -52,7 +52,7 @@
         "loc":{"source":null,"start":{"line":1,"column":56},"end":{"line":1,"column":58}},
         "range":[56,58],
         "members":[],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     },
@@ -93,7 +93,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumStringBody",
+        "type":"EnumBody",
         "trailingComments":[
           {
             "type":"Block",
@@ -113,7 +113,7 @@
         "loc":{"source":null,"start":{"line":3,"column":56},"end":{"line":3,"column":90}},
         "range":[138,172],
         "members":[],
-        "explicitType":true,
+        "explicitType":"string",
         "hasUnknownMembers":false
       }
     },
@@ -130,7 +130,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumStringBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":5,"column":9},"end":{"line":8,"column":1}},
         "range":[205,282],
         "members":[
@@ -193,7 +193,7 @@
             }
           }
         ],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     },
@@ -210,7 +210,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumNumberBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":10,"column":9},"end":{"line":12,"column":1}},
         "range":[293,370],
         "members":[
@@ -267,7 +267,7 @@
             }
           }
         ],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     },
@@ -284,7 +284,7 @@
         "optional":false
       },
       "body":{
-        "type":"EnumBooleanBody",
+        "type":"EnumBody",
         "loc":{"source":null,"start":{"line":14,"column":9},"end":{"line":16,"column":1}},
         "range":[381,462],
         "members":[
@@ -341,7 +341,7 @@
             }
           }
         ],
-        "explicitType":false,
+        "explicitType":null,
         "hasUnknownMembers":false
       }
     },
@@ -371,11 +371,11 @@
             "optional":false
           },
           "body":{
-            "type":"EnumStringBody",
+            "type":"EnumBody",
             "loc":{"source":null,"start":{"line":19,"column":28},"end":{"line":19,"column":30}},
             "range":[494,496],
             "members":[],
-            "explicitType":false,
+            "explicitType":null,
             "hasUnknownMembers":false
           }
         },
@@ -400,7 +400,7 @@
             "optional":false
           },
           "body":{
-            "type":"EnumStringBody",
+            "type":"EnumBody",
             "trailingComments":[
               {
                 "type":"Block",
@@ -418,7 +418,7 @@
             "loc":{"source":null,"start":{"line":19,"column":57},"end":{"line":19,"column":59}},
             "range":[523,525],
             "members":[],
-            "explicitType":false,
+            "explicitType":null,
             "hasUnknownMembers":false
           }
         }
