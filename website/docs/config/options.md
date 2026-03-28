@@ -202,6 +202,38 @@ The default value for `merge_timeout` is `100`.
 This can be overridden from the CLI using the `--merge-timeout` flag or the
 `FLOW_MERGE_TIMEOUT` environment variable.
 
+### module.declaration_dirnames <SinceVersion version="0.253.0" /> {#toc-module-declaration-dirnames}
+
+Type: `string`
+
+By default, Flow looks for declaration (`.flow`) files in the `@flowtyped` directory at the
+project root. Declaration files in these directories let you provide type definitions for
+third-party modules without modifying the original packages (see
+[declaring a module in the `@flowtyped` directory](../../libdefs/creation#toc-declaring-a-module-in-at-flowtyped)).
+
+You can use `module.declaration_dirnames` to customize which directories Flow searches for
+declaration files. When you explicitly set this option, it **replaces** the default
+`@flowtyped` directory entirely — `@flowtyped` will no longer be searched unless you
+include it in your list.
+
+For example, if you do:
+
+```
+[options]
+module.declaration_dirnames=<PROJECT_ROOT>/decl1
+module.declaration_dirnames=<PROJECT_ROOT>/decl2
+```
+
+Then Flow will look for declaration files in the `decl1` and `decl2` directories instead of
+`@flowtyped`. A module specifier like `foo` will resolve to `decl1/foo.js.flow` or
+`decl2/foo.js.flow` (or their `index.js.flow` equivalents) before falling back to
+`node_modules`.
+
+> **Note:** You can specify `module.declaration_dirnames` multiple times to search multiple
+> directories. The values `.` and `..` are not allowed.
+
+The default value is `<PROJECT_ROOT>/@flowtyped`.
+
 ### module.file_ext {#toc-module-file-ext}
 
 By default, Flow will look for files with the extensions `.js`, `.jsx`, `.mjs`,
