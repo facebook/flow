@@ -299,6 +299,41 @@ hasThisParam(''); // error: global object is not number
 noThisParam(''); // ok: no this type requirement
 ```
 
+## `Awaited<T>` <SinceVersion version="0.246" /> {#toc-awaited}
+
+`Awaited<T>` unwraps a `Promise` type to extract the type of its resolved value. If `T` is not a `Promise`, it returns `T` unchanged.
+
+```js flow-check
+type Response = Awaited<Promise<string>>; // Evaluates to string
+'hello' as Response; // OK
+42 as Response; // Error: number is not string
+```
+
+This is useful when you need to refer to the resolved type of a `Promise` without manually unwrapping it. If `T` is not a `Promise`, `Awaited<T>` simply evaluates to `T`:
+
+```js flow-check
+type A = Awaited<Promise<number>>; // number
+type B = Awaited<string>; // string (non-Promise types are returned as-is)
+
+42 as A; // OK
+'hello' as B; // OK
+'hello' as A; // Error: string is not number
+42 as B; // Error: number is not string
+```
+
+You can combine `Awaited` with other utility types like [`ReturnType`](#toc-return-type) to extract the resolved type from an async function's return type:
+
+```js flow-check
+async function fetchUser(): Promise<{name: string}> {
+  return {name: 'George'};
+}
+
+type User = Awaited<ReturnType<typeof fetchUser>>;
+
+const user: User = {name: 'George'}; // OK
+const bad: User = 'not a user'; // Error
+```
+
 ## `Pick<O, Keys>` <SinceVersion version="0.211" /> {#toc-pick}
 
 This utility type allows you to generate an object type using a subset of the fields from
