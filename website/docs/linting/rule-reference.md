@@ -76,6 +76,50 @@ component Outer() {
 }
 ```
 
+### `nested-hook` {#toc-nested-hook}
+Triggers when a [hook](../../react/hook-syntax) is defined directly inside another component or hook. Nested hooks are problematic because they break the [Rules of Hooks](https://react.dev/reference/rules/rules-of-hooks) — React relies on hooks being called in a consistent order at the top level of a component or hook, and a nested hook definition obscures the call structure.
+
+This lint is enabled as an error by default. It applies to [hook syntax](../../react/hook-syntax) declarations, which require `component_syntax=true` in your `.flowconfig`.
+
+```js flow-check
+import * as React from 'react';
+import {useState} from 'react';
+
+component Foo() {
+  hook useNested() { // Error
+    return useState();
+  }
+  return null;
+}
+```
+
+The lint also fires when a hook is defined inside another hook:
+```js flow-check
+import {useState} from 'react';
+
+hook useFoo() {
+  hook useNested() { // Error
+    return useState();
+  }
+  return useNested();
+}
+```
+
+To fix, move the nested hook to the top level:
+```js flow-check
+import * as React from 'react';
+import {useState} from 'react';
+
+hook useNested() {
+  return useState();
+}
+
+component Foo() {
+  useNested();
+  return null;
+}
+```
+
 ### `nonstrict-import` {#toc-nonstrict-import}
 Used in conjunction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
 
