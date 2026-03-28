@@ -260,6 +260,47 @@ with something other than a string literal.
 
 The default value is `false`.
 
+### module.missing_module_generators {#toc-module-missing-module-generators}
+
+Type: `regex -> string`
+
+Specify a regular expression to match against module names, and a command to
+suggest, separated by a `->`.
+
+When Flow encounters a `cannot-resolve-module` error for an import whose module
+name matches one of the configured patterns, it appends a hint to the error
+message suggesting that you run the associated command to generate the missing
+module.
+
+For example, if you add the following to your `.flowconfig`:
+
+```
+[options]
+module.missing_module_generators='.*\.css$' -> 'build-css-types'
+```
+
+Then when Flow reports a missing module error for `require('./Button.css')`, the
+error message will include:
+
+```
+Cannot resolve module `./Button.css`. Try running the command `build-css-types` to generate the missing module.
+```
+
+Without a matching generator, the error is simply:
+
+```
+Cannot resolve module `./Button.css`.
+```
+
+This is useful in codebases that use code generation to produce type definitions
+(e.g. for CSS modules, GraphQL queries, or other non-JS assets). The generator
+hint tells developers which command to run to fix the error.
+
+The patterns are
+[OCaml regular expressions](http://caml.inria.fr/pub/docs/manual-ocaml/libref/Str.html#TYPEregexp).
+
+> **Note:** You can specify `module.missing_module_generators` multiple times.
+
 ### module.name_mapper {#toc-module-name-mapper}
 
 Type: `regex -> string`
