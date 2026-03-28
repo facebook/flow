@@ -10,14 +10,14 @@ Learn how to define a Flow Enum. Looking for a quick overview? Check out the [Qu
 An enum declaration is a statement. Its name defines both a value (from which to [access its members](../using-enums/#toc-accessing-enum-members),
 and call its [methods](../using-enums/#toc-methods)), and a type (which can be [used as an annotation](../using-enums/#toc-using-as-a-type-annotation) for the type of its members).
 
-Enum members must all be of the same type, and those members can be one of four types:
-[string](#toc-string-enums), [number](#toc-number-enums), [boolean](#toc-boolean-enums), and [symbol](#toc-symbol-enums).
+Enum members must all be of the same type, and those members can be one of five types:
+[string](#toc-string-enums), [number](#toc-number-enums), [boolean](#toc-boolean-enums), [bigint](#toc-bigint-enums), and [symbol](#toc-symbol-enums).
 
 Every enum has some common properties:
 
 #### Consistent member type {#toc-consistent-member-type}
 The type of the enum members must be consistent. For example, you can’t mix `string` and `number` members in one enum.
-They must all be strings, numbers, or booleans (you do not provide values for `symbol` based enums).
+They must all be strings, numbers, booleans, or bigints (you do not provide values for `symbol` based enums).
 
 #### Member name starting character {#toc-member-name-starting-character}
 Member names must be valid identifiers (e.g. not start with numbers), and must not start with lowercase `a` through `z`.
@@ -42,7 +42,7 @@ enum Status {
 ```
 
 #### Literal member values {#toc-literal-member-values}
-If you specify a value for an enum member, it must be a literal (string, number, or boolean), not a computed value. This is not allowed:
+If you specify a value for an enum member, it must be a literal (string, number, boolean, or bigint), not a computed value. This is not allowed:
 
 ```js flow-check
 enum Status {
@@ -172,6 +172,45 @@ enum Status of boolean {
   Active = true,
   Off = false,
 }
+```
+
+
+## BigInt enums {#toc-bigint-enums}
+BigInt enums must have their values specified using [bigint literals](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/BigInt) (e.g. `1n`, `2n`).
+
+You can specify a bigint enum like this:
+
+```js flow-check
+enum Status {
+  Active = 1n,
+  Paused = 2n,
+  Off = 3n,
+}
+```
+
+Optionally, you can use an `of` clause.
+This does not affect the type-checking behavior of a valid Flow Enum,
+it just ensures that all enum members are `bigint`s at the definition site.
+
+```js flow-check
+enum Status of bigint {
+  Active = 1n,
+  Paused = 2n,
+  Off = 3n,
+}
+```
+
+BigInt enum members can be used like other enum members. Their representation type is `bigint`:
+
+```js flow-check
+enum Status of bigint {
+  Active = 1n,
+  Paused = 2n,
+  Off = 3n,
+}
+
+const status: Status = Status.Active; // OK
+status as bigint; // OK
 ```
 
 
