@@ -2359,9 +2359,25 @@ pub mod statement {
             serde::Serialize,
             serde::Deserialize
         )]
+        pub enum MemberName<M: Dupe> {
+            Identifier(Identifier<M, M>),
+            StringLiteral(M, super::super::StringLiteral<M>),
+        }
+
+        #[derive(
+            Debug,
+            Clone,
+            PartialEq,
+            Eq,
+            Hash,
+            PartialOrd,
+            Ord,
+            serde::Serialize,
+            serde::Deserialize
+        )]
         pub struct DefaultedMember<M: Dupe> {
             pub loc: M,
-            pub id: Identifier<M, M>,
+            pub id: MemberName<M>,
         }
 
         #[derive(
@@ -2377,7 +2393,7 @@ pub mod statement {
         )]
         pub struct InitializedMember<I, M: Dupe> {
             pub loc: M,
-            pub id: Identifier<M, M>,
+            pub id: MemberName<M>,
             pub init: (M, I),
         }
 

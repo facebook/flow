@@ -878,7 +878,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
         : 'N Ast.Statement.EnumDeclaration.DefaultedMember.t =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in
       let (annot, { id }) = member in
-      (this#on_loc_annot annot, { id = this#enum_member_identifier id })
+      (this#on_loc_annot annot, { id = this#enum_member_name id })
 
     method enum_boolean_member
         (member : ('M Ast.BooleanLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
@@ -886,7 +886,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
       let init' = (this#on_loc_annot init_annot, this#boolean_literal init_val) in
-      (this#on_loc_annot annot, { id = this#enum_member_identifier id; init = init' })
+      (this#on_loc_annot annot, { id = this#enum_member_name id; init = init' })
 
     method enum_number_member
         (member : ('M Ast.NumberLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
@@ -894,7 +894,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
       let init' = (this#on_loc_annot init_annot, this#number_literal init_val) in
-      (this#on_loc_annot annot, { id = this#enum_member_identifier id; init = init' })
+      (this#on_loc_annot annot, { id = this#enum_member_name id; init = init' })
 
     method enum_string_member
         (member : ('M Ast.StringLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
@@ -902,7 +902,7 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
       let init' = (this#on_loc_annot init_annot, this#string_literal init_val) in
-      (this#on_loc_annot annot, { id = this#enum_member_identifier id; init = init' })
+      (this#on_loc_annot annot, { id = this#enum_member_name id; init = init' })
 
     method enum_bigint_member
         (member : ('M Ast.BigIntLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t)
@@ -910,7 +910,15 @@ class virtual ['M, 'T, 'N, 'U] mapper =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (annot, { id; init = (init_annot, init_val) }) = member in
       let init' = (this#on_loc_annot init_annot, this#bigint_literal init_val) in
-      (this#on_loc_annot annot, { id = this#enum_member_identifier id; init = init' })
+      (this#on_loc_annot annot, { id = this#enum_member_name id; init = init' })
+
+    method enum_member_name (id : 'M Ast.Statement.EnumDeclaration.member_name)
+        : 'N Ast.Statement.EnumDeclaration.member_name =
+      let open Ast.Statement.EnumDeclaration in
+      match id with
+      | Identifier ident -> Identifier (this#enum_member_identifier ident)
+      | StringLiteral (annot, lit) ->
+        StringLiteral (this#on_loc_annot annot, this#string_literal lit)
 
     method enum_member_identifier (ident : ('M, 'M) Ast.Identifier.t) : ('N, 'N) Ast.Identifier.t =
       this#identifier ident

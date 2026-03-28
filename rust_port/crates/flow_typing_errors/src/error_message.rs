@@ -225,6 +225,11 @@ pub enum EnumErrorKind<L: Dupe + PartialOrd + Ord + PartialEq + Eq> {
         enum_reason: VirtualReason<L>,
         member_name: String,
     },
+    EnumNonIdentifierMemberName {
+        loc: L,
+        enum_reason: VirtualReason<L>,
+        member_name: String,
+    },
     EnumDuplicateMemberName {
         loc: L,
         prev_use_loc: L,
@@ -2469,6 +2474,15 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                         enum_reason: map_reason(enum_reason),
                         member_name,
                     },
+                    EnumNonIdentifierMemberName {
+                        loc,
+                        enum_reason,
+                        member_name,
+                    } => EnumNonIdentifierMemberName {
+                        loc: f(loc),
+                        enum_reason: map_reason(enum_reason),
+                        member_name,
+                    },
                     EnumDuplicateMemberName {
                         loc,
                         prev_use_loc,
@@ -3682,7 +3696,8 @@ impl<L: Dupe + PartialOrd + Ord + PartialEq + Eq> ErrorMessage<L> {
                     ..
                 }
                 | EnumErrorKind::EnumInvalidCheck { loc: key_loc, .. }
-                | EnumErrorKind::EnumInvalidMemberName { loc: key_loc, .. },
+                | EnumErrorKind::EnumInvalidMemberName { loc: key_loc, .. }
+                | EnumErrorKind::EnumNonIdentifierMemberName { loc: key_loc, .. },
             ) => Some(key_loc.dupe()),
 
             Self::EEnumError(
@@ -4910,6 +4925,14 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 member_name,
                 ..
             }) => Normal(Message::MessageInvalidEnumMemberName {
+                member_name,
+                enum_reason,
+            }),
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNonIdentifierMemberName {
+                enum_reason,
+                member_name,
+                ..
+            }) => Normal(Message::MessageEnumNonIdentifierMemberName {
                 member_name,
                 enum_reason,
             }),
@@ -6720,6 +6743,9 @@ impl<L: Dupe + PartialEq + Eq + PartialOrd + Ord> ErrorMessage<L> {
                 Some(InvalidExhaustiveCheck)
             }
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName { .. }) => {
+                Some(InvalidEnumMemberName)
+            }
+            ErrorMessage::EEnumError(EnumErrorKind::EnumNonIdentifierMemberName { .. }) => {
                 Some(InvalidEnumMemberName)
             }
             ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidCheck { from_match, .. }) => {

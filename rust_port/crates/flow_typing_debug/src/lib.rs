@@ -3238,6 +3238,18 @@ pub fn dump_error_message(cx: &Context, err: &ErrorMessage<ALoc>) -> String {
                     member_name
                 )
             }
+            EnumErrorKind::EnumNonIdentifierMemberName {
+                loc,
+                enum_reason,
+                member_name,
+            } => {
+                format!(
+                    "EEnumError (EnumNonIdentifierMemberName ({}) ({}) ({}))",
+                    string_of_aloc(None, loc),
+                    dump_reason(cx, enum_reason),
+                    member_name
+                )
+            }
             EnumErrorKind::EnumDuplicateMemberName {
                 loc,
                 prev_use_loc,

@@ -1783,17 +1783,21 @@ with type t = Impl.t = struct
     and enum_body body =
       let open Statement.EnumDeclaration in
       let (loc, { Body.members; explicit_type; has_unknown_members; comments }) = body in
+      let enum_member_name = function
+        | Identifier id -> identifier id
+        | StringLiteral sl -> string_literal sl
+      in
       let enum_member = function
         | BooleanMember (loc, { InitializedMember.id; init }) ->
-          node "EnumBooleanMember" loc [("id", identifier id); ("init", boolean_literal init)]
+          node "EnumBooleanMember" loc [("id", enum_member_name id); ("init", boolean_literal init)]
         | NumberMember (loc, { InitializedMember.id; init }) ->
-          node "EnumNumberMember" loc [("id", identifier id); ("init", number_literal init)]
+          node "EnumNumberMember" loc [("id", enum_member_name id); ("init", number_literal init)]
         | StringMember (loc, { InitializedMember.id; init }) ->
-          node "EnumStringMember" loc [("id", identifier id); ("init", string_literal init)]
+          node "EnumStringMember" loc [("id", enum_member_name id); ("init", string_literal init)]
         | BigIntMember (loc, { InitializedMember.id; init }) ->
-          node "EnumBigIntMember" loc [("id", identifier id); ("init", bigint_literal init)]
+          node "EnumBigIntMember" loc [("id", enum_member_name id); ("init", bigint_literal init)]
         | DefaultedMember (loc, { DefaultedMember.id }) ->
-          node "EnumDefaultedMember" loc [("id", identifier id)]
+          node "EnumDefaultedMember" loc [("id", enum_member_name id)]
       in
       let explicit_type_str =
         match explicit_type with

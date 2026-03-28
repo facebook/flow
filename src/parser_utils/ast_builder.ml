@@ -593,9 +593,12 @@ module Statements = struct
     open EnumDeclaration
 
     let initialized_member ?(loc = Loc.none) id init_value =
+      let id = EnumDeclaration.Identifier id in
       (loc, { InitializedMember.id; init = (loc, init_value) })
 
-    let defaulted_member ?(loc = Loc.none) id = (loc, { DefaultedMember.id })
+    let defaulted_member ?(loc = Loc.none) id =
+      let id = EnumDeclaration.Identifier id in
+      (loc, { DefaultedMember.id })
 
     let boolean_member m = BooleanMember m
 

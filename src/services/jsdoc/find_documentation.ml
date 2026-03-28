@@ -296,11 +296,21 @@ class jsdoc_documentation_searcher find =
       find id_loc comments;
       super#enum_declaration loc enum
 
+    method private enum_member_name_comments member_loc id =
+      let (name_loc, comments) =
+        match id with
+        | Ast.Statement.EnumDeclaration.Identifier (id_loc, { Ast.Identifier.comments; _ }) ->
+          (id_loc, comments)
+        | Ast.Statement.EnumDeclaration.StringLiteral (sl_loc, { Ast.StringLiteral.comments; _ }) ->
+          (sl_loc, comments)
+      in
+      find member_loc comments;
+      find name_loc comments
+
     method! enum_defaulted_member member =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in
-      let (loc, { id = (id_loc, Ast.Identifier.{ comments; _ }) }) = member in
-      find loc comments;
-      find id_loc comments;
+      let (loc, { id }) = member in
+      this#enum_member_name_comments loc id;
       member
 
     method enum_initialized_member
@@ -309,9 +319,8 @@ class jsdoc_documentation_searcher find =
           ('a, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t =
       fun member ->
         let open Ast.Statement.EnumDeclaration.InitializedMember in
-        let (loc, { id = (id_loc, Ast.Identifier.{ comments; _ }); _ }) = member in
-        find loc comments;
-        find id_loc comments;
+        let (loc, { id; _ }) = member in
+        this#enum_member_name_comments loc id;
         member
 
     method! enum_boolean_member member = this#enum_initialized_member member

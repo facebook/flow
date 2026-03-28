@@ -230,4 +230,6 @@ val function_type_param_parts :
 
 val string_of_enum_explicit_type : Flow_ast.Statement.EnumDeclaration.explicit_type -> string
 
+val string_of_enum_member_name : 'M Flow_ast.Statement.EnumDeclaration.member_name -> string
+
 val string_of_bigint : 'm Flow_ast.BigIntLiteral.t -> string

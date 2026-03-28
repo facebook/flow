@@ -3872,7 +3872,7 @@ pub fn enum_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
             ast::statement::enum_declaration::Member::BooleanMember(
                 ast::statement::enum_declaration::InitializedMember {
                     loc: mapper.on_loc_annot(loc)?,
-                    id: enum_member_identifier(mapper, id)?,
+                    id: enum_member_name(mapper, id)?,
                     init: init_,
                 },
             )
@@ -3890,7 +3890,7 @@ pub fn enum_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
             ast::statement::enum_declaration::Member::NumberMember(
                 ast::statement::enum_declaration::InitializedMember {
                     loc: mapper.on_loc_annot(loc)?,
-                    id: enum_member_identifier(mapper, id)?,
+                    id: enum_member_name(mapper, id)?,
                     init: init_,
                 },
             )
@@ -3908,7 +3908,7 @@ pub fn enum_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
             ast::statement::enum_declaration::Member::StringMember(
                 ast::statement::enum_declaration::InitializedMember {
                     loc: mapper.on_loc_annot(loc)?,
-                    id: enum_member_identifier(mapper, id)?,
+                    id: enum_member_name(mapper, id)?,
                     init: init_,
                 },
             )
@@ -3926,7 +3926,7 @@ pub fn enum_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
             ast::statement::enum_declaration::Member::BigIntMember(
                 ast::statement::enum_declaration::InitializedMember {
                     loc: mapper.on_loc_annot(loc)?,
-                    id: enum_member_identifier(mapper, id)?,
+                    id: enum_member_name(mapper, id)?,
                     init: init_,
                 },
             )
@@ -3936,8 +3936,27 @@ pub fn enum_member<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
             ast::statement::enum_declaration::Member::DefaultedMember(
                 ast::statement::enum_declaration::DefaultedMember {
                     loc: mapper.on_loc_annot(loc)?,
-                    id: enum_member_identifier(mapper, id)?,
+                    id: enum_member_name(mapper, id)?,
                 },
+            )
+        }
+    })
+}
+
+pub fn enum_member_name<M: Dupe, T: Dupe, N: Dupe, U: Dupe, E>(
+    mapper: &mut impl LocMapper<M, T, N, U, E>,
+    id: &ast::statement::enum_declaration::MemberName<M>,
+) -> Result<ast::statement::enum_declaration::MemberName<N>, E> {
+    Ok(match id {
+        ast::statement::enum_declaration::MemberName::Identifier(ident) => {
+            ast::statement::enum_declaration::MemberName::Identifier(enum_member_identifier(
+                mapper, ident,
+            )?)
+        }
+        ast::statement::enum_declaration::MemberName::StringLiteral(annot, lit) => {
+            ast::statement::enum_declaration::MemberName::StringLiteral(
+                mapper.on_loc_annot(annot)?,
+                string_literal(mapper, lit)?,
             )
         }
     })

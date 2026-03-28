@@ -95,6 +95,11 @@ type 'loc enum_error_kind =
       enum_reason: 'loc virtual_reason;
       member_name: string;
     }
+  | EnumNonIdentifierMemberName of {
+      loc: 'loc;
+      enum_reason: 'loc virtual_reason;
+      member_name: string;
+    }
   | EnumDuplicateMemberName of {
       loc: 'loc;
       prev_use_loc: 'loc;
@@ -1725,6 +1730,9 @@ let rec map_loc_of_error_message (f : 'a -> 'b) : 'a t' -> 'b t' =
         EnumInvalidAbstractUse { reason = map_reason reason; enum_reason = map_reason enum_reason }
       | EnumInvalidMemberName { loc; enum_reason; member_name } ->
         EnumInvalidMemberName { loc = f loc; enum_reason = map_reason enum_reason; member_name }
+      | EnumNonIdentifierMemberName { loc; enum_reason; member_name } ->
+        EnumNonIdentifierMemberName
+          { loc = f loc; enum_reason = map_reason enum_reason; member_name }
       | EnumDuplicateMemberName { loc; prev_use_loc; enum_reason; member_name } ->
         EnumDuplicateMemberName
           {
@@ -2442,6 +2450,7 @@ let loc_of_msg : 'loc t' -> 'loc option = function
     | EnumMemberAlreadyChecked { case_test_loc = loc; _ }
     | EnumInvalidCheck { loc; _ }
     | EnumInvalidMemberName { loc; _ }
+    | EnumNonIdentifierMemberName { loc; _ }
     | EnumModification { loc; _ }
     | EnumMemberDuplicateValue { loc; _ }
     | EnumDuplicateMemberName { loc; _ }
@@ -3638,6 +3647,8 @@ let friendly_message_of_msg = function
         )
     | EnumInvalidMemberName { enum_reason; member_name; _ } ->
       Normal (MessageInvalidEnumMemberName { member_name; enum_reason })
+    | EnumNonIdentifierMemberName { enum_reason; member_name; _ } ->
+      Normal (MessageEnumNonIdentifierMemberName { member_name; enum_reason })
     | EnumDuplicateMemberName { prev_use_loc; enum_reason; member_name; _ } ->
       Normal (MessageEnumDuplicateMemberName { member_name; prev_use_loc; enum_reason })
     | EnumInconsistentMemberValues { enum_reason; _ } ->
@@ -4055,6 +4066,7 @@ let error_code_of_message err : error_code option =
     | EnumAllMembersAlreadyChecked _ -> Some InvalidExhaustiveCheck
     | EnumInvalidAbstractUse _ -> Some InvalidExhaustiveCheck
     | EnumInvalidMemberName _ -> Some InvalidEnumMemberName
+    | EnumNonIdentifierMemberName _ -> Some InvalidEnumMemberName
     | EnumInvalidCheck { from_match; _ } ->
       if from_match then
         Some MatchInvalidPattern

@@ -13,7 +13,6 @@ use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use crate::ast::BigIntLiteral;
 use crate::ast::BooleanLiteral;
 use crate::ast::Comment;
-use crate::ast::Identifier;
 use crate::ast::IdentifierInner;
 use crate::ast::NumberLiteral;
 use crate::ast::StringLiteral;
@@ -188,23 +187,40 @@ fn member_init(env: &mut ParserEnv) -> Result<Init, Rollback> {
     }
 }
 
-fn member_raw(env: &mut ParserEnv) -> Result<(Loc, (Identifier<Loc, Loc>, Init)), Rollback> {
+fn member_raw(
+    env: &mut ParserEnv,
+) -> Result<(Loc, (statement::enum_declaration::MemberName<Loc>, Init)), Rollback> {
     with_loc(None, env, |env| {
-        let id = parser_common::identifier_name(env)?;
+        let id = match peek::token(env) {
+            TokenKind::TString(str_loc, value, raw, octal) => {
+                let str_loc = str_loc.dupe();
+                let value = value.to_owned();
+                let raw = raw.to_owned();
+                if *octal {
+                    env.strict_error(ParseError::StrictOctalLiteral)?;
+                }
+                eat::token(env)?;
+                statement::enum_declaration::MemberName::StringLiteral(
+                    str_loc,
+                    StringLiteral {
+                        value,
+                        raw,
+                        comments: None,
+                    },
+                )
+            }
+            _ => statement::enum_declaration::MemberName::Identifier(
+                parser_common::identifier_name(env)?,
+            ),
+        };
         let init = match peek::token(env) {
             TokenKind::TAssign => {
                 expect::token(env, TokenKind::TAssign)?;
                 member_init(env)?
             }
             TokenKind::TColon => {
-                let IdentifierInner {
-                    loc: _,
-                    name: member_name,
-                    comments: _,
-                } = id.deref();
-                env.error(ParseError::EnumInvalidInitializerSeparator {
-                    member_name: member_name.as_str().to_owned(),
-                })?;
+                let member_name = ast_utils::string_of_enum_member_name(&id).to_owned();
+                env.error(ParseError::EnumInvalidInitializerSeparator { member_name })?;
                 expect::token(env, TokenKind::TColon)?;
                 member_init(env)?
             }
@@ -221,11 +237,7 @@ fn enum_member(
     explicit_type: Option<ExplicitType>,
 ) -> Result<(), Rollback> {
     let (member_loc, (id, init)) = member_raw(env)?;
-    let IdentifierInner {
-        loc: _id_loc,
-        name: member_name,
-        comments: _,
-    } = id.deref();
+    let member_name = ast_utils::string_of_enum_member_name(&id);
 
     /* if we parsed an empty name, something has gone wrong and we should abort analysis */
     if member_name.is_empty() {
@@ -275,7 +287,7 @@ fn enum_member(
                 ParseError::EnumInvalidMemberInitializer {
                     enum_name: enum_name.to_owned(),
                     explicit_type,
-                    member_name: member_name.as_str().to_owned(),
+                    member_name: member_name.to_owned(),
                 },
             )?;
         }

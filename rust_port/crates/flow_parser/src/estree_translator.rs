@@ -3686,6 +3686,16 @@ fn enum_body(
         comments,
     } = body;
 
+    let enum_member_name = |id: &ast::statement::enum_declaration::MemberName<Loc>| -> Value {
+        match id {
+            ast::statement::enum_declaration::MemberName::Identifier(ident) => {
+                identifier(offset_table, config, ident)
+            }
+            ast::statement::enum_declaration::MemberName::StringLiteral(loc, sl) => {
+                string_literal(offset_table, config, loc, sl)
+            }
+        }
+    };
     let enum_member = |member: &Member<Loc>| -> Value {
         match member {
             Member::BooleanMember(member) => node(
@@ -3695,7 +3705,7 @@ fn enum_body(
                 &member.loc,
                 None,
                 vec![
-                    ("id", identifier(offset_table, config, &member.id)),
+                    ("id", enum_member_name(&member.id)),
                     (
                         "init",
                         boolean_literal(offset_table, config, &member.init.0, &member.init.1),
@@ -3709,7 +3719,7 @@ fn enum_body(
                 &member.loc,
                 None,
                 vec![
-                    ("id", identifier(offset_table, config, &member.id)),
+                    ("id", enum_member_name(&member.id)),
                     (
                         "init",
                         number_literal(offset_table, config, &member.init.0, &member.init.1),
@@ -3723,7 +3733,7 @@ fn enum_body(
                 &member.loc,
                 None,
                 vec![
-                    ("id", identifier(offset_table, config, &member.id)),
+                    ("id", enum_member_name(&member.id)),
                     (
                         "init",
                         string_literal(offset_table, config, &member.init.0, &member.init.1),
@@ -3737,7 +3747,7 @@ fn enum_body(
                 &member.loc,
                 None,
                 vec![
-                    ("id", identifier(offset_table, config, &member.id)),
+                    ("id", enum_member_name(&member.id)),
                     (
                         "init",
                         bigint_literal(offset_table, config, &member.init.0, &member.init.1),
@@ -3750,7 +3760,7 @@ fn enum_body(
                 "EnumDefaultedMember",
                 &member.loc,
                 None,
-                vec![("id", identifier(offset_table, config, &member.id))],
+                vec![("id", enum_member_name(&member.id))],
             ),
         }
     };
@@ -3785,15 +3795,6 @@ fn enum_declaration(
     loc: &Loc,
     enum_decl: &ast::statement::EnumDeclaration<Loc, Loc>,
 ) -> Value {
-    // and enum_declaration (loc, { Statement.EnumDeclaration.id; body; const_; comments }) =
-    //   let props = [("id", identifier id); ("body", enum_body body)] in
-    //   let props =
-    //     if const_ then
-    //       ("const", bool true) :: props
-    //     else
-    //       props
-    //   in
-    //   node ?comments "EnumDeclaration" loc props
     let mut props = vec![
         ("id", identifier(offset_table, config, &enum_decl.id)),
         ("body", enum_body(offset_table, config, &enum_decl.body)),

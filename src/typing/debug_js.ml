@@ -1917,6 +1917,12 @@ let dump_error_message =
           (string_of_aloc loc)
           (dump_reason cx enum_reason)
           member_name
+      | EnumNonIdentifierMemberName { loc; enum_reason; member_name } ->
+        spf
+          "EEnumError (EnumNonIdentifierMemberName (%s) (%s) (%s))"
+          (string_of_aloc loc)
+          (dump_reason cx enum_reason)
+          member_name
       | EnumDuplicateMemberName { loc; prev_use_loc; enum_reason; member_name } ->
         spf
           "EEnumError (EnumDuplicateMemberName (%s) (%s) (%s) (%s))"

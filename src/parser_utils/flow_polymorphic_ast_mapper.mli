@@ -273,6 +273,9 @@ class virtual ['M, 'T, 'N, 'U] mapper :
       ('M Ast.BigIntLiteral.t, 'M) Ast.Statement.EnumDeclaration.InitializedMember.t ->
       ('N Ast.BigIntLiteral.t, 'N) Ast.Statement.EnumDeclaration.InitializedMember.t
 
+    method enum_member_name :
+      'M Ast.Statement.EnumDeclaration.member_name -> 'N Ast.Statement.EnumDeclaration.member_name
+
     method enum_member_identifier : ('M, 'M) Ast.Identifier.t -> ('N, 'N) Ast.Identifier.t
 
     method export_default_declaration :

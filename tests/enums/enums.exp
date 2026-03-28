@@ -1997,6 +1997,81 @@ References:
             ^^^ [1]
 
 
+Error ---------------------------------------------------------------------------------- error-member-validation.js:86:3
+
+Enum member names must be identifiers, not string literals. `'MAIN'` is not a valid member name in enum `E16` [1].
+[invalid-enum-member-name]
+
+   error-member-validation.js:86:3
+   86|   'MAIN' = "MAIN", // ERROR
+         ^^^^^^
+
+References:
+   error-member-validation.js:85:6
+   85| enum E16 of string {
+            ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:87:3
+
+Enum member names must be identifiers, not string literals. `'NOPREVIEW'` is not a valid member name in enum `E16` [1].
+[invalid-enum-member-name]
+
+   error-member-validation.js:87:3
+   87|   'NOPREVIEW' = "NOPREVIEW", // ERROR
+         ^^^^^^^^^^^
+
+References:
+   error-member-validation.js:85:6
+   85| enum E16 of string {
+            ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:93:3
+
+Enum member names must be identifiers, not string literals. `'FOO'` is not a valid member name in enum `E17` [1].
+[invalid-enum-member-name]
+
+   error-member-validation.js:93:3
+   93|   'FOO', // ERROR
+         ^^^^^
+
+References:
+   error-member-validation.js:92:6
+   92| enum E17 {
+            ^^^ [1]
+
+
+Error ---------------------------------------------------------------------------------- error-member-validation.js:99:3
+
+Enum member names must be identifiers, not string literals. `'foo-bar'` is not a valid member name in enum `E18` [1].
+[invalid-enum-member-name]
+
+   error-member-validation.js:99:3
+   99|   'foo-bar' = "foo-bar", // ERROR
+         ^^^^^^^^^
+
+References:
+   error-member-validation.js:98:6
+   98| enum E18 of string {
+            ^^^ [1]
+
+
+Error --------------------------------------------------------------------------------- error-member-validation.js:100:3
+
+Enum member names must be identifiers, not string literals. `'has space'` is not a valid member name in enum `E18` [1].
+[invalid-enum-member-name]
+
+   error-member-validation.js:100:3
+   100|   'has space' = "has space", // ERROR
+          ^^^^^^^^^^^
+
+References:
+   error-member-validation.js:98:6
+    98| enum E18 of string {
+             ^^^ [1]
+
+
 Error ---------------------------------------------------------------------------------------- error-modification.js:9:1
 
 Cannot change member of enum `E` [1] because enums are frozen. [cannot-write-enum]
@@ -4856,7 +4931,7 @@ References:
 
 
 
-Found 286 errors
+Found 291 errors
 
 Only showing the most relevant union/intersection branches.
 To see all branches, re-run Flow with --show-all-branches

@@ -243,8 +243,14 @@ class useless_mapper =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in
       let (loc, { id }) = member in
       match id with
-      | (loc', { Ast.Identifier.name = "On"; comments }) ->
-        (loc, { id = (loc', Ast.Identifier.{ name = "Enabled"; comments }) })
+      | Ast.Statement.EnumDeclaration.Identifier (loc', { Ast.Identifier.name = "On"; comments }) ->
+        ( loc,
+          {
+            id =
+              Ast.Statement.EnumDeclaration.Identifier
+                (loc', Ast.Identifier.{ name = "Enabled"; comments });
+          }
+        )
       | _ -> member
 
     method! enum_string_member

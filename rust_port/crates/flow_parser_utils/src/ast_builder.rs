@@ -1612,7 +1612,7 @@ pub mod statements {
 
         pub fn initialized_member<I>(
             loc: Option<Loc>,
-            id: ast::Identifier<Loc, Loc>,
+            id: enum_declaration::MemberName<Loc>,
             init_value: I,
         ) -> enum_declaration::InitializedMember<I, Loc> {
             let loc = loc.unwrap_or_else(Loc::none);
@@ -1625,7 +1625,7 @@ pub mod statements {
 
         pub fn defaulted_member(
             loc: Option<Loc>,
-            id: ast::Identifier<Loc, Loc>,
+            id: enum_declaration::MemberName<Loc>,
         ) -> enum_declaration::DefaultedMember<Loc> {
             let loc = loc.unwrap_or_else(Loc::none);
             enum_declaration::DefaultedMember { loc, id }

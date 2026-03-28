@@ -18271,6 +18271,13 @@ pub fn mk_enum(
                     member_name: member_name.clone(),
                 }
             }
+            enum_validate::ValidationError::NonIdentifierMemberName { loc, member_name } => {
+                EnumErrorKind::EnumNonIdentifierMemberName {
+                    loc: loc.dupe(),
+                    enum_reason: enum_reason.dupe(),
+                    member_name: member_name.clone(),
+                }
+            }
         };
         flow_js_utils::add_output_non_speculating(cx, ErrorMessage::EEnumError(error));
     }

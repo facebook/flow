@@ -3548,13 +3548,24 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     | (StringMember m1, StringMember m2) -> enum_string_member m1 m2
     | (BigIntMember m1, BigIntMember m2) -> enum_bigint_member m1 m2
     | _ -> None
+  and enum_member_name
+      (id1 : Loc.t Ast.Statement.EnumDeclaration.member_name)
+      (id2 : Loc.t Ast.Statement.EnumDeclaration.member_name) : node change list option =
+    match (id1, id2) with
+    | (Ast.Statement.EnumDeclaration.Identifier i1, Ast.Statement.EnumDeclaration.Identifier i2) ->
+      Some (diff_if_changed identifier i1 i2)
+    | ( Ast.Statement.EnumDeclaration.StringLiteral (loc1, lit1),
+        Ast.Statement.EnumDeclaration.StringLiteral (loc2, lit2)
+      ) ->
+      diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2
+    | _ -> None
   and enum_defaulted_member
       (member1 : Loc.t Ast.Statement.EnumDeclaration.DefaultedMember.t)
       (member2 : Loc.t Ast.Statement.EnumDeclaration.DefaultedMember.t) : node change list option =
     let open Ast.Statement.EnumDeclaration.DefaultedMember in
     let (_, { id = id1 }) = member1 in
     let (_, { id = id2 }) = member2 in
-    Some (diff_if_changed identifier id1 id2)
+    enum_member_name id1 id2
   and enum_boolean_member
       (member1 :
         (Loc.t Ast.BooleanLiteral.t, Loc.t) Ast.Statement.EnumDeclaration.InitializedMember.t
@@ -3565,7 +3576,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let open Ast.Statement.EnumDeclaration.InitializedMember in
     let (_, { id = id1; init = (loc1, lit1) }) = member1 in
     let (_, { id = id2; init = (loc2, lit2) }) = member2 in
-    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let id_diff = enum_member_name id1 id2 in
     let value_diff = diff_if_changed_ret_opt (boolean_literal loc1 loc2) lit1 lit2 in
     join_diff_list [id_diff; value_diff]
   and enum_number_member
@@ -3578,7 +3589,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let open Ast.Statement.EnumDeclaration.InitializedMember in
     let (_, { id = id1; init = (loc1, lit1) }) = member1 in
     let (_, { id = id2; init = (loc2, lit2) }) = member2 in
-    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let id_diff = enum_member_name id1 id2 in
     let value_diff = diff_if_changed_ret_opt (number_literal loc1 loc2) lit1 lit2 in
     join_diff_list [id_diff; value_diff]
   and enum_string_member
@@ -3591,7 +3602,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let open Ast.Statement.EnumDeclaration.InitializedMember in
     let (_, { id = id1; init = (loc1, lit1) }) = member1 in
     let (_, { id = id2; init = (loc2, lit2) }) = member2 in
-    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let id_diff = enum_member_name id1 id2 in
     let value_diff = diff_if_changed_ret_opt (string_literal loc1 loc2) lit1 lit2 in
     join_diff_list [id_diff; value_diff]
   and enum_bigint_member
@@ -3604,7 +3615,7 @@ let program (program1 : (Loc.t, Loc.t) Ast.Program.t) (program2 : (Loc.t, Loc.t)
     let open Ast.Statement.EnumDeclaration.InitializedMember in
     let (_, { id = id1; init = (loc1, lit1) }) = member1 in
     let (_, { id = id2; init = (loc2, lit2) }) = member2 in
-    let id_diff = Some (diff_if_changed identifier id1 id2) in
+    let id_diff = enum_member_name id1 id2 in
     let value_diff = diff_if_changed_ret_opt (bigint_literal loc1 loc2) lit1 lit2 in
     join_diff_list [id_diff; value_diff]
   and type_params

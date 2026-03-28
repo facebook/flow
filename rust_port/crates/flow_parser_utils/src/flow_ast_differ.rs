@@ -5569,11 +5569,28 @@ fn enum_member(
     }
 }
 
+fn enum_member_name(
+    id1: &ast::statement::enum_declaration::MemberName<Loc>,
+    id2: &ast::statement::enum_declaration::MemberName<Loc>,
+) -> Option<Vec<NodeChange>> {
+    match (id1, id2) {
+        (
+            ast::statement::enum_declaration::MemberName::Identifier(i1),
+            ast::statement::enum_declaration::MemberName::Identifier(i2),
+        ) => Some(diff_if_changed(identifier, i1, i2)),
+        (
+            ast::statement::enum_declaration::MemberName::StringLiteral(loc1, lit1),
+            ast::statement::enum_declaration::MemberName::StringLiteral(loc2, lit2),
+        ) => diff_if_changed_ret_opt(|l1, l2| string_literal(loc1, loc2, l1, l2), lit1, lit2),
+        _ => None,
+    }
+}
+
 fn enum_defaulted_member(
     member1: &ast::statement::enum_declaration::DefaultedMember<Loc>,
     member2: &ast::statement::enum_declaration::DefaultedMember<Loc>,
 ) -> Option<Vec<NodeChange>> {
-    Some(diff_if_changed(identifier, &member1.id, &member2.id))
+    enum_member_name(&member1.id, &member2.id)
 }
 
 fn enum_boolean_member(
@@ -5582,7 +5599,7 @@ fn enum_boolean_member(
 ) -> Option<Vec<NodeChange>> {
     let (ref loc1, ref lit1) = member1.init;
     let (ref loc2, ref lit2) = member2.init;
-    let id_diff = Some(diff_if_changed(identifier, &member1.id, &member2.id));
+    let id_diff = enum_member_name(&member1.id, &member2.id);
     let value_diff =
         diff_if_changed_ret_opt(|l1, l2| boolean_literal(loc1, loc2, l1, l2), lit1, lit2);
     join_diff_list(vec![id_diff, value_diff])
@@ -5594,7 +5611,7 @@ fn enum_number_member(
 ) -> Option<Vec<NodeChange>> {
     let (ref loc1, ref lit1) = member1.init;
     let (ref loc2, ref lit2) = member2.init;
-    let id_diff = Some(diff_if_changed(identifier, &member1.id, &member2.id));
+    let id_diff = enum_member_name(&member1.id, &member2.id);
     let value_diff =
         diff_if_changed_ret_opt(|l1, l2| number_literal(loc1, loc2, l1, l2), lit1, lit2);
     join_diff_list(vec![id_diff, value_diff])
@@ -5606,7 +5623,7 @@ fn enum_string_member(
 ) -> Option<Vec<NodeChange>> {
     let (ref loc1, ref lit1) = member1.init;
     let (ref loc2, ref lit2) = member2.init;
-    let id_diff = Some(diff_if_changed(identifier, &member1.id, &member2.id));
+    let id_diff = enum_member_name(&member1.id, &member2.id);
     let value_diff =
         diff_if_changed_ret_opt(|l1, l2| string_literal(loc1, loc2, l1, l2), lit1, lit2);
     join_diff_list(vec![id_diff, value_diff])
@@ -5618,7 +5635,7 @@ fn enum_bigint_member(
 ) -> Option<Vec<NodeChange>> {
     let (ref loc1, ref lit1) = member1.init;
     let (ref loc2, ref lit2) = member2.init;
-    let id_diff = Some(diff_if_changed(identifier, &member1.id, &member2.id));
+    let id_diff = enum_member_name(&member1.id, &member2.id);
     let value_diff =
         diff_if_changed_ret_opt(|l1, l2| bigint_literal(loc1, loc2, l1, l2), lit1, lit2);
     join_diff_list(vec![id_diff, value_diff])

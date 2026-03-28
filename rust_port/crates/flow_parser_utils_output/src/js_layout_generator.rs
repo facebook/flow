@@ -3167,16 +3167,32 @@ fn enum_declaration(
             vec![join(pretty_hardline(), members)],
         )
     };
-    let initialized_member = |id: &ast::Identifier<Loc, Loc>, value: LayoutNode| -> LayoutNode {
-        fuse(vec![
-            identifier(id),
-            pretty_space(),
-            atom("="),
-            pretty_space(),
-            value,
-            atom(","),
-        ])
-    };
+    let enum_member_name_layout =
+        |id: &ast::statement::enum_declaration::MemberName<Loc>| -> LayoutNode {
+            match id {
+                ast::statement::enum_declaration::MemberName::Identifier(ident) => {
+                    identifier(ident)
+                }
+                ast::statement::enum_declaration::MemberName::StringLiteral(loc, str_lit) => {
+                    layout_node_with_comments_opt(
+                        loc,
+                        str_lit.comments.as_ref(),
+                        atom(&str_lit.raw),
+                    )
+                }
+            }
+        };
+    let initialized_member =
+        |id: &ast::statement::enum_declaration::MemberName<Loc>, value: LayoutNode| -> LayoutNode {
+            fuse(vec![
+                enum_member_name_layout(id),
+                pretty_space(),
+                atom("="),
+                pretty_space(),
+                value,
+                atom(","),
+            ])
+        };
     let unknown_members = |has: Option<&Loc>| -> Vec<LayoutNode> {
         match has {
             Some(_) => vec![atom("...")],
@@ -3241,7 +3257,7 @@ fn enum_declaration(
                         atom(&m.init.1.raw),
                     ),
                 ),
-                Member::DefaultedMember(m) => fuse(vec![identifier(&m.id), atom(",")]),
+                Member::DefaultedMember(m) => fuse(vec![enum_member_name_layout(&m.id), atom(",")]),
             }
         };
         fuse(vec![

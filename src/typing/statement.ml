@@ -10362,6 +10362,8 @@ module Make
             Error_message.EnumMemberDuplicateValue { loc; prev_use_loc; enum_reason }
           | Enum_validate.InvalidMemberName { loc; member_name } ->
             Error_message.EnumInvalidMemberName { loc; enum_reason; member_name }
+          | Enum_validate.NonIdentifierMemberName { loc; member_name } ->
+            Error_message.EnumNonIdentifierMemberName { loc; enum_reason; member_name }
         in
         Flow.add_output cx (Error_message.EEnumError error))
       result.Enum_validate.errors;

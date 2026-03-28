@@ -6387,6 +6387,16 @@ where
                     " enums are not supported. Flow Enums are designed to allow for inlining, however the inlining itself needs to be part of the build system (whatever you use) rather than Flow itself.",
                 ),
             ]),
+            MessageEnumNonIdentifierMemberName {
+                member_name,
+                enum_reason,
+            } => friendly::Message(vec![
+                text("Enum member names must be identifiers, not string literals. "),
+                code(member_name),
+                text(" is not a valid member name in "),
+                ref_(enum_reason),
+                text("."),
+            ]),
             MessageInvalidEnumMemberName {
                 member_name,
                 enum_reason,

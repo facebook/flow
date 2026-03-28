@@ -122,14 +122,21 @@ end = struct
 
   let member_raw =
     with_loc (fun env ->
-        let id = identifier_name env in
+        let id =
+          match Peek.token env with
+          | T_STRING (loc, value, raw, octal) ->
+            if octal then strict_error env Parse_error.StrictOctalLiteral;
+            Eat.token env;
+            StringLiteral (loc, { StringLiteral.value; raw; comments = None })
+          | _ -> Identifier (identifier_name env)
+        in
         let init =
           match Peek.token env with
           | T_ASSIGN ->
             Expect.token env T_ASSIGN;
             member_init env
           | T_COLON ->
-            let (_, { Identifier.name = member_name; _ }) = id in
+            let member_name = Flow_ast_utils.string_of_enum_member_name id in
             error env (Parse_error.EnumInvalidInitializerSeparator { member_name });
             Expect.token env T_COLON;
             member_init env
@@ -140,7 +147,7 @@ end = struct
 
   let enum_member ~enum_name ~explicit_type acc env =
     let (member_loc, (id, init)) = member_raw env in
-    let (_, { Identifier.name = member_name; _ }) = id in
+    let member_name = Flow_ast_utils.string_of_enum_member_name id in
     (* if we parsed an empty name, something has gone wrong and we should abort analysis *)
     if member_name = "" then
       acc

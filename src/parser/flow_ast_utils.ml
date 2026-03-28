@@ -909,6 +909,12 @@ let string_of_enum_explicit_type =
   | Symbol -> "symbol"
   | BigInt -> "bigint"
 
+let string_of_enum_member_name =
+  let open Statement.EnumDeclaration in
+  function
+  | Identifier (_, { I.name; _ }) -> name
+  | StringLiteral (_, { StringLiteral.value; _ }) -> value
+
 let string_of_bigint { BigIntLiteral.value; raw; comments = _ } =
   (* https://github.com/estree/estree/blob/master/es2020.md#bigintliteral
    * `bigint` property is the string representation of the `BigInt` value.

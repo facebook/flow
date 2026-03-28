@@ -3018,8 +3018,16 @@ and enum_declaration ~def loc { Ast.Statement.EnumDeclaration.id; body; const_; 
   let wrap_body members =
     wrap_and_indent ~break:pretty_hardline (Atom "{", Atom "}") [join pretty_hardline members]
   in
+  let enum_member_name_layout = function
+    | Ast.Statement.EnumDeclaration.Identifier id -> identifier id
+    | Ast.Statement.EnumDeclaration.StringLiteral (loc, str_lit) ->
+      layout_node_with_comments_opt
+        loc
+        str_lit.Ast.StringLiteral.comments
+        (Atom str_lit.Ast.StringLiteral.raw)
+  in
   let initialized_member id value =
-    fuse [identifier id; pretty_space; Atom "="; pretty_space; value; Atom ","]
+    fuse [enum_member_name_layout id; pretty_space; Atom "="; pretty_space; value; Atom ","]
   in
   let unknown_members has_unknown_members =
     match has_unknown_members with
@@ -3071,7 +3079,7 @@ and enum_declaration ~def loc { Ast.Statement.EnumDeclaration.id; body; const_; 
           (_, { InitializedMember.id; init = (init_loc, { Ast.BigIntLiteral.raw; comments; _ }) })
         ->
         initialized_member id (layout_node_with_comments_opt init_loc comments (Atom raw))
-      | DefaultedMember (_, { DefaultedMember.id }) -> fuse [identifier id; Atom ","]
+      | DefaultedMember (_, { DefaultedMember.id }) -> fuse [enum_member_name_layout id; Atom ","]
     in
     fuse
       [

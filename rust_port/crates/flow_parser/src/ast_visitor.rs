@@ -1564,6 +1564,23 @@ pub trait AstVisitor<'ast, Loc: Dupe, Type: Dupe = Loc, C = &'ast Loc, E = !> {
         map_enum_bigint_member_default(self, member)
     }
 
+    fn enum_member_name(
+        &mut self,
+        id: &'ast ast::statement::enum_declaration::MemberName<Loc>,
+    ) -> Result<(), E> {
+        enum_member_name_default(self, id)
+    }
+
+    fn map_enum_member_name(
+        &mut self,
+        id: &'ast ast::statement::enum_declaration::MemberName<Loc>,
+    ) -> ast::statement::enum_declaration::MemberName<Loc>
+    where
+        Loc: Dupe,
+    {
+        map_enum_member_name_default(self, id)
+    }
+
     fn enum_member_identifier(&mut self, id: &'ast ast::Identifier<Loc, Loc>) -> Result<(), E> {
         enum_member_identifier_default(self, id)
     }
@@ -9465,7 +9482,7 @@ pub fn enum_defaulted_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     member: &'ast ast::statement::enum_declaration::DefaultedMember<Loc>,
 ) -> Result<(), E> {
     let ast::statement::enum_declaration::DefaultedMember { loc: _, id } = member;
-    visitor.enum_member_identifier(id)?;
+    visitor.enum_member_name(id)?;
     Ok(())
 }
 
@@ -9474,7 +9491,7 @@ pub fn map_enum_defaulted_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     member: &'ast ast::statement::enum_declaration::DefaultedMember<Loc>,
 ) -> ast::statement::enum_declaration::DefaultedMember<Loc> {
     let ast::statement::enum_declaration::DefaultedMember { loc, id } = member;
-    let id_ = visitor.map_enum_member_identifier(id);
+    let id_ = visitor.map_enum_member_name(id);
     ast::statement::enum_declaration::DefaultedMember {
         loc: loc.dupe(),
         id: id_,
@@ -9493,7 +9510,7 @@ pub fn enum_boolean_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         id,
         init: (_, init_val),
     } = member;
-    visitor.enum_member_identifier(id)?;
+    visitor.enum_member_name(id)?;
     visitor.boolean_literal(init_val)?;
     Ok(())
 }
@@ -9506,7 +9523,7 @@ pub fn map_enum_boolean_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     >,
 ) -> ast::statement::enum_declaration::InitializedMember<ast::BooleanLiteral<Loc>, Loc> {
     let ast::statement::enum_declaration::InitializedMember { loc, id, init } = member;
-    let id_ = visitor.map_enum_member_identifier(id);
+    let id_ = visitor.map_enum_member_name(id);
     let (init_loc, init_lit) = init;
     let init_lit_ = visitor.map_boolean_literal(init_lit);
     ast::statement::enum_declaration::InitializedMember {
@@ -9525,7 +9542,7 @@ pub fn enum_number_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         id,
         init: (_, init_val),
     } = member;
-    visitor.enum_member_identifier(id)?;
+    visitor.enum_member_name(id)?;
     visitor.number_literal(init_val)?;
     Ok(())
 }
@@ -9535,7 +9552,7 @@ pub fn map_enum_number_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     member: &'ast ast::statement::enum_declaration::InitializedMember<ast::NumberLiteral<Loc>, Loc>,
 ) -> ast::statement::enum_declaration::InitializedMember<ast::NumberLiteral<Loc>, Loc> {
     let ast::statement::enum_declaration::InitializedMember { loc, id, init } = member;
-    let id_ = visitor.map_enum_member_identifier(id);
+    let id_ = visitor.map_enum_member_name(id);
     let (init_loc, init_lit) = init;
     let init_lit_ = visitor.map_number_literal(init_lit);
     ast::statement::enum_declaration::InitializedMember {
@@ -9554,7 +9571,7 @@ pub fn enum_string_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         id,
         init: (_, init_val),
     } = member;
-    visitor.enum_member_identifier(id)?;
+    visitor.enum_member_name(id)?;
     visitor.string_literal(init_val)?;
     Ok(())
 }
@@ -9564,7 +9581,7 @@ pub fn map_enum_string_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     member: &'ast ast::statement::enum_declaration::InitializedMember<ast::StringLiteral<Loc>, Loc>,
 ) -> ast::statement::enum_declaration::InitializedMember<ast::StringLiteral<Loc>, Loc> {
     let ast::statement::enum_declaration::InitializedMember { loc, id, init } = member;
-    let id_ = visitor.map_enum_member_identifier(id);
+    let id_ = visitor.map_enum_member_name(id);
     let (init_loc, init_lit) = init;
     let init_lit_ = visitor.map_string_literal(init_lit);
     ast::statement::enum_declaration::InitializedMember {
@@ -9583,7 +9600,7 @@ pub fn enum_bigint_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
         id,
         init: (_, init_val),
     } = member;
-    visitor.enum_member_identifier(id)?;
+    visitor.enum_member_name(id)?;
     visitor.bigint_literal(init_val)?;
     Ok(())
 }
@@ -9593,13 +9610,47 @@ pub fn map_enum_bigint_member_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
     member: &'ast ast::statement::enum_declaration::InitializedMember<ast::BigIntLiteral<Loc>, Loc>,
 ) -> ast::statement::enum_declaration::InitializedMember<ast::BigIntLiteral<Loc>, Loc> {
     let ast::statement::enum_declaration::InitializedMember { loc, id, init } = member;
-    let id_ = visitor.map_enum_member_identifier(id);
+    let id_ = visitor.map_enum_member_name(id);
     let (init_loc, init_lit) = init;
     let init_lit_ = visitor.map_bigint_literal(init_lit);
     ast::statement::enum_declaration::InitializedMember {
         loc: loc.dupe(),
         id: id_,
         init: (init_loc.dupe(), init_lit_),
+    }
+}
+
+pub fn enum_member_name_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
+    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
+    id: &'ast ast::statement::enum_declaration::MemberName<Loc>,
+) -> Result<(), E> {
+    match id {
+        ast::statement::enum_declaration::MemberName::Identifier(ident) => {
+            visitor.enum_member_identifier(ident)?;
+        }
+        ast::statement::enum_declaration::MemberName::StringLiteral(_, lit) => {
+            visitor.string_literal(lit)?;
+        }
+    }
+    Ok(())
+}
+
+pub fn map_enum_member_name_default<'ast, Loc: Dupe, Type: Dupe, C, E>(
+    visitor: &mut (impl AstVisitor<'ast, Loc, Type, C, E> + ?Sized),
+    id: &'ast ast::statement::enum_declaration::MemberName<Loc>,
+) -> ast::statement::enum_declaration::MemberName<Loc> {
+    match id {
+        ast::statement::enum_declaration::MemberName::Identifier(ident) => {
+            ast::statement::enum_declaration::MemberName::Identifier(
+                visitor.map_enum_member_identifier(ident),
+            )
+        }
+        ast::statement::enum_declaration::MemberName::StringLiteral(loc, lit) => {
+            ast::statement::enum_declaration::MemberName::StringLiteral(
+                loc.dupe(),
+                visitor.map_string_literal(lit),
+            )
+        }
     }
 }
 

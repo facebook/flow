@@ -1191,7 +1191,7 @@ class ['loc] mapper =
     method enum_defaulted_member (member : 'loc Ast.Statement.EnumDeclaration.DefaultedMember.t) =
       let open Ast.Statement.EnumDeclaration.DefaultedMember in
       let (loc, { id = ident }) = member in
-      let id' = this#enum_member_identifier ident in
+      let id' = this#enum_member_name ident in
       if ident == id' then
         member
       else
@@ -1203,7 +1203,7 @@ class ['loc] mapper =
           ) =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
-      let id' = this#enum_member_identifier ident in
+      let id' = this#enum_member_name ident in
       let (init_loc, init_val) = init in
       let init_val' = this#boolean_literal init_val in
       if ident == id' && init_val == init_val' then
@@ -1216,7 +1216,7 @@ class ['loc] mapper =
         =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
-      let id' = this#enum_member_identifier ident in
+      let id' = this#enum_member_name ident in
       let (init_loc, init_val) = init in
       let init_val' = this#number_literal init_val in
       if ident == id' && init_val == init_val' then
@@ -1229,7 +1229,7 @@ class ['loc] mapper =
         =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
-      let id' = this#enum_member_identifier ident in
+      let id' = this#enum_member_name ident in
       let (init_loc, init_val) = init in
       let init_val' = this#string_literal init_val in
       if ident == id' && init_val == init_val' then
@@ -1242,13 +1242,29 @@ class ['loc] mapper =
         =
       let open Ast.Statement.EnumDeclaration.InitializedMember in
       let (loc, { id = ident; init }) = member in
-      let id' = this#enum_member_identifier ident in
+      let id' = this#enum_member_name ident in
       let (init_loc, init_val) = init in
       let init_val' = this#bigint_literal init_val in
       if ident == id' && init_val == init_val' then
         member
       else
         (loc, { id = id'; init = (init_loc, init_val') })
+
+    method enum_member_name (id : 'loc Ast.Statement.EnumDeclaration.member_name) =
+      let open Ast.Statement.EnumDeclaration in
+      match id with
+      | Identifier ident ->
+        let ident' = this#enum_member_identifier ident in
+        if ident == ident' then
+          id
+        else
+          Identifier ident'
+      | StringLiteral (loc, lit) ->
+        let lit' = this#string_literal lit in
+        if lit == lit' then
+          id
+        else
+          StringLiteral (loc, lit')
 
     method enum_member_identifier (id : ('loc, 'loc) Ast.Identifier.t) = this#identifier id
 

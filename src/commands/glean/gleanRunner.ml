@@ -652,12 +652,12 @@ class declaration_info_collector ~scope_info ~reader ~add_var_info ~add_member_i
         (fun member ->
           let (aloc, name) =
             match member with
-            | BooleanMember (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ })
-            | NumberMember (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ })
-            | StringMember (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ })
-            | BigIntMember (aloc, { InitializedMember.id = (_, Ast.Identifier.{ name; _ }); _ })
-            | DefaultedMember (aloc, { DefaultedMember.id = (_, Ast.Identifier.{ name; _ }); _ }) ->
-              (aloc, name)
+            | BooleanMember (aloc, { InitializedMember.id; _ })
+            | NumberMember (aloc, { InitializedMember.id; _ })
+            | StringMember (aloc, { InitializedMember.id; _ })
+            | BigIntMember (aloc, { InitializedMember.id; _ })
+            | DefaultedMember (aloc, { DefaultedMember.id }) ->
+              (aloc, Flow_ast_utils.string_of_enum_member_name id)
           in
           let loc = Parsing_heaps.Reader.loc_of_aloc ~reader aloc in
           add_member_info name loc type_)

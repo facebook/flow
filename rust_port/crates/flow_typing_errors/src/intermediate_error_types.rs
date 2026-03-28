@@ -1124,6 +1124,11 @@ pub enum Message<L: Dupe> {
         enum_reason: VirtualReason<L>,
     },
 
+    MessageEnumNonIdentifierMemberName {
+        member_name: String,
+        enum_reason: VirtualReason<L>,
+    },
+
     MessageInvalidEnumMemberName {
         member_name: String,
         enum_reason: VirtualReason<L>,

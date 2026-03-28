@@ -1001,17 +1001,22 @@ and Statement : sig
   end
 
   module EnumDeclaration : sig
+    type 'M member_name =
+      | Identifier of ('M, 'M) Identifier.t
+      | StringLiteral of ('M * 'M StringLiteral.t)
+    [@@deriving show]
+
     module DefaultedMember : sig
       type 'M t = 'M * 'M t'
 
-      and 'M t' = { id: ('M, 'M) Identifier.t } [@@deriving show]
+      and 'M t' = { id: 'M member_name } [@@deriving show]
     end
 
     module InitializedMember : sig
       type ('I, 'M) t = 'M * ('I, 'M) t'
 
       and ('I, 'M) t' = {
-        id: ('M, 'M) Identifier.t;
+        id: 'M member_name;
         init: 'M * 'I;
       }
       [@@deriving show]

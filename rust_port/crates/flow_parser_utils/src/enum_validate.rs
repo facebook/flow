@@ -13,6 +13,8 @@ use flow_parser::ast::statement::enum_declaration::DefaultedMember;
 use flow_parser::ast::statement::enum_declaration::ExplicitType;
 use flow_parser::ast::statement::enum_declaration::InitializedMember;
 use flow_parser::ast::statement::enum_declaration::Member;
+use flow_parser::ast::statement::enum_declaration::MemberName;
+use flow_parser::ast_utils;
 
 pub enum ValidationError<M: Dupe> {
     DuplicateMemberName {
@@ -55,6 +57,10 @@ pub enum ValidationError<M: Dupe> {
         loc: M,
         member_name: String,
     },
+    NonIdentifierMemberName {
+        loc: M,
+        member_name: String,
+    },
 }
 
 struct ClassifiedMembers {
@@ -86,7 +92,16 @@ fn member_name<M: Dupe>(member: &Member<M>) -> &str {
         | Member::NumberMember(InitializedMember { id, .. })
         | Member::StringMember(InitializedMember { id, .. })
         | Member::BigIntMember(InitializedMember { id, .. })
-        | Member::DefaultedMember(DefaultedMember { id, .. }) => &id.name,
+        | Member::DefaultedMember(DefaultedMember { id, .. }) => {
+            ast_utils::string_of_enum_member_name(id)
+        }
+    }
+}
+
+fn member_name_loc<M: Dupe>(id: &MemberName<M>) -> &M {
+    match id {
+        MemberName::Identifier(ident) => &ident.loc,
+        MemberName::StringLiteral(loc, _) => loc,
     }
 }
 
@@ -96,7 +111,7 @@ fn member_id_loc<M: Dupe>(member: &Member<M>) -> &M {
         | Member::NumberMember(InitializedMember { id, .. })
         | Member::StringMember(InitializedMember { id, .. })
         | Member::BigIntMember(InitializedMember { id, .. })
-        | Member::DefaultedMember(DefaultedMember { id, .. }) => &id.loc,
+        | Member::DefaultedMember(DefaultedMember { id, .. }) => member_name_loc(id),
     }
 }
 
@@ -156,17 +171,48 @@ fn check_duplicate_names<M: Dupe>(members: &[Member<M>]) -> Vec<ValidationError<
     errs
 }
 
+fn member_id<M: Dupe>(member: &Member<M>) -> &MemberName<M> {
+    match member {
+        Member::BooleanMember(InitializedMember { id, .. })
+        | Member::NumberMember(InitializedMember { id, .. })
+        | Member::StringMember(InitializedMember { id, .. })
+        | Member::BigIntMember(InitializedMember { id, .. })
+        | Member::DefaultedMember(DefaultedMember { id, .. }) => id,
+    }
+}
+
 fn check_member_names<M: Dupe>(members: &[Member<M>]) -> Vec<ValidationError<M>> {
     let is_a_to_z = |c: char| c >= 'a' && c <= 'z';
     let mut errs: Vec<ValidationError<M>> = Vec::new();
     for member in members {
-        let name = member_name(member);
-        if !name.is_empty() && is_a_to_z(name.as_bytes()[0] as char) {
-            let loc = member_id_loc(member).dupe();
-            errs.push(ValidationError::InvalidMemberName {
-                loc,
-                member_name: name.to_string(),
-            });
+        match member_id(member) {
+            MemberName::Identifier(_) => {
+                let name = member_name(member);
+                if !name.is_empty() && is_a_to_z(name.as_bytes()[0] as char) {
+                    let loc = member_id_loc(member).dupe();
+                    errs.push(ValidationError::InvalidMemberName {
+                        loc,
+                        member_name: name.to_string(),
+                    });
+                }
+            }
+            MemberName::StringLiteral(_, _) => {}
+        }
+    }
+    errs
+}
+
+fn check_non_identifier_member_names<M: Dupe>(members: &[Member<M>]) -> Vec<ValidationError<M>> {
+    let mut errs: Vec<ValidationError<M>> = Vec::new();
+    for member in members {
+        match member_id(member) {
+            MemberName::StringLiteral(loc, lit) => {
+                errs.push(ValidationError::NonIdentifierMemberName {
+                    loc: loc.dupe(),
+                    member_name: lit.raw.to_string(),
+                });
+            }
+            MemberName::Identifier(_) => {}
         }
     }
     errs
@@ -257,7 +303,7 @@ fn validate_explicit_boolean<M: Dupe>(members: &[Member<M>]) -> Vec<ValidationEr
             Member::DefaultedMember(DefaultedMember { loc, id }) => {
                 errors.push(ValidationError::BooleanMemberNotInitialized {
                     loc: loc.dupe(),
-                    member_name: id.name.to_string(),
+                    member_name: ast_utils::string_of_enum_member_name(id).to_string(),
                 });
             }
             _ => {
@@ -282,7 +328,7 @@ fn validate_explicit_number<M: Dupe>(members: &[Member<M>]) -> Vec<ValidationErr
             Member::DefaultedMember(DefaultedMember { loc, id }) => {
                 errors.push(ValidationError::NumberMemberNotInitialized {
                     loc: loc.dupe(),
-                    member_name: id.name.to_string(),
+                    member_name: ast_utils::string_of_enum_member_name(id).to_string(),
                 });
             }
             _ => {
@@ -377,7 +423,7 @@ fn validate_explicit_bigint<M: Dupe>(members: &[Member<M>]) -> Vec<ValidationErr
             Member::DefaultedMember(DefaultedMember { loc, id }) => {
                 errors.push(ValidationError::BigIntMemberNotInitialized {
                     loc: loc.dupe(),
-                    member_name: id.name.to_string(),
+                    member_name: ast_utils::string_of_enum_member_name(id).to_string(),
                 });
             }
             _ => {
@@ -473,7 +519,7 @@ fn validate_implicit_type<M: Dupe>(
                     Member::DefaultedMember(DefaultedMember { loc, id }) => {
                         errors.push(ValidationError::BooleanMemberNotInitialized {
                             loc: loc.dupe(),
-                            member_name: id.name.to_string(),
+                            member_name: ast_utils::string_of_enum_member_name(id).to_string(),
                         });
                     }
                     _ => {}
@@ -499,7 +545,7 @@ fn validate_implicit_type<M: Dupe>(
                     Member::DefaultedMember(DefaultedMember { loc, id }) => {
                         errors.push(ValidationError::NumberMemberNotInitialized {
                             loc: loc.dupe(),
-                            member_name: id.name.to_string(),
+                            member_name: ast_utils::string_of_enum_member_name(id).to_string(),
                         });
                     }
                     _ => {}
@@ -521,7 +567,7 @@ fn validate_implicit_type<M: Dupe>(
                     Member::DefaultedMember(DefaultedMember { loc, id }) => {
                         errors.push(ValidationError::BigIntMemberNotInitialized {
                             loc: loc.dupe(),
-                            member_name: id.name.to_string(),
+                            member_name: ast_utils::string_of_enum_member_name(id).to_string(),
                         });
                     }
                     _ => {}
@@ -666,10 +712,12 @@ pub fn classify_enum_body<M: Dupe>(body: &Body<M>, body_loc: &M) -> Classificati
         None => validate_implicit_type(body_loc, members),
     };
     let name_errors = check_member_names(members);
+    let non_id_errors = check_non_identifier_member_names(members);
     let value_errors = check_duplicate_values(members);
     let mut errors = dup_errors;
     errors.extend(type_errors);
     errors.extend(name_errors);
+    errors.extend(non_id_errors);
     errors.extend(value_errors);
     ClassificationResult {
         rep,

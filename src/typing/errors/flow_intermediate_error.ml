@@ -3644,6 +3644,14 @@ let to_printable_error :
         ref enum_reason;
         text ".";
       ]
+    | MessageEnumNonIdentifierMemberName { member_name; enum_reason } ->
+      [
+        text "Enum member names must be identifiers, not string literals. ";
+        code member_name;
+        text " is not a valid member name in ";
+        ref enum_reason;
+        text ".";
+      ]
     | MessageEnumDuplicateMemberName { member_name; prev_use_loc; enum_reason } ->
       [
         text "Enum member names need to be unique, but the name ";

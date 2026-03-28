@@ -1400,3 +1400,12 @@ pub fn export_specifiers_has_value_export<M: Dupe, T: Dupe>(
             == statement::ExportKind::ExportValue
     })
 }
+
+pub fn string_of_enum_member_name<M: Dupe>(
+    id: &statement::enum_declaration::MemberName<M>,
+) -> &str {
+    match id {
+        statement::enum_declaration::MemberName::Identifier(ident) => &ident.name,
+        statement::enum_declaration::MemberName::StringLiteral(_, lit) => &lit.value,
+    }
+}

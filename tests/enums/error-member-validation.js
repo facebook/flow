@@ -80,3 +80,22 @@ enum E14 { // ERROR
 enum E15 of symbol {
   A = "hello", // ERROR
 }
+
+// String literal member name (not allowed)
+enum E16 of string {
+  'MAIN' = "MAIN", // ERROR
+  'NOPREVIEW' = "NOPREVIEW", // ERROR
+  Good = "Good",
+}
+
+// Defaulted string literal member name (not allowed)
+enum E17 {
+  'FOO', // ERROR
+  Bar,
+}
+
+// String literal member name with special characters (not allowed)
+enum E18 of string {
+  'foo-bar' = "foo-bar", // ERROR
+  'has space' = "has space", // ERROR
+}

@@ -660,14 +660,18 @@ fn enum_of_boolean() {
                         S::enum_declarations::boolean_member(
                             S::enum_declarations::initialized_member(
                                 None,
-                                I::identifier(None, "A"),
+                                ast::statement::enum_declaration::MemberName::Identifier(
+                                    I::identifier(None, "A"),
+                                ),
                                 ast_builder::boolean_literal(None, true),
                             ),
                         ),
                         S::enum_declarations::boolean_member(
                             S::enum_declarations::initialized_member(
                                 None,
-                                I::identifier(None, "B"),
+                                ast::statement::enum_declaration::MemberName::Identifier(
+                                    I::identifier(None, "B"),
+                                ),
                                 ast_builder::boolean_literal(None, false),
                             ),
                         ),
@@ -714,14 +718,18 @@ fn enum_of_number() {
                         S::enum_declarations::number_member(
                             S::enum_declarations::initialized_member(
                                 None,
-                                I::identifier(None, "A"),
+                                ast::statement::enum_declaration::MemberName::Identifier(
+                                    I::identifier(None, "A"),
+                                ),
                                 ast_builder::number_literal(None, 1.0, "1"),
                             ),
                         ),
                         S::enum_declarations::number_member(
                             S::enum_declarations::initialized_member(
                                 None,
-                                I::identifier(None, "B"),
+                                ast::statement::enum_declaration::MemberName::Identifier(
+                                    I::identifier(None, "B"),
+                                ),
                                 ast_builder::number_literal(None, 2.0, "2"),
                             ),
                         ),
@@ -768,14 +776,18 @@ fn enum_of_string_initialized() {
                         S::enum_declarations::string_member(
                             S::enum_declarations::initialized_member(
                                 None,
-                                I::identifier(None, "A"),
+                                ast::statement::enum_declaration::MemberName::Identifier(
+                                    I::identifier(None, "A"),
+                                ),
                                 ast_builder::string_literal(None, "a"),
                             ),
                         ),
                         S::enum_declarations::string_member(
                             S::enum_declarations::initialized_member(
                                 None,
-                                I::identifier(None, "B"),
+                                ast::statement::enum_declaration::MemberName::Identifier(
+                                    I::identifier(None, "B"),
+                                ),
                                 ast_builder::string_literal(None, "b"),
                             ),
                         ),
@@ -820,10 +832,20 @@ fn enum_of_string_defaulted() {
                     Loc::none(),
                     Arc::from([
                         S::enum_declarations::defaulted_member_of(
-                            S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
+                            S::enum_declarations::defaulted_member(
+                                None,
+                                ast::statement::enum_declaration::MemberName::Identifier(
+                                    I::identifier(None, "A"),
+                                ),
+                            ),
                         ),
                         S::enum_declarations::defaulted_member_of(
-                            S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
+                            S::enum_declarations::defaulted_member(
+                                None,
+                                ast::statement::enum_declaration::MemberName::Identifier(
+                                    I::identifier(None, "B"),
+                                ),
+                            ),
                         ),
                     ]),
                     et,
@@ -857,10 +879,20 @@ fn enum_of_symbol() {
                 Loc::none(),
                 Arc::from([
                     S::enum_declarations::defaulted_member_of(
-                        S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
+                        S::enum_declarations::defaulted_member(
+                            None,
+                            ast::statement::enum_declaration::MemberName::Identifier(
+                                I::identifier(None, "A"),
+                            ),
+                        ),
                     ),
                     S::enum_declarations::defaulted_member_of(
-                        S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
+                        S::enum_declarations::defaulted_member(
+                            None,
+                            ast::statement::enum_declaration::MemberName::Identifier(
+                                I::identifier(None, "B"),
+                            ),
+                        ),
                     ),
                 ]),
                 Some((
@@ -891,10 +923,20 @@ fn enum_with_unknown_members() {
                 Loc::none(),
                 Arc::from([
                     S::enum_declarations::defaulted_member_of(
-                        S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
+                        S::enum_declarations::defaulted_member(
+                            None,
+                            ast::statement::enum_declaration::MemberName::Identifier(
+                                I::identifier(None, "A"),
+                            ),
+                        ),
                     ),
                     S::enum_declarations::defaulted_member_of(
-                        S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
+                        S::enum_declarations::defaulted_member(
+                            None,
+                            ast::statement::enum_declaration::MemberName::Identifier(
+                                I::identifier(None, "B"),
+                            ),
+                        ),
                     ),
                 ]),
                 Some((
@@ -926,10 +968,20 @@ fn enum_with_internal_comment() {
                 Loc::none(),
                 Arc::from([
                     S::enum_declarations::defaulted_member_of(
-                        S::enum_declarations::defaulted_member(None, I::identifier(None, "A")),
+                        S::enum_declarations::defaulted_member(
+                            None,
+                            ast::statement::enum_declaration::MemberName::Identifier(
+                                I::identifier(None, "A"),
+                            ),
+                        ),
                     ),
                     S::enum_declarations::defaulted_member_of(
-                        S::enum_declarations::defaulted_member(None, I::identifier(None, "B")),
+                        S::enum_declarations::defaulted_member(
+                            None,
+                            ast::statement::enum_declaration::MemberName::Identifier(
+                                I::identifier(None, "B"),
+                            ),
+                        ),
                     ),
                 ]),
                 Some((

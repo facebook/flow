@@ -44,6 +44,10 @@ type 'M validation_error =
       loc: 'M;
       member_name: string;
     }
+  | NonIdentifierMemberName of {
+      loc: 'M;
+      member_name: string;
+    }
 
 type 'M classified_members = {
   boolean_count: int;
@@ -73,21 +77,26 @@ type 'M classified_result = {
 
 let member_name (type a) (member : a member) : string =
   match member with
-  | BooleanMember (_, { InitializedMember.id = (_, { Flow_ast.Identifier.name; _ }); _ })
-  | NumberMember (_, { InitializedMember.id = (_, { Flow_ast.Identifier.name; _ }); _ })
-  | StringMember (_, { InitializedMember.id = (_, { Flow_ast.Identifier.name; _ }); _ })
-  | BigIntMember (_, { InitializedMember.id = (_, { Flow_ast.Identifier.name; _ }); _ })
-  | DefaultedMember (_, { DefaultedMember.id = (_, { Flow_ast.Identifier.name; _ }) }) ->
-    name
+  | BooleanMember (_, { InitializedMember.id; _ })
+  | NumberMember (_, { InitializedMember.id; _ })
+  | StringMember (_, { InitializedMember.id; _ })
+  | BigIntMember (_, { InitializedMember.id; _ })
+  | DefaultedMember (_, { DefaultedMember.id }) ->
+    Flow_ast_utils.string_of_enum_member_name id
+
+let member_name_loc (type a) (id : a member_name) : a =
+  match id with
+  | Identifier (loc, _) -> loc
+  | StringLiteral (loc, _) -> loc
 
 let member_id_loc (type a) (member : a member) : a =
   match member with
-  | BooleanMember (_, { InitializedMember.id = (loc, _); _ })
-  | NumberMember (_, { InitializedMember.id = (loc, _); _ })
-  | StringMember (_, { InitializedMember.id = (loc, _); _ })
-  | BigIntMember (_, { InitializedMember.id = (loc, _); _ })
-  | DefaultedMember (_, { DefaultedMember.id = (loc, _) }) ->
-    loc
+  | BooleanMember (_, { InitializedMember.id; _ })
+  | NumberMember (_, { InitializedMember.id; _ })
+  | StringMember (_, { InitializedMember.id; _ })
+  | BigIntMember (_, { InitializedMember.id; _ })
+  | DefaultedMember (_, { DefaultedMember.id }) ->
+    member_name_loc id
 
 let member_loc (type a) (member : a member) : a =
   match member with
@@ -130,16 +139,39 @@ let check_duplicate_names members =
   in
   List.rev errors
 
+let member_id (type a) (member : a member) : a member_name =
+  match member with
+  | BooleanMember (_, { InitializedMember.id; _ })
+  | NumberMember (_, { InitializedMember.id; _ })
+  | StringMember (_, { InitializedMember.id; _ })
+  | BigIntMember (_, { InitializedMember.id; _ })
+  | DefaultedMember (_, { DefaultedMember.id }) ->
+    id
+
 let check_member_names members =
   let is_a_to_z c = c >= 'a' && c <= 'z' in
   List.fold_left
     (fun errs member ->
-      let name = member_name member in
-      if String.length name > 0 && is_a_to_z name.[0] then
-        let loc = member_id_loc member in
-        InvalidMemberName { loc; member_name = name } :: errs
-      else
-        errs)
+      match member_id member with
+      | Identifier _ ->
+        let name = member_name member in
+        if String.length name > 0 && is_a_to_z name.[0] then
+          let loc = member_id_loc member in
+          InvalidMemberName { loc; member_name = name } :: errs
+        else
+          errs
+      | StringLiteral _ -> errs)
+    []
+    members
+  |> List.rev
+
+let check_non_identifier_member_names members =
+  List.fold_left
+    (fun errs member ->
+      match member_id member with
+      | StringLiteral (loc, { Flow_ast.StringLiteral.raw; _ }) ->
+        NonIdentifierMemberName { loc; member_name = raw } :: errs
+      | Identifier _ -> errs)
     []
     members
   |> List.rev
@@ -208,8 +240,11 @@ let validate_explicit_boolean members =
     (fun member ->
       match member with
       | BooleanMember _ -> ()
-      | DefaultedMember (loc, { DefaultedMember.id = (_, { Flow_ast.Identifier.name; _ }) }) ->
-        errors := BooleanMemberNotInitialized { loc; member_name = name } :: !errors
+      | DefaultedMember (loc, { DefaultedMember.id }) ->
+        errors :=
+          BooleanMemberNotInitialized
+            { loc; member_name = Flow_ast_utils.string_of_enum_member_name id }
+          :: !errors
       | _ ->
         let loc = member_loc member in
         let name = member_name member in
@@ -225,8 +260,11 @@ let validate_explicit_number members =
     (fun member ->
       match member with
       | NumberMember _ -> ()
-      | DefaultedMember (loc, { DefaultedMember.id = (_, { Flow_ast.Identifier.name; _ }) }) ->
-        errors := NumberMemberNotInitialized { loc; member_name = name } :: !errors
+      | DefaultedMember (loc, { DefaultedMember.id }) ->
+        errors :=
+          NumberMemberNotInitialized
+            { loc; member_name = Flow_ast_utils.string_of_enum_member_name id }
+          :: !errors
       | _ ->
         let loc = member_loc member in
         let name = member_name member in
@@ -309,8 +347,11 @@ let validate_explicit_bigint members =
     (fun member ->
       match member with
       | BigIntMember _ -> ()
-      | DefaultedMember (loc, { DefaultedMember.id = (_, { Flow_ast.Identifier.name; _ }) }) ->
-        errors := BigIntMemberNotInitialized { loc; member_name = name } :: !errors
+      | DefaultedMember (loc, { DefaultedMember.id }) ->
+        errors :=
+          BigIntMemberNotInitialized
+            { loc; member_name = Flow_ast_utils.string_of_enum_member_name id }
+          :: !errors
       | _ ->
         let loc = member_loc member in
         let name = member_name member in
@@ -381,8 +422,11 @@ let validate_implicit_type ~body_loc members =
     List.iter
       (fun member ->
         match member with
-        | DefaultedMember (loc, { DefaultedMember.id = (_, { Flow_ast.Identifier.name; _ }) }) ->
-          errors := BooleanMemberNotInitialized { loc; member_name = name } :: !errors
+        | DefaultedMember (loc, { DefaultedMember.id }) ->
+          errors :=
+            BooleanMemberNotInitialized
+              { loc; member_name = Flow_ast_utils.string_of_enum_member_name id }
+            :: !errors
         | _ -> ())
       members;
     let lit =
@@ -405,8 +449,11 @@ let validate_implicit_type ~body_loc members =
     List.iter
       (fun member ->
         match member with
-        | DefaultedMember (loc, { DefaultedMember.id = (_, { Flow_ast.Identifier.name; _ }) }) ->
-          errors := NumberMemberNotInitialized { loc; member_name = name } :: !errors
+        | DefaultedMember (loc, { DefaultedMember.id }) ->
+          errors :=
+            NumberMemberNotInitialized
+              { loc; member_name = Flow_ast_utils.string_of_enum_member_name id }
+            :: !errors
         | _ -> ())
       members;
     let truthy =
@@ -426,8 +473,11 @@ let validate_implicit_type ~body_loc members =
     List.iter
       (fun member ->
         match member with
-        | DefaultedMember (loc, { DefaultedMember.id = (_, { Flow_ast.Identifier.name; _ }) }) ->
-          errors := BigIntMemberNotInitialized { loc; member_name = name } :: !errors
+        | DefaultedMember (loc, { DefaultedMember.id }) ->
+          errors :=
+            BigIntMemberNotInitialized
+              { loc; member_name = Flow_ast_utils.string_of_enum_member_name id }
+            :: !errors
         | _ -> ())
       members;
     let truthy =
@@ -555,10 +605,11 @@ let classify_enum_body (body : 'M Body.t) ~body_loc : 'M classification_result =
     | None -> validate_implicit_type ~body_loc members
   in
   let name_errors = check_member_names members in
+  let non_id_errors = check_non_identifier_member_names members in
   let value_errors = check_duplicate_values members in
   {
     rep;
     members = member_names;
     has_unknown_members;
-    errors = dup_errors @ type_errors @ name_errors @ value_errors;
+    errors = dup_errors @ type_errors @ name_errors @ non_id_errors @ value_errors;
   }
