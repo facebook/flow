@@ -38,6 +38,38 @@ Like [`ambiguous-object-type`](#toc-ambiguous-object-type), except triggers even
 ### `nonstrict-import` {#toc-nonstrict-import}
 Used in conjunction with [Flow Strict](../../strict/). Triggers when importing a non `@flow strict` module. When enabled, dependencies of a `@flow strict` module must also be `@flow strict`.
 
+### `react-intrinsic-overlap` {#toc-react-intrinsic-overlap}
+Triggers when a local definition shares its name with an intrinsic JSX element (such as `div`, `span`, or `input`) and has a type that could be used as a React component. Because JSX treats lowercase element names as intrinsics, writing `<div />` always refers to the HTML element, never to a local binding called `div`. If the local binding is a function, class, abstract component, callable object, or `mixed`, this overlap is likely a mistake that leads to confusing behavior.
+
+This lint is off by default.
+
+A local function whose name overlaps with an intrinsic:
+```js flow-check
+// flowlint react-intrinsic-overlap:error
+import * as React from 'react';
+
+declare function div(): React.Node; // ERROR
+<div />;
+```
+
+A local variable with a non-component type does not trigger the lint, because there is no ambiguity:
+```js flow-check
+// flowlint react-intrinsic-overlap:error
+import * as React from 'react';
+
+const div = 2 / 3;
+<div />; // OK
+```
+
+To fix the error, rename the local definition so it does not collide with an intrinsic element name:
+```js flow-check
+// flowlint react-intrinsic-overlap:error
+import * as React from 'react';
+
+declare function MyDiv(): React.Node;
+<MyDiv />;
+```
+
 ### `sketchy-null` {#toc-sketchy-null}
 Triggers when you do an existence check on a value that can be either null/undefined or falsey.
 
