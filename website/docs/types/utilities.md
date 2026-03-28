@@ -426,6 +426,66 @@ null as MaybeName; // Works
 null as Name; // Error! `null` can't be annotated as Name because Name is not a maybe type
 ```
 
+## `NoInfer<T>` <SinceVersion version="0.230" /> {#toc-noinfer}
+
+`NoInfer<T>` prevents a type parameter from being inferred from the wrapped position.
+When Flow infers a type parameter `T`, it normally considers every position where `T` appears.
+Wrapping a position in `NoInfer` excludes it from inference, so `T` is determined only by the remaining (unwrapped) positions.
+The resulting type is still `T` — `NoInfer` only affects inference, not the type itself.
+
+This is useful when a generic function has multiple parameters that share a type parameter, but you want only some of them to drive inference. Without `NoInfer`, Flow may widen the type parameter to accommodate all arguments, allowing mismatches to go undetected.
+
+Consider a function where both parameters use the same type parameter `T`:
+
+```js flow-check
+declare function assertEqual<T>(actual: T, expected: T): void;
+
+assertEqual('hello', 42); // No error: T is inferred as string | number
+```
+
+Because both arguments contribute to inference, Flow widens `T` to `string | number`, and the call succeeds even though the two arguments have different types.
+
+By wrapping the `expected` parameter with `NoInfer`, you can ensure `T` is inferred only from `actual`:
+
+```js flow-check
+declare function assertEqual<T>(actual: T, expected: NoInfer<T>): void;
+
+assertEqual('hello', 'world'); // OK
+assertEqual('hello', 42); // Error!
+```
+
+Now `T` is inferred as `string` from the first argument alone, and `42` fails to match.
+
+**Nested types**
+
+`NoInfer` also works when `T` appears inside a more complex type. Any occurrence of the type parameter within `NoInfer` is excluded from inference:
+
+```js flow-check
+declare function createSignal<T>(
+  initialValue: T,
+  defaultValue: NoInfer<T>,
+): void;
+
+createSignal('hello', 'default'); // OK
+createSignal('hello', 42); // Error!
+```
+
+**Callbacks**
+
+You can use `NoInfer` in callback parameter positions to prevent the callback from influencing the type parameter while still receiving the inferred type:
+
+```js flow-check
+declare function filter<T>(
+  items: Array<T>,
+  predicate: (item: NoInfer<T>) => boolean,
+): Array<T>;
+
+const numbers: Array<number> = [1, 2, 3];
+filter(numbers, (item) => item > 1); // OK
+```
+
+Here `T` is inferred as `number` from the `items` argument. The `predicate` callback receives `item` typed as `number` but does not participate in inferring `T`.
+
 ## `$KeyMirror<O>` {#toc-keymirror}
 
 `$KeyMirror<Obj>` is a special case of `$ObjMapi<Obj, F>`, when `F` is the identity
