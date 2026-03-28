@@ -143,7 +143,12 @@ module.exports = {
     {
       type: 'category',
       label: 'Flow CLI',
-      items: ['cli/index', 'cli/coverage', 'cli/annotate-exports'],
+      items: [
+        'cli/index',
+        'cli/apply-code-action',
+        'cli/coverage',
+        'cli/annotate-exports',
+      ],
     },
     {
       type: 'category',
