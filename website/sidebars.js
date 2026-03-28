@@ -133,6 +133,7 @@ module.exports = {
         'linting/index',
         'linting/flowlint-comments',
         'linting/rule-reference',
+        'linting/strict-import-export-lints',
       ],
     },
     {
