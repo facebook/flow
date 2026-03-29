@@ -675,6 +675,26 @@ literals as being the types that the Relay compiler emitted for that
 fragment/mutaiton/query/etc. This allows users to omit type parameters from
 common Relay APIs like `useFragment` and `usePreloadedQuery`.
 
+### relay_integration.esmodules {#toc-relay-integration-esmodules}
+
+Type: `boolean`
+
+When this option is enabled along with `relay_integration`, Flow treats the
+types of `graphql` tagged template literals as ES module default exports rather
+than CommonJS `require` imports. Use this when your Relay compiler is configured
+to output ES modules (e.g. with the `eagerEsModules` option).
+
+By default, Flow's Relay integration assumes that Relay artifact files use
+CommonJS (`module.exports = ...`). When `relay_integration.esmodules` is
+enabled, Flow instead resolves the types as `import default` from the artifact
+module, matching the `export default ...` syntax that Relay emits in ESM mode.
+
+```
+[options]
+relay_integration=true
+relay_integration.esmodules=true
+```
+
 ### relay_integration.excludes {#toc-relay-integration-excludes}
 
 Type: `string`
