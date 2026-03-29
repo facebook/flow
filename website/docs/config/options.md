@@ -545,6 +545,82 @@ ignore the builtin library definitions.
 
 The default value is `false`.
 
+### no_unchecked_indexed_access <SinceVersion version="0.257.0" /> {#toc-no-unchecked-indexed-access}
+
+Type: `boolean`
+
+Set this to `true` to make Flow include `void` in the result type of indexing
+into an array or object with a dictionary. This catches cases where you access
+an element that may not exist at runtime, such as an out-of-bounds array index
+or an absent dictionary key.
+
+By default, accessing an element of an `Array<string>` returns `string`. With
+this option enabled, the same access returns `string | void`, forcing you to
+handle the `undefined` case:
+
+```js
+const items: Array<string> = ["hello", "world"];
+const item = items[0]; // type is `string | void` when enabled
+
+// You must refine before using it as a string:
+if (item != null) {
+  item.toUpperCase(); // OK
+}
+```
+
+This option affects the following indexed access patterns:
+
+**Arrays** — accessing elements by index on `Array<T>` or `$ReadOnlyArray<T>`
+returns `T | void` instead of `T`:
+
+```js
+declare const arr: Array<string>;
+const x = arr[0]; // string | void
+const y = arr[someIndex]; // string | void
+```
+
+**Objects with indexers** — accessing properties on dictionary objects (objects
+with an indexer like `{[string]: T}`) returns `T | void` instead of `T`, for
+both bracket and dot access on keys not explicitly present in the type:
+
+```js
+declare const dict: {[string]: number};
+const a = dict["key"]; // number | void
+const b = dict.key; // number | void
+```
+
+**Tuples with dynamic keys** — accessing a tuple with a non-literal key returns
+`T | void`:
+
+```js
+declare const tuple: [number, string, boolean];
+declare const i: number;
+const val = tuple[i]; // number | string | boolean | void
+```
+
+Note that tuple access with a *literal* index is unaffected — `tuple[0]`
+still returns the precise element type (or an out-of-bounds error):
+
+```js
+declare const tuple: [number, string, boolean];
+tuple[0]; // number (not number | void)
+tuple[1]; // string
+```
+
+**Type-level indexed access is not affected.** Using indexed access types like
+`T[K]` in type annotations continues to return the element type without `void`:
+
+```js
+type Items = Array<string>;
+type Item = Items[number]; // string, not string | void
+```
+
+Writing `undefined` into an array or dictionary that does not include `void` in
+its value type is still an error, regardless of this option. The option only
+affects *reads*.
+
+The default value for `no_unchecked_indexed_access` is `false`.
+
 ### react.runtime <SinceVersion version="0.123.0" /> {#toc-react-runtime}
 
 Type: `automatic | classic`
