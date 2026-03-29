@@ -147,6 +147,24 @@ with refinements.
 
 The default value is `false`.
 
+### experimental.strict_es6_import_export {#toc-experimental-strict-es6-import-export}
+
+Type: `boolean`
+
+Set this to `true` to enable a collection of lint rules that enforce strict ES6
+module import and export practices. When enabled, Flow detects several patterns
+that can cause confusing behavior or interop issues in ES modules.
+
+These lint rules only produce errors when this config option is enabled.
+Without `experimental.strict_es6_import_export=true`, the rules have no effect
+even if they are configured in the `[lints]` section. Each rule can be set to
+`error`, `warn`, or `off` independently.
+
+See the [strict import/export lints](../../linting/strict-import-export-lints)
+page for the full list of rules, detailed examples, and explanations.
+
+The default value for `experimental.strict_es6_import_export` is `false`.
+
 ### format.bracket_spacing {#toc-format-bracket-spacing}
 
 Type: `boolean`
