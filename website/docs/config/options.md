@@ -639,6 +639,102 @@ affects *reads*.
 
 The default value for `no_unchecked_indexed_access` is `false`.
 
+### react.custom_jsx_typing <SinceVersion version="0.245.0" /> {#toc-react-custom-jsx-typing}
+
+Type: `boolean`
+
+Set this to `true` to replace Flow's built-in React JSX type checking with a
+user-defined function type. When enabled, Flow type-checks JSX element creation
+by calling your globally-defined `React$CustomJSXFactory` type instead of the
+built-in `React.createElement` typing.
+
+This is useful when working in repositories (such as the React repo itself) where
+components and elements do not conform to Flow's built-in React component model.
+By defining your own factory type, you control exactly how the component, props,
+and children are checked.
+
+#### Defining `React$CustomJSXFactory`
+
+When `react.custom_jsx_typing` is enabled, you must define a global type called
+`React$CustomJSXFactory`. This type should be a function type whose parameters
+correspond to the arguments of a JSX element creation call:
+
+1. **component** -- the component being rendered (the JSX tag)
+2. **props** -- an object type for the element's attributes
+3. **children** -- one parameter per child passed between the opening and closing tags
+
+The return type determines the type of the JSX expression.
+
+For example, a permissive definition that accepts anything:
+
+```js
+declare type React$CustomJSXFactory = (
+  component: any,
+  props: any,
+  ...children: Array<any>
+) => React$MixedElement;
+```
+
+A more restrictive definition that enforces specific types:
+
+```js
+declare type React$CustomJSXFactory = (
+  component: React$ElementType,
+  props: {name: string},
+  child1: number,
+  child2: string,
+) => React$MixedElement;
+```
+
+With the restrictive definition above, Flow checks that JSX elements match the
+exact parameter types -- the component must be a `React$ElementType`, props must
+have a `name` property of type `string`, and exactly two children of types
+`number` and `string` must be provided.
+
+#### How it works
+
+When Flow encounters a JSX expression like `<Com foo="bar">{1}{2}</Com>`, it
+desugars the element creation into a call to your `React$CustomJSXFactory` type:
+
+```js
+// JSX:
+<Com foo="bar">{1}{2}</Com>
+
+// Checked as if calling:
+React$CustomJSXFactory(Com, {foo: "bar"}, 1, 2)
+```
+
+Each child is passed as a separate argument (not collected into an array), so
+your factory type can enforce per-child types if needed.
+
+Flow still validates that `React.createElement` is in scope and is compatible
+with your `React$CustomJSXFactory` type when using the classic React runtime.
+If `React` or `React.createElement` is missing or incompatible, Flow reports
+an error in addition to checking the JSX against your custom factory type.
+
+#### Configuration
+
+Add the following to your `.flowconfig`:
+
+```
+[options]
+react.custom_jsx_typing=true
+```
+
+Then define `React$CustomJSXFactory` as a global type in a
+[library definition](../../libdefs/creation) file (`.js.flow`):
+
+```js
+// flow-typed/custom-jsx.js.flow
+declare type React$CustomJSXFactory = (
+  component: any,
+  props: any,
+  ...children: Array<any>
+) => React$MixedElement;
+```
+
+The default value for `react.custom_jsx_typing` is `false`.
+
 ### react.runtime <SinceVersion version="0.123.0" /> {#toc-react-runtime}
 
 Type: `automatic | classic`
