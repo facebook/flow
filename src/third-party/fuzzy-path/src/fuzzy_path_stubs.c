@@ -109,6 +109,51 @@ value fuzzy_add_candidates_array(value matcher, value candidates) {
   CAMLreturn (Val_unit);
 }
 
+value fuzzy_init_pair_from_arrays(value candidates_a, value candidates_b) {
+  CAMLparam2(candidates_a, candidates_b);
+  CAMLlocal1(result);
+  size_t count_a = Wosize_val(candidates_a);
+  size_t count_b = Wosize_val(candidates_b);
+
+  const char **strs_a = (const char **)malloc(count_a * sizeof(const char *));
+  int *weights_a = (int *)malloc(count_a * sizeof(int));
+  const char **strs_b = (const char **)malloc(count_b * sizeof(const char *));
+  int *weights_b = (int *)malloc(count_b * sizeof(int));
+  if (strs_a == NULL || weights_a == NULL || strs_b == NULL || weights_b == NULL) {
+    free(strs_a);
+    free(weights_a);
+    free(strs_b);
+    free(weights_b);
+    caml_raise_out_of_memory();
+  }
+  for (size_t i = 0; i < count_a; i++) {
+    value pair = Field(candidates_a, i);
+    strs_a[i] = String_val(Field(pair, 0));
+    weights_a[i] = Int_val(Field(pair, 1));
+  }
+  for (size_t i = 0; i < count_b; i++) {
+    value pair = Field(candidates_b, i);
+    strs_b[i] = String_val(Field(pair, 0));
+    weights_b[i] = Int_val(Field(pair, 1));
+  }
+
+  matcher_t *ma = NULL;
+  matcher_t *mb = NULL;
+  matcher_init_pair_bulk(
+    &ma, strs_a, weights_a, count_a,
+    &mb, strs_b, weights_b, count_b);
+
+  free(strs_a);
+  free(weights_a);
+  free(strs_b);
+  free(weights_b);
+
+  result = caml_alloc_tuple(2);
+  Store_field(result, 0, alloc_matcher(ma));
+  Store_field(result, 1, alloc_matcher(mb));
+  CAMLreturn(result);
+}
+
 value fuzzy_remove_candidate(value matcher, value candidate) {
   CAMLparam2(matcher, candidate);
   matcher_remove_candidate(Matcher_val(matcher), String_val(candidate));
