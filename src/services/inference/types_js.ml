@@ -1832,6 +1832,7 @@ let init_with_initial_state
     ~options
     ~restore_dependency_info
     ?(saved_duplicate_providers = SMap.empty)
+    ?saved_export_index
     env
     (parsed, unparsed, packages, dirty_modules, local_errors) =
   let abstract_reader = Abstract_state_reader.Mutator_state_reader reader in
@@ -1921,14 +1922,25 @@ let init_with_initial_state
 
   let%lwt exports =
     if Options.autoimports options then (
-      Hh_logger.info "Indexing files";
-      let%lwt exports =
-        with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
-            Export_service.init ~workers ~reader ~libs:lib_exports parsed
-        )
-      in
-      Hh_logger.info "Indexing files Done";
-      Lwt.return (Some exports)
+      match saved_export_index with
+      | Some index ->
+        Hh_logger.info "Indexing files (from saved state)";
+        let%lwt exports =
+          with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+              Lwt.return (Export_search.init index)
+          )
+        in
+        Hh_logger.info "Indexing files Done";
+        Lwt.return (Some exports)
+      | None ->
+        Hh_logger.info "Indexing files";
+        let%lwt exports =
+          with_memory_timer_lwt ~options "Indexing" profiling (fun () ->
+              Export_service.init ~workers ~reader ~libs:lib_exports parsed
+          )
+        in
+        Hh_logger.info "Indexing files Done";
+        Lwt.return (Some exports)
     ) else
       Lwt.return None
   in
@@ -2202,6 +2214,7 @@ let init_from_direct_saved_state ~profiling ~workers ~saved_state ~updates ?env 
     node_modules_containers;
     dependency_info;
     duplicate_providers;
+    export_index;
   } =
     saved_state
   in
@@ -2284,6 +2297,12 @@ let init_from_direct_saved_state ~profiling ~workers ~saved_state ~updates ?env 
             Lwt.return dependency_info
         ))
       ~saved_duplicate_providers:duplicate_providers
+      ?saved_export_index:
+        ( if Options.saved_state_persist_export_index options then
+          export_index
+        else
+          None
+        )
       env
       (parsed_files, unparsed_files, package_json_files, dirty_modules, local_errors)
   in

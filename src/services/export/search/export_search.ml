@@ -61,6 +61,8 @@ let partition_candidates index =
     ~init:{ values = []; types = [] }
     index
 
+let get_index t = t.index
+
 let init index =
   let { values; types } = partition_candidates index in
   let value_matcher = Fuzzy_path.init values in
