@@ -53,14 +53,14 @@ use flow_typing_flow_common::flow_js_utils::add_output_non_speculating;
 ///
 /// returns (success, parse and signature errors, exports)
 fn load_lib_files(
-    ccx: &Rc<flow_typing_context::ComponentT>,
+    ccx: &Rc<flow_typing_context::ComponentT<'static>>,
     options: &Options,
     reader: &SharedMem,
     files: &[(Option<String>, String)],
 ) -> (
     bool,
     MasterContext,
-    Option<Context>,
+    Option<Context<'static>>,
     (Exports, Vec<(FlowProjects, Exports)>),
 ) {
     let mut ok = true;
@@ -107,8 +107,8 @@ fn load_lib_files(
                         })
                             as Box<dyn FnOnce() -> Rc<ALocTable>>))
                     },
-                    Rc::new(move |_| ResolvedRequire::MissingModule),
-                    Rc::new(move |_cx: Context| Builtins::empty()),
+                    Rc::new(move |_cx: &Context, _| ResolvedRequire::MissingModule),
+                    Rc::new(move |_cx: &Context| Builtins::empty()),
                 );
                 let file_keys_with_comments: Vec<(FileKey, &[flow_parser::ast::Comment<Loc>])> =
                     ordered_asts
@@ -222,7 +222,6 @@ pub fn init(
             );
             // Break Rc cycles in the init Context before dropping it.
             cx.post_inference_cleanup();
-            flow_typing_utils::annotation_inference::clear_dst_cx();
             let mut init = FlowOrdMap::new();
             for (file, _) in aloc_tables.iter() {
                 init.insert(file.dupe(), ErrorSet::empty());

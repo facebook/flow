@@ -40,14 +40,19 @@ use crate::normalizer::State;
 pub struct NoFlowInput;
 
 impl NormalizerInput for NoFlowInput {
-    fn eval(
-        _cx: &Context,
-        env: &mut Env<'_>,
+    fn eval<'cx>(
+        _cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
         state: &mut State,
         _should_eval: bool,
-        _cont: impl FnOnce(&mut Env<'_>, &mut State, &Type) -> Result<ALocTy, Error>,
-        _default: impl FnOnce(&mut Env<'_>, &mut State, &Type) -> Result<ALocTy, Error>,
-        non_eval: impl FnOnce(&mut Env<'_>, &mut State, &Type, &Destructor) -> Result<ALocTy, Error>,
+        _cont: impl FnOnce(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<ALocTy, Error>,
+        _default: impl FnOnce(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<ALocTy, Error>,
+        non_eval: impl FnOnce(
+            &mut Env<'_, 'cx>,
+            &mut State,
+            &Type,
+            &Destructor,
+        ) -> Result<ALocTy, Error>,
         x: (&Type, &flow_typing_type::type_::TypeDestructorT, &eval::Id),
     ) -> Result<ALocTy, Error> {
         let (t, defer_use_t, _id) = x;
@@ -55,25 +60,25 @@ impl NormalizerInput for NoFlowInput {
         non_eval(env, state, t, d)
     }
 
-    fn keys<A>(
-        _cx: &Context,
-        env: &mut Env<'_>,
+    fn keys<'cx, A>(
+        _cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
         state: &mut State,
         _should_evaluate: bool,
-        _cont: impl FnOnce(&mut Env<'_>, &mut State, Type) -> A,
-        default: impl FnOnce(&mut Env<'_>, &mut State) -> A,
+        _cont: impl FnOnce(&mut Env<'_, 'cx>, &mut State, Type) -> A,
+        default: impl FnOnce(&mut Env<'_, 'cx>, &mut State) -> A,
         _reason: Reason,
         _t: Type,
     ) -> A {
         default(env, state)
     }
 
-    fn typeapp<A>(
-        _cx: &Context,
-        env: &mut Env<'_>,
+    fn typeapp<'cx, A>(
+        _cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
         state: &mut State,
-        _cont: &mut dyn FnMut(&mut Env<'_>, &mut State, &Type) -> A,
-        type_: &mut dyn FnMut(&mut Env<'_>, &mut State, &Type) -> A,
+        _cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> A,
+        type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> A,
         app: impl FnOnce(A, Vec<A>) -> A,
         _from_value: bool,
         _reason: Reason,
@@ -85,11 +90,11 @@ impl NormalizerInput for NoFlowInput {
         app(c, targs)
     }
 
-    fn builtin_type<A>(
-        cx: &Context,
-        env: &mut Env<'_>,
+    fn builtin_type<'cx, A>(
+        cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_>, &mut State, Type) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
         reason: Reason,
         name: &str,
     ) -> A {
@@ -108,12 +113,12 @@ impl NormalizerInput for NoFlowInput {
         cont(env, state, t)
     }
 
-    fn builtin_typeapp<A>(
-        cx: &Context,
-        env: &mut Env<'_>,
+    fn builtin_typeapp<'cx, A>(
+        cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_>, &mut State, Type) -> A,
-        _type_: &mut dyn FnMut(&mut Env<'_>, &mut State, Type) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
+        _type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
         _app: impl FnOnce(A, Vec<A>) -> A,
         reason: Reason,
         name: &str,
@@ -128,17 +133,17 @@ impl NormalizerInput for NoFlowInput {
 
 pub type NoFlowNormalizer = Normalizer<NoFlowInput>;
 
-pub fn from_type(genv: &Genv<'_>, t: &Type) -> Result<ALocElt, Error> {
+pub fn from_type(genv: &Genv<'_, '_>, t: &Type) -> Result<ALocElt, Error> {
     let mut state = State::empty();
     NoFlowNormalizer::run_type(genv, &mut state, t)
 }
 
-pub fn mk_genv<'cx>(
+pub fn mk_genv<'a: 'cx, 'cx>(
     options: Options,
-    cx: &'cx Context,
-    typed_ast_opt: Option<&'cx ast::Program<ALoc, (ALoc, Type)>>,
+    cx: &'a Context<'cx>,
+    typed_ast_opt: Option<&'a ast::Program<ALoc, (ALoc, Type)>>,
     file_sig: Arc<FileSig>,
-) -> Genv<'cx> {
+) -> Genv<'a, 'cx> {
     // Computing proper import information would introduce cycles making this module
     // unusable in any code depending on Flow_js.
     let dummy_import_list = vec![];
@@ -162,7 +167,10 @@ pub fn mk_genv<'cx>(
     }
 }
 
-pub fn mk_default_genv(options: Option<Options>, cx: &Context) -> Genv<'_> {
+pub fn mk_default_genv<'a: 'cx, 'cx>(
+    options: Option<Options>,
+    cx: &'a Context<'cx>,
+) -> Genv<'a, 'cx> {
     thread_local! {
         static EMPTY_TYPED_AST: &'static ast::Program<ALoc, (ALoc, Type)> =
             Box::leak(Box::new(ast::Program {
@@ -179,7 +187,7 @@ pub fn mk_default_genv(options: Option<Options>, cx: &Context) -> Genv<'_> {
     mk_genv(options.unwrap_or_default(), cx, typed_ast_opt, file_sig)
 }
 
-pub fn debug_string_of_t(cx: &Context, t: &Type) -> String {
+pub fn debug_string_of_t<'a: 'cx, 'cx>(cx: &'a Context<'cx>, t: &Type) -> String {
     let genv = mk_default_genv(None, cx);
     match from_type(&genv, t) {
         Err(e) => format!("<Error {}>", e.kind),
@@ -195,7 +203,7 @@ pub fn debug_string_of_t(cx: &Context, t: &Type) -> String {
 }
 
 pub fn type_to_desc_for_errors(
-    genv: &Genv<'_>,
+    genv: &Genv<'_, '_>,
     t: &Type,
 ) -> Result<ALocTy, flow_common::reason::ReasonDesc> {
     use flow_common::reason::VirtualReasonDesc;

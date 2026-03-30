@@ -15,8 +15,8 @@ use super::helpers::mk_typeapp_instance_annot;
 use super::helpers::*;
 use super::*;
 
-pub(super) fn destruct(
-    cx: &Context,
+pub(super) fn destruct<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     reason: &Reason,
     kind: DestructKind,
@@ -32,8 +32,8 @@ pub(super) fn destruct(
     eval_selector(cx, Some(trace), annot, reason, t, selector, tout, id)
 }
 
-pub(super) fn eval_selector(
-    cx: &Context,
+pub(super) fn eval_selector<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     annot: bool,
     reason: &Reason,
@@ -55,7 +55,7 @@ pub(super) fn eval_selector(
     let use_t = match selector {
         Selector::Prop(name_str, has_default) => {
             let name = Name::new(name_str.dupe());
-            let lookup_ub = || -> Result<UseT, FlowJsException> {
+            let lookup_ub = || -> Result<UseT<Context<'cx>>, FlowJsException> {
                 let use_op = unknown_use();
                 let action = LookupAction::ReadProp {
                     use_op: use_op.dupe(),
@@ -64,20 +64,21 @@ pub(super) fn eval_selector(
                 };
                 // LookupT unifies with the default with tvar. To get around that, we can create some
                 // indirection with a fresh tvar in between to ensure that we only add a lower bound
-                let default_tout = flow_typing_tvar::mk_where_result(cx, reason.dupe(), |tout| {
-                    flow_opt(
-                        cx,
-                        trace,
-                        (
-                            tout,
-                            &UseT::new(UseTInner::UseT(
-                                use_op.dupe(),
-                                Type::new(TypeInner::OpenT(tvar.dupe())),
-                            )),
-                        ),
-                    )?;
-                    Ok::<(), FlowJsException>(())
-                })?;
+                let default_tout =
+                    flow_typing_tvar::mk_where_result(cx, reason.dupe(), |cx, tout| {
+                        flow_opt(
+                            cx,
+                            trace,
+                            (
+                                tout,
+                                &UseT::new(UseTInner::UseT(
+                                    use_op.dupe(),
+                                    Type::new(TypeInner::OpenT(tvar.dupe())),
+                                )),
+                            ),
+                        )?;
+                        Ok::<(), FlowJsException>(())
+                    })?;
                 let void_reason = tvar.reason().dupe().replace_desc(VirtualReasonDesc::RVoid);
                 let lookup_kind = LookupKind::NonstrictReturning(
                     Some((
@@ -97,7 +98,7 @@ pub(super) fn eval_selector(
                     ignore_dicts: false,
                 }))
             };
-            let getprop_ub = || -> UseT {
+            let getprop_ub = || -> UseT<Context<'cx>> {
                 UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
                     use_op: unknown_use(),
                     reason: reason.dupe(),
@@ -163,8 +164,8 @@ pub(super) fn eval_selector(
     flow_opt(cx, trace, (curr_t, &use_t))
 }
 
-pub(super) fn evaluate_type_destructor(
-    cx: &Context,
+pub(super) fn evaluate_type_destructor<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -256,8 +257,8 @@ pub(super) fn evaluate_type_destructor(
 }
 
 // and mk_type_destructor cx ~trace use_op reason t d id =
-pub(super) fn mk_type_destructor(
-    cx: &Context,
+pub(super) fn mk_type_destructor<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -286,17 +287,15 @@ pub(super) fn mk_type_destructor(
         let result = match evaluated.get(&id) {
             Some(cached_t) => cached_t.dupe(),
             None => {
-                let cx_clone = cx.dupe();
                 let use_op_clone = use_op.dupe();
                 let reason_clone = reason.dupe();
                 let d_clone = d.clone();
                 let trace = DepthTrace::dummy_trace();
-                flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t.dupe(), move |t| {
-                    let cx = &cx_clone;
+                flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t.dupe(), move |cx, t| {
                     crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                         cx,
                         reason_clone.dupe(),
-                        |tvar_reason, tvar_id| {
+                        |cx, tvar_reason, tvar_id| {
                             let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                             let errors = cx.errors();
                             let cache_snapshot = cx.take_cache_snapshot();
@@ -333,7 +332,7 @@ pub(super) fn mk_type_destructor(
                 flow_typing_tvar::mk_no_wrap_where_result(
                     cx,
                     reason.dupe(),
-                    move |tvar_reason, tvar_id| {
+                    move |cx, tvar_reason, tvar_id| {
                         let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                         let mut evaluated = cx.evaluated();
                         evaluated.insert(id_clone, Type::new(TypeInner::OpenT(tvar.dupe())));
@@ -365,8 +364,8 @@ pub(super) fn mk_type_destructor(
     }
 }
 
-pub(super) fn eval_destructor(
-    cx: &Context,
+pub(super) fn eval_destructor<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -410,7 +409,7 @@ pub(super) fn eval_destructor(
     let destruct_union = |f: Option<Box<dyn Fn(Type) -> Type>>,
                           r: Reason,
                           members: Vec<Type>,
-                          upper: UseT|
+                          upper: UseT<Context<'cx>>|
      -> Result<(), FlowJsException> {
         let f: Box<dyn Fn(Type) -> Type> = f.unwrap_or_else(|| Box::new(|t| t));
         let destructor = TypeDestructorT::new(TypeDestructorTInner(
@@ -439,7 +438,7 @@ pub(super) fn eval_destructor(
     let destruct_maybe = |f: Option<Box<dyn Fn(Type) -> Type>>,
                           r: Reason,
                           inner_t: Type,
-                          upper: UseT|
+                          upper: UseT<Context<'cx>>|
      -> Result<(), FlowJsException> {
         let null_or_void_reason = r.dupe().replace_desc_new(VirtualReasonDesc::RNullOrVoid);
         let null = null::make(null_or_void_reason.dupe());
@@ -450,7 +449,7 @@ pub(super) fn eval_destructor(
     let destruct_optional = |f: Option<Box<dyn Fn(Type) -> Type>>,
                              r: Reason,
                              inner_t: Type,
-                             upper: UseT|
+                             upper: UseT<Context<'cx>>|
      -> Result<(), FlowJsException> {
         let void_reason = r.dupe().replace_desc_new(VirtualReasonDesc::RVoid);
         let void = void::make(void_reason.dupe());
@@ -1190,7 +1189,7 @@ pub(super) fn eval_destructor(
                         &UseT::new(UseTInner::ReactKitT(
                             use_op.dupe(),
                             reason.dupe(),
-                            Box::new(react::Tool::GetConfig {
+                            Box::new(react::Tool::<Context<'cx>>::GetConfig {
                                 tout: Type::new(TypeInner::OpenT(tout.dupe())),
                             }),
                         )),
@@ -1244,8 +1243,8 @@ pub(super) fn eval_destructor(
     }
 }
 
-pub(super) fn eagerly_eval_destructor_if_resolved(
-    cx: &Context,
+pub(super) fn eagerly_eval_destructor_if_resolved<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -1283,8 +1282,8 @@ pub(super) fn eagerly_eval_destructor_if_resolved(
     }
 }
 
-pub(super) fn mk_possibly_evaluated_destructor_for_annotations(
-    cx: &Context,
+pub(super) fn mk_possibly_evaluated_destructor_for_annotations<'cx>(
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     t: &Type,
@@ -1316,17 +1315,15 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations(
 
         if type_subst::free_var_finder(cx, None, &eval_t).is_empty() {
             let trace = DepthTrace::dummy_trace();
-            let cx_clone = cx.dupe();
             let use_op_clone = use_op.dupe();
             let reason_clone = reason.dupe();
             let d_clone = d.clone();
             let result =
-                flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t.dupe(), move |t| {
-                    let cx = &cx_clone;
+                flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t.dupe(), move |cx, t| {
                     crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                         cx,
                         reason_clone.dupe(),
-                        |tvar_reason, tvar_id| {
+                        |cx, tvar_reason, tvar_id| {
                             let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                             evaluate_type_destructor(
                                 cx,
@@ -1349,7 +1346,6 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations(
                                 stuck_eval_targs: Vec<Type>,
                                 upper_t: Option<Type>| {
                 let trace = DepthTrace::dummy_trace();
-                let cx_for_map = cx.dupe();
                 let use_op_for_map = use_op.dupe();
                 let reason_for_map = reason.dupe();
                 let d_for_map = d.clone();
@@ -1360,8 +1356,7 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations(
                     cx,
                     reason.dupe(),
                     t.dupe(),
-                    move |t_resolved| {
-                        let cx = &cx_for_map;
+                    move |cx, t_resolved| {
                         let use_op = use_op_for_map.dupe();
                         let reason = reason_for_map.dupe();
                         let d = d_for_map.clone();
@@ -1371,9 +1366,8 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations(
                         crate::tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                             cx,
                             reason.dupe(),
-                            |tvar_reason, tvar_id| {
+                            |cx, tvar_reason, tvar_id| {
                                 let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
-                                let cx_for_spec = cx.dupe();
                                 let use_op_spec = use_op.dupe();
                                 let reason_spec = reason.dupe();
                                 let t_spec = t_resolved.dupe();
@@ -1382,9 +1376,9 @@ pub(super) fn mk_possibly_evaluated_destructor_for_annotations(
                                 let result =
                                     crate::speculation_kit::try_singleton_custom_throw_on_failure(
                                         cx,
-                                        Box::new(move || {
+                                        Box::new(move |cx| {
                                             evaluate_type_destructor(
-                                                &cx_for_spec,
+                                                cx,
                                                 trace,
                                                 use_op_spec,
                                                 &reason_spec,

@@ -80,7 +80,7 @@ fn print_graph(graph: Vec<(String, String)>) {
     println!("}}");
 }
 
-fn autocomplete_hooks() -> AutocompleteHooks<ALoc> {
+fn autocomplete_hooks() -> AutocompleteHooks<'static, ALoc> {
     AutocompleteHooks {
         id_hook: Box::new(|_, _| false),
         literal_hook: Box::new(|_| false),

@@ -276,8 +276,8 @@ impl Inference {
     }
 }
 
-struct ProcessRequestSearcher<'a> {
-    cx: &'a Context,
+struct ProcessRequestSearcher<'a, 'cx> {
+    cx: &'a Context<'cx>,
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     from_trigger_character: bool,
     cursor: &'a Loc,
@@ -287,9 +287,9 @@ struct ProcessRequestSearcher<'a> {
     class_key_depth: usize,
 }
 
-impl<'a> ProcessRequestSearcher<'a> {
+impl<'a, 'cx> ProcessRequestSearcher<'a, 'cx> {
     fn new(
-        cx: &'a Context,
+        cx: &'a Context<'cx>,
         file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
         from_trigger_character: bool,
         cursor: &'a Loc,
@@ -623,7 +623,7 @@ impl<'a> ProcessRequestSearcher<'a> {
     }
 }
 
-impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSearcher<'_> {
+impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, Found> for ProcessRequestSearcher<'_, '_> {
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
     }

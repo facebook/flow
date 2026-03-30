@@ -47,14 +47,19 @@ use crate::ty_normalizer_imports;
 struct FlowInput;
 
 impl NormalizerInput for FlowInput {
-    fn eval(
-        cx: &Context,
-        env: &mut Env<'_>,
+    fn eval<'cx>(
+        cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
         state: &mut State,
         should_eval: bool,
-        cont: impl FnOnce(&mut Env<'_>, &mut State, &Type) -> Result<ALocTy, Error>,
-        default: impl FnOnce(&mut Env<'_>, &mut State, &Type) -> Result<ALocTy, Error>,
-        non_eval: impl FnOnce(&mut Env<'_>, &mut State, &Type, &Destructor) -> Result<ALocTy, Error>,
+        cont: impl FnOnce(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<ALocTy, Error>,
+        default: impl FnOnce(&mut Env<'_, 'cx>, &mut State, &Type) -> Result<ALocTy, Error>,
+        non_eval: impl FnOnce(
+            &mut Env<'_, 'cx>,
+            &mut State,
+            &Type,
+            &Destructor,
+        ) -> Result<ALocTy, Error>,
         x: (&Type, &TypeDestructorT, &eval::Id),
     ) -> Result<ALocTy, Error> {
         let (t, defer_use_t, id) = x;
@@ -75,20 +80,20 @@ impl NormalizerInput for FlowInput {
         }
     }
 
-    fn keys<A>(
-        cx: &Context,
-        env: &mut Env<'_>,
+    fn keys<'cx, A>(
+        cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
         state: &mut State,
         should_evaluate: bool,
-        cont: impl FnOnce(&mut Env<'_>, &mut State, Type) -> A,
-        default: impl FnOnce(&mut Env<'_>, &mut State) -> A,
+        cont: impl FnOnce(&mut Env<'_, 'cx>, &mut State, Type) -> A,
+        default: impl FnOnce(&mut Env<'_, 'cx>, &mut State) -> A,
         reason: Reason,
         t: Type,
     ) -> A {
         if should_evaluate {
             let reason_clone = reason.dupe();
             let t_clone = t.dupe();
-            let tout = flow_typing_tvar::mk_where(cx, reason.dupe(), move |tout| {
+            let tout = flow_typing_tvar::mk_where(cx, reason.dupe(), move |cx, tout| {
                 let use_t = UseT::new(UseTInner::GetKeysT(
                     reason_clone.dupe(),
                     Box::new(UseT::new(UseTInner::UseT(unknown_use(), tout.dupe()))),
@@ -112,12 +117,12 @@ impl NormalizerInput for FlowInput {
         }
     }
 
-    fn typeapp<A>(
-        cx: &Context,
-        env: &mut Env<'_>,
+    fn typeapp<'cx, A>(
+        cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_>, &mut State, &Type) -> A,
-        _type_: &mut dyn FnMut(&mut Env<'_>, &mut State, &Type) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> A,
+        _type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, &Type) -> A,
         _app: impl FnOnce(A, Vec<A>) -> A,
         from_value: bool,
         reason: Reason,
@@ -136,11 +141,11 @@ impl NormalizerInput for FlowInput {
         cont(env, state, &t)
     }
 
-    fn builtin_type<A>(
-        cx: &Context,
-        env: &mut Env<'_>,
+    fn builtin_type<'cx, A>(
+        cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_>, &mut State, Type) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
         reason: Reason,
         name: &str,
     ) -> A {
@@ -148,12 +153,12 @@ impl NormalizerInput for FlowInput {
         cont(env, state, t)
     }
 
-    fn builtin_typeapp<A>(
-        cx: &Context,
-        env: &mut Env<'_>,
+    fn builtin_typeapp<'cx, A>(
+        cx: &Context<'cx>,
+        env: &mut Env<'_, 'cx>,
         state: &mut State,
-        cont: &mut dyn FnMut(&mut Env<'_>, &mut State, Type) -> A,
-        _type_: &mut dyn FnMut(&mut Env<'_>, &mut State, Type) -> A,
+        cont: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
+        _type_: &mut dyn FnMut(&mut Env<'_, 'cx>, &mut State, Type) -> A,
         _app: impl FnOnce(A, Vec<A>) -> A,
         reason: Reason,
         name: &str,
@@ -169,7 +174,7 @@ type FlowNormalizer = Normalizer<FlowInput>;
 
 // Exposed API
 
-fn print_normalizer_banner(genv: &Genv<'_>) {
+fn print_normalizer_banner(genv: &Genv<'_, '_>) {
     if genv.options.verbose_normalizer {
         let banner = "\n======================================== Normalization =======================================\n";
         eprintln!("{}", banner);
@@ -181,7 +186,7 @@ fn print_normalizer_banner(genv: &Genv<'_>) {
 // transformation to the next element.
 pub fn from_types<A>(
     f: Option<&dyn Fn(&A)>,
-    genv: &Genv<'_>,
+    genv: &Genv<'_, '_>,
     ts: Vec<(A, Type)>,
 ) -> Vec<(A, Result<ALocElt, Error>)> {
     print_normalizer_banner(genv);
@@ -201,7 +206,7 @@ pub fn from_types<A>(
 }
 
 pub fn from_type_with_found_computed_type(
-    genv: &Genv<'_>,
+    genv: &Genv<'_, '_>,
     t: &Type,
 ) -> (Result<ALocElt, Error>, bool) {
     print_normalizer_banner(genv);
@@ -210,14 +215,14 @@ pub fn from_type_with_found_computed_type(
     (result, state.found_computed_type())
 }
 
-pub fn from_type(genv: &Genv<'_>, t: &Type) -> Result<ALocElt, Error> {
+pub fn from_type(genv: &Genv<'_, '_>, t: &Type) -> Result<ALocElt, Error> {
     print_normalizer_banner(genv);
     let mut state = State::empty();
     FlowNormalizer::run_type(genv, &mut state, t)
 }
 
 pub fn from_module_type(
-    genv: &Genv<'_>,
+    genv: &Genv<'_, '_>,
     t: &ModuleType,
 ) -> Result<flow_common_ty::ty::Decl<ALoc>, Error> {
     print_normalizer_banner(genv);
@@ -228,7 +233,7 @@ pub fn from_module_type(
 pub fn expand_members(
     force_instance: bool,
     allowed_prop_names: Option<Vec<Name>>,
-    genv: &Genv<'_>,
+    genv: &Genv<'_, '_>,
     t: &Type,
 ) -> Result<ALocTy, Error> {
     print_normalizer_banner(genv);
@@ -236,18 +241,18 @@ pub fn expand_members(
     FlowNormalizer::run_expand_members(force_instance, allowed_prop_names, genv, &mut state, t)
 }
 
-pub fn expand_literal_union(genv: &Genv<'_>, t: &Type) -> Result<ALocTy, Error> {
+pub fn expand_literal_union(genv: &Genv<'_, '_>, t: &Type) -> Result<ALocTy, Error> {
     print_normalizer_banner(genv);
     let mut state = State::empty();
     FlowNormalizer::run_expand_literal_union(genv, &mut state, t)
 }
 
-pub fn mk_genv<'cx>(
+pub fn mk_genv<'a, 'cx>(
     options: Options,
-    cx: &'cx Context,
-    typed_ast_opt: Option<&'cx ast::Program<ALoc, (ALoc, Type)>>,
+    cx: &'a Context<'cx>,
+    typed_ast_opt: Option<&'a ast::Program<ALoc, (ALoc, Type)>>,
     file_sig: Arc<FileSig>,
-) -> Genv<'cx> {
+) -> Genv<'a, 'cx> {
     let file_sig_for_lazy = file_sig.dupe();
     let options_for_lazy = options.dupe();
     let imported_names = Rc::new(Lazy::new(Box::new(move || {
@@ -276,17 +281,21 @@ pub fn mk_genv<'cx>(
 }
 
 // A debugging facility for getting quick string representations of Type.t
-pub fn debug_string_of_t(cx: &Context, t: &Type) -> String {
-    let typed_ast = ast::Program {
-        loc: ALoc::default(),
-        statements: Arc::from([]),
-        interpreter: None,
-        comments: None,
-        all_comments: Arc::from([]),
-    };
+pub fn debug_string_of_t<'cx>(cx: &Context<'cx>, t: &Type) -> String {
+    thread_local! {
+        static EMPTY_TYPED_AST: &'static ast::Program<ALoc, (ALoc, Type)> =
+            Box::leak(Box::new(ast::Program {
+                loc: ALoc::default(),
+                statements: Arc::from([]),
+                interpreter: None,
+                comments: None,
+                all_comments: Arc::from([]),
+            }));
+    }
+    let typed_ast = EMPTY_TYPED_AST.with(|ast| *ast);
     let file_sig = Arc::new(FileSig::empty());
     let options = Options::default();
-    let genv = mk_genv(options, cx, Some(&typed_ast), file_sig);
+    let genv = mk_genv(options, cx, Some(typed_ast), file_sig);
     match from_type(&genv, t) {
         Err(e) => format!("<Error {}>", e.kind),
         Ok(elt) => {

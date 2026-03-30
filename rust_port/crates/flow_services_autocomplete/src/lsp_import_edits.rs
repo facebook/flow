@@ -24,9 +24,9 @@ use crate::autofix_imports;
 use crate::code_action_text_edits::CodeActionTextEdits;
 use crate::module_system_info::LspModuleSystemInfo;
 
-pub fn is_available_autoimport_result(
-    cx: &Context,
-) -> impl Fn(&str, &export_index::Source) -> bool + '_ {
+pub fn is_available_autoimport_result<'a>(
+    cx: &'a Context<'_>,
+) -> impl Fn(&str, &export_index::Source) -> bool + 'a {
     let available_globals = cx.builtins().builtin_ordinary_name_set();
     let available_modules = cx.builtins().builtin_modules_set();
     move |name: &str, source: &export_index::Source| match source {

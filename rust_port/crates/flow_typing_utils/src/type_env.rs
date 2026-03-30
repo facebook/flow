@@ -5,7 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-use std::ops::Deref;
+use std::cell::RefCell;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -43,6 +43,7 @@ use flow_typing_key::Key;
 use flow_typing_loc_env::loc_env::LocEnv;
 use flow_typing_loc_env::loc_env::TypeEntry;
 use flow_typing_type::type_::ClassBinding;
+use flow_typing_type::type_::HintEvalResult;
 use flow_typing_type::type_::LazyHintT;
 use flow_typing_type::type_::PredFuncallInfo;
 use flow_typing_type::type_::Predicate;
@@ -85,7 +86,7 @@ pub enum LookupMode {
     ForTypeof,
 }
 
-pub fn get_class_entries(cx: &Context) -> Vec<ClassBinding> {
+pub fn get_class_entries<'cx>(cx: &Context<'cx>) -> Vec<ClassBinding> {
     let env = cx.environment();
     let class_stack = &env.class_stack;
     let class_bindings = &env.class_bindings;
@@ -98,8 +99,8 @@ pub fn get_class_entries(cx: &Context) -> Vec<ClassBinding> {
     lst
 }
 
-pub fn with_class_stack<A>(
-    cx: &Context,
+pub fn with_class_stack<'cx, A>(
+    cx: &Context<'cx>,
     class_stack: FlowVector<ALoc>,
     f: impl FnOnce() -> A,
 ) -> A {
@@ -113,7 +114,7 @@ pub fn with_class_stack<A>(
     res
 }
 
-pub fn has_hint(cx: &Context, loc: ALoc) -> bool {
+pub fn has_hint<'cx>(cx: &Context<'cx>, loc: ALoc) -> bool {
     if !matches!(&*cx.typing_mode(), TypingMode::CheckingMode) {
         return false;
     }
@@ -124,25 +125,33 @@ pub fn has_hint(cx: &Context, loc: ALoc) -> bool {
         .unwrap_or(false)
 }
 
-pub fn get_hint(cx: &Context, loc: ALoc) -> LazyHintT {
+pub fn get_hint<'cx>(cx: &Context<'cx>, loc: ALoc) -> LazyHintT<Context<'cx>> {
     if !matches!(&*cx.typing_mode(), TypingMode::CheckingMode) {
-        return flow_typing_type::type_::hint_unavailable();
+        return LazyHintT(
+            false,
+            Rc::new(|_cx: &Context<'_>, _e, _s, _r| HintEvalResult::NoHint),
+        );
     }
     let env = cx.environment();
     env.hint_map
         .get(&EnvKey::new(DefLocType::OrdinaryNameLoc, loc))
         .cloned()
-        .unwrap_or_else(flow_typing_type::type_::hint_unavailable)
+        .unwrap_or_else(|| {
+            LazyHintT(
+                false,
+                Rc::new(|_cx: &Context<'_>, _e, _s, _r| HintEvalResult::NoHint),
+            )
+        })
 }
 
-pub fn set_scope_kind(cx: &Context, k: ScopeKind) -> ScopeKind {
+pub fn set_scope_kind<'cx>(cx: &Context<'cx>, k: ScopeKind) -> ScopeKind {
     let mut env = cx.environment_mut();
     let old = env.scope_kind;
     env.scope_kind = k;
     old
 }
 
-pub fn in_class_scope<A>(cx: &Context, loc: ALoc, f: impl FnOnce() -> A) -> A {
+pub fn in_class_scope<'cx, A>(cx: &Context<'cx>, loc: ALoc, f: impl FnOnce() -> A) -> A {
     let old_stack = {
         let mut env = cx.environment_mut();
         let old_stack = env.class_stack.clone();
@@ -155,42 +164,42 @@ pub fn in_class_scope<A>(cx: &Context, loc: ALoc, f: impl FnOnce() -> A) -> A {
     res
 }
 
-fn is_var_kind(cx: &Context, k: ScopeKind) -> bool {
+fn is_var_kind<'cx>(cx: &Context<'cx>, k: ScopeKind) -> bool {
     cx.environment().scope_kind == k
 }
 
-pub fn in_async_scope(cx: &Context) -> bool {
+pub fn in_async_scope<'cx>(cx: &Context<'cx>) -> bool {
     is_var_kind(cx, ScopeKind::Async)
         || is_var_kind(cx, ScopeKind::AsyncGenerator)
         || is_var_kind(cx, ScopeKind::AsyncComponentOrHookBody)
 }
 
-pub fn var_scope_kind(cx: &Context) -> ScopeKind {
+pub fn var_scope_kind<'cx>(cx: &Context<'cx>) -> ScopeKind {
     cx.environment().scope_kind
 }
 
-pub fn in_global_scope(cx: &Context) -> bool {
+pub fn in_global_scope<'cx>(cx: &Context<'cx>) -> bool {
     is_var_kind(cx, ScopeKind::Global)
 }
 
-pub fn in_toplevel_scope(cx: &Context) -> bool {
+pub fn in_toplevel_scope<'cx>(cx: &Context<'cx>) -> bool {
     is_var_kind(cx, ScopeKind::Module)
 }
 
-pub fn is_provider(cx: &Context, id_loc: ALoc) -> bool {
+pub fn is_provider<'cx>(cx: &Context<'cx>, id_loc: ALoc) -> bool {
     let env = cx.environment();
     env.var_info.providers.is_provider(&id_loc)
 }
 
 #[cfg(not(debug_assertions))]
-fn with_debug_exn(_cx: &Context, _loc: ALoc, f: impl FnOnce() -> Type) -> Type {
+fn with_debug_exn<'cx>(_cx: &Context<'cx>, _loc: ALoc, f: impl FnOnce() -> Type) -> Type {
     f()
 }
 
 // We don't want the new-env to throw if we encounter some new case in the wild for which we did
 // not adequately prepare. Instead, we return `any` in prod mode, but still crash in build mode.
 #[cfg(debug_assertions)]
-fn with_debug_exn(cx: &Context, loc: ALoc, f: impl FnOnce() -> Type) -> Type {
+fn with_debug_exn<'cx>(cx: &Context<'cx>, loc: ALoc, f: impl FnOnce() -> Type) -> Type {
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_errors::error_message::InternalError;
     use flow_typing_type::type_::AnySource;
@@ -212,8 +221,8 @@ fn with_debug_exn(cx: &Context, loc: ALoc, f: impl FnOnce() -> Type) -> Type {
 }
 
 #[cfg(not(debug_assertions))]
-fn with_debug_exn_error<A: 'static>(
-    _cx: &Context,
+fn with_debug_exn_error<'cx, A: 'static>(
+    _cx: &Context<'cx>,
     _loc: ALoc,
     f: impl FnOnce() -> A,
     _error: impl FnOnce() -> A,
@@ -222,8 +231,8 @@ fn with_debug_exn_error<A: 'static>(
 }
 
 #[cfg(debug_assertions)]
-fn with_debug_exn_error<A: 'static>(
-    cx: &Context,
+fn with_debug_exn_error<'cx, A: 'static>(
+    cx: &Context<'cx>,
     loc: ALoc,
     f: impl FnOnce() -> A,
     error: impl FnOnce() -> A,
@@ -246,7 +255,7 @@ fn with_debug_exn_error<A: 'static>(
     }
 }
 
-pub fn t_option_value_exn(cx: &Context, loc: ALoc, t: Option<Type>) -> Type {
+pub fn t_option_value_exn<'cx>(cx: &Context<'cx>, loc: ALoc, t: Option<Type>) -> Type {
     with_debug_exn(cx, loc.dupe(), || match t {
         Some(t) => t,
         None => panic!("Missing location entry: {}", loc.debug_to_string(true)),
@@ -257,7 +266,11 @@ pub fn t_option_value_exn(cx: &Context, loc: ALoc, t: Option<Type>) -> Type {
 // * Helpers *
 // ***********
 
-pub fn checked_find_loc_env_write_opt(cx: &Context, kind: DefLocType, loc: ALoc) -> Option<Type> {
+pub fn checked_find_loc_env_write_opt<'cx>(
+    cx: &Context<'cx>,
+    kind: DefLocType,
+    loc: ALoc,
+) -> Option<Type> {
     let env = cx.environment();
     let entry_key = EnvKey::new(kind, loc.dupe());
     let env_entry = env.var_info.env_entries.get(&entry_key).cloned();
@@ -278,7 +291,7 @@ pub fn checked_find_loc_env_write_opt(cx: &Context, kind: DefLocType, loc: ALoc)
     }
 }
 
-pub fn checked_find_loc_env_write(cx: &Context, kind: DefLocType, loc: ALoc) -> Type {
+pub fn checked_find_loc_env_write<'cx>(cx: &Context<'cx>, kind: DefLocType, loc: ALoc) -> Type {
     let t = checked_find_loc_env_write_opt(cx, kind, loc.dupe());
     t_option_value_exn(cx, loc, t)
 }
@@ -319,10 +332,10 @@ fn is_def_loc_annotated(var_info: &EnvInfo<ALoc>, loc: &ALoc) -> bool {
     }
 }
 
-pub fn provider_type_for_def_loc(
+pub fn provider_type_for_def_loc<'cx>(
     intersect: bool,
-    cx: &Context,
-    env: &LocEnv,
+    cx: &Context<'cx>,
+    env: &LocEnv<'cx, Context<'cx>>,
     def_loc: ALoc,
 ) -> Type {
     let var_info = &env.var_info;
@@ -405,8 +418,8 @@ fn merge_actually_refined_refining_locs(
 /// Currently, this just produces a new type variable with the types of
 /// all the incoming writes as lower bounds. In the future, however, we
 /// may want to compute a more specific least upper bound for these writes.
-fn phi(
-    cx: &Context,
+fn phi<'cx>(
+    cx: &Context<'cx>,
     reason: Reason,
     states: Vec<PossiblyRefinedWriteState>,
 ) -> PossiblyRefinedWriteState {
@@ -439,8 +452,8 @@ fn phi(
     }
 }
 
-fn read_pred_func_info_exn(
-    cx: &Context,
+fn read_pred_func_info_exn<'cx>(
+    cx: &Context<'cx>,
     loc: ALoc,
 ) -> Box<flow_typing_type::type_::PredFuncallInfo> {
     use flow_typing_type::type_::AnySource;
@@ -466,7 +479,7 @@ fn read_pred_func_info_exn(
                     })
                     .dupe()
             };
-            Box::new((*lazy_info).clone())
+            Box::new(lazy_info.get_forced(cx).clone())
         },
         move || {
             Box::new(PredFuncallInfo(
@@ -481,17 +494,17 @@ fn read_pred_func_info_exn(
 }
 
 /// Returns [true] iff the input type is potentially a predicate function.
-fn maybe_predicate_function(cx: &Context, t: &Type) -> bool {
+fn maybe_predicate_function<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
     use std::ops::Deref;
 
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::TypeInner;
 
-    fn simplify_callee(cx: &Context, func_t: &Type) -> Type {
+    fn simplify_callee<'cx>(cx: &Context<'cx>, func_t: &Type) -> Type {
         let errors = cx.errors();
         let result = cx.run_and_rolled_back_cache(|| {
             let reason = flow_typing_type::type_util::reason_of_t(func_t);
-            flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |r, tvar_id| {
+            flow_typing_tvar::mk_no_wrap_where(cx, reason.dupe(), |cx, r, tvar_id| {
                 use flow_typing_type::type_::Tvar;
                 use flow_typing_type::type_::UseT;
                 use flow_typing_type::type_::UseTInner;
@@ -528,7 +541,7 @@ fn maybe_predicate_function(cx: &Context, t: &Type) -> bool {
         }
     }
 
-    fn on_non_inter(cx: &Context, t: &Type) -> bool {
+    fn on_non_inter<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
         match t.deref() {
             TypeInner::DefT(_, _) => on_ground(t),
             _ => {
@@ -541,14 +554,14 @@ fn maybe_predicate_function(cx: &Context, t: &Type) -> bool {
         }
     }
 
-    fn on_concrete(cx: &Context, t: &Type) -> bool {
+    fn on_concrete<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
         match t.deref() {
             TypeInner::IntersectionT(_, rep) => rep.members_iter().any(|m| on_t(cx, m)),
             _ => on_non_inter(cx, t),
         }
     }
 
-    fn on_t(cx: &Context, t: &Type) -> bool {
+    fn on_t<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
         let reason = flow_typing_type::type_util::reason_of_t(t);
         FlowJs::possible_concrete_types_for_inspection(cx, reason, t)
             .expect("Non speculating")
@@ -559,7 +572,10 @@ fn maybe_predicate_function(cx: &Context, t: &Type) -> bool {
     on_t(cx, t)
 }
 
-fn predicate_of_refinement(cx: &Context, kind: &RefinementKind<ALoc>) -> Option<Predicate> {
+fn predicate_of_refinement<'cx>(
+    cx: &Context<'cx>,
+    kind: &RefinementKind<ALoc>,
+) -> Option<Predicate> {
     use flow_common::reason::Name;
     use flow_common::reason::mk_reason;
     use flow_env_builder::env_api::InstanceofContext;
@@ -567,7 +583,7 @@ fn predicate_of_refinement(cx: &Context, kind: &RefinementKind<ALoc>) -> Option<
     use flow_typing_type::type_::BinaryTest;
     use flow_typing_type::type_::PredicateInner;
 
-    fn pred(cx: &Context, kind: &RefinementKind<ALoc>) -> Option<Predicate> {
+    fn pred<'cx>(cx: &Context<'cx>, kind: &RefinementKind<ALoc>) -> Option<Predicate> {
         match kind {
             RefinementKind::AndR(r1, r2) => match (pred(cx, r1), pred(cx, r2)) {
                 (Some(p1), Some(p2)) => Some(Predicate::new(PredicateInner::AndP(p1, p2))),
@@ -690,7 +706,7 @@ fn predicate_of_refinement(cx: &Context, kind: &RefinementKind<ALoc>) -> Option<
                 };
                 match lazy_info {
                     Some(info) => {
-                        let PredFuncallInfo(_, _, t, _, _) = info.deref().deref();
+                        let PredFuncallInfo(_, _, t, _, _) = info.get_forced(cx);
                         if maybe_predicate_function(cx, t) {
                             Some(Predicate::new(PredicateInner::LatentP(
                                 read_pred_func_info_exn(cx, func_loc),
@@ -715,7 +731,7 @@ fn predicate_of_refinement(cx: &Context, kind: &RefinementKind<ALoc>) -> Option<
                 };
                 match lazy_info {
                     Some(info) => {
-                        let PredFuncallInfo(_, _, t, _, _) = info.deref().deref();
+                        let PredFuncallInfo(_, _, t, _, _) = info.get_forced(cx);
                         if maybe_predicate_function(cx, t) {
                             Some(Predicate::new(PredicateInner::LatentThisP(
                                 read_pred_func_info_exn(cx, func_loc),
@@ -782,8 +798,8 @@ fn predicate_of_refinement(cx: &Context, kind: &RefinementKind<ALoc>) -> Option<
     pred(cx, kind)
 }
 
-fn refine(
-    cx: &Context,
+fn refine<'cx>(
+    cx: &Context<'cx>,
     reason: Reason,
     loc: ALoc,
     refi: Option<&Refinement<ALoc>>,
@@ -836,10 +852,10 @@ fn refine(
     }
 }
 
-fn possibly_refined_write_state_of_state(
+fn possibly_refined_write_state_of_state<'cx>(
     lookup_mode: LookupMode,
     val_kind: ValKind,
-    cx: &Context,
+    cx: &Context<'cx>,
     loc: ALoc,
     reason: Reason,
     write_locs: &[WriteLoc<ALoc>],
@@ -854,9 +870,9 @@ fn possibly_refined_write_state_of_state(
         }
     }
 
-    fn loop_fn(
+    fn loop_fn<'cx>(
         lookup_mode: LookupMode,
-        cx: &Context,
+        cx: &Context<'cx>,
         loc: ALoc,
         reason: Reason,
         states: &[WriteLoc<ALoc>],
@@ -1128,10 +1144,10 @@ fn possibly_refined_write_state_of_state(
     state
 }
 
-fn type_of_state(
+fn type_of_state<'cx>(
     lookup_mode: LookupMode,
     val_kind: ValKind,
-    cx: &Context,
+    cx: &Context<'cx>,
     loc: ALoc,
     reason: Reason,
     write_locs: &[WriteLoc<ALoc>],
@@ -1158,9 +1174,9 @@ fn type_of_state(
     t
 }
 
-fn read_entry(
+fn read_entry<'cx>(
     lookup_mode: LookupMode,
-    cx: &Context,
+    cx: &Context<'cx>,
     loc: ALoc,
     reason: Reason,
 ) -> Result<Type, ALoc> {
@@ -1273,7 +1289,12 @@ fn read_entry(
     }
 }
 
-fn read_entry_exn(lookup_mode: LookupMode, cx: &Context, loc: ALoc, reason: Reason) -> Type {
+fn read_entry_exn<'cx>(
+    lookup_mode: LookupMode,
+    cx: &Context<'cx>,
+    loc: ALoc,
+    reason: Reason,
+) -> Type {
     let loc_clone = loc.dupe();
     with_debug_exn(cx, loc, move || {
         match read_entry(lookup_mode, cx, loc_clone.dupe(), reason) {
@@ -1286,7 +1307,7 @@ fn read_entry_exn(lookup_mode: LookupMode, cx: &Context, loc: ALoc, reason: Reas
     })
 }
 
-pub fn read_to_predicate(cx: &Context, read: &EnvRead<ALoc>) -> Option<Predicate> {
+pub fn read_to_predicate<'cx>(cx: &Context<'cx>, read: &EnvRead<ALoc>) -> Option<Predicate> {
     use flow_typing_type::type_::PredicateInner;
 
     let var_info = {
@@ -1318,8 +1339,8 @@ pub fn read_to_predicate(cx: &Context, read: &EnvRead<ALoc>) -> Option<Predicate
     }
 }
 
-pub fn checked_type_guard_at_return(
-    cx: &Context,
+pub fn checked_type_guard_at_return<'cx>(
+    cx: &Context<'cx>,
     reason: Reason,
     param_loc: ALoc,
     return_loc: ALoc,
@@ -1366,8 +1387,8 @@ pub fn checked_type_guard_at_return(
     }
 }
 
-pub fn inferred_type_guard_at_return(
-    cx: &Context,
+pub fn inferred_type_guard_at_return<'cx>(
+    cx: &Context<'cx>,
     reason: Reason,
     return_loc: ALoc,
     write_locs: &[WriteLoc<ALoc>],
@@ -1384,12 +1405,17 @@ pub fn inferred_type_guard_at_return(
     )
 }
 
-pub fn ref_entry_exn(lookup_mode: LookupMode, cx: &Context, loc: ALoc, reason: Reason) -> Type {
+pub fn ref_entry_exn<'cx>(
+    lookup_mode: LookupMode,
+    cx: &Context<'cx>,
+    loc: ALoc,
+    reason: Reason,
+) -> Type {
     let t = read_entry_exn(lookup_mode, cx, loc.dupe(), reason);
     flow_js::reposition_non_speculating(cx, loc, t)
 }
 
-pub fn find_write(cx: &Context, kind: DefLocType, reason: Reason) -> Type {
+pub fn find_write<'cx>(cx: &Context<'cx>, kind: DefLocType, reason: Reason) -> Type {
     let loc = reason.loc().dupe();
     match checked_find_loc_env_write_opt(cx, kind, loc) {
         Some(t) => t,
@@ -1397,7 +1423,7 @@ pub fn find_write(cx: &Context, kind: DefLocType, reason: Reason) -> Type {
     }
 }
 
-pub fn get_refinement(cx: &Context, desc: ReasonDesc, loc: ALoc) -> Option<Type> {
+pub fn get_refinement<'cx>(cx: &Context<'cx>, desc: ReasonDesc, loc: ALoc) -> Option<Type> {
     let reason = flow_common::reason::mk_reason(desc, loc.dupe());
     match read_entry(LookupMode::ForValue, cx, loc.dupe(), reason) {
         Ok(x) => Some(flow_js::reposition_non_speculating(cx, loc.dupe(), x)),
@@ -1412,7 +1438,12 @@ pub fn get_refinement(cx: &Context, desc: ReasonDesc, loc: ALoc) -> Option<Type>
     }
 }
 
-pub fn get_var(lookup_mode: Option<LookupMode>, cx: &Context, name: &str, loc: ALoc) -> Type {
+pub fn get_var<'cx>(
+    lookup_mode: Option<LookupMode>,
+    cx: &Context<'cx>,
+    name: &str,
+    loc: ALoc,
+) -> Type {
     let ord_name = Name::new(name);
     let lookup_mode = lookup_mode.unwrap_or(LookupMode::ForValue);
     read_entry_exn(
@@ -1423,9 +1454,9 @@ pub fn get_var(lookup_mode: Option<LookupMode>, cx: &Context, name: &str, loc: A
     )
 }
 
-pub fn query_var(
+pub fn query_var<'cx>(
     lookup_mode: Option<LookupMode>,
-    cx: &Context,
+    cx: &Context<'cx>,
     name: Name,
     desc: Option<ReasonDesc>,
     loc: ALoc,
@@ -1443,8 +1474,8 @@ pub fn query_var(
     )
 }
 
-pub fn intrinsic_ref(
-    cx: &Context,
+pub fn intrinsic_ref<'cx>(
+    cx: &Context<'cx>,
     desc: Option<ReasonDesc>,
     name: Name,
     loc: ALoc,
@@ -1492,9 +1523,9 @@ pub fn intrinsic_ref(
     }
 }
 
-pub fn var_ref(
+pub fn var_ref<'cx>(
     lookup_mode: Option<LookupMode>,
-    cx: &Context,
+    cx: &Context<'cx>,
     desc: Option<ReasonDesc>,
     name: Name,
     loc: ALoc,
@@ -1504,9 +1535,9 @@ pub fn var_ref(
     flow_js::reposition_non_speculating(cx, loc, t)
 }
 
-pub fn sig_var_ref(
+pub fn sig_var_ref<'cx>(
     lookup_mode: Option<LookupMode>,
-    cx: &Context,
+    cx: &Context<'cx>,
     desc: Option<ReasonDesc>,
     name: Name,
     loc: ALoc,
@@ -1521,7 +1552,7 @@ pub fn sig_var_ref(
     Type::new(flow_typing_type::type_::TypeInner::AnnotT(reason, t, true))
 }
 
-pub fn read_class_self_type(cx: &Context, loc: ALoc) -> Type {
+pub fn read_class_self_type<'cx>(cx: &Context<'cx>, loc: ALoc) -> Type {
     match checked_find_loc_env_write_opt(cx, DefLocType::ClassSelfLoc, loc.dupe()) {
         Some(t) => t,
         None => {
@@ -1534,7 +1565,7 @@ pub fn read_class_self_type(cx: &Context, loc: ALoc) -> Type {
     }
 }
 
-pub fn is_global_var(cx: &Context, loc: ALoc) -> bool {
+pub fn is_global_var<'cx>(cx: &Context<'cx>, loc: ALoc) -> bool {
     let env = cx.environment();
     match find_var_opt(&env.var_info, &loc) {
         Ok(read) => flow_env_builder::env_api::is_global_var(read),
@@ -1542,19 +1573,19 @@ pub fn is_global_var(cx: &Context, loc: ALoc) -> bool {
     }
 }
 
-pub fn local_scope_entry_exists(cx: &Context, loc: ALoc) -> bool {
+pub fn local_scope_entry_exists<'cx>(cx: &Context<'cx>, loc: ALoc) -> bool {
     !is_global_var(cx, loc)
 }
 
-pub fn has_var_read(cx: &Context, loc: &ALoc) -> bool {
+pub fn has_var_read<'cx>(cx: &Context<'cx>, loc: &ALoc) -> bool {
     let env = cx.environment();
     find_var_opt(&env.var_info, loc).is_ok()
 }
 
-pub fn get_var_declared_type(
+pub fn get_var_declared_type<'cx>(
     lookup_mode: Option<LookupMode>,
     is_declared_function: Option<bool>,
-    cx: &Context,
+    cx: &Context<'cx>,
     name: Name,
     loc: ALoc,
 ) -> Type {
@@ -1589,7 +1620,12 @@ pub fn get_var_declared_type(
     }
 }
 
-pub fn constraining_type(default: Type, cx: &Context, name: &FlowSmolStr, loc: ALoc) -> Type {
+pub fn constraining_type<'cx>(
+    default: Type,
+    cx: &Context<'cx>,
+    name: &FlowSmolStr,
+    loc: ALoc,
+) -> Type {
     let env = cx.environment();
     let var_info = &env.var_info;
 
@@ -1636,8 +1672,8 @@ pub fn constraining_type(default: Type, cx: &Context, name: &FlowSmolStr, loc: A
 
 // Subtypes the given type against the providers for a def loc. Should be used on assignments to
 // non-import value bindings
-fn subtype_against_providers(
-    cx: &Context,
+fn subtype_against_providers<'cx>(
+    cx: &Context<'cx>,
     use_op: &UseOp,
     potential_global_name: Option<&str>,
     t: &Type,
@@ -1716,48 +1752,50 @@ fn subtype_against_providers(
     }
 }
 
-pub fn make_env_entries_under_resolution(cx: &Context, entries: EnvSet<ALoc>) {
+pub fn make_env_entries_under_resolution<'cx>(cx: &Context<'cx>, entries: EnvSet<ALoc>) {
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_errors::error_message::InternalError;
     use flow_typing_type::type_::any_t;
     use flow_typing_type::type_util;
-    use once_cell::unsync::Lazy;
 
-    let env = cx.environment();
-    let update = |key: &EnvKey<ALoc>| {
+    let mut env = cx.environment_mut();
+    let update = |env: &mut LocEnv<'cx, Context<'cx>>, key: &EnvKey<ALoc>| {
         let def_loc_kind = key.def_loc_type;
         let loc = key.loc.dupe();
         match env.types.get(key) {
             None => {}
             Some(type_entry) => {
-                let t = &type_entry.t;
-                let state = &type_entry.state;
-                let reason = type_util::reason_of_t(t);
+                let t = type_entry.t.dupe();
+                let reason = type_util::reason_of_t(&t);
                 let reason_clone = reason.dupe();
                 let loc_clone = loc.dupe();
-                let cx_clone = cx.dupe();
-                *state.borrow_mut() = Lazy::new(Box::new(move || {
+                let new_state: flow_lazy::Lazy<
+                    Context<'cx>,
+                    Type,
+                    Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
+                > = flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
                     flow_js::add_output_non_speculating(
-                        &cx_clone,
+                        cx,
                         ErrorMessage::EInternal(
                             loc_clone,
                             InternalError::ForcedReadOfUnderResolutionTvar(def_loc_kind),
                         ),
                     );
                     any_t::error(reason_clone)
-                }) as Box<dyn FnOnce() -> Type>);
+                }));
+                *type_entry.state.borrow_mut() = new_state;
             }
         }
     };
     for key in entries.iter() {
-        update(key);
+        update(&mut env, key);
     }
 }
 
 // Resolve `t` with the entry in the loc_env's map. This allows it to be looked up for Write
 // entries reported by the name_resolver as well as providers for the provider analysis
-pub fn resolve_env_entry(
-    cx: &Context,
+pub fn resolve_env_entry<'cx>(
+    cx: &Context<'cx>,
     t: Type,
     kind: DefLocType,
     add_array_or_object_literal_declaration_tracking: bool,
@@ -1771,8 +1809,6 @@ pub fn resolve_env_entry(
     use flow_typing_type::type_::DefT as DefTType;
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::TypeInner;
-    use once_cell::unsync::Lazy;
-
     flow_typing_debug::verbose::print_if_verbose(
         cx,
         None,
@@ -1784,13 +1820,15 @@ pub fn resolve_env_entry(
             loc.debug_to_string(true)
         )],
     );
-    let env = cx.environment();
-    let var_info = &env.var_info;
     let key = EnvKey::new(kind, loc.dupe());
-    match (
-        var_info.env_entries.get(&key),
-        env.find_write(kind, loc.dupe()),
-    ) {
+    let (env_entry, type_entry) = {
+        let env = cx.environment();
+        (
+            env.var_info.env_entries.get(&key).cloned(),
+            env.find_write(kind, loc.dupe()).cloned(),
+        )
+    };
+    match (env_entry, type_entry) {
         (Some(EnvEntry::NonAssigningWrite), _) => {}
         (_, None) => {
             flow_js::add_output_non_speculating(
@@ -1799,8 +1837,8 @@ pub fn resolve_env_entry(
             );
         }
         (_, Some(type_entry)) => {
-            let existing_t = &type_entry.t;
-            let state = &type_entry.state;
+            let existing_t = type_entry.t;
+            let state = type_entry.state;
             if add_array_or_object_literal_declaration_tracking {
                 if let TypeInner::OpenT(tvar) = existing_t.deref() {
                     cx.add_array_or_object_literal_declaration_tracking(
@@ -1811,8 +1849,11 @@ pub fn resolve_env_entry(
             }
             tvar_resolver::resolve(cx, tvar_resolver::default_no_lowers, true, &t);
             let t_clone = t.dupe();
-            let cx_clone = cx.dupe();
-            *state.borrow_mut() = Lazy::new(Box::new(move || {
+            let new_state: flow_lazy::Lazy<
+                Context<'cx>,
+                Type,
+                Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
+            > = flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
                 // Unwrap possible OpenT so that OpenT doesn't wrap another OpenT.
                 // This has to be done lazily, so that we don't force tvars until we
                 // resolved all entries in a component.
@@ -1821,7 +1862,7 @@ pub fn resolve_env_entry(
                         let r = tvar.reason();
                         let id = tvar.id() as i32;
                         flow_js_utils::merge_tvar(
-                            &cx_clone,
+                            cx,
                             false,
                             |_cx, r| {
                                 Type::new(TypeInner::DefT(
@@ -1836,12 +1877,13 @@ pub fn resolve_env_entry(
                     // | t -> t
                     _ => t_clone.dupe(),
                 }
-            }) as Box<dyn FnOnce() -> Type>);
+            }));
+            *state.borrow_mut() = new_state;
         }
     }
 }
 
-fn subtype_entry(cx: &Context, use_op: &UseOp, t: &Type, loc: ALoc) {
+fn subtype_entry<'cx>(cx: &Context<'cx>, use_op: &UseOp, t: &Type, loc: ALoc) {
     use flow_typing_type::type_::UseT;
     use flow_typing_type::type_::UseTInner;
 
@@ -1865,7 +1907,7 @@ fn subtype_entry(cx: &Context, use_op: &UseOp, t: &Type, loc: ALoc) {
 // init_entry is called on variable declarations (not assignments), and `t`
 // is the RHS type. If the variable is annotated, we just need to check t against
 // its type; but if it's not annotated, the RHS t becomes the variable's type.
-fn init_entry(cx: &Context, use_op: &UseOp, t: &Type, loc: ALoc) {
+fn init_entry<'cx>(cx: &Context<'cx>, use_op: &UseOp, t: &Type, loc: ALoc) {
     let env = cx.environment();
     let var_info = &env.var_info;
     if is_def_loc_annotated(var_info, &loc) {
@@ -1873,61 +1915,61 @@ fn init_entry(cx: &Context, use_op: &UseOp, t: &Type, loc: ALoc) {
     }
 }
 
-pub fn set_var(cx: &Context, use_op: &UseOp, name: &str, t: &Type, loc: ALoc) {
+pub fn set_var<'cx>(cx: &Context<'cx>, use_op: &UseOp, name: &str, t: &Type, loc: ALoc) {
     subtype_against_providers(cx, use_op, Some(name), t, loc)
 }
 
-pub fn bind_function_param(cx: &Context, t: Type, loc: ALoc) {
+pub fn bind_function_param<'cx>(cx: &Context<'cx>, t: Type, loc: ALoc) {
     resolve_env_entry(cx, t, DefLocType::FunctionParamLoc, false, loc)
 }
 
-pub fn bind_function_this(cx: &Context, t: Type, loc: ALoc) {
+pub fn bind_function_this<'cx>(cx: &Context<'cx>, t: Type, loc: ALoc) {
     if matches!(&*cx.typing_mode(), TypingMode::CheckingMode) {
         resolve_env_entry(cx, t, DefLocType::FunctionThisLoc, false, loc)
     }
 }
 
-pub fn bind_class_instance_this(cx: &Context, t: Type, loc: ALoc) {
+pub fn bind_class_instance_this<'cx>(cx: &Context<'cx>, t: Type, loc: ALoc) {
     resolve_env_entry(cx, t, DefLocType::ClassInstanceThisLoc, false, loc)
 }
 
-pub fn bind_class_static_this(cx: &Context, t: Type, loc: ALoc) {
+pub fn bind_class_static_this<'cx>(cx: &Context<'cx>, t: Type, loc: ALoc) {
     resolve_env_entry(cx, t, DefLocType::ClassStaticThisLoc, false, loc)
 }
 
-pub fn bind_class_instance_super(cx: &Context, t: Type, loc: ALoc) {
+pub fn bind_class_instance_super<'cx>(cx: &Context<'cx>, t: Type, loc: ALoc) {
     resolve_env_entry(cx, t, DefLocType::ClassInstanceSuperLoc, false, loc)
 }
 
-pub fn bind_class_static_super(cx: &Context, t: Type, loc: ALoc) {
+pub fn bind_class_static_super<'cx>(cx: &Context<'cx>, t: Type, loc: ALoc) {
     resolve_env_entry(cx, t, DefLocType::ClassStaticSuperLoc, false, loc)
 }
 
-pub fn bind_class_self_type(cx: &Context, t: Type, loc: ALoc) {
+pub fn bind_class_self_type<'cx>(cx: &Context<'cx>, t: Type, loc: ALoc) {
     resolve_env_entry(cx, t, DefLocType::ClassSelfLoc, false, loc)
 }
 
-pub fn init_var(cx: &Context, use_op: &UseOp, t: &Type, loc: ALoc) {
+pub fn init_var<'cx>(cx: &Context<'cx>, use_op: &UseOp, t: &Type, loc: ALoc) {
     init_entry(cx, use_op, t, loc)
 }
 
-pub fn init_let(cx: &Context, use_op: &UseOp, t: &Type, loc: ALoc) {
+pub fn init_let<'cx>(cx: &Context<'cx>, use_op: &UseOp, t: &Type, loc: ALoc) {
     init_entry(cx, use_op, t, loc)
 }
 
-pub fn init_implicit_let(cx: &Context, use_op: &UseOp, t: &Type, loc: ALoc) {
+pub fn init_implicit_let<'cx>(cx: &Context<'cx>, use_op: &UseOp, t: &Type, loc: ALoc) {
     init_entry(cx, use_op, t, loc)
 }
 
-pub fn init_const(cx: &Context, use_op: &UseOp, t: &Type, loc: ALoc) {
+pub fn init_const<'cx>(cx: &Context<'cx>, use_op: &UseOp, t: &Type, loc: ALoc) {
     init_entry(cx, use_op, t, loc)
 }
 
-pub fn init_implicit_const(cx: &Context, use_op: &UseOp, t: &Type, loc: ALoc) {
+pub fn init_implicit_const<'cx>(cx: &Context<'cx>, use_op: &UseOp, t: &Type, loc: ALoc) {
     init_entry(cx, use_op, t, loc)
 }
 
-pub fn read_declared_type(cx: &Context, reason: Reason, loc: ALoc) -> Type {
+pub fn read_declared_type<'cx>(cx: &Context<'cx>, reason: Reason, loc: ALoc) -> Type {
     use flow_typing_type::type_::empty_t;
     // match checked_find_loc_env_write_opt cx Env_api.OrdinaryNameLoc loc with
     match checked_find_loc_env_write_opt(cx, DefLocType::OrdinaryNameLoc, loc) {
@@ -1942,16 +1984,13 @@ pub fn read_declared_type(cx: &Context, reason: Reason, loc: ALoc) -> Type {
 // (* Variable Declaration *)
 // (************************)
 
-pub fn init_env(cx: &Context, toplevel_scope_kind: ScopeKind) {
-    use std::cell::RefCell;
+pub fn init_env<'cx>(cx: &Context<'cx>, toplevel_scope_kind: ScopeKind) {
     use std::rc::Rc;
 
     use flow_common::reason::mk_reason;
     use flow_typing_errors::error_message::ErrorMessage;
     use flow_typing_errors::error_message::InternalError;
     use flow_typing_type::type_::any_t;
-    use once_cell::unsync::Lazy;
-
     let entries: Vec<_> = {
         let env = cx.environment();
         env.var_info
@@ -1961,80 +2000,83 @@ pub fn init_env(cx: &Context, toplevel_scope_kind: ScopeKind) {
             .collect()
     };
 
-    let initialize_entry = |cx: &Context,
-                            def_loc_type: DefLocType,
-                            loc: ALoc,
-                            env_entry: &EnvEntry<ALoc>| {
-        match env_entry {
-            EnvEntry::AssigningWrite(reason) | EnvEntry::GlobalWrite(reason) => {
-                let reason_clone = reason.dupe();
-                let reason_clone2 = reason.dupe();
-                let loc_clone = reason.loc().dupe();
-                let cx_clone = cx.dupe();
-                let state: Rc<RefCell<Lazy<Type, Box<dyn FnOnce() -> Type>>>> =
-                    Rc::new(RefCell::new(Lazy::new(Box::new(move || {
+    let initialize_entry =
+        |cx: &Context<'cx>, def_loc_type: DefLocType, loc: ALoc, env_entry: &EnvEntry<ALoc>| {
+            match env_entry {
+                EnvEntry::AssigningWrite(reason) | EnvEntry::GlobalWrite(reason) => {
+                    let reason_clone = reason.dupe();
+                    let reason_clone2 = reason.dupe();
+                    let loc_clone = reason.loc().dupe();
+                    let initial_state: flow_lazy::Lazy<
+                        Context<'cx>,
+                        Type,
+                        Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
+                    > = flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
                         flow_js::add_output_non_speculating(
-                            &cx_clone,
+                            cx,
                             ErrorMessage::EInternal(
                                 loc_clone,
                                 InternalError::ReadOfUnreachedTvar(def_loc_type),
                             ),
                         );
-                        match &*cx_clone.typing_mode() {
+                        match &*cx.typing_mode() {
                             TypingMode::CheckingMode => any_t::error(reason_clone),
                             TypingMode::SynthesisMode { .. } | TypingMode::HintEvaluationMode => {
                                 any_t::placeholder(reason_clone)
                             }
                         }
-                    })
-                        as Box<dyn FnOnce() -> Type>)));
-                let state_for_lazy = state.dupe();
-                let lazy_t: Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>> =
-                    Rc::new(Lazy::new(Box::new(move || {
-                        let inner = state_for_lazy.borrow();
-                        (*inner).dupe()
-                    })
-                        as Box<dyn FnOnce() -> Type>));
-                // During initialization, all these lazy tvars are created, but not all of them are
-                // ready for forcing. The ones that are ready for forcing will be separately added to
-                // the list after each component resolution.
-                let force_post_component = false;
-                let t = flow_typing_tvar::mk_fully_resolved_lazy(
-                    cx,
-                    reason_clone2,
-                    force_post_component,
-                    lazy_t,
-                );
-                let mut current_env = cx.environment_mut();
-                current_env.initialize(def_loc_type, loc, TypeEntry { t, state });
-            }
-            EnvEntry::NonAssigningWrite => {
-                if is_provider(cx, loc.dupe()) {
-                    // If an illegal write is considered as a provider, we still need to give it a
-                    // slot to prevent crashing in code that queries provider types.
-                    let reason = mk_reason(
-                        flow_common::reason::VirtualReasonDesc::RAnyImplicit,
-                        loc.dupe(),
-                    );
-                    let reason_clone = reason.dupe();
-                    let state: Rc<RefCell<Lazy<Type, Box<dyn FnOnce() -> Type>>>> = Rc::new(
-                        RefCell::new(Lazy::new(Box::new(move || any_t::error(reason_clone))
-                            as Box<dyn FnOnce() -> Type>)),
-                    );
+                    }));
+                    let state = Rc::new(RefCell::new(initial_state));
                     let state_for_lazy = state.dupe();
-                    let lazy_t: Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>> =
-                        Rc::new(Lazy::new(Box::new(move || {
-                            let inner = state_for_lazy.borrow();
-                            (*inner).dupe()
-                        })
-                            as Box<dyn FnOnce() -> Type>));
-                    let t = flow_typing_tvar::mk_fully_resolved_lazy(cx, reason, false, lazy_t);
+                    let lazy_t: Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx> =
+                        Box::new(move |cx: &Context<'cx>| {
+                            let current_state = state_for_lazy.borrow();
+                            current_state.get_forced(cx).dupe()
+                        });
+                    // During initialization, all these lazy tvars are created, but not all of them are
+                    // ready for forcing. The ones that are ready for forcing will be separately added to
+                    // the list after each component resolution.
+                    let force_post_component = false;
+                    let t = flow_typing_tvar::mk_fully_resolved_lazy(
+                        cx,
+                        reason_clone2,
+                        force_post_component,
+                        lazy_t,
+                    );
                     let mut current_env = cx.environment_mut();
                     current_env.initialize(def_loc_type, loc, TypeEntry { t, state });
                 }
+                EnvEntry::NonAssigningWrite => {
+                    if is_provider(cx, loc.dupe()) {
+                        // If an illegal write is considered as a provider, we still need to give it a
+                        // slot to prevent crashing in code that queries provider types.
+                        let reason = mk_reason(
+                            flow_common::reason::VirtualReasonDesc::RAnyImplicit,
+                            loc.dupe(),
+                        );
+                        let reason_clone = reason.dupe();
+                        let initial_state: flow_lazy::Lazy<
+                            Context<'cx>,
+                            Type,
+                            Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>,
+                        > = flow_lazy::Lazy::new(Box::new(move |_cx: &Context<'cx>| {
+                            any_t::error(reason_clone)
+                        })
+                            as Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>);
+                        let state = Rc::new(RefCell::new(initial_state));
+                        let state_for_lazy = state.dupe();
+                        let lazy_t: Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx> =
+                            Box::new(move |cx: &Context<'cx>| {
+                                let current_state = state_for_lazy.borrow();
+                                current_state.get_forced(cx).dupe()
+                            });
+                        let t = flow_typing_tvar::mk_fully_resolved_lazy(cx, reason, false, lazy_t);
+                        let mut current_env = cx.environment_mut();
+                        current_env.initialize(def_loc_type, loc, TypeEntry { t, state });
+                    }
+                }
             }
-        }
-    };
+        };
 
     for (key, env_entry) in &entries {
         // Array providers must be initialized first
@@ -2053,8 +2095,8 @@ pub fn init_env(cx: &Context, toplevel_scope_kind: ScopeKind) {
     env.scope_kind = toplevel_scope_kind;
 }
 
-pub fn discriminant_after_negated_cases(
-    cx: &Context,
+pub fn discriminant_after_negated_cases<'cx>(
+    cx: &Context<'cx>,
     switch_loc: ALoc,
     refinement_key_opt: Option<&Key>,
 ) -> Option<Type> {
@@ -2073,7 +2115,7 @@ pub fn discriminant_after_negated_cases(
     .ok()
 }
 
-pub fn get_next(cx: &Context, loc: ALoc) -> Type {
+pub fn get_next<'cx>(cx: &Context<'cx>, loc: ALoc) -> Type {
     use flow_common::reason::mk_reason;
 
     read_entry_exn(

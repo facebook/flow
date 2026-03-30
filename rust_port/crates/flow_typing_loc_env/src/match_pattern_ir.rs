@@ -837,53 +837,55 @@ pub fn empty_inexact_tuple_pattern(reason: Reason) -> pattern_object::PatternObj
 }
 
 pub mod value_object {
-    use std::ops::Deref;
-
     use dupe::IterDupedExt;
-    use once_cell::unsync::Lazy;
 
     use super::*;
 
-    pub type LazyValueUnion =
-        Rc<Lazy<value_union::ValueUnion, Box<dyn FnOnce() -> value_union::ValueUnion>>>;
+    pub type LazyValueUnion<'cx, CX> = Rc<
+        flow_lazy::Lazy<
+            CX,
+            value_union::ValueUnion<'cx, CX>,
+            Box<dyn FnOnce(&CX) -> value_union::ValueUnion<'cx, CX> + 'cx>,
+        >,
+    >;
 
     #[derive(Debug, Clone, Dupe)]
-    pub struct Property {
+    pub struct Property<'cx, CX: Clone> {
         pub loc: ALoc,
-        pub value: LazyValueUnion,
+        pub value: LazyValueUnion<'cx, CX>,
         pub optional: bool,
     }
 
     pub mod properties {
         use super::*;
 
-        pub type Properties = FlowOrdMap<FlowSmolStr, Option<Property>>;
+        pub type Properties<'cx, CX> = FlowOrdMap<FlowSmolStr, Option<Property<'cx, CX>>>;
 
-        pub fn is_empty(props: &Properties) -> bool {
+        pub fn is_empty<CX: Clone>(props: &Properties<'_, CX>) -> bool {
             !props.values().any(|prop| prop.is_some())
         }
     }
 
     #[derive(Debug, Clone)]
-    pub struct ValueObjectInner {
+    pub struct ValueObjectInner<'cx, CX: Clone> {
         pub kind: ObjKind,
         pub t: Type,
-        pub props: properties::Properties,
+        pub props: properties::Properties<'cx, CX>,
         pub class_info: Option<(ALocId, Option<FlowSmolStr>, FlowOrdSet<ALocId>)>,
         pub rest: Option<Reason>,
         pub sentinel_props: FlowOrdSet<FlowSmolStr>,
     }
 
     #[derive(Debug, Clone, Dupe)]
-    pub struct ValueObject(pub Reason, pub Rc<ValueObjectInner>);
+    pub struct ValueObject<'cx, CX: Clone>(pub Reason, pub Rc<ValueObjectInner<'cx, CX>>);
 
-    impl ValueObject {
+    impl<'cx, CX: Clone> ValueObject<'cx, CX> {
         pub fn to_original_type(&self) -> Type {
             let ValueObject(_, inner) = self;
             inner.t.dupe()
         }
 
-        pub fn to_pattern(&self) -> pattern_object::PatternObject {
+        pub fn to_pattern(&self, cx: &CX) -> pattern_object::PatternObject {
             let ValueObject(reason, inner) = self;
             let ValueObjectInner {
                 props,
@@ -921,8 +923,8 @@ pub mod value_object {
                                 if result_rest.is_none() {
                                     result_rest = Some(reason.dupe());
                                 }
-                            } else if Lazy::get(&**value).is_some() || is_sentinel_prop {
-                                let pattern_value = Lazy::force(&**value).to_pattern();
+                            } else if value.is_forced() || is_sentinel_prop {
+                                let pattern_value = value.get_forced(cx).to_pattern(cx);
                                 let pattern_prop = pattern_object::Property {
                                     loc: loc.dupe(),
                                     value: pattern_value,
@@ -977,8 +979,8 @@ pub mod value_object {
                                     value: prop_value,
                                     loc: prop_loc,
                                     ..
-                                }) if Lazy::get(prop_value.deref()).is_some() => {
-                                    (prop_loc.dupe(), Lazy::force(&**prop_value).to_pattern())
+                                }) if prop_value.is_forced() => {
+                                    (prop_loc.dupe(), prop_value.get_forced(cx).to_pattern(cx))
                                 }
                                 _ => (loc.dupe(), wildcard_pattern(reason.dupe())),
                             };
@@ -1022,21 +1024,20 @@ pub mod value_object {
 // A representation of a union of values.
 pub mod value_union {
     use flow_typing_type::type_util;
-    use once_cell::unsync::Lazy;
 
     use super::*;
 
     #[derive(Debug, Clone, Dupe)]
-    pub struct ValueUnion {
+    pub struct ValueUnion<'cx, CX: Clone> {
         pub leafs: LeafSet,
-        pub tuples: FlowVector<value_object::ValueObject>,
-        pub arrays: FlowVector<value_object::ValueObject>,
-        pub objects: FlowVector<value_object::ValueObject>,
+        pub tuples: FlowVector<value_object::ValueObject<'cx, CX>>,
+        pub arrays: FlowVector<value_object::ValueObject<'cx, CX>>,
+        pub objects: FlowVector<value_object::ValueObject<'cx, CX>>,
         pub enum_unknown_members: FlowVector<(Reason, LeafSet)>,
         pub inexhaustible: FlowVector<Type>,
     }
 
-    impl ValueUnion {
+    impl<'cx, CX: Clone> ValueUnion<'cx, CX> {
         pub fn empty() -> Self {
             Self {
                 leafs: FlowOrdSet::default(),
@@ -1119,7 +1120,7 @@ pub mod value_union {
             }
         }
 
-        pub fn to_pattern(&self) -> pattern_union::PatternUnion {
+        pub fn to_pattern(&self, cx: &CX) -> pattern_union::PatternUnion {
             let ValueUnion {
                 leafs,
                 tuples,
@@ -1138,7 +1139,7 @@ pub mod value_union {
             //        )
             //   in
             let mut tuple_patterns: Vec<pattern_object::PatternObject> =
-                tuples.iter().map(|vo| vo.to_pattern()).collect();
+                tuples.iter().map(|vo| vo.to_pattern(cx)).collect();
             tuple_patterns.sort();
 
             let mut tuples_exact: FlowOrdMap<usize, FlowVector<pattern_object::WithIndex>> =
@@ -1180,7 +1181,7 @@ pub mod value_union {
             }
 
             let mut object_patterns: Vec<pattern_object::PatternObject> =
-                objects.iter().map(|vo| vo.to_pattern()).collect();
+                objects.iter().map(|vo| vo.to_pattern(cx)).collect();
             object_patterns.sort();
             let objects_result: Vec<pattern_object::WithIndex> =
                 object_patterns.into_iter().enumerate().collect();
@@ -1236,7 +1237,7 @@ pub mod value_union {
             type_util::union_of_ts(r, all_possible_types, None)
         }
 
-        pub fn select(&self, selector: &Selector<ALoc, ALoc>) -> Option<Self> {
+        pub fn select(&self, cx: &CX, selector: &Selector<ALoc, ALoc>) -> Option<Self> {
             let Self {
                 tuples,
                 arrays,
@@ -1244,11 +1245,11 @@ pub mod value_union {
                 ..
             } = self;
 
-            fn conservative_find(
+            fn conservative_find<'a, 'cx, CX: Clone>(
                 key: &FlowSmolStr,
-                values: &FlowVector<value_object::ValueObject>,
-            ) -> Option<Vec<value_object::LazyValueUnion>> {
-                let mut acc: Vec<value_object::LazyValueUnion> = Vec::new();
+                values: &'a FlowVector<value_object::ValueObject<'cx, CX>>,
+            ) -> Option<Vec<value_object::LazyValueUnion<'cx, CX>>> {
+                let mut acc: Vec<value_object::LazyValueUnion<'cx, CX>> = Vec::new();
                 for value_object::ValueObject(_, inner) in values.iter() {
                     let value_object::ValueObjectInner { props, rest, .. } = inner.as_ref();
                     match props.get(key) {
@@ -1269,27 +1270,27 @@ pub mod value_union {
             }
 
             let conservative_find_all =
-                |key: &FlowSmolStr| -> Option<Vec<value_object::LazyValueUnion>> {
+                |key: &FlowSmolStr| -> Option<Vec<value_object::LazyValueUnion<'cx, CX>>> {
                     let tuple_candidates = conservative_find(key, tuples)?;
                     let array_candidates = conservative_find(key, arrays)?;
                     let object_candidates = conservative_find(key, objects)?;
                     Some([tuple_candidates, array_candidates, object_candidates].concat())
                 };
 
-            let vus_opt: Option<Vec<ValueUnion>> = match selector {
+            let vus_opt: Option<Vec<ValueUnion<'cx, CX>>> = match selector {
                 Selector::Elem { index, .. } => {
                     let key: FlowSmolStr = index.to_string().into();
                     conservative_find_all(&key).map(|lazy_cells| {
                         lazy_cells
                             .into_iter()
-                            .map(|cell| Lazy::force(&*cell).dupe())
+                            .map(|cell| cell.get_forced(cx).clone())
                             .collect()
                     })
                 }
                 Selector::Prop { prop, .. } => conservative_find_all(prop).map(|lazy_cells| {
                     lazy_cells
                         .into_iter()
-                        .map(|cell| Lazy::force(&*cell).clone())
+                        .map(|cell| cell.get_forced(cx).clone())
                         .collect()
                 }),
                 Selector::Computed { .. } => None,

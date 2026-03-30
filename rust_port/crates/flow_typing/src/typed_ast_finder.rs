@@ -15,7 +15,7 @@ use flow_typing_statement::statement;
 use flow_typing_type::type_::Type;
 use flow_typing_type::type_::TypeParam;
 
-pub fn mk_bound_t(cx: &Context, tparam: &TypeParam) -> Type {
+pub fn mk_bound_t<'a>(cx: &Context<'a>, tparam: &TypeParam) -> Type {
     flow_js_utils::generic_of_tparam(cx, |x: &Type| x.dupe(), tparam)
 }
 
@@ -28,8 +28,8 @@ pub enum EnclosingNode<M: Dupe, T: Dupe> {
 
 use flow_typing_utils::abnormal::AbnormalControlFlow;
 
-pub fn infer_node(
-    cx: &Context,
+pub fn infer_node<'a>(
+    cx: &Context<'a>,
     node: EnclosingNode<ALoc, ALoc>,
 ) -> Result<EnclosingNode<ALoc, (ALoc, Type)>, AbnormalControlFlow> {
     match node {
@@ -186,13 +186,13 @@ pub mod type_at_pos {
     // - literal object keys      (handled in object_key)
     // - `this`, `super`          (handled in expression)
     // - private property names   (handled in expression)
-    struct TypeAtPosSearcher<'a> {
-        cx: &'a Context,
+    struct TypeAtPosSearcher<'a, 'cx> {
+        cx: &'a Context<'cx>,
         target_loc: Loc,
         rev_bound_tparams: Vec<TypeParam>,
     }
 
-    impl<'a> TypeAtPosSearcher<'a> {
+    impl<'a, 'cx> TypeAtPosSearcher<'a, 'cx> {
         fn covers_target(&self, loc: &ALoc) -> bool {
             reason::in_range(&self.target_loc, loc.to_loc_exn())
         }
@@ -308,8 +308,8 @@ pub mod type_at_pos {
         }
     }
 
-    impl<'ast, 'a> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundResult>
-        for TypeAtPosSearcher<'a>
+    impl<'ast, 'a, 'cx> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundResult>
+        for TypeAtPosSearcher<'a, 'cx>
     {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
@@ -507,7 +507,7 @@ pub mod type_at_pos {
                     loc.dupe(),
                 );
                 let LazyHintT(_, lazy_hint) = type_env::get_hint(self.cx, loc.dupe());
-                let hint_result = lazy_hint(false, None, reason);
+                let hint_result = lazy_hint(self.cx, false, None, reason);
                 // Split with_hint_result to avoid double &mut self borrow in closures
                 let hint_t = type_hint::with_hint_result(Some, || None, hint_result);
                 match hint_t {
@@ -560,7 +560,7 @@ pub mod type_at_pos {
     }
 
     pub fn find(
-        cx: &Context,
+        cx: &Context<'_>,
         typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
         loc: Loc,
     ) -> TypeAtPosResult {
@@ -582,7 +582,7 @@ pub mod type_at_pos {
 }
 
 pub fn find_type_at_pos_annotation(
-    cx: &Context,
+    cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc: Loc,
 ) -> type_at_pos::TypeAtPosResult {

@@ -328,7 +328,7 @@ pub fn check_contents(
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> (Context, ast::Program<ALoc, (ALoc, Type)>) {
+) -> (Context<'static>, ast::Program<ALoc, (ALoc, Type)>) {
     with_timer(options, "MergeContents", || {
         ensure_checked_dependencies(
             options,
@@ -362,7 +362,7 @@ pub fn compute_env_of_contents(
     requires: &[flow_common::flow_import_specifier::FlowImportSpecifier],
     file_sig: Arc<flow_parser_utils::file_sig::FileSig>,
     node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> (Context, ast::Program<ALoc, ALoc>) {
+) -> (Context<'static>, ast::Program<ALoc, ALoc>) {
     type_inference_hooks_js::with_for_ide(true, || {
         with_timer(options, "MergeContents", || {
             ensure_checked_dependencies(
@@ -395,7 +395,7 @@ pub fn type_parse_artifacts(
     filename: FileKey,
     intermediate_result: (Option<ParseArtifacts>, ErrorSet),
     node_modules_containers: &std::collections::BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> Result<FileArtifacts, ErrorSet> {
+) -> Result<FileArtifacts<'static>, ErrorSet> {
     match intermediate_result {
         (Some(parse_artifacts), _errs) => {
             let ParseArtifacts {

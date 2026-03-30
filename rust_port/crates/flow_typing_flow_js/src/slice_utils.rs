@@ -72,8 +72,8 @@ use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util;
 use vec1::Vec1;
 
-pub fn mk_object_type(
-    cx: &Context,
+pub fn mk_object_type<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     wrap_on_exact_obj: bool,
     invalidate_aliases: bool,
@@ -291,8 +291,8 @@ pub fn read_dict(r: &Reason, dict: &DictType) -> Type {
     }
 }
 
-pub fn object_slice(
-    cx: &Context,
+pub fn object_slice<'cx>(
+    cx: &Context<'cx>,
     interface: Option<(Type, InstType)>,
     r: &Reason,
     id: properties::Id,
@@ -418,9 +418,9 @@ where
     Ok(acc)
 }
 
-fn spread2(
-    dict_check: &dyn Fn(&Context, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
-    cx: &Context,
+fn spread2<'cx>(
+    dict_check: &dyn Fn(&Context<'cx>, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
+    cx: &Context<'cx>,
     use_op: &UseOp,
     reason: &Reason,
     (
@@ -681,9 +681,9 @@ fn spread2(
     }
 }
 
-pub fn spread(
-    dict_check: &dyn Fn(&Context, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
-    cx: &Context,
+pub fn spread<'cx>(
+    dict_check: &dyn Fn(&Context<'cx>, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
+    cx: &Context<'cx>,
     use_op: &UseOp,
     reason: &Reason,
     nel: (object::spread::AccElement, Vec<object::spread::AccElement>),
@@ -744,8 +744,8 @@ pub fn spread(
     }
 }
 
-pub fn spread_mk_object(
-    cx: &Context,
+pub fn spread_mk_object<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     target: &object::spread::Target,
     slice: &object::Slice,
@@ -832,12 +832,12 @@ pub fn spread_mk_object(
     )
 }
 
-pub fn object_spread<A>(
-    dict_check: &dyn Fn(&Context, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
-    add_output: &dyn Fn(&Context, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context, UseOp, Type) -> Result<A, FlowJsException>,
+pub fn object_spread<'cx, A>(
+    dict_check: &dyn Fn(&Context<'cx>, UseOp, &DictType, &DictType) -> Result<(), FlowJsException>,
+    add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
+    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context,
+        &Context<'cx>,
         UseOp,
         &Reason,
         object::ResolveTool,
@@ -846,7 +846,7 @@ pub fn object_spread<A>(
     ) -> Result<A, FlowJsException>,
     options: &object::spread::Target,
     state: object::spread::State,
-    cx: &Context,
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     x: Vec1<object::Slice>,
@@ -984,8 +984,8 @@ pub fn object_spread<A>(
     return_(cx, use_op, t)
 }
 
-fn check_config2(
-    cx: &Context,
+fn check_config2<'cx>(
+    cx: &Context<'cx>,
     allow_ref_in_spread: bool,
     pmap: &properties::PropertiesMap,
     slice: &object::Slice,
@@ -1085,12 +1085,12 @@ fn check_config2(
     (t, duplicate_props_in_spread, ref_prop_in_spread)
 }
 
-pub fn check_component_config<A>(
-    add_output: &dyn Fn(&Context, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context, UseOp, Type) -> Result<A, FlowJsException>,
+pub fn check_component_config<'cx, A>(
+    add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
+    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     allow_ref_in_spread: bool,
     pmap: &properties::PropertiesMap,
-    cx: &Context,
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     x: Vec1<object::Slice>,
@@ -1145,26 +1145,26 @@ pub fn check_component_config<A>(
 // * Object Rest *
 // ***************
 
-pub fn object_rest<A>(
-    add_output: &dyn Fn(&Context, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
+pub fn object_rest<'cx, A>(
+    add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
     return_: &dyn Fn(
-        &Context,
+        &Context<'cx>,
         Box<dyn Fn(Polarity) -> UseOp>,
         object::rest::MergeMode,
         Type,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context,
+        &Context<'cx>,
         UseOp,
         &Reason,
         object::ResolveTool,
         object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    subt_check: &dyn Fn(UseOp, &Context, (&Type, &Type)) -> Result<(), FlowJsException>,
+    subt_check: &dyn Fn(UseOp, &Context<'cx>, (&Type, &Type)) -> Result<(), FlowJsException>,
     options: &object::rest::MergeMode,
     state: &object::rest::State,
-    cx: &Context,
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     x: Vec1<object::Slice>,
@@ -1192,7 +1192,7 @@ pub fn object_rest<A>(
     //
     // The resulting object only has a property if the property is own in props1 and
     // it is not an own property of props2.
-    let rest = |cx: &Context,
+    let rest = |cx,
                 use_op: &UseOp,
                 merge_mode: &object::rest::MergeMode,
                 object::Slice {
@@ -1471,8 +1471,8 @@ pub fn object_rest<A>(
 // *********************
 // * Object Make Exact *
 // *********************
-pub fn object_make_exact(
-    cx: &Context,
+pub fn object_make_exact<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     x: Vec1<object::Slice>,
 ) -> Result<Type, FlowJsException> {
@@ -1587,7 +1587,7 @@ pub fn object_make_exact(
 // ********************
 // * Object Read Only *
 // ********************
-pub fn object_read_only(cx: &Context, reason: &Reason, x: Vec1<object::Slice>) -> Type {
+pub fn object_read_only<'cx>(cx: &Context<'cx>, reason: &Reason, x: Vec1<object::Slice>) -> Type {
     let polarity = Polarity::Positive;
     let mk_read_only_object = |object::Slice {
                                    reason: r,
@@ -1674,9 +1674,9 @@ pub enum ObjectUpdateOptionalityKind {
     Required,
 }
 
-pub fn object_update_optionality(
+pub fn object_update_optionality<'cx>(
     kind: ObjectUpdateOptionalityKind,
-    cx: &Context,
+    cx: &Context<'cx>,
     reason: &Reason,
     x: Vec1<object::Slice>,
 ) -> Type {
@@ -1808,8 +1808,8 @@ pub fn object_update_optionality(
 // {...{p:T}&{p:U}} = {...{p:T&U}}
 // {...A&(B|C)} = {...(A&B)|(A&C)}
 // {...(A|B)&C} = {...(A&C)|(B&C)}
-pub fn intersect2(
-    cx: &Context,
+pub fn intersect2<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     object::Slice {
         reason: r1,
@@ -1952,8 +1952,8 @@ pub fn intersect2(
     )
 }
 
-pub fn intersect2_with_reason(
-    cx: &Context,
+pub fn intersect2_with_reason<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     intersection_loc: ALoc,
     x1: &object::Slice,
@@ -1972,10 +1972,10 @@ pub fn intersect2_with_reason(
     }
 }
 
-pub fn resolved<A>(
-    next: &dyn Fn(&Context, UseOp, &object::Tool, &Reason, Vec1<object::Slice>) -> A,
-    recurse: &dyn Fn(&Context, UseOp, &Reason, object::ResolveTool, &object::Tool, Type) -> A,
-    cx: &Context,
+pub fn resolved<'cx, A>(
+    next: &dyn Fn(&Context<'cx>, UseOp, &object::Tool, &Reason, Vec1<object::Slice>) -> A,
+    recurse: &dyn Fn(&Context<'cx>, UseOp, &Reason, object::ResolveTool, &object::Tool, Type) -> A,
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: object::Resolve,
@@ -2037,8 +2037,8 @@ pub fn resolved<A>(
     }
 }
 
-pub fn interface_slice(
-    cx: &Context,
+pub fn interface_slice<'cx>(
+    cx: &Context<'cx>,
     r: &Reason,
     static_: &Type,
     inst: InstType,
@@ -2066,26 +2066,26 @@ pub fn interface_slice(
     )
 }
 
-pub fn resolve<A>(
-    add_output: &dyn Fn(&Context, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context, UseOp, Type) -> Result<A, FlowJsException>,
+pub fn resolve<'cx, A>(
+    add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
+    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     next: &dyn Fn(
-        &Context,
+        &Context<'cx>,
         UseOp,
         &object::Tool,
         &Reason,
         Vec1<object::Slice>,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context,
+        &Context<'cx>,
         UseOp,
         &Reason,
         object::ResolveTool,
         &object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    statics: &dyn Fn(&Context, &Reason, &Type) -> Result<Type, FlowJsException>,
-    cx: &Context,
+    statics: &dyn Fn(&Context<'cx>, &Reason, &Type) -> Result<Type, FlowJsException>,
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: object::Resolve,
@@ -2093,8 +2093,8 @@ pub fn resolve<A>(
     t: &Type,
 ) -> Result<A, FlowJsException> {
     let (t_generic_id, t) = {
-        fn loop_generic(
-            cx: &Context,
+        fn loop_generic<'cx>(
+            cx: &Context<'cx>,
             t: &Type,
             ls: object::GenericSpreadId,
         ) -> (object::GenericSpreadId, Type) {
@@ -2520,24 +2520,24 @@ pub fn resolve<A>(
     return_(cx, use_op, any_t::error(reason.dupe()))
 }
 
-pub fn super_<A>(
-    return_: &dyn Fn(&Context, UseOp, Type) -> Result<A, FlowJsException>,
+pub fn super_<'cx, A>(
+    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     next: &dyn Fn(
-        &Context,
+        &Context<'cx>,
         UseOp,
         &object::Tool,
         &Reason,
         Vec1<object::Slice>,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context,
+        &Context<'cx>,
         UseOp,
         &Reason,
         object::ResolveTool,
         &object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    cx: &Context,
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: object::Resolve,
@@ -2620,10 +2620,10 @@ pub fn is_prop_optional(t: &Type) -> bool {
     matches!(t.deref(), TypeInner::OptionalT { .. })
 }
 
-pub fn map_object(
+pub fn map_object<'cx>(
     poly_prop: &Type,
     mapped_type_flags: &MappedTypeFlags,
-    cx: &Context,
+    cx: &Context<'cx>,
     reason: &Reason,
     use_op: &UseOp,
     selected_keys: Option<(Vec<(Name, Reason)>, Vec<Type>)>,
@@ -2782,26 +2782,26 @@ pub fn map_object(
     )
 }
 
-pub fn run<A>(
-    add_output: &dyn Fn(&Context, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
-    return_: &dyn Fn(&Context, UseOp, Type) -> Result<A, FlowJsException>,
+pub fn run<'cx, A>(
+    add_output: &dyn Fn(&Context<'cx>, ErrorMessage<ALoc>) -> Result<(), FlowJsException>,
+    return_: &dyn Fn(&Context<'cx>, UseOp, Type) -> Result<A, FlowJsException>,
     next: &dyn Fn(
-        &Context,
+        &Context<'cx>,
         UseOp,
         &object::Tool,
         &Reason,
         Vec1<object::Slice>,
     ) -> Result<A, FlowJsException>,
     recurse: &dyn Fn(
-        &Context,
+        &Context<'cx>,
         UseOp,
         &Reason,
         object::ResolveTool,
         &object::Tool,
         Type,
     ) -> Result<A, FlowJsException>,
-    statics: &dyn Fn(&Context, &Reason, &Type) -> Result<Type, FlowJsException>,
-    cx: &Context,
+    statics: &dyn Fn(&Context<'cx>, &Reason, &Type) -> Result<Type, FlowJsException>,
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: object::ResolveTool,

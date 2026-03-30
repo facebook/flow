@@ -19,13 +19,13 @@ use flow_typing_type::type_::UseT;
 use flow_typing_type::type_::UseTInner;
 use flow_typing_type::type_::unknown_use;
 
-pub fn try_custom<'a>(
-    cx: &Context,
+pub fn try_custom<'cx, 'a>(
+    cx: &Context<'cx>,
     use_op: Option<flow_typing_type::type_::UseOp>,
-    use_t: Option<UseT>,
-    default_resolve: Option<Box<dyn FnOnce() -> Result<(), FlowJsException> + 'a>>,
+    use_t: Option<UseT<Context<'cx>>>,
+    default_resolve: Option<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + 'a>>,
     no_match_error_loc: flow_aloc::ALoc,
-    cases: Vec<Box<dyn FnOnce() -> Result<(), FlowJsException> + 'a>>,
+    cases: Vec<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + 'a>>,
 ) -> Result<(), FlowJsException> {
     flow_typing_flow_js::speculation_kit::try_custom(
         cx,
@@ -37,16 +37,21 @@ pub fn try_custom<'a>(
     )
 }
 
-pub fn flow_t_unsafe(cx: &Context, (l, u): (Type, Type)) -> Result<(), FlowJsException> {
+pub fn flow_t_unsafe<'cx>(cx: &Context<'cx>, (l, u): (Type, Type)) -> Result<(), FlowJsException> {
+    let use_t: UseT<Context<'cx>> = UseT::new(UseTInner::UseT(unknown_use(), u));
     flow_typing_flow_js::speculation_kit::try_singleton_throw_on_failure(
         cx,
         DepthTrace::dummy_trace(),
         l,
-        UseT::new(UseTInner::UseT(unknown_use(), u)),
+        use_t,
     )
 }
 
-pub fn is_flow_successful(cx: &Context, t: Type, u: UseT) -> Result<bool, FlowJsException> {
+pub fn is_flow_successful<'cx>(
+    cx: &Context<'cx>,
+    t: Type,
+    u: UseT<Context<'cx>>,
+) -> Result<bool, FlowJsException> {
     match flow_typing_flow_js::speculation_kit::try_singleton_throw_on_failure(
         cx,
         DepthTrace::dummy_trace(),
@@ -59,14 +64,19 @@ pub fn is_flow_successful(cx: &Context, t: Type, u: UseT) -> Result<bool, FlowJs
     }
 }
 
-pub fn is_subtyping_successful(cx: &Context, l: Type, u: Type) -> Result<bool, FlowJsException> {
-    is_flow_successful(cx, l, UseT::new(UseTInner::UseT(unknown_use(), u)))
+pub fn is_subtyping_successful<'cx>(
+    cx: &Context<'cx>,
+    l: Type,
+    u: Type,
+) -> Result<bool, FlowJsException> {
+    let use_t: UseT<Context<'cx>> = UseT::new(UseTInner::UseT(unknown_use(), u));
+    is_flow_successful(cx, l, use_t)
 }
 
-pub fn resolved_lower_flow_unsafe(
-    cx: &Context,
+pub fn resolved_lower_flow_unsafe<'cx>(
+    cx: &Context<'cx>,
     r: &Reason,
-    (l, u): (&Type, &UseT),
+    (l, u): (&Type, &UseT<Context<'cx>>),
 ) -> Result<(), FlowJsException> {
     let concrete_types = FlowJs::possible_concrete_types_for_inspection(cx, r, l)?;
     match concrete_types.as_slice() {
@@ -87,8 +97,8 @@ pub fn resolved_lower_flow_unsafe(
     }
 }
 
-pub fn resolved_lower_flow_t_unsafe(
-    cx: &Context,
+pub fn resolved_lower_flow_t_unsafe<'cx>(
+    cx: &Context<'cx>,
     r: &Reason,
     (l, u): (&Type, &Type),
 ) -> Result<(), FlowJsException> {
@@ -96,8 +106,8 @@ pub fn resolved_lower_flow_t_unsafe(
     resolved_lower_flow_unsafe(cx, r, (l, &use_t))
 }
 
-pub fn resolved_upper_flow_t_unsafe(
-    cx: &Context,
+pub fn resolved_upper_flow_t_unsafe<'cx>(
+    cx: &Context<'cx>,
     r: &Reason,
     (l, u): (&Type, &Type),
 ) -> Result<(), FlowJsException> {
@@ -128,15 +138,15 @@ pub fn resolved_upper_flow_t_unsafe(
     }
 }
 
-pub fn get_method_type_unsafe(
-    cx: &Context,
+pub fn get_method_type_unsafe<'cx>(
+    cx: &Context<'cx>,
     t: &Type,
     reason: Reason,
     propref: PropRef,
 ) -> Result<Type, FlowJsException> {
     let t = t.dupe();
     let reason2 = reason.dupe();
-    flow_typing_tvar::mk_where_result(cx, reason, move |prop_t| {
+    flow_typing_tvar::mk_where_result(cx, reason, move |cx, prop_t| {
         let use_t = UseT::new(UseTInner::MethodT(
             unknown_use(),
             reason2.dupe(),
@@ -148,8 +158,8 @@ pub fn get_method_type_unsafe(
     })
 }
 
-pub fn get_method_type_opt(
-    cx: &Context,
+pub fn get_method_type_opt<'cx>(
+    cx: &Context<'cx>,
     t: &Type,
     reason: Reason,
     propref: PropRef,

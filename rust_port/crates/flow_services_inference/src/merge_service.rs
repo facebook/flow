@@ -626,7 +626,7 @@ fn merge_component(
 pub type CheckFileResult = (
     // (cx, type_sig, file_sig, typed_ast)
     (
-        Context,
+        Context<'static>,
         Arc<flow_type_sig::packed_type_sig::Module<Loc>>,
         Arc<FileSig>,
         ast::Program<ALoc, (ALoc, Type)>,
@@ -641,14 +641,15 @@ pub type CheckFileResult = (
 fn mk_check_file(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
-    master_cx: Arc<MasterContext>,
+    master_cx: &MasterContext,
 ) -> (
     Box<dyn FnMut(FileKey) -> Option<CheckFileResult>>,
-    Rc<std::cell::RefCell<CheckCache>>,
+    Rc<std::cell::RefCell<CheckCache<'static>>>,
 ) {
     let cache = Rc::new(std::cell::RefCell::new(CheckCache::create(10_000_000)));
     let cache_ref = cache.dupe();
     let check_service::CheckFileAndCompEnv {
+        mut make_cx,
         mut check_file,
         compute_env: _,
     } = check_service::mk_check_file(shared_mem.dupe(), options, master_cx, cache);
@@ -681,14 +682,22 @@ fn mk_check_file(
                 .map(|(specifier, module)| (specifier.dupe(), module.clone()))
                 .collect()
         };
-        let (cx, typed_ast) = check_file(
+        let cx = make_cx(
             file.dupe(),
             resolved_modules,
-            ast,
-            file_sig.dupe(),
+            ast.dupe(),
             docblock,
             aloc_table,
         );
+        let ast_ref = ast;
+        let ast::Program {
+            all_comments: comments,
+            ..
+        } = ast_ref.as_ref();
+        let mut mapper = flow_aloc::LocToALocMapper;
+        let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast_ref);
+        let metadata = cx.metadata().clone();
+        let typed_ast = check_file(&cx, &file, file_sig.dupe(), &metadata, comments, &aloc_ast);
         let coverage = file_coverage(&cx, &typed_ast);
         let errors = cx.errors();
         let tolerable_error_set =
@@ -703,8 +712,6 @@ fn mk_check_file(
         // Break Rc reference cycles in Context to prevent memory leaks.
         // cx is returned but immediately dropped by job_helper (line 41: Ok(Some((_, acc)))).
         cx.post_inference_cleanup();
-        // Clear the thread-local DST_CX_REF to release the retained Context.
-        flow_typing_utils::annotation_inference::clear_dst_cx();
         #[cfg(debug_assertions)]
         {
             // After cleanup, the only strong references to this Context should be:
@@ -747,11 +754,11 @@ fn mk_check_file(
 // event of a compaction, which can be done in the SharedMem.on_compact
 // callback.
 thread_local! {
-    static CHECK_CONTENTS_CACHE: Rc<std::cell::RefCell<CheckCache>> =
+    static CHECK_CONTENTS_CACHE: Rc<std::cell::RefCell<CheckCache<'static>>> =
         Rc::new(std::cell::RefCell::new(CheckCache::create(10_000)));
 }
 
-pub fn check_contents_cache() -> Rc<std::cell::RefCell<CheckCache>> {
+pub fn check_contents_cache() -> Rc<std::cell::RefCell<CheckCache<'static>>> {
     CHECK_CONTENTS_CACHE.with(|cache| cache.dupe())
 }
 
@@ -770,7 +777,7 @@ pub fn check_contents_context(
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> (Context, ast::Program<ALoc, (ALoc, Type)>) {
+) -> (Context<'static>, ast::Program<ALoc, (ALoc, Type)>) {
     // Loading an aloc_table is unusual for check contents! During check, we use
     // this aloc table for two purposes: (1) to compare concrete and keyed alocs
     // which might be equivalent and (2) to create ALoc.id values which always
@@ -814,12 +821,33 @@ pub fn check_contents_context(
         })
         .collect();
     let check_service::CheckFileAndCompEnv {
+        mut make_cx,
         mut check_file,
         compute_env: _,
     } = CHECK_CONTENTS_CACHE.with(|cache| {
-        check_service::mk_check_file(shared_mem.dupe(), options.dupe(), master_cx, cache.dupe())
+        check_service::mk_check_file(
+            shared_mem.dupe(),
+            options.dupe(),
+            master_cx.as_ref(),
+            cache.dupe(),
+        )
     });
-    let (cx, typed_ast) = check_file(file, resolved_modules, ast, file_sig, docblock, aloc_table);
+    let cx = make_cx(
+        file.dupe(),
+        resolved_modules,
+        ast.dupe(),
+        docblock,
+        aloc_table,
+    );
+    let ast_ref = ast;
+    let ast::Program {
+        all_comments: comments,
+        ..
+    } = ast_ref.as_ref();
+    let mut mapper = flow_aloc::LocToALocMapper;
+    let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast_ref);
+    let metadata = cx.metadata().clone();
+    let typed_ast = check_file(&cx, &file, file_sig, &metadata, comments, &aloc_ast);
     (cx, typed_ast)
 }
 
@@ -835,7 +863,7 @@ pub fn compute_env_of_contents(
     docblock: Arc<Docblock>,
     file_sig: Arc<FileSig>,
     node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
-) -> (Context, ast::Program<ALoc, ALoc>) {
+) -> (Context<'static>, ast::Program<ALoc, ALoc>) {
     let aloc_table: flow_aloc::LazyALocTable = {
         let file_for_aloc = file.dupe();
         let shared_mem_for_aloc = shared_mem.dupe();
@@ -863,12 +891,28 @@ pub fn compute_env_of_contents(
         })
         .collect();
     let check_service::CheckFileAndCompEnv {
+        mut make_cx,
         check_file: _,
         mut compute_env,
     } = CHECK_CONTENTS_CACHE.with(|cache| {
-        check_service::mk_check_file(shared_mem.dupe(), options.dupe(), master_cx, cache.dupe())
+        check_service::mk_check_file(
+            shared_mem.dupe(),
+            options.dupe(),
+            master_cx.as_ref(),
+            cache.dupe(),
+        )
     });
-    compute_env(file, resolved_modules, ast, docblock, aloc_table)
+    let cx = make_cx(
+        file.dupe(),
+        resolved_modules,
+        ast.dupe(),
+        docblock,
+        aloc_table,
+    );
+    let mut mapper = flow_aloc::LocToALocMapper;
+    let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast);
+    compute_env(&cx, &aloc_ast);
+    (cx, aloc_ast)
 }
 
 fn merge_job<A, F>(
@@ -975,10 +1019,10 @@ pub fn merge(
 pub fn mk_check(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
-    master_cx: Arc<MasterContext>,
+    master_cx: &MasterContext,
 ) -> (
     Box<dyn FnMut(FileKey) -> UnitResult<Option<CheckFileResult>>>,
-    Rc<std::cell::RefCell<CheckCache>>,
+    Rc<std::cell::RefCell<CheckCache<'static>>>,
 ) {
     let (mut check_file, cache) = mk_check_file(shared_mem.dupe(), options.dupe(), master_cx);
     let check_fn = Box::new(move |file: FileKey| {
@@ -987,12 +1031,6 @@ pub fn mk_check(
         match result {
             Ok(ok) => Ok(ok),
             Err(panic_payload) => {
-                // Break Rc cycles in any leaked Context from the panicked check.
-                // The DST_CX_REF thread-local holds a strong reference to the
-                // Context being checked. Without cleanup, Rc cycles in the
-                // Context prevent it from being freed.
-                flow_typing_utils::annotation_inference::cleanup_and_clear_dst_cx();
-
                 // SpeculativeError panics are expected: they simulate OCaml's exception
                 // unwinding from add_output during speculation. These should be caught
                 // and treated as non-critical errors, not re-panicked.

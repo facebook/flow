@@ -15,6 +15,7 @@ use flow_aloc::ALocSet;
 use flow_common::reason::Name;
 use flow_common::reason::Reason;
 use flow_common::reason::VirtualReasonDesc;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_env_builder::env_api;
 use flow_env_builder::env_api::RefinementKind;
 use flow_env_builder::name_def_types;
@@ -50,20 +51,19 @@ use flow_typing_type::type_::TypeInner;
 use flow_typing_type::type_::nominal;
 use flow_typing_utils::type_env;
 use flow_typing_utils::typed_ast_utils;
-use once_cell::unsync::Lazy;
 
 use crate::type_annotation;
 
-pub fn check_ref_use(
-    cx: &Context,
+pub fn check_ref_use<'a>(
+    cx: &Context<'a>,
     rrid: Option<&type_::nominal::Id>,
     in_hook: bool,
     var_reason: Reason,
     kind: RefInRenderKind,
     t: Type,
 ) -> Vec<ErrorMessage<ALoc>> {
-    fn recur_id(
-        cx: &Context,
+    fn recur_id<'a>(
+        cx: &Context<'a>,
         rrid: Option<&nominal::Id>,
         in_hook: bool,
         var_reason: &Reason,
@@ -184,7 +184,7 @@ enum HookResult {
     AnyCallee,
 }
 
-fn hook_callee(cx: &Context, t: Type) -> HookResult {
+fn hook_callee<'a>(cx: &Context<'a>, t: Type) -> HookResult {
     fn merge(l: HookResult, r: HookResult) -> HookResult {
         match (l, r) {
             (HookResult::AnyCallee, other) | (other, HookResult::AnyCallee) => other,
@@ -255,7 +255,7 @@ fn hook_callee(cx: &Context, t: Type) -> HookResult {
         [r.def_loc().dupe()].into_iter().collect()
     }
 
-    fn recur_id(cx: &Context, seen: &mut TvarSeenSet<u32>, t: &Type) -> HookResult {
+    fn recur_id<'a>(cx: &Context<'a>, seen: &mut TvarSeenSet<u32>, t: &Type) -> HookResult {
         match t.deref() {
             TypeInner::DefT(r, def_t)
                 if matches!(
@@ -361,7 +361,12 @@ fn hook_callee(cx: &Context, t: Type) -> HookResult {
     recur_id(cx, &mut seen, &t)
 }
 
-fn hook_error(cx: &Context, call_loc: ALoc, callee_loc: ALoc, kind: error_message::HookRule<ALoc>) {
+fn hook_error<'cx>(
+    cx: &Context<'cx>,
+    call_loc: ALoc,
+    callee_loc: ALoc,
+    kind: error_message::HookRule<ALoc>,
+) {
     if cx.react_rule_enabled(flow_common::options::ReactRule::RulesOfHooks) {
         flow_js_utils::add_output_non_speculating(
             cx,
@@ -615,8 +620,8 @@ fn strip_use_callback<'a, M: dupe::Dupe, T: dupe::Dupe>(
     }
 }
 
-fn downstream_effects(
-    ev_cx: &EffectVisitorContext<'_>,
+fn downstream_effects<'ev, 'b, 'cx>(
+    ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
     seen: &mut ALocSet,
     loc: ALoc,
 ) -> Vec<ErrorMessage<ALoc>> {
@@ -628,8 +633,8 @@ fn downstream_effects(
     let providers = &ev_cx.var_info.providers;
     let name_defs = &ev_cx.name_defs;
 
-    fn visit_func<'cx>(
-        ev_cx: &'cx EffectVisitorContext<'cx>,
+    fn visit_func<'ev, 'b, 'cx>(
+        ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
         seen: &mut ALocSet,
         loc: &ALoc,
         func: &ast::function::Function<ALoc, ALoc>,
@@ -648,8 +653,8 @@ fn downstream_effects(
         result
     }
 
-    fn visit_class<'cx>(
-        ev_cx: &'cx EffectVisitorContext<'cx>,
+    fn visit_class<'ev, 'b, 'cx>(
+        ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
         seen: &mut ALocSet,
         loc: &ALoc,
         cls: &ast::class::Class<ALoc, ALoc>,
@@ -721,9 +726,9 @@ fn downstream_effects(
                     Def::Record { .. } => {}
                     Def::Binding(bind) => {
                         // let rec handle_binding bind =
-                        fn handle_binding<'cx>(
+                        fn handle_binding<'ev, 'b, 'cx>(
                             bind: &Binding,
-                            ev_cx: &'cx EffectVisitorContext<'cx>,
+                            ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
                             seen: &mut ALocSet,
                             loc: &ALoc,
                         ) -> Vec<ErrorMessage<ALoc>> {
@@ -787,7 +792,7 @@ fn downstream_effects(
     }
 }
 
-fn is_initializing(ev_cx: &EffectVisitorContext<'_>, loc: &ALoc) -> bool {
+fn is_initializing(ev_cx: &EffectVisitorContext<'_, '_>, loc: &ALoc) -> bool {
     let env_values = &ev_cx.var_info.env_values;
     let refinement_of_id = &ev_cx.var_info.refinement_of_id;
 
@@ -800,7 +805,7 @@ fn is_initializing(ev_cx: &EffectVisitorContext<'_>, loc: &ALoc) -> bool {
         return false;
     }
 
-    fn is_nullish(cx: &Context, seen: &mut TvarSeenSet<u32>, t: &Type) -> bool {
+    fn is_nullish<'a>(cx: &Context<'a>, seen: &mut TvarSeenSet<u32>, t: &Type) -> bool {
         match t.deref() {
             TypeInner::OpenT(tvar) if seen.contains(&tvar.id()) => false,
             TypeInner::OpenT(tvar) => seen.with_added(tvar.id(), |seen| {
@@ -817,7 +822,7 @@ fn is_initializing(ev_cx: &EffectVisitorContext<'_>, loc: &ALoc) -> bool {
         }
     }
 
-    fn refines_safe(cx: &Context, refi: &RefinementKind<ALoc>) -> bool {
+    fn refines_safe<'a>(cx: &Context<'a>, refi: &RefinementKind<ALoc>) -> bool {
         match refi {
             RefinementKind::AndR(l, r) => refines_safe(cx, l) || refines_safe(cx, r),
             RefinementKind::OrR(l, r) => refines_safe(cx, l) && refines_safe(cx, r),
@@ -839,7 +844,7 @@ fn is_initializing(ev_cx: &EffectVisitorContext<'_>, loc: &ALoc) -> bool {
         }
     }
 
-    fn not_refines_safe(cx: &Context, refi: &RefinementKind<ALoc>) -> bool {
+    fn not_refines_safe<'a>(cx: &Context<'a>, refi: &RefinementKind<ALoc>) -> bool {
         match refi {
             RefinementKind::AndR(l, r) => not_refines_safe(cx, l) && not_refines_safe(cx, r),
             RefinementKind::OrR(l, r) => not_refines_safe(cx, l) || not_refines_safe(cx, r),
@@ -855,26 +860,26 @@ fn is_initializing(ev_cx: &EffectVisitorContext<'_>, loc: &ALoc) -> bool {
     })
 }
 
-struct EffectVisitorContext<'cx> {
-    cx: &'cx Context,
+struct EffectVisitorContext<'b, 'cx> {
+    cx: &'b Context<'cx>,
     is_hook: bool,
-    rrid: Option<&'cx type_::nominal::Id>,
+    rrid: Option<type_::nominal::Id>,
     type_map: ALocMap<Type>,
     var_info: std::rc::Rc<flow_env_builder::env_api::EnvInfo<ALoc>>,
     name_defs: flow_env_builder::name_def_types::EnvEntriesMap,
 }
 
-struct EffectVisitor<'cx, 'seen> {
-    ev_cx: &'cx EffectVisitorContext<'cx>,
+struct EffectVisitor<'ev, 'b, 'cx, 'seen> {
+    ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
     effects: Vec<ErrorMessage<ALoc>>,
     in_target: bool,
     seen: &'seen mut ALocSet,
     toplevel: bool,
 }
 
-impl<'cx, 'seen> EffectVisitor<'cx, 'seen> {
+impl<'ev, 'b, 'cx, 'seen> EffectVisitor<'ev, 'b, 'cx, 'seen> {
     fn new(
-        ev_cx: &'cx EffectVisitorContext<'cx>,
+        ev_cx: &'ev EffectVisitorContext<'b, 'cx>,
         toplevel: bool,
         seen: &'seen mut ALocSet,
     ) -> Self {
@@ -998,7 +1003,7 @@ impl<'cx, 'seen> EffectVisitor<'cx, 'seen> {
             if let Some(ty) = self.ev_cx.type_map.get(&loc) {
                 let new_effects = check_ref_use(
                     self.ev_cx.cx,
-                    self.ev_cx.rrid,
+                    self.ev_cx.rrid.as_ref(),
                     self.ev_cx.is_hook,
                     reason,
                     err_kind,
@@ -1085,7 +1090,9 @@ impl<'cx, 'seen> EffectVisitor<'cx, 'seen> {
     }
 }
 
-impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for EffectVisitor<'_, '_> {
+impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !>
+    for EffectVisitor<'_, '_, '_, '_>
+{
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
     }
@@ -1253,15 +1260,15 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for EffectVi
 // let effect_visitor cx ~is_hook rrid tast =
 //   ...
 //   visitor ~toplevel:true ALocSet.empty
-struct EffectVisitorFactory<'cx> {
-    ev_cx: EffectVisitorContext<'cx>,
+struct EffectVisitorFactory<'b, 'cx> {
+    ev_cx: EffectVisitorContext<'b, 'cx>,
 }
 
-impl<'cx> EffectVisitorFactory<'cx> {
+impl<'b, 'cx> EffectVisitorFactory<'b, 'cx> {
     fn new(
-        cx: &'cx Context,
+        cx: &'b Context<'cx>,
         is_hook: bool,
-        rrid: Option<&'cx type_::nominal::Id>,
+        rrid: Option<type_::nominal::Id>,
         tast: &ast::Program<ALoc, (ALoc, Type)>,
     ) -> Self {
         let env = cx.environment();
@@ -1281,13 +1288,16 @@ impl<'cx> EffectVisitorFactory<'cx> {
         }
     }
 
-    fn function_entry(&self, body: &ast::function::Body<ALoc, ALoc>) -> Vec<ErrorMessage<ALoc>> {
+    fn run_function_entry(
+        &self,
+        body: &ast::function::Body<ALoc, ALoc>,
+    ) -> Vec<ErrorMessage<ALoc>> {
         let mut seen = ALocSet::new();
         let mut visitor = EffectVisitor::new(&self.ev_cx, true, &mut seen);
         visitor.function_entry(body)
     }
 
-    fn component_entry(
+    fn run_component_entry(
         &self,
         body: &(ALoc, ast::statement::Block<ALoc, ALoc>),
     ) -> Vec<ErrorMessage<ALoc>> {
@@ -1297,7 +1307,7 @@ impl<'cx> EffectVisitorFactory<'cx> {
     }
 }
 
-fn emit_effect_errors(cx: &Context, errors: Vec<ErrorMessage<ALoc>>) {
+fn emit_effect_errors<'a>(cx: &Context<'a>, errors: Vec<ErrorMessage<ALoc>>) {
     for error in errors {
         flow_js_utils::add_output_non_speculating(cx, error);
     }
@@ -1321,29 +1331,35 @@ enum HookCallContext {
     HookCallStrictlyDisallowedWithoutCompatibilityMode,
 }
 
-struct WholeAstVisitor<'a> {
-    tast: &'a ast::Program<ALoc, (ALoc, Type)>,
+struct WholeAstVisitor<'b, 'cx, 't> {
+    tast: &'t ast::Program<ALoc, (ALoc, Type)>,
     under_function_or_class_body: bool,
-    cx: &'a Context,
-    rrid: Option<&'a type_::nominal::Id>,
-    hook_call_context: Rc<Lazy<HookCallContext, Box<dyn FnOnce() -> HookCallContext + 'a>>>,
+    cx: &'b Context<'cx>,
+    rrid: Option<type_::nominal::Id>,
+    hook_call_context: Rc<
+        flow_lazy::Lazy<
+            Context<'cx>,
+            HookCallContext,
+            Box<dyn FnOnce(&Context<'cx>) -> HookCallContext + 'cx>,
+        >,
+    >,
     in_context_possibly_expecting_fn_component_or_hook: bool,
 }
 
-impl<'a> WholeAstVisitor<'a> {
+impl<'b, 'cx, 't> WholeAstVisitor<'b, 'cx, 't> {
     fn new(
-        tast: &'a ast::Program<ALoc, (ALoc, Type)>,
+        tast: &'t ast::Program<ALoc, (ALoc, Type)>,
         under_function_or_class_body: bool,
         initial_hook_call_context: HookCallContext,
-        cx: &'a Context,
-        rrid: Option<&'a type_::nominal::Id>,
+        cx: &'b Context<'cx>,
+        rrid: Option<type_::nominal::Id>,
     ) -> Self {
         Self {
             tast,
             under_function_or_class_body,
             cx,
             rrid,
-            hook_call_context: Rc::new(Lazy::new(Box::new(move || initial_hook_call_context))),
+            hook_call_context: Rc::new(flow_lazy::Lazy::new_forced(initial_hook_call_context)),
             in_context_possibly_expecting_fn_component_or_hook: false,
         }
     }
@@ -1351,9 +1367,21 @@ impl<'a> WholeAstVisitor<'a> {
     fn visit_function(
         &mut self,
         loc_for_hint: Option<ALoc>,
-        fn_: &ast::function::Function<ALoc, (ALoc, Type)>,
+        fn_: &'t ast::function::Function<ALoc, (ALoc, Type)>,
     ) {
-        let id = &fn_.id;
+        self.visit_function_with_id(loc_for_hint, fn_, None);
+    }
+
+    /// Visit a function with an optional effective id override.
+    /// When `effective_id` is Some, it is used for hook detection instead of `fn_.id`.
+    /// The original `fn_` AST node (with 't lifetime) is still used for traversal.
+    fn visit_function_with_id(
+        &mut self,
+        loc_for_hint: Option<ALoc>,
+        fn_: &'t ast::function::Function<ALoc, (ALoc, Type)>,
+        effective_id: Option<&ast::Identifier<ALoc, (ALoc, Type)>>,
+    ) {
+        let id = effective_id.or(fn_.id.as_ref());
         let params = &fn_.params;
         let params_list = &params.params;
         let rest = &params.rest;
@@ -1367,49 +1395,48 @@ impl<'a> WholeAstVisitor<'a> {
                     &mut typed_ast_utils::UntypedAstMapper,
                     body,
                 );
-                let factory = EffectVisitorFactory::new(self.cx, true, self.rrid, self.tast);
-                factory.function_entry(&untyped_body)
+                let factory =
+                    EffectVisitorFactory::new(self.cx, true, self.rrid.clone(), self.tast);
+                factory.run_function_entry(&untyped_body)
             };
             emit_effect_errors(self.cx, effects);
-            if let Some(ident) = id {
+            if let Some(ident) = &fn_.id {
                 let Ok(()) = self.function_identifier(ident);
             }
             if let Some(tparams) = &fn_.tparams {
                 let Ok(()) = self.type_params(&ast_visitor::TypeParamsContext::Function, tparams);
             }
             {
-                let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid);
+                let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid.clone());
                 let Ok(()) = cav.function_params(params);
             }
             let Ok(()) = self.function_return_annotation(return_);
             {
-                let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid);
+                let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid.clone());
                 let Ok(()) = cav.function_component_body(body);
             }
             if let Some(predicate) = &fn_.predicate {
-                let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid);
+                let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid.clone());
                 let Ok(()) = cav.predicate(predicate);
             }
         } else {
             let cur_hook_call_context = self.hook_call_context.dupe();
             let is_probably_function_component = id
-                .as_ref()
                 .map(|ident| componentlike_name(ident.name.as_str()))
                 .unwrap_or(false)
                 && params_list.len() <= 2
                 && rest.is_none();
 
+            let is_hook_function = id.is_some_and(|ident| ast_utils::hook_name(&ident.name));
             let possibly_in_context_allow_hook_call = self
                 .in_context_possibly_expecting_fn_component_or_hook
                 || is_probably_function_component
-                || ast_utils::hook_function(fn_).is_some();
+                || is_hook_function;
             let saved_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
             // Above, we pull out some reads of mutable class fields out of lazy block.
 
             // Pre-extract owned data for lazy closure
-            let cx = self.cx;
-            let id_name = id.as_ref().map(|ident| ident.name.dupe());
-            let is_hook_function = ast_utils::hook_function(fn_).is_some();
+            let id_name = id.map(|ident| ident.name.dupe());
             // Return type data: None means TypeGuard (ret_check = true)
             let return_t = match return_ {
                 ast::function::ReturnAnnot::Missing((_, t)) => Some(t.dupe()),
@@ -1435,7 +1462,7 @@ impl<'a> WholeAstVisitor<'a> {
                 _ => None,
             };
 
-            self.hook_call_context = Rc::new(Lazy::new(Box::new(move || {
+            self.hook_call_context = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx| {
                 let is_definitely_non_component_due_to_typing = || -> bool {
                     // Not returning `React.Node`
                     let ret_check = match &return_t {
@@ -1478,7 +1505,7 @@ impl<'a> WholeAstVisitor<'a> {
                                 VirtualReasonDesc::RFunctionType,
                                 hint_loc.dupe(),
                             );
-                            match (lazy_hint.1)(true, Some(true), reason.dupe()) {
+                            match (lazy_hint.1)(cx, true, Some(true), reason.dupe()) {
                                 type_::HintEvalResult::NoHint
                                 | type_::HintEvalResult::EncounteredPlaceholder
                                 | type_::HintEvalResult::DecompositionError => false,
@@ -1504,7 +1531,7 @@ impl<'a> WholeAstVisitor<'a> {
                 if possibly_in_context_allow_hook_call {
                     if cx.hook_compatibility() || is_definitely_component_due_to_hint() {
                         HookCallContext::HookCallPermissivelyAllowedUnderCompatibilityMode
-                    } else if id_name.as_ref().is_some_and(|name| {
+                    } else if id_name.as_ref().is_some_and(|name: &FlowSmolStr| {
                         !is_hook_function
                             && componentlike_name(name.as_str())
                             && is_definitely_non_component_due_to_typing()
@@ -1513,7 +1540,7 @@ impl<'a> WholeAstVisitor<'a> {
                     } else {
                         HookCallContext::HookCallStrictlyDisallowedWithoutCompatibilityMode
                     }
-                } else if id_name.as_ref().is_some_and(|name| {
+                } else if id_name.as_ref().is_some_and(|name: &FlowSmolStr| {
                     !saved_in_context
                         && !is_hook_function
                         && (!componentlike_name(name.as_str())
@@ -1530,21 +1557,21 @@ impl<'a> WholeAstVisitor<'a> {
     }
 }
 
-impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
-    for WholeAstVisitor<'_>
+impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
+    for WholeAstVisitor<'b, 'cx, 't>
 {
-    fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
+    fn normalize_loc(loc: &'t ALoc) -> &'t ALoc {
         loc
     }
 
-    fn normalize_type(type_: &'ast (ALoc, Type)) -> &'ast ALoc {
+    fn normalize_type(type_: &'t (ALoc, Type)) -> &'t ALoc {
         &type_.0
     }
 
     fn component_declaration(
         &mut self,
-        _loc: &'ast ALoc,
-        cmp: &'ast ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
+        _loc: &'t ALoc,
+        cmp: &'t ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let effects = match &cmp.body {
             None => vec![],
@@ -1553,19 +1580,20 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
                     &mut typed_ast_utils::UntypedAstMapper,
                     body,
                 );
-                let factory = EffectVisitorFactory::new(self.cx, false, self.rrid, self.tast);
-                factory.component_entry(&untyped_body)
+                let factory =
+                    EffectVisitorFactory::new(self.cx, false, self.rrid.clone(), self.tast);
+                factory.run_component_entry(&untyped_body)
             }
         };
         emit_effect_errors(self.cx, effects);
-        let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid);
+        let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid.clone());
         cav.visit_toplevel_component(cmp);
         Ok(())
     }
 
     fn expression(
         &mut self,
-        expr: &'ast ast::expression::Expression<ALoc, (ALoc, Type)>,
+        expr: &'t ast::expression::Expression<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         match expr.deref() {
             ExpressionInner::ArrowFunction { loc, inner: fn_ } => {
@@ -1585,8 +1613,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn function_(
         &mut self,
-        _loc: &'ast ALoc,
-        fn_: &'ast ast::function::Function<ALoc, (ALoc, Type)>,
+        _loc: &'t ALoc,
+        fn_: &'t ast::function::Function<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         self.visit_function(None, fn_);
         Ok(())
@@ -1594,8 +1622,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn call(
         &mut self,
-        annot: &'ast (ALoc, Type),
-        expr: &'ast ast::expression::Call<ALoc, (ALoc, Type)>,
+        annot: &'t (ALoc, Type),
+        expr: &'t ast::expression::Call<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let call_loc = &annot.0;
         let callee = &expr.callee;
@@ -1627,7 +1655,7 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
                     && bare_use(expr)
                     && self.under_function_or_class_body)
                 {
-                    match **self.hook_call_context {
+                    match self.hook_call_context.get_forced(self.cx) {
                         HookCallContext::HookCallDefinitelyNotAllowed => {
                             hook_error(
                                 self.cx,
@@ -1678,7 +1706,7 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn export_default_declaration_decl(
         &mut self,
-        decl: &'ast ast::statement::export_default_declaration::Declaration<ALoc, (ALoc, Type)>,
+        decl: &'t ast::statement::export_default_declaration::Declaration<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let cur_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
         let file_key = self.cx.file();
@@ -1718,7 +1746,7 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn object_property(
         &mut self,
-        prop: &'ast ast::expression::object::NormalProperty<ALoc, (ALoc, Type)>,
+        prop: &'t ast::expression::object::NormalProperty<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let cur_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
         let next_in_context = match prop {
@@ -1748,8 +1776,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn return_(
         &mut self,
-        loc: &'ast ALoc,
-        ret: &'ast ast::statement::Return<ALoc, (ALoc, Type)>,
+        loc: &'t ALoc,
+        ret: &'t ast::statement::Return<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let cur_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
         let next_in_context = match &ret.argument {
@@ -1772,7 +1800,7 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn body_expression(
         &mut self,
-        expr: &'ast ast::expression::Expression<ALoc, (ALoc, Type)>,
+        expr: &'t ast::expression::Expression<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let cur_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
         let next_in_context = match expr.deref() {
@@ -1791,19 +1819,19 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
     fn variable_declarator(
         &mut self,
         kind: ast::VariableKind,
-        decl: &'ast ast::statement::variable::Declarator<ALoc, (ALoc, Type)>,
+        decl: &'t ast::statement::variable::Declarator<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let id_pat = &decl.id;
         let init = &decl.init;
         let Ok(()) = self.variable_declarator_pattern(kind, id_pat);
         let cur_in_context = self.in_context_possibly_expecting_fn_component_or_hook;
-        let (next_in_context, init) = match (id_pat, init) {
+        let (next_in_context, effective_id) = match (id_pat, init) {
             (
                 Pattern::Identifier {
                     inner: pat_ident, ..
                 },
                 Some(init_expr),
-            ) if let Some((fn_loc, f)) = match init_expr.deref() {
+            ) if let Some((_fn_loc, f)) = match init_expr.deref() {
                 ExpressionInner::ArrowFunction { loc, inner: f }
                 | ExpressionInner::Function { loc, inner: f } => Some((loc, f)),
                 _ => None,
@@ -1823,28 +1851,26 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
                 }
                 ```
                 */
-                let new_id = Some(f.id.as_ref().unwrap_or(id).dupe());
-                let new_init = ast::expression::Expression(
-                    ExpressionInner::Function {
-                        loc: fn_loc.dupe(),
-                        inner: ast::function::Function {
-                            id: new_id,
-                            ..(**f).clone()
-                        }
-                        .into(),
-                    }
-                    .into(),
-                );
-                (next, Some(new_init))
+                let new_id = f.id.as_ref().unwrap_or(id).dupe();
+                (next, Some(new_id))
             }
             _ => (false, None),
         };
         self.in_context_possibly_expecting_fn_component_or_hook = next_in_context;
-        match init {
-            Some(ref modified_init) => {
-                let Ok(()) = self.expression(modified_init);
+        match (&effective_id, init) {
+            (Some(_), Some(init_expr)) => {
+                // Visit the function directly using the original AST (which has 'a lifetime)
+                // but with the effective id for hook detection purposes.
+                match init_expr.deref() {
+                    ExpressionInner::ArrowFunction { loc, inner: f }
+                    | ExpressionInner::Function { loc, inner: f } => {
+                        let hint_loc = loc.0.dupe();
+                        self.visit_function_with_id(Some(hint_loc), f, effective_id.as_ref());
+                    }
+                    _ => unreachable!(),
+                }
             }
-            None => {
+            _ => {
                 if let Some(init_expr) = &decl.init {
                     let Ok(()) = self.expression(init_expr);
                 }
@@ -1855,18 +1881,18 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
     }
 }
 
-struct ComponentAstVisitor<'a> {
-    tast: &'a ast::Program<ALoc, (ALoc, Type)>,
-    cx: &'a Context,
-    rrid: Option<&'a type_::nominal::Id>,
+struct ComponentAstVisitor<'b, 'cx, 't> {
+    tast: &'t ast::Program<ALoc, (ALoc, Type)>,
+    cx: &'b Context<'cx>,
+    rrid: Option<type_::nominal::Id>,
     conditional_state: conditional_state::ConditionalState,
 }
 
-impl<'a> ComponentAstVisitor<'a> {
+impl<'b, 'cx, 't> ComponentAstVisitor<'b, 'cx, 't> {
     fn new(
-        tast: &'a ast::Program<ALoc, (ALoc, Type)>,
-        cx: &'a Context,
-        rrid: Option<&'a type_::nominal::Id>,
+        tast: &'t ast::Program<ALoc, (ALoc, Type)>,
+        cx: &'b Context<'cx>,
+        rrid: Option<type_::nominal::Id>,
     ) -> Self {
         Self {
             tast,
@@ -1878,7 +1904,7 @@ impl<'a> ComponentAstVisitor<'a> {
 
     fn visit_toplevel_component(
         &mut self,
-        cmp: &'a ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
+        cmp: &'t ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
     ) {
         let Ok(()) = ast_visitor::component_declaration_default(self, &cmp.sig_loc, cmp);
     }
@@ -1893,7 +1919,7 @@ impl<'a> ComponentAstVisitor<'a> {
     fn visit_switch_case(
         &mut self,
         is_last: bool,
-        case: &'a ast::statement::switch::Case<ALoc, (ALoc, Type)>,
+        case: &'t ast::statement::switch::Case<ALoc, (ALoc, Type)>,
     ) {
         if case.test.is_some() || !is_last {
             self.in_conditional(|this| {
@@ -1904,7 +1930,7 @@ impl<'a> ComponentAstVisitor<'a> {
         }
     }
 
-    fn try_block(&mut self, block: &'a ast::statement::Block<ALoc, (ALoc, Type)>) {
+    fn try_block(&mut self, block: &'t ast::statement::Block<ALoc, (ALoc, Type)>) {
         let (cur, cur_try) = self.conditional_state.enter_try();
         let Ok(()) = self.statement_list(&block.body);
         self.conditional_state.reset_try(cur, cur_try);
@@ -1912,20 +1938,20 @@ impl<'a> ComponentAstVisitor<'a> {
 
     fn function_component_body(
         &mut self,
-        body: &'a ast::function::Body<ALoc, (ALoc, Type)>,
+        body: &'t ast::function::Body<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         ast_visitor::function_body_any_default(self, body)
     }
 }
 
-impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
-    for ComponentAstVisitor<'ast>
+impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
+    for ComponentAstVisitor<'b, 'cx, 't>
 {
-    fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
+    fn normalize_loc(loc: &'t ALoc) -> &'t ALoc {
         loc
     }
 
-    fn normalize_type(type_: &'ast (ALoc, Type)) -> &'ast ALoc {
+    fn normalize_type(type_: &'t (ALoc, Type)) -> &'t ALoc {
         &type_.0
     }
 
@@ -1934,10 +1960,10 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
     // components might be called conditionally.
     fn component_declaration(
         &mut self,
-        _loc: &'ast ALoc,
-        cmp: &'ast ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
+        _loc: &'t ALoc,
+        cmp: &'t ast::statement::ComponentDeclaration<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
-        let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid);
+        let mut cav = ComponentAstVisitor::new(self.tast, self.cx, self.rrid.clone());
         cav.visit_toplevel_component(cmp);
         Ok(())
     }
@@ -1945,8 +1971,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
     // method! call ((call_loc, _) as annot) expr =
     fn call(
         &mut self,
-        annot: &'ast (ALoc, Type),
-        expr: &'ast ast::expression::Call<ALoc, (ALoc, Type)>,
+        annot: &'t (ALoc, Type),
+        expr: &'t ast::expression::Call<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let call_loc = &annot.0;
         let callee = &expr.callee;
@@ -2007,8 +2033,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn new(
         &mut self,
-        loc: &'ast (ALoc, Type),
-        expr: &'ast ast::expression::New<ALoc, (ALoc, Type)>,
+        loc: &'t (ALoc, Type),
+        expr: &'t ast::expression::New<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let Ok(()) = ast_visitor::new_default(self, loc, expr);
         self.conditional_state.throwable();
@@ -2017,8 +2043,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn throw(
         &mut self,
-        loc: &'ast ALoc,
-        throw: &'ast ast::statement::Throw<ALoc, (ALoc, Type)>,
+        loc: &'t ALoc,
+        throw: &'t ast::statement::Throw<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let Ok(()) = ast_visitor::throw_default(self, loc, throw);
         self.conditional_state.throwable();
@@ -2027,8 +2053,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn return_(
         &mut self,
-        loc: &'ast ALoc,
-        ret: &'ast ast::statement::Return<ALoc, (ALoc, Type)>,
+        loc: &'t ALoc,
+        ret: &'t ast::statement::Return<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let Ok(()) = ast_visitor::return_default(self, loc, ret);
         self.conditional_state.do_return();
@@ -2037,8 +2063,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn labeled_statement(
         &mut self,
-        loc: &'ast ALoc,
-        stmt: &'ast ast::statement::Labeled<ALoc, (ALoc, Type)>,
+        loc: &'t ALoc,
+        stmt: &'t ast::statement::Labeled<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let name = stmt.label.name.dupe();
         let cur = self.conditional_state.enter_label(name.dupe());
@@ -2049,8 +2075,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn switch(
         &mut self,
-        _loc: &'ast ALoc,
-        stmt: &'ast ast::statement::Switch<ALoc, (ALoc, Type)>,
+        _loc: &'t ALoc,
+        stmt: &'t ast::statement::Switch<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let (cur, cur_switch) = self.conditional_state.enter_switch_or_loop();
         let Ok(()) = self.expression(&stmt.discriminant);
@@ -2064,8 +2090,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn break_(
         &mut self,
-        loc: &'ast ALoc,
-        break_stmt: &'ast ast::statement::Break<ALoc>,
+        loc: &'t ALoc,
+        break_stmt: &'t ast::statement::Break<ALoc>,
     ) -> Result<(), !> {
         let s = break_stmt.label.as_ref().map(|ident| ident.name.dupe());
         self.conditional_state.do_break(s);
@@ -2074,8 +2100,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn try_catch(
         &mut self,
-        _loc: &'ast ALoc,
-        stmt: &'ast ast::statement::Try<ALoc, (ALoc, Type)>,
+        _loc: &'t ALoc,
+        stmt: &'t ast::statement::Try<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let block = &stmt.block.1;
         let pre_cond = self.conditional_state.dupe();
@@ -2098,7 +2124,7 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
     fn if_consequent_statement(
         &mut self,
         has_else: bool,
-        stmt: &'ast ast::statement::Statement<ALoc, (ALoc, Type)>,
+        stmt: &'t ast::statement::Statement<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         self.in_conditional(|this| {
             let Ok(()) = ast_visitor::if_consequent_statement_default(this, has_else, stmt);
@@ -2108,7 +2134,7 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn if_alternate_statement(
         &mut self,
-        altern: &'ast ast::statement::if_::Alternate<ALoc, (ALoc, Type)>,
+        altern: &'t ast::statement::if_::Alternate<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         self.in_conditional(|this| {
             let Ok(()) = ast_visitor::if_alternate_statement_default(this, altern);
@@ -2118,8 +2144,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn conditional(
         &mut self,
-        _loc: &'ast (ALoc, Type),
-        expr: &'ast ast::expression::Conditional<ALoc, (ALoc, Type)>,
+        _loc: &'t (ALoc, Type),
+        expr: &'t ast::expression::Conditional<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let Ok(()) = self.predicate_expression(&expr.test);
         self.in_conditional(|this| {
@@ -2133,8 +2159,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn logical(
         &mut self,
-        _loc: &'ast (ALoc, Type),
-        expr: &'ast ast::expression::Logical<ALoc, (ALoc, Type)>,
+        _loc: &'t (ALoc, Type),
+        expr: &'t ast::expression::Logical<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let Ok(()) = self.expression(&expr.left);
         self.in_conditional(|this| {
@@ -2145,8 +2171,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn for_in_statement(
         &mut self,
-        _loc: &'ast ALoc,
-        stmt: &'ast ast::statement::ForIn<ALoc, (ALoc, Type)>,
+        _loc: &'t ALoc,
+        stmt: &'t ast::statement::ForIn<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let Ok(()) = self.for_in_statement_lhs(&stmt.left);
         let Ok(()) = self.expression(&stmt.right);
@@ -2160,8 +2186,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn for_of_statement(
         &mut self,
-        _loc: &'ast ALoc,
-        stmt: &'ast ast::statement::ForOf<ALoc, (ALoc, Type)>,
+        _loc: &'t ALoc,
+        stmt: &'t ast::statement::ForOf<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let Ok(()) = self.for_of_statement_lhs(&stmt.left);
         let Ok(()) = self.expression(&stmt.right);
@@ -2175,8 +2201,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn for_statement(
         &mut self,
-        _loc: &'ast ALoc,
-        stmt: &'ast ast::statement::For<ALoc, (ALoc, Type)>,
+        _loc: &'t ALoc,
+        stmt: &'t ast::statement::For<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         if let Some(init) = &stmt.init {
             let Ok(()) = self.for_statement_init(init);
@@ -2199,8 +2225,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn while_(
         &mut self,
-        _loc: &'ast ALoc,
-        stmt: &'ast ast::statement::While<ALoc, (ALoc, Type)>,
+        _loc: &'t ALoc,
+        stmt: &'t ast::statement::While<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         let (cur, cur_loop) = self.conditional_state.enter_switch_or_loop();
         let Ok(()) = self.predicate_expression(&stmt.test);
@@ -2213,8 +2239,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
 
     fn function_(
         &mut self,
-        _loc: &'ast ALoc,
-        expr: &'ast ast::function::Function<ALoc, (ALoc, Type)>,
+        _loc: &'t ALoc,
+        expr: &'t ast::function::Function<ALoc, (ALoc, Type)>,
     ) -> Result<(), !> {
         if let Some(ident) = &expr.id {
             let Ok(()) = self.function_identifier(ident);
@@ -2230,7 +2256,8 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
             } else {
                 HookCallContext::HookCallNotAllowedUnderNormalFunctionInComponentOrHooks
             };
-            let mut wav = WholeAstVisitor::new(self.tast, true, initial_ctx, self.cx, self.rrid);
+            let mut wav =
+                WholeAstVisitor::new(self.tast, true, initial_ctx, self.cx, self.rrid.clone());
             let Ok(()) = wav.function_body_any(&expr.body);
         }
         if let Some(predicate) = &expr.predicate {
@@ -2239,32 +2266,29 @@ impl<'ast> ast_visitor::AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
         Ok(())
     }
 
-    fn class_body(
-        &mut self,
-        cls_body: &'ast ast::class::Body<ALoc, (ALoc, Type)>,
-    ) -> Result<(), !> {
+    fn class_body(&mut self, cls_body: &'t ast::class::Body<ALoc, (ALoc, Type)>) -> Result<(), !> {
         let mut wav = WholeAstVisitor::new(
             self.tast,
             true,
             HookCallContext::HookCallNotAllowedUnderUnknownContext,
             self.cx,
-            self.rrid,
+            self.rrid.clone(),
         );
         wav.class_body(cls_body)
     }
 
     fn match_case<B>(
         &mut self,
-        case: &'ast ast::match_::Case<ALoc, (ALoc, Type), B>,
-        on_case_body: &mut impl FnMut(&mut Self, &'ast B) -> Result<(), !>,
+        case: &'t ast::match_::Case<ALoc, (ALoc, Type), B>,
+        on_case_body: &mut impl FnMut(&mut Self, &'t B) -> Result<(), !>,
     ) -> Result<(), !> {
         self.in_conditional(|this| ast_visitor::match_case_default(this, case, on_case_body))
     }
 }
 
-pub fn check_react_rules(cx: &Context, ast: &ast::Program<ALoc, (ALoc, Type)>) {
+pub fn check_react_rules<'cx>(cx: &Context<'cx>, ast: &ast::Program<ALoc, (ALoc, Type)>) {
     let rrid = {
-        let get_t = |cx: &Context, pair: &(ALoc, Type)| -> Type {
+        let get_t = |cx, pair: &(ALoc, Type)| -> Type {
             let (_, t) = pair;
             match t.deref() {
                 TypeInner::OpenT(tvar) => {
@@ -2300,7 +2324,7 @@ pub fn check_react_rules(cx: &Context, ast: &ast::Program<ALoc, (ALoc, Type)>) {
         false,
         HookCallContext::HookCallNotAllowedUnderUnknownContext,
         cx,
-        rrid.as_ref(),
+        rrid,
     );
     let Ok(()) = visitor.program(ast);
 }

@@ -37,20 +37,25 @@ pub struct ParseArtifacts {
     pub parse_errors: Vec<(Loc, ParseError)>,
 }
 
-pub struct TypecheckArtifacts {
-    pub cx: Context,
+pub struct TypecheckArtifacts<'cx> {
+    pub cx: Context<'cx>,
     pub typed_ast: ast::Program<ALoc, (ALoc, Type)>,
     pub obj_to_obj_map: BTreeMap<Loc, BTreeSet<properties::Id>>,
 }
 
-pub type FileArtifacts = (ParseArtifacts, TypecheckArtifacts);
+pub type FileArtifacts<'cx> = (ParseArtifacts, TypecheckArtifacts<'cx>);
 
-pub type AutocompleteArtifacts = (String, ParseArtifacts, Context, ast::Program<ALoc, ALoc>);
+pub type AutocompleteArtifacts<'cx> = (
+    String,
+    ParseArtifacts,
+    Context<'cx>,
+    ast::Program<ALoc, ALoc>,
+);
 
 pub type Duration = f64;
 
-pub type CheckTypeResult = (
-    Context,
+pub type CheckTypeResult<'cx> = (
+    Context<'cx>,
     packed_type_sig::Module<Loc>,
     FileSig,
     ast::Program<ALoc, (ALoc, Type)>,
@@ -65,6 +70,6 @@ pub type CheckErrorResult = (
     Duration,
 );
 
-pub type CheckResult = (CheckTypeResult, CheckErrorResult);
+pub type CheckResult<'cx> = (CheckTypeResult<'cx>, CheckErrorResult);
 
 pub type MergeResult = (ErrorSuppressions, Duration);

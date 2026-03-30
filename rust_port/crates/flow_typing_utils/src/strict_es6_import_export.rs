@@ -265,16 +265,16 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for ThisVisitor {
 }
 
 // Visitor that uses the previously found declaration info to check for errors in imports/exports.
-struct ImportExportVisitor<'a> {
-    cx: &'a Context,
+struct ImportExportVisitor<'cx, 'a> {
+    cx: &'a Context<'cx>,
     scope_info: &'a ScopeInfo<ALoc>,
     declarations: &'a Declarations,
     import_star_uses: ALocMap<(ALoc, ast::Identifier<ALoc, ALoc>)>,
 }
 
-impl<'a> ImportExportVisitor<'a> {
+impl<'cx, 'a> ImportExportVisitor<'cx, 'a> {
     fn new(
-        cx: &'a Context,
+        cx: &'a Context<'cx>,
         scope_info: &'a ScopeInfo<ALoc>,
         declarations: &'a Declarations,
     ) -> Self {
@@ -431,7 +431,7 @@ impl<'a> ImportExportVisitor<'a> {
     }
 }
 
-impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for ImportExportVisitor<'a> {
+impl<'cx, 'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for ImportExportVisitor<'cx, 'a> {
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
     }
@@ -810,7 +810,7 @@ impl<'a, 'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for ImportExportVisit
     }
 }
 
-fn detect_mixed_import_and_require_error(cx: &Context, declarations: &Declarations) {
+fn detect_mixed_import_and_require_error<'cx>(cx: &Context<'cx>, declarations: &Declarations) {
     match (&declarations.first_import, &declarations.first_require) {
         (Some(first_import_loc), Some(first_require_loc)) => {
             let import_reason = mk_reason(
@@ -826,7 +826,7 @@ fn detect_mixed_import_and_require_error(cx: &Context, declarations: &Declaratio
     }
 }
 
-fn detect_errors_from_ast(cx: &Context, ast: &ast::Program<ALoc, ALoc>) {
+fn detect_errors_from_ast<'cx>(cx: &Context<'cx>, ast: &ast::Program<ALoc, ALoc>) {
     let scope_info = scope_builder::program(cx.enable_enums(), true, ast);
     let declarations = gather_declarations(ast);
     detect_mixed_import_and_require_error(cx, &declarations);
@@ -834,7 +834,7 @@ fn detect_errors_from_ast(cx: &Context, ast: &ast::Program<ALoc, ALoc>) {
     let Ok(()) = visitor.program(ast);
 }
 
-pub fn detect_errors(cx: &Context, ast: &ast::Program<ALoc, ALoc>, metadata: &Metadata) {
+pub fn detect_errors<'cx>(cx: &Context<'cx>, ast: &ast::Program<ALoc, ALoc>, metadata: &Metadata) {
     if metadata.frozen.strict_es6_import_export {
         detect_errors_from_ast(cx, ast)
     }

@@ -73,8 +73,8 @@ pub fn empty(
     }
 }
 
-fn pattern_default(
-    cx: &Context,
+fn pattern_default<'a>(
+    cx: &Context<'a>,
     acc: &mut State,
     default_expr: Option<&expression::Expression<ALoc, ALoc>>,
 ) -> Result<Option<expression::Expression<ALoc, (ALoc, Type)>>, AbnormalControlFlow> {
@@ -91,7 +91,7 @@ fn pattern_default(
     }
 }
 
-fn array_element(cx: &Context, acc: &State, i: i32, loc: ALoc) -> State {
+fn array_element<'a>(cx: &Context<'a>, acc: &State, i: i32, loc: ALoc) -> State {
     let init = &acc.init;
     let default_val = &acc.default;
     let key = Type::new(TypeInner::DefT(
@@ -148,10 +148,10 @@ fn array_rest_element(acc: &State, i: i32, loc: ALoc) -> State {
     }
 }
 
-fn object_named_property(
+fn object_named_property<'a>(
     has_default: bool,
     _parent_loc: ALoc,
-    cx: &Context,
+    cx: &Context<'a>,
     acc: &State,
     loc: ALoc,
     x: &FlowSmolStr,
@@ -202,8 +202,8 @@ fn object_named_property(
     }
 }
 
-fn object_computed_property(
-    cx: &Context,
+fn object_computed_property<'a>(
+    cx: &Context<'a>,
     acc: &State,
     e: &expression::Expression<ALoc, ALoc>,
 ) -> Result<(State, expression::Expression<ALoc, (ALoc, Type)>), AbnormalControlFlow> {
@@ -248,8 +248,8 @@ fn object_rest_property(acc: &State, xs: Vec<FlowSmolStr>, loc: ALoc) -> State {
     }
 }
 
-fn object_property(
-    cx: &Context,
+fn object_property<'a>(
+    cx: &Context<'a>,
     has_default: bool,
     parent_loc: ALoc,
     current: Type,
@@ -366,8 +366,8 @@ fn object_property(
     }
 }
 
-fn identifier(
-    cx: &Context,
+fn identifier<'a>(
+    cx: &Context<'a>,
     f: &Callback<'_>,
     acc: &State,
     name_loc: ALoc,
@@ -406,7 +406,7 @@ fn identifier(
     f(&use_op, name_loc, name, default_val.as_ref(), current)
 }
 
-fn current_type(cx: &Context, p: &pattern::Pattern<ALoc, ALoc>) -> Type {
+fn current_type<'a>(cx: &Context<'a>, p: &pattern::Pattern<ALoc, ALoc>) -> Type {
     let loc = p.loc().dupe();
     match p {
         pattern::Pattern::Identifier { inner, .. } => {
@@ -440,8 +440,8 @@ fn current_type(cx: &Context, p: &pattern::Pattern<ALoc, ALoc>) -> Type {
     }
 }
 
-pub fn pattern(
-    cx: &Context,
+pub fn pattern<'a>(
+    cx: &Context<'a>,
     f: &Callback<'_>,
     acc: &mut State,
     p: &pattern::Pattern<ALoc, ALoc>,
@@ -536,8 +536,8 @@ pub fn pattern(
     }
 }
 
-pub fn array_elements(
-    cx: &Context,
+pub fn array_elements<'a>(
+    cx: &Context<'a>,
     f: &Callback<'_>,
     acc: &mut State,
     elements: &[pattern::array::Element<ALoc, ALoc>],
@@ -580,8 +580,8 @@ pub fn array_elements(
         .collect::<Result<Vec<_>, _>>()
 }
 
-pub fn object_properties(
-    cx: &Context,
+pub fn object_properties<'a>(
+    cx: &Context<'a>,
     f: &Callback<'_>,
     parent_loc: ALoc,
     acc: &mut State,
@@ -653,8 +653,8 @@ pub fn type_of_pattern(
 }
 
 /// instantiate pattern visitor for assignments
-pub fn assignment(
-    cx: &Context,
+pub fn assignment<'a>(
+    cx: &Context<'a>,
     init: expression::Expression<ALoc, ALoc>,
     p: &pattern::Pattern<ALoc, ALoc>,
 ) -> Result<pattern::Pattern<ALoc, (ALoc, Type)>, AbnormalControlFlow> {

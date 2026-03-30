@@ -82,7 +82,11 @@ pub fn is_rest_type_annotated(rest: &Rest) -> bool {
     rest.has_anno
 }
 
-pub fn subst_param(cx: &Context, map: &FlowOrdMap<SubstName, Type>, param: &Param) -> Param {
+pub fn subst_param<'a>(
+    cx: &Context<'a>,
+    map: &FlowOrdMap<SubstName, Type>,
+    param: &Param,
+) -> Param {
     let t = flow_js::subst(cx, None, None, None, map, param.t.dupe());
     Param {
         t,
@@ -94,7 +98,7 @@ pub fn subst_param(cx: &Context, map: &FlowOrdMap<SubstName, Type>, param: &Para
     }
 }
 
-pub fn subst_rest(cx: &Context, map: &FlowOrdMap<SubstName, Type>, rest: &Rest) -> Rest {
+pub fn subst_rest<'a>(cx: &Context<'a>, map: &FlowOrdMap<SubstName, Type>, rest: &Rest) -> Rest {
     let t = flow_js::subst(cx, None, None, None, map, rest.t.dupe());
     Rest {
         t,
@@ -105,7 +109,11 @@ pub fn subst_rest(cx: &Context, map: &FlowOrdMap<SubstName, Type>, rest: &Rest) 
     }
 }
 
-pub fn subst_this(cx: &Context, map: &FlowOrdMap<SubstName, Type>, this: &ThisParam) -> ThisParam {
+pub fn subst_this<'a>(
+    cx: &Context<'a>,
+    map: &FlowOrdMap<SubstName, Type>,
+    this: &ThisParam,
+) -> ThisParam {
     let t = flow_js::subst(cx, None, None, None, map, this.t.dupe());
     ThisParam {
         t,
@@ -114,8 +122,8 @@ pub fn subst_this(cx: &Context, map: &FlowOrdMap<SubstName, Type>, this: &ThisPa
     }
 }
 
-fn destruct(
-    cx: &Context,
+fn destruct<'a>(
+    cx: &Context<'a>,
     use_op: &UseOp,
     name_loc: ALoc,
     name: &str,
@@ -136,7 +144,7 @@ fn destruct(
     t
 }
 
-fn flow_default(cx: &Context, annot_t: &Type, default_t: &Type) {
+fn flow_default<'a>(cx: &Context<'a>, annot_t: &Type, default_t: &Type) {
     let use_op = UseOp::Op(std::sync::Arc::new(type_::RootUseOp::AssignVar {
         var: Some(type_util::reason_of_t(annot_t).dupe()),
         init: type_util::reason_of_t(default_t).dupe(),
@@ -150,8 +158,8 @@ fn flow_default(cx: &Context, annot_t: &Type, default_t: &Type) {
     );
 }
 
-fn eval_default(
-    cx: &Context,
+fn eval_default<'a>(
+    cx: &Context<'a>,
     always_flow_default: bool,
     annot_t: &Type,
     has_anno: bool,
@@ -176,8 +184,8 @@ fn eval_default(
         .transpose()
 }
 
-pub fn eval_param(
-    cx: &Context,
+pub fn eval_param<'a>(
+    cx: &Context<'a>,
     param: &Param,
 ) -> Result<flow_typing_loc_env::func_stmt_config_types::ParamAst<(ALoc, Type)>, AbnormalControlFlow>
 {
@@ -278,8 +286,8 @@ pub fn eval_param(
     }
 }
 
-pub fn eval_rest(
-    cx: &Context,
+pub fn eval_rest<'a>(
+    cx: &Context<'a>,
     rest: &Rest,
 ) -> flow_typing_loc_env::func_stmt_config_types::RestAst<(ALoc, Type)> {
     let Rest {
@@ -306,8 +314,8 @@ pub fn eval_rest(
     }
 }
 
-pub fn eval_this(
-    _cx: &Context,
+pub fn eval_this<'a>(
+    _cx: &Context<'a>,
     this: &ThisParam,
 ) -> flow_typing_loc_env::func_stmt_config_types::ThisAst<(ALoc, Type)> {
     ast::function::ThisParam {

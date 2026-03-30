@@ -118,8 +118,8 @@ impl ConcretizedType {
         &self.0
     }
 
-    fn for_all_concrete_ts(
-        cx: &Context,
+    fn for_all_concrete_ts<'cx>(
+        cx: &Context<'cx>,
         t: &Type,
         f: &dyn Fn(&ConcretizedType) -> bool,
     ) -> Result<bool, FlowJsException> {
@@ -172,14 +172,14 @@ fn report_changed_filtering_result_to_predicate_result(
     );
 }
 
-fn concretize_and_run_predicate(
-    cx: &Context,
+fn concretize_and_run_predicate<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     l: &Type,
     variant: PredicateConcretetizerVariant,
     result_collector: &PredicateResultCollector,
     predicate_no_concretization: &dyn Fn(
-        &Context,
+        &Context<'cx>,
         DepthTrace,
         &PredicateResultCollector,
         &Type,
@@ -244,8 +244,8 @@ fn concretize_and_run_predicate(
     Ok(())
 }
 
-fn concretize_binary_rhs_and_run_binary_predicate(
-    cx: &Context,
+fn concretize_binary_rhs_and_run_binary_predicate<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     l: &Type,
     r: &Type,
@@ -274,8 +274,8 @@ fn concretize_binary_rhs_and_run_binary_predicate(
 // l - incoming concrete LB (predicate input)
 // result - guard result in case of success
 // p - predicate
-fn predicate_no_concretization(
-    cx: &Context,
+fn predicate_no_concretization<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     result_collector: &PredicateResultCollector,
     l: &Type,
@@ -877,8 +877,8 @@ fn predicate_no_concretization(
 /// branch. Since at the time of processing the call we do not know yet the
 /// function's formal parameters, [idx] is the index of the argument that gets
 /// refined.
-fn call_latent_pred(
-    cx: &Context,
+fn call_latent_pred<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     fun_t: &Type,
     use_op: &UseOp,
@@ -901,32 +901,35 @@ fn call_latent_pred(
                 let targs_c = targs.dupe();
                 let argts_c = argts.to_vec();
                 let tin_c = tin.dupe();
-                let cases: Vec<Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>> = members
-                    .into_iter()
-                    .map(|member_t| {
-                        let use_op_inner = use_op_c.dupe();
-                        let reason_inner = reason_c.dupe();
-                        let targs_inner = targs_c.dupe();
-                        let argts_inner = argts_c.clone();
-                        let tin_inner = tin_c.dupe();
-                        Box::new(move || {
-                            call_latent_pred(
-                                cx,
-                                trace,
-                                &member_t,
-                                &use_op_inner,
-                                &reason_inner,
-                                &targs_inner,
-                                &argts_inner,
-                                sense,
-                                is_target,
-                                &tin_inner,
-                                result_collector,
-                            )
+                let cases: Vec<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_>> =
+                    members
+                        .into_iter()
+                        .map(|member_t| {
+                            let use_op_inner = use_op_c.dupe();
+                            let reason_inner = reason_c.dupe();
+                            let targs_inner = targs_c.dupe();
+                            let argts_inner = argts_c.clone();
+                            let tin_inner = tin_c.dupe();
+                            Box::new(move |_cx: &Context<'cx>| {
+                                call_latent_pred(
+                                    cx,
+                                    trace,
+                                    &member_t,
+                                    &use_op_inner,
+                                    &reason_inner,
+                                    &targs_inner,
+                                    &argts_inner,
+                                    sense,
+                                    is_target,
+                                    &tin_inner,
+                                    result_collector,
+                                )
+                            })
+                                as Box<
+                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                >
                         })
-                            as Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>
-                    })
-                    .collect();
+                        .collect();
                 speculation_flow::try_custom(
                     cx,
                     Some(use_op.dupe()),
@@ -1074,8 +1077,8 @@ fn call_latent_pred(
     Ok(())
 }
 
-fn call_latent_param_pred(
-    cx: &Context,
+fn call_latent_param_pred<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     fun_t: &Type,
     use_op: &UseOp,
@@ -1108,8 +1111,8 @@ fn call_latent_param_pred(
     )
 }
 
-fn call_latent_this_pred(
-    cx: &Context,
+fn call_latent_this_pred<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     fun_t: &Type,
     use_op: &UseOp,
@@ -1135,8 +1138,8 @@ fn call_latent_this_pred(
     )
 }
 
-fn intersect(cx: &Context, t1: Type, t2: Type) -> Type {
-    fn is_any(cx: &Context, t: &Type) -> bool {
+fn intersect<'cx>(cx: &Context<'cx>, t1: Type, t2: Type) -> Type {
+    fn is_any<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
         let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t);
         match ts {
             Ok(ts) => ts.iter().any(|t| matches!(t.deref(), TypeInner::AnyT(..))),
@@ -1158,11 +1161,14 @@ fn intersect(cx: &Context, t1: Type, t2: Type) -> Type {
         }
     }
 
-    fn tags_of_t(cx: &Context, t: &ConcretizedType) -> Option<crate::type_filter::TypeTagSet> {
+    fn tags_of_t<'cx>(
+        cx: &Context<'cx>,
+        t: &ConcretizedType,
+    ) -> Option<crate::type_filter::TypeTagSet> {
         crate::type_filter::tag_of_t(cx, t.unwrap())
     }
 
-    fn tags_differ(cx: &Context, t1: &ConcretizedType, t2: &ConcretizedType) -> bool {
+    fn tags_differ<'cx>(cx: &Context<'cx>, t1: &ConcretizedType, t2: &ConcretizedType) -> bool {
         match (tags_of_t(cx, t1), tags_of_t(cx, t2)) {
             (Some(ref t1_tags), Some(ref t2_tags)) => {
                 !crate::type_filter::tags_overlap(t1_tags, t2_tags)
@@ -1194,7 +1200,7 @@ fn intersect(cx: &Context, t1: Type, t2: Type) -> Type {
         }
     }
 
-    fn type_tags_differ(cx: &Context, depth: i32, ts1: &[Type], ts2: &[Type]) -> bool {
+    fn type_tags_differ<'cx>(cx: &Context<'cx>, depth: i32, ts1: &[Type], ts2: &[Type]) -> bool {
         match (ts1, ts2) {
             ([t1, rest1 @ ..], [t2, rest2 @ ..]) => {
                 let t2_c = t2.dupe();
@@ -1209,8 +1215,8 @@ fn intersect(cx: &Context, t1: Type, t2: Type) -> Type {
     }
 
     // C<T> has no overlap with C<S> iff T and S have no overlap
-    fn instance_tags_differ(
-        cx: &Context,
+    fn instance_tags_differ<'cx>(
+        cx: &Context<'cx>,
         depth: i32,
         t1: &ConcretizedType,
         t2: &ConcretizedType,
@@ -1253,7 +1259,7 @@ fn intersect(cx: &Context, t1: Type, t2: Type) -> Type {
         }
     }
 
-    fn types_differ(cx: &Context, depth: i32, t1: &ConcretizedType, t2: &Type) -> bool {
+    fn types_differ<'cx>(cx: &Context<'cx>, depth: i32, t1: &ConcretizedType, t2: &Type) -> bool {
         // To prevent infinite recursion, we use a simple depth mechanism.
         if depth > 2 {
             return false;
@@ -1267,8 +1273,8 @@ fn intersect(cx: &Context, t1: Type, t2: Type) -> Type {
         .unwrap_or(false)
     }
 
-    fn try_intersect(
-        cx: &Context,
+    fn try_intersect<'cx>(
+        cx: &Context<'cx>,
         reason1: &Reason,
         t1_conc: &ConcretizedType,
         t2: &Type,
@@ -1378,7 +1384,7 @@ fn intersect(cx: &Context, t1: Type, t2: Type) -> Type {
 /// with a type guard `x is t2`. The only case considered here is that of t1 <: t2.
 /// This means that the positive branch will always be taken, and so we are left with
 /// `empty` in the negated case.
-fn type_guard_diff(cx: &Context, t1: &Type, t2: &Type) -> FilterResult {
+fn type_guard_diff<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> FilterResult {
     let reason1 = reason_of_t(t1);
     if type_util::quick_subtype(None::<&fn(&Type)>, t1, t2)
         || FlowJs::speculative_subtyping_succeeds(cx, t1, t2)
@@ -1412,8 +1418,8 @@ fn type_guard_diff(cx: &Context, t1: &Type, t2: &Type) -> FilterResult {
     }
 }
 
-fn prop_exists_test(
-    cx: &Context,
+fn prop_exists_test<'cx>(
+    cx: &Context<'cx>,
     key: &str,
     sense: bool,
     obj: &Type,
@@ -1437,7 +1443,11 @@ fn prop_exists_test(
 /// If an object has an own or non-own prop, representing `'key' in obj`.
 /// Returns `None` if it is unknown whether the object has the prop (for example
 /// due to inexact objects)
-fn has_prop(cx: &Context, key: &Name, obj: &Type) -> Result<Option<bool>, FlowJsException> {
+fn has_prop<'cx>(
+    cx: &Context<'cx>,
+    key: &Name,
+    obj: &Type,
+) -> Result<Option<bool>, FlowJsException> {
     fn all_have_prop(xs: Vec<Option<bool>>) -> Option<bool> {
         xs.into_iter().try_fold(true, |acc, x| x.map(|b| acc && b))
     }
@@ -1454,8 +1464,8 @@ fn has_prop(cx: &Context, key: &Name, obj: &Type) -> Result<Option<bool>, FlowJs
         acc
     }
 
-    fn find_key(
-        cx: &Context,
+    fn find_key<'cx>(
+        cx: &Context<'cx>,
         exact: bool,
         super_t: &Type,
         props_list: &[properties::Id],
@@ -1539,8 +1549,8 @@ fn has_prop(cx: &Context, key: &Name, obj: &Type) -> Result<Option<bool>, FlowJs
     }
 }
 
-fn prop_truthy_test(
-    cx: &Context,
+fn prop_truthy_test<'cx>(
+    cx: &Context<'cx>,
     key: &str,
     reason: &Reason,
     sense: bool,
@@ -1559,8 +1569,8 @@ fn prop_truthy_test(
     )
 }
 
-fn prop_non_maybe_test(
-    cx: &Context,
+fn prop_non_maybe_test<'cx>(
+    cx: &Context<'cx>,
     key: &str,
     reason: &Reason,
     sense: bool,
@@ -1579,8 +1589,8 @@ fn prop_non_maybe_test(
     )
 }
 
-fn prop_is_exactly_null_test(
-    cx: &Context,
+fn prop_is_exactly_null_test<'cx>(
+    cx: &Context<'cx>,
     key: &str,
     reason: &Reason,
     sense: bool,
@@ -1599,8 +1609,8 @@ fn prop_is_exactly_null_test(
     )
 }
 
-fn prop_non_void_test(
-    cx: &Context,
+fn prop_non_void_test<'cx>(
+    cx: &Context<'cx>,
     key: &str,
     reason: &Reason,
     sense: bool,
@@ -1619,10 +1629,10 @@ fn prop_non_void_test(
     )
 }
 
-fn prop_exists_test_generic(
+fn prop_exists_test_generic<'cx>(
     key: &str,
     reason: &Reason,
-    cx: &Context,
+    cx: &Context<'cx>,
     result_collector: &PredicateResultCollector,
     orig_obj: &Type,
     sense: bool,
@@ -1775,8 +1785,8 @@ fn prop_exists_test_generic(
     Ok(())
 }
 
-fn binary_predicate(
-    cx: &Context,
+fn binary_predicate<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     sense: bool,
     test: &BinaryTest,
@@ -1800,8 +1810,8 @@ fn binary_predicate(
     }
 }
 
-fn instanceof_test(
-    cx: &Context,
+fn instanceof_test<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     result_collector: &PredicateResultCollector,
     sense: bool,
@@ -2044,9 +2054,9 @@ fn instanceof_test(
     Ok(())
 }
 
-fn sentinel_prop_test(
+fn sentinel_prop_test<'cx>(
     key: &str,
-    cx: &Context,
+    cx: &Context<'cx>,
     result_collector: &PredicateResultCollector,
     sense: bool,
     obj: &Type,
@@ -2055,9 +2065,9 @@ fn sentinel_prop_test(
     sentinel_prop_test_generic(key, cx, result_collector, obj, sense, obj, t)
 }
 
-fn sentinel_prop_test_generic(
+fn sentinel_prop_test_generic<'cx>(
     key: &str,
-    cx: &Context,
+    cx: &Context<'cx>,
     result_collector: &PredicateResultCollector,
     orig_obj: &Type,
     sense: bool,
@@ -2324,8 +2334,8 @@ fn sentinel_prop_test_generic(
     Ok(())
 }
 
-fn concretize_and_run_sentinel_prop_test(
-    cx: &Context,
+fn concretize_and_run_sentinel_prop_test<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     orig_obj: &Type,
     sense: bool,
@@ -2465,8 +2475,8 @@ fn concretize_and_run_sentinel_prop_test(
     Ok(())
 }
 
-fn eq_test(
-    cx: &Context,
+fn eq_test<'cx>(
+    cx: &Context<'cx>,
     result_collector: &PredicateResultCollector,
     sense: bool,
     left: &Type,
@@ -2547,8 +2557,8 @@ fn eq_test(
 // (**********)
 // (* guards *)
 // (**********)
-fn concretize_and_guard_prop(
-    cx: &Context,
+fn concretize_and_guard_prop<'cx>(
+    cx: &Context<'cx>,
     source: &Type,
     pred: &PropGuard,
     orig_obj: &Type,
@@ -2565,7 +2575,7 @@ fn concretize_and_guard_prop(
     Ok(())
 }
 
-fn guard_prop(cx: &Context, source: &Type, pred: &PropGuard) -> bool {
+fn guard_prop<'cx>(cx: &Context<'cx>, source: &Type, pred: &PropGuard) -> bool {
     fn is_empty_and_changed(result: FilterResult) -> bool {
         match result.type_.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
@@ -2601,8 +2611,8 @@ pub enum PredicateResult {
     TypeUnchanged(Type),
 }
 
-pub fn run_predicate_track_changes(
-    cx: &Context,
+pub fn run_predicate_track_changes<'cx>(
+    cx: &Context<'cx>,
     t: &Type,
     p: &Predicate,
     result_reason: Reason,
@@ -2644,7 +2654,7 @@ pub fn run_predicate_track_changes(
     }
 }
 
-pub fn run_predicate_for_filtering(cx: &Context, t: &Type, p: &Predicate, tout: &Tvar) {
+pub fn run_predicate_for_filtering<'cx>(cx: &Context<'cx>, t: &Type, p: &Predicate, tout: &Tvar) {
     let collector = TypeCollector::create();
     let changed = Rc::new(RefCell::new(false));
     let result_collector = PredicateResultCollector {

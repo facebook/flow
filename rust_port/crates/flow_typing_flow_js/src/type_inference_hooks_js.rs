@@ -146,27 +146,27 @@ pub fn reset_hooks() {
     });
 }
 
-pub fn dispatch_id_hook(cx: &Context, name: &str, loc: ALoc) -> bool {
+pub fn dispatch_id_hook<'cx>(cx: &Context<'cx>, name: &str, loc: ALoc) -> bool {
     let hook = HOOK_STATE.with(|state| state.borrow().id_hook);
     hook(cx, name, loc)
 }
 
-pub fn dispatch_literal_hook(cx: &Context, loc: ALoc) -> bool {
+pub fn dispatch_literal_hook<'cx>(cx: &Context<'cx>, loc: ALoc) -> bool {
     let hook = HOOK_STATE.with(|state| state.borrow().literal_hook);
     hook(cx, loc)
 }
 
-pub fn dispatch_jsx_hook(cx: &Context, name: &str, loc: ALoc) -> bool {
+pub fn dispatch_jsx_hook<'cx>(cx: &Context<'cx>, name: &str, loc: ALoc) -> bool {
     let hook = HOOK_STATE.with(|state| state.borrow().jsx_hook);
     hook(cx, name, loc)
 }
 
-pub fn dispatch_obj_prop_decl_hook(cx: &Context, name: &str, loc: ALoc) -> bool {
+pub fn dispatch_obj_prop_decl_hook<'cx>(cx: &Context<'cx>, name: &str, loc: ALoc) -> bool {
     let hook = HOOK_STATE.with(|state| state.borrow().obj_prop_decl_hook);
     hook(cx, name, loc)
 }
 
-pub fn dispatch_obj_to_obj_hook(cx: &Context, t1: &Type, t2: &Type) {
+pub fn dispatch_obj_to_obj_hook<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) {
     let hook = HOOK_STATE.with(|state| state.borrow().obj_to_obj_hook);
     hook(cx, t1, t2);
 }

@@ -113,8 +113,8 @@ fn union_flatten(t: Type) -> Vec<Type> {
 // We would like the type of `st` and `setSt` to use the general form of the type
 // for the initial state `42`, i.e. number (resp. `(number)=>void`), instead of
 // the rather impractical `42` (resp. `(42)=>void`).
-fn generalize_singletons(
-    cx: &Context,
+fn generalize_singletons<'cx>(
+    cx: &Context<'cx>,
     call_loc: &flow_aloc::ALoc,
     has_syntactic_hint: bool,
     t: Type,
@@ -162,29 +162,30 @@ impl GeneralizedTarg {
 }
 
 trait Observer {
-    fn on_pinned_tparam(cx: &Context, tparam: &TypeParam, inferred: Type) -> InferredTarg;
-    fn on_constant_tparam_missing_bounds(
-        cx: &Context,
+    fn on_pinned_tparam<'cx>(cx: &Context<'cx>, tparam: &TypeParam, inferred: Type)
+    -> InferredTarg;
+    fn on_constant_tparam_missing_bounds<'cx>(
+        cx: &Context<'cx>,
         tparam: &TypeParam,
     ) -> Result<InferredTarg, FlowJsException>;
-    fn on_missing_bounds(
-        cx: &Context,
+    fn on_missing_bounds<'cx>(
+        cx: &Context<'cx>,
         use_op: &UseOp,
         tparam: &TypeParam,
         tparam_binder_reason: &Reason,
         instantiation_reason: &Reason,
     ) -> Result<InferredTarg, FlowJsException>;
-    fn on_upper_non_t(
-        cx: &Context,
+    fn on_upper_non_t<'cx>(
+        cx: &Context<'cx>,
         use_op: &UseOp,
-        u: &UseT,
+        u: &UseT<Context<'cx>>,
         tparam: &TypeParam,
         tparam_binder_reason: &Reason,
         instantiation_reason: &Reason,
     ) -> Result<InferredTarg, FlowJsException>;
 }
 
-fn get_t(cx: &Context, t: &Type) -> Type {
+fn get_t<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
     let no_lowers = |_cx: &Context, r: &Reason| unsoundness::merged_any(r.dupe());
     match t.deref() {
         TypeInner::OpenT(tvar) => {
@@ -198,8 +199,10 @@ fn get_t(cx: &Context, t: &Type) -> Type {
 
 // Sorting of the upper bounds is mostly done for compatibility with the version
 // before EvalTypeDestructorT was a use_t.
-fn sort_upper_bounds_for_merging(xs: Vec<(UseT, DepthTrace)>) -> Vec<(UseT, DepthTrace)> {
-    let (use_t, rest_t): (Vec<_>, Vec<_>) = xs.into_iter().partition(|(u, _)| {
+fn sort_upper_bounds_for_merging<CX>(
+    xs: Vec<(UseT<CX>, DepthTrace)>,
+) -> Vec<(UseT<CX>, DepthTrace)> {
+    let (use_t, rest_t): (Vec<_>, Vec<_>) = xs.into_iter().partition(|(u, _): &(UseT<CX>, _)| {
         matches!(
             u.deref(),
             UseTInner::UseT(_, _) | UseTInner::EvalTypeDestructorT { .. }
@@ -208,8 +211,8 @@ fn sort_upper_bounds_for_merging(xs: Vec<(UseT, DepthTrace)>) -> Vec<(UseT, Dept
     use_t.into_iter().chain(rest_t).collect()
 }
 
-fn speculative_subtyping_succeeds(
-    cx: &Context,
+fn speculative_subtyping_succeeds<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     l: &Type,
@@ -229,14 +232,17 @@ fn speculative_subtyping_succeeds(
     }
 }
 
-struct ImplicitInstantiationVisitor<'a> {
+struct ImplicitInstantiationVisitor<'a, 'cx> {
     tparams_map: &'a BTreeMap<SubstName, TypeParam>,
+    cx: &'a Context<'cx>,
 }
 
-impl TypeVisitor<(Marked<SubstName>, FlowOrdSet<SubstName>)> for ImplicitInstantiationVisitor<'_> {
-    fn type_(
+impl TypeVisitor<(Marked<SubstName>, FlowOrdSet<SubstName>)>
+    for ImplicitInstantiationVisitor<'_, '_>
+{
+    fn type_<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: (Marked<SubstName>, FlowOrdSet<SubstName>),
         t: &Type,
@@ -277,7 +283,7 @@ impl TypeVisitor<(Marked<SubstName>, FlowOrdSet<SubstName>)> for ImplicitInstant
                 }
             }
             TypeInner::TypeAppT(box TypeAppTData { type_, targs, .. }) => {
-                self.typeapp(targs, cx, pole, (marked, tparam_names), type_)
+                self.typeapp(targs, self.cx, pole, (marked, tparam_names), type_)
             }
             // ThisTypeAppT is created from a new expression, which cannot be used as an annotation,
             // so we do not special case it like we do with TypeAppT
@@ -286,18 +292,18 @@ impl TypeVisitor<(Marked<SubstName>, FlowOrdSet<SubstName>)> for ImplicitInstant
     }
 }
 
-impl ImplicitInstantiationVisitor<'_> {
-    fn typeapp(
+impl ImplicitInstantiationVisitor<'_, '_> {
+    fn typeapp<'cx>(
         &mut self,
         targs: &[Type],
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: (Marked<SubstName>, FlowOrdSet<SubstName>),
         type_: &Type,
     ) -> (Marked<SubstName>, FlowOrdSet<SubstName>) {
-        fn loop_(
+        fn loop_<'cx>(
             visitor: &mut ImplicitInstantiationVisitor,
-            cx: &Context,
+            cx: &Context<'cx>,
             pole: Polarity,
             mut acc: (Marked<SubstName>, FlowOrdSet<SubstName>),
             tparams: Option<&[TypeParam]>,
@@ -340,41 +346,41 @@ impl ImplicitInstantiationVisitor<'_> {
     }
 }
 
-enum UseTResult {
+enum UseTResult<'cx> {
     UpperEmpty,
-    UpperNonT(UseT),
+    UpperNonT(UseT<Context<'cx>>),
     UpperT(Type),
 }
 
 // and rec t_of_use_t cx seen tvar u =
-fn t_of_use_t(
-    cx: &Context,
+fn t_of_use_t<'cx>(
+    cx: &Context<'cx>,
     seen: &mut BTreeSet<i32>,
     tvar: &Type,
-    u: &UseT,
-) -> Result<UseTResult, FlowJsException> {
-    fn use_t_result_of_t_option(
+    u: &UseT<Context<'cx>>,
+) -> Result<UseTResult<'cx>, FlowJsException> {
+    fn use_t_result_of_t_option<'a>(
         opt: Result<Option<Type>, FlowJsException>,
-    ) -> Result<UseTResult, FlowJsException> {
+    ) -> Result<UseTResult<'a>, FlowJsException> {
         match opt? {
             Some(t) => Ok(UseTResult::UpperT(t)),
             None => Ok(UseTResult::UpperEmpty),
         }
     }
-    fn merge_lower_or_upper_bounds(
-        cx: &Context,
+    fn merge_lower_or_upper_bounds<'cx>(
+        cx: &Context<'cx>,
         seen: &mut BTreeSet<i32>,
         t: &Type,
-    ) -> Result<UseTResult, FlowJsException> {
+    ) -> Result<UseTResult<'cx>, FlowJsException> {
         match merge_lower_bounds(cx, t)? {
             Some(t) => Ok(UseTResult::UpperT(t)),
             None => merge_upper_bounds(cx, seen, t),
         }
     }
-    fn bind_use_t_result(
-        result: UseTResult,
-        f: &dyn Fn(Type) -> Result<UseTResult, FlowJsException>,
-    ) -> Result<UseTResult, FlowJsException> {
+    fn bind_use_t_result<'a>(
+        result: UseTResult<'a>,
+        f: &dyn Fn(Type) -> Result<UseTResult<'a>, FlowJsException>,
+    ) -> Result<UseTResult<'a>, FlowJsException> {
         match result {
             UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
             UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
@@ -412,7 +418,7 @@ fn t_of_use_t(
                         let result_t = flow_typing_tvar::mk_no_wrap_where_result(
                             cx,
                             r.dupe(),
-                            |_reason, t_prime_id| {
+                            |cx, _reason, t_prime_id| {
                                 let t_prime_tvar = Tvar::new(r.dupe(), t_prime_id as u32);
                                 let open_t_prime = Type::new(TypeInner::OpenT(t_prime_tvar));
                                 let u_inner = UseTInner::GetEnumT {
@@ -519,7 +525,7 @@ fn t_of_use_t(
                                 let arr_rest_result = flow_typing_tvar::mk_where_result(
                                     cx,
                                     reason_spread.dupe(),
-                                    |t_prime| {
+                                    |cx, t_prime| {
                                         let u_inner = UseTInner::ArrRestT(
                                             unknown_use(),
                                             reason_spread.dupe(),
@@ -759,12 +765,12 @@ fn t_of_use_t(
     }
 }
 
-fn identity_reverse_upper_bound(
-    cx: &Context,
+fn identity_reverse_upper_bound<'cx>(
+    cx: &Context<'cx>,
     seen: &mut BTreeSet<i32>,
     tvar: &Type,
     tout: &Type,
-) -> Result<UseTResult, FlowJsException> {
+) -> Result<UseTResult<'cx>, FlowJsException> {
     let solution = merge_upper_bounds(cx, seen, tout)?;
     match &solution {
         UseTResult::UpperT(t) => FlowJs::flow_t(cx, t, tvar)?,
@@ -773,8 +779,8 @@ fn identity_reverse_upper_bound(
     Ok(solution)
 }
 
-fn reverse_obj_spread(
-    cx: &Context,
+fn reverse_obj_spread<'cx>(
+    cx: &Context<'cx>,
     r: &Reason,
     todo_rev: &[object::spread::Operand],
     acc_elements: &[object::spread::AccElement],
@@ -844,7 +850,7 @@ fn reverse_obj_spread(
     };
 
     let rest_type = |l: Type, rest: Type| -> Result<Type, FlowJsException> {
-        flow_typing_tvar::mk_where_result(cx, r.dupe(), |tout| {
+        flow_typing_tvar::mk_where_result(cx, r.dupe(), |cx, tout| {
             let u_inner = UseTInner::ObjKitT(
                 unknown_use(),
                 r.dupe(),
@@ -860,7 +866,7 @@ fn reverse_obj_spread(
         })
     };
 
-    let mut tout_val = flow_typing_tvar::mk_where_result(cx, r.dupe(), |t_prime| {
+    let mut tout_val = flow_typing_tvar::mk_where_result(cx, r.dupe(), |cx, t_prime| {
         FlowJs::flow_t(cx, tout, t_prime)?;
         Ok::<(), FlowJsException>(())
     })?;
@@ -875,8 +881,8 @@ fn reverse_obj_spread(
     Ok(tout_val)
 }
 
-fn reverse_component_check_config(
-    cx: &Context,
+fn reverse_component_check_config<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     pmap: &properties::PropertiesMap,
     tout: &Type,
@@ -884,7 +890,7 @@ fn reverse_component_check_config(
     if pmap.is_empty() {
         return Ok(tout.dupe());
     }
-    flow_typing_tvar::mk_where_result(cx, reason.dupe(), |t_prime| {
+    flow_typing_tvar::mk_where_result(cx, reason.dupe(), |cx, t_prime| {
         let rest = obj_type::mk_with_proto(
             cx,
             reason.dupe(),
@@ -910,13 +916,13 @@ fn reverse_component_check_config(
     })
 }
 
-fn reverse_obj_kit_rest(
-    cx: &Context,
+fn reverse_obj_kit_rest<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     t_rest: &Type,
     tout: &Type,
 ) -> Result<Type, FlowJsException> {
-    flow_typing_tvar::mk_no_wrap_where_result(cx, reason.dupe(), |_r, t_prime_id| {
+    flow_typing_tvar::mk_no_wrap_where_result(cx, reason.dupe(), |cx, _r, t_prime_id| {
         let tool = object::ResolveTool::Resolve(object::Resolve::Next);
         let options = object::spread::Target::Value {
             make_seal: obj_type::mk_seal(false, false),
@@ -945,8 +951,8 @@ fn reverse_obj_kit_rest(
 }
 
 // and reverse_resolve_spread_multiflow_subtype_full_no_resolution cx tvar reason params rest_param =
-fn reverse_resolve_spread_multiflow_subtype_full_no_resolution(
-    cx: &Context,
+fn reverse_resolve_spread_multiflow_subtype_full_no_resolution<'cx>(
+    cx: &Context<'cx>,
     tvar: &Type,
     reason: &Reason,
     params: &[FunParam],
@@ -999,7 +1005,7 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution(
         Some(rest_param_val) => {
             let rest_param_t = &rest_param_val.2;
             let rest_elem_t =
-                flow_typing_tvar::mk_no_wrap_where_result(cx, reason.dupe(), |_r, tout_id| {
+                flow_typing_tvar::mk_no_wrap_where_result(cx, reason.dupe(), |cx, _r, tout_id| {
                     let tout_tvar = Tvar::new(reason.dupe(), tout_id as u32);
                     let u_inner = UseTInner::GetElemT {
                         use_op: unknown_use(),
@@ -1046,8 +1052,8 @@ fn reverse_resolve_spread_multiflow_subtype_full_no_resolution(
     Ok(solution)
 }
 
-fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution(
-    cx: &Context,
+fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution<'cx>(
+    cx: &Context<'cx>,
     tvar: &Type,
     reason: &Reason,
     resolved: &[ResolvedParam],
@@ -1085,12 +1091,12 @@ fn reverse_resolve_spread_multiflow_subtype_full_partial_resolution(
 
 // merge_upper_bounds is complex — it looks at upper bounds and tries to find a consistent type.
 // For now we provide a simplified version that handles the common cases.
-fn merge_upper_bounds(
-    cx: &Context,
+fn merge_upper_bounds<'cx>(
+    cx: &Context<'cx>,
     seen: &mut BTreeSet<i32>,
     tvar: &Type,
-) -> Result<UseTResult, FlowJsException> {
-    let filter_placeholder = |t: Type| -> UseTResult {
+) -> Result<UseTResult<'cx>, FlowJsException> {
+    let filter_placeholder = |t: Type| -> UseTResult<'cx> {
         if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) {
             UseTResult::UpperEmpty
         } else {
@@ -1167,7 +1173,7 @@ fn merge_upper_bounds(
     }
 }
 
-fn merge_lower_bounds(cx: &Context, t: &Type) -> Result<Option<Type>, FlowJsException> {
+fn merge_lower_bounds<'cx>(cx: &Context<'cx>, t: &Type) -> Result<Option<Type>, FlowJsException> {
     // When the input tvar has a ReposUseT upper bound it means that we might be
     // discounting lower bounds that are just waiting to be added as soon as the
     // ReposUseT fires. Here, we make sure we record the result of the ReposUseT
@@ -1246,8 +1252,8 @@ fn merge_lower_bounds(cx: &Context, t: &Type) -> Result<Option<Type>, FlowJsExce
     })
 }
 
-fn on_missing_bounds<Obs: Observer>(
-    cx: &Context,
+fn on_missing_bounds<'cx, Obs: Observer>(
+    cx: &Context<'cx>,
     use_op: &UseOp,
     tparam: &TypeParam,
     default_bound: &Option<Type>,
@@ -1266,14 +1272,19 @@ fn on_missing_bounds<Obs: Observer>(
     }
 }
 
-fn use_upper_bounds<Obs: Observer>(
-    cx: &Context,
+fn use_upper_bounds<'cx, Obs: Observer>(
+    cx: &Context<'cx>,
     use_op: &UseOp,
     tparam: &TypeParam,
     tvar: &Type,
     default_bound: &Option<Type>,
     on_upper_empty: Option<
-        &dyn Fn(&Context, &TypeParam, &Reason, &Reason) -> Result<InferredTarg, FlowJsException>,
+        &dyn Fn(
+            &Context<'cx>,
+            &TypeParam,
+            &Reason,
+            &Reason,
+        ) -> Result<InferredTarg, FlowJsException>,
     >,
     tparam_binder_reason: &Reason,
     instantiation_reason: &Reason,
@@ -1303,8 +1314,8 @@ fn use_upper_bounds<Obs: Observer>(
     }
 }
 
-fn check_instantiation<Obs: Observer>(
-    cx: &Context,
+fn check_instantiation<'cx, Obs: Observer>(
+    cx: &Context<'cx>,
     tparams: &[TypeParam],
     marked_tparams: Marked<SubstName>,
     check: &ImplicitInstantiationCheck,
@@ -1530,7 +1541,7 @@ fn check_instantiation<Obs: Observer>(
             let react_kit_t = UseT::new(UseTInner::ReactKitT(
                 use_op.dupe(),
                 reason_op.dupe(),
-                Box::new(react::Tool::CreateElement {
+                Box::new(react::Tool::<Context<'cx>>::CreateElement {
                     component: component.dupe(),
                     jsx_props: jsx_props.dupe(),
                     targs: None,
@@ -1563,8 +1574,8 @@ fn check_instantiation<Obs: Observer>(
     Ok((inferred_targ_list, marked_tparams, tout))
 }
 
-fn make_pin_type<Obs: Observer>(
-    cx: &Context,
+fn make_pin_type<'cx, Obs: Observer>(
+    cx: &Context<'cx>,
     use_op: &UseOp,
     tparam: &TypeParam,
     polarity: Option<Polarity>,
@@ -1578,7 +1589,7 @@ fn make_pin_type<Obs: Observer>(
     match polarity {
         None => match merge_lower_bounds(cx, t)? {
             None => {
-                let on_upper_empty = |cx: &Context,
+                let on_upper_empty = |cx: &Context<'_>,
                                       tparam: &TypeParam,
                                       _tparam_binder_reason: &Reason,
                                       _instantiation_reason: &Reason|
@@ -1629,7 +1640,7 @@ fn make_pin_type<Obs: Observer>(
             Some(inferred) => pin_tparam(inferred),
         },
         Some(Polarity::Negative) => {
-            let on_upper_empty = |cx: &Context,
+            let on_upper_empty = |cx: &Context<'_>,
                                   tparam: &TypeParam,
                                   tparam_binder_reason: &Reason,
                                   instantiation_reason: &Reason|
@@ -1660,8 +1671,8 @@ fn make_pin_type<Obs: Observer>(
     }
 }
 
-fn pin_types<Obs: Observer>(
-    cx: &Context,
+fn pin_types<'cx, Obs: Observer>(
+    cx: &Context<'cx>,
     use_op: &UseOp,
     has_new_errors: bool,
     allow_underconstrained: bool,
@@ -1764,8 +1775,8 @@ fn pin_types<Obs: Observer>(
     Ok((result_map, result_list))
 }
 
-fn check_fun<Obs: Observer>(
-    cx: &Context,
+fn check_fun<'cx, Obs: Observer>(
+    cx: &Context<'cx>,
     tparams: &[TypeParam],
     tparams_map: &BTreeMap<SubstName, TypeParam>,
     return_t: &Type,
@@ -1778,7 +1789,7 @@ fn check_fun<Obs: Observer>(
     ),
     FlowJsException,
 > {
-    let mut visitor = ImplicitInstantiationVisitor { tparams_map };
+    let mut visitor = ImplicitInstantiationVisitor { tparams_map, cx };
     let tparam_names: FlowOrdSet<SubstName> =
         tparams.iter().fold(FlowOrdSet::new(), |mut set, tparam| {
             set.insert(tparam.name.dupe());
@@ -1793,8 +1804,8 @@ fn check_fun<Obs: Observer>(
     check_instantiation::<Obs>(cx, tparams, marked_tparams, check)
 }
 
-fn check_react_fun<Obs: Observer>(
-    cx: &Context,
+fn check_react_fun<'cx, Obs: Observer>(
+    cx: &Context<'cx>,
     tparams: &[TypeParam],
     tparams_map: &BTreeMap<SubstName, TypeParam>,
     props: Option<&Type>,
@@ -1825,8 +1836,8 @@ fn check_react_fun<Obs: Observer>(
 }
 
 // let check_instance cx ~tparams ~implicit_instantiation =
-fn check_instance<Obs: Observer>(
-    cx: &Context,
+fn check_instance<'cx, Obs: Observer>(
+    cx: &Context<'cx>,
     tparams: &[TypeParam],
     check: &ImplicitInstantiationCheck,
 ) -> Result<
@@ -1847,8 +1858,8 @@ fn check_instance<Obs: Observer>(
     check_instantiation::<Obs>(cx, tparams, marked_tparams, check)
 }
 
-fn implicitly_instantiate<Obs: Observer>(
-    cx: &Context,
+fn implicitly_instantiate<'cx, Obs: Observer>(
+    cx: &Context<'cx>,
     check: &ImplicitInstantiationCheck,
 ) -> Result<
     (
@@ -1925,8 +1936,8 @@ pub mod pin_types {
     struct PinTypesObserver;
 
     impl Observer for PinTypesObserver {
-        fn on_constant_tparam_missing_bounds(
-            cx: &Context,
+        fn on_constant_tparam_missing_bounds<'cx>(
+            cx: &Context<'cx>,
             tparam: &TypeParam,
         ) -> Result<InferredTarg, FlowJsException> {
             flow_js_utils::add_output(
@@ -1944,15 +1955,19 @@ pub mod pin_types {
             })
         }
 
-        fn on_pinned_tparam(_cx: &Context, tparam: &TypeParam, inferred: Type) -> InferredTarg {
+        fn on_pinned_tparam<'cx>(
+            _cx: &Context<'cx>,
+            tparam: &TypeParam,
+            inferred: Type,
+        ) -> InferredTarg {
             InferredTarg {
                 tparam: tparam.dupe(),
                 inferred,
             }
         }
 
-        fn on_missing_bounds(
-            cx: &Context,
+        fn on_missing_bounds<'cx>(
+            cx: &Context<'cx>,
             _use_op: &UseOp,
             tparam: &TypeParam,
             tparam_binder_reason: &Reason,
@@ -1964,10 +1979,10 @@ pub mod pin_types {
             })
         }
 
-        fn on_upper_non_t(
-            cx: &Context,
+        fn on_upper_non_t<'cx>(
+            cx: &Context<'cx>,
             _use_op: &UseOp,
-            _u: &UseT,
+            _u: &UseT<Context<'cx>>,
             tparam: &TypeParam,
             tparam_binder_reason: &Reason,
             _instantiation_reason: &Reason,
@@ -1979,8 +1994,8 @@ pub mod pin_types {
         }
     }
 
-    pub fn pin_type(
-        cx: &Context,
+    pub fn pin_type<'cx>(
+        cx: &Context<'cx>,
         use_op: UseOp,
         reason: &Reason,
         t: &Type,
@@ -2015,8 +2030,8 @@ pub mod instantiation_solver {
     struct MainObserver;
 
     impl Observer for MainObserver {
-        fn on_constant_tparam_missing_bounds(
-            cx: &Context,
+        fn on_constant_tparam_missing_bounds<'cx>(
+            cx: &Context<'cx>,
             tparam: &TypeParam,
         ) -> Result<InferredTarg, FlowJsException> {
             let inferred = match &tparam.default {
@@ -2044,7 +2059,11 @@ pub mod instantiation_solver {
             })
         }
 
-        fn on_pinned_tparam(cx: &Context, tparam: &TypeParam, inferred: Type) -> InferredTarg {
+        fn on_pinned_tparam<'cx>(
+            cx: &Context<'cx>,
+            tparam: &TypeParam,
+            inferred: Type,
+        ) -> InferredTarg {
             // Debug_js.Verbose.print_if_verbose_lazy cx
             //   (lazy [spf "Type parameter %s is pinned to %s"
             //     (Subst_name.string_of_subst_name tparam.name) (Debug_js.dump_t cx ~depth:3 inferred)])
@@ -2061,8 +2080,8 @@ pub mod instantiation_solver {
             }
         }
 
-        fn on_missing_bounds(
-            cx: &Context,
+        fn on_missing_bounds<'cx>(
+            cx: &Context<'cx>,
             use_op: &UseOp,
             tparam: &TypeParam,
             tparam_binder_reason: &Reason,
@@ -2112,10 +2131,10 @@ pub mod instantiation_solver {
             }
         }
 
-        fn on_upper_non_t(
-            cx: &Context,
+        fn on_upper_non_t<'cx>(
+            cx: &Context<'cx>,
             use_op: &UseOp,
-            u: &UseT,
+            u: &UseT<Context<'cx>>,
             tparam: &TypeParam,
             tparam_binder_reason: &Reason,
             instantiation_reason: &Reason,
@@ -2152,8 +2171,8 @@ pub mod instantiation_solver {
         }
     }
 
-    pub fn pin_type(
-        cx: &Context,
+    pub fn pin_type<'cx>(
+        cx: &Context<'cx>,
         use_op: UseOp,
         tparam: &TypeParam,
         polarity: Option<Polarity>,
@@ -2164,8 +2183,8 @@ pub mod instantiation_solver {
         make_pin_type::<MainObserver>(cx, &use_op, tparam, polarity, &default_bound, reason, t)
     }
 
-    pub fn solve_targs(
-        cx: &Context,
+    pub fn solve_targs<'cx>(
+        cx: &Context<'cx>,
         use_op: UseOp,
         allow_underconstrained: bool,
         has_syntactic_hint: bool,
@@ -2317,8 +2336,8 @@ pub mod instantiation_solver {
         result
     }
 
-    pub(crate) fn solve_conditional_type_targs(
-        cx: &Context,
+    pub(crate) fn solve_conditional_type_targs<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: &UseOp,
         reason: &Reason,
@@ -2358,6 +2377,7 @@ pub mod instantiation_solver {
             let (marked_tparams, _) = {
                 let mut visitor = ImplicitInstantiationVisitor {
                     tparams_map: &tparams_map,
+                    cx,
                 };
                 visitor.type_(cx, Polarity::Positive, (Marked::new(), tparams_set), true_t)
             };
@@ -2390,9 +2410,9 @@ pub mod instantiation_solver {
         }
     }
 
-    pub fn fold<Acc>(
-        implicit_instantiation_cx: &Context,
-        cx: &Context,
+    pub fn fold<'cx, Acc>(
+        implicit_instantiation_cx: &Context<'cx>,
+        cx: &Context<'cx>,
         f: impl Fn(
             &Context,
             Acc,
@@ -2427,8 +2447,8 @@ pub mod kit {
     use super::instantiation_solver::solve_targs;
     use super::*;
 
-    fn instantiate_poly_with_subst_map(
-        cx: &Context,
+    fn instantiate_poly_with_subst_map<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         poly_t: &Type,
         subst_map: &BTreeMap<SubstName, GeneralizedTarg>,
@@ -2517,16 +2537,17 @@ pub mod kit {
         )
     }
 
-    pub fn run_call(
-        cx: &Context,
+    pub fn run_call<'cx>(
+        cx: &Context<'cx>,
         check: &ImplicitInstantiationCheck,
-        return_hint: &LazyHintT,
+        return_hint: &LazyHintT<Context<'cx>>,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
         reason_tapp: &Reason,
     ) -> Result<(Type, Vec<(Type, subst_name::SubstName)>), FlowJsException> {
-        let (allow_underconstrained, rh) = match (return_hint.1)(false, None, reason_op.dupe()) {
+        let (allow_underconstrained, rh) = match (return_hint.1)(cx, false, None, reason_op.dupe())
+        {
             HintEvalResult::HintAvailable(t, kind) => (true, Some((t, kind))),
             HintEvalResult::DecompositionError => (true, None),
             HintEvalResult::NoHint | HintEvalResult::EncounteredPlaceholder => (false, None),
@@ -2567,8 +2588,8 @@ pub mod kit {
         })
     }
 
-    pub fn run_render_extractor(
-        cx: &Context,
+    pub fn run_render_extractor<'cx>(
+        cx: &Context<'cx>,
         use_op: UseOp,
         reason: &Reason,
         t: &Type,
@@ -2632,8 +2653,8 @@ pub mod kit {
     // If argument is a Promise<T>, then (await argument) returns T.
     // otherwise it just returns the argument type.
     // TODO update this comment when recursive unwrapping of Promise is done.
-    pub fn run_await(
-        cx: &Context,
+    pub fn run_await<'cx>(
+        cx: &Context<'cx>,
         use_op: UseOp,
         reason: &Reason,
         t: &Type,
@@ -2710,8 +2731,8 @@ pub mod kit {
         }
     }
 
-    pub fn run_monomorphize(
-        cx: &Context,
+    pub fn run_monomorphize<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
@@ -2749,8 +2770,8 @@ pub mod kit {
         instantiate_poly_with_subst_map(cx, trace, t, &subst_map, &use_op, reason_op, reason_tapp)
     }
 
-    pub fn run_conditional(
-        cx: &Context,
+    pub fn run_conditional<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: UseOp,
         reason: &Reason,

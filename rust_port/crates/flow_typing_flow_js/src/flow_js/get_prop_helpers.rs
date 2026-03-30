@@ -9,17 +9,16 @@ use super::helpers::*;
 use super::*;
 
 impl flow_js_utils::GetPropHelper for FlowJs {
-    type R = Box<dyn FnOnce(Tvar) -> Result<(), FlowJsException>>;
+    type R = Box<dyn for<'b> FnOnce(&Context<'b>, Tvar) -> Result<(), FlowJsException>>;
 
-    fn error_type(
-        cx: &Context,
+    fn error_type<'cx>(
+        _cx: &Context<'cx>,
         trace: DepthTrace,
         reason: Reason,
     ) -> Result<Self::R, FlowJsException> {
-        let cx = cx.dupe();
-        Ok(Box::new(move |tout| {
+        Ok(Box::new(move |cx, tout| {
             rec_flow_t(
-                &cx,
+                cx,
                 trace,
                 unknown_use(),
                 (&any_t::error(reason), &Type::new(TypeInner::OpenT(tout))),
@@ -27,20 +26,19 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         }))
     }
 
-    fn return_(
-        cx: &Context,
+    fn return_<'cx>(
+        _cx: &Context<'cx>,
         use_op: UseOp,
         trace: DepthTrace,
         t: Type,
     ) -> Result<Self::R, FlowJsException> {
-        let cx = cx.dupe();
-        Ok(Box::new(move |tout| {
-            rec_flow_t(&cx, trace, use_op, (&t, &Type::new(TypeInner::OpenT(tout))))
+        Ok(Box::new(move |cx, tout| {
+            rec_flow_t(cx, trace, use_op, (&t, &Type::new(TypeInner::OpenT(tout))))
         }))
     }
 
-    fn dict_read_check(
-        cx: &Context,
+    fn dict_read_check<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: &UseOp,
         pair: (&Type, &Type),
@@ -48,8 +46,8 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         rec_flow_t(cx, trace, use_op.dupe(), pair)
     }
 
-    fn reposition(
-        cx: &Context,
+    fn reposition<'cx>(
+        cx: &Context<'cx>,
         trace: Option<DepthTrace>,
         loc: ALoc,
         t: Type,
@@ -57,8 +55,8 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         helpers::reposition(cx, trace, loc, None, None, t)
     }
 
-    fn cg_lookup(
-        cx: &Context,
+    fn cg_lookup<'cx>(
+        _cx: &Context<'cx>,
         trace: DepthTrace,
         obj_t: Type,
         method_accessible: bool,
@@ -66,10 +64,9 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         args: (Reason, LookupKind, PropRef, UseOp, properties::Set),
     ) -> Result<Self::R, FlowJsException> {
         let (reason_op, lookup_kind, propref, use_op, ids) = args;
-        let cx = cx.dupe();
-        Ok(Box::new(move |tout| {
+        Ok(Box::new(move |cx, tout| {
             rec_flow(
-                &cx,
+                cx,
                 trace,
                 (
                     &super_t,
@@ -92,8 +89,8 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         }))
     }
 
-    fn cg_get_prop(
-        cx: &Context,
+    fn cg_get_prop<'cx>(
+        _cx: &Context<'cx>,
         trace: DepthTrace,
         t: Type,
         args: (
@@ -104,10 +101,9 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         ),
     ) -> Result<Self::R, FlowJsException> {
         let (use_op, access_reason, id, (prop_reason, name)) = args;
-        let cx = cx.dupe();
-        Ok(Box::new(move |tout| {
+        Ok(Box::new(move |cx, tout| {
             rec_flow(
-                &cx,
+                cx,
                 trace,
                 (
                     &t,
@@ -130,12 +126,12 @@ impl flow_js_utils::GetPropHelper for FlowJs {
         }))
     }
 
-    fn mk_react_dro(cx: &Context, use_op: UseOp, dro: &ReactDro, t: Type) -> Type {
+    fn mk_react_dro<'cx>(cx: &Context<'cx>, use_op: UseOp, dro: &ReactDro, t: Type) -> Type {
         mk_react_dro(cx, use_op, dro.clone(), t)
     }
 
     fn prop_overlaps_with_indexer()
-    -> Option<fn(&Context, &flow_common::reason::Name, &Reason, &Type) -> bool> {
+    -> Option<for<'b> fn(&Context<'b>, &flow_common::reason::Name, &Reason, &Type) -> bool> {
         Some(|cx, name, reason_name, key| {
             let name_t = flow_js_utils::type_of_key_name(cx, name.dupe(), reason_name);
             speculative_subtyping_succeeds(cx, &name_t, key)
@@ -145,8 +141,8 @@ impl flow_js_utils::GetPropHelper for FlowJs {
 
 // Property lookup functions in objects and instances
 
-pub(super) fn prop_typo_suggestion(
-    cx: &Context,
+pub(super) fn prop_typo_suggestion<'cx>(
+    cx: &Context<'cx>,
     ids: &[properties::Id],
     name: &str,
 ) -> Option<FlowSmolStr> {
@@ -163,8 +159,8 @@ pub(super) fn prop_typo_suggestion(
     flow_common_utils::utils_js::typo_suggestion(&refs, name)
 }
 
-pub(super) fn get_private_prop(
-    cx: &Context,
+pub(super) fn get_private_prop<'cx>(
+    cx: &Context<'cx>,
     allow_method_access: bool,
     trace: DepthTrace,
     l: &Type,
@@ -269,14 +265,14 @@ pub(super) fn get_private_prop(
     }
 }
 
-pub(super) fn elem_action_on_obj(
-    cx: &Context,
+pub(super) fn elem_action_on_obj<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: &UseOp,
     l: &Type,
     obj: &Type,
     reason_op: &Reason,
-    action: &ElemAction,
+    action: &ElemAction<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     let propref = flow_js_utils::propref_for_elem_t(cx, l);
     match action {
@@ -342,8 +338,8 @@ pub(super) fn elem_action_on_obj(
     }
 }
 
-pub(super) fn write_obj_prop(
-    cx: &Context,
+pub(super) fn write_obj_prop<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: &UseOp,
     mode: &SetMode,

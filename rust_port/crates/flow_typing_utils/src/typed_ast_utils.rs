@@ -139,17 +139,17 @@ impl LocMapper<ALoc, ALoc, ALoc, (ALoc, Type)> for ErrorMapper {
 }
 
 /// Used in skipped body due to placeholder function types.
-pub struct PlaceholderMapper<'a> {
-    cx: &'a Context,
+pub struct PlaceholderMapper<'a, 'cx> {
+    cx: &'a Context<'cx>,
 }
 
-impl<'a> PlaceholderMapper<'a> {
-    pub fn new(cx: &'a Context) -> Self {
+impl<'a, 'cx> PlaceholderMapper<'a, 'cx> {
+    pub fn new(cx: &'a Context<'cx>) -> Self {
         Self { cx }
     }
 }
 
-impl LocMapper<ALoc, ALoc, ALoc, (ALoc, Type)> for PlaceholderMapper<'_> {
+impl LocMapper<ALoc, ALoc, ALoc, (ALoc, Type)> for PlaceholderMapper<'_, '_> {
     fn on_loc_annot(&mut self, loc: &ALoc) -> Result<ALoc, !> {
         Ok(loc.dupe())
     }

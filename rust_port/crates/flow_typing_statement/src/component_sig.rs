@@ -41,14 +41,16 @@ pub mod component_declaration_body {
 
     use super::*;
 
-    struct ComponentScopeVisitor<'a> {
-        cx: &'a Context,
+    struct ComponentScopeVisitor<'a, 'cx, 'b> {
+        cx: &'a Context<'cx>,
         body_loc: ALoc,
-        renders_t: &'a Type,
-        exhaust: &'a Option<(RefCell<Vec<Type>>, Vec<ALoc>)>,
+        renders_t: &'b Type,
+        exhaust: &'b Option<(RefCell<Vec<Type>>, Vec<ALoc>)>,
     }
 
-    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for ComponentScopeVisitor<'_> {
+    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !>
+        for ComponentScopeVisitor<'_, '_, '_>
+    {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
         }
@@ -104,7 +106,7 @@ pub mod component_declaration_body {
         }
     }
 
-    impl ComponentScopeVisitor<'_> {
+    impl ComponentScopeVisitor<'_, '_, '_> {
         fn visit(&mut self, statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>]) {
             let Ok(()) = self.statement_list(statements);
         }
@@ -134,8 +136,8 @@ pub mod component_declaration_body {
         }
     }
 
-    pub fn eval(
-        cx: &Context,
+    pub fn eval<'a>(
+        cx: &Context<'a>,
         reason_cmp: Reason,
         renders_t: Type,
         body: declaration_body_config::Body<ALoc>,
@@ -196,8 +198,8 @@ pub mod component_declaration_body {
     }
 }
 
-pub fn toplevels(
-    cx: &Context,
+pub fn toplevels<'a>(
+    cx: &Context<'a>,
     x: &ComponentSig,
 ) -> Result<
     (
@@ -227,8 +229,8 @@ pub fn toplevels(
     Ok((params_ast, body_ast))
 }
 
-pub fn component_type<C: crate::component_params_intf::Config>(
-    cx: &Context,
+pub fn component_type<'a, C: crate::component_params_intf::Config>(
+    cx: &Context<'a>,
     in_annotation: bool,
     reason: &flow_common::reason::Reason,
     tparams: type_::TypeParams,

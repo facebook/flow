@@ -496,10 +496,10 @@ pub struct TyMembers {
     pub errors: Vec<String>,
 }
 
-pub fn extract(
+pub fn extract<'a>(
     force_instance: bool,
     allowed_prop_names: Option<Vec<Name>>,
-    cx: &Context,
+    cx: &Context<'a>,
     typed_ast_opt: Option<&flow_parser::ast::Program<ALoc, (ALoc, Type)>>,
     file_sig: std::sync::Arc<FileSig>,
     scheme: &Type,

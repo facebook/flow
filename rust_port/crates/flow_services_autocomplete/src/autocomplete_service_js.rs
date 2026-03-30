@@ -427,7 +427,7 @@ pub struct Typing<'a> {
         Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a>,
     pub search_exported_types:
         Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a>,
-    pub cx: &'a Context,
+    pub cx: &'a Context<'a>,
     pub file_sig: Arc<FileSig>,
     pub ast: ast::Program<Loc, Loc>,
     pub aloc_ast: ast::Program<ALoc, ALoc>,
@@ -435,13 +435,13 @@ pub struct Typing<'a> {
 }
 
 impl<'a> Typing<'a> {
-    fn norm_genv(&self) -> flow_typing_ty_normalizer::env::Genv<'_> {
+    fn norm_genv(&self) -> flow_typing_ty_normalizer::env::Genv<'_, 'a> {
         ty_normalizer_flow::mk_genv(ty_normalizer_options(), self.cx, None, self.file_sig.dupe())
     }
 }
 
 fn search_with_filtered_auto_import_results<'a>(
-    cx: &'a Context,
+    cx: &'a Context<'a>,
     f: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
 ) -> Box<dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults + 'a> {
     let is_available_autoimport_result = lsp_import_edits::is_available_autoimport_result(cx);
@@ -470,7 +470,7 @@ pub fn mk_typing_artifacts<'a>(
     module_system_info: &'a LspModuleSystemInfo,
     search_exported_values: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
     search_exported_types: &'a dyn Fn(&AcOptions, &str) -> export_search_types::SearchResults,
-    cx: &'a Context,
+    cx: &'a Context<'a>,
     file_sig: Arc<FileSig>,
     ast: ast::Program<Loc, Loc>,
     aloc_ast: ast::Program<ALoc, ALoc>,
@@ -872,7 +872,7 @@ fn autocomplete_create_string_literal_edit_controls(
 fn autocomplete_literals(
     prefer_single_quotes: bool,
     cx: &Context,
-    genv: &flow_typing_ty_normalizer::env::Genv<'_>,
+    genv: &flow_typing_ty_normalizer::env::Genv<'_, '_>,
     edit_locs: &(Loc, Loc),
     expected_type: &Type,
     token: &str,
@@ -1568,13 +1568,13 @@ fn exports_of_module_ty(
     items
 }
 
-struct LocalTypeIdentifiersAstSearcher<'a> {
-    cx: &'a Context,
+struct LocalTypeIdentifiersAstSearcher<'a, 'cx> {
+    cx: &'a Context<'cx>,
     rev_ids: Vec<ast::Identifier<ALoc, (ALoc, Type)>>,
 }
 
-impl<'a> LocalTypeIdentifiersAstSearcher<'a> {
-    fn new(cx: &'a Context) -> Self {
+impl<'a, 'cx> LocalTypeIdentifiersAstSearcher<'a, 'cx> {
+    fn new(cx: &'a Context<'cx>) -> Self {
         Self {
             cx,
             rev_ids: Vec::new(),
@@ -1586,7 +1586,7 @@ impl<'a> LocalTypeIdentifiersAstSearcher<'a> {
     }
 }
 
-impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LocalTypeIdentifiersAstSearcher<'_> {
+impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LocalTypeIdentifiersAstSearcher<'_, '_> {
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
     }
@@ -2575,7 +2575,7 @@ fn autocomplete_jsx_attribute(
         VirtualReasonDesc::RProperty(Some(Name::new(attribute.1.clone()))),
         ALoc::of_loc(attribute.0.clone()),
     );
-    let props_object = flow_typing_tvar::mk_where(typing.cx, reason.dupe(), |tvar| {
+    let props_object = flow_typing_tvar::mk_where(typing.cx, reason.dupe(), |_cx, tvar| {
         let use_op = UseOp::Op(std::sync::Arc::new(VirtualRootUseOp::UnknownUse));
         let use_t = UseT::new(UseTInner::ReactKitT(
             use_op,

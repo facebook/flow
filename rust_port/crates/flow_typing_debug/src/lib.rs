@@ -599,12 +599,17 @@ fn dump_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, t: &Type) -> Str
     }
 }
 
-fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT) -> String {
+fn dump_use_t_<CX>(
+    depth: u32,
+    tvars: &mut BTreeSet<i32>,
+    cx: &Context,
+    use_t: &UseT<CX>,
+) -> String {
     if depth == 0 {
         return string_of_use_ctor(use_t);
     }
 
-    fn p(cx: &Context, use_t: &UseT, reason: bool, extra: &str) -> String {
+    fn p<CX>(cx: &Context, use_t: &UseT<CX>, reason: bool, extra: &str) -> String {
         let ctor = string_of_use_ctor(use_t);
         let reason_str = if reason {
             format!("{:?}", dump_reason(cx, reason_of_use_t(use_t)))
@@ -622,7 +627,7 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
     let kid =
         move |tvars: &mut BTreeSet<i32>, t: &Type| -> String { dump_t_(depth - 1, tvars, cx, t) };
 
-    let use_kid = move |tvars: &mut BTreeSet<i32>, u: &UseT| -> String {
+    let use_kid = move |tvars: &mut BTreeSet<i32>, u: &UseT<CX>| -> String {
         dump_use_t_(depth - 1, tvars, cx, u)
     };
 
@@ -704,7 +709,7 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
         }
     };
 
-    let react_kit = |tvars: &mut BTreeSet<i32>, tool: &type_::react::Tool| -> String {
+    let react_kit = |tvars: &mut BTreeSet<i32>, tool: &type_::react::Tool<CX>| -> String {
         match tool {
             type_::react::Tool::CreateElement {
                 jsx_props, tout, ..
@@ -931,7 +936,7 @@ fn dump_use_t_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, use_t: &UseT
         format!("({}, {})", resolve_tool_str, tool_str)
     };
 
-    let method_action = |tvars: &mut BTreeSet<i32>, action: &type_::MethodAction| -> String {
+    let method_action = |tvars: &mut BTreeSet<i32>, action: &type_::MethodAction<CX>| -> String {
         match action {
             type_::MethodAction::CallM { methodcalltype, .. }
             | type_::MethodAction::ChainM { methodcalltype, .. } => {
@@ -1541,7 +1546,7 @@ pub fn dump_t(depth: Option<u32>, cx: &Context, t: &Type) -> String {
     dump_t_(depth.unwrap_or(3), &mut BTreeSet::new(), cx, t)
 }
 
-pub fn dump_use_t(depth: Option<u32>, cx: &Context, use_t: &UseT) -> String {
+pub fn dump_use_t<CX>(depth: Option<u32>, cx: &Context, use_t: &UseT<CX>) -> String {
     dump_use_t_(depth.unwrap_or(3), &mut BTreeSet::new(), cx, use_t)
 }
 
@@ -1557,7 +1562,7 @@ pub fn dump_tvar(depth: Option<u32>, cx: &Context, id: i32) -> String {
     dump_tvar_(depth.unwrap_or(3), &mut BTreeSet::new(), cx, id)
 }
 
-pub fn dump_flow(depth: Option<u32>, cx: &Context, t: &Type, use_t: &UseT) -> String {
+pub fn dump_flow<CX>(depth: Option<u32>, cx: &Context, t: &Type, use_t: &UseT<CX>) -> String {
     let depth = depth.unwrap_or(3);
     format!(
         "Lower: {} ~>\n Upper: {}",
@@ -3882,12 +3887,12 @@ pub mod verbose {
         }
     }
 
-    pub fn print_types_if_verbose(
+    pub fn print_types_if_verbose<CX>(
         cx: &Context,
         trace: &DepthTrace,
         note: Option<&str>,
         t: &Type,
-        use_t: &UseT,
+        use_t: &UseT<CX>,
     ) {
         if !cx.is_verbose() {
             return;

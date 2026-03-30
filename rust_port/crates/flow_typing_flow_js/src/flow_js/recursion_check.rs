@@ -13,7 +13,7 @@ use flow_typing_type::type_::DepthTrace;
 /// which is either equal or pretty close.
 /// When check is called with a trace whose depth exceeds a constant
 /// limit, we throw a LimitExceeded exception.
-pub fn check(cx: &Context, trace: DepthTrace) -> Result<(), FlowJsException> {
+pub fn check<'cx>(cx: &Context<'cx>, trace: DepthTrace) -> Result<(), FlowJsException> {
     if trace.depth() >= cx.recursion_limit() as u32 {
         Err(FlowJsException::LimitExceeded)
     } else {

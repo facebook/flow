@@ -50,42 +50,42 @@ impl Config for FuncStmtConfig {
         func_stmt_config::is_rest_type_annotated(rest)
     }
 
-    fn subst_param(
-        cx: &Context,
+    fn subst_param<'a>(
+        cx: &Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         param: &Self::Param,
     ) -> Self::Param {
         func_stmt_config::subst_param(cx, map, param)
     }
 
-    fn subst_rest(
-        cx: &Context,
+    fn subst_rest<'a>(
+        cx: &Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         rest: &Self::Rest,
     ) -> Self::Rest {
         func_stmt_config::subst_rest(cx, map, rest)
     }
 
-    fn subst_this(
-        cx: &Context,
+    fn subst_this<'a>(
+        cx: &Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         this: &Self::ThisParam,
     ) -> Self::ThisParam {
         func_stmt_config::subst_this(cx, map, this)
     }
 
-    fn eval_param(
-        cx: &Context,
+    fn eval_param<'a>(
+        cx: &Context<'a>,
         param: &Self::Param,
     ) -> Result<Self::ParamAst, AbnormalControlFlow> {
         func_stmt_config::eval_param(cx, param)
     }
 
-    fn eval_rest(cx: &Context, rest: &Self::Rest) -> Self::RestAst {
+    fn eval_rest<'a>(cx: &Context<'a>, rest: &Self::Rest) -> Self::RestAst {
         func_stmt_config::eval_rest(cx, rest)
     }
 
-    fn eval_this(cx: &Context, this: &Self::ThisParam) -> Self::ThisAst {
+    fn eval_this<'a>(cx: &Context<'a>, this: &Self::ThisParam) -> Self::ThisAst {
         func_stmt_config::eval_this(cx, this)
     }
 }
@@ -127,8 +127,8 @@ pub fn this<C: Config>(this: Option<&C::ThisParam>) -> Option<Type> {
     this.map(C::this_type)
 }
 
-pub fn eval<C: Config, R>(
-    cx: &Context,
+pub fn eval<'a, C: Config, R>(
+    cx: &Context<'a>,
     params: &[C::Param],
     rest: Option<&C::Rest>,
     this: Option<&C::ThisParam>,

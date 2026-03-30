@@ -78,7 +78,7 @@ pub fn reason_of_defer_use_t(defer_use_t: &TypeDestructorT) -> &Reason {
     &defer_use_t.1
 }
 
-pub fn reason_of_use_t(u: &UseT) -> &Reason {
+pub fn reason_of_use_t<CX>(u: &UseT<CX>) -> &Reason {
     match u.deref() {
         UseTInner::UseT(_, t) => reason_of_t(t),
         UseTInner::ArrRestT(_, reason, _, _) => reason,
@@ -398,12 +398,12 @@ pub fn mod_reason_of_defer_use_t(
     ))
 }
 
-pub fn util_use_op_of_use_t<T>(
-    nope: &dyn Fn(&UseT) -> T,
-    util: &dyn Fn(&UseT, &UseOp, &dyn Fn(UseOp) -> UseT) -> T,
-    u: &UseT,
+pub fn util_use_op_of_use_t<T, CX>(
+    nope: &dyn Fn(&UseT<CX>) -> T,
+    util: &dyn Fn(&UseT<CX>, &UseOp, &dyn Fn(UseOp) -> UseT<CX>) -> T,
+    u: &UseT<CX>,
 ) -> T {
-    let call_util = |op: &UseOp, make: &dyn Fn(UseOp) -> UseT| util(u, op, make);
+    let call_util = |op: &UseOp, make: &dyn Fn(UseOp) -> UseT<CX>| util(u, op, make);
 
     match u.deref() {
         UseTInner::UseT(op, t) => {
@@ -1010,11 +1010,11 @@ pub fn is_in_common_interface_conformance_check(use_op: &UseOp) -> bool {
     )
 }
 
-pub fn use_op_of_use_t(u: &UseT) -> Option<UseOp> {
+pub fn use_op_of_use_t<CX>(u: &UseT<CX>) -> Option<UseOp> {
     util_use_op_of_use_t(&|_| None, &|_, op, _| Some(op.dupe()), u)
 }
 
-pub fn mod_use_op_of_use_t<F>(f: F, u: &UseT) -> UseT
+pub fn mod_use_op_of_use_t<F, CX>(f: F, u: &UseT<CX>) -> UseT<CX>
 where
     F: Fn(&UseOp) -> UseOp,
 {
@@ -1898,7 +1898,7 @@ where
     }
 }
 
-pub fn ground_subtype_use_t<F>(on_singleton_eq: &F, l: &Type, u: &UseT) -> bool
+pub fn ground_subtype_use_t<F, CX>(on_singleton_eq: &F, l: &Type, u: &UseT<CX>) -> bool
 where
     F: Fn(&Type),
 {
@@ -2072,7 +2072,7 @@ pub fn class_type(t: Type, structural: bool, annot_loc: Option<ALoc>) -> Type {
     Type::new(TypeInner::DefT(reason, DefT::new(DefTInner::ClassT(t))))
 }
 
-pub fn extends_use_type(use_op: UseOp, l: Type, u: Type) -> UseT {
+pub fn extends_use_type<CX>(use_op: UseOp, l: Type, u: Type) -> UseT<CX> {
     let reason = reason_of_t(&u)
         .dupe()
         .update_desc_new(|desc| flow_common::reason::VirtualReasonDesc::RExtends(Arc::new(desc)));

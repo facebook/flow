@@ -36,14 +36,17 @@ impl Config for DeclarationConfig {
     type ParamAst = declaration_param_config::ParamAst<(ALoc, Type)>;
     type RestAst = declaration_param_config::RestAst<(ALoc, Type)>;
 
-    fn eval_param(
-        cx: &Context,
+    fn eval_param<'a>(
+        cx: &Context<'a>,
         param: &Self::Param,
     ) -> Result<Self::ParamAst, AbnormalControlFlow> {
         component_declaration_config::eval_param(cx, param)
     }
 
-    fn eval_rest(cx: &Context, rest: &Self::Rest) -> Result<Self::RestAst, AbnormalControlFlow> {
+    fn eval_rest<'a>(
+        cx: &Context<'a>,
+        rest: &Self::Rest,
+    ) -> Result<Self::RestAst, AbnormalControlFlow> {
         component_declaration_config::eval_rest(cx, rest)
     }
 
@@ -55,7 +58,7 @@ impl Config for DeclarationConfig {
         component_declaration_config::rest_type(rest)
     }
 
-    fn read_react(cx: &Context, loc: ALoc) {
+    fn read_react<'a>(cx: &Context<'a>, loc: ALoc) {
         component_declaration_config::read_react(cx, loc);
     }
 }
@@ -65,9 +68,9 @@ pub struct Found(pub FlowSmolStr);
 pub struct TparamFinder;
 
 impl TypeVisitor<Result<FlowOrdSet<SubstName>, Found>> for TparamFinder {
-    fn type_(
+    fn type_<'a>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'a>,
         pole: Polarity,
         acc: Result<FlowOrdSet<SubstName>, Found>,
         t: &Type,
@@ -110,8 +113,8 @@ pub fn add_rest(r: declaration_param_config::Rest, x: &mut param_types::Params) 
     x.rest = Some(r);
 }
 
-pub fn config<C: Config>(
-    cx: &Context,
+pub fn config<'a, C: Config>(
+    cx: &Context<'a>,
     in_annotation: bool,
     config_reason: &flow_common::reason::Reason,
     params: &[C::Param],
@@ -222,8 +225,8 @@ pub fn config<C: Config>(
     .expect("Should not be under speculation")
 }
 
-pub fn eval<C: Config, R>(
-    cx: &Context,
+pub fn eval<'a, C: Config, R>(
+    cx: &Context<'a>,
     params: &[C::Param],
     rest: Option<&C::Rest>,
     reconstruct: impl Fn(Vec<C::ParamAst>, Option<C::RestAst>) -> R,

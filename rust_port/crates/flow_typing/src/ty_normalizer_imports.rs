@@ -53,8 +53,8 @@ fn add_bind_ident_from_typed_ast(
     }
 }
 
-fn add_bind_ident_from_imports(
-    cx: &Context,
+fn add_bind_ident_from_imports<'a>(
+    cx: &Context<'a>,
     local_name: &FlowSmolStr,
     import_mode: ImportMode,
     local_loc: ALoc,
@@ -86,8 +86,8 @@ fn add_bind_ident_from_imports(
     acc
 }
 
-fn add_imported_loc_map_bindings(
-    cx: &Context,
+fn add_imported_loc_map_bindings<'a>(
+    cx: &Context<'a>,
     typed_ast: &Option<&ast::Program<ALoc, (ALoc, Type)>>,
     import_mode: ImportMode,
     source: &(Loc, FlowSmolStr),
@@ -142,8 +142,8 @@ fn add_imported_loc_map_bindings(
     acc
 }
 
-fn add_require_bindings_from_exports_map(
-    cx: &Context,
+fn add_require_bindings_from_exports_map<'a>(
+    cx: &Context<'a>,
     loc: ALoc,
     source_name: Userland,
     binding: &RequireBindings,
@@ -236,8 +236,8 @@ fn add_require_bindings_from_typed_ast(
     loop_binding(typed_ast, import_mode, binding, acc)
 }
 
-fn add_require_bindings(
-    cx: &Context,
+fn add_require_bindings<'a>(
+    cx: &Context<'a>,
     typed_ast: &Option<&ast::Program<ALoc, (ALoc, Type)>>,
     import_mode: ImportMode,
     source: &(Loc, FlowSmolStr),
@@ -265,8 +265,8 @@ fn add_require_bindings(
     }
 }
 
-fn add_import_bindings(
-    cx: &Context,
+fn add_import_bindings<'a>(
+    cx: &Context<'a>,
     typed_ast: &Option<&ast::Program<ALoc, (ALoc, Type)>>,
     mut acc: Vec<(FlowSmolStr, ALoc, ImportMode, Type)>,
     require: &Require,
@@ -334,8 +334,8 @@ fn add_import_bindings(
     }
 }
 
-pub fn extract_types(
-    cx: &Context,
+pub fn extract_types<'a>(
+    cx: &Context<'a>,
     file_sig: &FileSig,
     typed_ast: Option<&ast::Program<ALoc, (ALoc, Type)>>,
 ) -> Vec<(FlowSmolStr, ALoc, ImportMode, Type)> {

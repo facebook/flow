@@ -45,22 +45,26 @@ use flow_typing_utils::type_operation_utils;
 use crate::func_params;
 use crate::statement;
 
-struct FuncScopeVisitor<'a> {
-    cx: &'a Context,
+struct FuncScopeVisitor<'a, 'cx, 'b> {
+    cx: &'a Context<'cx>,
     has_return_annot: bool,
     ret_annot_loc: ALoc,
-    return_t: &'a Type,
-    yield_t: &'a Type,
-    next_t: &'a Type,
+    return_t: &'b Type,
+    yield_t: &'b Type,
+    next_t: &'b Type,
     body_loc: ALoc,
-    kind: &'a Kind,
-    exhaust: &'a Option<(RefCell<Vec<Type>>, Vec<ALoc>, (Type, type_::UseT))>,
+    kind: &'b Kind,
+    exhaust: &'b Option<(
+        RefCell<Vec<Type>>,
+        Vec<ALoc>,
+        (Type, type_::UseT<Context<'cx>>),
+    )>,
     no_return: bool,
     has_throw: bool,
     no_yield: bool,
 }
 
-impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisitor<'_> {
+impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisitor<'_, '_, '_> {
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
     }
@@ -179,7 +183,7 @@ impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for FuncScopeVisi
     }
 }
 
-impl FuncScopeVisitor<'_> {
+impl FuncScopeVisitor<'_, '_, '_> {
     fn visit(&mut self, statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>]) {
         let Ok(()) = self.statement_list(statements);
         if !self.has_return_annot {
@@ -246,9 +250,8 @@ impl FuncScopeVisitor<'_> {
                         reason::VirtualReasonDesc::RCustom("generator return".into()),
                         loc.dupe(),
                     ),
-                    |tvar| {
-                        flow_js::flow_t(self.cx, (t, tvar))
-                            .expect("Should not be under speculation");
+                    |cx, tvar| {
+                        flow_js::flow_t(cx, (t, tvar)).expect("Should not be under speculation");
                     },
                 );
                 let t_prime = flow_js::FlowJs::get_builtin_typeapp(
@@ -267,8 +270,8 @@ impl FuncScopeVisitor<'_> {
                         reason::VirtualReasonDesc::RCustom("async generator return".into()),
                         loc.dupe(),
                     ),
-                    |tvar| {
-                        flow_js::flow_t_non_speculating(self.cx, (t, tvar));
+                    |cx, tvar| {
+                        flow_js::flow_t_non_speculating(cx, (t, tvar));
                     },
                 );
                 let t_prime = flow_js::FlowJs::get_builtin_typeapp(
@@ -344,8 +347,8 @@ pub fn field_initializer<C: ConfigTypes>(
     }
 }
 
-pub fn functiontype<C: crate::func_params_intf::Config>(
-    cx: &Context,
+pub fn functiontype<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     arrow: bool,
     func_loc: Option<ALoc>,
     this_default: Type,
@@ -414,8 +417,8 @@ pub fn functiontype<C: crate::func_params_intf::Config>(
     type_util::poly_type_of_tparams(type_::poly::Id::generate_id(), tparams.clone(), t)
 }
 
-pub fn methodtype<C: crate::func_params_intf::Config>(
-    cx: &Context,
+pub fn methodtype<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     method_this_loc: Option<ALoc>,
     this_default: Type,
     x: &Func<C>,
@@ -479,8 +482,8 @@ pub fn settertype<C: crate::func_params_intf::Config>(x: &Func<C>) -> Type {
     }
 }
 
-pub fn toplevels<C: crate::func_params_intf::Config>(
-    cx: &Context,
+pub fn toplevels<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     x: &Func<C>,
 ) -> Result<
     (
@@ -833,7 +836,10 @@ pub fn toplevels<C: crate::func_params_intf::Config>(
                     exhaustive,
                     (
                         void_t,
-                        type_::UseT::new(type_::UseTInner::UseT(use_op, return_t.dupe())),
+                        type_::UseT::new(type_::UseTInner::<Context>::UseT(
+                            use_op,
+                            return_t.dupe(),
+                        )),
                     ),
                 ))
             }

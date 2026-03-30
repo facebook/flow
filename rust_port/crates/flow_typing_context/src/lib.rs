@@ -65,6 +65,7 @@ use flow_parser::loc::Loc;
 use flow_parser::polymorphic_ast_mapper;
 use flow_type_sig::compact_table;
 use flow_typing_builtins::Builtins;
+use flow_typing_builtins::LazyModuleType;
 use flow_typing_errors::error_message::ErrorMessage;
 use flow_typing_errors::error_suppressions::ErrorSuppressions;
 use flow_typing_errors::flow_error::ErrorSet;
@@ -91,7 +92,6 @@ use flow_typing_type::type_::aconstraint::AConstraint;
 use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::constraint::forcing_state::ForcingState;
 use flow_utils_union_find::TvarNotFound;
-use once_cell::unsync::Lazy;
 use regex::Regex;
 use vec1::Vec1;
 
@@ -363,8 +363,8 @@ pub enum MasterContext {
     },
 }
 
-pub struct ComponentT {
-    sig_cx: RefCell<TypeContext>,
+pub struct ComponentT<'cx> {
+    sig_cx: RefCell<TypeContext<'cx, Context<'cx>>>,
     // mapping from keyed alocs to concrete locations
     aloc_tables: RefCell<HashMap<FileKey, LazyALocTable>>,
     synthesis_produced_uncacheable_result: RefCell<bool>,
@@ -408,7 +408,7 @@ pub struct ComponentT {
     >,
     maybe_unused_promises: RefCell<FlowVector<(ALoc, Type, bool)>>,
 
-    constraint_cache: RefCell<type_::FlowSet>,
+    constraint_cache: RefCell<type_::FlowSet<Context<'cx>>>,
     subst_cache: RefCell<type_::SubstCacheMap<(Vec<SubstCacheErr>, Type)>>,
     eval_id_cache: RefCell<EvalIdCacheMap>,
     id_cache: RefCell<IdCacheMap>,
@@ -421,7 +421,7 @@ pub struct ComponentT {
 
     // Post-inference checks
     delayed_forcing_tvars: RefCell<FlowOrdSet<i32>>,
-    post_component_tvar_forcing_states: RefCell<FlowVector<ForcingState>>,
+    post_component_tvar_forcing_states: RefCell<FlowVector<ForcingState<'cx, Context<'cx>>>>,
     post_inference_polarity_checks: RefCell<
         Vec<(
             BTreeMap<SubstName, type_::TypeParam>,
@@ -429,7 +429,7 @@ pub struct ComponentT {
             Type,
         )>,
     >,
-    post_inference_validation_flows: RefCell<Vec<(Type, type_::UseT)>>,
+    post_inference_validation_flows: RefCell<Vec<(Type, type_::UseT<Context<'cx>>)>>,
     post_inference_projects_strict_boundary_import_pattern_opt_outs_validations:
         RefCell<Vec<(ALoc, String, Vec<FlowProjects>)>>,
     env_value_cache: RefCell<IntHashMap<i32, PossiblyRefinedWriteState>>,
@@ -499,25 +499,39 @@ impl TypingMode {
 }
 
 #[derive(Clone, Dupe)]
-pub enum ResolvedRequire {
-    TypedModule(Rc<dyn Fn() -> Result<ModuleType, Type>>),
+pub enum ResolvedRequire<'cx> {
+    /// The closure takes (cx, dst_cx) where cx is the source context and
+    /// dst_cx is the destination context for error reporting.
+    TypedModule(Rc<dyn Fn(&Context<'cx>, &Context<'cx>) -> Result<ModuleType, Type> + 'cx>),
     UncheckedModule(ALoc),
     MissingModule,
 }
 
-struct ContextInner {
-    ccx: Rc<ComponentT>,
+struct ContextInner<'cx> {
+    ccx: Rc<ComponentT<'cx>>,
     file: FileKey,
     aloc_table: LazyALocTable,
     metadata: Metadata,
-    resolve_require: RefCell<Option<ResolveRequire>>,
-    builtins: Lazy<Builtins, Box<dyn FnOnce() -> Builtins>>,
+    /// During cross-file merge (copy_into), annotation inference errors must be
+    /// reported on the destination context, not the source. This field stores a
+    /// weak reference to the destination context, set only during merge and None
+    /// otherwise. When None, callers should use cx itself as dst_cx.
+    merge_dst_cx: RefCell<Option<Weak<ContextInner<'cx>>>>,
+    resolve_require: RefCell<Option<ResolveRequire<'cx>>>,
+    builtins: flow_lazy::Lazy<
+        Context<'cx>,
+        Builtins<'cx, Context<'cx>>,
+        Box<dyn FnOnce(&Context<'cx>) -> Builtins<'cx, Context<'cx>> + 'cx>,
+    >,
     hint_map_arglist_cache: RefCell<HashMap<(ALoc, Option<ALoc>), Vec<(ALoc, type_::CallArg)>>>,
     hint_map_jsx_cache: RefCell<
-        HashMap<(Reason, String, Vec<ALoc>, ALoc), Rc<LazyCell<Type, Box<dyn Fn() -> Type>>>>,
+        HashMap<
+            (Reason, String, Vec<ALoc>, ALoc),
+            Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>,
+        >,
     >,
     hint_eval_cache: RefCell<IntHashMap<i32, Option<Type>>>,
-    environment: RefCell<LocEnv>,
+    environment: RefCell<LocEnv<'cx, Context<'cx>>>,
     typing_mode: RefCell<TypingMode>,
     //  A subset of all transitive dependencies of the current file as determined by import/require.
     // This set will only be populated with type sig files that are actually forced.
@@ -525,24 +539,14 @@ struct ContextInner {
     refined_locations: RefCell<ALocMap<FlowOrdSet<ALoc>>>,
     aggressively_invalidated_locations: RefCell<ALocMap<RefinementInvalidation>>,
     switch_to_match_eligible_locations: RefCell<ALocSet>,
-    node_cache: NodeCache,
+    node_cache: NodeCache<'cx, Context<'cx>>,
 }
 
 #[derive(Clone, Dupe)]
-pub struct Context(Rc<ContextInner>);
+pub struct Context<'cx>(Rc<ContextInner<'cx>>);
 
-/// A weak reference to a Context, used to break Rc reference cycles.
-/// Can be upgraded to a full Context if the original is still alive.
-#[derive(Clone)]
-pub struct WeakContext(Weak<ContextInner>);
-
-impl WeakContext {
-    pub fn upgrade(&self) -> Option<Context> {
-        self.0.upgrade().map(Context)
-    }
-}
-
-pub type ResolveRequire = Rc<dyn Fn(&FlowImportSpecifier) -> ResolvedRequire>;
+pub type ResolveRequire<'cx> =
+    Rc<dyn Fn(&Context<'cx>, &FlowImportSpecifier) -> ResolvedRequire<'cx> + 'cx>;
 
 pub fn metadata_of_options(options: &Options) -> Metadata {
     Metadata {
@@ -694,7 +698,7 @@ pub fn docblock_overrides(
     metadata
 }
 
-pub fn empty_sig_cx() -> TypeContext {
+pub fn empty_sig_cx<'cx>() -> TypeContext<'cx, Context<'cx>> {
     thread_local! {
         static CACHED_EVALUATED: type_::eval::Map<Type> = Default::default();
     }
@@ -709,7 +713,7 @@ pub fn empty_sig_cx() -> TypeContext {
     }
 }
 
-pub fn make_ccx() -> ComponentT {
+pub fn make_ccx<'cx>() -> ComponentT<'cx> {
     thread_local! {
         static CACHED_ORD_SET: FlowOrdSet<i32> = FlowOrdSet::new();
         static CACHED_SEVERITY_COVER: FlowOrdMap<FileKey, LintSeverityCover> = FlowOrdMap::new();
@@ -764,54 +768,56 @@ pub fn make_ccx() -> ComponentT {
     }
 }
 
-impl Context {
+impl<'cx> Context<'cx> {
     pub fn make(
-        ccx: Rc<ComponentT>,
+        ccx: Rc<ComponentT<'cx>>,
         metadata: Metadata,
         file: FileKey,
         aloc_table: LazyALocTable,
-        resolve_require: ResolveRequire,
-        mk_builtins: Rc<dyn Fn(Context) -> Builtins>,
+        resolve_require: ResolveRequire<'cx>,
+        mk_builtins: Rc<dyn Fn(&Context<'cx>) -> Builtins<'cx, Context<'cx>> + 'cx>,
     ) -> Self {
         ccx.aloc_tables
             .borrow_mut()
             .insert(file.dupe(), aloc_table.dupe());
-        let inner = Rc::new_cyclic(|weak: &std::rc::Weak<ContextInner>| {
-            let weak = weak.clone();
-            ContextInner {
-                ccx,
-                file,
-                aloc_table,
-                metadata,
-                resolve_require: RefCell::new(Some(resolve_require)),
-                builtins: Lazy::new(Box::new(move || {
-                    let cx = Context(weak.upgrade().unwrap());
-                    mk_builtins(cx)
-                })),
-                hint_map_arglist_cache: RefCell::new(HashMap::new()),
-                hint_map_jsx_cache: RefCell::new(HashMap::new()),
-                hint_eval_cache: RefCell::new(IntHashMap::default()),
-                environment: RefCell::new(LocEnv::empty(ScopeKind::Global)),
-                typing_mode: RefCell::new(TypingMode::CheckingMode),
-                reachable_deps: RefCell::new(BTreeSet::new()),
-                node_cache: NodeCache::mk_empty(),
-                refined_locations: RefCell::new(ALocMap::new()),
-                aggressively_invalidated_locations: RefCell::new(ALocMap::new()),
-                switch_to_match_eligible_locations: RefCell::new(ALocSet::new()),
-            }
+        let inner = Rc::new(ContextInner {
+            ccx,
+            file,
+            aloc_table,
+            metadata,
+            merge_dst_cx: RefCell::new(None),
+            resolve_require: RefCell::new(Some(resolve_require)),
+            builtins: flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| mk_builtins(cx))),
+            hint_map_arglist_cache: RefCell::new(HashMap::new()),
+            hint_map_jsx_cache: RefCell::new(HashMap::new()),
+            hint_eval_cache: RefCell::new(IntHashMap::default()),
+            environment: RefCell::new(LocEnv::empty(ScopeKind::Global)),
+            typing_mode: RefCell::new(TypingMode::CheckingMode),
+            reachable_deps: RefCell::new(BTreeSet::new()),
+            node_cache: NodeCache::mk_empty(),
+            refined_locations: RefCell::new(ALocMap::new()),
+            aggressively_invalidated_locations: RefCell::new(ALocMap::new()),
+            switch_to_match_eligible_locations: RefCell::new(ALocSet::new()),
         });
         Self(inner)
     }
 
-    /// Create a weak reference to this Context, used to break Rc cycles
-    /// in closures that would otherwise prevent deallocation.
-    pub fn downgrade(&self) -> WeakContext {
-        WeakContext(Rc::downgrade(&self.0))
+    /// Returns the merge-phase destination context if set, otherwise None.
+    /// During cross-file merge, errors should be reported on the destination
+    /// context. Outside of merge, callers should use cx itself as dst_cx.
+    pub fn merge_dst_cx(&self) -> Option<Context<'cx>> {
+        self.0
+            .merge_dst_cx
+            .borrow()
+            .as_ref()
+            .and_then(|w| w.upgrade().map(Context))
     }
 
-    /// Returns the number of strong references to the underlying ContextInner.
-    /// Used for debug assertions to verify cycle-breaking cleanup.
-    #[cfg(debug_assertions)]
+    /// Set the merge-phase destination context.
+    pub fn set_merge_dst_cx(&self, dst_cx: &Context<'cx>) {
+        *self.0.merge_dst_cx.borrow_mut() = Some(Rc::downgrade(&dst_cx.0));
+    }
+
     pub fn strong_count(&self) -> usize {
         Rc::strong_count(&self.0)
     }
@@ -827,15 +833,15 @@ impl Context {
         // Replace each Lazy (which may hold a closure capturing cx) with one
         // that is already forced to entry.t, releasing the closure.
         {
-            let env = self.0.environment.borrow();
-            for (_, entry) in env.types.iter() {
-                let t = entry.t.dupe();
-                let mut state = entry.state.borrow_mut();
-                *state = {
-                    let lazy = Lazy::new(Box::new(move || t) as Box<dyn FnOnce() -> Type>);
-                    Lazy::force(&lazy);
-                    lazy
-                };
+            let entries = {
+                let env = self.0.environment.borrow();
+                env.types
+                    .iter()
+                    .map(|(_, entry)| (entry.state.dupe(), entry.t.dupe()))
+                    .collect::<Vec<_>>()
+            };
+            for (state, t) in entries {
+                *state.borrow_mut() = flow_lazy::Lazy::new_forced(t);
             }
         }
 
@@ -874,7 +880,7 @@ impl Context {
 
         // constraint_cache contains (Type, UseT) pairs. UseT variants like
         // CallT, GetPropT, ConstructorT embed LazyHintT(Rc<dyn Fn>) closures
-        // that capture cx.dupe(), forming:
+        // that capture cx, forming:
         // Context → ccx → constraint_cache → UseT → LazyHintT → cx → Context
         *self.0.ccx.constraint_cache.borrow_mut() = Default::default();
 
@@ -887,7 +893,7 @@ impl Context {
             .clear();
     }
 
-    pub fn sig_cx(&self) -> std::cell::Ref<'_, TypeContext> {
+    pub fn sig_cx(&self) -> std::cell::Ref<'_, TypeContext<'cx, Context<'cx>>> {
         self.0.ccx.sig_cx.borrow()
     }
 
@@ -939,20 +945,23 @@ impl Context {
         }
     }
 
-    pub fn builtins(&self) -> &Builtins {
-        &self.0.builtins
+    pub fn builtins(&self) -> &Builtins<'cx, Context<'cx>> {
+        self.0.builtins.get_forced(self)
     }
 
     pub fn builtin_value_opt(&self, name: &str) -> Option<(ALoc, Type)> {
-        self.builtins().get_builtin_value_opt(name)
+        self.builtins().get_builtin_value_opt(self, name)
     }
 
     pub fn builtin_type_opt(&self, name: &str) -> Option<(ALoc, Type)> {
-        self.builtins().get_builtin_type_opt(name)
+        self.builtins().get_builtin_type_opt(self, name)
     }
 
-    pub fn builtin_module_opt(&self, name: &Userland) -> Option<(Reason, ModuleType)> {
-        self.builtins().get_builtin_module_opt(name)
+    pub fn builtin_module_opt(
+        &self,
+        name: &Userland,
+    ) -> Option<(Reason, LazyModuleType<'cx, Context<'cx>>)> {
+        self.builtins().get_builtin_module_opt(self, name)
     }
 
     pub fn casting_syntax(&self) -> CastingSyntax {
@@ -1153,7 +1162,7 @@ impl Context {
             .unwrap()
     }
 
-    pub fn find_require(&self, mref: &FlowImportSpecifier) -> ResolvedRequire {
+    pub fn find_require(&self, mref: &FlowImportSpecifier) -> ResolvedRequire<'cx> {
         let rr = self
             .0
             .resolve_require
@@ -1161,13 +1170,13 @@ impl Context {
             .as_ref()
             .expect("resolve_require already cleaned up")
             .dupe();
-        (rr)(mref)
+        (rr)(self, mref)
     }
 
     pub fn find_tvar(
         &self,
         id: i32,
-    ) -> flow_utils_union_find::Node<type_::constraint::Constraints> {
+    ) -> flow_utils_union_find::Node<type_::constraint::Constraints<'cx, Context<'cx>>> {
         self.0
             .ccx
             .sig_cx
@@ -1182,7 +1191,8 @@ impl Context {
 
     pub fn graph(
         &self,
-    ) -> Rc<RefCell<flow_utils_union_find::Graph<type_::constraint::Constraints>>> {
+    ) -> Rc<RefCell<flow_utils_union_find::Graph<type_::constraint::Constraints<'cx, Context<'cx>>>>>
+    {
         self.0.ccx.sig_cx.borrow().graph.dupe()
     }
 
@@ -1374,7 +1384,9 @@ impl Context {
         self.0.ccx.delayed_forcing_tvars.borrow()
     }
 
-    pub fn post_component_tvar_forcing_states(&self) -> FlowVector<ForcingState> {
+    pub fn post_component_tvar_forcing_states(
+        &self,
+    ) -> FlowVector<ForcingState<'cx, Context<'cx>>> {
         self.0
             .ccx
             .post_component_tvar_forcing_states
@@ -1394,7 +1406,9 @@ impl Context {
         self.0.ccx.post_inference_polarity_checks.borrow()
     }
 
-    pub fn post_inference_validation_flows(&self) -> std::cell::Ref<'_, Vec<(Type, type_::UseT)>> {
+    pub fn post_inference_validation_flows(
+        &self,
+    ) -> std::cell::Ref<'_, Vec<(Type, type_::UseT<Context<'cx>>)>> {
         self.0.ccx.post_inference_validation_flows.borrow()
     }
 
@@ -1490,11 +1504,11 @@ impl Context {
         self.0.reachable_deps.borrow()
     }
 
-    pub fn environment(&self) -> std::cell::Ref<'_, LocEnv> {
+    pub fn environment(&self) -> std::cell::Ref<'_, LocEnv<'cx, Context<'cx>>> {
         self.0.environment.borrow()
     }
 
-    pub fn environment_mut(&self) -> std::cell::RefMut<'_, LocEnv> {
+    pub fn environment_mut(&self) -> std::cell::RefMut<'_, LocEnv<'cx, Context<'cx>>> {
         self.0.environment.borrow_mut()
     }
 
@@ -1502,7 +1516,7 @@ impl Context {
         self.0.typing_mode.borrow()
     }
 
-    pub fn node_cache(&self) -> &NodeCache {
+    pub fn node_cache(&self) -> &NodeCache<'cx, Context<'cx>> {
         &self.0.node_cache
     }
 
@@ -1530,7 +1544,10 @@ impl Context {
         &self,
     ) -> std::cell::Ref<
         '_,
-        HashMap<(Reason, String, Vec<ALoc>, ALoc), Rc<LazyCell<Type, Box<dyn Fn() -> Type>>>>,
+        HashMap<
+            (Reason, String, Vec<ALoc>, ALoc),
+            Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>,
+        >,
     > {
         self.0.hint_map_jsx_cache.borrow()
     }
@@ -1539,7 +1556,10 @@ impl Context {
         &self,
     ) -> std::cell::RefMut<
         '_,
-        HashMap<(Reason, String, Vec<ALoc>, ALoc), Rc<LazyCell<Type, Box<dyn Fn() -> Type>>>>,
+        HashMap<
+            (Reason, String, Vec<ALoc>, ALoc),
+            Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>,
+        >,
     > {
         self.0.hint_map_jsx_cache.borrow_mut()
     }
@@ -1620,7 +1640,7 @@ impl Context {
     pub fn add_tvar(
         &self,
         id: i32,
-        bounds: flow_utils_union_find::Node<type_::constraint::Constraints>,
+        bounds: flow_utils_union_find::Node<type_::constraint::Constraints<'cx, Context<'cx>>>,
     ) {
         self.0
             .ccx
@@ -1649,7 +1669,11 @@ impl Context {
         any_t::placeholder(reason)
     }
 
-    pub fn add_post_component_tvar_forcing_state(&self, id: i32, state: ForcingState) {
+    pub fn add_post_component_tvar_forcing_state(
+        &self,
+        id: i32,
+        state: ForcingState<'cx, Context<'cx>>,
+    ) {
         self.0.ccx.delayed_forcing_tvars.borrow_mut().insert(id);
         self.0
             .ccx
@@ -1671,7 +1695,7 @@ impl Context {
             .push((tparams, polarity, t));
     }
 
-    pub fn add_post_inference_validation_flow(&self, t: Type, use_t: type_::UseT) {
+    pub fn add_post_inference_validation_flow(&self, t: Type, use_t: type_::UseT<Context<'cx>>) {
         self.0
             .ccx
             .post_inference_validation_flows
@@ -1918,7 +1942,7 @@ pub struct CacheSnapshot {
     snapshot_instantiation_stack: FlowVector<type_app_expansion::Entry>,
 }
 
-impl Context {
+impl<'cx> Context<'cx> {
     pub fn take_cache_snapshot(&self) -> CacheSnapshot {
         // snapshot_subst_cache = !(cx.ccx.subst_cache);
         let snapshot_subst_cache = self.0.ccx.subst_cache.borrow().dupe();
@@ -2312,12 +2336,15 @@ impl Context {
         type_::poly::Id::of_aloc_id(type_sig, aloc_id)
     }
 
-    pub fn find_graph(&self, id: i32) -> type_::constraint::Constraints {
+    pub fn find_graph(&self, id: i32) -> type_::constraint::Constraints<'cx, Context<'cx>> {
         let graph = self.graph();
         graph.borrow_mut().find_graph(id).unwrap().clone()
     }
 
-    pub fn find_constraints(&self, id: i32) -> (i32, type_::constraint::Constraints) {
+    pub fn find_constraints(
+        &self,
+        id: i32,
+    ) -> (i32, type_::constraint::Constraints<'cx, Context<'cx>>) {
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
         let (id, c) = graph.find_constraints(id).unwrap();
@@ -2330,7 +2357,7 @@ impl Context {
     pub fn modify_constraints<R>(
         &self,
         id: i32,
-        f: impl FnOnce(i32, &mut type_::constraint::Constraints) -> R,
+        f: impl FnOnce(i32, &mut type_::constraint::Constraints<'cx, Context<'cx>>) -> R,
     ) -> R {
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
@@ -2344,7 +2371,7 @@ impl Context {
     pub fn inspect_constraints<R>(
         &self,
         id: i32,
-        f: impl FnOnce(i32, &type_::constraint::Constraints) -> R,
+        f: impl FnOnce(i32, &type_::constraint::Constraints<'cx, Context<'cx>>) -> R,
     ) -> R {
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
@@ -2357,7 +2384,7 @@ impl Context {
         id: i32,
     ) -> (
         i32,
-        flow_utils_union_find::Root<type_::constraint::Constraints>,
+        flow_utils_union_find::Root<type_::constraint::Constraints<'cx, Context<'cx>>>,
     ) {
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
@@ -2365,7 +2392,11 @@ impl Context {
         (id, root.clone())
     }
 
-    pub fn set_root_constraints(&self, id: i32, constraints: type_::constraint::Constraints) {
+    pub fn set_root_constraints(
+        &self,
+        id: i32,
+        constraints: type_::constraint::Constraints<'cx, Context<'cx>>,
+    ) {
         let graph = self.graph();
         let mut graph = graph.borrow_mut();
         let (_root_id, root) = graph.find_root(id).unwrap();
@@ -2393,13 +2424,13 @@ impl Context {
         any_t::error(reason)
     }
 
-    pub fn force_fully_resolved_tvar(&self, s: &ForcingState) -> Type {
-        s.force(|reason| self.on_cyclic_tvar_error(reason.dupe()))
+    pub fn force_fully_resolved_tvar(&self, s: &ForcingState<'cx, Context<'cx>>) -> Type {
+        s.force(self, |reason| self.on_cyclic_tvar_error(reason.dupe()))
     }
 
     pub fn find_resolved(&self, t_in: &Type) -> Option<Type> {
-        fn find_resolved_inner(
-            cx: &Context,
+        fn find_resolved_inner<'a>(
+            cx: &Context<'a>,
             seen: &mut BTreeSet<u32>,
             t_in: &Type,
         ) -> Option<Type> {
@@ -2433,11 +2464,11 @@ impl Context {
         find_resolved_inner(self, &mut seen, t_in)
     }
 
-    pub fn constraint_cache(&self) -> std::cell::Ref<'_, type_::FlowSet> {
+    pub fn constraint_cache(&self) -> std::cell::Ref<'_, type_::FlowSet<Context<'cx>>> {
         self.0.ccx.constraint_cache.borrow()
     }
 
-    pub fn constraint_cache_mut(&self) -> std::cell::RefMut<'_, type_::FlowSet> {
+    pub fn constraint_cache_mut(&self) -> std::cell::RefMut<'_, type_::FlowSet<Context<'cx>>> {
         self.0.ccx.constraint_cache.borrow_mut()
     }
 

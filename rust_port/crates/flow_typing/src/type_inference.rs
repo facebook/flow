@@ -644,9 +644,9 @@ pub fn scan_for_suppressions(
 // * Driver *
 // **********
 
-struct DepSigsContext(Context);
+struct DepSigsContext<'a, 'cx>(&'a Context<'cx>);
 
-impl dependency_sigs::Context for DepSigsContext {
+impl<'a, 'cx> dependency_sigs::Context for DepSigsContext<'a, 'cx> {
     fn enable_enums(&self) -> bool {
         self.0.enable_enums()
     }
@@ -680,18 +680,18 @@ impl dependency_sigs::Context for DepSigsContext {
     }
 }
 
-struct FlowJsUtilsFlow;
+struct FlowJsUtilsFlow<'a, 'cx>(std::marker::PhantomData<(&'a (), &'cx ())>);
 
-impl dependency_sigs::Flow for FlowJsUtilsFlow {
-    type Cx = DepSigsContext;
+impl<'a, 'cx: 'a> dependency_sigs::Flow for FlowJsUtilsFlow<'a, 'cx> {
+    type Cx = DepSigsContext<'a, 'cx>;
 
     fn add_output(cx: &Self::Cx, error: ErrorMessage<ALoc>) {
-        flow_js_utils::add_output_non_speculating(&cx.0, error);
+        flow_js_utils::add_output_non_speculating(cx.0, error);
     }
 }
 
-pub fn initialize_env(
-    cx: &Context,
+pub fn initialize_env<'cx>(
+    cx: &Context<'cx>,
     exclude_syms: Option<BTreeSet<FlowSmolStr>>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
 ) {
@@ -703,27 +703,24 @@ pub fn initialize_env(
     };
     let exclude_syms = exclude_syms.unwrap_or_default();
     let result: Result<(), env_api::EnvInvariant<ALoc>> = (|| {
-        let dep_cx = DepSigsContext(cx.dupe());
+        let dep_cx = DepSigsContext(cx);
         let (_abrupt_completion, info) =
-            name_resolver::program_with_scope::<DepSigsContext, FlowJsUtilsFlow>(
+            name_resolver::program_with_scope::<DepSigsContext<'_, '_>, FlowJsUtilsFlow<'_, '_>>(
                 &dep_cx,
                 lib,
                 exclude_syms.into_iter().collect(),
                 aloc_ast,
             );
         let info = info.to_env_info();
-        let cx_id = cx.dupe();
-        let cx_lit = cx.dupe();
-        let cx_obj = cx.dupe();
         let autocomplete_hooks = AutocompleteHooks {
-            id_hook: Box::new(move |name: &str, loc: &ALoc| {
-                type_inference_hooks_js::dispatch_id_hook(&cx_id, name, loc.dupe())
+            id_hook: Box::new(|name: &str, loc: &ALoc| {
+                type_inference_hooks_js::dispatch_id_hook(cx, name, loc.dupe())
             }),
-            literal_hook: Box::new(move |loc: &ALoc| {
-                type_inference_hooks_js::dispatch_literal_hook(&cx_lit, loc.dupe())
+            literal_hook: Box::new(|loc: &ALoc| {
+                type_inference_hooks_js::dispatch_literal_hook(cx, loc.dupe())
             }),
-            obj_prop_decl_hook: Box::new(move |name: &str, loc: &ALoc| {
-                type_inference_hooks_js::dispatch_obj_prop_decl_hook(&cx_obj, name, loc.dupe())
+            obj_prop_decl_hook: Box::new(|name: &str, loc: &ALoc| {
+                type_inference_hooks_js::dispatch_obj_prop_decl_hook(cx, name, loc.dupe())
             }),
         };
         let react_jsx = matches!(cx.jsx(), JsxMode::JsxReact);
@@ -761,17 +758,16 @@ pub fn initialize_env(
             name_def_graph.dupe(),
         );
         *cx.environment_mut() = env;
-        let components =
-            name_def_ordering::build_ordering::<_, _, DepSigsContext, FlowJsUtilsFlow>(
-                &dep_cx,
-                &autocomplete_hooks,
-                &info,
-                &name_def_graph,
-            )
-            .map_err(|msg| {
-                flow_js_utils::add_output_non_speculating(cx, *msg);
-                env_api::EnvInvariant::new(None, env_api::EnvInvariantFailure::NameDefGraphMismatch)
-            })?;
+        let components = name_def_ordering::build_ordering::<
+            _,
+            _,
+            DepSigsContext<'_, '_>,
+            FlowJsUtilsFlow<'_, '_>,
+        >(&dep_cx, &autocomplete_hooks, &info, &name_def_graph)
+        .map_err(|msg| {
+            flow_js_utils::add_output_non_speculating(cx, *msg);
+            env_api::EnvInvariant::new(None, env_api::EnvInvariantFailure::NameDefGraphMismatch)
+        })?;
         for component in &components {
             crate::cycles::handle_component(cx, &name_def_graph, component);
         }
@@ -803,9 +799,9 @@ pub fn initialize_env(
 }
 
 /// Lint suppressions are handled iff lint_severities is Some.
-pub fn infer_ast(
+pub fn infer_ast<'a>(
     lint_severities: &LintSettings<Severity>,
-    cx: &Context,
+    cx: &Context<'a>,
     filename: &FileKey,
     file_sig: Arc<FileSig>,
     metadata: &Metadata,
@@ -855,8 +851,8 @@ pub fn infer_ast(
     }
 }
 
-struct LibDefLocMapperAndValidator<'a> {
-    cx: &'a Context,
+struct LibDefLocMapperAndValidator<'a, 'cx> {
+    cx: &'a Context<'cx>,
 }
 
 fn stmt_validator(
@@ -997,7 +993,7 @@ fn stmt_validator(
     }
 }
 
-impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LibDefLocMapperAndValidator<'_> {
+impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LibDefLocMapperAndValidator<'_, '_> {
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
     }
@@ -1049,8 +1045,8 @@ impl<'ast> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for LibDefLocMapperAndVal
     }
 }
 
-fn lib_def_loc_mapper_and_validator(
-    cx: &Context,
+fn lib_def_loc_mapper_and_validator<'a>(
+    cx: &Context<'a>,
     aloc_ast: &ast::Program<ALoc, ALoc>,
 ) -> ast::Program<ALoc, ALoc> {
     let mut visitor = LibDefLocMapperAndValidator { cx };
@@ -1061,9 +1057,9 @@ fn lib_def_loc_mapper_and_validator(
 // processing is similar to an ordinary module, except that
 // a) symbols from prior library loads are suppressed if found,
 // b) bindings are added as properties to the builtin object
-fn infer_lib_file(
+fn infer_lib_file<'a>(
     lint_severities: &LintSettings<Severity>,
-    cx: &Context,
+    cx: &Context<'a>,
     file_key: &FileKey,
     file_sig: Arc<FileSig>,
     metadata: &Metadata,
@@ -1101,9 +1097,9 @@ fn infer_lib_file(
     tast
 }
 
-pub fn infer_file(
+pub fn infer_file<'a>(
     lint_severities: &LintSettings<Severity>,
-    cx: &Context,
+    cx: &Context<'a>,
     file_key: &FileKey,
     file_sig: Arc<FileSig>,
     metadata: &Metadata,

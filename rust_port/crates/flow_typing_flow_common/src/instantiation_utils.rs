@@ -38,8 +38,8 @@ pub mod implicit_type_argument {
     /// polymorphic types need to be implicitly instantiated, because there was no
     /// explicit instantiation (via a type application), or when we want to cache a
     /// unique instantiation and unify it with other explicit instantiations.
-    pub fn mk_targ(
-        cx: &Context,
+    pub fn mk_targ<'cx>(
+        cx: &Context<'cx>,
         typeparam: &TypeParam,
         reason_op: &Reason,
         reason_tapp: &Reason,
@@ -112,7 +112,13 @@ pub mod type_app_expansion {
     }
 
     impl TypeVisitor<RootSet> for RootsCollector {
-        fn type_(&mut self, cx: &Context, pole: Polarity, mut acc: RootSet, t: &Type) -> RootSet {
+        fn type_<'cx>(
+            &mut self,
+            cx: &Context<'cx>,
+            pole: Polarity,
+            mut acc: RootSet,
+            t: &Type,
+        ) -> RootSet {
             match t.deref() {
                 TypeInner::TypeAppT(box TypeAppTData {
                     type_: inner_type, ..
@@ -139,7 +145,7 @@ pub mod type_app_expansion {
         }
     }
 
-    fn collect_roots(cx: &Context, t: &Type) -> RootSet {
+    fn collect_roots<'cx>(cx: &Context<'cx>, t: &Type) -> RootSet {
         let mut collector = RootsCollector;
         collector.type_(cx, Polarity::Neutral, RootSet::new(), t)
     }
@@ -174,7 +180,7 @@ pub mod type_app_expansion {
 
     // Detect whether pushing would cause a loop. Push only if no loop is
     // detected, and return whether push happened.
-    pub fn push_unless_loop(cx: &Context, side: Bound, c: &Type, ts: &[Type]) -> bool {
+    pub fn push_unless_loop<'cx>(cx: &Context<'cx>, side: Bound, c: &Type, ts: &[Type]) -> bool {
         let tss: Vec<RootSet> = ts.iter().map(|t| collect_roots(cx, t)).collect();
         let limit = cx.type_expansion_recursion_limit();
         let mut is_loop = false;
@@ -208,18 +214,18 @@ pub mod type_app_expansion {
         }
     }
 
-    pub fn pop(cx: &Context) {
+    pub fn pop<'cx>(cx: &Context<'cx>) {
         let mut stack = cx.instantiation_stack_mut();
         if !stack.is_empty() {
             stack.pop();
         }
     }
 
-    pub fn get(cx: &Context) -> FlowVector<Entry> {
+    pub fn get<'cx>(cx: &Context<'cx>) -> FlowVector<Entry> {
         cx.instantiation_stack().dupe()
     }
 
-    pub fn set(cx: &Context, new_stack: FlowVector<Entry>) {
+    pub fn set<'cx>(cx: &Context<'cx>, new_stack: FlowVector<Entry>) {
         *cx.instantiation_stack_mut() = new_stack;
     }
 }

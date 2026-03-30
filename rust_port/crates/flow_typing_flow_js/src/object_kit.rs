@@ -67,8 +67,8 @@ use crate::slice_utils;
 // may lead to edge cases where we miss keys, it seems like the best way forward. To get rid of
 // these bugs in 100% of cases we'd need to make our EvalT machinery only operate over resolved
 // types.
-fn partition_keys_and_indexer(
-    cx: &Context,
+fn partition_keys_and_indexer<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -117,8 +117,8 @@ fn partition_keys_and_indexer(
     Ok((keys_result, indexers))
 }
 
-pub fn mapped_type_of_keys(
-    cx: &Context,
+pub fn mapped_type_of_keys<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason: &Reason,
@@ -198,9 +198,9 @@ pub fn mapped_type_of_keys(
     ))
 }
 
-pub fn run(
+pub fn run<'cx>(
     trace: DepthTrace,
-    cx: &Context,
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
     resolve_tool: &object::ResolveTool,
@@ -210,12 +210,12 @@ pub fn run(
 ) -> Result<(), FlowJsException> {
     let object_spread = |options: &object::spread::Target,
                          state: &object::spread::State,
-                         cx: &Context,
+                         cx: &Context<'cx>,
                          use_op: UseOp,
                          reason: &Reason,
                          x: Vec1<object::Slice>,
                          tout: &Type| {
-        let dict_check = |cx: &Context,
+        let dict_check = |cx: &Context<'cx>,
                           use_op: UseOp,
                           d1: &DictType,
                           d2: &DictType|
@@ -224,11 +224,11 @@ pub fn run(
             FlowJs::rec_flow_t(cx, trace, use_op, &d2.value, &d1.value)?;
             Ok(())
         };
-        let return_ = |cx: &Context, use_op: UseOp, t: Type| {
+        let return_ = |cx: &Context<'cx>, use_op: UseOp, t: Type| {
             FlowJs::rec_flow_t(cx, trace, use_op, &t, tout)?;
             Ok(())
         };
-        let recurse = |cx: &Context,
+        let recurse = |cx: &Context<'cx>,
                        use_op: UseOp,
                        reason: &Reason,
                        resolve_tool: object::ResolveTool,
@@ -268,13 +268,13 @@ pub fn run(
     // **************************
     let check_component_config = |allow_ref_in_spread: bool,
                                   pmap: &properties::PropertiesMap,
-                                  cx: &Context,
+                                  cx: &Context<'cx>,
                                   use_op: UseOp,
                                   reason: &Reason,
                                   x: Vec1<object::Slice>,
                                   tout: &Type|
      -> Result<(), FlowJsException> {
-        let return_ = |cx: &Context, use_op: UseOp, t: Type| {
+        let return_ = |cx: &Context<'cx>, use_op: UseOp, t: Type| {
             FlowJs::rec_flow_t(cx, trace, use_op, &t, tout)?;
             Ok(())
         };
@@ -295,12 +295,12 @@ pub fn run(
     // ***************
     let object_rest = |options: &object::rest::MergeMode,
                        state: &object::rest::State,
-                       cx: &Context,
+                       cx: &Context<'cx>,
                        use_op: UseOp,
                        reason: &Reason,
                        x: Vec1<object::Slice>,
                        tout: &Type| {
-        let return_ = |cx: &Context,
+        let return_ = |cx: &Context<'cx>,
                        use_op: Box<dyn Fn(Polarity) -> UseOp>,
                        options: object::rest::MergeMode,
                        t: Type| {
@@ -329,7 +329,7 @@ pub fn run(
             }
             Ok(())
         };
-        let recurse = |cx: &Context,
+        let recurse = |cx: &Context<'cx>,
                        use_op: UseOp,
                        reason: &Reason,
                        resolve_tool: object::ResolveTool,
@@ -350,7 +350,7 @@ pub fn run(
             Ok(())
         };
         let subt_check = |use_op: UseOp,
-                          cx: &Context,
+                          cx: &Context<'cx>,
                           (t1, t2): (&Type, &Type)|
          -> Result<(), FlowJsException> {
             FlowJs::rec_flow_t(cx, trace, use_op, t1, t2)?;
@@ -373,7 +373,7 @@ pub fn run(
     // *********************
     // * Object Make Exact *
     // *********************
-    let object_make_exact = |cx: &Context,
+    let object_make_exact = |cx: &Context<'cx>,
                              _use_op: UseOp,
                              reason: &Reason,
                              x: Vec1<object::Slice>,
@@ -388,7 +388,7 @@ pub fn run(
     };
 
     // ********************
-    let object_read_only = |cx: &Context,
+    let object_read_only = |cx: &Context<'cx>,
                             _use_op: UseOp,
                             reason: &Reason,
                             x: Vec1<object::Slice>,
@@ -410,7 +410,7 @@ pub fn run(
     // ******************
     // * Object Partial *
     // ******************
-    let object_partial = |cx: &Context,
+    let object_partial = |cx: &Context<'cx>,
                           _use_op: UseOp,
                           reason: &Reason,
                           x: Vec1<object::Slice>,
@@ -437,7 +437,7 @@ pub fn run(
     // *******************
     // * Object Required *
     // *******************
-    let object_required = |cx: &Context,
+    let object_required = |cx: &Context<'cx>,
                            _use_op: UseOp,
                            reason: &Reason,
                            x: Vec1<object::Slice>,
@@ -464,7 +464,7 @@ pub fn run(
     // **************
     // * Object Rep *
     // **************
-    let object_rep = |cx: &Context,
+    let object_rep = |cx: &Context<'cx>,
                       use_op: UseOp,
                       reason: &Reason,
                       x: Vec1<object::Slice>,
@@ -556,7 +556,7 @@ pub fn run(
     // ****************
     let react_config = |ref_manipulation: &object::react_config::RefManipulation,
                         state: &object::react_config::State,
-                        cx: &Context,
+                        cx: &Context<'cx>,
                         use_op: UseOp,
                         reason: &Reason,
                         x: Vec1<object::Slice>,
@@ -696,8 +696,10 @@ pub fn run(
                                 // Use CondT to replace void with t1.
                                 let t1_clone = t1.dupe();
                                 let t2_clone = t2.dupe();
-                                let t =
-                                    flow_typing_tvar::mk_where_result(cx, reason.dupe(), |tvar| {
+                                let t = flow_typing_tvar::mk_where_result(
+                                    cx,
+                                    reason.dupe(),
+                                    |cx, tvar| {
                                         let filter_id = FlowJs::filter_optional(
                                             cx,
                                             Some(trace),
@@ -720,7 +722,8 @@ pub fn run(
                                             )),
                                         )?;
                                         Ok::<(), FlowJsException>(())
-                                    })?;
+                                    },
+                                )?;
                                 Some((l.dupe(), t, *m1 || *m2))
                             }
                         };
@@ -956,7 +959,7 @@ pub fn run(
     let object_map = |prop_type: &Type,
                       mapped_type_flags: &MappedTypeFlags,
                       selected_keys_opt: &Option<Type>,
-                      cx: &Context,
+                      cx: &Context<'cx>,
                       use_op: UseOp,
                       reason: &Reason,
                       x: Vec1<object::Slice>,
@@ -997,7 +1000,7 @@ pub fn run(
     // *********************
     // * Object Resolution *
     // *********************
-    let next = |cx: &Context,
+    let next = |cx: &Context<'cx>,
                 use_op: UseOp,
                 tool: &object::Tool,
                 reason: &Reason,
@@ -1042,17 +1045,17 @@ pub fn run(
         }
     };
 
-    let return_ = |cx: &Context, use_op: UseOp, t: Type| -> Result<(), FlowJsException> {
+    let return_ = |cx: &Context<'cx>, use_op: UseOp, t: Type| -> Result<(), FlowJsException> {
         FlowJs::rec_flow_t(cx, trace, use_op, &t, tout)?;
         Ok(())
     };
-    let next_wrapped = |cx: &Context,
+    let next_wrapped = |cx: &Context<'cx>,
                         use_op: UseOp,
                         tool: &object::Tool,
                         reason: &Reason,
                         x: Vec1<object::Slice>|
      -> Result<(), FlowJsException> { next(cx, use_op, tool, reason, x) };
-    let recurse = |cx: &Context,
+    let recurse = |cx: &Context<'cx>,
                    use_op: UseOp,
                    reason: &Reason,
                    resolve_tool: object::ResolveTool,
@@ -1073,8 +1076,8 @@ pub fn run(
         )?;
         Ok(())
     };
-    let statics = |cx: &Context, r: &Reason, i: &Type| -> Result<Type, FlowJsException> {
-        flow_typing_tvar::mk_no_wrap_where_result(cx, r.dupe(), |reason, tvar_id| {
+    let statics = |cx: &Context<'cx>, r: &Reason, i: &Type| -> Result<Type, FlowJsException> {
+        flow_typing_tvar::mk_no_wrap_where_result(cx, r.dupe(), |cx, reason, tvar_id| {
             let tvar = Tvar::new(reason.dupe(), tvar_id as u32);
             FlowJs::rec_flow(
                 cx,

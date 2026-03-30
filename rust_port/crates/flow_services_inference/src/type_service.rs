@@ -779,7 +779,7 @@ mod check_files {
             >;
             type WorkerState = (
                 CheckFn,
-                Rc<std::cell::RefCell<crate::check_cache::CheckCache>>,
+                Rc<std::cell::RefCell<crate::check_cache::CheckCache<'static>>>,
             );
             thread_local! {
                 static WORKER_CHECK: RefCell<Option<WorkerState>> = const { RefCell::new(None) };
@@ -788,7 +788,7 @@ mod check_files {
                 let shared_mem = shared_mem.dupe();
                 let options = options.dupe();
                 Arc::new(move || {
-                    merge_service::mk_check(shared_mem.dupe(), options.dupe(), master_cx.dupe())
+                    merge_service::mk_check(shared_mem.dupe(), options.dupe(), master_cx.as_ref())
                 })
             };
             // Create per-worker deques for intra-batch work stealing.
@@ -902,7 +902,6 @@ mod check_files {
                 WORKER_DEQUE.with(|cell| {
                     *cell.borrow_mut() = None;
                 });
-                flow_typing_utils::annotation_inference::clear_dst_cx();
             });
             let Errors {
                 merge_errors,

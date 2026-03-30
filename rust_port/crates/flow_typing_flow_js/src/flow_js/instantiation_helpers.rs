@@ -14,8 +14,8 @@ use super::helpers::*;
 use super::*;
 
 impl flow_js_utils::InstantiationHelper for FlowJs {
-    fn reposition(
-        cx: &Context,
+    fn reposition<'cx>(
+        cx: &Context<'cx>,
         trace: Option<DepthTrace>,
         loc: ALoc,
         t: Type,
@@ -23,8 +23,8 @@ impl flow_js_utils::InstantiationHelper for FlowJs {
         helpers::reposition(cx, trace, loc, None, None, t)
     }
 
-    fn is_subtype(
-        cx: &Context,
+    fn is_subtype<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: UseOp,
         t1: Type,
@@ -33,8 +33,8 @@ impl flow_js_utils::InstantiationHelper for FlowJs {
         rec_flow_t(cx, trace, use_op, (&t1, &t2))
     }
 
-    fn unify(
-        cx: &Context,
+    fn unify<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: UseOp,
         t1: Type,
@@ -51,8 +51,8 @@ impl flow_js_utils::InstantiationHelper for FlowJs {
         )
     }
 
-    fn mk_targ(
-        cx: &Context,
+    fn mk_targ<'cx>(
+        cx: &Context<'cx>,
         typeparam: &TypeParam,
         reason_op: &Reason,
         reason_tapp: &Reason,
@@ -62,8 +62,8 @@ impl flow_js_utils::InstantiationHelper for FlowJs {
 }
 
 /// Instantiate a polymorphic definition given tparam instantiations in a Call or New expression.  
-pub(super) fn instantiate_with_targs_with_soln(
-    cx: &Context,
+pub(super) fn instantiate_with_targs_with_soln<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
@@ -98,8 +98,8 @@ pub(super) fn instantiate_with_targs_with_soln(
     )
 }
 
-pub(super) fn instantiate_with_targs(
-    cx: &Context,
+pub(super) fn instantiate_with_targs<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
@@ -112,11 +112,11 @@ pub(super) fn instantiate_with_targs(
     Ok(t)
 }
 
-pub(super) fn instantiate_poly_call_or_new_with_soln(
-    cx: &Context,
+pub(super) fn instantiate_poly_call_or_new_with_soln<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     lparts: (Reason, ALoc, Vec1<TypeParam>, Type),
-    uparts: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT),
+    uparts: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT<Context<'cx>>),
     check: impl FnOnce() -> ImplicitInstantiationCheck,
 ) -> Result<(Type, Vec<(Type, SubstName)>), FlowJsException> {
     let (reason_tapp, tparams_loc, xs, t) = lparts;
@@ -148,11 +148,11 @@ pub(super) fn instantiate_poly_call_or_new_with_soln(
 }
 
 // and instantiate_poly_call_or_new cx trace lparts uparts check =
-pub(super) fn instantiate_poly_call_or_new(
-    cx: &Context,
+pub(super) fn instantiate_poly_call_or_new<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     lparts: (Reason, ALoc, Vec1<TypeParam>, Type),
-    uparts: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT),
+    uparts: (UseOp, Reason, Option<Rc<[Targ]>>, LazyHintT<Context<'cx>>),
     check: impl FnOnce() -> ImplicitInstantiationCheck,
 ) -> Result<Type, FlowJsException> {
     let (reason_tapp, tparams_loc, xs, t) = lparts;
@@ -185,8 +185,8 @@ pub(super) fn instantiate_poly_call_or_new(
 
 /// Instantiate a polymorphic definition with stated bound or 'any' for args  
 /// Needed only for `instanceof` refis and React.PropTypes.instanceOf types  
-pub(super) fn instantiate_poly_default_args(
-    cx: &Context,
+pub(super) fn instantiate_poly_default_args<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
@@ -216,19 +216,19 @@ pub(super) fn instantiate_poly_default_args(
 }
 
 // Specialize This in a class. Eventually this causes substitution
-pub(super) fn instantiate_this_class(
-    cx: &Context,
+pub(super) fn instantiate_this_class<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     reason_op: &Reason,
     reason_tapp: &Reason,
     c: &Type,
     ts: Option<Rc<[Type]>>,
     this: &Type,
-    k: &Cont,
+    k: &Cont<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     let tc = match ts {
         None => c.dupe(),
-        Some(ts) => flow_typing_tvar::mk_where_result(cx, reason_tapp.dupe(), |tout| {
+        Some(ts) => flow_typing_tvar::mk_where_result(cx, reason_tapp.dupe(), |cx, tout| {
             rec_flow(
                 cx,
                 trace,

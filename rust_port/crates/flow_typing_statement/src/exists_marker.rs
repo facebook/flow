@@ -20,14 +20,14 @@ use flow_typing_type::type_::Type;
 
 use crate::refinement;
 
-struct Marker<'cx> {
+struct Marker<'a, 'cx> {
     cond: bool,
     predicate: bool,
-    cx: &'cx Context,
+    cx: &'a Context<'cx>,
 }
 
-impl<'cx> Marker<'cx> {
-    fn new(cx: &'cx Context) -> Self {
+impl<'a, 'cx> Marker<'a, 'cx> {
+    fn new(cx: &'a Context<'cx>) -> Self {
         Marker {
             cond: false,
             predicate: false,
@@ -94,7 +94,7 @@ impl<'cx> Marker<'cx> {
     }
 }
 
-impl<'ast, 'cx: 'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for Marker<'cx> {
+impl<'ast, 'cx: 'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for Marker<'_, 'cx> {
     fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
         loc
     }
@@ -292,7 +292,7 @@ impl<'ast, 'cx: 'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, !> for Ma
     }
 }
 
-pub fn mark(cx: &Context, ast: &ast::Program<ALoc, (ALoc, Type)>) {
+pub fn mark<'a>(cx: &Context<'a>, ast: &ast::Program<ALoc, (ALoc, Type)>) {
     let mut marker = Marker::new(cx);
     let Ok(()) = marker.program(ast);
 }

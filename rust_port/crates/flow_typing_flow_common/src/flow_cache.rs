@@ -45,7 +45,7 @@ pub mod flow_constraint {
     }
 
     // attempt to read LB/UB pair from cache, add if absent
-    pub fn get(cx: &Context, l: &Type, u: &UseT) -> bool {
+    pub fn get<'cx>(cx: &Context<'cx>, l: &Type, u: &UseT<Context<'cx>>) -> bool {
         match (l.deref(), u.deref()) {
             // Don't cache constraints involving type variables, since the
             // corresponding typing rules are already sufficiently robust.

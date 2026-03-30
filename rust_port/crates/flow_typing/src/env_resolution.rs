@@ -11,7 +11,6 @@
 //! predicate function resolution, and component resolution in the name definition
 //! ordering graph.
 
-use std::cell::LazyCell;
 use std::collections::BTreeMap;
 use std::collections::BTreeSet;
 use std::ops::Deref;
@@ -68,10 +67,8 @@ use flow_typing_utils::exhaustive;
 use flow_typing_utils::type_env;
 use flow_typing_utils::type_hint;
 use flow_typing_utils::type_operation_utils;
-use once_cell::unsync::Lazy;
-
-fn mk_tparams_map(
-    cx: &Context,
+fn mk_tparams_map<'cx>(
+    cx: &Context<'cx>,
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
 ) -> FlowOrdMap<SubstName, Type> {
     let env = cx.environment();
@@ -84,10 +81,10 @@ fn mk_tparams_map(
     subst_map
 }
 
-fn try_cache_result<T>(
-    cx: &Context,
+fn try_cache_result<'cx, T>(
+    cx: &Context<'cx>,
     target_loc: Option<ALoc>,
-    check: impl FnOnce() -> Result<T, AbnormalControlFlow>,
+    check: impl FnOnce(&Context<'cx>) -> Result<T, AbnormalControlFlow>,
     cache: impl FnOnce(&T),
 ) -> Result<T, AbnormalControlFlow> {
     if !matches!(
@@ -97,7 +94,7 @@ fn try_cache_result<T>(
         let original_errors = cx.errors();
         cx.reset_errors(ErrorSet::new());
         let (produced_uncacheable_result, result) =
-            cx.run_in_synthesis_mode(false, target_loc, check);
+            cx.run_in_synthesis_mode(false, target_loc, || check(cx));
         let can_cache = !produced_uncacheable_result && cx.errors().is_empty();
         cx.reset_errors(original_errors);
         let e = result?;
@@ -106,7 +103,7 @@ fn try_cache_result<T>(
         }
         Ok(e)
     } else {
-        let e = check()?;
+        let e = check(cx)?;
         cache(&e);
         Ok(e)
     }
@@ -114,8 +111,8 @@ fn try_cache_result<T>(
 
 // Helper to incrementally build PatternUnion state from a previous pattern location.
 // Returns the pattern_union_state to use for the current pattern.
-fn get_pattern_union_state_from_prev(
-    cx: &Context,
+fn get_pattern_union_state_from_prev<'cx>(
+    cx: &Context<'cx>,
     prev_pattern_loc: Option<ALoc>,
 ) -> (match_pattern_ir::pattern_union::PatternUnion, usize) {
     match prev_pattern_loc {
@@ -145,8 +142,8 @@ fn get_pattern_union_state_from_prev(
     }
 }
 
-fn expression(
-    cx: &Context,
+fn expression<'cx>(
+    cx: &Context<'cx>,
     encl_ctx: Option<EnclosingContext>,
     decl: Option<ast::VariableKind>,
     as_const: Option<bool>,
@@ -158,14 +155,13 @@ fn expression(
         _ => None,
     };
     let exp_clone = exp.dupe();
-    let cx_clone = cx.dupe();
     // OCaml: let ((_, t), _) = try_cache cx ~target_loc
     //   ~check:(fun () -> Statement.expression ?encl_ctx ?decl ?as_const cx exp)
     //   ~cache:(Node_cache.set_expression cache) in t
     let result = try_cache_result(
         cx,
         target_loc,
-        move || statement::expression(encl_ctx, decl, as_const, &cx_clone, &exp_clone),
+        move |cx| statement::expression(encl_ctx, decl, as_const, cx, &exp_clone),
         |e| {
             cache.set_expression(e.dupe());
         },
@@ -174,24 +170,22 @@ fn expression(
     Ok(t)
 }
 
-fn make_hooklike(cx: &Context, t: Type) -> Type {
+fn make_hooklike<'cx>(cx: &Context<'cx>, t: Type) -> Type {
     if cx.hook_compatibility() {
         match t.deref() {
             TypeInner::DefT(_, def_t) if matches!(def_t.deref(), type_::DefTInner::TypeT(..)) => t,
             _ => {
                 let reason = type_util::reason_of_t(&t).dupe();
-                let cx_inner = cx.dupe();
                 let reason_inner = reason.dupe();
-                flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t, move |t| {
-                    let cx_ref = &cx_inner;
+                flow_js_utils::map_on_resolved_type(cx, reason.dupe(), t, move |cx, t| {
                     let reason_for_tvar = reason_inner.dupe();
                     tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                        cx_ref,
+                        cx,
                         reason_inner,
-                        |_tvar_reason, tvar_id| {
+                        |cx, _tvar_reason, tvar_id| {
                             let tvar = Tvar::new(reason_for_tvar.dupe(), tvar_id as u32);
                             let use_t = UseT::new(type_::UseTInner::HooklikeT(Box::new(tvar)));
-                            flow_js::flow_non_speculating(cx_ref, (&t, &use_t));
+                            flow_js::flow_non_speculating(cx, (&t, &use_t));
                         },
                     )
                 })
@@ -202,8 +196,8 @@ fn make_hooklike(cx: &Context, t: Type) -> Type {
     }
 }
 
-fn resolve_annotation(
-    cx: &Context,
+fn resolve_annotation<'cx>(
+    cx: &Context<'cx>,
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
     react_deep_read_only: Option<(ALoc, name_def_types::DroAnnot)>,
     anno: &ast::types::Annotation<ALoc, ALoc>,
@@ -254,8 +248,8 @@ fn resolve_annotation(
     t
 }
 
-fn synthesizable_expression(
-    cx: &Context,
+fn synthesizable_expression<'cx>(
+    cx: &Context<'cx>,
     encl_ctx: EnclosingContext,
     exp: &ast::expression::Expression<ALoc, ALoc>,
 ) -> Result<Type, AbnormalControlFlow> {
@@ -323,8 +317,8 @@ fn synthesizable_expression(
     })
 }
 
-fn mk_selector_reason_has_default(
-    cx: &Context,
+fn mk_selector_reason_has_default<'cx>(
+    cx: &Context<'cx>,
     loc: &ALoc,
     selector: &selector::Selector<ALoc, ALoc>,
 ) -> Result<(type_::Selector, Reason, bool), AbnormalControlFlow> {
@@ -400,28 +394,25 @@ fn mk_selector_reason_has_default(
     })
 }
 
-fn synthesize_expression_for_instantiation(
-    cx: &Context,
+fn synthesize_expression_for_instantiation<'cx>(
+    cx: &Context<'cx>,
     target_loc: Option<ALoc>,
     e: &ast::expression::Expression<ALoc, ALoc>,
 ) -> ast::expression::Expression<ALoc, (ALoc, Type)> {
     let e_clone = e.dupe();
-    let cx_clone_1 = cx.dupe();
-    let cx_clone_2 = cx.dupe();
     try_cache_result(
         cx,
         target_loc,
-        move || statement::expression(None, None, None, &cx_clone_1, &e_clone),
+        move |cx| statement::expression(None, None, None, cx, &e_clone),
         |e| {
-            let cache = cx_clone_2.node_cache();
-            cache.set_expression(e.dupe());
+            cx.node_cache().set_expression(e.dupe());
         },
     )
     .expect("unexpected abnormal control flow in synthesize_expression_for_instantiation")
 }
 
-fn synthesize_jsx_children_for_instantiation(
-    cx: &Context,
+fn synthesize_jsx_children_for_instantiation<'cx>(
+    cx: &Context<'cx>,
     children: &(ALoc, Vec<ast::jsx::Child<ALoc, ALoc>>),
 ) -> Result<
     (
@@ -432,19 +423,18 @@ fn synthesize_jsx_children_for_instantiation(
 > {
     let cache = cx.node_cache();
     let children_clone = children.clone();
-    let cx_clone = cx.dupe();
     try_cache_result(
         cx,
         None,
-        move || statement::collapse_children(&cx_clone, &children_clone),
+        move |cx| statement::collapse_children(cx, &children_clone),
         |result| {
             cache.set_jsx_children(result.clone());
         },
     )
 }
 
-fn synth_arg_list(
-    cx: &Context,
+fn synth_arg_list<'cx>(
+    cx: &Context<'cx>,
     target_loc: Option<ALoc>,
     arg_list: &ast::expression::ArgList<ALoc, ALoc>,
 ) -> Vec<(ALoc, type_::CallArg)> {
@@ -470,17 +460,17 @@ fn synth_arg_list(
         .collect()
 }
 
-fn resolve_hint(
-    cx: &Context,
+fn resolve_hint<'cx>(
+    cx: &Context<'cx>,
     loc: ALoc,
     hint: flow_env_builder::name_def_types::AstHint,
-) -> type_hint::ConcrHint {
+) -> type_hint::ConcrHint<'cx> {
     use flow_env_builder::name_def_types::ArrayElementPatternHint;
     use flow_env_builder::name_def_types::HintNode;
     use flow_env_builder::name_def_types::ObjectPropPatternHint;
     use flow_typing_type::type_::TypeInner;
 
-    fn resolve_hint_node(cx: &Context, loc: ALoc, hint_node: HintNode) -> Type {
+    fn resolve_hint_node<'cx>(cx: &Context<'cx>, loc: ALoc, hint_node: HintNode) -> Type {
         match hint_node {
             HintNode::AnnotationHint(tparams_map, anno) => {
                 resolve_annotation(cx, &tparams_map, None, &anno)
@@ -607,7 +597,7 @@ fn resolve_hint(
                         }
                     })
                     .collect();
-                flow_typing_tvar::mk_where(cx, array_reason.dupe(), |tout| {
+                flow_typing_tvar::mk_where(cx, array_reason.dupe(), |cx, tout| {
                     let reason_op = array_reason.dupe();
                     let element_reason = reason_op.dupe().replace_desc(
                         reason::VirtualReasonDesc::RInferredUnionElemArray {
@@ -662,24 +652,23 @@ fn resolve_hint(
         }
     }
 
-    let cx_clone = cx.dupe();
     let loc_clone = loc.dupe();
-    let map_base_hint = Rc::new(move |h| resolve_hint_node(&cx_clone, loc_clone.dupe(), h));
+    let map_base_hint =
+        Rc::new(move |cx: &Context<'cx>, h| resolve_hint_node(cx, loc_clone.dupe(), h));
 
-    let cx_clone2 = cx.dupe();
     let map_targs = Rc::new(
-        move |targs: Option<ast::expression::CallTypeArgs<ALoc, ALoc>>| {
-            statement::convert_call_targs_opt_prime(&cx_clone2, targs.as_ref())
+        move |cx: &Context<'cx>, targs: Option<ast::expression::CallTypeArgs<ALoc, ALoc>>| {
+            statement::convert_call_targs_opt_prime(cx, targs.as_ref())
         },
     );
 
-    let cx_clone3 = cx.dupe();
     let map_arg_list = Rc::new(
-        move |arg_list: ast::expression::ArgList<ALoc, ALoc>| -> type_hint::ConcrArgListFn {
+        move |_cx: &Context<'cx>,
+              arg_list: ast::expression::ArgList<ALoc, ALoc>|
+              -> type_hint::ConcrArgListFn {
             let l = arg_list.loc.dupe();
-            let cx = cx_clone3.dupe();
             let arg_list = std::sync::Arc::new(arg_list);
-            Rc::new(move |target_loc: Option<ALoc>| {
+            Rc::new(move |cx, target_loc: Option<ALoc>| {
                 if let Some(result) = cx
                     .hint_map_arglist_cache()
                     .get(&(l.dupe(), target_loc.dupe()))
@@ -687,7 +676,7 @@ fn resolve_hint(
                 {
                     result
                 } else {
-                    let result = synth_arg_list(&cx, target_loc.dupe(), &arg_list);
+                    let result = synth_arg_list(cx, target_loc.dupe(), &arg_list);
                     cx.hint_map_arglist_cache_mut()
                         .insert((l.dupe(), target_loc), result.clone());
                     result
@@ -696,13 +685,16 @@ fn resolve_hint(
         },
     );
 
-    let cx_clone4 = cx.dupe();
     type PropsAndChildren = (
         std::sync::Arc<[ast::jsx::OpeningAttribute<ALoc, ALoc>]>,
         (ALoc, Vec<ast::jsx::Child<ALoc, ALoc>>),
     );
     let map_jsx = Rc::new(
-        move |jsx_reason: Reason, name: FlowSmolStr, (props, children): PropsAndChildren| {
+        move |cx: &Context<'cx>,
+              jsx_reason: Reason,
+              name: FlowSmolStr,
+              (props, children): PropsAndChildren|
+              -> type_hint::ConcrJsxProps<'cx> {
             let key_locs: Vec<ALoc> = props
                 .iter()
                 .map(|attr| match attr {
@@ -713,20 +705,19 @@ fn resolve_hint(
             let children_loc = children.0.dupe();
             let cache_key = (jsx_reason.dupe(), name.to_string(), key_locs, children_loc);
 
-            if let Some(result) = cx_clone4.hint_map_jsx_cache().get(&cache_key).duped() {
+            if let Some(result) = cx.hint_map_jsx_cache().get(&cache_key).duped() {
                 result
             } else {
-                let original_errors = cx_clone4.errors();
-                cx_clone4.reset_errors(ErrorSet::new());
-                let cx_lazy = cx_clone4.dupe();
+                let original_errors = cx.errors();
+                cx.reset_errors(ErrorSet::new());
                 let props_clone = props.dupe();
                 let children_clone = children.clone();
                 let jsx_reason_clone = jsx_reason.dupe();
                 let name_clone = name.dupe();
-                let lazy_props: Rc<LazyCell<Type, Box<dyn Fn() -> Type>>> =
-                    Rc::new(LazyCell::new(Box::new(move || {
+                let lazy_props: type_hint::ConcrJsxProps<'cx> =
+                    Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
                         let (jsx_props_t, _, _, _) = statement::jsx_mk_props(
-                            &cx_lazy,
+                            cx,
                             jsx_reason_clone.dupe(),
                             &|_hint, cx, expr| {
                                 Ok(synthesize_expression_for_instantiation(cx, None, expr))
@@ -739,54 +730,58 @@ fn resolve_hint(
                         .expect("Non speculating");
                         jsx_props_t
                     })));
-                cx_clone4.reset_errors(original_errors);
-                cx_clone4
-                    .hint_map_jsx_cache_mut()
+                cx.reset_errors(original_errors);
+                cx.hint_map_jsx_cache_mut()
                     .insert(cache_key, lazy_props.dupe());
                 lazy_props
             }
         },
     );
 
-    hint.map(&map_base_hint, &map_targs, &map_arg_list, &map_jsx)
+    hint.map(cx, &map_base_hint, &map_targs, &map_arg_list, &map_jsx)
 }
 
-fn resolve_hints(
-    cx: &Context,
+fn resolve_hints<'a>(
+    cx: &Context<'a>,
     loc: ALoc,
     hints: &[flow_env_builder::name_def_types::AstHint],
-) -> Vec<type_hint::ConcrHint> {
+) -> Vec<type_hint::ConcrHint<'a>> {
     hints
         .iter()
         .map(|h| resolve_hint(cx, loc.dupe(), h.clone()))
         .collect()
 }
 
-pub fn lazily_resolve_hints(
-    cx: &Context,
+pub fn lazily_resolve_hints<'cx>(
+    _cx: &Context<'cx>,
     loc: ALoc,
     hints: &[flow_env_builder::name_def_types::AstHint],
-) -> type_::LazyHintT {
+) -> type_::LazyHintT<Context<'cx>> {
     let has_hint = !hints.is_empty();
     let hints_owned: Vec<flow_env_builder::name_def_types::AstHint> = hints.to_vec();
-    let cx = cx.dupe();
-    let lazy_hint = move |expected_only: bool,
+    let lazy_hint = move |cx: &Context<'cx>,
+                          expected_only: bool,
                           skip_optional: Option<bool>,
                           r: Reason|
           -> type_::HintEvalResult {
-        let resolved = resolve_hints(&cx, loc.dupe(), &hints_owned);
-        type_hint::evaluate_hints(&cx, expected_only, skip_optional, &r, resolved)
+        let resolved = resolve_hints(cx, loc.dupe(), &hints_owned);
+        type_hint::evaluate_hints(cx, expected_only, skip_optional, &r, resolved)
     };
     type_::LazyHintT(has_hint, Rc::new(lazy_hint))
 }
 
-pub fn resolve_pred_func(
-    cx: &Context,
+pub fn resolve_pred_func<'cx>(
+    _cx: &Context<'cx>,
     info: &env_api::PredFuncInfo<ALoc>,
-) -> Rc<Lazy<type_::PredFuncallInfo, Box<dyn FnOnce() -> type_::PredFuncallInfo>>> {
-    let cx = cx.dupe();
+) -> Rc<
+    flow_lazy::Lazy<
+        Context<'cx>,
+        type_::PredFuncallInfo,
+        Box<dyn FnOnce(&Context<'cx>) -> type_::PredFuncallInfo + 'cx>,
+    >,
+> {
     let info = info.clone();
-    Rc::new(Lazy::new(Box::new(move || {
+    Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
         let loc = info.callee.loc();
         let use_op = type_::VirtualUseOp::Op(Arc::new(type_::VirtualRootUseOp::FunCall {
             op: reason::mk_expression_reason(&info.call_expr),
@@ -796,10 +791,10 @@ pub fn resolve_pred_func(
         }));
         // [callee] might be a member access expression. Since we are explicitly unbinding it from
         // the call, make sure we don't raise a method-unbinding error.
-        let callee_t = type_env::with_class_stack(&cx, info.class_stack.dupe(), || {
+        let callee_t = type_env::with_class_stack(cx, info.class_stack.dupe(), || {
             // Synthesis mode to avoid caching
             let (_, (t, new_errors)) = cx.run_in_synthesis_mode_with_errors(None, || {
-                expression(&cx, None, None, None, &info.callee)
+                expression(cx, None, None, None, &info.callee)
             });
             if new_errors.is_lint_only_errorset() {
                 match t {
@@ -810,12 +805,12 @@ pub fn resolve_pred_func(
                 any_t::at(AnySource::AnyError(None), loc.dupe())
             }
         });
-        let targs = statement::convert_call_targs_opt_prime(&cx, info.targs.as_ref());
+        let targs = statement::convert_call_targs_opt_prime(cx, info.targs.as_ref());
         let arguments = &info.arguments.arguments;
         let argts: Rc<[type_::CallArg]> = arguments
             .iter()
             .map(|e| {
-                let (t, _) = statement::expression_or_spread(&cx, e).expect("Non speculating");
+                let (t, _) = statement::expression_or_spread(cx, e).expect("Non speculating");
                 t
             })
             .collect();
@@ -824,8 +819,8 @@ pub fn resolve_pred_func(
     })))
 }
 
-fn resolve_annotated_function(
-    cx: &Context,
+fn resolve_annotated_function<'cx>(
+    cx: &Context<'cx>,
     scope_kind: ScopeKind,
     bind_this: bool,
     statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
@@ -872,8 +867,15 @@ fn resolve_annotated_function(
         reason.dupe(),
         function_,
     )?;
-    let (ref func_sig, _) = sig_data;
-    cache.set_function_sig(sig_loc, sig_data.clone());
+    let (ref func_sig, ref reconstruct, ref deferred_tg_check) = sig_data;
+    cache.set_function_sig(
+        sig_loc,
+        (
+            func_sig.clone(),
+            reconstruct.clone(),
+            deferred_tg_check.clone(),
+        ),
+    );
     let t = flow_typing_statement::func_sig::functiontype(
         cx,
         !bind_this, // arrow
@@ -888,8 +890,8 @@ fn resolve_annotated_function(
     })
 }
 
-fn resolve_annotated_component(
-    cx: &Context,
+fn resolve_annotated_component<'cx>(
+    cx: &Context<'cx>,
     scope_kind: ScopeKind,
     reason: Reason,
     tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
@@ -958,8 +960,8 @@ fn binding_has_annot(binding: &Binding) -> bool {
     }
 }
 
-fn resolve_binding(
-    cx: &Context,
+fn resolve_binding<'cx>(
+    cx: &Context<'cx>,
     def_scope_kind: ScopeKind,
     reason: Reason,
     loc: ALoc,
@@ -1068,8 +1070,8 @@ fn resolve_binding(
                 )
             };
 
-            fn mk_expression(
-                cx: &Context,
+            fn mk_expression<'cx>(
+                cx: &Context<'cx>,
                 def_scope_kind: ScopeKind,
                 resolve_prop: &dyn Fn(
                     bool,
@@ -1183,7 +1185,7 @@ fn resolve_binding(
                             .collect::<Result<Vec<_>, _>>()?;
                         let arr_reason =
                             reason::mk_reason(reason::VirtualReasonDesc::RArrayLit, loc.dupe());
-                        flow_typing_tvar::mk_where(cx, arr_reason.dupe(), |tout| {
+                        flow_typing_tvar::mk_where(cx, arr_reason.dupe(), |cx, tout| {
                             let reason_op = arr_reason.dupe();
                             let element_reason = reason_op.dupe().replace_desc(
                                 reason::VirtualReasonDesc::RInferredUnionElemArray {
@@ -1236,8 +1238,8 @@ fn resolve_binding(
                 })
             }
 
-            fn mk_obj(
-                cx: &Context,
+            fn mk_obj<'cx>(
+                cx: &Context<'cx>,
                 def_scope_kind: ScopeKind,
                 resolve_prop: &dyn Fn(
                     bool,
@@ -1398,7 +1400,7 @@ fn resolve_binding(
                 reason_fun,
                 function_,
             )?;
-            let (ref func_sig, _) = sig_data;
+            let (ref func_sig, ref reconstruct, ref deferred_tg_check) = sig_data;
             let t = flow_typing_statement::func_sig::functiontype(
                 cx,
                 *arrow,
@@ -1406,7 +1408,14 @@ fn resolve_binding(
                 default_this,
                 func_sig,
             );
-            cache.set_function_sig(sig_loc, sig_data);
+            cache.set_function_sig(
+                sig_loc,
+                (
+                    func_sig.clone(),
+                    reconstruct.clone(),
+                    deferred_tg_check.clone(),
+                ),
+            );
             Ok(t)
         }
         Binding::Root(Root::FunctionValue {
@@ -1486,7 +1495,7 @@ fn resolve_binding(
                 let elem_t = flow_typing_tvar::mk_where(
                     cx,
                     reason::mk_reason(reason::VirtualReasonDesc::REmptyArrayElement, loc.dupe()),
-                    |tvar| {
+                    |cx, tvar| {
                         for t in &ts {
                             let use_t = UseT::new(type_::UseTInner::UseT(
                                 type_::unknown_use(),
@@ -1545,10 +1554,10 @@ fn resolve_binding(
         }) => {
             let param_loc = ctx_reason.loc().dupe();
             let type_::LazyHintT(has_hint, lazy_hint) = lazily_resolve_hints(cx, loc.dupe(), hints);
-            let t = match lazy_hint(false, None, ctx_reason.dupe()) {
+            let t = match lazy_hint(cx, false, None, ctx_reason.dupe()) {
                 type_::HintEvalResult::HintAvailable(t, _) => {
                     let t = if default_expression.is_some() {
-                        flow_typing_tvar::mk_where(cx, ctx_reason.dupe(), |tout| {
+                        flow_typing_tvar::mk_where(cx, ctx_reason.dupe(), |cx, tout| {
                             let use_t = UseT::new(type_::UseTInner::FilterOptionalT(
                                 type_::unknown_use(),
                                 tout.dupe(),
@@ -1664,7 +1673,7 @@ fn resolve_binding(
             let node_cache = cx.node_cache();
             let filtered_pattern_type = node_cache
                 .get_match_pattern_value_union(parent_loc)
-                .and_then(|vu| vu.select(selector))
+                .and_then(|vu| vu.select(cx, selector))
                 .map(|value_left| {
                     node_cache.set_match_pattern_value_union(loc.dupe(), value_left.clone());
                     value_left.to_type(reason.dupe())
@@ -1702,17 +1711,15 @@ fn resolve_binding(
                             let sel_reason_c = sel_reason.dupe();
                             let selector_c = selector_ty.clone();
                             let kind_c = kind.clone();
-                            let cx_c = cx.dupe();
                             let t = flow_js_utils::map_on_resolved_type(
                                 cx,
                                 sel_reason.dupe(),
                                 t,
-                                move |t| {
-                                    let cx = &cx_c;
+                                move |cx, t| {
                                     tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                                         cx,
                                         sel_reason_c.dupe(),
-                                        |tout_reason, tout_id| {
+                                        |cx, tout_reason, tout_id| {
                                             let tout =
                                                 Tvar::new(tout_reason.dupe(), tout_id as u32);
                                             let use_t =
@@ -1736,17 +1743,15 @@ fn resolve_binding(
                                         &selector::Selector::Default,
                                     )?;
                                 let default_reason_c = default_reason.dupe();
-                                let cx_c2 = cx.dupe();
                                 flow_js_utils::map_on_resolved_type(
                                     cx,
                                     default_reason.dupe(),
                                     t,
-                                    move |t| {
-                                        let cx = &cx_c2;
+                                    move |cx, t| {
                                         tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                                             cx,
                                             default_reason_c.dupe(),
-                                            |tout_reason, tout_id| {
+                                            |cx, tout_reason, tout_id| {
                                                 let tout =
                                                     Tvar::new(tout_reason.dupe(), tout_id as u32);
                                                 let use_t =
@@ -1773,8 +1778,8 @@ fn resolve_binding(
     }
 }
 
-fn resolve_inferred_function(
-    cx: &Context,
+fn resolve_inferred_function<'cx>(
+    cx: &Context<'cx>,
     scope_kind: ScopeKind,
     statics: &BTreeMap<FlowSmolStr, env_api::EnvKey<ALoc>>,
     needs_this_param: bool,
@@ -1828,8 +1833,8 @@ fn resolve_inferred_function(
     )
 }
 
-fn resolve_class(
-    cx: &Context,
+fn resolve_class<'cx>(
+    cx: &Context<'cx>,
     id_loc: ALoc,
     reason: Reason,
     kind: &name_def_types::ClassKind,
@@ -1846,15 +1851,19 @@ fn resolve_class(
     let sig_info =
         statement::mk_class_sig(cx, id_loc, class_loc.dupe(), inst_kind, reason, class_)?;
     let (class_t, class_t_internal, class_sig, reconstruct) = sig_info;
-    // Convert Box<dyn FnOnce> to Rc<dyn Fn> for node_cache storage
-    let reconstruct_cell = std::cell::RefCell::new(Some(reconstruct));
-    let reconstruct_fn: Rc<dyn Fn(Type) -> ast::class::Class<ALoc, (ALoc, Type)>> =
-        Rc::new(move |t| {
-            reconstruct_cell
-                .borrow_mut()
-                .take()
-                .expect("class reconstruct called more than once")(t)
-        });
+    // Convert Box<dyn FnOnce(&Context, Type)> to Rc<dyn Fn(Type)> for node_cache storage.
+    // Thread cx through the cache boundary. The Rc<dyn Fn + 'cx> is valid because
+    // NodeCache<'cx> now carries the 'cx lifetime.
+    let reconstruct_cell: std::cell::Cell<
+        Option<Box<dyn FnOnce(&Context<'cx>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'cx>>,
+    > = std::cell::Cell::new(Some(reconstruct));
+    let reconstruct_fn: Rc<
+        dyn Fn(&Context<'cx>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'cx,
+    > = Rc::new(move |cx: &Context<'cx>, t| {
+        reconstruct_cell
+            .take()
+            .expect("class reconstruct called more than once")(cx, t)
+    });
     cache.set_class_sig(
         class_loc.dupe(),
         (
@@ -1868,8 +1877,8 @@ fn resolve_class(
     Ok(class_t)
 }
 
-fn resolve_record(
-    cx: &Context,
+fn resolve_record<'cx>(
+    cx: &Context<'cx>,
     id_loc: ALoc,
     reason: Reason,
     record_loc: ALoc,
@@ -1885,15 +1894,25 @@ fn resolve_record(
         reason,
         record,
     )?;
-    let record_t = sig_info.0.dupe();
-    let record_t_internal = sig_info.1.dupe();
-    cache.set_record_sig(record_loc.dupe(), sig_info);
+    let (record_t, record_t_internal, record_class_sig, record_reconstruct_fn) = sig_info;
+    let record_cache_fn: Rc<
+        dyn Fn(&Context<'cx>, Type) -> ast::statement::RecordDeclaration<ALoc, (ALoc, Type)> + 'cx,
+    > = Rc::new(move |cx: &Context<'cx>, t| record_reconstruct_fn(cx, t));
+    cache.set_record_sig(
+        record_loc.dupe(),
+        (
+            record_t.dupe(),
+            record_t_internal.dupe(),
+            record_class_sig,
+            record_cache_fn,
+        ),
+    );
     type_env::bind_class_self_type(cx, record_t_internal, record_loc);
     Ok(record_t)
 }
 
-fn resolve_op_assign(
-    cx: &Context,
+fn resolve_op_assign<'cx>(
+    cx: &Context<'cx>,
     exp_loc: ALoc,
     lhs: &ast::pattern::Pattern<ALoc, ALoc>,
     assertion: bool,
@@ -1969,14 +1988,14 @@ fn resolve_op_assign(
     }
 }
 
-fn resolve_update(cx: &Context, id_loc: ALoc, exp_loc: ALoc, id_reason: Reason) -> Type {
+fn resolve_update<'cx>(cx: &Context<'cx>, id_loc: ALoc, exp_loc: ALoc, id_reason: Reason) -> Type {
     let reason = reason::mk_reason(reason::VirtualReasonDesc::RUpdate, exp_loc);
     let id_t = type_env::ref_entry_exn(type_env::LookupMode::ForValue, cx, id_loc, id_reason);
     type_operation_utils::operators::unary_arith(cx, &reason, &type_::UnaryArithKind::Update, &id_t)
 }
 
-fn resolve_type_alias(
-    cx: &Context,
+fn resolve_type_alias<'cx>(
+    cx: &Context<'cx>,
     loc: ALoc,
     alias: &ast::statement::TypeAlias<ALoc, ALoc>,
 ) -> Type {
@@ -1986,8 +2005,8 @@ fn resolve_type_alias(
     t
 }
 
-fn resolve_opaque_type(
-    cx: &Context,
+fn resolve_opaque_type<'cx>(
+    cx: &Context<'cx>,
     loc: ALoc,
     opaque: &ast::statement::OpaqueType<ALoc, ALoc>,
 ) -> Type {
@@ -1997,8 +2016,8 @@ fn resolve_opaque_type(
     t
 }
 
-fn resolve_import(
-    cx: &Context,
+fn resolve_import<'cx>(
+    cx: &Context<'cx>,
     id_loc: ALoc,
     import_reason: Reason,
     import_kind: ast::statement::ImportKind,
@@ -2030,7 +2049,7 @@ fn resolve_import(
         } => {
             let import_kind = kind.unwrap_or(import_kind);
             let singleton_concretize =
-                |cx: &Context, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
+                |cx: &Context<'cx>, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
                     flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
                         .map_err(|e| e.into())
                 };
@@ -2072,7 +2091,7 @@ fn resolve_import(
         }
         Import::Default(local_name) => {
             let singleton_concretize =
-                |cx: &Context, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
+                |cx: &Context<'cx>, reason: Reason, t: Type| -> Result<Type, FlowJsException> {
                     flow_js::FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, &t)
                         .map_err(|e| e.into())
                 };
@@ -2095,8 +2114,8 @@ fn resolve_import(
     }
 }
 
-fn resolve_interface(
-    cx: &Context,
+fn resolve_interface<'cx>(
+    cx: &Context<'cx>,
     loc: ALoc,
     inter: &ast::statement::Interface<ALoc, ALoc>,
 ) -> Type {
@@ -2106,8 +2125,8 @@ fn resolve_interface(
     t
 }
 
-fn resolve_declare_class(
-    cx: &Context,
+fn resolve_declare_class<'cx>(
+    cx: &Context<'cx>,
     loc: ALoc,
     class_: &ast::statement::DeclareClass<ALoc, ALoc>,
 ) -> Type {
@@ -2117,8 +2136,8 @@ fn resolve_declare_class(
     t
 }
 
-fn resolve_declare_component(
-    cx: &Context,
+fn resolve_declare_component<'cx>(
+    cx: &Context<'cx>,
     loc: ALoc,
     component: &ast::statement::DeclareComponent<ALoc, ALoc>,
 ) -> Type {
@@ -2128,8 +2147,8 @@ fn resolve_declare_component(
     t
 }
 
-fn resolve_declare_namespace(
-    cx: &Context,
+fn resolve_declare_namespace<'cx>(
+    cx: &Context<'cx>,
     loc: ALoc,
     ns: &ast::statement::DeclareNamespace<ALoc, ALoc>,
 ) -> Type {
@@ -2139,8 +2158,8 @@ fn resolve_declare_namespace(
     t
 }
 
-fn resolve_enum(
-    cx: &Context,
+fn resolve_enum<'cx>(
+    cx: &Context<'cx>,
     id_loc: ALoc,
     enum_reason: Reason,
     enum_loc: ALoc,
@@ -2167,7 +2186,7 @@ fn resolve_enum(
     }
 }
 
-fn resolve_type_param(cx: &Context, id_loc: &ALoc) -> Type {
+fn resolve_type_param<'cx>(cx: &Context<'cx>, id_loc: &ALoc) -> Type {
     let env = cx.environment();
     let (_, _, t) = env.tparams.get_ordinary(id_loc).expect("tparam not found");
     let reason = type_util::reason_of_t(t).dupe();
@@ -2177,8 +2196,8 @@ fn resolve_type_param(cx: &Context, id_loc: &ALoc) -> Type {
     ))
 }
 
-fn resolve_chain_expression(
-    cx: &Context,
+fn resolve_chain_expression<'cx>(
+    cx: &Context<'cx>,
     cond: EnclosingContext,
     exp: &ast::expression::Expression<ALoc, ALoc>,
 ) -> Result<Type, AbnormalControlFlow> {
@@ -2188,16 +2207,16 @@ fn resolve_chain_expression(
     Ok(t)
 }
 
-fn resolve_write_expression(
-    cx: &Context,
+fn resolve_write_expression<'cx>(
+    cx: &Context<'cx>,
     cond: EnclosingContext,
     exp: &ast::expression::Expression<ALoc, ALoc>,
 ) -> Result<Type, AbnormalControlFlow> {
     synthesizable_expression(cx, cond, exp)
 }
 
-fn resolve_match_pattern(
-    cx: &Context,
+fn resolve_match_pattern<'cx>(
+    cx: &Context<'cx>,
     def_reason: Reason,
     case_match_root_loc: ALoc,
     has_guard: bool,
@@ -2217,8 +2236,8 @@ fn resolve_match_pattern(
     Ok(type_::mixed_t::why(def_reason))
 }
 
-fn resolve_generator_next(
-    cx: &Context,
+fn resolve_generator_next<'cx>(
+    cx: &Context<'cx>,
     reason: Reason,
     gen_info: Option<&name_def_types::GeneratorAnnot>,
 ) -> Type {
@@ -2247,7 +2266,7 @@ fn resolve_generator_next(
             } else {
                 "Generator"
             };
-            flow_typing_tvar::mk_where(cx, reason.dupe(), |next| {
+            flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, next| {
                 let yield_reason = reason
                     .dupe()
                     .replace_desc(reason::VirtualReasonDesc::RUnusedYield);
@@ -2272,8 +2291,8 @@ fn resolve_generator_next(
     }
 }
 
-fn resolve(
-    cx: &Context,
+fn resolve<'cx>(
+    cx: &Context<'cx>,
     def_kind: env_api::DefLocType,
     id_loc: ALoc,
     def: &Def,
@@ -2625,13 +2644,13 @@ fn entries_of_component(
     }
 }
 
-fn init_type_param(
-    cx: &Context,
+fn init_type_param<'cx>(
+    cx: &Context<'cx>,
     graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
     def_loc: ALoc,
 ) -> (SubstName, type_::TypeParam, Type) {
-    fn get_type_param(
-        cx: &Context,
+    fn get_type_param<'cx>(
+        cx: &Context<'cx>,
         graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
         l: ALoc,
     ) -> (SubstName, type_::TypeParam, Type) {
@@ -2645,8 +2664,8 @@ fn init_type_param(
         }
     }
 
-    fn mk_tparams_map_from_graph(
-        cx: &Context,
+    fn mk_tparams_map_from_graph<'cx>(
+        cx: &Context<'cx>,
         graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
         tparams_map: &FlowOrdMap<ALoc, FlowSmolStr>,
     ) -> FlowOrdMap<SubstName, Type> {
@@ -2709,8 +2728,8 @@ fn init_type_param(
     tparam_entry
 }
 
-fn resolve_component_type_params(
-    cx: &Context,
+fn resolve_component_type_params<'cx>(
+    cx: &Context<'cx>,
     graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
     component: &name_def_ordering::OrderingResult,
 ) {
@@ -2832,8 +2851,8 @@ fn resolve_component_type_params(
     }
 }
 
-pub fn resolve_component(
-    cx: &Context,
+pub fn resolve_component<'cx>(
+    cx: &Context<'cx>,
     graph: &EnvMap<ALoc, (Def, ScopeKind, name_def_types::ClassStack, Reason)>,
     component: &name_def_ordering::OrderingResult,
 ) {

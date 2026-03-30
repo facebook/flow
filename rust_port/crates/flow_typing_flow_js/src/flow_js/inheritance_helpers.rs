@@ -15,8 +15,8 @@ use super::*;
 // * inheritance utils *
 // *********************
 
-pub(super) fn flow_type_args(
-    cx: &Context,
+pub(super) fn flow_type_args<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     lreason: &Reason,
@@ -58,8 +58,8 @@ pub(super) fn flow_type_args(
     Ok(())
 }
 
-pub(super) fn inst_type_to_obj_type(
-    cx: &Context,
+pub(super) fn inst_type_to_obj_type<'cx>(
+    cx: &Context<'cx>,
     reason_struct: Reason,
     own_props_id: properties::Id,
     proto_props_id: properties::Id,
@@ -103,8 +103,8 @@ pub(super) fn inst_type_to_obj_type(
 // requirements given in the tuple. *)
 // TODO: own_props/proto_props is misleading, since they come from interfaces,
 // which don't have an own/proto distinction.
-pub(super) fn structural_subtype(
-    cx: &Context,
+pub(super) fn structural_subtype<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     lower: &Type,
@@ -162,8 +162,8 @@ pub(super) fn structural_subtype(
     Ok(())
 }
 
-pub(super) fn inst_structural_subtype(
-    cx: &Context,
+pub(super) fn inst_structural_subtype<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     lower: &Type,
@@ -401,8 +401,8 @@ pub(super) fn inst_structural_subtype(
     Ok(())
 }
 
-pub(super) fn check_super(
-    cx: &Context,
+pub(super) fn check_super<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     lreason: &Reason,

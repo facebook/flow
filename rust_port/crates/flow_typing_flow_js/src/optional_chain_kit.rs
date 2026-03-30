@@ -27,13 +27,13 @@ use crate::default_resolve;
 use crate::flow_js::FlowJs;
 use crate::speculation_kit;
 
-fn run_on_concretized(
-    cx: &Context,
+fn run_on_concretized<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     l: &Type,
     reason: &flow_common::reason::Reason,
     lhs_reason: &flow_common::reason::Reason,
-    upper: &UseT,
+    upper: &UseT<Context<'cx>>,
     voided_out_collector: &Option<TypeCollector>,
 ) -> Result<(), FlowJsException> {
     match l.deref() {
@@ -106,45 +106,44 @@ fn run_on_concretized(
             callee_recorder::add_callee_use(cx, callee_recorder::Kind::SigHelp, l.dupe(), &upper);
             let r_loc = r.loc().dupe();
             let upper_for_default = upper.dupe();
-            let default_resolve_fn: Box<dyn FnOnce() -> Result<(), FlowJsException>> = {
-                let cx_clone = cx.dupe();
+            let default_resolve_fn: Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>> = {
                 let r_loc_clone = r_loc.dupe();
                 let upper_clone = upper_for_default.dupe();
-                Box::new(move || {
+                Box::new(move |cx| {
                     let flow_fn = |t1: Type, t2: Type| {
-                        FlowJs::flow_t(&cx_clone, &t1, &t2)?;
+                        FlowJs::flow_t(cx, &t1, &t2)?;
                         Ok(())
                     };
                     default_resolve::default_resolve_touts(
                         &flow_fn,
                         None,
-                        &cx_clone,
+                        cx,
                         r_loc_clone,
                         &upper_clone,
                     )?;
                     Ok(())
                 })
             };
-            let cases: Vec<Box<dyn FnOnce() -> Result<(), FlowJsException>>> = rep
+            let cases: Vec<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>>> = rep
                 .members_iter()
                 .map(|t| {
-                    let cx_clone = cx.dupe();
                     let t = t.dupe();
                     let reason = reason.dupe();
                     let lhs_reason = lhs_reason.dupe();
                     let upper = upper.dupe();
                     let voided_out_collector_clone = voided_out_collector.clone();
-                    let f: Box<dyn FnOnce() -> Result<(), FlowJsException>> = Box::new(move || {
-                        run(
-                            &cx_clone,
-                            trace,
-                            &t,
-                            &reason,
-                            &lhs_reason,
-                            &upper,
-                            &voided_out_collector_clone,
-                        )
-                    });
+                    let f: Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>> =
+                        Box::new(move |cx| {
+                            run(
+                                cx,
+                                trace,
+                                &t,
+                                &reason,
+                                &lhs_reason,
+                                &upper,
+                                &voided_out_collector_clone,
+                            )
+                        });
                     f
                 })
                 .collect();
@@ -171,13 +170,13 @@ fn run_on_concretized(
     Ok(())
 }
 
-pub fn run(
-    cx: &Context,
+pub fn run<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     lhs: &Type,
     reason: &flow_common::reason::Reason,
     lhs_reason: &flow_common::reason::Reason,
-    upper: &UseT,
+    upper: &UseT<Context<'cx>>,
     voided_out_collector: &Option<TypeCollector>,
 ) -> Result<(), FlowJsException> {
     let concrete_types = FlowJs::possible_concrete_types_for_optional_chain(cx, lhs_reason, lhs)?;

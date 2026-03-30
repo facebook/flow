@@ -189,8 +189,8 @@ mod module_info {
     }
 }
 
-fn export_specifiers(
-    cx: &Context,
+fn export_specifiers<'a>(
+    cx: &Context<'a>,
     info: &mut module_info::ModuleInfo,
     loc: &ALoc,
     source: &Option<((ALoc, Type), ast::StringLiteral<ALoc>)>,
@@ -304,7 +304,7 @@ fn export_specifiers(
             let value = &source_lit.value;
             let module_type_opt =
                 match cx.find_require(&FlowImportSpecifier::userland(value.dupe())) {
-                    ResolvedRequire::TypedModule(f) => f().ok(),
+                    ResolvedRequire::TypedModule(f) => f(cx, cx).ok(),
                     _ => None,
                 };
             match export_kind {
@@ -319,8 +319,8 @@ fn export_specifiers(
     }
 }
 
-fn visit_toplevel_statement(
-    cx: &Context,
+fn visit_toplevel_statement<'a>(
+    cx: &Context<'a>,
     info: &mut module_info::ModuleInfo,
     in_declare_namespace: bool,
     stmt: &ast::statement::Statement<ALoc, (ALoc, Type)>,
@@ -916,13 +916,13 @@ fn module_exports_sig_loc(info: &module_info::ModuleInfo) -> Option<ALoc> {
 //
 // Finally, both CJS and ES modules can export types, which also has a star
 // export variant. Conflicts are handled in the same way.
-fn mk_module_type(
-    cx: &Context,
+fn mk_module_type<'a>(
+    cx: &Context<'a>,
     info: &module_info::ModuleInfo,
     self_reason: Reason,
     exports_reason: Reason,
 ) -> ModuleType {
-    fn mk_esm_module_type(cx: &Context, module_reason: Reason) -> ModuleType {
+    fn mk_esm_module_type<'a>(cx: &Context<'a>, module_reason: Reason) -> ModuleType {
         ModuleType::new(ModuleTypeInner {
             module_reason,
             module_export_types: ExportTypes {
@@ -943,8 +943,8 @@ fn mk_module_type(
     // (2) If the type is an object, mark it's properties as named exports, via
     //     CJSExtractNamedExportsT. (this is for convenience as part of our
     //     ES <-> CJS module interop semantics)
-    fn mk_commonjs_module_t(
-        cx: &Context,
+    fn mk_commonjs_module_t<'a>(
+        cx: &Context<'a>,
         reason_exports_module: Reason,
         reason: Reason,
         cjs_exports_state: &module_info::CjsExportsState,
@@ -995,24 +995,23 @@ fn mk_module_type(
             module_available_platforms: cx.available_platforms().cloned(),
         });
         let reason2 = reason.dupe();
+        let concretize = |t: Type| {
+            flow_js::FlowJs::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
+                cx, &reason2, &t,
+            )
+            .expect("Should not be under speculation")
+        };
         flow_js_utils::cjs_extract_named_exports_t_kit::on_type(
             cx,
-            |t: Type| {
-                flow_js::FlowJs::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
-                    cx,
-                    &reason2,
-                    &t,
-                )
-                .expect("Should not be under speculation")
-            },
+            &concretize,
             reason,
             local_module,
             export_t,
         )
     }
 
-    fn copy_star_exports(
-        cx: &Context,
+    fn copy_star_exports<'a>(
+        cx: &Context<'a>,
         reason: Reason,
         value_star: &[(ALoc, Option<ModuleType>)],
         type_star: &[(ALoc, Option<ModuleType>)],
@@ -1040,7 +1039,7 @@ fn mk_module_type(
                 Some(src_module_type) => {
                     flow_js_utils::copy_type_exports_t_kit::mod_module_t(
                         cx,
-                        |cx_inner: &Context, r: Reason, t: Type| -> Type {
+                        |cx_inner, r: Reason, t: Type| -> Type {
                             flow_js::FlowJs::singleton_concrete_type_for_cjs_extract_named_exports_and_type_exports(
                                 cx_inner,
                                 &r,
@@ -1106,8 +1105,8 @@ fn mk_module_type(
     }
 }
 
-fn mk_namespace_t(
-    cx: &Context,
+fn mk_namespace_t<'a>(
+    cx: &Context<'a>,
     info: &module_info::ModuleInfo,
     namespace_symbol: Symbol,
     reason: Reason,
@@ -1141,8 +1140,8 @@ fn mk_namespace_t(
     )
 }
 
-pub fn analyze_program(
-    cx: &Context,
+pub fn analyze_program<'a>(
+    cx: &Context<'a>,
     program: &ast::Program<ALoc, (ALoc, Type)>,
 ) -> (ALoc, ModuleType) {
     let prog_aloc = &program.loc;
@@ -1168,8 +1167,8 @@ pub fn analyze_program(
     (module_sig_loc, module_t)
 }
 
-pub fn analyze_declare_namespace(
-    cx: &Context,
+pub fn analyze_declare_namespace<'a>(
+    cx: &Context<'a>,
     namespace_symbol: Symbol,
     reason: Reason,
     statements: &[ast::statement::Statement<ALoc, (ALoc, Type)>],

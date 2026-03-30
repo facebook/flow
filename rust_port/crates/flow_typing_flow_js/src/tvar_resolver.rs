@@ -37,21 +37,22 @@ pub fn default_no_lowers(r: &Reason) -> Type {
     empty_t::make(r.dupe().replace_desc(desc))
 }
 
-struct Resolver<F>
+struct Resolver<'a, 'cx, F>
 where
     F: Fn(&Reason) -> Type,
 {
     no_lowers: F,
     filter_empty: bool,
+    cx: &'a Context<'cx>,
 }
 
 type Acc = (BTreeMap<i32, bool>, bool);
 
-impl<F> TypeVisitor<Acc> for Resolver<F>
+impl<F> TypeVisitor<Acc> for Resolver<'_, '_, F>
 where
     F: Fn(&Reason) -> Type,
 {
-    fn type_(&mut self, cx: &Context, pole: Polarity, seen: Acc, t: &Type) -> Acc {
+    fn type_<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, seen: Acc, t: &Type) -> Acc {
         match t.deref() {
             TypeInner::AnyT(_, AnySource::Placeholder) => {
                 let (seen_tvars, _) = seen;
@@ -61,9 +62,19 @@ where
         }
     }
 
-    fn tvar(&mut self, cx: &Context, pole: Polarity, seen: Acc, r: &Reason, id: u32) -> Acc {
+    fn tvar<'cx>(
+        &mut self,
+        cx: &Context<'cx>,
+        pole: Polarity,
+        seen: Acc,
+        r: &Reason,
+        id: u32,
+    ) -> Acc {
+        // Use self.cx (which has &Context<'a>) for operations that
+        // require the tied lifetime, like merge_tvar_opt.
+        let tied_cx = self.cx;
         let id = id as i32;
-        let (root_id, root) = cx.find_root(id);
+        let (root_id, root) = tied_cx.find_root(id);
         match &root.constraints {
             Constraints::FullyResolved(_) => seen,
             Constraints::Unresolved(_) | Constraints::Resolved(_) => {
@@ -80,7 +91,7 @@ where
                 seen_tvars.insert(root_id, false);
                 let t = {
                     match flow_js_utils::merge_tvar_opt(
-                        cx,
+                        tied_cx,
                         self.filter_empty,
                         UnionKind::ResolvedKind,
                         r,
@@ -100,7 +111,7 @@ where
                         Constraints::FullyResolved(ForcingState::of_non_lazy_t(t))
                     }
                 };
-                cx.set_root_constraints(root_id, constraints);
+                tied_cx.set_root_constraints(root_id, constraints);
                 (seen_tvars, seen_placeholders || seen_placeholders_in_t)
             }
         }
@@ -114,12 +125,14 @@ where
 /// In Rust we can't use exceptions, so we do a non-mutating pre-check instead.
 /// This prevents `resolved_t` from permanently mutating tvars to `FullyResolved(EmptyT)`
 /// when the result will be discarded anyway (DecompositionError).
-struct UnconstrainedChecker;
+struct UnconstrainedChecker<'a, 'cx> {
+    cx: &'a Context<'cx>,
+}
 
-impl TypeVisitor<(BTreeMap<i32, ()>, bool)> for UnconstrainedChecker {
-    fn type_(
+impl TypeVisitor<(BTreeMap<i32, ()>, bool)> for UnconstrainedChecker<'_, '_> {
+    fn type_<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         seen: (BTreeMap<i32, ()>, bool),
         t: &Type,
@@ -130,9 +143,9 @@ impl TypeVisitor<(BTreeMap<i32, ()>, bool)> for UnconstrainedChecker {
         type_visitor::type_default(self, cx, pole, seen, t)
     }
 
-    fn tvar(
+    fn tvar<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         seen: (BTreeMap<i32, ()>, bool),
         r: &Reason,
@@ -141,8 +154,9 @@ impl TypeVisitor<(BTreeMap<i32, ()>, bool)> for UnconstrainedChecker {
         if seen.1 {
             return seen;
         }
+        let tied_cx = self.cx;
         let id = id as i32;
-        let (root_id, root) = cx.find_root(id);
+        let (root_id, root) = tied_cx.find_root(id);
         match &root.constraints {
             Constraints::FullyResolved(_) => seen,
             Constraints::Unresolved(_) | Constraints::Resolved(_) => {
@@ -151,8 +165,13 @@ impl TypeVisitor<(BTreeMap<i32, ()>, bool)> for UnconstrainedChecker {
                     return (seen_tvars, false);
                 }
                 seen_tvars.insert(root_id, ());
-                match flow_js_utils::merge_tvar_opt(cx, false, UnionKind::ResolvedKind, r, root_id)
-                {
+                match flow_js_utils::merge_tvar_opt(
+                    tied_cx,
+                    false,
+                    UnionKind::ResolvedKind,
+                    r,
+                    root_id,
+                ) {
                     Some(t) => self.type_(cx, pole, (seen_tvars, false), &t),
                     None => (seen_tvars, true),
                 }
@@ -161,8 +180,8 @@ impl TypeVisitor<(BTreeMap<i32, ()>, bool)> for UnconstrainedChecker {
     }
 }
 
-pub fn has_unconstrained_tvars(cx: &Context, t: &Type) -> bool {
-    let mut checker = UnconstrainedChecker;
+pub fn has_unconstrained_tvars<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
+    let mut checker = UnconstrainedChecker { cx };
     let (_, found) = checker.type_(cx, Polarity::Positive, (BTreeMap::new(), false), t);
     found
 }
@@ -172,16 +191,17 @@ pub fn has_unconstrained_tvars(cx: &Context, t: &Type) -> bool {
 /// raises `UnconstrainedTvarException` for non-exempt tvars (e.g., tvars whose reason
 /// is `RInferredUnionElemArray { is_empty = true }` are exempt and silently resolved
 /// to empty).
-struct UnconstrainedCheckerExcept<F: Fn(&Reason) -> bool> {
+struct UnconstrainedCheckerExcept<'a, 'cx, F: Fn(&Reason) -> bool> {
     exempt: F,
+    cx: &'a Context<'cx>,
 }
 
 impl<F: Fn(&Reason) -> bool> TypeVisitor<(BTreeMap<i32, ()>, bool)>
-    for UnconstrainedCheckerExcept<F>
+    for UnconstrainedCheckerExcept<'_, '_, F>
 {
-    fn type_(
+    fn type_<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         seen: (BTreeMap<i32, ()>, bool),
         t: &Type,
@@ -192,9 +212,9 @@ impl<F: Fn(&Reason) -> bool> TypeVisitor<(BTreeMap<i32, ()>, bool)>
         type_visitor::type_default(self, cx, pole, seen, t)
     }
 
-    fn tvar(
+    fn tvar<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         seen: (BTreeMap<i32, ()>, bool),
         r: &Reason,
@@ -203,8 +223,9 @@ impl<F: Fn(&Reason) -> bool> TypeVisitor<(BTreeMap<i32, ()>, bool)>
         if seen.1 {
             return seen;
         }
+        let tied_cx = self.cx;
         let id = id as i32;
-        let (root_id, root) = cx.find_root(id);
+        let (root_id, root) = tied_cx.find_root(id);
         match &root.constraints {
             Constraints::FullyResolved(_) => seen,
             Constraints::Unresolved(_) | Constraints::Resolved(_) => {
@@ -213,8 +234,13 @@ impl<F: Fn(&Reason) -> bool> TypeVisitor<(BTreeMap<i32, ()>, bool)>
                     return (seen_tvars, false);
                 }
                 seen_tvars.insert(root_id, ());
-                match flow_js_utils::merge_tvar_opt(cx, false, UnionKind::ResolvedKind, r, root_id)
-                {
+                match flow_js_utils::merge_tvar_opt(
+                    tied_cx,
+                    false,
+                    UnionKind::ResolvedKind,
+                    r,
+                    root_id,
+                ) {
                     Some(t) => self.type_(cx, pole, (seen_tvars, false), &t),
                     None => {
                         if (self.exempt)(r) {
@@ -229,28 +255,29 @@ impl<F: Fn(&Reason) -> bool> TypeVisitor<(BTreeMap<i32, ()>, bool)>
     }
 }
 
-pub fn has_unconstrained_tvars_except(
-    cx: &Context,
+pub fn has_unconstrained_tvars_except<'cx>(
+    cx: &Context<'cx>,
     t: &Type,
     exempt: impl Fn(&Reason) -> bool,
 ) -> bool {
-    let mut checker = UnconstrainedCheckerExcept { exempt };
+    let mut checker = UnconstrainedCheckerExcept { exempt, cx };
     let (_, found) = checker.type_(cx, Polarity::Positive, (BTreeMap::new(), false), t);
     found
 }
 
-pub fn resolve<F>(cx: &Context, no_lowers: F, filter_empty: bool, t: &Type)
+pub fn resolve<'cx, F>(cx: &Context<'cx>, no_lowers: F, filter_empty: bool, t: &Type)
 where
     F: Fn(&Reason) -> Type,
 {
     let mut resolver = Resolver {
         no_lowers,
         filter_empty,
+        cx,
     };
     resolver.type_(cx, Polarity::Positive, (BTreeMap::new(), false), t);
 }
 
-pub fn resolved_t<F>(no_lowers: F, filter_empty: bool, cx: &Context, t: Type) -> Type
+pub fn resolved_t<'cx, F>(no_lowers: F, filter_empty: bool, cx: &Context<'cx>, t: Type) -> Type
 where
     F: Fn(&Reason) -> Type,
 {
@@ -258,38 +285,42 @@ where
     t
 }
 
-pub fn mk_tvar_and_fully_resolve_where<F>(cx: &Context, reason: Reason, f: F) -> Type
+pub fn mk_tvar_and_fully_resolve_where<'cx, F>(cx: &Context<'cx>, reason: Reason, f: F) -> Type
 where
-    F: FnOnce(&Type),
+    F: FnOnce(&Context<'cx>, &Type),
 {
     let tvar = flow_typing_tvar::mk_where(cx, reason, f);
     resolve(cx, default_no_lowers, true, &tvar);
     tvar
 }
 
-pub fn mk_tvar_and_fully_resolve_where_result<E>(
-    cx: &Context,
+pub fn mk_tvar_and_fully_resolve_where_result<'cx, E>(
+    cx: &Context<'cx>,
     reason: Reason,
-    f: impl FnOnce(&Type) -> Result<(), E>,
+    f: impl FnOnce(&Context<'cx>, &Type) -> Result<(), E>,
 ) -> Result<Type, E> {
     let tvar = flow_typing_tvar::mk_where_result(cx, reason, f)?;
     resolve(cx, default_no_lowers, true, &tvar);
     Ok(tvar)
 }
 
-pub fn mk_tvar_and_fully_resolve_no_wrap_where<F>(cx: &Context, reason: Reason, f: F) -> Type
+pub fn mk_tvar_and_fully_resolve_no_wrap_where<'cx, F>(
+    cx: &Context<'cx>,
+    reason: Reason,
+    f: F,
+) -> Type
 where
-    F: FnOnce(&Reason, i32),
+    F: FnOnce(&Context<'cx>, &Reason, i32),
 {
     let tvar = flow_typing_tvar::mk_no_wrap_where(cx, reason, f);
     resolve(cx, default_no_lowers, true, &tvar);
     tvar
 }
 
-pub fn mk_tvar_and_fully_resolve_no_wrap_where_result<E>(
-    cx: &Context,
+pub fn mk_tvar_and_fully_resolve_no_wrap_where_result<'cx, E>(
+    cx: &Context<'cx>,
     reason: Reason,
-    f: impl FnOnce(&Reason, i32) -> Result<(), E>,
+    f: impl FnOnce(&Context<'cx>, &Reason, i32) -> Result<(), E>,
 ) -> Result<Type, E> {
     let tvar = flow_typing_tvar::mk_no_wrap_where_result(cx, reason, f)?;
     resolve(cx, default_no_lowers, true, &tvar);

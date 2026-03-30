@@ -31,9 +31,9 @@ pub struct SearchResult {
     pub remote_locs: Vec<Loc>,
 }
 
-pub fn search(
+pub fn search<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context,
+    cx: &Context<'cx>,
     file_sig: &Arc<FileSig>,
     ast: &ast::Program<Loc, Loc>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,

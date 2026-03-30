@@ -78,7 +78,7 @@ fn json_of_type_t_kind(kind: &TypeTKind) -> Json {
 }
 
 // Convert funtype to JSON
-fn funtype_to_json(cx: &Context, depth: i32, funtype: &FunType) -> Json {
+fn funtype_to_json<'cx>(cx: &Context<'cx>, depth: i32, funtype: &FunType) -> Json {
     let (this_t_type, this_status) = &funtype.this_t;
     let this_status_json = match this_status {
         ThisStatus::ThisMethod { unbound } => {
@@ -156,7 +156,7 @@ fn funtype_to_json(cx: &Context, depth: i32, funtype: &FunType) -> Json {
 }
 
 // Forward declarations for recursive types
-pub fn type_to_json(cx: &Context, depth: i32, t: &Type) -> Json {
+pub fn type_to_json<'cx>(cx: &Context<'cx>, depth: i32, t: &Type) -> Json {
     if depth < 0 {
         return Json::String("<recursion>".to_string());
     }
@@ -402,8 +402,8 @@ pub fn type_to_json(cx: &Context, depth: i32, t: &Type) -> Json {
 }
 
 // Convert typeparams to JSON
-fn json_of_typeparams(
-    cx: &Context,
+fn json_of_typeparams<'cx>(
+    cx: &Context<'cx>,
     depth: i32,
     tparams: &[flow_typing_type::type_::TypeParam],
 ) -> Json {
@@ -427,7 +427,7 @@ fn json_of_typeparams(
 }
 
 // Convert enum_info to JSON
-fn json_of_enum_info(cx: &Context, depth: i32, enum_info: &EnumInfoInner) -> Json {
+fn json_of_enum_info<'cx>(cx: &Context<'cx>, depth: i32, enum_info: &EnumInfoInner) -> Json {
     match enum_info {
         EnumInfoInner::ConcreteEnum(enum_concrete_info) => {
             let members_json = Json::Array(
@@ -456,8 +456,8 @@ fn json_of_enum_info(cx: &Context, depth: i32, enum_info: &EnumInfoInner) -> Jso
 }
 
 // Convert canonical_renders_form to JSON
-fn json_of_canonical_renders_form(
-    cx: &Context,
+fn json_of_canonical_renders_form<'cx>(
+    cx: &Context<'cx>,
     depth: i32,
     renders: &CanonicalRendersForm,
 ) -> Json {
@@ -499,7 +499,7 @@ fn json_of_canonical_renders_form(
 }
 
 // Convert instance_t to JSON
-fn json_of_instance_t(cx: &Context, depth: i32, instance_t: &InstanceT) -> Json {
+fn json_of_instance_t<'cx>(cx: &Context<'cx>, depth: i32, instance_t: &InstanceT) -> Json {
     json!({
         "inst": json_of_insttype(cx, depth, &instance_t.inst),
         "static": type_to_json(cx, depth - 1, &instance_t.static_),
@@ -510,7 +510,7 @@ fn json_of_instance_t(cx: &Context, depth: i32, instance_t: &InstanceT) -> Json 
     })
 }
 
-fn json_of_insttype(cx: &Context, depth: i32, inst: &InstType) -> Json {
+fn json_of_insttype<'cx>(cx: &Context<'cx>, depth: i32, inst: &InstType) -> Json {
     let class_name_json = match &inst.class_name {
         None => Json::Null,
         Some(name) => Json::String(name.to_string()),
@@ -548,7 +548,7 @@ fn json_of_insttype(cx: &Context, depth: i32, inst: &InstType) -> Json {
 }
 
 // Convert def_t to JSON
-fn def_t_to_json(cx: &Context, depth: i32, def_t: &DefT) -> Json {
+fn def_t_to_json<'cx>(cx: &Context<'cx>, depth: i32, def_t: &DefT) -> Json {
     match def_t.deref() {
         DefTInner::NumGeneralT(_) => json_with_type("NumGeneral", vec![]),
         DefTInner::StrGeneralT(_) => json_with_type("StrGeneral", vec![]),
@@ -710,7 +710,7 @@ fn def_t_to_json(cx: &Context, depth: i32, def_t: &DefT) -> Json {
 }
 
 // Convert obj_kind to JSON
-fn json_of_obj_kind(cx: &Context, depth: i32, obj_kind: &ObjKind) -> Json {
+fn json_of_obj_kind<'cx>(cx: &Context<'cx>, depth: i32, obj_kind: &ObjKind) -> Json {
     match obj_kind {
         ObjKind::Exact => json!({"kind": "Exact"}),
         ObjKind::Inexact => json!({"kind": "Inexact"}),
@@ -721,7 +721,7 @@ fn json_of_obj_kind(cx: &Context, depth: i32, obj_kind: &ObjKind) -> Json {
 }
 
 // Convert dicttype to JSON
-fn json_of_dicttype(cx: &Context, depth: i32, dicttype: &DictType) -> Json {
+fn json_of_dicttype<'cx>(cx: &Context<'cx>, depth: i32, dicttype: &DictType) -> Json {
     let dict_name_json = match &dicttype.dict_name {
         None => Json::Null,
         Some(name) => Json::String(name.to_string()),
@@ -735,7 +735,7 @@ fn json_of_dicttype(cx: &Context, depth: i32, dicttype: &DictType) -> Json {
 }
 
 // Convert arrtype to JSON
-fn arrtype_to_json(cx: &Context, depth: i32, arrtype: &ArrType) -> Json {
+fn arrtype_to_json<'cx>(cx: &Context<'cx>, depth: i32, arrtype: &ArrType) -> Json {
     match arrtype {
         ArrType::ArrayAT {
             react_dro: _,
@@ -767,7 +767,7 @@ fn arrtype_to_json(cx: &Context, depth: i32, arrtype: &ArrType) -> Json {
 }
 
 // Convert tuple_element to JSON
-fn json_of_tuple_element(cx: &Context, depth: i32, element: &TupleElement) -> Json {
+fn json_of_tuple_element<'cx>(cx: &Context<'cx>, depth: i32, element: &TupleElement) -> Json {
     let TupleElement {
         reason: _,
         name,
@@ -788,12 +788,12 @@ fn json_of_tuple_element(cx: &Context, depth: i32, element: &TupleElement) -> Js
 }
 
 // Convert flags to JSON
-fn json_of_flags(cx: &Context, depth: i32, flags: &Flags) -> Json {
+fn json_of_flags<'cx>(cx: &Context<'cx>, depth: i32, flags: &Flags) -> Json {
     json!({"obj_kind": json_of_obj_kind(cx, depth, &flags.obj_kind)})
 }
 
 // Convert property to JSON
-fn json_of_property(cx: &Context, depth: i32, property: &Property) -> Json {
+fn json_of_property<'cx>(cx: &Context<'cx>, depth: i32, property: &Property) -> Json {
     match &**property {
         PropertyInner::Field {
             preferred_def_locs: _,
@@ -831,14 +831,18 @@ fn json_of_property(cx: &Context, depth: i32, property: &Property) -> Json {
 }
 
 // Convert property map to JSON
-fn json_of_property_map(cx: &Context, depth: i32, props_id: &properties::Id) -> Json {
+fn json_of_property_map<'cx>(cx: &Context<'cx>, depth: i32, props_id: &properties::Id) -> Json {
     match cx.find_props_opt(props_id.clone()) {
         Some(props) => json_of_property_map_value(cx, depth, &props),
         None => json!({"error": "Property map not found"}),
     }
 }
 
-fn json_of_property_map_value(cx: &Context, depth: i32, props: &properties::PropertiesMap) -> Json {
+fn json_of_property_map_value<'cx>(
+    cx: &Context<'cx>,
+    depth: i32,
+    props: &properties::PropertiesMap,
+) -> Json {
     let props_json: serde_json::Map<String, Json> = props
         .iter()
         .map(|(name, prop)| (name.as_str().to_string(), json_of_property(cx, depth, prop)))
@@ -847,7 +851,7 @@ fn json_of_property_map_value(cx: &Context, depth: i32, props: &properties::Prop
 }
 
 // Convert objtype to JSON
-fn objtype_to_json(cx: &Context, depth: i32, objtype: &ObjType) -> Json {
+fn objtype_to_json<'cx>(cx: &Context<'cx>, depth: i32, objtype: &ObjType) -> Json {
     let call_t_json = match objtype.call_t {
         None => Json::Null,
         Some(id) => json!(id),
@@ -860,7 +864,7 @@ fn objtype_to_json(cx: &Context, depth: i32, objtype: &ObjType) -> Json {
     })
 }
 
-fn json_of_destructor(cx: &Context, depth: i32, destructor: &Destructor) -> Json {
+fn json_of_destructor<'cx>(cx: &Context<'cx>, depth: i32, destructor: &Destructor) -> Json {
     match destructor {
         Destructor::NonMaybeType => json!({"kind": "NonMaybeType"}),
         Destructor::PropertyType { name } => {
@@ -1052,7 +1056,7 @@ fn json_of_destructor(cx: &Context, depth: i32, destructor: &Destructor) -> Json
     }
 }
 
-fn json_of_slice(cx: &Context, depth: i32, slice: &object::spread::OperandSlice) -> Json {
+fn json_of_slice<'cx>(cx: &Context<'cx>, depth: i32, slice: &object::spread::OperandSlice) -> Json {
     let dict_json = match &slice.dict {
         None => Json::Null,
         Some(dict) => json_of_dicttype(cx, depth, dict),
@@ -1099,8 +1103,8 @@ fn json_of_slice(cx: &Context, depth: i32, slice: &object::spread::OperandSlice)
     )
 }
 
-fn json_of_property_map_from_btreemap(
-    cx: &Context,
+fn json_of_property_map_from_btreemap<'cx>(
+    cx: &Context<'cx>,
     depth: i32,
     props: &flow_data_structure_wrapper::ord_map::FlowOrdMap<Name, Property>,
 ) -> Json {

@@ -85,7 +85,7 @@ impl Context for TestCx {
     }
 }
 
-fn autocomplete_hooks() -> AutocompleteHooks<ALoc> {
+fn autocomplete_hooks() -> AutocompleteHooks<'static, ALoc> {
     AutocompleteHooks {
         id_hook: Box::new(|_, _| false),
         literal_hook: Box::new(|_| false),

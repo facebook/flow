@@ -22,32 +22,33 @@ use linked_hash_map::LinkedHashMap;
 ///
 /// We keep track of a reference count, so we can forget about a cached
 /// component context once every file referencing it has been removed.
-struct CachedCcx {
+struct CachedCcx<'cx> {
     leader: FileKey,
-    ccx: Rc<ComponentT>,
+    ccx: Rc<ComponentT<'cx>>,
     refcount: Cell<usize>,
 }
 
 /// Each cached file holds a reference to its associated cached component
 /// context so that we can decrement its reference count.
-struct CachedFile {
-    file: type_sig_merge::File,
-    cached_ccx: Rc<CachedCcx>,
+struct CachedFile<'cx> {
+    file: type_sig_merge::File<'cx>,
+    cx: flow_typing_context::Context<'cx>,
+    cached_ccx: Rc<CachedCcx<'cx>>,
 }
 
-pub struct CheckCache {
+pub struct CheckCache<'cx> {
     // This data structure contains a hash table for O(1) lookup as well
     // as a doubly linked list, which we use to keep track of recency of use. When
     // a file is created or accessed, we move it to the front of the list. When we
     // exceed the capacity of the cache, entries at the back of the list are
     // dropped.
-    files: LinkedHashMap<FileKey, CachedFile>,
-    ccxs: HashMap<FileKey, Rc<CachedCcx>>,
+    files: LinkedHashMap<FileKey, CachedFile<'cx>>,
+    ccxs: HashMap<FileKey, Rc<CachedCcx<'cx>>>,
     size: usize,
     capacity: usize,
 }
 
-impl CheckCache {
+impl<'cx> CheckCache<'cx> {
     pub fn create(capacity: usize) -> Self {
         let files = LinkedHashMap::new();
         let ccxs = HashMap::new();
@@ -62,7 +63,7 @@ impl CheckCache {
     /// When a file is dropped from the cache, we decrement the refcount on its
     /// cached component context. Once no more files reference a given component
     /// context, we remove it from the cache.
-    fn release_ccx(&mut self, cached_ccx: &Rc<CachedCcx>) {
+    fn release_ccx(&mut self, cached_ccx: &Rc<CachedCcx<'cx>>) {
         let refcount = cached_ccx.refcount.get();
         if refcount == 1 {
             self.ccxs.remove(&cached_ccx.leader);
@@ -76,17 +77,24 @@ impl CheckCache {
     fn drop_least_recently_used(&mut self) {
         match self.files.pop_front() {
             None => {}
-            Some((_, CachedFile { file, cached_ccx })) => {
+            Some((
+                _,
+                CachedFile {
+                    file,
+                    cx,
+                    cached_ccx,
+                },
+            )) => {
                 if cached_ccx.refcount.get() == 1 {
                     // This is the last file using this component context.
                     // Use full cleanup to also break ForcingState cycles in
-                    // the shared graph: ForcingState closure → cx → ComponentT → graph → cycle
-                    file.cx().post_inference_cleanup();
+                    // the shared graph: ForcingState closure -> cx -> ComponentT -> graph -> cycle
+                    cx.post_inference_cleanup();
                 } else {
                     // Other files still share this component context.
                     // Only break per-file Rc cycles; shared component data
                     // is still needed by sibling files in the cache.
-                    file.cx().post_inference_cleanup_per_file();
+                    cx.post_inference_cleanup_per_file();
                 }
                 file.drop_closures();
                 self.release_ccx(&cached_ccx);
@@ -98,7 +106,7 @@ impl CheckCache {
     /// Files in a cycle share the same component context, so if we are creating a
     /// file in a cycle with an already cached file, its component context will
     /// also be cached.
-    fn find_or_create_ccx(&mut self, leader: FileKey) -> Rc<CachedCcx> {
+    fn find_or_create_ccx(&mut self, leader: FileKey) -> Rc<CachedCcx<'cx>> {
         match self.ccxs.get(&leader) {
             Some(cached_ccx) => {
                 cached_ccx.refcount.set(cached_ccx.refcount.get() + 1);
@@ -123,14 +131,17 @@ impl CheckCache {
     pub fn find_or_create(
         &mut self,
         leader: impl FnOnce() -> FileKey,
-        create_file: impl FnOnce(Rc<ComponentT>) -> type_sig_merge::File,
+        create_file: impl FnOnce(
+            Rc<ComponentT<'cx>>,
+        )
+            -> (type_sig_merge::File<'cx>, flow_typing_context::Context<'cx>),
         file_key: FileKey,
-    ) -> type_sig_merge::File {
+    ) -> (type_sig_merge::File<'cx>, flow_typing_context::Context<'cx>) {
         match self.files.get_refresh(&file_key) {
-            Some(CachedFile { file, .. }) => file.dupe(),
+            Some(CachedFile { file, cx, .. }) => (file.dupe(), cx.dupe()),
             None => {
                 let cached_ccx = self.find_or_create_ccx(leader());
-                let file = create_file(cached_ccx.ccx.dupe());
+                let (file, cx) = create_file(cached_ccx.ccx.dupe());
                 if self.size == self.capacity {
                     self.drop_least_recently_used();
                 }
@@ -138,11 +149,12 @@ impl CheckCache {
                     file_key,
                     CachedFile {
                         file: file.dupe(),
+                        cx: cx.dupe(),
                         cached_ccx,
                     },
                 );
                 self.size += 1;
-                file
+                (file, cx)
             }
         }
     }
@@ -161,13 +173,13 @@ impl CheckCache {
     /// closure fields that capture Arc<SharedMem> and Rc<CheckCache>.
     pub fn cleanup_all_files(&mut self) {
         for (_, cached_file) in self.files.iter() {
-            cached_file.file.cx().post_inference_cleanup();
+            cached_file.cx.post_inference_cleanup();
             cached_file.file.drop_closures();
         }
     }
 }
 
-impl Drop for CheckCache {
+impl Drop for CheckCache<'_> {
     fn drop(&mut self) {
         self.cleanup_all_files();
     }

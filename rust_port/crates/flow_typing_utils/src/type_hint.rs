@@ -95,38 +95,29 @@ use vec1::Vec1;
 use crate::speculation_flow;
 use crate::type_env;
 
-pub type ConcrArgListFn = Rc<dyn Fn(Option<ALoc>) -> Vec<(ALoc, CallArg)>>;
+pub type ConcrArgListFn = Rc<dyn for<'cx> Fn(&Context<'cx>, Option<ALoc>) -> Vec<(ALoc, CallArg)>>;
 
-pub type ConcrHint =
-    Hint<Type, Option<Vec<Targ>>, ConcrArgListFn, Rc<LazyCell<Type, Box<dyn Fn() -> Type>>>>;
+pub type ConcrJsxProps<'cx> =
+    Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>;
 
-pub type ConcrHintDecomposition = HintDecomposition<
+pub type ConcrHint<'cx> = Hint<'cx, Type, Option<Vec<Targ>>, ConcrArgListFn, ConcrJsxProps<'cx>>;
+
+pub type ConcrHintDecomposition<'cx> =
+    HintDecomposition<'cx, Type, Option<Vec<Targ>>, ConcrArgListFn, ConcrJsxProps<'cx>>;
+
+pub type ConcrHintDecompositionInner<'cx> =
+    HintDecompositionInner<'cx, Type, Option<Vec<Targ>>, ConcrArgListFn, ConcrJsxProps<'cx>>;
+
+pub type ConcrFunCallHints<'cx> = FunCallImplicitInstantiationHints<
+    'cx,
     Type,
     Option<Vec<Targ>>,
     ConcrArgListFn,
-    Rc<LazyCell<Type, Box<dyn Fn() -> Type>>>,
+    ConcrJsxProps<'cx>,
 >;
 
-pub type ConcrHintDecompositionInner = HintDecompositionInner<
-    Type,
-    Option<Vec<Targ>>,
-    ConcrArgListFn,
-    Rc<LazyCell<Type, Box<dyn Fn() -> Type>>>,
->;
-
-pub type ConcrFunCallHints = FunCallImplicitInstantiationHints<
-    Type,
-    Option<Vec<Targ>>,
-    ConcrArgListFn,
-    Rc<LazyCell<Type, Box<dyn Fn() -> Type>>>,
->;
-
-pub type ConcrJsxHints = JsxImplicitInstantiationHints<
-    Type,
-    Option<Vec<Targ>>,
-    ConcrArgListFn,
-    Rc<LazyCell<Type, Box<dyn Fn() -> Type>>>,
->;
+pub type ConcrJsxHints<'cx> =
+    JsxImplicitInstantiationHints<'cx, Type, Option<Vec<Targ>>, ConcrArgListFn, ConcrJsxProps<'cx>>;
 
 pub fn with_hint_result<A>(
     ok: impl FnOnce(Type) -> A,
@@ -187,8 +178,8 @@ struct HintOptions {
     skip_optional: bool,
 }
 
-fn in_sandbox_cx(
-    cx: &Context,
+fn in_sandbox_cx<'cx>(
+    cx: &Context<'cx>,
     t: &Type,
     f: impl FnOnce(Type) -> Result<Type, SandboxError>,
 ) -> Option<Type> {
@@ -249,8 +240,8 @@ fn in_sandbox_cx(
     })
 }
 
-fn synthesis_speculation_call(
-    cx: &Context,
+fn synthesis_speculation_call<'cx>(
+    cx: &Context<'cx>,
     call_reason: &Reason,
     reason: &Reason,
     rep: &inter_rep::InterRep,
@@ -297,8 +288,8 @@ fn synthesis_speculation_call(
     }
 }
 
-fn simplify_callee(
-    cx: &Context,
+fn simplify_callee<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     use_op: UseOp,
     func_t: &Type,
@@ -309,7 +300,7 @@ fn simplify_callee(
     Ok(flow_typing_tvar::mk_no_wrap_where_result(
         cx,
         reason.dupe(),
-        move |r, id| {
+        move |cx, r, id| {
             let call_action =
                 Box::new(CallAction::ConcretizeCallee(Tvar::new(r.dupe(), id as u32)));
             let use_t = UseT::new(UseTInner::CallT {
@@ -326,8 +317,8 @@ fn simplify_callee(
 
 // A cheaper version of `instantiate_poly_with_targs` from flow_js_utils that only performs
 // substitution and skips any validation.
-fn synthesis_instantiate_callee(
-    cx: &Context,
+fn synthesis_instantiate_callee<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     tparams: &[TypeParam],
     tout: &Type,
@@ -352,8 +343,8 @@ fn synthesis_instantiate_callee(
     flow_js::subst(cx, None, None, None, &map, tout.dupe())
 }
 
-fn get_t(cx: &Context, t: Type) -> Type {
-    fn get_t_with_depth(cx: &Context, mut depth: i32, mut t: Type) -> Type {
+fn get_t<'cx>(cx: &Context<'cx>, t: Type) -> Type {
+    fn get_t_with_depth<'cx>(cx: &Context<'cx>, mut depth: i32, mut t: Type) -> Type {
         loop {
             match t.deref() {
                 TypeInner::AnnotT(_, inner_t, _) if depth >= 0 => {
@@ -383,12 +374,12 @@ fn get_t(cx: &Context, t: Type) -> Type {
     get_t_with_depth(cx, 3, t)
 }
 
-fn instantiate_callee(
-    cx: &Context,
+fn instantiate_callee<'cx>(
+    cx: &Context<'cx>,
     opts: &HintOptions,
     target_reason: &Reason,
     fn_t: &Type,
-    instantiation_hint: &ConcrFunCallHints,
+    instantiation_hint: &ConcrFunCallHints<'cx>,
 ) -> Result<Type, SandboxError> {
     let reason = &instantiation_hint.reason;
     let targs = &instantiation_hint.targs;
@@ -396,14 +387,16 @@ fn instantiate_callee(
     let return_hints = &instantiation_hint.return_hints;
     let arg_index = instantiation_hint.arg_index;
 
-    fn handle_poly(
-        cx: &Context,
+    fn handle_poly<'cx>(
+        cx: &Context<'cx>,
         opts: &HintOptions,
         target_reason: &Reason,
         reason: &Reason,
-        targs: &Rc<LazyCell<Option<Vec<Targ>>, Box<dyn Fn() -> Option<Vec<Targ>>>>>,
-        arg_list: &Rc<LazyCell<ConcrArgListFn, Box<dyn Fn() -> ConcrArgListFn>>>,
-        return_hints: &Rc<LazyCell<Vec<ConcrHint>, Box<dyn Fn() -> Vec<ConcrHint>>>>,
+        targs: &Rc<LazyCell<Option<Vec<Targ>>, Box<dyn Fn() -> Option<Vec<Targ>> + 'cx>>>,
+        arg_list: &Rc<LazyCell<ConcrArgListFn, Box<dyn Fn() -> ConcrArgListFn + 'cx>>>,
+        return_hints: &Rc<
+            LazyCell<Vec<ConcrHint<'cx>>, Box<dyn Fn() -> Vec<ConcrHint<'cx>> + 'cx>>,
+        >,
         arg_index: i32,
         t: &Type,
     ) -> Result<Type, SandboxError> {
@@ -535,7 +528,7 @@ fn instantiate_callee(
                                     };
                                     let arg_list_fn: &ConcrArgListFn = arg_list.deref();
                                     let target_loc = Some(target_reason.loc().dupe());
-                                    let args = arg_list_fn(target_loc);
+                                    let args = arg_list_fn(cx, target_loc);
                                     args.iter()
                                         .enumerate()
                                         .map(|(i, (loc, call_arg))| {
@@ -626,7 +619,7 @@ fn instantiate_callee(
                 let targs_val: &Option<Vec<Targ>> = targs.deref();
                 let arg_list_fn: &ConcrArgListFn = arg_list.deref();
                 let target_loc = Some(target_reason.loc().dupe());
-                let args_val = arg_list_fn(target_loc);
+                let args_val = arg_list_fn(cx, target_loc);
                 let argts: Vec<CallArg> = args_val.iter().map(|(_, arg)| arg.clone()).collect();
                 synthesis_speculation_call(cx, reason, r, rep, targs_val.clone(), argts)?
             }
@@ -657,11 +650,11 @@ fn instantiate_callee(
     }
 }
 
-fn instantiate_component(
-    cx: &Context,
+fn instantiate_component<'cx>(
+    cx: &Context<'cx>,
     opts: &HintOptions,
     component: &Type,
-    instantiation_hint: &ConcrJsxHints,
+    instantiation_hint: &ConcrJsxHints<'cx>,
 ) -> Result<Type, SandboxError> {
     // match get_t cx component with
     let component_resolved = get_t(cx, component.dupe());
@@ -679,7 +672,7 @@ fn instantiate_component(
                 let jsx_hints = &instantiation_hint.jsx_hints;
 
                 let return_hint = {
-                    let hints_val: &Vec<ConcrHint> = jsx_hints;
+                    let hints_val: &Vec<ConcrHint<'cx>> = jsx_hints;
                     match evaluate_hints_inner(cx, opts, reason, hints_val.clone()) {
                         HintEvalResult::HintAvailable(t, k) => Some((t, k)),
                         _ => None,
@@ -698,7 +691,7 @@ fn instantiate_component(
                         unknown_use(),
                         reason.dupe(),
                         component.dupe(),
-                        LazyCell::force(jsx_props_and_children.deref()).dupe(),
+                        jsx_props_and_children.get_forced(cx).dupe(),
                         jsx_targs_val.as_ref().map(|v| Rc::from(v.as_slice())),
                         false,
                     )
@@ -758,15 +751,15 @@ fn instantiate_component(
     }
 }
 
-fn type_of_hint_decomposition(
-    cx: &Context,
+fn type_of_hint_decomposition<'cx>(
+    cx: &Context<'cx>,
     opts: &HintOptions,
-    op: &ConcrHintDecompositionInner,
+    op: &ConcrHintDecompositionInner<'cx>,
     reason: &Reason,
     t: &Type,
 ) -> Option<Type> {
     let make_fun_t = |reason: &Reason,
-                      cx: &Context,
+                      cx: &Context<'cx>,
                       params: Vec<FunParam>,
                       rest_param: Option<FunRestParam>,
                       return_t: Type,
@@ -935,7 +928,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_no_wrap_where_result(
                     cx,
                     reason.dupe(),
-                    move |r, id| {
+                    move |cx, r, id| {
                         let tout = Tvar::new(r.dupe(), id as u32);
                         let use_t = UseT::new(UseTInner::GetElemT {
                             use_op: unknown_use(),
@@ -962,7 +955,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_no_wrap_where_result(
                     cx,
                     reason.dupe(),
-                    move |r, id| {
+                    move |cx, r, id| {
                         let tout = Tvar::new(r.dupe(), id as u32);
                         let use_t = UseT::new(UseTInner::ArrRestT(
                             unknown_use(),
@@ -1013,7 +1006,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_where_result(
                     cx,
                     reason.dupe(),
-                    move |tout| -> Result<(), SandboxError> {
+                    move |cx, tout| -> Result<(), SandboxError> {
                         flow_js::flow_t(cx, (&t, tout))?;
                         let promise_t = FlowJs::get_builtin_typeapp(
                             cx,
@@ -1038,8 +1031,10 @@ fn type_of_hint_decomposition(
                 let get_this_t = |t: &Type| -> Result<Type, SandboxError> {
                     let t = t.dupe();
                     let reason2 = reason.dupe();
-                    let tvar_result =
-                        flow_typing_tvar::mk_where_result(cx, reason.dupe(), move |t_prime| {
+                    let tvar_result = flow_typing_tvar::mk_where_result(
+                        cx,
+                        reason.dupe(),
+                        move |cx, t_prime| {
                             let class_t = Type::new(TypeInner::DefT(
                                 reason2.dupe(),
                                 DefT::new(DefTInner::ClassT(t_prime.dupe())),
@@ -1050,7 +1045,8 @@ fn type_of_hint_decomposition(
                                 (&t, &class_t),
                             )?;
                             Ok::<(), FlowJsException>(())
-                        })?;
+                        },
+                    )?;
                     Ok(get_t(cx, tvar_result))
                 };
                 let this_t = match get_t(cx, t.dupe()).deref() {
@@ -1092,7 +1088,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_where_result(
                     cx,
                     reason.dupe(),
-                    move |param_t| {
+                    move |cx, param_t| {
                         let params: Vec<FunParam> = xs
                             .iter()
                             .enumerate()
@@ -1132,7 +1128,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_where_result(
                     cx,
                     reason.dupe(),
-                    move |rest_t| {
+                    move |cx, rest_t| {
                         let params: Vec<FunParam> = xs
                             .iter()
                             .map(|x| {
@@ -1180,7 +1176,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_where_result(
                     cx,
                     reason.dupe(),
-                    move |return_t| {
+                    move |cx, return_t| {
                         let fun_type =
                             make_fun_t(&reason2, cx, vec![], rest_param, return_t.dupe(), &None);
                         speculation_flow::resolved_lower_flow_t_unsafe(
@@ -1204,7 +1200,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_no_wrap_where_result(
                     cx,
                     reason.dupe(),
-                    move |r, id| {
+                    move |cx, r, id| {
                         let props_t = Tvar::new(r.dupe(), id as u32);
                         let use_t = UseT::new(UseTInner::ReactKitT(
                             unknown_use(),
@@ -1246,20 +1242,23 @@ fn type_of_hint_decomposition(
                 let t2 = t.dupe();
                 let reason2 = reason.dupe();
                 let name2 = name.dupe();
-                let result = flow_typing_tvar::mk_where_result(cx, reason.dupe(), move |prop_t| {
-                    let use_t =
-                        UseT::new(UseTInner::PrivateMethodT(Box::new(PrivateMethodTData {
-                            use_op: unknown_use(),
-                            reason: reason2.dupe(),
-                            prop_reason: reason2.dupe(),
-                            name: name2,
-                            class_bindings: class_entries.into(),
-                            static_: false,
-                            method_action: Box::new(MethodAction::NoMethodAction(prop_t.dupe())),
-                        })));
-                    speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t2, &use_t))?;
-                    Ok::<(), FlowJsException>(())
-                });
+                let result =
+                    flow_typing_tvar::mk_where_result(cx, reason.dupe(), move |cx, prop_t| {
+                        let use_t =
+                            UseT::new(UseTInner::PrivateMethodT(Box::new(PrivateMethodTData {
+                                use_op: unknown_use(),
+                                reason: reason2.dupe(),
+                                prop_reason: reason2.dupe(),
+                                name: name2,
+                                class_bindings: class_entries.into(),
+                                static_: false,
+                                method_action: Box::new(MethodAction::NoMethodAction(
+                                    prop_t.dupe(),
+                                )),
+                            })));
+                        speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t2, &use_t))?;
+                        Ok::<(), FlowJsException>(())
+                    });
                 let mut env = cx.environment_mut();
                 env.class_stack = old_stack;
                 Ok(result?)
@@ -1272,7 +1271,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_no_wrap_where_result(
                     cx,
                     reason.dupe(),
-                    move |r, id| {
+                    move |cx, r, id| {
                         let tout = Tvar::new(r.dupe(), id as u32);
                         let use_t = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
                             use_op: unknown_use(),
@@ -1301,7 +1300,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_no_wrap_where_result(
                     cx,
                     comp_reason.dupe(),
-                    move |r, id| {
+                    move |cx, r, id| {
                         let tout = Tvar::new(r.dupe(), id as u32);
                         let use_t = UseT::new(UseTInner::GetElemT {
                             use_op: unknown_use(),
@@ -1328,7 +1327,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_no_wrap_where_result(
                     cx,
                     reason.dupe(),
-                    move |r, id| {
+                    move |cx, r, id| {
                         let tout = Tvar::new(r.dupe(), id as u32);
                         let use_t = UseT::new(UseTInner::ObjRestT(
                             reason2.dupe(),
@@ -1350,8 +1349,10 @@ fn type_of_hint_decomposition(
                 let t2 = t.dupe();
                 let reason2 = reason.dupe();
                 let name2 = name.dupe();
-                let result =
-                    flow_typing_tvar::mk_no_wrap_where_result(cx, reason.dupe(), move |r, id| {
+                let result = flow_typing_tvar::mk_no_wrap_where_result(
+                    cx,
+                    reason.dupe(),
+                    move |cx, r, id| {
                         let prop_t = Tvar::new(r.dupe(), id as u32);
                         let use_t =
                             UseT::new(UseTInner::GetPrivatePropT(Box::new(GetPrivatePropTData {
@@ -1364,7 +1365,8 @@ fn type_of_hint_decomposition(
                             })));
                         speculation_flow::resolved_lower_flow_unsafe(cx, &reason2, (&t2, &use_t))?;
                         Ok::<(), FlowJsException>(())
-                    });
+                    },
+                );
                 let mut env = cx.environment_mut();
                 env.class_stack = old_stack;
                 Ok(result?)
@@ -1453,7 +1455,7 @@ fn type_of_hint_decomposition(
                                 Ok(tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                                     cx,
                                     reason.dupe(),
-                                    move |r, id| {
+                                    move |cx, r, id| {
                                         let tout = Tvar::new(r.dupe(), id as u32);
                                         crate::predicate_kit::run_predicate_for_filtering(
                                             cx, &t, &predicate, &tout,
@@ -1495,7 +1497,7 @@ fn type_of_hint_decomposition(
                 Ok(flow_typing_tvar::mk_where_result(
                     cx,
                     reason.dupe(),
-                    move |inner_t| {
+                    move |cx, inner_t| {
                         let promise_t = FlowJs::get_builtin_typeapp(
                             cx,
                             &reason2,
@@ -1521,7 +1523,7 @@ fn type_of_hint_decomposition(
     })
 }
 
-fn fully_resolve_final_result(cx: &Context, t: Type, kind: HintKind) -> HintEvalResult {
+fn fully_resolve_final_result<'cx>(cx: &Context<'cx>, t: Type, kind: HintKind) -> HintEvalResult {
     if flow_js_utils::tvar_visitors::has_placeholders(cx, &t) {
         flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
             vec![format!(
@@ -1544,20 +1546,20 @@ fn fully_resolve_final_result(cx: &Context, t: Type, kind: HintKind) -> HintEval
     }
 }
 
-fn evaluate_hint_ops(
-    cx: &Context,
+fn evaluate_hint_ops<'cx>(
+    cx: &Context<'cx>,
     opts: &HintOptions,
     reason: &Reason,
     t: Type,
     kind: HintKind,
-    ops: Vec<(usize, ConcrHintDecomposition)>,
+    ops: Vec<(usize, ConcrHintDecomposition<'cx>)>,
 ) -> HintEvalResult {
-    fn loop_ops(
-        cx: &Context,
+    fn loop_ops<'cx>(
+        cx: &Context<'cx>,
         opts: &HintOptions,
         reason: &Reason,
         mut t: Type,
-        ops: &[(usize, ConcrHintDecomposition)],
+        ops: &[(usize, ConcrHintDecomposition<'cx>)],
     ) -> Option<Type> {
         for (id, op) in ops {
             let result = match cx.hint_eval_cache_find_opt(*id as i32) {
@@ -1586,11 +1588,11 @@ fn evaluate_hint_ops(
     }
 }
 
-fn evaluate_hint_inner(
-    cx: &Context,
+fn evaluate_hint_inner<'cx>(
+    cx: &Context<'cx>,
     opts: &HintOptions,
     reason: &Reason,
-    hint: ConcrHint,
+    hint: ConcrHint<'cx>,
 ) -> HintEvalResult {
     if opts.expected_only {
         match &hint {
@@ -1618,11 +1620,11 @@ fn evaluate_hint_inner(
     }
 }
 
-fn evaluate_hints_inner(
-    cx: &Context,
+fn evaluate_hints_inner<'cx>(
+    cx: &Context<'cx>,
     opts: &HintOptions,
     reason: &Reason,
-    hints: Vec<ConcrHint>,
+    hints: Vec<ConcrHint<'cx>>,
 ) -> HintEvalResult {
     let mut result = HintEvalResult::NoHint;
     for hint in hints {
@@ -1639,12 +1641,12 @@ fn evaluate_hints_inner(
     result
 }
 
-pub fn evaluate_hint(
-    cx: &Context,
+pub fn evaluate_hint<'cx>(
+    cx: &Context<'cx>,
     expected_only: bool,
     skip_optional: Option<bool>,
     reason: &Reason,
-    hint: ConcrHint,
+    hint: ConcrHint<'cx>,
 ) -> HintEvalResult {
     let opts = HintOptions {
         expected_only,
@@ -1653,12 +1655,12 @@ pub fn evaluate_hint(
     evaluate_hint_inner(cx, &opts, reason, hint)
 }
 
-pub fn evaluate_hints(
-    cx: &Context,
+pub fn evaluate_hints<'cx>(
+    cx: &Context<'cx>,
     expected_only: bool,
     skip_optional: Option<bool>,
     reason: &Reason,
-    hints: Vec<ConcrHint>,
+    hints: Vec<ConcrHint<'cx>>,
 ) -> HintEvalResult {
     let opts = HintOptions {
         expected_only,

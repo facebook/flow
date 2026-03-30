@@ -546,15 +546,16 @@ pub enum HintEvalResult {
     DecompositionError,
 }
 
-pub type LazyHintCompute = Rc<
+pub type LazyHintCompute<CX = ()> = Rc<
     dyn Fn(
+        /* cx */ &CX,
         /* expected_only */ bool,
         /* skip_optional */ Option<bool>,
         /* reason */ Reason,
     ) -> HintEvalResult,
 >;
 
-impl std::fmt::Debug for LazyHintT {
+impl<CX> std::fmt::Debug for LazyHintT<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_tuple("LazyHintT")
             .field(&self.0)
@@ -563,24 +564,29 @@ impl std::fmt::Debug for LazyHintT {
     }
 }
 
-#[derive(Clone)]
-pub struct LazyHintT(pub bool, pub LazyHintCompute);
+pub struct LazyHintT<CX = ()>(pub bool, pub LazyHintCompute<CX>);
 
-impl PartialEq for LazyHintT {
+impl<CX> Clone for LazyHintT<CX> {
+    fn clone(&self) -> Self {
+        LazyHintT(self.0, self.1.clone())
+    }
+}
+
+impl<CX> PartialEq for LazyHintT<CX> {
     fn eq(&self, other: &Self) -> bool {
         self.0 == other.0 && Rc::ptr_eq(&self.1, &other.1)
     }
 }
 
-impl Eq for LazyHintT {}
+impl<CX> Eq for LazyHintT<CX> {}
 
-impl PartialOrd for LazyHintT {
+impl<CX> PartialOrd for LazyHintT<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for LazyHintT {
+impl<CX> Ord for LazyHintT<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         match self.0.cmp(&other.0) {
             std::cmp::Ordering::Equal => {
@@ -593,7 +599,7 @@ impl Ord for LazyHintT {
     }
 }
 
-impl std::hash::Hash for LazyHintT {
+impl<CX> std::hash::Hash for LazyHintT<CX> {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.0.hash(state);
         let ptr = Rc::as_ptr(&self.1) as *const () as usize;
@@ -1031,15 +1037,87 @@ pub type RootUseOp = VirtualRootUseOp<ALoc>;
 
 pub type FrameUseOp = VirtualFrameUseOp<ALoc>;
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct PrivateMethodTData {
+pub struct PrivateMethodTData<CX = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub prop_reason: Reason,
     pub name: FlowSmolStr,
     pub class_bindings: Rc<[ClassBinding]>,
     pub static_: bool,
-    pub method_action: Box<MethodAction>,
+    pub method_action: Box<MethodAction<CX>>,
+}
+
+impl<CX> Clone for PrivateMethodTData<CX> {
+    fn clone(&self) -> Self {
+        PrivateMethodTData {
+            use_op: self.use_op.clone(),
+            reason: self.reason.clone(),
+            prop_reason: self.prop_reason.clone(),
+            name: self.name.clone(),
+            class_bindings: self.class_bindings.clone(),
+            static_: self.static_,
+            method_action: self.method_action.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for PrivateMethodTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op
+            && self.reason == other.reason
+            && self.prop_reason == other.prop_reason
+            && self.name == other.name
+            && self.class_bindings == other.class_bindings
+            && self.static_ == other.static_
+            && self.method_action == other.method_action
+    }
+}
+
+impl<CX> Eq for PrivateMethodTData<CX> {}
+
+impl<CX> std::hash::Hash for PrivateMethodTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.reason.hash(state);
+        self.prop_reason.hash(state);
+        self.name.hash(state);
+        self.class_bindings.hash(state);
+        self.static_.hash(state);
+        self.method_action.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for PrivateMethodTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for PrivateMethodTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.reason.cmp(&other.reason))
+            .then_with(|| self.prop_reason.cmp(&other.prop_reason))
+            .then_with(|| self.name.cmp(&other.name))
+            .then_with(|| self.class_bindings.cmp(&other.class_bindings))
+            .then_with(|| self.static_.cmp(&other.static_))
+            .then_with(|| self.method_action.cmp(&other.method_action))
+    }
+}
+
+impl<CX> std::fmt::Debug for PrivateMethodTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("PrivateMethodTData")
+            .field("use_op", &self.use_op)
+            .field("reason", &self.reason)
+            .field("prop_reason", &self.prop_reason)
+            .field("name", &self.name)
+            .field("class_bindings", &self.class_bindings)
+            .field("static_", &self.static_)
+            .field("method_action", &self.method_action)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1055,8 +1133,7 @@ pub struct SetPrivatePropTData {
     pub tout: Option<Type>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct GetPropTData {
+pub struct GetPropTData<CX = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub id: Option<i32>,
@@ -1064,7 +1141,85 @@ pub struct GetPropTData {
     pub skip_optional: bool,
     pub propref: Box<PropRef>,
     pub tout: Box<Tvar>,
-    pub hint: LazyHintT,
+    pub hint: LazyHintT<CX>,
+}
+
+impl<CX> Clone for GetPropTData<CX> {
+    fn clone(&self) -> Self {
+        GetPropTData {
+            use_op: self.use_op.clone(),
+            reason: self.reason.clone(),
+            id: self.id,
+            from_annot: self.from_annot,
+            skip_optional: self.skip_optional,
+            propref: self.propref.clone(),
+            tout: self.tout.clone(),
+            hint: self.hint.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for GetPropTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op
+            && self.reason == other.reason
+            && self.id == other.id
+            && self.from_annot == other.from_annot
+            && self.skip_optional == other.skip_optional
+            && self.propref == other.propref
+            && self.tout == other.tout
+            && self.hint == other.hint
+    }
+}
+
+impl<CX> Eq for GetPropTData<CX> {}
+
+impl<CX> std::hash::Hash for GetPropTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.reason.hash(state);
+        self.id.hash(state);
+        self.from_annot.hash(state);
+        self.skip_optional.hash(state);
+        self.propref.hash(state);
+        self.tout.hash(state);
+        self.hint.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for GetPropTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for GetPropTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.reason.cmp(&other.reason))
+            .then_with(|| self.id.cmp(&other.id))
+            .then_with(|| self.from_annot.cmp(&other.from_annot))
+            .then_with(|| self.skip_optional.cmp(&other.skip_optional))
+            .then_with(|| self.propref.cmp(&other.propref))
+            .then_with(|| self.tout.cmp(&other.tout))
+            .then_with(|| self.hint.cmp(&other.hint))
+    }
+}
+
+impl<CX> std::fmt::Debug for GetPropTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("GetPropTData")
+            .field("use_op", &self.use_op)
+            .field("reason", &self.reason)
+            .field("id", &self.id)
+            .field("from_annot", &self.from_annot)
+            .field("skip_optional", &self.skip_optional)
+            .field("propref", &self.propref)
+            .field("tout", &self.tout)
+            .field("hint", &self.hint)
+            .finish()
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1077,19 +1232,90 @@ pub struct GetPrivatePropTData {
     pub tout: Box<Tvar>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub struct ConstructorTData {
+pub struct ConstructorTData<CX = ()> {
     pub use_op: UseOp,
     pub reason: Reason,
     pub targs: Option<Rc<[Targ]>>,
     pub args: Rc<[CallArg]>,
     pub tout: Type,
-    pub return_hint: LazyHintT,
+    pub return_hint: LazyHintT<CX>,
     pub specialized_ctor: Option<SpecializedCallee>,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum UseTInner {
+impl<CX> Clone for ConstructorTData<CX> {
+    fn clone(&self) -> Self {
+        ConstructorTData {
+            use_op: self.use_op.clone(),
+            reason: self.reason.clone(),
+            targs: self.targs.clone(),
+            args: self.args.clone(),
+            tout: self.tout.clone(),
+            return_hint: self.return_hint.clone(),
+            specialized_ctor: self.specialized_ctor.clone(),
+        }
+    }
+}
+
+impl<CX> PartialEq for ConstructorTData<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        self.use_op == other.use_op
+            && self.reason == other.reason
+            && self.targs == other.targs
+            && self.args == other.args
+            && self.tout == other.tout
+            && self.return_hint == other.return_hint
+            && self.specialized_ctor == other.specialized_ctor
+    }
+}
+
+impl<CX> Eq for ConstructorTData<CX> {}
+
+impl<CX> std::hash::Hash for ConstructorTData<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.use_op.hash(state);
+        self.reason.hash(state);
+        self.targs.hash(state);
+        self.args.hash(state);
+        self.tout.hash(state);
+        self.return_hint.hash(state);
+        self.specialized_ctor.hash(state);
+    }
+}
+
+impl<CX> PartialOrd for ConstructorTData<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for ConstructorTData<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        self.use_op
+            .cmp(&other.use_op)
+            .then_with(|| self.reason.cmp(&other.reason))
+            .then_with(|| self.targs.cmp(&other.targs))
+            .then_with(|| self.args.cmp(&other.args))
+            .then_with(|| self.tout.cmp(&other.tout))
+            .then_with(|| self.return_hint.cmp(&other.return_hint))
+            .then_with(|| self.specialized_ctor.cmp(&other.specialized_ctor))
+    }
+}
+
+impl<CX> std::fmt::Debug for ConstructorTData<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("ConstructorTData")
+            .field("use_op", &self.use_op)
+            .field("reason", &self.reason)
+            .field("targs", &self.targs)
+            .field("args", &self.args)
+            .field("tout", &self.tout)
+            .field("return_hint", &self.return_hint)
+            .field("specialized_ctor", &self.specialized_ctor)
+            .finish()
+    }
+}
+
+pub enum UseTInner<CX = ()> {
     /// Use a definition type as an upper bound
     UseT(UseOp, Type),
 
@@ -1099,7 +1325,7 @@ pub enum UseTInner {
         use_op: UseOp,
         reason: Reason,
         call_action: Box<CallAction>,
-        return_hint: LazyHintT,
+        return_hint: LazyHintT<CX>,
     },
     ConditionalT {
         use_op: UseOp,
@@ -1111,8 +1337,8 @@ pub enum UseTInner {
         false_t: Type,
         tout: Box<Tvar>,
     },
-    MethodT(UseOp, Reason, Reason, Box<PropRef>, Box<MethodAction>),
-    PrivateMethodT(Box<PrivateMethodTData>),
+    MethodT(UseOp, Reason, Reason, Box<PropRef>, Box<MethodAction<CX>>),
+    PrivateMethodT(Box<PrivateMethodTData<CX>>),
     SetPropT(
         UseOp,
         Reason,
@@ -1129,7 +1355,7 @@ pub enum UseTInner {
         prop_ref: (Reason, Name),
         tout: Box<Tvar>,
     },
-    GetPropT(Box<GetPropTData>),
+    GetPropT(Box<GetPropTData<CX>>),
     GetPrivatePropT(Box<GetPrivatePropTData>),
     TestPropT {
         use_op: UseOp,
@@ -1137,7 +1363,7 @@ pub enum UseTInner {
         id: i32,
         propref: Box<PropRef>,
         tout: Box<Tvar>,
-        hint: LazyHintT,
+        hint: LazyHintT<CX>,
     },
     SetElemT(UseOp, Reason, Type, SetMode, Type, Option<Type>),
     GetElemT {
@@ -1150,7 +1376,7 @@ pub enum UseTInner {
         key_t: Type,
         tout: Box<Tvar>,
     },
-    CallElemT(UseOp, Reason, Reason, Type, Box<MethodAction>),
+    CallElemT(UseOp, Reason, Reason, Type, Box<MethodAction<CX>>),
     GetStaticsT(Box<Tvar>),
     GetProtoT(Reason, Box<Tvar>),
     SetProtoT(Reason, Type),
@@ -1159,24 +1385,24 @@ pub enum UseTInner {
     ReposLowerT {
         reason: Reason,
         use_desc: bool,
-        use_t: Box<UseT>,
+        use_t: Box<UseT<CX>>,
     },
     ReposUseT(Reason, bool, UseOp, Type),
 
     // Operations on runtime types
-    ConstructorT(Box<ConstructorTData>),
+    ConstructorT(Box<ConstructorTData<CX>>),
     SuperT(UseOp, Reason, DerivedType),
     ImplementsT(UseOp, Type),
     MixinT(Reason, Type),
     ToStringT {
         orig_t: Option<Type>,
         reason: Reason,
-        t_out: Box<UseT>,
+        t_out: Box<UseT<CX>>,
     },
 
     // Operation on polymorphic types
     SpecializeT(UseOp, Reason, Reason, Option<Rc<[Type]>>, Type),
-    ThisSpecializeT(Reason, Type, Box<Cont>),
+    ThisSpecializeT(Reason, Type, Box<Cont<CX>>),
     ValueToTypeReferenceT(UseOp, Reason, TypeTKind, Box<Tvar>),
     ConcretizeTypeAppsT(
         UseOp,
@@ -1202,15 +1428,15 @@ pub enum UseTInner {
     ObjTestProtoT(Reason, Type),
     ObjTestT(Reason, Type, Type),
     ArrRestT(UseOp, Reason, i32, Type),
-    GetKeysT(Reason, Box<UseT>),
+    GetKeysT(Reason, Box<UseT<CX>>),
     HasOwnPropT(UseOp, Reason, Type),
     GetValuesT(Reason, Type),
-    GetDictValuesT(Reason, Box<UseT>),
+    GetDictValuesT(Reason, Box<UseT<CX>>),
     ElemT {
         use_op: UseOp,
         reason: Reason,
         obj: Type,
-        action: Box<ElemAction>,
+        action: Box<ElemAction<CX>>,
     },
     MapTypeT(UseOp, Reason, TypeMap, Type),
     ObjKitT(
@@ -1220,7 +1446,7 @@ pub enum UseTInner {
         Box<object::Tool>,
         Type,
     ),
-    ReactKitT(UseOp, Reason, Box<react::Tool>),
+    ReactKitT(UseOp, Reason, Box<react::Tool<CX>>),
 
     // Tools for preprocessing types
     ConcretizeT {
@@ -1237,7 +1463,7 @@ pub enum UseTInner {
         reason: Reason,
         unresolved: Rc<[Type]>,
         resolved: Rc<[Type]>,
-        upper: Box<UseT>,
+        upper: Box<UseT<CX>>,
         id: i32,
     },
     TypeCastT(UseOp, Type),
@@ -1267,7 +1493,7 @@ pub enum UseTInner {
         id: flow_typing_generics::GenericId,
         name: SubstName,
         no_infer: bool,
-        cont: Cont,
+        cont: Cont<CX>,
     },
     OptionalIndexedAccessT {
         use_op: UseOp,
@@ -1288,7 +1514,7 @@ pub enum UseTInner {
     ConvertEmptyPropsToMixedT(Reason, Type),
     ExitRendersT {
         renders_reason: Reason,
-        u: Box<UseT>,
+        u: Box<UseT<CX>>,
     },
     EvalTypeDestructorT {
         destructor_use_op: UseOp,
@@ -1299,30 +1525,2354 @@ pub enum UseTInner {
     },
 }
 
-#[derive(Clone, Dupe)]
-pub struct UseT(Rc<UseTInner>);
-
-impl Hash for UseT {
-    fn hash<H: Hasher>(&self, state: &mut H) {
-        self.0.hash(state);
+impl<CX> Clone for UseTInner<CX> {
+    fn clone(&self) -> Self {
+        match self {
+            UseTInner::UseT(a, b) => UseTInner::UseT(a.clone(), b.clone()),
+            UseTInner::BindT(a, b, c) => UseTInner::BindT(a.clone(), b.clone(), c.clone()),
+            UseTInner::CallT {
+                use_op,
+                reason,
+                call_action,
+                return_hint,
+            } => UseTInner::CallT {
+                use_op: use_op.clone(),
+                reason: reason.clone(),
+                call_action: call_action.clone(),
+                return_hint: return_hint.clone(),
+            },
+            UseTInner::ConditionalT {
+                use_op,
+                reason,
+                distributive_tparam_name,
+                infer_tparams,
+                extends_t,
+                true_t,
+                false_t,
+                tout,
+            } => UseTInner::ConditionalT {
+                use_op: use_op.clone(),
+                reason: reason.clone(),
+                distributive_tparam_name: distributive_tparam_name.clone(),
+                infer_tparams: infer_tparams.clone(),
+                extends_t: extends_t.clone(),
+                true_t: true_t.clone(),
+                false_t: false_t.clone(),
+                tout: tout.clone(),
+            },
+            UseTInner::MethodT(a, b, c, d, e) => {
+                UseTInner::MethodT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
+            }
+            UseTInner::PrivateMethodT(a) => UseTInner::PrivateMethodT(a.clone()),
+            UseTInner::SetPropT(a, b, c, d, e, f, g) => UseTInner::SetPropT(
+                a.clone(),
+                b.clone(),
+                c.clone(),
+                d.clone(),
+                e.clone(),
+                f.clone(),
+                g.clone(),
+            ),
+            UseTInner::SetPrivatePropT(a) => UseTInner::SetPrivatePropT(a.clone()),
+            UseTInner::GetTypeFromNamespaceT {
+                use_op,
+                reason,
+                prop_ref,
+                tout,
+            } => UseTInner::GetTypeFromNamespaceT {
+                use_op: use_op.clone(),
+                reason: reason.clone(),
+                prop_ref: prop_ref.clone(),
+                tout: tout.clone(),
+            },
+            UseTInner::GetPropT(a) => UseTInner::GetPropT(a.clone()),
+            UseTInner::GetPrivatePropT(a) => UseTInner::GetPrivatePropT(a.clone()),
+            UseTInner::TestPropT {
+                use_op,
+                reason,
+                id,
+                propref,
+                tout,
+                hint,
+            } => UseTInner::TestPropT {
+                use_op: use_op.clone(),
+                reason: reason.clone(),
+                id: *id,
+                propref: propref.clone(),
+                tout: tout.clone(),
+                hint: hint.clone(),
+            },
+            UseTInner::SetElemT(a, b, c, d, e, f) => UseTInner::SetElemT(
+                a.clone(),
+                b.clone(),
+                c.clone(),
+                d.clone(),
+                e.clone(),
+                f.clone(),
+            ),
+            UseTInner::GetElemT {
+                use_op,
+                reason,
+                id,
+                from_annot,
+                skip_optional,
+                access_iterables,
+                key_t,
+                tout,
+            } => UseTInner::GetElemT {
+                use_op: use_op.clone(),
+                reason: reason.clone(),
+                id: *id,
+                from_annot: *from_annot,
+                skip_optional: *skip_optional,
+                access_iterables: *access_iterables,
+                key_t: key_t.clone(),
+                tout: tout.clone(),
+            },
+            UseTInner::CallElemT(a, b, c, d, e) => {
+                UseTInner::CallElemT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
+            }
+            UseTInner::GetStaticsT(a) => UseTInner::GetStaticsT(a.clone()),
+            UseTInner::GetProtoT(a, b) => UseTInner::GetProtoT(a.clone(), b.clone()),
+            UseTInner::SetProtoT(a, b) => UseTInner::SetProtoT(a.clone(), b.clone()),
+            UseTInner::ReposLowerT {
+                reason,
+                use_desc,
+                use_t,
+            } => UseTInner::ReposLowerT {
+                reason: reason.clone(),
+                use_desc: *use_desc,
+                use_t: use_t.clone(),
+            },
+            UseTInner::ReposUseT(a, b, c, d) => {
+                UseTInner::ReposUseT(a.clone(), *b, c.clone(), d.clone())
+            }
+            UseTInner::ConstructorT(a) => UseTInner::ConstructorT(a.clone()),
+            UseTInner::SuperT(a, b, c) => UseTInner::SuperT(a.clone(), b.clone(), c.clone()),
+            UseTInner::ImplementsT(a, b) => UseTInner::ImplementsT(a.clone(), b.clone()),
+            UseTInner::MixinT(a, b) => UseTInner::MixinT(a.clone(), b.clone()),
+            UseTInner::ToStringT {
+                orig_t,
+                reason,
+                t_out,
+            } => UseTInner::ToStringT {
+                orig_t: orig_t.clone(),
+                reason: reason.clone(),
+                t_out: t_out.clone(),
+            },
+            UseTInner::SpecializeT(a, b, c, d, e) => {
+                UseTInner::SpecializeT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
+            }
+            UseTInner::ThisSpecializeT(a, b, c) => {
+                UseTInner::ThisSpecializeT(a.clone(), b.clone(), c.clone())
+            }
+            UseTInner::ValueToTypeReferenceT(a, b, c, d) => {
+                UseTInner::ValueToTypeReferenceT(a.clone(), b.clone(), c.clone(), d.clone())
+            }
+            UseTInner::ConcretizeTypeAppsT(a, b, c, d) => {
+                UseTInner::ConcretizeTypeAppsT(a.clone(), b.clone(), c.clone(), *d)
+            }
+            UseTInner::LookupT {
+                reason,
+                lookup_kind,
+                try_ts_on_failure,
+                propref,
+                lookup_action,
+                ids,
+                method_accessible,
+                ignore_dicts,
+            } => UseTInner::LookupT {
+                reason: reason.clone(),
+                lookup_kind: lookup_kind.clone(),
+                try_ts_on_failure: try_ts_on_failure.clone(),
+                propref: propref.clone(),
+                lookup_action: lookup_action.clone(),
+                ids: ids.clone(),
+                method_accessible: *method_accessible,
+                ignore_dicts: *ignore_dicts,
+            },
+            UseTInner::ObjRestT(a, b, c, d) => {
+                UseTInner::ObjRestT(a.clone(), b.clone(), c.clone(), *d)
+            }
+            UseTInner::ObjTestProtoT(a, b) => UseTInner::ObjTestProtoT(a.clone(), b.clone()),
+            UseTInner::ObjTestT(a, b, c) => UseTInner::ObjTestT(a.clone(), b.clone(), c.clone()),
+            UseTInner::ArrRestT(a, b, c, d) => {
+                UseTInner::ArrRestT(a.clone(), b.clone(), *c, d.clone())
+            }
+            UseTInner::GetKeysT(a, b) => UseTInner::GetKeysT(a.clone(), b.clone()),
+            UseTInner::HasOwnPropT(a, b, c) => {
+                UseTInner::HasOwnPropT(a.clone(), b.clone(), c.clone())
+            }
+            UseTInner::GetValuesT(a, b) => UseTInner::GetValuesT(a.clone(), b.clone()),
+            UseTInner::GetDictValuesT(a, b) => UseTInner::GetDictValuesT(a.clone(), b.clone()),
+            UseTInner::ElemT {
+                use_op,
+                reason,
+                obj,
+                action,
+            } => UseTInner::ElemT {
+                use_op: use_op.clone(),
+                reason: reason.clone(),
+                obj: obj.clone(),
+                action: action.clone(),
+            },
+            UseTInner::MapTypeT(a, b, c, d) => {
+                UseTInner::MapTypeT(a.clone(), b.clone(), c.clone(), d.clone())
+            }
+            UseTInner::ObjKitT(a, b, c, d, e) => {
+                UseTInner::ObjKitT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
+            }
+            UseTInner::ReactKitT(a, b, c) => UseTInner::ReactKitT(a.clone(), b.clone(), c.clone()),
+            UseTInner::ConcretizeT {
+                reason,
+                kind,
+                seen,
+                collector,
+            } => UseTInner::ConcretizeT {
+                reason: reason.clone(),
+                kind: kind.clone(),
+                seen: seen.clone(),
+                collector: collector.clone(),
+            },
+            UseTInner::ResolveSpreadT(a, b, c) => {
+                UseTInner::ResolveSpreadT(a.clone(), b.clone(), c.clone())
+            }
+            UseTInner::CondT(a, b, c, d) => {
+                UseTInner::CondT(a.clone(), b.clone(), c.clone(), d.clone())
+            }
+            UseTInner::ExtendsUseT(a, b, c, d, e) => {
+                UseTInner::ExtendsUseT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
+            }
+            UseTInner::DestructuringT(a, b, c, d, e) => {
+                UseTInner::DestructuringT(a.clone(), b.clone(), c.clone(), d.clone(), *e)
+            }
+            UseTInner::ResolveUnionT {
+                reason,
+                unresolved,
+                resolved,
+                upper,
+                id,
+            } => UseTInner::ResolveUnionT {
+                reason: reason.clone(),
+                unresolved: unresolved.clone(),
+                resolved: resolved.clone(),
+                upper: upper.clone(),
+                id: *id,
+            },
+            UseTInner::TypeCastT(a, b) => UseTInner::TypeCastT(a.clone(), b.clone()),
+            UseTInner::EnumCastT { use_op, enum_ } => UseTInner::EnumCastT {
+                use_op: use_op.clone(),
+                enum_: enum_.clone(),
+            },
+            UseTInner::EnumExhaustiveCheckT {
+                reason,
+                check,
+                incomplete_out,
+                discriminant_after_check,
+            } => UseTInner::EnumExhaustiveCheckT {
+                reason: reason.clone(),
+                check: check.clone(),
+                incomplete_out: incomplete_out.clone(),
+                discriminant_after_check: discriminant_after_check.clone(),
+            },
+            UseTInner::GetEnumT {
+                use_op,
+                reason,
+                orig_t,
+                kind,
+                tout,
+            } => UseTInner::GetEnumT {
+                use_op: use_op.clone(),
+                reason: reason.clone(),
+                orig_t: orig_t.clone(),
+                kind: kind.clone(),
+                tout: tout.clone(),
+            },
+            UseTInner::FilterOptionalT(a, b) => UseTInner::FilterOptionalT(a.clone(), b.clone()),
+            UseTInner::FilterMaybeT(a, b) => UseTInner::FilterMaybeT(a.clone(), b.clone()),
+            UseTInner::DeepReadOnlyT(a, b) => UseTInner::DeepReadOnlyT(a.clone(), b.clone()),
+            UseTInner::HooklikeT(a) => UseTInner::HooklikeT(a.clone()),
+            UseTInner::SealGenericT {
+                reason,
+                id,
+                name,
+                no_infer,
+                cont,
+            } => UseTInner::SealGenericT {
+                reason: reason.clone(),
+                id: id.clone(),
+                name: name.clone(),
+                no_infer: *no_infer,
+                cont: cont.clone(),
+            },
+            UseTInner::OptionalIndexedAccessT {
+                use_op,
+                reason,
+                index,
+                tout_tvar,
+            } => UseTInner::OptionalIndexedAccessT {
+                use_op: use_op.clone(),
+                reason: reason.clone(),
+                index: index.clone(),
+                tout_tvar: tout_tvar.clone(),
+            },
+            UseTInner::CheckUnusedPromiseT { reason, async_ } => UseTInner::CheckUnusedPromiseT {
+                reason: reason.clone(),
+                async_: *async_,
+            },
+            UseTInner::WriteComputedObjPropCheckT {
+                reason,
+                reason_key,
+                value_t,
+                err_on_str_key,
+            } => UseTInner::WriteComputedObjPropCheckT {
+                reason: reason.clone(),
+                reason_key: reason_key.clone(),
+                value_t: value_t.clone(),
+                err_on_str_key: err_on_str_key.clone(),
+            },
+            UseTInner::ConvertEmptyPropsToMixedT(a, b) => {
+                UseTInner::ConvertEmptyPropsToMixedT(a.clone(), b.clone())
+            }
+            UseTInner::ExitRendersT { renders_reason, u } => UseTInner::ExitRendersT {
+                renders_reason: renders_reason.clone(),
+                u: u.clone(),
+            },
+            UseTInner::EvalTypeDestructorT {
+                destructor_use_op,
+                reason,
+                repos,
+                destructor,
+                tout,
+            } => UseTInner::EvalTypeDestructorT {
+                destructor_use_op: destructor_use_op.clone(),
+                reason: reason.clone(),
+                repos: repos.clone(),
+                destructor: destructor.clone(),
+                tout: tout.clone(),
+            },
+        }
     }
 }
 
-impl PartialEq for UseT {
+impl<CX> PartialEq for UseTInner<CX> {
     fn eq(&self, other: &Self) -> bool {
-        Rc::ptr_eq(&self.0, &other.0) || self.0 == other.0
+        match (self, other) {
+            (UseTInner::UseT(a1, b1), UseTInner::UseT(a2, b2)) => a1 == a2 && b1 == b2,
+            (UseTInner::BindT(a1, b1, c1), UseTInner::BindT(a2, b2, c2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2
+            }
+            (
+                UseTInner::CallT {
+                    use_op: a1,
+                    reason: b1,
+                    call_action: c1,
+                    return_hint: d1,
+                },
+                UseTInner::CallT {
+                    use_op: a2,
+                    reason: b2,
+                    call_action: c2,
+                    return_hint: d2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (
+                UseTInner::ConditionalT {
+                    use_op: a1,
+                    reason: b1,
+                    distributive_tparam_name: c1,
+                    infer_tparams: d1,
+                    extends_t: e1,
+                    true_t: f1,
+                    false_t: g1,
+                    tout: h1,
+                },
+                UseTInner::ConditionalT {
+                    use_op: a2,
+                    reason: b2,
+                    distributive_tparam_name: c2,
+                    infer_tparams: d2,
+                    extends_t: e2,
+                    true_t: f2,
+                    false_t: g2,
+                    tout: h2,
+                },
+            ) => {
+                a1 == a2
+                    && b1 == b2
+                    && c1 == c2
+                    && d1 == d2
+                    && e1 == e2
+                    && f1 == f2
+                    && g1 == g2
+                    && h1 == h2
+            }
+            (UseTInner::MethodT(a1, b1, c1, d1, e1), UseTInner::MethodT(a2, b2, c2, d2, e2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2
+            }
+            (UseTInner::PrivateMethodT(a1), UseTInner::PrivateMethodT(a2)) => a1 == a2,
+            (
+                UseTInner::SetPropT(a1, b1, c1, d1, e1, f1, g1),
+                UseTInner::SetPropT(a2, b2, c2, d2, e2, f2, g2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2 && g1 == g2,
+            (UseTInner::SetPrivatePropT(a1), UseTInner::SetPrivatePropT(a2)) => a1 == a2,
+            (
+                UseTInner::GetTypeFromNamespaceT {
+                    use_op: a1,
+                    reason: b1,
+                    prop_ref: c1,
+                    tout: d1,
+                },
+                UseTInner::GetTypeFromNamespaceT {
+                    use_op: a2,
+                    reason: b2,
+                    prop_ref: c2,
+                    tout: d2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (UseTInner::GetPropT(a1), UseTInner::GetPropT(a2)) => a1 == a2,
+            (UseTInner::GetPrivatePropT(a1), UseTInner::GetPrivatePropT(a2)) => a1 == a2,
+            (
+                UseTInner::TestPropT {
+                    use_op: a1,
+                    reason: b1,
+                    id: c1,
+                    propref: d1,
+                    tout: e1,
+                    hint: f1,
+                },
+                UseTInner::TestPropT {
+                    use_op: a2,
+                    reason: b2,
+                    id: c2,
+                    propref: d2,
+                    tout: e2,
+                    hint: f2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
+            (
+                UseTInner::SetElemT(a1, b1, c1, d1, e1, f1),
+                UseTInner::SetElemT(a2, b2, c2, d2, e2, f2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
+            (
+                UseTInner::GetElemT {
+                    use_op: a1,
+                    reason: b1,
+                    id: c1,
+                    from_annot: d1,
+                    skip_optional: e1,
+                    access_iterables: f1,
+                    key_t: g1,
+                    tout: h1,
+                },
+                UseTInner::GetElemT {
+                    use_op: a2,
+                    reason: b2,
+                    id: c2,
+                    from_annot: d2,
+                    skip_optional: e2,
+                    access_iterables: f2,
+                    key_t: g2,
+                    tout: h2,
+                },
+            ) => {
+                a1 == a2
+                    && b1 == b2
+                    && c1 == c2
+                    && d1 == d2
+                    && e1 == e2
+                    && f1 == f2
+                    && g1 == g2
+                    && h1 == h2
+            }
+            (
+                UseTInner::CallElemT(a1, b1, c1, d1, e1),
+                UseTInner::CallElemT(a2, b2, c2, d2, e2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (UseTInner::GetStaticsT(a1), UseTInner::GetStaticsT(a2)) => a1 == a2,
+            (UseTInner::GetProtoT(a1, b1), UseTInner::GetProtoT(a2, b2)) => a1 == a2 && b1 == b2,
+            (UseTInner::SetProtoT(a1, b1), UseTInner::SetProtoT(a2, b2)) => a1 == a2 && b1 == b2,
+            (
+                UseTInner::ReposLowerT {
+                    reason: a1,
+                    use_desc: b1,
+                    use_t: c1,
+                },
+                UseTInner::ReposLowerT {
+                    reason: a2,
+                    use_desc: b2,
+                    use_t: c2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2,
+            (UseTInner::ReposUseT(a1, b1, c1, d1), UseTInner::ReposUseT(a2, b2, c2, d2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
+            }
+            (UseTInner::ConstructorT(a1), UseTInner::ConstructorT(a2)) => a1 == a2,
+            (UseTInner::SuperT(a1, b1, c1), UseTInner::SuperT(a2, b2, c2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2
+            }
+            (UseTInner::ImplementsT(a1, b1), UseTInner::ImplementsT(a2, b2)) => {
+                a1 == a2 && b1 == b2
+            }
+            (UseTInner::MixinT(a1, b1), UseTInner::MixinT(a2, b2)) => a1 == a2 && b1 == b2,
+            (
+                UseTInner::ToStringT {
+                    orig_t: a1,
+                    reason: b1,
+                    t_out: c1,
+                },
+                UseTInner::ToStringT {
+                    orig_t: a2,
+                    reason: b2,
+                    t_out: c2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2,
+            (
+                UseTInner::SpecializeT(a1, b1, c1, d1, e1),
+                UseTInner::SpecializeT(a2, b2, c2, d2, e2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (UseTInner::ThisSpecializeT(a1, b1, c1), UseTInner::ThisSpecializeT(a2, b2, c2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2
+            }
+            (
+                UseTInner::ValueToTypeReferenceT(a1, b1, c1, d1),
+                UseTInner::ValueToTypeReferenceT(a2, b2, c2, d2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (
+                UseTInner::ConcretizeTypeAppsT(a1, b1, c1, d1),
+                UseTInner::ConcretizeTypeAppsT(a2, b2, c2, d2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (
+                UseTInner::LookupT {
+                    reason: a1,
+                    lookup_kind: b1,
+                    try_ts_on_failure: c1,
+                    propref: d1,
+                    lookup_action: e1,
+                    ids: f1,
+                    method_accessible: g1,
+                    ignore_dicts: h1,
+                },
+                UseTInner::LookupT {
+                    reason: a2,
+                    lookup_kind: b2,
+                    try_ts_on_failure: c2,
+                    propref: d2,
+                    lookup_action: e2,
+                    ids: f2,
+                    method_accessible: g2,
+                    ignore_dicts: h2,
+                },
+            ) => {
+                a1 == a2
+                    && b1 == b2
+                    && c1 == c2
+                    && d1 == d2
+                    && e1 == e2
+                    && f1 == f2
+                    && g1 == g2
+                    && h1 == h2
+            }
+            (UseTInner::ObjRestT(a1, b1, c1, d1), UseTInner::ObjRestT(a2, b2, c2, d2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
+            }
+            (UseTInner::ObjTestProtoT(a1, b1), UseTInner::ObjTestProtoT(a2, b2)) => {
+                a1 == a2 && b1 == b2
+            }
+            (UseTInner::ObjTestT(a1, b1, c1), UseTInner::ObjTestT(a2, b2, c2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2
+            }
+            (UseTInner::ArrRestT(a1, b1, c1, d1), UseTInner::ArrRestT(a2, b2, c2, d2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
+            }
+            (UseTInner::GetKeysT(a1, b1), UseTInner::GetKeysT(a2, b2)) => a1 == a2 && b1 == b2,
+            (UseTInner::HasOwnPropT(a1, b1, c1), UseTInner::HasOwnPropT(a2, b2, c2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2
+            }
+            (UseTInner::GetValuesT(a1, b1), UseTInner::GetValuesT(a2, b2)) => a1 == a2 && b1 == b2,
+            (UseTInner::GetDictValuesT(a1, b1), UseTInner::GetDictValuesT(a2, b2)) => {
+                a1 == a2 && b1 == b2
+            }
+            (
+                UseTInner::ElemT {
+                    use_op: a1,
+                    reason: b1,
+                    obj: c1,
+                    action: d1,
+                },
+                UseTInner::ElemT {
+                    use_op: a2,
+                    reason: b2,
+                    obj: c2,
+                    action: d2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (UseTInner::MapTypeT(a1, b1, c1, d1), UseTInner::MapTypeT(a2, b2, c2, d2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
+            }
+            (UseTInner::ObjKitT(a1, b1, c1, d1, e1), UseTInner::ObjKitT(a2, b2, c2, d2, e2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2
+            }
+            (UseTInner::ReactKitT(a1, b1, c1), UseTInner::ReactKitT(a2, b2, c2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2
+            }
+            (
+                UseTInner::ConcretizeT {
+                    reason: a1,
+                    kind: b1,
+                    seen: c1,
+                    collector: d1,
+                },
+                UseTInner::ConcretizeT {
+                    reason: a2,
+                    kind: b2,
+                    seen: c2,
+                    collector: d2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (UseTInner::ResolveSpreadT(a1, b1, c1), UseTInner::ResolveSpreadT(a2, b2, c2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2
+            }
+            (UseTInner::CondT(a1, b1, c1, d1), UseTInner::CondT(a2, b2, c2, d2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2
+            }
+            (
+                UseTInner::ExtendsUseT(a1, b1, c1, d1, e1),
+                UseTInner::ExtendsUseT(a2, b2, c2, d2, e2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (
+                UseTInner::DestructuringT(a1, b1, c1, d1, e1),
+                UseTInner::DestructuringT(a2, b2, c2, d2, e2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (
+                UseTInner::ResolveUnionT {
+                    reason: a1,
+                    unresolved: b1,
+                    resolved: c1,
+                    upper: d1,
+                    id: e1,
+                },
+                UseTInner::ResolveUnionT {
+                    reason: a2,
+                    unresolved: b2,
+                    resolved: c2,
+                    upper: d2,
+                    id: e2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (UseTInner::TypeCastT(a1, b1), UseTInner::TypeCastT(a2, b2)) => a1 == a2 && b1 == b2,
+            (
+                UseTInner::EnumCastT {
+                    use_op: a1,
+                    enum_: b1,
+                },
+                UseTInner::EnumCastT {
+                    use_op: a2,
+                    enum_: b2,
+                },
+            ) => a1 == a2 && b1 == b2,
+            (
+                UseTInner::EnumExhaustiveCheckT {
+                    reason: a1,
+                    check: b1,
+                    incomplete_out: c1,
+                    discriminant_after_check: d1,
+                },
+                UseTInner::EnumExhaustiveCheckT {
+                    reason: a2,
+                    check: b2,
+                    incomplete_out: c2,
+                    discriminant_after_check: d2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (
+                UseTInner::GetEnumT {
+                    use_op: a1,
+                    reason: b1,
+                    orig_t: c1,
+                    kind: d1,
+                    tout: e1,
+                },
+                UseTInner::GetEnumT {
+                    use_op: a2,
+                    reason: b2,
+                    orig_t: c2,
+                    kind: d2,
+                    tout: e2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (UseTInner::FilterOptionalT(a1, b1), UseTInner::FilterOptionalT(a2, b2)) => {
+                a1 == a2 && b1 == b2
+            }
+            (UseTInner::FilterMaybeT(a1, b1), UseTInner::FilterMaybeT(a2, b2)) => {
+                a1 == a2 && b1 == b2
+            }
+            (UseTInner::DeepReadOnlyT(a1, b1), UseTInner::DeepReadOnlyT(a2, b2)) => {
+                a1 == a2 && b1 == b2
+            }
+            (UseTInner::HooklikeT(a1), UseTInner::HooklikeT(a2)) => a1 == a2,
+            (
+                UseTInner::SealGenericT {
+                    reason: a1,
+                    id: b1,
+                    name: c1,
+                    no_infer: d1,
+                    cont: e1,
+                },
+                UseTInner::SealGenericT {
+                    reason: a2,
+                    id: b2,
+                    name: c2,
+                    no_infer: d2,
+                    cont: e2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (
+                UseTInner::OptionalIndexedAccessT {
+                    use_op: a1,
+                    reason: b1,
+                    index: c1,
+                    tout_tvar: d1,
+                },
+                UseTInner::OptionalIndexedAccessT {
+                    use_op: a2,
+                    reason: b2,
+                    index: c2,
+                    tout_tvar: d2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (
+                UseTInner::CheckUnusedPromiseT {
+                    reason: a1,
+                    async_: b1,
+                },
+                UseTInner::CheckUnusedPromiseT {
+                    reason: a2,
+                    async_: b2,
+                },
+            ) => a1 == a2 && b1 == b2,
+            (
+                UseTInner::WriteComputedObjPropCheckT {
+                    reason: a1,
+                    reason_key: b1,
+                    value_t: c1,
+                    err_on_str_key: d1,
+                },
+                UseTInner::WriteComputedObjPropCheckT {
+                    reason: a2,
+                    reason_key: b2,
+                    value_t: c2,
+                    err_on_str_key: d2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (
+                UseTInner::ConvertEmptyPropsToMixedT(a1, b1),
+                UseTInner::ConvertEmptyPropsToMixedT(a2, b2),
+            ) => a1 == a2 && b1 == b2,
+            (
+                UseTInner::ExitRendersT {
+                    renders_reason: a1,
+                    u: b1,
+                },
+                UseTInner::ExitRendersT {
+                    renders_reason: a2,
+                    u: b2,
+                },
+            ) => a1 == a2 && b1 == b2,
+            (
+                UseTInner::EvalTypeDestructorT {
+                    destructor_use_op: a1,
+                    reason: b1,
+                    repos: c1,
+                    destructor: d1,
+                    tout: e1,
+                },
+                UseTInner::EvalTypeDestructorT {
+                    destructor_use_op: a2,
+                    reason: b2,
+                    repos: c2,
+                    destructor: d2,
+                    tout: e2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            _ => false,
+        }
     }
 }
 
-impl Eq for UseT {}
+impl<CX> Eq for UseTInner<CX> {}
 
-impl PartialOrd for UseT {
+impl<CX> std::hash::Hash for UseTInner<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            UseTInner::UseT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::BindT(a, b, c) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+            }
+            UseTInner::CallT {
+                use_op,
+                reason,
+                call_action,
+                return_hint,
+            } => {
+                use_op.hash(state);
+                reason.hash(state);
+                call_action.hash(state);
+                return_hint.hash(state);
+            }
+            UseTInner::ConditionalT {
+                use_op,
+                reason,
+                distributive_tparam_name,
+                infer_tparams,
+                extends_t,
+                true_t,
+                false_t,
+                tout,
+            } => {
+                use_op.hash(state);
+                reason.hash(state);
+                distributive_tparam_name.hash(state);
+                infer_tparams.hash(state);
+                extends_t.hash(state);
+                true_t.hash(state);
+                false_t.hash(state);
+                tout.hash(state);
+            }
+            UseTInner::MethodT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+            UseTInner::PrivateMethodT(a) => {
+                a.hash(state);
+            }
+            UseTInner::SetPropT(a, b, c, d, e, f, g) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+                f.hash(state);
+                g.hash(state);
+            }
+            UseTInner::SetPrivatePropT(a) => {
+                a.hash(state);
+            }
+            UseTInner::GetTypeFromNamespaceT {
+                use_op,
+                reason,
+                prop_ref,
+                tout,
+            } => {
+                use_op.hash(state);
+                reason.hash(state);
+                prop_ref.hash(state);
+                tout.hash(state);
+            }
+            UseTInner::GetPropT(a) => {
+                a.hash(state);
+            }
+            UseTInner::GetPrivatePropT(a) => {
+                a.hash(state);
+            }
+            UseTInner::TestPropT {
+                use_op,
+                reason,
+                id,
+                propref,
+                tout,
+                hint,
+            } => {
+                use_op.hash(state);
+                reason.hash(state);
+                id.hash(state);
+                propref.hash(state);
+                tout.hash(state);
+                hint.hash(state);
+            }
+            UseTInner::SetElemT(a, b, c, d, e, f) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+                f.hash(state);
+            }
+            UseTInner::GetElemT {
+                use_op,
+                reason,
+                id,
+                from_annot,
+                skip_optional,
+                access_iterables,
+                key_t,
+                tout,
+            } => {
+                use_op.hash(state);
+                reason.hash(state);
+                id.hash(state);
+                from_annot.hash(state);
+                skip_optional.hash(state);
+                access_iterables.hash(state);
+                key_t.hash(state);
+                tout.hash(state);
+            }
+            UseTInner::CallElemT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+            UseTInner::GetStaticsT(a) => {
+                a.hash(state);
+            }
+            UseTInner::GetProtoT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::SetProtoT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::ReposLowerT {
+                reason,
+                use_desc,
+                use_t,
+            } => {
+                reason.hash(state);
+                use_desc.hash(state);
+                use_t.hash(state);
+            }
+            UseTInner::ReposUseT(a, b, c, d) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+            }
+            UseTInner::ConstructorT(a) => {
+                a.hash(state);
+            }
+            UseTInner::SuperT(a, b, c) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+            }
+            UseTInner::ImplementsT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::MixinT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::ToStringT {
+                orig_t,
+                reason,
+                t_out,
+            } => {
+                orig_t.hash(state);
+                reason.hash(state);
+                t_out.hash(state);
+            }
+            UseTInner::SpecializeT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+            UseTInner::ThisSpecializeT(a, b, c) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+            }
+            UseTInner::ValueToTypeReferenceT(a, b, c, d) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+            }
+            UseTInner::ConcretizeTypeAppsT(a, b, c, d) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+            }
+            UseTInner::LookupT {
+                reason,
+                lookup_kind,
+                try_ts_on_failure,
+                propref,
+                lookup_action,
+                ids,
+                method_accessible,
+                ignore_dicts,
+            } => {
+                reason.hash(state);
+                lookup_kind.hash(state);
+                try_ts_on_failure.hash(state);
+                propref.hash(state);
+                lookup_action.hash(state);
+                ids.hash(state);
+                method_accessible.hash(state);
+                ignore_dicts.hash(state);
+            }
+            UseTInner::ObjRestT(a, b, c, d) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+            }
+            UseTInner::ObjTestProtoT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::ObjTestT(a, b, c) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+            }
+            UseTInner::ArrRestT(a, b, c, d) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+            }
+            UseTInner::GetKeysT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::HasOwnPropT(a, b, c) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+            }
+            UseTInner::GetValuesT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::GetDictValuesT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::ElemT {
+                use_op,
+                reason,
+                obj,
+                action,
+            } => {
+                use_op.hash(state);
+                reason.hash(state);
+                obj.hash(state);
+                action.hash(state);
+            }
+            UseTInner::MapTypeT(a, b, c, d) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+            }
+            UseTInner::ObjKitT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+            UseTInner::ReactKitT(a, b, c) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+            }
+            UseTInner::ConcretizeT {
+                reason,
+                kind,
+                seen,
+                collector,
+            } => {
+                reason.hash(state);
+                kind.hash(state);
+                seen.hash(state);
+                collector.hash(state);
+            }
+            UseTInner::ResolveSpreadT(a, b, c) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+            }
+            UseTInner::CondT(a, b, c, d) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+            }
+            UseTInner::ExtendsUseT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+            UseTInner::DestructuringT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+            UseTInner::ResolveUnionT {
+                reason,
+                unresolved,
+                resolved,
+                upper,
+                id,
+            } => {
+                reason.hash(state);
+                unresolved.hash(state);
+                resolved.hash(state);
+                upper.hash(state);
+                id.hash(state);
+            }
+            UseTInner::TypeCastT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::EnumCastT { use_op, enum_ } => {
+                use_op.hash(state);
+                enum_.hash(state);
+            }
+            UseTInner::EnumExhaustiveCheckT {
+                reason,
+                check,
+                incomplete_out,
+                discriminant_after_check,
+            } => {
+                reason.hash(state);
+                check.hash(state);
+                incomplete_out.hash(state);
+                discriminant_after_check.hash(state);
+            }
+            UseTInner::GetEnumT {
+                use_op,
+                reason,
+                orig_t,
+                kind,
+                tout,
+            } => {
+                use_op.hash(state);
+                reason.hash(state);
+                orig_t.hash(state);
+                kind.hash(state);
+                tout.hash(state);
+            }
+            UseTInner::FilterOptionalT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::FilterMaybeT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::DeepReadOnlyT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::HooklikeT(a) => {
+                a.hash(state);
+            }
+            UseTInner::SealGenericT {
+                reason,
+                id,
+                name,
+                no_infer,
+                cont,
+            } => {
+                reason.hash(state);
+                id.hash(state);
+                name.hash(state);
+                no_infer.hash(state);
+                cont.hash(state);
+            }
+            UseTInner::OptionalIndexedAccessT {
+                use_op,
+                reason,
+                index,
+                tout_tvar,
+            } => {
+                use_op.hash(state);
+                reason.hash(state);
+                index.hash(state);
+                tout_tvar.hash(state);
+            }
+            UseTInner::CheckUnusedPromiseT { reason, async_ } => {
+                reason.hash(state);
+                async_.hash(state);
+            }
+            UseTInner::WriteComputedObjPropCheckT {
+                reason,
+                reason_key,
+                value_t,
+                err_on_str_key,
+            } => {
+                reason.hash(state);
+                reason_key.hash(state);
+                value_t.hash(state);
+                err_on_str_key.hash(state);
+            }
+            UseTInner::ConvertEmptyPropsToMixedT(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            UseTInner::ExitRendersT { renders_reason, u } => {
+                renders_reason.hash(state);
+                u.hash(state);
+            }
+            UseTInner::EvalTypeDestructorT {
+                destructor_use_op,
+                reason,
+                repos,
+                destructor,
+                tout,
+            } => {
+                destructor_use_op.hash(state);
+                reason.hash(state);
+                repos.hash(state);
+                destructor.hash(state);
+                tout.hash(state);
+            }
+        }
+    }
+}
+
+impl<CX> PartialOrd for UseTInner<CX> {
     fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
         Some(self.cmp(other))
     }
 }
 
-impl Ord for UseT {
+impl<CX> Ord for UseTInner<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        fn variant_index<CX>(v: &UseTInner<CX>) -> u32 {
+            // Assign a unique index to each variant for ordering
+            match v {
+                UseTInner::UseT(..) => 0,
+                UseTInner::BindT(..) => 1,
+                UseTInner::CallT { .. } => 2,
+                UseTInner::ConditionalT { .. } => 3,
+                UseTInner::MethodT(..) => 4,
+                UseTInner::PrivateMethodT(..) => 5,
+                UseTInner::SetPropT(..) => 6,
+                UseTInner::SetPrivatePropT(..) => 7,
+                UseTInner::GetTypeFromNamespaceT { .. } => 8,
+                UseTInner::GetPropT(..) => 9,
+                UseTInner::GetPrivatePropT(..) => 10,
+                UseTInner::TestPropT { .. } => 11,
+                UseTInner::SetElemT(..) => 12,
+                UseTInner::GetElemT { .. } => 13,
+                UseTInner::CallElemT(..) => 14,
+                UseTInner::GetStaticsT(..) => 15,
+                UseTInner::GetProtoT(..) => 16,
+                UseTInner::SetProtoT(..) => 17,
+                UseTInner::ReposLowerT { .. } => 18,
+                UseTInner::ReposUseT(..) => 19,
+                UseTInner::ConstructorT(..) => 20,
+                UseTInner::SuperT(..) => 21,
+                UseTInner::ImplementsT(..) => 22,
+                UseTInner::MixinT(..) => 23,
+                UseTInner::ToStringT { .. } => 24,
+                UseTInner::SpecializeT(..) => 25,
+                UseTInner::ThisSpecializeT(..) => 26,
+                UseTInner::ValueToTypeReferenceT(..) => 27,
+                UseTInner::ConcretizeTypeAppsT(..) => 28,
+                UseTInner::LookupT { .. } => 29,
+                UseTInner::ObjRestT(..) => 30,
+                UseTInner::ObjTestProtoT(..) => 31,
+                UseTInner::ObjTestT(..) => 32,
+                UseTInner::ArrRestT(..) => 33,
+                UseTInner::GetKeysT(..) => 34,
+                UseTInner::HasOwnPropT(..) => 35,
+                UseTInner::GetValuesT(..) => 36,
+                UseTInner::GetDictValuesT(..) => 37,
+                UseTInner::ElemT { .. } => 38,
+                UseTInner::MapTypeT(..) => 39,
+                UseTInner::ObjKitT(..) => 40,
+                UseTInner::ReactKitT(..) => 41,
+                UseTInner::ConcretizeT { .. } => 42,
+                UseTInner::ResolveSpreadT(..) => 43,
+                UseTInner::CondT(..) => 44,
+                UseTInner::ExtendsUseT(..) => 45,
+                UseTInner::DestructuringT(..) => 46,
+                UseTInner::ResolveUnionT { .. } => 47,
+                UseTInner::TypeCastT(..) => 48,
+                UseTInner::EnumCastT { .. } => 49,
+                UseTInner::EnumExhaustiveCheckT { .. } => 50,
+                UseTInner::GetEnumT { .. } => 51,
+                UseTInner::FilterOptionalT(..) => 52,
+                UseTInner::FilterMaybeT(..) => 53,
+                UseTInner::DeepReadOnlyT(..) => 54,
+                UseTInner::HooklikeT(..) => 55,
+                UseTInner::SealGenericT { .. } => 56,
+                UseTInner::OptionalIndexedAccessT { .. } => 57,
+                UseTInner::CheckUnusedPromiseT { .. } => 58,
+                UseTInner::WriteComputedObjPropCheckT { .. } => 59,
+                UseTInner::ConvertEmptyPropsToMixedT(..) => 60,
+                UseTInner::ExitRendersT { .. } => 61,
+                UseTInner::EvalTypeDestructorT { .. } => 62,
+            }
+        }
+        let disc = variant_index(self).cmp(&variant_index(other));
+        if disc != std::cmp::Ordering::Equal {
+            return disc;
+        }
+        match (self, other) {
+            (UseTInner::UseT(a1, b1), UseTInner::UseT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (UseTInner::BindT(a1, b1, c1), UseTInner::BindT(a2, b2, c2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
+            }
+            (
+                UseTInner::CallT {
+                    use_op: a1,
+                    reason: b1,
+                    call_action: c1,
+                    return_hint: d1,
+                },
+                UseTInner::CallT {
+                    use_op: a2,
+                    reason: b2,
+                    call_action: c2,
+                    return_hint: d2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (
+                UseTInner::ConditionalT {
+                    use_op: a1,
+                    reason: b1,
+                    distributive_tparam_name: c1,
+                    infer_tparams: d1,
+                    extends_t: e1,
+                    true_t: f1,
+                    false_t: g1,
+                    tout: h1,
+                },
+                UseTInner::ConditionalT {
+                    use_op: a2,
+                    reason: b2,
+                    distributive_tparam_name: c2,
+                    infer_tparams: d2,
+                    extends_t: e2,
+                    true_t: f2,
+                    false_t: g2,
+                    tout: h2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2))
+                .then_with(|| f1.cmp(f2))
+                .then_with(|| g1.cmp(g2))
+                .then_with(|| h1.cmp(h2)),
+            (UseTInner::MethodT(a1, b1, c1, d1, e1), UseTInner::MethodT(a2, b2, c2, d2, e2)) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (UseTInner::PrivateMethodT(a1), UseTInner::PrivateMethodT(a2)) => a1.cmp(a2),
+            (
+                UseTInner::SetPropT(a1, b1, c1, d1, e1, f1, g1),
+                UseTInner::SetPropT(a2, b2, c2, d2, e2, f2, g2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2))
+                .then_with(|| f1.cmp(f2))
+                .then_with(|| g1.cmp(g2)),
+            (UseTInner::SetPrivatePropT(a1), UseTInner::SetPrivatePropT(a2)) => a1.cmp(a2),
+            (
+                UseTInner::GetTypeFromNamespaceT {
+                    use_op: a1,
+                    reason: b1,
+                    prop_ref: c1,
+                    tout: d1,
+                },
+                UseTInner::GetTypeFromNamespaceT {
+                    use_op: a2,
+                    reason: b2,
+                    prop_ref: c2,
+                    tout: d2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (UseTInner::GetPropT(a1), UseTInner::GetPropT(a2)) => a1.cmp(a2),
+            (UseTInner::GetPrivatePropT(a1), UseTInner::GetPrivatePropT(a2)) => a1.cmp(a2),
+            (
+                UseTInner::TestPropT {
+                    use_op: a1,
+                    reason: b1,
+                    id: c1,
+                    propref: d1,
+                    tout: e1,
+                    hint: f1,
+                },
+                UseTInner::TestPropT {
+                    use_op: a2,
+                    reason: b2,
+                    id: c2,
+                    propref: d2,
+                    tout: e2,
+                    hint: f2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2))
+                .then_with(|| f1.cmp(f2)),
+            (
+                UseTInner::SetElemT(a1, b1, c1, d1, e1, f1),
+                UseTInner::SetElemT(a2, b2, c2, d2, e2, f2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2))
+                .then_with(|| f1.cmp(f2)),
+            (
+                UseTInner::GetElemT {
+                    use_op: a1,
+                    reason: b1,
+                    id: c1,
+                    from_annot: d1,
+                    skip_optional: e1,
+                    access_iterables: f1,
+                    key_t: g1,
+                    tout: h1,
+                },
+                UseTInner::GetElemT {
+                    use_op: a2,
+                    reason: b2,
+                    id: c2,
+                    from_annot: d2,
+                    skip_optional: e2,
+                    access_iterables: f2,
+                    key_t: g2,
+                    tout: h2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2))
+                .then_with(|| f1.cmp(f2))
+                .then_with(|| g1.cmp(g2))
+                .then_with(|| h1.cmp(h2)),
+            (
+                UseTInner::CallElemT(a1, b1, c1, d1, e1),
+                UseTInner::CallElemT(a2, b2, c2, d2, e2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (UseTInner::GetStaticsT(a1), UseTInner::GetStaticsT(a2)) => a1.cmp(a2),
+            (UseTInner::GetProtoT(a1, b1), UseTInner::GetProtoT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (UseTInner::SetProtoT(a1, b1), UseTInner::SetProtoT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (
+                UseTInner::ReposLowerT {
+                    reason: a1,
+                    use_desc: b1,
+                    use_t: c1,
+                },
+                UseTInner::ReposLowerT {
+                    reason: a2,
+                    use_desc: b2,
+                    use_t: c2,
+                },
+            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2)),
+            (UseTInner::ReposUseT(a1, b1, c1, d1), UseTInner::ReposUseT(a2, b2, c2, d2)) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (UseTInner::ConstructorT(a1), UseTInner::ConstructorT(a2)) => a1.cmp(a2),
+            (UseTInner::SuperT(a1, b1, c1), UseTInner::SuperT(a2, b2, c2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
+            }
+            (UseTInner::ImplementsT(a1, b1), UseTInner::ImplementsT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (UseTInner::MixinT(a1, b1), UseTInner::MixinT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (
+                UseTInner::ToStringT {
+                    orig_t: a1,
+                    reason: b1,
+                    t_out: c1,
+                },
+                UseTInner::ToStringT {
+                    orig_t: a2,
+                    reason: b2,
+                    t_out: c2,
+                },
+            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2)),
+            (
+                UseTInner::SpecializeT(a1, b1, c1, d1, e1),
+                UseTInner::SpecializeT(a2, b2, c2, d2, e2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (UseTInner::ThisSpecializeT(a1, b1, c1), UseTInner::ThisSpecializeT(a2, b2, c2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
+            }
+            (
+                UseTInner::ValueToTypeReferenceT(a1, b1, c1, d1),
+                UseTInner::ValueToTypeReferenceT(a2, b2, c2, d2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (
+                UseTInner::ConcretizeTypeAppsT(a1, b1, c1, d1),
+                UseTInner::ConcretizeTypeAppsT(a2, b2, c2, d2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (
+                UseTInner::LookupT {
+                    reason: a1,
+                    lookup_kind: b1,
+                    try_ts_on_failure: c1,
+                    propref: d1,
+                    lookup_action: e1,
+                    ids: f1,
+                    method_accessible: g1,
+                    ignore_dicts: h1,
+                },
+                UseTInner::LookupT {
+                    reason: a2,
+                    lookup_kind: b2,
+                    try_ts_on_failure: c2,
+                    propref: d2,
+                    lookup_action: e2,
+                    ids: f2,
+                    method_accessible: g2,
+                    ignore_dicts: h2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2))
+                .then_with(|| f1.cmp(f2))
+                .then_with(|| g1.cmp(g2))
+                .then_with(|| h1.cmp(h2)),
+            (UseTInner::ObjRestT(a1, b1, c1, d1), UseTInner::ObjRestT(a2, b2, c2, d2)) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (UseTInner::ObjTestProtoT(a1, b1), UseTInner::ObjTestProtoT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (UseTInner::ObjTestT(a1, b1, c1), UseTInner::ObjTestT(a2, b2, c2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
+            }
+            (UseTInner::ArrRestT(a1, b1, c1, d1), UseTInner::ArrRestT(a2, b2, c2, d2)) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (UseTInner::GetKeysT(a1, b1), UseTInner::GetKeysT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (UseTInner::HasOwnPropT(a1, b1, c1), UseTInner::HasOwnPropT(a2, b2, c2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
+            }
+            (UseTInner::GetValuesT(a1, b1), UseTInner::GetValuesT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (UseTInner::GetDictValuesT(a1, b1), UseTInner::GetDictValuesT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (
+                UseTInner::ElemT {
+                    use_op: a1,
+                    reason: b1,
+                    obj: c1,
+                    action: d1,
+                },
+                UseTInner::ElemT {
+                    use_op: a2,
+                    reason: b2,
+                    obj: c2,
+                    action: d2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (UseTInner::MapTypeT(a1, b1, c1, d1), UseTInner::MapTypeT(a2, b2, c2, d2)) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (UseTInner::ObjKitT(a1, b1, c1, d1, e1), UseTInner::ObjKitT(a2, b2, c2, d2, e2)) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (UseTInner::ReactKitT(a1, b1, c1), UseTInner::ReactKitT(a2, b2, c2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
+            }
+            (
+                UseTInner::ConcretizeT {
+                    reason: a1,
+                    kind: b1,
+                    seen: c1,
+                    collector: d1,
+                },
+                UseTInner::ConcretizeT {
+                    reason: a2,
+                    kind: b2,
+                    seen: c2,
+                    collector: d2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (UseTInner::ResolveSpreadT(a1, b1, c1), UseTInner::ResolveSpreadT(a2, b2, c2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2))
+            }
+            (UseTInner::CondT(a1, b1, c1, d1), UseTInner::CondT(a2, b2, c2, d2)) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (
+                UseTInner::ExtendsUseT(a1, b1, c1, d1, e1),
+                UseTInner::ExtendsUseT(a2, b2, c2, d2, e2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (
+                UseTInner::DestructuringT(a1, b1, c1, d1, e1),
+                UseTInner::DestructuringT(a2, b2, c2, d2, e2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (
+                UseTInner::ResolveUnionT {
+                    reason: a1,
+                    unresolved: b1,
+                    resolved: c1,
+                    upper: d1,
+                    id: e1,
+                },
+                UseTInner::ResolveUnionT {
+                    reason: a2,
+                    unresolved: b2,
+                    resolved: c2,
+                    upper: d2,
+                    id: e2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (UseTInner::TypeCastT(a1, b1), UseTInner::TypeCastT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (
+                UseTInner::EnumCastT {
+                    use_op: a1,
+                    enum_: b1,
+                },
+                UseTInner::EnumCastT {
+                    use_op: a2,
+                    enum_: b2,
+                },
+            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
+            (
+                UseTInner::EnumExhaustiveCheckT {
+                    reason: a1,
+                    check: b1,
+                    incomplete_out: c1,
+                    discriminant_after_check: d1,
+                },
+                UseTInner::EnumExhaustiveCheckT {
+                    reason: a2,
+                    check: b2,
+                    incomplete_out: c2,
+                    discriminant_after_check: d2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (
+                UseTInner::GetEnumT {
+                    use_op: a1,
+                    reason: b1,
+                    orig_t: c1,
+                    kind: d1,
+                    tout: e1,
+                },
+                UseTInner::GetEnumT {
+                    use_op: a2,
+                    reason: b2,
+                    orig_t: c2,
+                    kind: d2,
+                    tout: e2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (UseTInner::FilterOptionalT(a1, b1), UseTInner::FilterOptionalT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (UseTInner::FilterMaybeT(a1, b1), UseTInner::FilterMaybeT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (UseTInner::DeepReadOnlyT(a1, b1), UseTInner::DeepReadOnlyT(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            (UseTInner::HooklikeT(a1), UseTInner::HooklikeT(a2)) => a1.cmp(a2),
+            (
+                UseTInner::SealGenericT {
+                    reason: a1,
+                    id: b1,
+                    name: c1,
+                    no_infer: d1,
+                    cont: e1,
+                },
+                UseTInner::SealGenericT {
+                    reason: a2,
+                    id: b2,
+                    name: c2,
+                    no_infer: d2,
+                    cont: e2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (
+                UseTInner::OptionalIndexedAccessT {
+                    use_op: a1,
+                    reason: b1,
+                    index: c1,
+                    tout_tvar: d1,
+                },
+                UseTInner::OptionalIndexedAccessT {
+                    use_op: a2,
+                    reason: b2,
+                    index: c2,
+                    tout_tvar: d2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (
+                UseTInner::CheckUnusedPromiseT {
+                    reason: a1,
+                    async_: b1,
+                },
+                UseTInner::CheckUnusedPromiseT {
+                    reason: a2,
+                    async_: b2,
+                },
+            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
+            (
+                UseTInner::WriteComputedObjPropCheckT {
+                    reason: a1,
+                    reason_key: b1,
+                    value_t: c1,
+                    err_on_str_key: d1,
+                },
+                UseTInner::WriteComputedObjPropCheckT {
+                    reason: a2,
+                    reason_key: b2,
+                    value_t: c2,
+                    err_on_str_key: d2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (
+                UseTInner::ConvertEmptyPropsToMixedT(a1, b1),
+                UseTInner::ConvertEmptyPropsToMixedT(a2, b2),
+            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
+            (
+                UseTInner::ExitRendersT {
+                    renders_reason: a1,
+                    u: b1,
+                },
+                UseTInner::ExitRendersT {
+                    renders_reason: a2,
+                    u: b2,
+                },
+            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
+            (
+                UseTInner::EvalTypeDestructorT {
+                    destructor_use_op: a1,
+                    reason: b1,
+                    repos: c1,
+                    destructor: d1,
+                    tout: e1,
+                },
+                UseTInner::EvalTypeDestructorT {
+                    destructor_use_op: a2,
+                    reason: b2,
+                    repos: c2,
+                    destructor: d2,
+                    tout: e2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            _ => std::cmp::Ordering::Equal,
+        }
+    }
+}
+
+impl<CX> std::fmt::Debug for UseTInner<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            UseTInner::UseT(a, b) => f.debug_tuple("UseT").field(a).field(b).finish(),
+            UseTInner::BindT(a, b, c) => f.debug_tuple("BindT").field(a).field(b).field(c).finish(),
+            UseTInner::CallT {
+                use_op,
+                reason,
+                call_action,
+                return_hint,
+            } => f
+                .debug_struct("CallT")
+                .field("use_op", use_op)
+                .field("reason", reason)
+                .field("call_action", call_action)
+                .field("return_hint", return_hint)
+                .finish(),
+            UseTInner::ConditionalT {
+                use_op,
+                reason,
+                distributive_tparam_name,
+                infer_tparams,
+                extends_t,
+                true_t,
+                false_t,
+                tout,
+            } => f
+                .debug_struct("ConditionalT")
+                .field("use_op", use_op)
+                .field("reason", reason)
+                .field("distributive_tparam_name", distributive_tparam_name)
+                .field("infer_tparams", infer_tparams)
+                .field("extends_t", extends_t)
+                .field("true_t", true_t)
+                .field("false_t", false_t)
+                .field("tout", tout)
+                .finish(),
+            UseTInner::MethodT(a, b, c, d, e) => f
+                .debug_tuple("MethodT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+            UseTInner::PrivateMethodT(a) => f.debug_tuple("PrivateMethodT").field(a).finish(),
+            UseTInner::SetPropT(a, b, c, d, e, ff, g) => f
+                .debug_tuple("SetPropT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .field(ff)
+                .field(g)
+                .finish(),
+            UseTInner::SetPrivatePropT(a) => f.debug_tuple("SetPrivatePropT").field(a).finish(),
+            UseTInner::GetTypeFromNamespaceT {
+                use_op,
+                reason,
+                prop_ref,
+                tout,
+            } => f
+                .debug_struct("GetTypeFromNamespaceT")
+                .field("use_op", use_op)
+                .field("reason", reason)
+                .field("prop_ref", prop_ref)
+                .field("tout", tout)
+                .finish(),
+            UseTInner::GetPropT(a) => f.debug_tuple("GetPropT").field(a).finish(),
+            UseTInner::GetPrivatePropT(a) => f.debug_tuple("GetPrivatePropT").field(a).finish(),
+            UseTInner::TestPropT {
+                use_op,
+                reason,
+                id,
+                propref,
+                tout,
+                hint,
+            } => f
+                .debug_struct("TestPropT")
+                .field("use_op", use_op)
+                .field("reason", reason)
+                .field("id", id)
+                .field("propref", propref)
+                .field("tout", tout)
+                .field("hint", hint)
+                .finish(),
+            UseTInner::SetElemT(a, b, c, d, e, ff) => f
+                .debug_tuple("SetElemT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .field(ff)
+                .finish(),
+            UseTInner::GetElemT {
+                use_op,
+                reason,
+                id,
+                from_annot,
+                skip_optional,
+                access_iterables,
+                key_t,
+                tout,
+            } => f
+                .debug_struct("GetElemT")
+                .field("use_op", use_op)
+                .field("reason", reason)
+                .field("id", id)
+                .field("from_annot", from_annot)
+                .field("skip_optional", skip_optional)
+                .field("access_iterables", access_iterables)
+                .field("key_t", key_t)
+                .field("tout", tout)
+                .finish(),
+            UseTInner::CallElemT(a, b, c, d, e) => f
+                .debug_tuple("CallElemT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+            UseTInner::GetStaticsT(a) => f.debug_tuple("GetStaticsT").field(a).finish(),
+            UseTInner::GetProtoT(a, b) => f.debug_tuple("GetProtoT").field(a).field(b).finish(),
+            UseTInner::SetProtoT(a, b) => f.debug_tuple("SetProtoT").field(a).field(b).finish(),
+            UseTInner::ReposLowerT {
+                reason,
+                use_desc,
+                use_t,
+            } => f
+                .debug_struct("ReposLowerT")
+                .field("reason", reason)
+                .field("use_desc", use_desc)
+                .field("use_t", use_t)
+                .finish(),
+            UseTInner::ReposUseT(a, b, c, d) => f
+                .debug_tuple("ReposUseT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .finish(),
+            UseTInner::ConstructorT(a) => f.debug_tuple("ConstructorT").field(a).finish(),
+            UseTInner::SuperT(a, b, c) => {
+                f.debug_tuple("SuperT").field(a).field(b).field(c).finish()
+            }
+            UseTInner::ImplementsT(a, b) => f.debug_tuple("ImplementsT").field(a).field(b).finish(),
+            UseTInner::MixinT(a, b) => f.debug_tuple("MixinT").field(a).field(b).finish(),
+            UseTInner::ToStringT {
+                orig_t,
+                reason,
+                t_out,
+            } => f
+                .debug_struct("ToStringT")
+                .field("orig_t", orig_t)
+                .field("reason", reason)
+                .field("t_out", t_out)
+                .finish(),
+            UseTInner::SpecializeT(a, b, c, d, e) => f
+                .debug_tuple("SpecializeT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+            UseTInner::ThisSpecializeT(a, b, c) => f
+                .debug_tuple("ThisSpecializeT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .finish(),
+            UseTInner::ValueToTypeReferenceT(a, b, c, d) => f
+                .debug_tuple("ValueToTypeReferenceT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .finish(),
+            UseTInner::ConcretizeTypeAppsT(a, b, c, d) => f
+                .debug_tuple("ConcretizeTypeAppsT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .finish(),
+            UseTInner::LookupT {
+                reason,
+                lookup_kind,
+                try_ts_on_failure,
+                propref,
+                lookup_action,
+                ids,
+                method_accessible,
+                ignore_dicts,
+            } => f
+                .debug_struct("LookupT")
+                .field("reason", reason)
+                .field("lookup_kind", lookup_kind)
+                .field("try_ts_on_failure", try_ts_on_failure)
+                .field("propref", propref)
+                .field("lookup_action", lookup_action)
+                .field("ids", ids)
+                .field("method_accessible", method_accessible)
+                .field("ignore_dicts", ignore_dicts)
+                .finish(),
+            UseTInner::ObjRestT(a, b, c, d) => f
+                .debug_tuple("ObjRestT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .finish(),
+            UseTInner::ObjTestProtoT(a, b) => {
+                f.debug_tuple("ObjTestProtoT").field(a).field(b).finish()
+            }
+            UseTInner::ObjTestT(a, b, c) => f
+                .debug_tuple("ObjTestT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .finish(),
+            UseTInner::ArrRestT(a, b, c, d) => f
+                .debug_tuple("ArrRestT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .finish(),
+            UseTInner::GetKeysT(a, b) => f.debug_tuple("GetKeysT").field(a).field(b).finish(),
+            UseTInner::HasOwnPropT(a, b, c) => f
+                .debug_tuple("HasOwnPropT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .finish(),
+            UseTInner::GetValuesT(a, b) => f.debug_tuple("GetValuesT").field(a).field(b).finish(),
+            UseTInner::GetDictValuesT(a, b) => {
+                f.debug_tuple("GetDictValuesT").field(a).field(b).finish()
+            }
+            UseTInner::ElemT {
+                use_op,
+                reason,
+                obj,
+                action,
+            } => f
+                .debug_struct("ElemT")
+                .field("use_op", use_op)
+                .field("reason", reason)
+                .field("obj", obj)
+                .field("action", action)
+                .finish(),
+            UseTInner::MapTypeT(a, b, c, d) => f
+                .debug_tuple("MapTypeT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .finish(),
+            UseTInner::ObjKitT(a, b, c, d, e) => f
+                .debug_tuple("ObjKitT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+            UseTInner::ReactKitT(a, b, c) => f
+                .debug_tuple("ReactKitT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .finish(),
+            UseTInner::ConcretizeT {
+                reason,
+                kind,
+                seen,
+                collector,
+            } => f
+                .debug_struct("ConcretizeT")
+                .field("reason", reason)
+                .field("kind", kind)
+                .field("seen", seen)
+                .field("collector", collector)
+                .finish(),
+            UseTInner::ResolveSpreadT(a, b, c) => f
+                .debug_tuple("ResolveSpreadT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .finish(),
+            UseTInner::CondT(a, b, c, d) => f
+                .debug_tuple("CondT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .finish(),
+            UseTInner::ExtendsUseT(a, b, c, d, e) => f
+                .debug_tuple("ExtendsUseT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+            UseTInner::DestructuringT(a, b, c, d, e) => f
+                .debug_tuple("DestructuringT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+            UseTInner::ResolveUnionT {
+                reason,
+                unresolved,
+                resolved,
+                upper,
+                id,
+            } => f
+                .debug_struct("ResolveUnionT")
+                .field("reason", reason)
+                .field("unresolved", unresolved)
+                .field("resolved", resolved)
+                .field("upper", upper)
+                .field("id", id)
+                .finish(),
+            UseTInner::TypeCastT(a, b) => f.debug_tuple("TypeCastT").field(a).field(b).finish(),
+            UseTInner::EnumCastT { use_op, enum_ } => f
+                .debug_struct("EnumCastT")
+                .field("use_op", use_op)
+                .field("enum_", enum_)
+                .finish(),
+            UseTInner::EnumExhaustiveCheckT {
+                reason,
+                check,
+                incomplete_out,
+                discriminant_after_check,
+            } => f
+                .debug_struct("EnumExhaustiveCheckT")
+                .field("reason", reason)
+                .field("check", check)
+                .field("incomplete_out", incomplete_out)
+                .field("discriminant_after_check", discriminant_after_check)
+                .finish(),
+            UseTInner::GetEnumT {
+                use_op,
+                reason,
+                orig_t,
+                kind,
+                tout,
+            } => f
+                .debug_struct("GetEnumT")
+                .field("use_op", use_op)
+                .field("reason", reason)
+                .field("orig_t", orig_t)
+                .field("kind", kind)
+                .field("tout", tout)
+                .finish(),
+            UseTInner::FilterOptionalT(a, b) => {
+                f.debug_tuple("FilterOptionalT").field(a).field(b).finish()
+            }
+            UseTInner::FilterMaybeT(a, b) => {
+                f.debug_tuple("FilterMaybeT").field(a).field(b).finish()
+            }
+            UseTInner::DeepReadOnlyT(a, b) => {
+                f.debug_tuple("DeepReadOnlyT").field(a).field(b).finish()
+            }
+            UseTInner::HooklikeT(a) => f.debug_tuple("HooklikeT").field(a).finish(),
+            UseTInner::SealGenericT {
+                reason,
+                id,
+                name,
+                no_infer,
+                cont,
+            } => f
+                .debug_struct("SealGenericT")
+                .field("reason", reason)
+                .field("id", id)
+                .field("name", name)
+                .field("no_infer", no_infer)
+                .field("cont", cont)
+                .finish(),
+            UseTInner::OptionalIndexedAccessT {
+                use_op,
+                reason,
+                index,
+                tout_tvar,
+            } => f
+                .debug_struct("OptionalIndexedAccessT")
+                .field("use_op", use_op)
+                .field("reason", reason)
+                .field("index", index)
+                .field("tout_tvar", tout_tvar)
+                .finish(),
+            UseTInner::CheckUnusedPromiseT { reason, async_ } => f
+                .debug_struct("CheckUnusedPromiseT")
+                .field("reason", reason)
+                .field("async_", async_)
+                .finish(),
+            UseTInner::WriteComputedObjPropCheckT {
+                reason,
+                reason_key,
+                value_t,
+                err_on_str_key,
+            } => f
+                .debug_struct("WriteComputedObjPropCheckT")
+                .field("reason", reason)
+                .field("reason_key", reason_key)
+                .field("value_t", value_t)
+                .field("err_on_str_key", err_on_str_key)
+                .finish(),
+            UseTInner::ConvertEmptyPropsToMixedT(a, b) => f
+                .debug_tuple("ConvertEmptyPropsToMixedT")
+                .field(a)
+                .field(b)
+                .finish(),
+            UseTInner::ExitRendersT { renders_reason, u } => f
+                .debug_struct("ExitRendersT")
+                .field("renders_reason", renders_reason)
+                .field("u", u)
+                .finish(),
+            UseTInner::EvalTypeDestructorT {
+                destructor_use_op,
+                reason,
+                repos,
+                destructor,
+                tout,
+            } => f
+                .debug_struct("EvalTypeDestructorT")
+                .field("destructor_use_op", destructor_use_op)
+                .field("reason", reason)
+                .field("repos", repos)
+                .field("destructor", destructor)
+                .field("tout", tout)
+                .finish(),
+        }
+    }
+}
+
+pub struct UseT<CX = ()>(Rc<UseTInner<CX>>);
+
+impl<CX> Clone for UseT<CX> {
+    fn clone(&self) -> Self {
+        UseT(self.0.clone())
+    }
+}
+
+impl<CX> Dupe for UseT<CX> {}
+
+impl<CX> Hash for UseT<CX> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        self.0.hash(state);
+    }
+}
+
+impl<CX> PartialEq for UseT<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        Rc::ptr_eq(&self.0, &other.0) || self.0 == other.0
+    }
+}
+
+impl<CX> Eq for UseT<CX> {}
+
+impl<CX> PartialOrd for UseT<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for UseT<CX> {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
         if Rc::ptr_eq(&self.0, &other.0) {
             std::cmp::Ordering::Equal
@@ -1332,32 +3882,32 @@ impl Ord for UseT {
     }
 }
 
-impl std::fmt::Debug for UseT {
+impl<CX> std::fmt::Debug for UseT<CX> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         self.0.fmt(f)
     }
 }
 
-impl Deref for UseT {
-    type Target = UseTInner;
+impl<CX> Deref for UseT<CX> {
+    type Target = UseTInner<CX>;
 
     fn deref(&self) -> &Self::Target {
         &self.0
     }
 }
 
-impl UseT {
-    pub fn new(inner: UseTInner) -> Self {
+impl<CX> UseT<CX> {
+    pub fn new(inner: UseTInner<CX>) -> Self {
         UseT(Rc::new(inner))
     }
 
-    pub fn ptr_eq(&self, other: &UseT) -> bool {
+    pub fn ptr_eq(&self, other: &UseT<CX>) -> bool {
         Rc::ptr_eq(&self.0, &other.0)
     }
 }
 
-impl From<UseTInner> for UseT {
-    fn from(inner: UseTInner) -> Self {
+impl<CX> From<UseTInner<CX>> for UseT<CX> {
+    fn from(inner: UseTInner<CX>) -> Self {
         UseT::new(inner)
     }
 }
@@ -1411,15 +3961,14 @@ pub enum CallAction {
 }
 
 // opt_use_t: use_ts which can be part of an optional chain
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum OptUseT {
+pub enum OptUseT<CX = ()> {
     OptCallT {
         use_op: UseOp,
         reason: Reason,
         opt_funcalltype: OptFuncallType,
-        return_hint: LazyHintT,
+        return_hint: LazyHintT<CX>,
     },
-    OptMethodT(UseOp, Reason, Reason, PropRef, OptMethodAction),
+    OptMethodT(UseOp, Reason, Reason, PropRef, OptMethodAction<CX>),
     OptPrivateMethodT(
         UseOp,
         Reason,
@@ -1427,19 +3976,419 @@ pub enum OptUseT {
         FlowSmolStr,
         Rc<[ClassBinding]>,
         bool,
-        OptMethodAction,
+        OptMethodAction<CX>,
     ),
     OptGetPropT {
         use_op: UseOp,
         reason: Reason,
         id: Option<i32>,
         propref: PropRef,
-        hint: LazyHintT,
+        hint: LazyHintT<CX>,
     },
     OptGetPrivatePropT(UseOp, Reason, FlowSmolStr, Rc<[ClassBinding]>, bool),
-    OptTestPropT(UseOp, Reason, i32, PropRef, LazyHintT),
+    OptTestPropT(UseOp, Reason, i32, PropRef, LazyHintT<CX>),
     OptGetElemT(UseOp, Reason, Option<i32>, bool, Type),
-    OptCallElemT(UseOp, Reason, Reason, Type, OptMethodAction),
+    OptCallElemT(UseOp, Reason, Reason, Type, OptMethodAction<CX>),
+}
+
+impl<CX> Clone for OptUseT<CX> {
+    fn clone(&self) -> Self {
+        match self {
+            OptUseT::OptCallT {
+                use_op,
+                reason,
+                opt_funcalltype,
+                return_hint,
+            } => OptUseT::OptCallT {
+                use_op: use_op.clone(),
+                reason: reason.clone(),
+                opt_funcalltype: opt_funcalltype.clone(),
+                return_hint: return_hint.clone(),
+            },
+            OptUseT::OptMethodT(a, b, c, d, e) => {
+                OptUseT::OptMethodT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
+            }
+            OptUseT::OptPrivateMethodT(a, b, c, d, e, f, g) => OptUseT::OptPrivateMethodT(
+                a.clone(),
+                b.clone(),
+                c.clone(),
+                d.clone(),
+                e.clone(),
+                *f,
+                g.clone(),
+            ),
+            OptUseT::OptGetPropT {
+                use_op,
+                reason,
+                id,
+                propref,
+                hint,
+            } => OptUseT::OptGetPropT {
+                use_op: use_op.clone(),
+                reason: reason.clone(),
+                id: *id,
+                propref: propref.clone(),
+                hint: hint.clone(),
+            },
+            OptUseT::OptGetPrivatePropT(a, b, c, d, e) => {
+                OptUseT::OptGetPrivatePropT(a.clone(), b.clone(), c.clone(), d.clone(), *e)
+            }
+            OptUseT::OptTestPropT(a, b, c, d, e) => {
+                OptUseT::OptTestPropT(a.clone(), b.clone(), *c, d.clone(), e.clone())
+            }
+            OptUseT::OptGetElemT(a, b, c, d, e) => {
+                OptUseT::OptGetElemT(a.clone(), b.clone(), *c, *d, e.clone())
+            }
+            OptUseT::OptCallElemT(a, b, c, d, e) => {
+                OptUseT::OptCallElemT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
+            }
+        }
+    }
+}
+
+impl<CX> PartialEq for OptUseT<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                OptUseT::OptCallT {
+                    use_op: a1,
+                    reason: b1,
+                    opt_funcalltype: c1,
+                    return_hint: d1,
+                },
+                OptUseT::OptCallT {
+                    use_op: a2,
+                    reason: b2,
+                    opt_funcalltype: c2,
+                    return_hint: d2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2,
+            (OptUseT::OptMethodT(a1, b1, c1, d1, e1), OptUseT::OptMethodT(a2, b2, c2, d2, e2)) => {
+                a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2
+            }
+            (
+                OptUseT::OptPrivateMethodT(a1, b1, c1, d1, e1, f1, g1),
+                OptUseT::OptPrivateMethodT(a2, b2, c2, d2, e2, f2, g2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2 && g1 == g2,
+            (
+                OptUseT::OptGetPropT {
+                    use_op: a1,
+                    reason: b1,
+                    id: c1,
+                    propref: d1,
+                    hint: e1,
+                },
+                OptUseT::OptGetPropT {
+                    use_op: a2,
+                    reason: b2,
+                    id: c2,
+                    propref: d2,
+                    hint: e2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (
+                OptUseT::OptGetPrivatePropT(a1, b1, c1, d1, e1),
+                OptUseT::OptGetPrivatePropT(a2, b2, c2, d2, e2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (
+                OptUseT::OptTestPropT(a1, b1, c1, d1, e1),
+                OptUseT::OptTestPropT(a2, b2, c2, d2, e2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (
+                OptUseT::OptGetElemT(a1, b1, c1, d1, e1),
+                OptUseT::OptGetElemT(a2, b2, c2, d2, e2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (
+                OptUseT::OptCallElemT(a1, b1, c1, d1, e1),
+                OptUseT::OptCallElemT(a2, b2, c2, d2, e2),
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            _ => false,
+        }
+    }
+}
+
+impl<CX> Eq for OptUseT<CX> {}
+
+impl<CX> std::hash::Hash for OptUseT<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            OptUseT::OptCallT {
+                use_op,
+                reason,
+                opt_funcalltype,
+                return_hint,
+            } => {
+                use_op.hash(state);
+                reason.hash(state);
+                opt_funcalltype.hash(state);
+                return_hint.hash(state);
+            }
+            OptUseT::OptMethodT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+            OptUseT::OptPrivateMethodT(a, b, c, d, e, f, g) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+                f.hash(state);
+                g.hash(state);
+            }
+            OptUseT::OptGetPropT {
+                use_op,
+                reason,
+                id,
+                propref,
+                hint,
+            } => {
+                use_op.hash(state);
+                reason.hash(state);
+                id.hash(state);
+                propref.hash(state);
+                hint.hash(state);
+            }
+            OptUseT::OptGetPrivatePropT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+            OptUseT::OptTestPropT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+            OptUseT::OptGetElemT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+            OptUseT::OptCallElemT(a, b, c, d, e) => {
+                a.hash(state);
+                b.hash(state);
+                c.hash(state);
+                d.hash(state);
+                e.hash(state);
+            }
+        }
+    }
+}
+
+impl<CX> PartialOrd for OptUseT<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for OptUseT<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        fn variant_index<CX>(v: &OptUseT<CX>) -> u32 {
+            match v {
+                OptUseT::OptCallT { .. } => 0,
+                OptUseT::OptMethodT(..) => 1,
+                OptUseT::OptPrivateMethodT(..) => 2,
+                OptUseT::OptGetPropT { .. } => 3,
+                OptUseT::OptGetPrivatePropT(..) => 4,
+                OptUseT::OptTestPropT(..) => 5,
+                OptUseT::OptGetElemT(..) => 6,
+                OptUseT::OptCallElemT(..) => 7,
+            }
+        }
+        let disc = variant_index(self).cmp(&variant_index(other));
+        if disc != std::cmp::Ordering::Equal {
+            return disc;
+        }
+        match (self, other) {
+            (
+                OptUseT::OptCallT {
+                    use_op: a1,
+                    reason: b1,
+                    opt_funcalltype: c1,
+                    return_hint: d1,
+                },
+                OptUseT::OptCallT {
+                    use_op: a2,
+                    reason: b2,
+                    opt_funcalltype: c2,
+                    return_hint: d2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2)),
+            (OptUseT::OptMethodT(a1, b1, c1, d1, e1), OptUseT::OptMethodT(a2, b2, c2, d2, e2)) => {
+                a1.cmp(a2)
+                    .then_with(|| b1.cmp(b2))
+                    .then_with(|| c1.cmp(c2))
+                    .then_with(|| d1.cmp(d2))
+                    .then_with(|| e1.cmp(e2))
+            }
+            (
+                OptUseT::OptPrivateMethodT(a1, b1, c1, d1, e1, f1, g1),
+                OptUseT::OptPrivateMethodT(a2, b2, c2, d2, e2, f2, g2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2))
+                .then_with(|| f1.cmp(f2))
+                .then_with(|| g1.cmp(g2)),
+            (
+                OptUseT::OptGetPropT {
+                    use_op: a1,
+                    reason: b1,
+                    id: c1,
+                    propref: d1,
+                    hint: e1,
+                },
+                OptUseT::OptGetPropT {
+                    use_op: a2,
+                    reason: b2,
+                    id: c2,
+                    propref: d2,
+                    hint: e2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (
+                OptUseT::OptGetPrivatePropT(a1, b1, c1, d1, e1),
+                OptUseT::OptGetPrivatePropT(a2, b2, c2, d2, e2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (
+                OptUseT::OptTestPropT(a1, b1, c1, d1, e1),
+                OptUseT::OptTestPropT(a2, b2, c2, d2, e2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (
+                OptUseT::OptGetElemT(a1, b1, c1, d1, e1),
+                OptUseT::OptGetElemT(a2, b2, c2, d2, e2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (
+                OptUseT::OptCallElemT(a1, b1, c1, d1, e1),
+                OptUseT::OptCallElemT(a2, b2, c2, d2, e2),
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            _ => std::cmp::Ordering::Equal,
+        }
+    }
+}
+
+impl<CX> std::fmt::Debug for OptUseT<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OptUseT::OptCallT {
+                use_op,
+                reason,
+                opt_funcalltype,
+                return_hint,
+            } => f
+                .debug_struct("OptCallT")
+                .field("use_op", use_op)
+                .field("reason", reason)
+                .field("opt_funcalltype", opt_funcalltype)
+                .field("return_hint", return_hint)
+                .finish(),
+            OptUseT::OptMethodT(a, b, c, d, e) => f
+                .debug_tuple("OptMethodT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+            OptUseT::OptPrivateMethodT(a, b, c, d, e, ff, g) => f
+                .debug_tuple("OptPrivateMethodT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .field(ff)
+                .field(g)
+                .finish(),
+            OptUseT::OptGetPropT {
+                use_op,
+                reason,
+                id,
+                propref,
+                hint,
+            } => f
+                .debug_struct("OptGetPropT")
+                .field("use_op", use_op)
+                .field("reason", reason)
+                .field("id", id)
+                .field("propref", propref)
+                .field("hint", hint)
+                .finish(),
+            OptUseT::OptGetPrivatePropT(a, b, c, d, e) => f
+                .debug_tuple("OptGetPrivatePropT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+            OptUseT::OptTestPropT(a, b, c, d, e) => f
+                .debug_tuple("OptTestPropT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+            OptUseT::OptGetElemT(a, b, c, d, e) => f
+                .debug_tuple("OptGetElemT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+            OptUseT::OptCallElemT(a, b, c, d, e) => f
+                .debug_tuple("OptCallElemT")
+                .field(a)
+                .field(b)
+                .field(c)
+                .field(d)
+                .field(e)
+                .finish(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1450,11 +4399,10 @@ pub enum OptState {
     AssertChain,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum MethodAction {
+pub enum MethodAction<CX = ()> {
     CallM {
         methodcalltype: MethodCallType,
-        return_hint: LazyHintT,
+        return_hint: LazyHintT<CX>,
         specialized_callee: Option<SpecializedCallee>,
     },
     ChainM {
@@ -1462,17 +4410,220 @@ pub enum MethodAction {
         lhs_reason: Reason,
         methodcalltype: MethodCallType,
         voided_out_collector: Option<type_collector::TypeCollector>,
-        return_hint: LazyHintT,
+        return_hint: LazyHintT<CX>,
         specialized_callee: Option<SpecializedCallee>,
     },
     NoMethodAction(Type),
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum OptMethodAction {
+impl<CX> Clone for MethodAction<CX> {
+    fn clone(&self) -> Self {
+        match self {
+            MethodAction::CallM {
+                methodcalltype,
+                return_hint,
+                specialized_callee,
+            } => MethodAction::CallM {
+                methodcalltype: methodcalltype.clone(),
+                return_hint: return_hint.clone(),
+                specialized_callee: specialized_callee.clone(),
+            },
+            MethodAction::ChainM {
+                exp_reason,
+                lhs_reason,
+                methodcalltype,
+                voided_out_collector,
+                return_hint,
+                specialized_callee,
+            } => MethodAction::ChainM {
+                exp_reason: exp_reason.clone(),
+                lhs_reason: lhs_reason.clone(),
+                methodcalltype: methodcalltype.clone(),
+                voided_out_collector: voided_out_collector.clone(),
+                return_hint: return_hint.clone(),
+                specialized_callee: specialized_callee.clone(),
+            },
+            MethodAction::NoMethodAction(a) => MethodAction::NoMethodAction(a.clone()),
+        }
+    }
+}
+
+impl<CX> PartialEq for MethodAction<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                MethodAction::CallM {
+                    methodcalltype: a1,
+                    return_hint: b1,
+                    specialized_callee: c1,
+                },
+                MethodAction::CallM {
+                    methodcalltype: a2,
+                    return_hint: b2,
+                    specialized_callee: c2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2,
+            (
+                MethodAction::ChainM {
+                    exp_reason: a1,
+                    lhs_reason: b1,
+                    methodcalltype: c1,
+                    voided_out_collector: d1,
+                    return_hint: e1,
+                    specialized_callee: f1,
+                },
+                MethodAction::ChainM {
+                    exp_reason: a2,
+                    lhs_reason: b2,
+                    methodcalltype: c2,
+                    voided_out_collector: d2,
+                    return_hint: e2,
+                    specialized_callee: f2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
+            (MethodAction::NoMethodAction(a1), MethodAction::NoMethodAction(a2)) => a1 == a2,
+            _ => false,
+        }
+    }
+}
+
+impl<CX> Eq for MethodAction<CX> {}
+
+impl<CX> std::hash::Hash for MethodAction<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            MethodAction::CallM {
+                methodcalltype,
+                return_hint,
+                specialized_callee,
+            } => {
+                methodcalltype.hash(state);
+                return_hint.hash(state);
+                specialized_callee.hash(state);
+            }
+            MethodAction::ChainM {
+                exp_reason,
+                lhs_reason,
+                methodcalltype,
+                voided_out_collector,
+                return_hint,
+                specialized_callee,
+            } => {
+                exp_reason.hash(state);
+                lhs_reason.hash(state);
+                methodcalltype.hash(state);
+                voided_out_collector.hash(state);
+                return_hint.hash(state);
+                specialized_callee.hash(state);
+            }
+            MethodAction::NoMethodAction(a) => {
+                a.hash(state);
+            }
+        }
+    }
+}
+
+impl<CX> PartialOrd for MethodAction<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for MethodAction<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        fn variant_index<CX>(v: &MethodAction<CX>) -> u32 {
+            match v {
+                MethodAction::CallM { .. } => 0,
+                MethodAction::ChainM { .. } => 1,
+                MethodAction::NoMethodAction(..) => 2,
+            }
+        }
+        let disc = variant_index(self).cmp(&variant_index(other));
+        if disc != std::cmp::Ordering::Equal {
+            return disc;
+        }
+        match (self, other) {
+            (
+                MethodAction::CallM {
+                    methodcalltype: a1,
+                    return_hint: b1,
+                    specialized_callee: c1,
+                },
+                MethodAction::CallM {
+                    methodcalltype: a2,
+                    return_hint: b2,
+                    specialized_callee: c2,
+                },
+            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2)),
+            (
+                MethodAction::ChainM {
+                    exp_reason: a1,
+                    lhs_reason: b1,
+                    methodcalltype: c1,
+                    voided_out_collector: d1,
+                    return_hint: e1,
+                    specialized_callee: f1,
+                },
+                MethodAction::ChainM {
+                    exp_reason: a2,
+                    lhs_reason: b2,
+                    methodcalltype: c2,
+                    voided_out_collector: d2,
+                    return_hint: e2,
+                    specialized_callee: f2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2))
+                .then_with(|| f1.cmp(f2)),
+            (MethodAction::NoMethodAction(a1), MethodAction::NoMethodAction(a2)) => a1.cmp(a2),
+            _ => std::cmp::Ordering::Equal,
+        }
+    }
+}
+
+impl<CX> std::fmt::Debug for MethodAction<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            MethodAction::CallM {
+                methodcalltype,
+                return_hint,
+                specialized_callee,
+            } => f
+                .debug_struct("CallM")
+                .field("methodcalltype", methodcalltype)
+                .field("return_hint", return_hint)
+                .field("specialized_callee", specialized_callee)
+                .finish(),
+            MethodAction::ChainM {
+                exp_reason,
+                lhs_reason,
+                methodcalltype,
+                voided_out_collector,
+                return_hint,
+                specialized_callee,
+            } => f
+                .debug_struct("ChainM")
+                .field("exp_reason", exp_reason)
+                .field("lhs_reason", lhs_reason)
+                .field("methodcalltype", methodcalltype)
+                .field("voided_out_collector", voided_out_collector)
+                .field("return_hint", return_hint)
+                .field("specialized_callee", specialized_callee)
+                .finish(),
+            MethodAction::NoMethodAction(a) => f.debug_tuple("NoMethodAction").field(a).finish(),
+        }
+    }
+}
+
+pub enum OptMethodAction<CX = ()> {
     OptCallM {
         opt_methodcalltype: OptMethodCallType,
-        return_hint: LazyHintT,
+        return_hint: LazyHintT<CX>,
         specialized_callee: Option<SpecializedCallee>,
     },
     OptChainM {
@@ -1480,10 +4631,220 @@ pub enum OptMethodAction {
         lhs_reason: Reason,
         opt_methodcalltype: OptMethodCallType,
         voided_out_collector: Option<type_collector::TypeCollector>,
-        return_hint: LazyHintT,
+        return_hint: LazyHintT<CX>,
         specialized_callee: Option<SpecializedCallee>,
     },
     OptNoMethodAction(Type),
+}
+
+impl<CX> Clone for OptMethodAction<CX> {
+    fn clone(&self) -> Self {
+        match self {
+            OptMethodAction::OptCallM {
+                opt_methodcalltype,
+                return_hint,
+                specialized_callee,
+            } => OptMethodAction::OptCallM {
+                opt_methodcalltype: opt_methodcalltype.clone(),
+                return_hint: return_hint.clone(),
+                specialized_callee: specialized_callee.clone(),
+            },
+            OptMethodAction::OptChainM {
+                exp_reason,
+                lhs_reason,
+                opt_methodcalltype,
+                voided_out_collector,
+                return_hint,
+                specialized_callee,
+            } => OptMethodAction::OptChainM {
+                exp_reason: exp_reason.clone(),
+                lhs_reason: lhs_reason.clone(),
+                opt_methodcalltype: opt_methodcalltype.clone(),
+                voided_out_collector: voided_out_collector.clone(),
+                return_hint: return_hint.clone(),
+                specialized_callee: specialized_callee.clone(),
+            },
+            OptMethodAction::OptNoMethodAction(a) => OptMethodAction::OptNoMethodAction(a.clone()),
+        }
+    }
+}
+
+impl<CX> PartialEq for OptMethodAction<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                OptMethodAction::OptCallM {
+                    opt_methodcalltype: a1,
+                    return_hint: b1,
+                    specialized_callee: c1,
+                },
+                OptMethodAction::OptCallM {
+                    opt_methodcalltype: a2,
+                    return_hint: b2,
+                    specialized_callee: c2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2,
+            (
+                OptMethodAction::OptChainM {
+                    exp_reason: a1,
+                    lhs_reason: b1,
+                    opt_methodcalltype: c1,
+                    voided_out_collector: d1,
+                    return_hint: e1,
+                    specialized_callee: f1,
+                },
+                OptMethodAction::OptChainM {
+                    exp_reason: a2,
+                    lhs_reason: b2,
+                    opt_methodcalltype: c2,
+                    voided_out_collector: d2,
+                    return_hint: e2,
+                    specialized_callee: f2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2 && f1 == f2,
+            (OptMethodAction::OptNoMethodAction(a1), OptMethodAction::OptNoMethodAction(a2)) => {
+                a1 == a2
+            }
+            _ => false,
+        }
+    }
+}
+
+impl<CX> Eq for OptMethodAction<CX> {}
+
+impl<CX> std::hash::Hash for OptMethodAction<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            OptMethodAction::OptCallM {
+                opt_methodcalltype,
+                return_hint,
+                specialized_callee,
+            } => {
+                opt_methodcalltype.hash(state);
+                return_hint.hash(state);
+                specialized_callee.hash(state);
+            }
+            OptMethodAction::OptChainM {
+                exp_reason,
+                lhs_reason,
+                opt_methodcalltype,
+                voided_out_collector,
+                return_hint,
+                specialized_callee,
+            } => {
+                exp_reason.hash(state);
+                lhs_reason.hash(state);
+                opt_methodcalltype.hash(state);
+                voided_out_collector.hash(state);
+                return_hint.hash(state);
+                specialized_callee.hash(state);
+            }
+            OptMethodAction::OptNoMethodAction(a) => {
+                a.hash(state);
+            }
+        }
+    }
+}
+
+impl<CX> PartialOrd for OptMethodAction<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for OptMethodAction<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        fn variant_index<CX>(v: &OptMethodAction<CX>) -> u32 {
+            match v {
+                OptMethodAction::OptCallM { .. } => 0,
+                OptMethodAction::OptChainM { .. } => 1,
+                OptMethodAction::OptNoMethodAction(..) => 2,
+            }
+        }
+        let disc = variant_index(self).cmp(&variant_index(other));
+        if disc != std::cmp::Ordering::Equal {
+            return disc;
+        }
+        match (self, other) {
+            (
+                OptMethodAction::OptCallM {
+                    opt_methodcalltype: a1,
+                    return_hint: b1,
+                    specialized_callee: c1,
+                },
+                OptMethodAction::OptCallM {
+                    opt_methodcalltype: a2,
+                    return_hint: b2,
+                    specialized_callee: c2,
+                },
+            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2)),
+            (
+                OptMethodAction::OptChainM {
+                    exp_reason: a1,
+                    lhs_reason: b1,
+                    opt_methodcalltype: c1,
+                    voided_out_collector: d1,
+                    return_hint: e1,
+                    specialized_callee: f1,
+                },
+                OptMethodAction::OptChainM {
+                    exp_reason: a2,
+                    lhs_reason: b2,
+                    opt_methodcalltype: c2,
+                    voided_out_collector: d2,
+                    return_hint: e2,
+                    specialized_callee: f2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2))
+                .then_with(|| f1.cmp(f2)),
+            (OptMethodAction::OptNoMethodAction(a1), OptMethodAction::OptNoMethodAction(a2)) => {
+                a1.cmp(a2)
+            }
+            _ => std::cmp::Ordering::Equal,
+        }
+    }
+}
+
+impl<CX> std::fmt::Debug for OptMethodAction<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            OptMethodAction::OptCallM {
+                opt_methodcalltype,
+                return_hint,
+                specialized_callee,
+            } => f
+                .debug_struct("OptCallM")
+                .field("opt_methodcalltype", opt_methodcalltype)
+                .field("return_hint", return_hint)
+                .field("specialized_callee", specialized_callee)
+                .finish(),
+            OptMethodAction::OptChainM {
+                exp_reason,
+                lhs_reason,
+                opt_methodcalltype,
+                voided_out_collector,
+                return_hint,
+                specialized_callee,
+            } => f
+                .debug_struct("OptChainM")
+                .field("exp_reason", exp_reason)
+                .field("lhs_reason", lhs_reason)
+                .field("opt_methodcalltype", opt_methodcalltype)
+                .field("voided_out_collector", voided_out_collector)
+                .field("return_hint", return_hint)
+                .field("specialized_callee", specialized_callee)
+                .finish(),
+            OptMethodAction::OptNoMethodAction(a) => {
+                f.debug_tuple("OptNoMethodAction").field(a).finish()
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -2000,10 +5361,80 @@ pub struct NamespaceType {
     pub types_tmap: properties::Id,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum Cont {
+pub enum Cont<CX = ()> {
     Lower(UseOp, Type),
-    Upper(Box<UseT>),
+    Upper(Box<UseT<CX>>),
+}
+
+impl<CX> Clone for Cont<CX> {
+    fn clone(&self) -> Self {
+        match self {
+            Cont::Lower(a, b) => Cont::Lower(a.clone(), b.clone()),
+            Cont::Upper(a) => Cont::Upper(a.clone()),
+        }
+    }
+}
+
+impl<CX> PartialEq for Cont<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (Cont::Lower(a1, b1), Cont::Lower(a2, b2)) => a1 == a2 && b1 == b2,
+            (Cont::Upper(a1), Cont::Upper(a2)) => a1 == a2,
+            _ => false,
+        }
+    }
+}
+
+impl<CX> Eq for Cont<CX> {}
+
+impl<CX> std::hash::Hash for Cont<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            Cont::Lower(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+            Cont::Upper(a) => {
+                a.hash(state);
+            }
+        }
+    }
+}
+
+impl<CX> PartialOrd for Cont<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for Cont<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        fn variant_index<CX>(v: &Cont<CX>) -> u32 {
+            match v {
+                Cont::Lower(..) => 0,
+                Cont::Upper(..) => 1,
+            }
+        }
+        let disc = variant_index(self).cmp(&variant_index(other));
+        if disc != std::cmp::Ordering::Equal {
+            return disc;
+        }
+        match (self, other) {
+            (Cont::Lower(a1, b1), Cont::Lower(a2, b2)) => a1.cmp(a2).then_with(|| b1.cmp(b2)),
+            (Cont::Upper(a1), Cont::Upper(a2)) => a1.cmp(a2),
+            _ => std::cmp::Ordering::Equal,
+        }
+    }
+}
+
+impl<CX> std::fmt::Debug for Cont<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Cont::Lower(a, b) => f.debug_tuple("Lower").field(a).field(b).finish(),
+            Cont::Upper(a) => f.debug_tuple("Upper").field(a).finish(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -2107,8 +5538,7 @@ pub enum PropertySource {
 /// In particular, a computed property in the object initializer users SetElemT
 /// to initialize the property value, but in order to avoid race conditions we
 /// need to ensure that reads happen after writes.
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum ElemAction {
+pub enum ElemAction<CX = ()> {
     ReadElem {
         id: Option<i32>,
         from_annot: bool,
@@ -2121,7 +5551,191 @@ pub enum ElemAction {
         tout: Option<Type>,
         mode: SetMode,
     },
-    CallElem(Reason, Box<MethodAction>),
+    CallElem(Reason, Box<MethodAction<CX>>),
+}
+
+impl<CX> Clone for ElemAction<CX> {
+    fn clone(&self) -> Self {
+        match self {
+            ElemAction::ReadElem {
+                id,
+                from_annot,
+                skip_optional,
+                access_iterables,
+                tout,
+            } => ElemAction::ReadElem {
+                id: *id,
+                from_annot: *from_annot,
+                skip_optional: *skip_optional,
+                access_iterables: *access_iterables,
+                tout: tout.clone(),
+            },
+            ElemAction::WriteElem { tin, tout, mode } => ElemAction::WriteElem {
+                tin: tin.clone(),
+                tout: tout.clone(),
+                mode: mode.clone(),
+            },
+            ElemAction::CallElem(a, b) => ElemAction::CallElem(a.clone(), b.clone()),
+        }
+    }
+}
+
+impl<CX> PartialEq for ElemAction<CX> {
+    fn eq(&self, other: &Self) -> bool {
+        match (self, other) {
+            (
+                ElemAction::ReadElem {
+                    id: a1,
+                    from_annot: b1,
+                    skip_optional: c1,
+                    access_iterables: d1,
+                    tout: e1,
+                },
+                ElemAction::ReadElem {
+                    id: a2,
+                    from_annot: b2,
+                    skip_optional: c2,
+                    access_iterables: d2,
+                    tout: e2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
+            (
+                ElemAction::WriteElem {
+                    tin: a1,
+                    tout: b1,
+                    mode: c1,
+                },
+                ElemAction::WriteElem {
+                    tin: a2,
+                    tout: b2,
+                    mode: c2,
+                },
+            ) => a1 == a2 && b1 == b2 && c1 == c2,
+            (ElemAction::CallElem(a1, b1), ElemAction::CallElem(a2, b2)) => a1 == a2 && b1 == b2,
+            _ => false,
+        }
+    }
+}
+
+impl<CX> Eq for ElemAction<CX> {}
+
+impl<CX> std::hash::Hash for ElemAction<CX> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        std::mem::discriminant(self).hash(state);
+        match self {
+            ElemAction::ReadElem {
+                id,
+                from_annot,
+                skip_optional,
+                access_iterables,
+                tout,
+            } => {
+                id.hash(state);
+                from_annot.hash(state);
+                skip_optional.hash(state);
+                access_iterables.hash(state);
+                tout.hash(state);
+            }
+            ElemAction::WriteElem { tin, tout, mode } => {
+                tin.hash(state);
+                tout.hash(state);
+                mode.hash(state);
+            }
+            ElemAction::CallElem(a, b) => {
+                a.hash(state);
+                b.hash(state);
+            }
+        }
+    }
+}
+
+impl<CX> PartialOrd for ElemAction<CX> {
+    fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+        Some(self.cmp(other))
+    }
+}
+
+impl<CX> Ord for ElemAction<CX> {
+    fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+        fn variant_index<CX>(v: &ElemAction<CX>) -> u32 {
+            match v {
+                ElemAction::ReadElem { .. } => 0,
+                ElemAction::WriteElem { .. } => 1,
+                ElemAction::CallElem(..) => 2,
+            }
+        }
+        let disc = variant_index(self).cmp(&variant_index(other));
+        if disc != std::cmp::Ordering::Equal {
+            return disc;
+        }
+        match (self, other) {
+            (
+                ElemAction::ReadElem {
+                    id: a1,
+                    from_annot: b1,
+                    skip_optional: c1,
+                    access_iterables: d1,
+                    tout: e1,
+                },
+                ElemAction::ReadElem {
+                    id: a2,
+                    from_annot: b2,
+                    skip_optional: c2,
+                    access_iterables: d2,
+                    tout: e2,
+                },
+            ) => a1
+                .cmp(a2)
+                .then_with(|| b1.cmp(b2))
+                .then_with(|| c1.cmp(c2))
+                .then_with(|| d1.cmp(d2))
+                .then_with(|| e1.cmp(e2)),
+            (
+                ElemAction::WriteElem {
+                    tin: a1,
+                    tout: b1,
+                    mode: c1,
+                },
+                ElemAction::WriteElem {
+                    tin: a2,
+                    tout: b2,
+                    mode: c2,
+                },
+            ) => a1.cmp(a2).then_with(|| b1.cmp(b2)).then_with(|| c1.cmp(c2)),
+            (ElemAction::CallElem(a1, b1), ElemAction::CallElem(a2, b2)) => {
+                a1.cmp(a2).then_with(|| b1.cmp(b2))
+            }
+            _ => std::cmp::Ordering::Equal,
+        }
+    }
+}
+
+impl<CX> std::fmt::Debug for ElemAction<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            ElemAction::ReadElem {
+                id,
+                from_annot,
+                skip_optional,
+                access_iterables,
+                tout,
+            } => f
+                .debug_struct("ReadElem")
+                .field("id", id)
+                .field("from_annot", from_annot)
+                .field("skip_optional", skip_optional)
+                .field("access_iterables", access_iterables)
+                .field("tout", tout)
+                .finish(),
+            ElemAction::WriteElem { tin, tout, mode } => f
+                .debug_struct("WriteElem")
+                .field("tin", tin)
+                .field("tout", tout)
+                .field("mode", mode)
+                .finish(),
+            ElemAction::CallElem(a, b) => f.debug_tuple("CallElem").field(a).field(b).finish(),
+        }
+    }
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -5175,15 +8789,14 @@ pub mod object {
 pub mod react {
     use super::*;
 
-    #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-    pub enum Tool {
+    pub enum Tool<CX = ()> {
         CreateElement {
             component: Type,
             jsx_props: Type,
             tout: Tvar,
             targs: Option<Rc<[Targ]>>,
             should_generalize: bool,
-            return_hint: LazyHintT,
+            return_hint: LazyHintT<CX>,
             record_monomorphized_result: bool,
             inferred_targs: Option<Rc<[(Type, SubstName)]>>,
             specialized_component: Option<SpecializedCallee>,
@@ -5194,6 +8807,214 @@ pub mod react {
         GetConfig {
             tout: Type,
         },
+    }
+
+    impl<CX> Clone for Tool<CX> {
+        fn clone(&self) -> Self {
+            match self {
+                Tool::CreateElement {
+                    component,
+                    jsx_props,
+                    tout,
+                    targs,
+                    should_generalize,
+                    return_hint,
+                    record_monomorphized_result,
+                    inferred_targs,
+                    specialized_component,
+                } => Tool::CreateElement {
+                    component: component.clone(),
+                    jsx_props: jsx_props.clone(),
+                    tout: tout.clone(),
+                    targs: targs.clone(),
+                    should_generalize: *should_generalize,
+                    return_hint: return_hint.clone(),
+                    record_monomorphized_result: *record_monomorphized_result,
+                    inferred_targs: inferred_targs.clone(),
+                    specialized_component: specialized_component.clone(),
+                },
+                Tool::ConfigCheck { props } => Tool::ConfigCheck {
+                    props: props.clone(),
+                },
+                Tool::GetConfig { tout } => Tool::GetConfig { tout: tout.clone() },
+            }
+        }
+    }
+
+    impl<CX> PartialEq for Tool<CX> {
+        fn eq(&self, other: &Self) -> bool {
+            match (self, other) {
+                (
+                    Tool::CreateElement {
+                        component: a1,
+                        jsx_props: b1,
+                        tout: c1,
+                        targs: d1,
+                        should_generalize: e1,
+                        return_hint: f1,
+                        record_monomorphized_result: g1,
+                        inferred_targs: h1,
+                        specialized_component: i1,
+                    },
+                    Tool::CreateElement {
+                        component: a2,
+                        jsx_props: b2,
+                        tout: c2,
+                        targs: d2,
+                        should_generalize: e2,
+                        return_hint: f2,
+                        record_monomorphized_result: g2,
+                        inferred_targs: h2,
+                        specialized_component: i2,
+                    },
+                ) => {
+                    a1 == a2
+                        && b1 == b2
+                        && c1 == c2
+                        && d1 == d2
+                        && e1 == e2
+                        && f1 == f2
+                        && g1 == g2
+                        && h1 == h2
+                        && i1 == i2
+                }
+                (Tool::ConfigCheck { props: a1 }, Tool::ConfigCheck { props: a2 }) => a1 == a2,
+                (Tool::GetConfig { tout: a1 }, Tool::GetConfig { tout: a2 }) => a1 == a2,
+                _ => false,
+            }
+        }
+    }
+
+    impl<CX> Eq for Tool<CX> {}
+
+    impl<CX> std::hash::Hash for Tool<CX> {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            std::mem::discriminant(self).hash(state);
+            match self {
+                Tool::CreateElement {
+                    component,
+                    jsx_props,
+                    tout,
+                    targs,
+                    should_generalize,
+                    return_hint,
+                    record_monomorphized_result,
+                    inferred_targs,
+                    specialized_component,
+                } => {
+                    component.hash(state);
+                    jsx_props.hash(state);
+                    tout.hash(state);
+                    targs.hash(state);
+                    should_generalize.hash(state);
+                    return_hint.hash(state);
+                    record_monomorphized_result.hash(state);
+                    inferred_targs.hash(state);
+                    specialized_component.hash(state);
+                }
+                Tool::ConfigCheck { props } => {
+                    props.hash(state);
+                }
+                Tool::GetConfig { tout } => {
+                    tout.hash(state);
+                }
+            }
+        }
+    }
+
+    impl<CX> PartialOrd for Tool<CX> {
+        fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
+            Some(self.cmp(other))
+        }
+    }
+
+    impl<CX> Ord for Tool<CX> {
+        fn cmp(&self, other: &Self) -> std::cmp::Ordering {
+            fn variant_index<CX>(v: &Tool<CX>) -> u32 {
+                match v {
+                    Tool::CreateElement { .. } => 0,
+                    Tool::ConfigCheck { .. } => 1,
+                    Tool::GetConfig { .. } => 2,
+                }
+            }
+            let disc = variant_index(self).cmp(&variant_index(other));
+            if disc != std::cmp::Ordering::Equal {
+                return disc;
+            }
+            match (self, other) {
+                (
+                    Tool::CreateElement {
+                        component: a1,
+                        jsx_props: b1,
+                        tout: c1,
+                        targs: d1,
+                        should_generalize: e1,
+                        return_hint: f1,
+                        record_monomorphized_result: g1,
+                        inferred_targs: h1,
+                        specialized_component: i1,
+                    },
+                    Tool::CreateElement {
+                        component: a2,
+                        jsx_props: b2,
+                        tout: c2,
+                        targs: d2,
+                        should_generalize: e2,
+                        return_hint: f2,
+                        record_monomorphized_result: g2,
+                        inferred_targs: h2,
+                        specialized_component: i2,
+                    },
+                ) => a1
+                    .cmp(a2)
+                    .then_with(|| b1.cmp(b2))
+                    .then_with(|| c1.cmp(c2))
+                    .then_with(|| d1.cmp(d2))
+                    .then_with(|| e1.cmp(e2))
+                    .then_with(|| f1.cmp(f2))
+                    .then_with(|| g1.cmp(g2))
+                    .then_with(|| h1.cmp(h2))
+                    .then_with(|| i1.cmp(i2)),
+                (Tool::ConfigCheck { props: a1 }, Tool::ConfigCheck { props: a2 }) => a1.cmp(a2),
+                (Tool::GetConfig { tout: a1 }, Tool::GetConfig { tout: a2 }) => a1.cmp(a2),
+                _ => std::cmp::Ordering::Equal,
+            }
+        }
+    }
+
+    impl<CX> std::fmt::Debug for Tool<CX> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            match self {
+                Tool::CreateElement {
+                    component,
+                    jsx_props,
+                    tout,
+                    targs,
+                    should_generalize,
+                    return_hint,
+                    record_monomorphized_result,
+                    inferred_targs,
+                    specialized_component,
+                } => f
+                    .debug_struct("CreateElement")
+                    .field("component", component)
+                    .field("jsx_props", jsx_props)
+                    .field("tout", tout)
+                    .field("targs", targs)
+                    .field("should_generalize", should_generalize)
+                    .field("return_hint", return_hint)
+                    .field("record_monomorphized_result", record_monomorphized_result)
+                    .field("inferred_targs", inferred_targs)
+                    .field("specialized_component", specialized_component)
+                    .finish(),
+                Tool::ConfigCheck { props } => {
+                    f.debug_struct("ConfigCheck").field("props", props).finish()
+                }
+                Tool::GetConfig { tout } => {
+                    f.debug_struct("GetConfig").field("tout", tout).finish()
+                }
+            }
+        }
     }
 }
 
@@ -5432,19 +9253,51 @@ pub mod constraint {
     pub type SpeculationId = i32;
     pub type CaseId = i32;
 
-    #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-    pub struct UseTypeKey {
-        pub use_t: UseT,
+    pub struct UseTypeKey<CX = ()> {
+        pub use_t: UseT<CX>,
         pub assoc: Option<(SpeculationId, CaseId)>,
     }
 
-    impl PartialOrd for UseTypeKey {
+    impl<CX> Clone for UseTypeKey<CX> {
+        fn clone(&self) -> Self {
+            UseTypeKey {
+                use_t: self.use_t.clone(),
+                assoc: self.assoc,
+            }
+        }
+    }
+
+    impl<CX> PartialEq for UseTypeKey<CX> {
+        fn eq(&self, other: &Self) -> bool {
+            self.use_t == other.use_t && self.assoc == other.assoc
+        }
+    }
+
+    impl<CX> Eq for UseTypeKey<CX> {}
+
+    impl<CX> std::hash::Hash for UseTypeKey<CX> {
+        fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+            self.use_t.hash(state);
+            self.assoc.hash(state);
+        }
+    }
+
+    impl<CX> std::fmt::Debug for UseTypeKey<CX> {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.debug_struct("UseTypeKey")
+                .field("use_t", &self.use_t)
+                .field("assoc", &self.assoc)
+                .finish()
+        }
+    }
+
+    impl<CX> PartialOrd for UseTypeKey<CX> {
         fn partial_cmp(&self, other: &Self) -> Option<std::cmp::Ordering> {
             Some(self.cmp(other))
         }
     }
 
-    impl Ord for UseTypeKey {
+    impl<CX> Ord for UseTypeKey<CX> {
         fn cmp(&self, other: &Self) -> std::cmp::Ordering {
             match self.assoc.cmp(&other.assoc) {
                 std::cmp::Ordering::Equal => self.use_t.cmp(&other.use_t),
@@ -5455,22 +9308,26 @@ pub mod constraint {
 
     pub mod forcing_state {
         use std::cell::UnsafeCell;
+        use std::marker::PhantomData;
 
         use super::*;
 
-        enum ForcingStateInner<A> {
-            Lazy(Box<dyn FnOnce() -> A>),
+        enum ForcingStateInner<'cx, CX: ?Sized, A> {
+            Lazy(Box<dyn FnOnce(&CX) -> A + 'cx>),
             Forcing,
             Forced(A),
             ForcedWithCyclicError(A),
         }
 
-        pub struct State<A, B> {
-            inner: Rc<UnsafeCell<ForcingStateInner<A>>>,
+        pub struct State<'cx, CX: ?Sized, A, B> {
+            inner: Rc<UnsafeCell<ForcingStateInner<'cx, CX, A>>>,
             error_reason: Option<B>,
+            _phantom: PhantomData<fn(&CX)>,
         }
 
-        impl<A: Clone + std::fmt::Debug, B: Clone + std::fmt::Debug> std::fmt::Debug for State<A, B> {
+        impl<CX, A: Clone + std::fmt::Debug, B: Clone + std::fmt::Debug> std::fmt::Debug
+            for State<'_, CX, A, B>
+        {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 // SAFETY: single-threaded, just reading for debug
                 let status_str = match unsafe { &*self.inner.get() } {
@@ -5486,17 +9343,19 @@ pub mod constraint {
             }
         }
 
-        pub type ForcingState = State<Type, Reason>;
-        pub type ModuleTypeForcingState = State<Result<ModuleType, Type>, Reason>;
+        pub type ForcingState<'cx, CX = ()> = State<'cx, CX, Type, Reason>;
+        pub type ModuleTypeForcingState<'cx, CX = ()> =
+            State<'cx, CX, Result<ModuleType, Type>, Reason>;
 
-        impl<A: Dupe + 'static, B: Clone> State<A, B> {
+        impl<'cx, CX: ?Sized + 'cx, A: Dupe + 'static, B: Clone> State<'cx, CX, A, B> {
             pub fn of_lazy_t<F>(error_reason: B, f: F) -> Self
             where
-                F: FnOnce() -> A + 'static,
+                F: FnOnce(&CX) -> A + 'cx,
             {
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Lazy(Box::new(f)))),
                     error_reason: Some(error_reason),
+                    _phantom: PhantomData,
                 }
             }
 
@@ -5504,10 +9363,11 @@ pub mod constraint {
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Forced(t))),
                     error_reason: None,
+                    _phantom: PhantomData,
                 }
             }
 
-            pub fn force<F>(&self, on_error: F) -> A
+            pub fn force<F>(&self, cx: &CX, on_error: F) -> A
             where
                 F: Fn(&B) -> A,
             {
@@ -5521,7 +9381,7 @@ pub mod constraint {
                             unreachable!()
                         };
 
-                        let t = f();
+                        let t = f(cx);
 
                         match inner {
                             ForcingStateInner::Forcing => {
@@ -5549,6 +9409,10 @@ pub mod constraint {
                 )
             }
 
+            pub fn error_reason(&self) -> Option<&B> {
+                self.error_reason.as_ref()
+            }
+
             pub fn get_forced_for_debugging(&self) -> Option<A> {
                 match unsafe { &*self.inner.get() } {
                     ForcingStateInner::Lazy(_) | ForcingStateInner::Forcing => None,
@@ -5567,41 +9431,48 @@ pub mod constraint {
                 }
             }
 
-            pub fn copy<F, G>(&self, on_error: F, visit_for_copier: G) -> Self
+            pub fn copy<F, G>(&self, src_cx: &CX, on_error: F, visit_for_copier: G) -> Self
             where
-                B: 'static,
-                F: Fn(&B) -> A + 'static,
-                G: FnOnce(&A) + 'static,
+                CX: Clone,
+                B: 'cx,
+                F: Fn(&CX, &B) -> A + 'cx,
+                G: FnOnce(&CX, &CX, &A) + 'cx,
             {
                 let src_inner = self.inner.dupe();
                 let src_error_reason = self.error_reason.clone();
+                let src_cx = src_cx.clone();
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Lazy(Box::new(
-                        move || {
+                        move |dst_cx: &CX| {
                             let src_state = State {
                                 inner: src_inner,
                                 error_reason: src_error_reason,
+                                _phantom: PhantomData,
                             };
-                            let t = src_state.force(&on_error);
-                            visit_for_copier(&t);
+                            let t = src_state.force(&src_cx, |r| on_error(&src_cx, r));
+                            visit_for_copier(&src_cx, dst_cx, &t);
                             t
                         },
                     )))),
                     error_reason: self.error_reason.clone(),
+                    _phantom: PhantomData,
                 }
             }
         }
 
-        impl State<Result<ModuleType, Type>, Reason> {
-            pub fn of_lazy_module<F>(reason: Reason, f: F) -> Self
-            where
-                F: FnOnce() -> ModuleType + 'static,
-            {
+        impl<'cx, CX: ?Sized + 'cx> State<'cx, CX, Result<ModuleType, Type>, Reason> {
+            pub fn of_lazy_module(
+                reason: Reason,
+                lazy_module: Rc<
+                    flow_lazy::Lazy<CX, ModuleType, Box<dyn FnOnce(&CX) -> ModuleType + 'cx>>,
+                >,
+            ) -> Self {
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Lazy(Box::new(
-                        move || Ok(f()),
+                        move |cx: &CX| Ok(lazy_module.get_forced(cx).dupe()),
                     )))),
                     error_reason: Some(reason),
+                    _phantom: PhantomData,
                 }
             }
 
@@ -5609,15 +9480,17 @@ pub mod constraint {
                 State {
                     inner: Rc::new(UnsafeCell::new(ForcingStateInner::Forced(Err(t)))),
                     error_reason: None,
+                    _phantom: PhantomData,
                 }
             }
         }
 
-        impl<A: Clone, B: Clone> Clone for State<A, B> {
+        impl<CX, A: Clone, B: Clone> Clone for State<'_, CX, A, B> {
             fn clone(&self) -> Self {
                 State {
                     inner: self.inner.clone(),
                     error_reason: self.error_reason.clone(),
+                    _phantom: PhantomData,
                 }
             }
         }
@@ -5633,7 +9506,7 @@ pub mod constraint {
             use crate::type_::any_t;
 
             fn assert_forced_to_any(s: &ForcingState) {
-                match &*s.force(|r| any_t::error(r.dupe())) {
+                match &*s.force(&(), |r| any_t::error(r.dupe())) {
                     TypeInner::AnyT(_, _) => {}
                     _ => panic!("Invalid type"),
                 }
@@ -5645,10 +9518,10 @@ pub mod constraint {
                 let s_clone = s.clone();
                 let state = ForcingState::of_lazy_t(
                     locationless_reason(VirtualReasonDesc::RNull),
-                    move || {
+                    move |_cx| {
                         let s_ref = s_clone.borrow();
                         let inner_state = s_ref.as_ref().unwrap();
-                        inner_state.force(|r| any_t::error(r.dupe()))
+                        inner_state.force(&(), |r| any_t::error(r.dupe()))
                     },
                 );
                 *s.borrow_mut() = Some(state);
@@ -5665,20 +9538,20 @@ pub mod constraint {
                 let s2_for_s1 = s2.clone();
                 let state1 = ForcingState::of_lazy_t(
                     locationless_reason(VirtualReasonDesc::RNull),
-                    move || {
+                    move |_cx| {
                         let s2_ref = s2_for_s1.borrow();
                         let inner_state = s2_ref.as_ref().unwrap();
-                        inner_state.force(|r| any_t::error(r.dupe()))
+                        inner_state.force(&(), |r| any_t::error(r.dupe()))
                     },
                 );
 
                 let s1_for_s2 = s1.clone();
                 let state2 = ForcingState::of_lazy_t(
                     locationless_reason(VirtualReasonDesc::RNull),
-                    move || {
+                    move |_cx| {
                         let s1_ref = s1_for_s2.borrow();
                         let inner_state = s1_ref.as_ref().unwrap();
-                        inner_state.force(|r| any_t::error(r.dupe()))
+                        inner_state.force(&(), |r| any_t::error(r.dupe()))
                     },
                 );
 
@@ -5697,17 +9570,21 @@ pub mod constraint {
                 let s_clone = s.clone();
                 let state = ForcingState::of_lazy_t(
                     locationless_reason(VirtualReasonDesc::RNull),
-                    move || {
+                    move |_cx| {
                         let s_ref = s_clone.borrow();
                         let inner_state = s_ref.as_ref().unwrap();
-                        inner_state.force(|r| any_t::error(r.dupe()))
+                        inner_state.force(&(), |r| any_t::error(r.dupe()))
                     },
                 );
                 *s.borrow_mut() = Some(state);
 
                 let s_ref = s.borrow();
                 let state = s_ref.as_ref().unwrap();
-                let state_copy = state.copy(|r| any_t::error(r.dupe()), |_| {});
+                let state_copy = state.copy(
+                    &(),
+                    |_src_cx, r| any_t::error(r.dupe()),
+                    |_src_cx, _dst_cx, _| {},
+                );
                 assert_forced_to_any(&state_copy);
             }
 
@@ -5717,51 +9594,66 @@ pub mod constraint {
                 let s_clone = s.clone();
                 let state = ForcingState::of_lazy_t(
                     locationless_reason(VirtualReasonDesc::RNull),
-                    move || {
+                    move |_cx| {
                         let s_ref = s_clone.borrow();
                         let inner_state = s_ref.as_ref().unwrap();
-                        let _ = inner_state.force(|r| any_t::error(r.dupe()));
-                        inner_state.force(|r| any_t::error(r.dupe()))
+                        let _ = inner_state.force(&(), |r| any_t::error(r.dupe()));
+                        inner_state.force(&(), |r| any_t::error(r.dupe()))
                     },
                 );
                 *s.borrow_mut() = Some(state);
 
                 let s_ref = s.borrow();
                 let state = s_ref.as_ref().unwrap();
-                let state_copy = state.copy(|r| any_t::error(r.dupe()), |_| {});
+                let state_copy = state.copy(
+                    &(),
+                    |_src_cx, r| any_t::error(r.dupe()),
+                    |_src_cx, _dst_cx, _| {},
+                );
                 assert_forced_to_any(&state_copy);
             }
         }
     }
 
     #[derive(Debug, Clone)]
-    pub enum Constraints {
+    pub enum Constraints<'a, CX = ()> {
         Resolved(Type),
-        Unresolved(Rc<Bounds>),
-        FullyResolved(forcing_state::ForcingState),
+        Unresolved(Rc<Bounds<CX>>),
+        FullyResolved(forcing_state::ForcingState<'a, CX>),
     }
 
-    impl Default for Constraints {
+    impl<CX> Default for Constraints<'_, CX> {
         fn default() -> Self {
             Constraints::Unresolved(Rc::new(Bounds::default()))
         }
     }
 
-    #[derive(Debug, Clone)]
-    pub struct Bounds {
+    #[derive(Debug)]
+    pub struct Bounds<CX = ()> {
         pub lower: BTreeMap<Type, (DepthTrace, UseOp)>,
-        pub upper: BTreeMap<UseTypeKey, DepthTrace>,
+        pub upper: BTreeMap<UseTypeKey<CX>, DepthTrace>,
         pub lowertvars: flow_data_structure_wrapper::int_map::IntHashMap<i32, (DepthTrace, UseOp)>,
         pub uppertvars: flow_data_structure_wrapper::int_map::IntHashMap<i32, (DepthTrace, UseOp)>,
     }
 
-    impl Default for Bounds {
+    impl<CX> Clone for Bounds<CX> {
+        fn clone(&self) -> Self {
+            Bounds {
+                lower: self.lower.clone(),
+                upper: self.upper.clone(),
+                lowertvars: self.lowertvars.clone(),
+                uppertvars: self.uppertvars.clone(),
+            }
+        }
+    }
+
+    impl<CX> Default for Bounds<CX> {
         fn default() -> Self {
             Self::empty()
         }
     }
 
-    impl Bounds {
+    impl<CX> Bounds<CX> {
         pub fn empty() -> Self {
             Bounds {
                 lower: BTreeMap::new(),
@@ -6131,9 +10023,9 @@ pub enum UnifyCause {
 }
 
 #[derive(Debug, Default, Clone)]
-pub struct TypeContext {
+pub struct TypeContext<'a, CX = ()> {
     /// map from tvar ids to nodes (type info structures)
-    pub graph: Rc<RefCell<flow_utils_union_find::Graph<constraint::Constraints>>>,
+    pub graph: Rc<RefCell<flow_utils_union_find::Graph<constraint::Constraints<'a, CX>>>>,
     /// obj types point to mutable property maps
     pub property_maps: std::collections::HashMap<properties::Id, properties::PropertiesMap>,
     /// indirection to support context opt
@@ -6144,7 +10036,7 @@ pub struct TypeContext {
     pub evaluated: eval::Map<Type>,
 }
 
-impl TypeContext {
+impl<'a, CX: 'a> TypeContext<'a, CX> {
     /// Walk the graph and drop all unforced ForcingState closures, and clear
     /// Unresolved bounds that may contain UseT values with LazyHintT closures.
     /// Used to break Rc cycles after inference is complete.
@@ -6178,15 +10070,22 @@ impl TypeContext {
     }
 }
 
-#[derive(Debug)]
-pub struct FlowSet {
+pub struct FlowSet<CX = ()> {
     // Stack of BTreeMap layers. Bottom = oldest, top = newest.
     // add() checks all layers, inserts into top.
     // Snapshot = push empty layer. Restore = pop top layer.
-    levels: Vec<BTreeMap<Type, BTreeSet<UseT>>>,
+    levels: Vec<BTreeMap<Type, BTreeSet<UseT<CX>>>>,
 }
 
-impl Default for FlowSet {
+impl<CX> std::fmt::Debug for FlowSet<CX> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("FlowSet")
+            .field("levels", &self.levels)
+            .finish()
+    }
+}
+
+impl<CX> Default for FlowSet<CX> {
     fn default() -> Self {
         Self {
             levels: vec![BTreeMap::new()],
@@ -6194,9 +10093,9 @@ impl Default for FlowSet {
     }
 }
 
-impl FlowSet {
+impl<CX> FlowSet<CX> {
     /// Returns whether the pair is inserted into the set.
-    pub fn add(&mut self, l: Type, u: UseT) -> bool {
+    pub fn add(&mut self, l: Type, u: UseT<CX>) -> bool {
         let (top, rest) = self.levels.split_last_mut().expect("FlowSet has no levels");
         match top.entry(l) {
             std::collections::btree_map::Entry::Occupied(mut entry) => {
@@ -6233,7 +10132,7 @@ impl FlowSet {
 
     pub fn fold<F, R>(&self, mut f: F, init: R) -> R
     where
-        F: FnMut(R, (&Type, &UseT)) -> R,
+        F: FnMut(R, (&Type, &UseT<CX>)) -> R,
     {
         self.levels.iter().fold(init, |acc, level| {
             level.iter().fold(acc, |acc, (l, us)| {
@@ -6864,10 +10763,10 @@ pub mod locationless {
     }
 }
 
-pub fn hint_unavailable() -> LazyHintT {
+pub fn hint_unavailable<CX>() -> LazyHintT<CX> {
     LazyHintT(
         false,
-        Rc::new(|_expected_only, _skip_optional, _reason| HintEvalResult::NoHint),
+        Rc::new(|_cx, _expected_only, _skip_optional, _reason| HintEvalResult::NoHint),
     )
 }
 
@@ -6882,7 +10781,7 @@ pub fn drop_generic(t: Type) -> Type {
 
 // Primitives, like string, will be promoted to their wrapper object types for
 // certain operations, like GetPropT, but not for others, like `UseT _`.
-pub fn primitive_promoting_use_t(use_t: &UseT) -> bool {
+pub fn primitive_promoting_use_t<CX>(use_t: &UseT<CX>) -> bool {
     match use_t.deref() {
         UseTInner::CallElemT(..)
         | UseTInner::GetElemT { .. }
@@ -7162,7 +11061,7 @@ pub fn string_of_predicate_concretizer_variant(
     }
 }
 
-pub fn string_of_use_ctor(use_t: &UseT) -> String {
+pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
     match use_t.deref() {
         UseTInner::UseT(op, t) => format!("UseT({}, {})", string_of_use_op(op), string_of_ctor(t)),
         UseTInner::ArrRestT { .. } => "ArrRestT".to_string(),
@@ -7753,7 +11652,7 @@ pub fn create_intersection(rep: inter_rep::InterRep) -> Type {
     ))
 }
 
-pub fn apply_opt_action(action: OptMethodAction, t_out: Tvar) -> MethodAction {
+pub fn apply_opt_action<CX>(action: OptMethodAction<CX>, t_out: Tvar) -> MethodAction<CX> {
     match action {
         OptMethodAction::OptCallM {
             opt_methodcalltype,
@@ -7783,7 +11682,7 @@ pub fn apply_opt_action(action: OptMethodAction, t_out: Tvar) -> MethodAction {
     }
 }
 
-pub fn apply_opt_use(opt_use: OptUseT, t_out: Tvar) -> UseT {
+pub fn apply_opt_use<CX>(opt_use: OptUseT<CX>, t_out: Tvar) -> UseT<CX> {
     match opt_use {
         OptUseT::OptMethodT(op, r1, r2, propref, action) => UseT::new(UseTInner::MethodT(
             op,

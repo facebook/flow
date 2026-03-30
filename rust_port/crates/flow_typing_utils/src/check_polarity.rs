@@ -42,8 +42,8 @@ use flow_typing_type::type_util::reason_of_t;
 
 use crate::type_operation_utils;
 
-pub fn check_polarity(
-    cx: &Context,
+pub fn check_polarity<'cx>(
+    cx: &Context<'cx>,
     tparams: &BTreeMap<SubstName, TypeParam>,
     polarity: Polarity,
     t: &Type,
@@ -60,8 +60,8 @@ pub fn check_polarity(
 
 // TODO: flesh this out
 // [seen] is the set of visited EvalT ids
-fn check_polarity_impl(
-    cx: &Context,
+fn check_polarity_impl<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
@@ -210,7 +210,7 @@ fn check_polarity_impl(
                 let out = flow_typing_tvar::mk_no_wrap_where_result(
                     cx,
                     r.dupe(),
-                    |tvar_reason, tvar_id| {
+                    |cx, tvar_reason, tvar_id| {
                         let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                         flow_typing_flow_js::flow_js::FlowJs::eval_destructor(
                             cx,
@@ -482,8 +482,8 @@ fn check_polarity_impl(
     Ok(())
 }
 
-fn check_polarity_propmap(
-    cx: &Context,
+fn check_polarity_propmap<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     skip_ctor: bool,
     seen: &mut HashSet<eval::Id>,
@@ -501,8 +501,8 @@ fn check_polarity_propmap(
     Ok(())
 }
 
-fn check_polarity_prop(
-    cx: &Context,
+fn check_polarity_prop<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
@@ -539,8 +539,8 @@ fn check_polarity_prop(
 }
 
 // and check_polarity_dict cx ?trace seen tparams polarity d =
-fn check_polarity_dict(
-    cx: &Context,
+fn check_polarity_dict<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
@@ -565,8 +565,8 @@ fn check_polarity_dict(
     Ok(())
 }
 
-fn check_polarity_call(
-    cx: &Context,
+fn check_polarity_call<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
@@ -577,8 +577,8 @@ fn check_polarity_call(
     check_polarity_impl(cx, trace, seen, tparams, polarity, &t)
 }
 
-fn check_polarity_typeparam(
-    cx: &Context,
+fn check_polarity_typeparam<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     seen: &mut HashSet<eval::Id>,
     tparams: &BTreeMap<SubstName, TypeParam>,
@@ -602,8 +602,8 @@ fn check_polarity_typeparam(
     Ok(())
 }
 
-fn variance_check(
-    cx: &Context,
+fn variance_check<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     tparams: &BTreeMap<SubstName, TypeParam>,
     polarity: Polarity,

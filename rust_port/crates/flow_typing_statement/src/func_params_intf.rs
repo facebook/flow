@@ -20,20 +20,25 @@ pub trait Config: ConfigTypes {
     fn this_type(this: &Self::ThisParam) -> Type;
     fn is_param_type_annotated(param: &Self::Param) -> bool;
     fn is_rest_type_annotated(rest: &Self::Rest) -> bool;
-    fn subst_param(
-        cx: &Context,
+    fn subst_param<'a>(
+        cx: &Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         param: &Self::Param,
     ) -> Self::Param;
-    fn subst_rest(cx: &Context, map: &FlowOrdMap<SubstName, Type>, rest: &Self::Rest)
-    -> Self::Rest;
-    fn subst_this(
-        cx: &Context,
+    fn subst_rest<'a>(
+        cx: &Context<'a>,
+        map: &FlowOrdMap<SubstName, Type>,
+        rest: &Self::Rest,
+    ) -> Self::Rest;
+    fn subst_this<'a>(
+        cx: &Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         this: &Self::ThisParam,
     ) -> Self::ThisParam;
-    fn eval_param(cx: &Context, param: &Self::Param)
-    -> Result<Self::ParamAst, AbnormalControlFlow>;
-    fn eval_rest(cx: &Context, rest: &Self::Rest) -> Self::RestAst;
-    fn eval_this(cx: &Context, this: &Self::ThisParam) -> Self::ThisAst;
+    fn eval_param<'a>(
+        cx: &Context<'a>,
+        param: &Self::Param,
+    ) -> Result<Self::ParamAst, AbnormalControlFlow>;
+    fn eval_rest<'a>(cx: &Context<'a>, rest: &Self::Rest) -> Self::RestAst;
+    fn eval_this<'a>(cx: &Context<'a>, this: &Self::ThisParam) -> Self::ThisAst;
 }

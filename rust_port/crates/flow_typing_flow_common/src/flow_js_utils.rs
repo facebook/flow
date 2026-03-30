@@ -54,7 +54,7 @@ use vec1::Vec1;
 
 // For any constraints, return a list of def types that form either the lower
 // bounds of the solution, or a singleton containing the solution itself.
-pub fn types_of(cx: &Context, constraints: &Constraints) -> Vec<Type> {
+pub fn types_of<'cx>(cx: &Context<'cx>, constraints: &Constraints<'cx, Context<'cx>>) -> Vec<Type> {
     match constraints {
         Constraints::Unresolved(bounds) => bounds.lower.keys().duped().collect(),
         Constraints::Resolved(t) => vec![t.dupe()],
@@ -62,7 +62,10 @@ pub fn types_of(cx: &Context, constraints: &Constraints) -> Vec<Type> {
     }
 }
 
-pub fn uses_of(cx: &Context, constraints: &Constraints) -> Vec<UseT> {
+pub fn uses_of<'cx>(
+    cx: &Context<'cx>,
+    constraints: &Constraints<'cx, Context<'cx>>,
+) -> Vec<UseT<Context<'cx>>> {
     match constraints {
         Constraints::Unresolved(bounds) => {
             bounds.upper.keys().map(|key| key.use_t.dupe()).collect()
@@ -82,24 +85,24 @@ pub fn uses_of(cx: &Context, constraints: &Constraints) -> Vec<UseT> {
 // to a separate module in order to avoid a circular dependency
 //
 // Def types that describe the solution of a type variable.
-pub fn possible_types(cx: &Context, id: i32) -> Vec<Type> {
+pub fn possible_types<'cx>(cx: &Context<'cx>, id: i32) -> Vec<Type> {
     types_of(cx, &cx.find_graph(id))
 }
 
-pub fn possible_types_of_type(cx: &Context, t: &Type) -> Vec<Type> {
+pub fn possible_types_of_type<'cx>(cx: &Context<'cx>, t: &Type) -> Vec<Type> {
     match t.deref() {
         TypeInner::OpenT(open_t) => possible_types(cx, open_t.id() as i32),
         _ => Vec::new(),
     }
 }
 
-pub fn possible_uses(cx: &Context, id: i32) -> Vec<UseT> {
+pub fn possible_uses<'cx>(cx: &Context<'cx>, id: i32) -> Vec<UseT<Context<'cx>>> {
     uses_of(cx, &cx.find_graph(id))
 }
 
-pub fn collect_lowers(
+pub fn collect_lowers<'cx>(
     filter_empty: bool,
-    cx: &Context,
+    cx: &Context<'cx>,
     seen: &mut BTreeSet<i32>,
     acc: &mut Vec<Type>,
     ts: Vec<Type>,
@@ -134,8 +137,8 @@ pub fn collect_lowers(
     }
 }
 
-pub fn merge_tvar_opt(
-    cx: &Context,
+pub fn merge_tvar_opt<'cx>(
+    cx: &Context<'cx>,
     filter_empty: bool,
     union_kind: UnionKind,
     reason: &Reason,
@@ -167,8 +170,8 @@ pub fn merge_tvar_opt(
     }
 }
 
-pub fn merge_tvar<F>(
-    cx: &Context,
+pub fn merge_tvar<'cx, F>(
+    cx: &Context<'cx>,
     filter_empty: bool,
     no_lowers: F,
     reason: &Reason,
@@ -187,6 +190,7 @@ pub mod invalid_cyclic_type_validation {
     use std::collections::BTreeSet;
     use std::ops::Deref;
 
+    use dupe::Dupe;
     use flow_common::polarity::Polarity;
     use flow_common::reason::Reason;
     use flow_typing_context::Context;
@@ -200,23 +204,30 @@ pub mod invalid_cyclic_type_validation {
 
     type Acc = (BTreeSet<i32>, bool);
 
-    enum TvarVisitingVariant {
+    enum TvarVisitingVariant<'a, 'cx> {
         ValidateLocalType,
-        ValidateTypeSigType(Box<dyn Fn(&Context, &Reason) -> Type>),
+        ValidateTypeSigType { dst_cx: &'a Context<'cx> },
     }
 
-    struct TvarForcingVisitor {
-        variant: TvarVisitingVariant,
+    struct TvarForcingVisitor<'a, 'cx> {
+        variant: TvarVisitingVariant<'a, 'cx>,
+        cx: &'a Context<'cx>,
     }
 
-    impl TypeVisitor<Acc> for TvarForcingVisitor {
-        fn call_prop(&mut self, _cx: &Context, _pole: Polarity, acc: Acc, _id: i32) -> Acc {
+    impl TypeVisitor<Acc> for TvarForcingVisitor<'_, '_> {
+        fn call_prop<'cx>(
+            &mut self,
+            _cx: &Context<'cx>,
+            _pole: Polarity,
+            acc: Acc,
+            _id: i32,
+        ) -> Acc {
             acc
         }
 
-        fn props(
+        fn props<'cx>(
             &mut self,
-            _cx: &Context,
+            _cx: &Context<'cx>,
             _pole: Polarity,
             acc: Acc,
             _props_id: flow_typing_type::type_::properties::Id,
@@ -224,9 +235,9 @@ pub mod invalid_cyclic_type_validation {
             acc
         }
 
-        fn exports(
+        fn exports<'cx>(
             &mut self,
-            _cx: &Context,
+            _cx: &Context<'cx>,
             _pole: Polarity,
             acc: Acc,
             _id: flow_typing_type::type_::exports::Id,
@@ -234,7 +245,7 @@ pub mod invalid_cyclic_type_validation {
             acc
         }
 
-        fn type_(&mut self, cx: &Context, pole: Polarity, acc: Acc, t: &Type) -> Acc {
+        fn type_<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, t: &Type) -> Acc {
             match t.deref() {
                 TypeInner::TypeAppT(..) | TypeInner::ThisTypeAppT(..) => acc,
                 TypeInner::EvalT { id, .. } => {
@@ -295,30 +306,48 @@ pub mod invalid_cyclic_type_validation {
             }
         }
 
-        fn tvar(&mut self, cx: &Context, pole: Polarity, acc: Acc, r: &Reason, id: u32) -> Acc {
+        fn tvar<'cx>(
+            &mut self,
+            cx: &Context<'cx>,
+            pole: Polarity,
+            acc: Acc,
+            r: &Reason,
+            id: u32,
+        ) -> Acc {
+            // Use self.cx (which has &Context<'cx>) for operations that
+            // require the tied lifetime, like force_fully_resolved_tvar and
+            // ForcingState::force.
+            let tied_cx = self.cx;
             match &self.variant {
                 TvarVisitingVariant::ValidateLocalType => {
                     let (mut seen, in_lazy_tvar) = acc;
-                    let (root_id, constraints) = cx.find_constraints(id as i32);
-                    let s = get_fully_resolved_state(cx, r, id as i32, constraints);
+                    let (root_id, constraints) = tied_cx.find_constraints(id as i32);
+                    let s = get_fully_resolved_state(tied_cx, r, id as i32, constraints);
                     if !seen.contains(&root_id)
-                        && (in_lazy_tvar || cx.delayed_forcing_tvars().contains(&root_id))
+                        && (in_lazy_tvar || tied_cx.delayed_forcing_tvars().contains(&root_id))
                     {
                         seen.insert(root_id);
-                        let forced_t = cx.force_fully_resolved_tvar(&s);
+                        let forced_t = tied_cx.force_fully_resolved_tvar(&s);
                         let (seen, _) = self.type_(cx, pole, (seen, true), &forced_t);
                         (seen, in_lazy_tvar)
                     } else {
                         (seen, in_lazy_tvar)
                     }
                 }
-                TvarVisitingVariant::ValidateTypeSigType(error_recursive) => {
+                TvarVisitingVariant::ValidateTypeSigType { dst_cx } => {
                     let (mut seen, in_lazy_tvar) = acc;
-                    let (root_id, constraints) = cx.find_constraints(id as i32);
-                    let s = get_fully_resolved_state(cx, r, id as i32, constraints);
+                    let (root_id, constraints) = tied_cx.find_constraints(id as i32);
+                    let s = get_fully_resolved_state(tied_cx, r, id as i32, constraints);
                     if !seen.contains(&root_id) {
                         seen.insert(root_id);
-                        let forced_t = s.force(|reason| (error_recursive)(cx, reason));
+                        let forced_t = s.force(tied_cx, |reason| {
+                            // Inline error_recursive: create ETrivialRecursiveDefinition
+                            // error and report it via add_annot_inference_error.
+                            let loc = reason.loc().dupe();
+                            let msg = flow_typing_errors::error_message::ErrorMessage::ETrivialRecursiveDefinition(loc, reason.dupe());
+                            super::add_annot_inference_error(tied_cx, dst_cx, msg);
+                            flow_typing_type::type_::any_t::error(reason.dupe())
+                        });
                         self.type_(cx, pole, (seen, in_lazy_tvar), &forced_t)
                     } else {
                         (seen, in_lazy_tvar)
@@ -328,12 +357,12 @@ pub mod invalid_cyclic_type_validation {
         }
     }
 
-    fn get_fully_resolved_state(
-        cx: &Context,
+    fn get_fully_resolved_state<'cx>(
+        cx: &Context<'cx>,
         r: &Reason,
         id: i32,
-        constraints: Constraints,
-    ) -> ForcingState {
+        constraints: Constraints<'cx, Context<'cx>>,
+    ) -> ForcingState<'cx, Context<'cx>> {
         match constraints {
             Constraints::FullyResolved(s) => s,
             Constraints::Resolved(t) => {
@@ -354,26 +383,24 @@ pub mod invalid_cyclic_type_validation {
         }
     }
 
-    pub fn validate_local_type(cx: &Context, t: &Type) {
+    pub fn validate_local_type<'cx>(cx: &Context<'cx>, t: &Type) {
         let mut visitor = TvarForcingVisitor {
             variant: TvarVisitingVariant::ValidateLocalType,
+            cx,
         };
         visitor.type_(cx, Polarity::Positive, (BTreeSet::new(), false), t);
     }
 
-    pub fn validate_type_sig_type(
-        error_recursive: Box<dyn Fn(&Context, &Reason) -> Type>,
-        cx: &Context,
-        t: &Type,
-    ) {
+    pub fn validate_type_sig_type<'cx>(dst_cx: &Context<'cx>, cx: &Context<'cx>, t: &Type) {
         let mut visitor = TvarForcingVisitor {
-            variant: TvarVisitingVariant::ValidateTypeSigType(error_recursive),
+            variant: TvarVisitingVariant::ValidateTypeSigType { dst_cx },
+            cx,
         };
         visitor.type_(cx, Polarity::Positive, (BTreeSet::new(), false), t);
     }
 }
 
-pub fn unwrap_fully_resolved_open_t(cx: &Context, t: &Type) -> Type {
+pub fn unwrap_fully_resolved_open_t<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
     let unwrapped = match t.deref() {
         TypeInner::OpenT(open_t) => {
             let r = open_t.reason();
@@ -397,19 +424,21 @@ pub fn unwrap_fully_resolved_open_t(cx: &Context, t: &Type) -> Type {
     unwrapped
 }
 
-pub fn map_on_resolved_type<F>(cx: &Context, reason_op: Reason, l: Type, f: F) -> Type
+pub fn map_on_resolved_type<'cx, F>(cx: &Context<'cx>, reason_op: Reason, l: Type, f: F) -> Type
 where
-    F: FnOnce(Type) -> Type + 'static,
+    F: FnOnce(&Context<'cx>, Type) -> Type + 'cx,
 {
-    let cx_inner = cx.dupe();
-    let lazy_t = std::rc::Rc::new(once_cell::unsync::Lazy::new(Box::new(move || {
-        cx_inner.run_in_signature_tvar_env(|| {
-            let result = f(l);
-            unwrap_fully_resolved_open_t(&cx_inner, &result)
-        })
-    })
-        as Box<dyn FnOnce() -> Type>));
-    flow_typing_tvar::mk_fully_resolved_lazy(cx, reason_op, true, lazy_t)
+    flow_typing_tvar::mk_fully_resolved_lazy(
+        cx,
+        reason_op,
+        true,
+        Box::new(move |cx: &Context<'cx>| {
+            cx.run_in_signature_tvar_env(|| {
+                let result = f(cx, l);
+                unwrap_fully_resolved_open_t(cx, &result)
+            })
+        }),
+    )
 }
 
 // Type predicates
@@ -461,7 +490,7 @@ pub fn is_dictionary_exempt(name: &Name) -> bool {
     is_object_prototype_method(name)
 }
 
-pub fn update_lit_type_from_annot(cx: &Context, t: &Type) {
+pub fn update_lit_type_from_annot<'cx>(cx: &Context<'cx>, t: &Type) {
     match t.deref() {
         TypeInner::DefT(r, def_t) => match def_t.deref() {
             DefTInner::SingletonStrT {
@@ -529,7 +558,7 @@ pub fn object_like(t: &Type) -> bool {
     }
 }
 
-pub fn object_like_op(u: &UseT) -> bool {
+pub fn object_like_op<CX>(u: &UseT<CX>) -> bool {
     match u.deref() {
         UseTInner::SetPropT(..)
         | UseTInner::GetPropT(..)
@@ -588,9 +617,9 @@ pub mod tvar_visitors {
     struct HasPlaceholdersVisitor;
 
     impl TypeVisitor<Result<Seen, TvarVisitorResult>> for HasPlaceholdersVisitor {
-        fn type_(
+        fn type_<'cx>(
             &mut self,
-            cx: &Context,
+            cx: &Context<'cx>,
             pole: Polarity,
             acc: Result<Seen, TvarVisitorResult>,
             t: &Type,
@@ -604,9 +633,9 @@ pub mod tvar_visitors {
             }
         }
 
-        fn tvar(
+        fn tvar<'cx>(
             &mut self,
-            cx: &Context,
+            cx: &Context<'cx>,
             pole: Polarity,
             acc: Result<Seen, TvarVisitorResult>,
             _r: &flow_common::reason::Reason,
@@ -633,7 +662,7 @@ pub mod tvar_visitors {
         }
     }
 
-    pub fn has_placeholders(cx: &Context, t: &Type) -> bool {
+    pub fn has_placeholders(cx: &Context<'_>, t: &Type) -> bool {
         let mut visitor = HasPlaceholdersVisitor;
         match visitor.type_(cx, Polarity::Positive, Ok(BTreeSet::new()), t) {
             Err(TvarVisitorResult::EncounteredPlaceholderType) => true,
@@ -644,9 +673,9 @@ pub mod tvar_visitors {
     struct HasUnresolvedTvarsVisitor;
 
     impl TypeVisitor<Result<Seen, TvarVisitorResult>> for HasUnresolvedTvarsVisitor {
-        fn tvar(
+        fn tvar<'cx>(
             &mut self,
-            cx: &Context,
+            cx: &Context<'cx>,
             pole: Polarity,
             acc: Result<Seen, TvarVisitorResult>,
             _r: &flow_common::reason::Reason,
@@ -670,9 +699,9 @@ pub mod tvar_visitors {
     struct HasUnresolvedTvarsOrPlaceholdersVisitor;
 
     impl TypeVisitor<Result<Seen, TvarVisitorResult>> for HasUnresolvedTvarsOrPlaceholdersVisitor {
-        fn type_(
+        fn type_<'cx>(
             &mut self,
-            cx: &Context,
+            cx: &Context<'cx>,
             pole: Polarity,
             acc: Result<Seen, TvarVisitorResult>,
             t: &Type,
@@ -686,9 +715,9 @@ pub mod tvar_visitors {
             }
         }
 
-        fn tvar(
+        fn tvar<'cx>(
             &mut self,
-            cx: &Context,
+            cx: &Context<'cx>,
             pole: Polarity,
             acc: Result<Seen, TvarVisitorResult>,
             _r: &flow_common::reason::Reason,
@@ -709,7 +738,7 @@ pub mod tvar_visitors {
         }
     }
 
-    pub fn has_unresolved_tvars_or_placeholders(cx: &Context, t: &Type) -> bool {
+    pub fn has_unresolved_tvars_or_placeholders<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
         let mut visitor = HasUnresolvedTvarsOrPlaceholdersVisitor;
         match visitor.type_(cx, Polarity::Positive, Ok(BTreeSet::new()), t) {
             Err(TvarVisitorResult::EncounteredUnresolvedTvar) => true,
@@ -718,7 +747,7 @@ pub mod tvar_visitors {
         }
     }
 
-    pub fn has_unresolved_tvars(cx: &Context, t: &Type) -> bool {
+    pub fn has_unresolved_tvars<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
         let mut visitor = HasUnresolvedTvarsVisitor;
         match visitor.type_(cx, Polarity::Positive, Ok(BTreeSet::new()), t) {
             Err(TvarVisitorResult::EncounteredUnresolvedTvar) => true,
@@ -726,7 +755,7 @@ pub mod tvar_visitors {
         }
     }
 
-    pub fn has_unresolved_tvars_in_destructors(cx: &Context, d: &Destructor) -> bool {
+    pub fn has_unresolved_tvars_in_destructors<'cx>(cx: &Context<'cx>, d: &Destructor) -> bool {
         let mut visitor = HasUnresolvedTvarsVisitor;
         match visitor.destructor(cx, Ok(BTreeSet::new()), d) {
             Err(TvarVisitorResult::EncounteredUnresolvedTvar) => true,
@@ -752,7 +781,9 @@ pub fn error_message_kind_of_lower(
     }
 }
 
-pub fn error_message_kind_of_upper(u: &UseT) -> flow_typing_errors::error_message::UpperKind<ALoc> {
+pub fn error_message_kind_of_upper<CX>(
+    u: &UseT<CX>,
+) -> flow_typing_errors::error_message::UpperKind<ALoc> {
     use flow_typing_errors::error_message::UpperKind;
     use flow_typing_type::type_::PropRef;
     use flow_typing_type::type_::string_of_use_ctor;
@@ -883,9 +914,9 @@ pub enum FlowJsException {
 
 // [src_cx] is the context in which the error is created, and [dst_cx] the context
 // in which it is recorded.
-pub fn add_output_generic(
-    src_cx: &Context,
-    dst_cx: &Context,
+pub fn add_output_generic<'src, 'dst>(
+    src_cx: &Context<'src>,
+    dst_cx: &Context<'dst>,
     msg: ErrorMessage<ALoc>,
 ) -> Result<(), SpeculativeError> {
     use flow_typing_errors::flow_error::error_of_msg;
@@ -924,11 +955,11 @@ pub fn add_output_generic(
     }
 }
 
-pub fn add_output(cx: &Context, msg: ErrorMessage<ALoc>) -> Result<(), FlowJsException> {
+pub fn add_output<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) -> Result<(), FlowJsException> {
     add_output_generic(cx, cx, msg).map_err(FlowJsException::Speculative)
 }
 
-pub fn add_output_non_speculating(cx: &Context, msg: ErrorMessage<ALoc>) {
+pub fn add_output_non_speculating<'cx>(cx: &Context<'cx>, msg: ErrorMessage<ALoc>) {
     add_output(cx, msg).expect("Non speculating")
 }
 
@@ -938,8 +969,8 @@ pub fn add_annot_inference_error(src_cx: &Context, dst_cx: &Context, msg: ErrorM
     add_output_generic(src_cx, dst_cx, msg).unwrap()
 }
 
-pub fn exact_obj_error(
-    cx: &Context,
+pub fn exact_obj_error<'cx>(
+    cx: &Context<'cx>,
     obj_kind: &flow_typing_type::type_::ObjKind,
     use_op: UseOp,
     exact_reason: Reason,
@@ -973,8 +1004,8 @@ pub enum UnionOptimizationGuardResult {
     },
 }
 
-pub fn union_optimization_guard<F>(
-    cx: &Context,
+pub fn union_optimization_guard<'cx, F>(
+    cx: &Context<'cx>,
     comparator: F,
     l: &Type,
     u: &Type,
@@ -988,11 +1019,11 @@ where
 
     type TypeSet = FlowOrdSet<Type>;
 
-    fn unwrap_type(cx: &Context, t: &Type) -> Type {
+    fn unwrap_type<'cx>(cx: &Context<'cx>, t: &Type) -> Type {
         cx.find_resolved(t).unwrap_or_else(|| t.dupe())
     }
 
-    fn union_compare<F2>(cx: &Context, comparator: F2, lts: &[Type], uts: &[Type]) -> bool
+    fn union_compare<'cx, F2>(cx: &Context<'cx>, comparator: F2, lts: &[Type], uts: &[Type]) -> bool
     where
         F2: Fn(&Type, &Type) -> bool,
     {
@@ -1004,9 +1035,9 @@ where
         ts1.iter().all(|t1| ts2.iter().any(|t2| comparator(t1, t2)))
     }
 
-    fn union_optimization_guard_impl<F2>(
+    fn union_optimization_guard_impl<'cx, F2>(
         seen: &TypeSet,
-        cx: &Context,
+        cx: &Context<'cx>,
         comparator: F2,
         l: &Type,
         u: &Type,
@@ -1102,9 +1133,9 @@ where
 // Optimization where an union is a subset of another. Equality modulo
 // reasons is important for this optimization to be effective, since types
 // are repositioned everywhere.
-pub fn remove_predicate_from_union<F>(
+pub fn remove_predicate_from_union<'cx, F>(
     reason: Reason,
-    cx: &Context,
+    cx: &Context<'cx>,
     predicate: F,
     rep: &flow_typing_type::type_::union_rep::UnionRep,
 ) -> Type
@@ -1119,17 +1150,17 @@ where
     union_of_ts(reason, filtered, None)
 }
 
-pub fn iter_union<T, E, F, J>(
+pub fn iter_union<'cx, T, E, F, J, CX>(
     f: F,
     init: T,
     join: J,
-    cx: &Context,
+    cx: &Context<'cx>,
     trace: &DepthTrace,
     rep: &flow_typing_type::type_::union_rep::UnionRep,
-    u: &UseT,
+    u: &UseT<CX>,
 ) -> Result<T, E>
 where
-    F: Fn(&Context, &DepthTrace, (&Type, &UseT)) -> Result<T, E>,
+    F: Fn(&Context<'cx>, &DepthTrace, (&Type, &UseT<CX>)) -> Result<T, E>,
     J: Fn(T, T) -> T,
 {
     use flow_common::reason::VirtualReasonDesc;
@@ -1150,15 +1181,15 @@ where
     Ok(acc)
 }
 
-pub fn map_union<F>(
+pub fn map_union<'cx, F>(
     f: F,
-    cx: &Context,
+    cx: &Context<'cx>,
     trace: &DepthTrace,
     rep: &flow_typing_type::type_::union_rep::UnionRep,
     reason: Reason,
 ) -> Type
 where
-    F: Fn(&Context, &DepthTrace, &Type, Type),
+    F: Fn(&Context<'cx>, &DepthTrace, &Type, Type),
 {
     use flow_typing_tvar::mk_where;
     use flow_typing_type::type_util::reason_of_t;
@@ -1167,7 +1198,7 @@ where
     let ts: Vec<_> = rep
         .members_iter()
         .map(|t| {
-            mk_where(cx, reason_of_t(t).dupe(), |tout| {
+            mk_where(cx, reason_of_t(t).dupe(), |cx, tout| {
                 f(cx, trace, t, tout.dupe())
             })
         })
@@ -1175,15 +1206,15 @@ where
     union_of_ts(reason, ts, None)
 }
 
-pub fn map_union_result<F>(
+pub fn map_union_result<'cx, F>(
     f: F,
-    cx: &Context,
+    cx: &Context<'cx>,
     trace: &DepthTrace,
     rep: &flow_typing_type::type_::union_rep::UnionRep,
     reason: Reason,
 ) -> Result<Type, FlowJsException>
 where
-    F: Fn(&Context, &DepthTrace, &Type, Type) -> Result<(), FlowJsException>,
+    F: Fn(&Context<'cx>, &DepthTrace, &Type, Type) -> Result<(), FlowJsException>,
 {
     use flow_typing_tvar::mk_where_result;
     use flow_typing_type::type_util::reason_of_t;
@@ -1192,7 +1223,7 @@ where
     let ts: Result<Vec<_>, _> = rep
         .members_iter()
         .map(|t| {
-            mk_where_result(cx, reason_of_t(t).dupe(), |tout| {
+            mk_where_result(cx, reason_of_t(t).dupe(), |cx, tout| {
                 f(cx, trace, t, tout.dupe())
             })
         })
@@ -1200,15 +1231,15 @@ where
     Ok(union_of_ts(reason, ts?, None))
 }
 
-pub fn map_inter<F>(
+pub fn map_inter<'cx, F>(
     f: F,
-    cx: &Context,
+    cx: &Context<'cx>,
     trace: &DepthTrace,
     rep: &inter_rep::InterRep,
     reason: Reason,
 ) -> Type
 where
-    F: Fn(&Context, &DepthTrace, &Type, Type),
+    F: Fn(&Context<'cx>, &DepthTrace, &Type, Type),
 {
     use flow_typing_tvar::mk_where;
     use flow_typing_type::type_::DefT;
@@ -1217,7 +1248,7 @@ where
     let ts: Vec<_> = rep
         .members_iter()
         .map(|t| {
-            mk_where(cx, reason_of_t(t).dupe(), |tout| {
+            mk_where(cx, reason_of_t(t).dupe(), |cx, tout| {
                 f(cx, trace, t, tout.dupe())
             })
         })
@@ -1242,15 +1273,15 @@ where
     }
 }
 
-pub fn map_inter_result<F>(
+pub fn map_inter_result<'cx, F>(
     f: F,
-    cx: &Context,
+    cx: &Context<'cx>,
     trace: &DepthTrace,
     rep: &inter_rep::InterRep,
     reason: Reason,
 ) -> Result<Type, FlowJsException>
 where
-    F: Fn(&Context, &DepthTrace, &Type, Type) -> Result<(), FlowJsException>,
+    F: Fn(&Context<'cx>, &DepthTrace, &Type, Type) -> Result<(), FlowJsException>,
 {
     use flow_typing_tvar::mk_where_result;
     use flow_typing_type::type_::DefT;
@@ -1259,7 +1290,7 @@ where
     let ts: Result<Vec<_>, _> = rep
         .members_iter()
         .map(|t| {
-            mk_where_result(cx, reason_of_t(t).dupe(), |tout| {
+            mk_where_result(cx, reason_of_t(t).dupe(), |cx, tout| {
                 f(cx, trace, t, tout.dupe())
             })
         })
@@ -1285,16 +1316,16 @@ where
     })
 }
 
-pub fn iter_resolve_union<F>(
+pub fn iter_resolve_union<'cx, F, CX>(
     f: F,
-    cx: &Context,
+    cx: &Context<'cx>,
     trace: &DepthTrace,
     reason: Reason,
     rep: &flow_typing_type::type_::union_rep::UnionRep,
-    upper: UseT,
+    upper: UseT<CX>,
 ) -> Result<(), FlowJsException>
 where
-    F: FnOnce(&Context, &DepthTrace, (Type, UseT)) -> Result<(), FlowJsException>,
+    F: FnOnce(&Context<'cx>, &DepthTrace, (Type, UseT<CX>)) -> Result<(), FlowJsException>,
 {
     use flow_common::reason::mk_id;
     use flow_typing_type::type_::UseTInner;
@@ -1322,7 +1353,7 @@ where
 // Generics
 
 // New generics mode: generate a GenericT from a generic
-pub fn generic_of_tparam<F>(cx: &Context, f: F, tparam: &TypeParam) -> Type
+pub fn generic_of_tparam<'cx, F>(cx: &Context<'cx>, f: F, tparam: &TypeParam) -> Type
 where
     F: FnOnce(&Type) -> Type,
 {
@@ -1351,8 +1382,8 @@ where
     })))
 }
 
-pub fn generic_bound(
-    cx: &Context,
+pub fn generic_bound<'cx>(
+    cx: &Context<'cx>,
     prev_map: FlowOrdMap<flow_common::subst_name::SubstName, Type>,
     tparam: &TypeParam,
 ) -> (Type, FlowOrdMap<flow_common::subst_name::SubstName, Type>) {
@@ -1379,8 +1410,8 @@ pub fn generic_bound(
     (generic, new_map)
 }
 
-pub fn mk_tparams(
-    cx: &Context,
+pub fn mk_tparams<'cx>(
+    cx: &Context<'cx>,
     params: &[TypeParam],
 ) -> (
     FlowOrdMap<flow_common::subst_name::SubstName, Type>,
@@ -1404,8 +1435,8 @@ pub fn poly_minimum_arity(tparams: &Vec1<TypeParam>) -> usize {
 }
 
 // This typing
-pub fn default_this_type(
-    cx: &Context,
+pub fn default_this_type<'cx>(
+    cx: &Context<'cx>,
     needs_this_param: bool,
     func: &flow_parser::ast::function::Function<ALoc, ALoc>,
 ) -> Result<Type, FlowJsException> {
@@ -1460,8 +1491,8 @@ pub fn string_key(s: Name, reason: &Reason) -> Type {
 }
 
 // common case checking a function as an object
-pub fn quick_error_fun_as_obj(
-    cx: &Context,
+pub fn quick_error_fun_as_obj<'cx>(
+    cx: &Context<'cx>,
     use_op: &UseOp,
     reason: &Reason,
     statics: &Type,
@@ -1530,8 +1561,8 @@ pub fn quick_error_fun_as_obj(
 // Instantiation
 
 // instantiate each param of a polymorphic type with its upper bound
-pub fn instantiate_poly_param_upper_bounds(
-    cx: &Context,
+pub fn instantiate_poly_param_upper_bounds<'cx>(
+    cx: &Context<'cx>,
     typeparams: &Vec1<TypeParam>,
 ) -> Vec<Type> {
     use flow_data_structure_wrapper::ord_map::FlowOrdMap;
@@ -1561,8 +1592,8 @@ pub fn instantiate_poly_param_upper_bounds(
 
 // Builtins
 
-pub fn emit_cacheable_env_error(
-    cx: &Context,
+pub fn emit_cacheable_env_error<'cx>(
+    cx: &Context<'cx>,
     loc: ALoc,
     err: flow_env_builder::env_api::CacheableEnvError<ALoc>,
 ) {
@@ -1586,8 +1617,8 @@ pub fn emit_cacheable_env_error(
     add_output(cx, msg).unwrap()
 }
 
-pub fn lookup_builtin_module_error(
-    cx: &Context,
+pub fn lookup_builtin_module_error<'cx>(
+    cx: &Context<'cx>,
     module_name: &flow_data_structure_wrapper::smol_str::FlowSmolStr,
     loc: ALoc,
 ) -> Result<Type, FlowJsException> {
@@ -1643,8 +1674,8 @@ fn lookup_builtin_name_error(
     ))
 }
 
-pub fn lookup_builtin_value_result(
-    cx: &Context,
+pub fn lookup_builtin_value_result<'cx>(
+    cx: &Context<'cx>,
     x: &str,
     reason: Reason,
 ) -> Result<
@@ -1662,8 +1693,8 @@ pub fn lookup_builtin_value_result(
     }
 }
 
-pub fn lookup_builtin_type_result(
-    cx: &Context,
+pub fn lookup_builtin_type_result<'cx>(
+    cx: &Context<'cx>,
     x: &str,
     reason: Reason,
 ) -> Result<
@@ -1681,8 +1712,8 @@ pub fn lookup_builtin_type_result(
     }
 }
 
-fn apply_errors(
-    cx: &Context,
+fn apply_errors<'cx>(
+    cx: &Context<'cx>,
     reason: Reason,
     result: Result<
         Type,
@@ -1703,24 +1734,29 @@ fn apply_errors(
     }
 }
 
-pub fn lookup_builtin_value(cx: &Context, x: &str, reason: Reason) -> Type {
+pub fn lookup_builtin_value<'cx>(cx: &Context<'cx>, x: &str, reason: Reason) -> Type {
     let result = lookup_builtin_value_result(cx, x, reason.dupe());
     apply_errors(cx, reason, result)
 }
 
-pub fn lookup_builtin_type(cx: &Context, x: &str, reason: Reason) -> Type {
+pub fn lookup_builtin_type<'cx>(cx: &Context<'cx>, x: &str, reason: Reason) -> Type {
     let result = lookup_builtin_type_result(cx, x, reason.dupe());
     apply_errors(cx, reason, result)
 }
 
-pub fn lookup_builtin_typeapp(cx: &Context, reason: Reason, x: &str, targs: Vec<Type>) -> Type {
+pub fn lookup_builtin_typeapp<'cx>(
+    cx: &Context<'cx>,
+    reason: Reason,
+    x: &str,
+    targs: Vec<Type>,
+) -> Type {
     use flow_typing_type::type_util::typeapp;
 
     let t = lookup_builtin_type(cx, x, reason.dupe());
     typeapp(false, false, reason, t, targs)
 }
 
-pub fn builtin_promise_class_id(cx: &Context) -> Option<flow_aloc::ALocId> {
+pub fn builtin_promise_class_id<'cx>(cx: &Context<'cx>) -> Option<flow_aloc::ALocId> {
     use flow_typing_type::type_::DefTInner;
 
     let (_, t) = cx.builtin_value_opt("Promise")?;
@@ -1749,7 +1785,11 @@ pub fn builtin_promise_class_id(cx: &Context) -> Option<flow_aloc::ALocId> {
     None
 }
 
-pub fn is_builtin_class_id(class_ref: &str, class_id: flow_aloc::ALocId, cx: &Context) -> bool {
+pub fn is_builtin_class_id<'cx>(
+    class_ref: &str,
+    class_id: flow_aloc::ALocId,
+    cx: &Context<'cx>,
+) -> bool {
     use flow_typing_type::type_::DefTInner;
 
     match cx.builtin_type_opt(class_ref) {
@@ -1816,12 +1856,12 @@ pub fn is_builtin_class_id(class_ref: &str, class_id: flow_aloc::ALocId, cx: &Co
     }
 }
 
-pub fn is_builtin_iterable_class_id(class_id: flow_aloc::ALocId, cx: &Context) -> bool {
+pub fn is_builtin_iterable_class_id<'cx>(class_id: flow_aloc::ALocId, cx: &Context<'cx>) -> bool {
     is_builtin_class_id("$Iterable", class_id, cx)
 }
 
-pub fn builtin_react_element_nominal_id(
-    cx: &Context,
+pub fn builtin_react_element_nominal_id<'cx>(
+    cx: &Context<'cx>,
 ) -> Option<flow_typing_type::type_::nominal::Id> {
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::TypeTKind;
@@ -1856,8 +1896,8 @@ pub fn builtin_react_element_nominal_id(
     }
 }
 
-pub fn builtin_react_renders_exactly_nominal_id(
-    cx: &Context,
+pub fn builtin_react_renders_exactly_nominal_id<'cx>(
+    cx: &Context<'cx>,
 ) -> Option<flow_typing_type::type_::nominal::Id> {
     use flow_typing_type::type_::DefTInner;
     use flow_typing_type::type_::TypeTKind;
@@ -1892,8 +1932,8 @@ pub fn builtin_react_renders_exactly_nominal_id(
     }
 }
 
-pub fn enum_proto(
-    cx: &Context,
+pub fn enum_proto<'cx>(
+    cx: &Context<'cx>,
     reason: Reason,
     enum_object_t: Type,
     enum_value_t: Type,
@@ -1915,12 +1955,12 @@ pub fn is_munged_prop_name_with_munge(name: &Name, should_munge_underscores: boo
     signature_utils::is_munged_property_name(name) && should_munge_underscores
 }
 
-pub fn is_munged_prop_name(cx: &Context, name: &Name) -> bool {
+pub fn is_munged_prop_name<'cx>(cx: &Context<'cx>, name: &Name) -> bool {
     is_munged_prop_name_with_munge(name, cx.should_munge_underscores())
 }
 
-pub fn obj_key_mirror(
-    cx: &Context,
+pub fn obj_key_mirror<'cx>(
+    cx: &Context<'cx>,
     o: &flow_typing_type::type_::ObjType,
     reason_op: &Reason,
 ) -> Type {
@@ -2015,8 +2055,8 @@ pub fn obj_key_mirror(
     ))
 }
 
-pub fn namespace_type(
-    cx: &Context,
+pub fn namespace_type<'cx>(
+    cx: &Context<'cx>,
     reason: Reason,
     namespace_symbol: flow_common::flow_symbol::Symbol,
     values: &std::collections::BTreeMap<Name, flow_typing_type::type_::NamedSymbol>,
@@ -2085,8 +2125,8 @@ pub fn is_exception_to_react_dro(propref: &flow_typing_type::type_::PropRef) -> 
 // Fix a this-abstracted instance type by tying a "knot": assume that the
 // fixpoint is some `this`, substitute it as This in the instance type, and
 // finally return the result as `this`.
-pub fn fix_this_instance(
-    cx: &Context,
+pub fn fix_this_instance<'cx>(
+    cx: &Context<'cx>,
     reason: Reason,
     reason_i: Reason,
     i: &flow_typing_type::type_::InstanceT,
@@ -2108,90 +2148,75 @@ pub fn fix_this_instance(
         return cached;
     }
 
-    let lazy_cell: std::rc::Rc<
-        std::cell::RefCell<
-            Option<std::rc::Rc<once_cell::unsync::Lazy<Type, Box<dyn FnOnce() -> Type>>>>,
-        >,
-    > = std::rc::Rc::new(std::cell::RefCell::new(None));
+    // Knot-tying: result_cell will hold the computed result once available.
+    // The `this` tvar's forcing closure reads from result_cell.
+    let result_cell: std::rc::Rc<std::cell::RefCell<Option<Type>>> =
+        std::rc::Rc::new(std::cell::RefCell::new(None));
+    let result_cell_c = result_cell.dupe();
 
-    let cx_c = cx.dupe();
-    let reason_c = reason.dupe();
-    let reason_i_c = reason_i.dupe();
-    let i_c = i.dupe();
-    let cache_key_c = cache_key.dupe();
-    let lazy_cell_c = lazy_cell.dupe();
-    let this_name_c = this_name.dupe();
-
-    let lazy_val: std::rc::Rc<once_cell::unsync::Lazy<Type, Box<dyn FnOnce() -> Type>>> =
-        std::rc::Rc::new(once_cell::unsync::Lazy::new(Box::new(move || {
-            let i_prime_ref = lazy_cell_c.borrow().as_ref().unwrap().dupe();
-            let this = flow_typing_tvar::mk_fully_resolved_lazy(
-                &cx_c,
-                reason_i_c.dupe(),
-                true,
-                i_prime_ref,
-            );
-            let this_generic = if is_this {
-                Type::new(TypeInner::GenericT(Box::new(GenericTData {
-                    id: cx_c.make_generic_id(this_name_c.dupe(), reason_i_c.def_loc()),
-                    reason: reason_c,
-                    name: this_name_c.dupe(),
-                    bound: this,
-                    no_infer: false,
-                })))
-            } else {
-                this
-            };
-            let mut map = FlowOrdMap::new();
-            map.insert(this_name_c, this_generic);
-            let subst_i = type_subst::subst_instance_type(
-                &cx_c,
-                None,
-                true,
-                false,
-                type_subst::Purpose::Normal,
-                &map,
-                &i_c,
-            );
-            let result = Type::new(TypeInner::DefT(
-                reason_i_c,
-                DefT::new(DefTInner::InstanceT(std::rc::Rc::new(subst_i))),
-            ));
-            flow_cache::fix::add(&cx_c, is_this, cache_key_c, result.dupe());
-            result
-        })
-            as Box<dyn FnOnce() -> Type>));
-
-    *lazy_cell.borrow_mut() = Some(lazy_val.dupe());
-    (*lazy_val).dupe()
+    let this = flow_typing_tvar::mk_fully_resolved_lazy(
+        cx,
+        reason_i.dupe(),
+        true,
+        Box::new(move |_cx: &Context<'cx>| result_cell_c.borrow().as_ref().unwrap().dupe()),
+    );
+    let this_generic = if is_this {
+        Type::new(TypeInner::GenericT(Box::new(GenericTData {
+            id: cx.make_generic_id(this_name.dupe(), reason_i.def_loc()),
+            reason,
+            name: this_name.dupe(),
+            bound: this,
+            no_infer: false,
+        })))
+    } else {
+        this
+    };
+    let mut map = FlowOrdMap::new();
+    map.insert(this_name, this_generic);
+    let subst_i = type_subst::subst_instance_type(
+        cx,
+        None,
+        true,
+        false,
+        type_subst::Purpose::Normal,
+        &map,
+        i,
+    );
+    let result = Type::new(TypeInner::DefT(
+        reason_i,
+        DefT::new(DefTInner::InstanceT(std::rc::Rc::new(subst_i))),
+    ));
+    flow_cache::fix::add(cx, is_this, cache_key, result.dupe());
+    *result_cell.borrow_mut() = Some(result.dupe());
+    result
 }
 
 pub trait InstantiationHelper {
-    fn reposition(
-        cx: &Context,
+    fn reposition<'cx>(
+        cx: &Context<'cx>,
         trace: Option<DepthTrace>,
         loc: ALoc,
         t: Type,
     ) -> Result<Type, FlowJsException>;
 
-    fn is_subtype(
-        cx: &Context,
+    fn is_subtype<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: UseOp,
         t1: Type,
         t2: Type,
     ) -> Result<(), FlowJsException>;
 
-    fn unify(
-        cx: &Context,
+    fn unify<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: UseOp,
         t1: Type,
         t2: Type,
     ) -> Result<(), FlowJsException>;
 
-    fn mk_targ(
-        cx: &Context,
+    fn mk_targ<'cx>(
+        cx: &Context<'cx>,
         typeparam: &TypeParam,
         reason_op: &Reason,
         reason_tapp: &Reason,
@@ -2224,8 +2249,8 @@ pub mod instantiation_kit {
     use crate::type_subst::subst;
 
     // Instantiate a polymorphic definition given type arguments.
-    pub fn instantiate_poly_with_targs<H: InstantiationHelper>(
-        cx: &Context,
+    pub fn instantiate_poly_with_targs<'cx, H: InstantiationHelper>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
@@ -2351,8 +2376,8 @@ pub mod instantiation_kit {
         Ok((repositioned, all_ts))
     }
 
-    pub fn mk_typeapp_of_poly<H: InstantiationHelper>(
-        cx: &Context,
+    pub fn mk_typeapp_of_poly<'cx, H: InstantiationHelper>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
@@ -2417,8 +2442,8 @@ pub mod instantiation_kit {
     }
 
     // Instantiate a polymorphic definition by creating fresh type arguments.
-    pub fn instantiate_poly<H: InstantiationHelper>(
-        cx: &Context,
+    pub fn instantiate_poly<'cx, H: InstantiationHelper>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
@@ -2449,8 +2474,8 @@ pub mod instantiation_kit {
     }
 }
 
-pub fn mk_distributive_tparam_subst_fn(
-    cx: &Context,
+pub fn mk_distributive_tparam_subst_fn<'cx>(
+    cx: &Context<'cx>,
     use_op: Option<UseOp>,
     name: flow_common::subst_name::SubstName,
     distributed_t: Type,
@@ -2519,8 +2544,8 @@ pub fn mk_distributive_tparam_subst_fn(
     }
 }
 
-pub fn substitute_mapped_type_distributive_tparams(
-    cx: &Context,
+pub fn substitute_mapped_type_distributive_tparams<'cx>(
+    cx: &Context<'cx>,
     use_op: Option<UseOp>,
     distributive_tparam_name: Option<flow_common::subst_name::SubstName>,
     property_type: Type,
@@ -2571,8 +2596,8 @@ pub mod value_to_type_reference_transform {
     use crate::type_subst::subst;
 
     // a component syntax value annotation becomes React$RendersExactly of that component
-    fn run_on_abstract_component(
-        cx: &Context,
+    fn run_on_abstract_component<'cx>(
+        cx: &Context<'cx>,
         reason_component: &Reason,
         reason_op: &Reason,
         l: Type,
@@ -2591,8 +2616,8 @@ pub mod value_to_type_reference_transform {
     }
 
     // let run_on_concrete_type cx ~use_op reason_op kind = function
-    pub fn run_on_concrete_type(
-        cx: &Context,
+    pub fn run_on_concrete_type<'cx>(
+        cx: &Context<'cx>,
         use_op: UseOp,
         reason_op: &Reason,
         kind: TypeTKind,
@@ -2781,8 +2806,8 @@ pub mod value_to_type_reference_transform {
 
 // Imports
 
-pub fn check_nonstrict_import(
-    cx: &Context,
+pub fn check_nonstrict_import<'cx>(
+    cx: &Context<'cx>,
     is_strict: bool,
     imported_is_strict: bool,
     reason: &Reason,
@@ -2816,10 +2841,10 @@ pub fn check_nonstrict_import(
 pub trait ImportExportHelperSig {
     type R;
 
-    fn reposition(cx: &Context, loc: ALoc, t: Type) -> Type;
+    fn reposition<'cx>(cx: &Context<'cx>, loc: ALoc, t: Type) -> Type;
 
-    fn export_named(
-        cx: &Context,
+    fn export_named<'cx>(
+        cx: &Context<'cx>,
         info: (
             Reason,
             FlowOrdMap<Name, NamedSymbol>,
@@ -2829,7 +2854,7 @@ pub trait ImportExportHelperSig {
         module_: Type,
     ) -> Self::R;
 
-    fn return_(cx: &Context, t: Type) -> Self::R;
+    fn return_<'cx>(cx: &Context<'cx>, t: Type) -> Self::R;
 }
 
 // *********************************************************************
@@ -2888,7 +2913,11 @@ pub mod import_type_t_kit {
     use super::fix_this_instance;
     use super::mk_tparams;
 
-    pub fn canonicalize_imported_type(cx: &Context, reason: Reason, t: &Type) -> Option<Type> {
+    pub fn canonicalize_imported_type<'cx>(
+        cx: &Context<'cx>,
+        reason: Reason,
+        t: &Type,
+    ) -> Option<Type> {
         match t.deref() {
             TypeInner::DefT(_, def_t) => match def_t.deref() {
                 // fix this-abstracted class when used as a type
@@ -2980,8 +3009,8 @@ pub mod import_type_t_kit {
         }
     }
 
-    pub fn on_concrete_type(
-        cx: &Context,
+    pub fn on_concrete_type<'cx>(
+        cx: &Context<'cx>,
         reason: Reason,
         export_name: &str,
         exported_type: Type,
@@ -3033,8 +3062,8 @@ pub mod import_typeof_t_kit {
     use super::FlowJsException;
     use super::add_output;
 
-    pub fn on_concrete_type(
-        cx: &Context,
+    pub fn on_concrete_type<'cx>(
+        cx: &Context<'cx>,
         reason: Reason,
         export_name: &str,
         l: &Type,
@@ -3170,8 +3199,8 @@ pub mod cjs_require_t_kit {
     use super::lookup_builtin_typeapp;
 
     // require('SomeModule')
-    pub fn on_module_t<R>(
-        cx: &Context,
+    pub fn on_module_t<'cx, R>(
+        cx: &Context<'cx>,
         reposition: R,
         reason: Reason,
         module_symbol: Symbol,
@@ -3180,7 +3209,7 @@ pub mod cjs_require_t_kit {
         module_: &ModuleType,
     ) -> Result<(Type, ALoc), FlowJsException>
     where
-        R: Fn(&Context, ALoc, Type) -> Type,
+        R: Fn(&Context<'cx>, ALoc, Type) -> Type,
     {
         let ModuleTypeInner {
             module_reason,
@@ -3325,8 +3354,8 @@ pub mod import_module_ns_t_kit {
     use super::check_nonstrict_import;
     use crate::obj_type;
 
-    pub fn on_module_t(
-        cx: &Context,
+    pub fn on_module_t<'cx>(
+        cx: &Context<'cx>,
         is_common_interface_module: bool,
         reason_op: Reason,
         is_strict: bool,
@@ -3442,10 +3471,10 @@ pub mod import_default_t_kit {
     use super::import_typeof_t_kit;
 
     // import [type] X from 'SomeModule';
-    pub fn on_module_t(
-        cx: &Context,
+    pub fn on_module_t<'cx>(
+        cx: &Context<'cx>,
         with_concretized_type: &dyn Fn(
-            &Context,
+            &Context<'cx>,
             Reason,
             &dyn Fn(&Type) -> Result<Type, FlowJsException>,
             Type,
@@ -3568,10 +3597,10 @@ pub mod import_named_t_kit {
     use super::import_type_t_kit;
     use super::import_typeof_t_kit;
 
-    pub fn on_module_t(
-        cx: &Context,
+    pub fn on_module_t<'cx>(
+        cx: &Context<'cx>,
         with_concretized_type: &dyn Fn(
-            &Context,
+            &Context<'cx>,
             Reason,
             &dyn Fn(&Type) -> Result<Type, FlowJsException>,
             Type,
@@ -3807,8 +3836,8 @@ pub mod export_named_t_kit {
     use flow_typing_type::type_::exports;
 
     // let mod_ModuleT cx (value_tmap, type_tmap, export_kind) module_ =
-    pub fn mod_module_t(
-        cx: &Context,
+    pub fn mod_module_t<'cx>(
+        cx: &Context<'cx>,
         value_tmap: exports::T,
         type_tmap: exports::T,
         export_kind: ExportKind,
@@ -3891,7 +3920,11 @@ pub mod assert_export_is_type_t_kit {
         }
     }
 
-    pub fn on_concrete_type(cx: &Context, name: Name, l: Type) -> Result<Type, FlowJsException> {
+    pub fn on_concrete_type<'cx>(
+        cx: &Context<'cx>,
+        name: Name,
+        l: Type,
+    ) -> Result<Type, FlowJsException> {
         if is_type(&l) {
             Ok(l)
         } else {
@@ -3915,7 +3948,11 @@ pub mod copy_named_exports_t_kit {
 
     use super::export_named_t_kit;
 
-    pub fn mod_module_t(cx: &Context, target_module_type: &ModuleType, module_: &ModuleType) {
+    pub fn mod_module_t<'cx>(
+        cx: &Context<'cx>,
+        target_module_type: &ModuleType,
+        module_: &ModuleType,
+    ) {
         let source_exports = &module_.module_export_types;
         let value_exports = cx.find_exports(source_exports.value_exports_tmap);
         let type_exports = cx.find_exports(source_exports.type_exports_tmap);
@@ -3953,8 +3990,8 @@ pub mod export_type_t_kit {
     use super::export_named_t_kit;
     use super::import_type_t_kit;
 
-    pub fn on_concrete_type(
-        cx: &Context,
+    pub fn on_concrete_type<'cx>(
+        cx: &Context<'cx>,
         reason: Reason,
         named_symbol: &NamedSymbol,
         export_name: Name,
@@ -4000,14 +4037,14 @@ pub mod copy_type_exports_t_kit {
 
     use super::export_type_t_kit;
 
-    pub fn mod_module_t<F>(
-        cx: &Context,
+    pub fn mod_module_t<'cx, F>(
+        cx: &Context<'cx>,
         concretize_export_type: F,
         reason: Reason,
         target_module_type: &ModuleType,
         module_: &ModuleType,
     ) where
-        F: Fn(&Context, Reason, Type) -> Type,
+        F: Fn(&Context<'cx>, Reason, Type) -> Type,
     {
         let source_exports = &module_.module_export_types;
 
@@ -4051,15 +4088,15 @@ pub mod cjs_extract_named_exports_t_kit {
     use super::is_munged_prop_name;
 
     // let rec on_type cx ~concretize (reason, local_module) t =
-    pub fn on_type<F>(
-        cx: &Context,
-        concretize: F,
+    pub fn on_type<'cx, F>(
+        cx: &Context<'cx>,
+        concretize: &F,
         reason: Reason,
         local_module: ModuleType,
         t: Type,
     ) -> ModuleType
     where
-        F: Fn(Type) -> Type + Copy,
+        F: Fn(Type) -> Type,
     {
         let t = concretize(t);
         match t.deref() {
@@ -4206,8 +4243,8 @@ pub mod import_export_utils {
     use super::import_typeof_t_kit;
     use super::lookup_builtin_module_error;
 
-    fn check_platform_availability(
-        cx: &Context,
+    fn check_platform_availability<'cx>(
+        cx: &Context<'cx>,
         error_loc: ALoc,
         imported_module_available_platforms: Option<&PlatformSet>,
     ) -> Result<(), FlowJsException> {
@@ -4238,8 +4275,8 @@ pub mod import_export_utils {
         }
     }
 
-    fn validate_projects_strict_boundary_import_pattern_opt_outs(
-        cx: &Context,
+    fn validate_projects_strict_boundary_import_pattern_opt_outs<'cx>(
+        cx: &Context<'cx>,
         error_loc: ALoc,
         import_specifier: &Userland,
     ) {
@@ -4267,8 +4304,8 @@ pub mod import_export_utils {
         }
     }
 
-    pub fn get_module_type_or_any(
-        cx: &Context,
+    pub fn get_module_type_or_any<'cx>(
+        cx: &Context<'cx>,
         perform_platform_validation: bool,
         import_kind_for_untyped_import_validation: Option<ImportKind>,
         loc: ALoc,
@@ -4276,7 +4313,7 @@ pub mod import_export_utils {
     ) -> Result<Result<ModuleType, Type>, FlowJsException> {
         if cx.in_declare_module() {
             match cx.builtin_module_opt(&mref) {
-                Some((_reason, m)) => Ok(Ok(m.dupe())),
+                Some((_reason, m)) => Ok(Ok(m.get_forced(cx).dupe())),
                 None => {
                     let err_t =
                         lookup_builtin_module_error(cx, &FlowSmolStr::new(mref.as_str()), loc)?;
@@ -4287,7 +4324,7 @@ pub mod import_export_utils {
             let module_type_or_any = match cx
                 .find_require(&FlowImportSpecifier::Userland(mref.dupe()))
             {
-                ResolvedRequire::TypedModule(f) => f(),
+                ResolvedRequire::TypedModule(f) => f(cx, cx),
                 ResolvedRequire::UncheckedModule(module_def_loc) => {
                     if let Some(import_kind) = &import_kind_for_untyped_import_validation {
                         match import_kind {
@@ -4337,10 +4374,10 @@ pub mod import_export_utils {
         }
     }
 
-    pub fn get_imported_type(
-        cx: &Context,
+    pub fn get_imported_type<'cx>(
+        cx: &Context<'cx>,
         singleton_concretize_type_for_imports_exports: &dyn Fn(
-            &Context,
+            &Context<'cx>,
             Reason,
             Type,
         )
@@ -4354,7 +4391,7 @@ pub mod import_export_utils {
     ) -> Result<(Option<ALoc>, Type), FlowJsException> {
         let is_strict = cx.is_strict();
         let mut name_def_loc_ref: Option<ALoc> = None;
-        let with_concretized_type = |cx: &Context,
+        let with_concretized_type = |cx: &Context<'cx>,
                                      r: Reason,
                                      f: &dyn Fn(&Type) -> Result<Type, FlowJsException>,
                                      t: Type|
@@ -4397,8 +4434,8 @@ pub mod import_export_utils {
         Ok((name_def_loc, t))
     }
 
-    pub fn get_module_namespace_type(
-        cx: &Context,
+    pub fn get_module_namespace_type<'cx>(
+        cx: &Context<'cx>,
         reason: Reason,
         namespace_symbol: Symbol,
         source_module: &Result<ModuleType, Type>,
@@ -4418,8 +4455,8 @@ pub mod import_export_utils {
         })
     }
 
-    pub fn import_namespace_specifier_type(
-        cx: &Context,
+    pub fn import_namespace_specifier_type<'cx>(
+        cx: &Context<'cx>,
         import_reason: Reason,
         import_kind: &AstImportKind,
         module_name: Userland,
@@ -4461,11 +4498,11 @@ pub mod import_export_utils {
         }
     }
 
-    pub fn import_named_specifier_type(
-        cx: &Context,
+    pub fn import_named_specifier_type<'cx>(
+        cx: &Context<'cx>,
         import_reason: Reason,
         singleton_concretize_type_for_imports_exports: &dyn Fn(
-            &Context,
+            &Context<'cx>,
             Reason,
             Type,
         )
@@ -4489,11 +4526,11 @@ pub mod import_export_utils {
         )
     }
 
-    pub fn import_default_specifier_type(
-        cx: &Context,
+    pub fn import_default_specifier_type<'cx>(
+        cx: &Context<'cx>,
         import_reason: Reason,
         singleton_concretize_type_for_imports_exports: &dyn Fn(
-            &Context,
+            &Context<'cx>,
             Reason,
             Type,
         )
@@ -4516,8 +4553,8 @@ pub mod import_export_utils {
         )
     }
 
-    pub fn cjs_require_type<R>(
-        cx: &Context,
+    pub fn cjs_require_type<'cx, R>(
+        cx: &Context<'cx>,
         reason: Reason,
         reposition: R,
         namespace_symbol: Symbol,
@@ -4525,7 +4562,7 @@ pub mod import_export_utils {
         source_module: &Result<ModuleType, Type>,
     ) -> Result<(Option<ALoc>, Type), FlowJsException>
     where
-        R: Fn(&Context, ALoc, Type) -> Type,
+        R: Fn(&Context<'cx>, ALoc, Type) -> Type,
     {
         let is_strict = cx.is_strict();
         Ok(match source_module {
@@ -4545,11 +4582,11 @@ pub mod import_export_utils {
         })
     }
 
-    pub fn get_implicitly_imported_react_type(
-        cx: &Context,
+    pub fn get_implicitly_imported_react_type<'cx>(
+        cx: &Context<'cx>,
         loc: ALoc,
         singleton_concretize_type_for_imports_exports: &dyn Fn(
-            &Context,
+            &Context<'cx>,
             Reason,
             Type,
         )
@@ -4558,7 +4595,7 @@ pub mod import_export_utils {
     ) -> Result<Type, FlowJsException> {
         let react_userland = Userland::from_smol_str(FlowSmolStr::new("react"));
         let source_module = match cx.builtin_module_opt(&react_userland) {
-            Some((_reason, module_type)) => Ok(module_type),
+            Some((_reason, module_type)) => Ok(module_type.get_forced(cx).dupe()),
             None => {
                 let reason = mk_reason(
                     VirtualReasonDesc::RModule(react_userland.dupe()),
@@ -4644,13 +4681,13 @@ pub mod import_export_utils {
 // * GetPropT helper *
 // *******************
 
-pub fn check_method_unbinding(
-    cx: &Context,
+pub fn check_method_unbinding<'cx>(
+    cx: &Context<'cx>,
     use_op: &UseOp,
     method_accessible: bool,
     reason_op: &Reason,
     propref: &flow_typing_type::type_::PropRef,
-    hint: &flow_typing_type::type_::LazyHintT,
+    hint: &flow_typing_type::type_::LazyHintT<Context<'cx>>,
     p: flow_typing_type::type_::Property,
 ) -> Result<flow_typing_type::type_::Property, FlowJsException> {
     use std::ops::Deref;
@@ -4665,7 +4702,7 @@ pub fn check_method_unbinding(
     // match p with
     match p.deref() {
         PropertyInner::Method { key_loc, type_: t } if !method_accessible => {
-            let hint_result = (hint.1)(false, None, reason_op.dupe());
+            let hint_result = (hint.1)(cx, false, None, reason_op.dupe());
 
             let valid_hint_t = match hint_result {
                 HintEvalResult::HintAvailable(hint_t, _) => {
@@ -4732,7 +4769,7 @@ pub fn is_str_intlike(s: &str) -> bool {
     INT_REGEX.is_match(s)
 }
 
-pub fn type_of_key_name(cx: &Context, name: Name, reason: &Reason) -> Type {
+pub fn type_of_key_name<'cx>(cx: &Context<'cx>, name: Name, reason: &Reason) -> Type {
     use flow_typing_type::type_::DefT;
 
     let str_key = || {
@@ -4785,15 +4822,15 @@ pub fn type_of_key_name(cx: &Context, name: Name, reason: &Reason) -> Type {
 pub trait GetPropHelper {
     type R;
 
-    fn dict_read_check(
-        cx: &Context,
+    fn dict_read_check<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: &UseOp,
         pair: (&Type, &Type),
     ) -> Result<(), FlowJsException>;
 
-    fn cg_lookup(
-        cx: &Context,
+    fn cg_lookup<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         obj_t: Type,
         method_accessible: bool,
@@ -4807,35 +4844,35 @@ pub trait GetPropHelper {
         ),
     ) -> Result<Self::R, FlowJsException>;
 
-    fn reposition(
-        cx: &Context,
+    fn reposition<'cx>(
+        cx: &Context<'cx>,
         trace: Option<DepthTrace>,
         loc: ALoc,
         t: Type,
     ) -> Result<Type, FlowJsException>;
 
-    fn mk_react_dro(
-        cx: &Context,
+    fn mk_react_dro<'cx>(
+        cx: &Context<'cx>,
         use_op: UseOp,
         dro: &flow_typing_type::type_::ReactDro,
         t: Type,
     ) -> Type;
 
-    fn return_(
-        cx: &Context,
+    fn return_<'cx>(
+        cx: &Context<'cx>,
         use_op: UseOp,
         trace: DepthTrace,
         t: Type,
     ) -> Result<Self::R, FlowJsException>;
 
-    fn error_type(
-        cx: &Context,
+    fn error_type<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         reason: Reason,
     ) -> Result<Self::R, FlowJsException>;
 
-    fn cg_get_prop(
-        cx: &Context,
+    fn cg_get_prop<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         t: Type,
         args: (
@@ -4854,7 +4891,7 @@ pub trait GetPropHelper {
     // likely introduce inconsistent semantics and is undesirable, but at the time of writing this
     // comment we had no alternative for annotation inference.
     fn prop_overlaps_with_indexer()
-    -> Option<fn(&Context, &flow_common::reason::Name, &Reason, &Type) -> bool>;
+    -> Option<for<'b> fn(&Context<'b>, &flow_common::reason::Name, &Reason, &Type) -> bool>;
 }
 
 pub mod get_prop_t_kit {
@@ -4908,8 +4945,8 @@ pub mod get_prop_t_kit {
     use super::type_of_key_name;
     use crate::obj_type;
 
-    pub fn perform_read_prop_action<F: GetPropHelper>(
-        cx: &Context,
+    pub fn perform_read_prop_action<'cx, F: GetPropHelper>(
+        cx: &Context<'cx>,
         trace: &DepthTrace,
         use_op: UseOp,
         propref: &PropRef,
@@ -4958,8 +4995,8 @@ pub mod get_prop_t_kit {
         }
     }
 
-    pub fn get_instance_prop<F: GetPropHelper>(
-        cx: &Context,
+    pub fn get_instance_prop<'cx, F: GetPropHelper>(
+        cx: &Context<'cx>,
         trace: &DepthTrace,
         use_op: &UseOp,
         ignore_dicts: bool,
@@ -5036,8 +5073,8 @@ pub mod get_prop_t_kit {
         }
     }
 
-    pub fn read_instance_prop<F: GetPropHelper>(
-        cx: &Context,
+    pub fn read_instance_prop<'cx, F: GetPropHelper>(
+        cx: &Context<'cx>,
         trace: &DepthTrace,
         use_op: &UseOp,
         instance_t: &Type,
@@ -5045,7 +5082,7 @@ pub mod get_prop_t_kit {
         method_accessible: bool,
         super_t: Type,
         lookup_kind: LookupKind,
-        hint: &type_::LazyHintT,
+        hint: &type_::LazyHintT<Context<'cx>>,
         _skip_optional: bool,
         inst: &InstType,
         propref: &PropRef,
@@ -5104,8 +5141,8 @@ pub mod get_prop_t_kit {
     }
 
     // let on_EnumObjectT cx trace enum_reason ~enum_object_t ~enum_value_t ~enum_info access =
-    pub fn on_enum_object_t<F: GetPropHelper>(
-        cx: &Context,
+    pub fn on_enum_object_t<'cx, F: GetPropHelper>(
+        cx: &Context<'cx>,
         trace: &DepthTrace,
         enum_reason: &Reason,
         enum_object_t: Type,
@@ -5177,8 +5214,8 @@ pub mod get_prop_t_kit {
         }
     }
 
-    pub fn on_array_length<F: GetPropHelper>(
-        cx: &Context,
+    pub fn on_array_length<'cx, F: GetPropHelper>(
+        cx: &Context<'cx>,
         trace: &DepthTrace,
         reason: Reason,
         inexact: bool,
@@ -5202,8 +5239,8 @@ pub mod get_prop_t_kit {
     // e.g. indexed access type or write `obj[foo] = ...`
     //
     // never_union_void_on_computed_prop_access is the flag to disable the union void behavior.
-    pub fn get_obj_prop<F: GetPropHelper>(
-        cx: &Context,
+    pub fn get_obj_prop<'cx, F: GetPropHelper>(
+        cx: &Context<'cx>,
         trace: &DepthTrace,
         use_op: &UseOp,
         skip_optional: bool,
@@ -5323,8 +5360,8 @@ pub mod get_prop_t_kit {
         }
     }
 
-    pub fn read_obj_prop<F: GetPropHelper>(
-        cx: &Context,
+    pub fn read_obj_prop<'cx, F: GetPropHelper>(
+        cx: &Context<'cx>,
         trace: &DepthTrace,
         use_op: UseOp,
         from_annot: bool,
@@ -5509,8 +5546,8 @@ pub mod get_prop_t_kit {
 // ***************
 
 // See docs GetPropsKit.get_obj_prop for explanation of never_union_void_on_computed_prop_access
-pub fn array_elem_check(
-    cx: &Context,
+pub fn array_elem_check<'cx>(
+    cx: &Context<'cx>,
     write_action: bool,
     never_union_void_on_computed_prop_access: bool,
     l: &Type,
@@ -5775,7 +5812,7 @@ pub fn array_elem_check(
 //     let name = OrdinaryName (Dtoa.ecma_string_of_float value) in
 //     mk_named_prop ~reason ~from_indexed_access:true name
 //   | l -> Computed l
-pub fn propref_for_elem_t(cx: &Context, l: &Type) -> flow_typing_type::type_::PropRef {
+pub fn propref_for_elem_t<'cx>(cx: &Context<'cx>, l: &Type) -> flow_typing_type::type_::PropRef {
     use flow_common::js_number::ecma_string_of_float;
     use flow_common::js_number::is_float_safe_integer;
     use flow_typing_type::type_::DefTInner;
@@ -5888,8 +5925,8 @@ pub fn keylist_of_props(
     acc
 }
 
-pub fn objt_to_obj_rest(
-    cx: &Context,
+pub fn objt_to_obj_rest<'cx>(
+    cx: &Context<'cx>,
     props_tmap: flow_typing_type::type_::properties::Id,
     reachable_targs: Option<Rc<[(Type, flow_common::polarity::Polarity)]>>,
     obj_kind: flow_typing_type::type_::ObjKind,
@@ -5976,8 +6013,8 @@ pub fn objt_to_obj_rest(
 
 // $Values
 
-pub fn get_values_type_of_obj_t(
-    cx: &Context,
+pub fn get_values_type_of_obj_t<'cx>(
+    cx: &Context<'cx>,
     o: &flow_typing_type::type_::ObjType,
     reason: Reason,
 ) -> Type {
@@ -6007,8 +6044,8 @@ pub fn get_values_type_of_obj_t(
     union_of_ts(reason, ts, None)
 }
 
-pub fn get_values_type_of_instance_t(
-    cx: &Context,
+pub fn get_values_type_of_instance_t<'cx>(
+    cx: &Context<'cx>,
     own_props: flow_typing_type::type_::properties::Id,
     dict: Option<&flow_typing_type::type_::DictType>,
     reason: Reason,
@@ -6086,8 +6123,8 @@ pub fn unary_negate_bigint_lit(
     (reason, (value, raw))
 }
 
-pub fn flow_unary_arith(
-    cx: &Context,
+pub fn flow_unary_arith<'cx>(
+    cx: &Context<'cx>,
     l: &Type,
     reason: Reason,
     kind: UnaryArithKind,
@@ -6183,8 +6220,8 @@ pub fn flow_unary_arith(
     }
 }
 
-pub fn flow_arith(
-    cx: &Context,
+pub fn flow_arith<'cx>(
+    cx: &Context<'cx>,
     reason: Reason,
     l: &Type,
     r: &Type,
@@ -6302,14 +6339,14 @@ pub fn is_same_instance_type(
 // In order to prevent this in common mapped type and other cases, we do a best-effort
 // check to see if the RHS contains a mapped type, or other utility type. This traversal
 // is extremely limited and does not attempt to be exhaustive.
-pub fn wraps_utility_type(cx: &Context, tin: &Type) -> bool {
+pub fn wraps_utility_type<'cx>(cx: &Context<'cx>, tin: &Type) -> bool {
     use std::collections::BTreeSet;
 
     let mut seen_open_id: BTreeSet<i32> = BTreeSet::new();
     let mut seen_eval_id: BTreeSet<flow_typing_type::type_::eval::Id> = BTreeSet::new();
 
-    fn loop_inner(
-        cx: &Context,
+    fn loop_inner<'cx>(
+        cx: &Context<'cx>,
         t: &Type,
         seen_open_id: &mut BTreeSet<i32>,
         seen_eval_id: &mut BTreeSet<flow_typing_type::type_::eval::Id>,
@@ -6410,8 +6447,8 @@ pub fn wraps_utility_type(cx: &Context, tin: &Type) -> bool {
 // (* Tuples *)
 // (**********)
 
-pub fn validate_tuple_elements(
-    cx: &Context,
+pub fn validate_tuple_elements<'cx>(
+    cx: &Context<'cx>,
     reason_tuple: &Reason,
     error_on_req_after_opt: bool,
     elements: &[flow_typing_type::type_::TupleElement],
@@ -6461,8 +6498,8 @@ pub fn validate_tuple_elements(
     Ok((valid, arity))
 }
 
-pub fn mk_tuple_type<F>(
-    cx: &Context,
+pub fn mk_tuple_type<'cx, F>(
+    cx: &Context<'cx>,
     id: flow_typing_type::type_::eval::Id,
     mk_type_destructor: F,
     inexact: bool,
@@ -6471,7 +6508,7 @@ pub fn mk_tuple_type<F>(
 ) -> Result<Type, FlowJsException>
 where
     F: FnOnce(
-        &Context,
+        &Context<'cx>,
         UseOp,
         Reason,
         Type,
@@ -6644,12 +6681,12 @@ pub mod render_types {
         normal_errors: Vec<ErrorMessage<ALoc>>,
     }
 
-    struct RenderTypeNormalizationContext<'a, F, G>
+    struct RenderTypeNormalizationContext<'a, 'cx, F, G>
     where
         F: Fn(&Type) -> Vec<Type>,
         G: Fn(&Type) -> bool,
     {
-        cx: &'a Context,
+        cx: &'a Context<'cx>,
         type_collector: TypeCollector,
         error_acc_ref: RefCell<ErrorAcc>,
         arg_loc: ALoc,
@@ -6660,7 +6697,7 @@ pub mod render_types {
     }
 
     fn merge_error_acc_with_potential_fixable_error<F, G>(
-        normalization_cx: &RenderTypeNormalizationContext<'_, F, G>,
+        normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         new_error: (Reason, PotentialFixableErrorKind),
     ) where
         F: Fn(&Type) -> Vec<Type>,
@@ -6685,7 +6722,7 @@ pub mod render_types {
     }
 
     fn merge_error_acc_with_normal_error<F, G>(
-        normalization_cx: &RenderTypeNormalizationContext<'_, F, G>,
+        normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         e: ErrorMessage<ALoc>,
     ) where
         F: Fn(&Type) -> Vec<Type>,
@@ -6696,7 +6733,7 @@ pub mod render_types {
     }
 
     fn on_concretized_renders_normalization<F, G>(
-        normalization_cx: &RenderTypeNormalizationContext<'_, F, G>,
+        normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         resolved_elem_reason: &Reason,
         t: Type,
     ) where
@@ -6786,7 +6823,7 @@ pub mod render_types {
     }
 
     fn on_concretized_component_normalization<F, G>(
-        normalization_cx: &RenderTypeNormalizationContext<'_, F, G>,
+        normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         resolved_elem_reason: &Reason,
         t: Type,
     ) where
@@ -6904,7 +6941,7 @@ pub mod render_types {
     }
 
     fn on_concretized_bad_non_element_normalization<F, G>(
-        normalization_cx: &RenderTypeNormalizationContext<'_, F, G>,
+        normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         t: Type,
     ) where
         F: Fn(&Type) -> Vec<Type>,
@@ -6972,7 +7009,7 @@ pub mod render_types {
     }
 
     fn on_concretized_element_normalization<F, G>(
-        normalization_cx: &RenderTypeNormalizationContext<'_, F, G>,
+        normalization_cx: &RenderTypeNormalizationContext<'_, '_, F, G>,
         t: Type,
     ) where
         F: Fn(&Type) -> Vec<Type>,
@@ -7067,8 +7104,8 @@ pub mod render_types {
         }
     }
 
-    fn normalize_render_type_argument<F, G>(
-        cx: &Context,
+    fn normalize_render_type_argument<'cx, F, G>(
+        cx: &Context<'cx>,
         arg_loc: ALoc,
         reason: Reason,
         renders_variant: RendersVariant,
@@ -7137,8 +7174,8 @@ pub mod render_types {
         ))
     }
 
-    pub fn mk_non_generic_render_type<F, G>(
-        cx: &Context,
+    pub fn mk_non_generic_render_type<'cx, F, G>(
+        cx: &Context<'cx>,
         reason: Reason,
         renders_variant: RendersVariant,
         force_post_component: bool,
@@ -7147,31 +7184,33 @@ pub mod render_types {
         t: Type,
     ) -> Type
     where
-        F: Fn(&Context, &Type) -> Vec<Type> + 'static,
-        G: Fn(&Context, &Type) -> bool + 'static,
+        F: Fn(&Context<'cx>, &Type) -> Vec<Type> + 'cx,
+        G: Fn(&Context<'cx>, &Type) -> bool + 'cx,
     {
-        let cx_inner = cx.dupe();
         let reason_inner = reason.dupe();
         let renders_variant_inner = renders_variant.clone();
-        let lazy_t = std::rc::Rc::new(once_cell::unsync::Lazy::new(Box::new(move || {
-            cx_inner.run_in_signature_tvar_env(|| {
-                let arg_loc = loc_of_t(&t).dupe();
-                let concretize_partial = |t: &Type| -> Vec<Type> { concretize(&cx_inner, t) };
-                let is_iterable_partial =
-                    |t: &Type| -> bool { is_iterable_for_better_error(&cx_inner, t) };
-                normalize_render_type_argument(
-                    &cx_inner,
-                    arg_loc,
-                    reason_inner,
-                    renders_variant_inner,
-                    concretize_partial,
-                    is_iterable_partial,
-                    t,
-                )
-            })
-        })
-            as Box<dyn FnOnce() -> Type>));
-        flow_typing_tvar::mk_fully_resolved_lazy(cx, reason, force_post_component, lazy_t)
+        flow_typing_tvar::mk_fully_resolved_lazy(
+            cx,
+            reason,
+            force_post_component,
+            Box::new(move |cx: &Context<'cx>| {
+                cx.run_in_signature_tvar_env(|| {
+                    let arg_loc = loc_of_t(&t).dupe();
+                    let concretize_partial = |t: &Type| -> Vec<Type> { concretize(cx, t) };
+                    let is_iterable_partial =
+                        |t: &Type| -> bool { is_iterable_for_better_error(cx, t) };
+                    normalize_render_type_argument(
+                        cx,
+                        arg_loc,
+                        reason_inner,
+                        renders_variant_inner,
+                        concretize_partial,
+                        is_iterable_partial,
+                        t,
+                    )
+                })
+            }),
+        )
     }
 }
 
@@ -7191,7 +7230,7 @@ pub mod callee_recorder {
         All,
     }
 
-    fn add_tast(cx: &Context, l: Type, specialized_callee: &SpecializedCallee) {
+    fn add_tast<'cx>(cx: &Context<'cx>, l: Type, specialized_callee: &SpecializedCallee) {
         match cx.speculation_id() {
             Some(id) if Some(id.dupe()) != specialized_callee.init_speculation_state => {
                 // It is possible that the call we are inspecting was initiated in a speculative
@@ -7213,7 +7252,7 @@ pub mod callee_recorder {
     // intersection types. These would appear under speculation, so we can effectively
     // enforce this constraint by checking that we are not in a speculation enviornment.
     // Also we skip voided out results in case of optional chaining.
-    fn add_signature_help(cx: &Context, l: Type, specialized_callee: &SpecializedCallee) {
+    fn add_signature_help<'cx>(cx: &Context<'cx>, l: Type, specialized_callee: &SpecializedCallee) {
         if cx.speculation_id().is_none() {
             specialized_callee.sig_help.borrow_mut().push(l);
         }
@@ -7233,8 +7272,8 @@ pub mod callee_recorder {
         }
     }
 
-    pub fn add_callee(
-        cx: &Context,
+    pub fn add_callee<'cx>(
+        cx: &Context<'cx>,
         kind: Kind,
         l: Type,
         specialized_callee: Option<&SpecializedCallee>,
@@ -7254,7 +7293,7 @@ pub mod callee_recorder {
         }
     }
 
-    pub fn add_callee_use(cx: &Context, kind: Kind, l: Type, u: &UseT) {
+    pub fn add_callee_use<'cx, CX>(cx: &Context<'cx>, kind: Kind, l: Type, u: &UseT<CX>) {
         use flow_typing_type::type_::UseTInner;
         match &**u {
             UseTInner::CallT { call_action, .. } => match call_action.as_ref() {

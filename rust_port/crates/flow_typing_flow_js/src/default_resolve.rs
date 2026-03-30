@@ -35,12 +35,12 @@ use flow_typing_type::type_::any_t;
 use flow_typing_type::type_::inter_rep;
 use flow_typing_type::type_::react;
 
-pub fn default_resolve_touts(
+pub fn default_resolve_touts<'cx>(
     flow: &dyn Fn(Type, Type) -> Result<(), FlowJsException>,
     resolve_callee: Option<&(Reason, Vec<Type>)>,
-    cx: &Context,
+    cx: &Context<'cx>,
     loc: ALoc,
-    u: &UseT,
+    u: &UseT<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     let any = any_t::at(AnySource::AnyError(None), loc.dupe());
     let resolve = |t: Type| flow(any.dupe(), t);
@@ -77,32 +77,33 @@ pub fn default_resolve_touts(
             specialized_callee.as_ref(),
         );
     };
-    let resolve_method_action = |action: &MethodAction| -> Result<(), FlowJsException> {
-        match action {
-            MethodAction::ChainM {
-                exp_reason: _,
-                lhs_reason: _,
-                methodcalltype,
-                voided_out_collector: _,
-                return_hint: _,
-                specialized_callee,
-            } => {
-                resolve_tvar(&methodcalltype.meth_tout)?;
-                resolve_specialized_callee(specialized_callee);
-                Ok(())
+    let resolve_method_action =
+        |action: &MethodAction<Context<'cx>>| -> Result<(), FlowJsException> {
+            match action {
+                MethodAction::ChainM {
+                    exp_reason: _,
+                    lhs_reason: _,
+                    methodcalltype,
+                    voided_out_collector: _,
+                    return_hint: _,
+                    specialized_callee,
+                } => {
+                    resolve_tvar(&methodcalltype.meth_tout)?;
+                    resolve_specialized_callee(specialized_callee);
+                    Ok(())
+                }
+                MethodAction::CallM {
+                    methodcalltype,
+                    return_hint: _,
+                    specialized_callee,
+                } => {
+                    resolve_tvar(&methodcalltype.meth_tout)?;
+                    resolve_specialized_callee(specialized_callee);
+                    Ok(())
+                }
+                MethodAction::NoMethodAction(tout) => resolve(tout.dupe()),
             }
-            MethodAction::CallM {
-                methodcalltype,
-                return_hint: _,
-                specialized_callee,
-            } => {
-                resolve_tvar(&methodcalltype.meth_tout)?;
-                resolve_specialized_callee(specialized_callee);
-                Ok(())
-            }
-            MethodAction::NoMethodAction(tout) => resolve(tout.dupe()),
-        }
-    };
+        };
     let resolve_lookup_action = |action: &LookupAction| -> Result<(), FlowJsException> {
         match action {
             LookupAction::ReadProp { tout, .. } => resolve_tvar(tout),
@@ -113,14 +114,14 @@ pub fn default_resolve_touts(
             | LookupAction::MatchProp { .. } => Ok(()),
         }
     };
-    let resolve_elem_action = |action: &ElemAction| -> Result<(), FlowJsException> {
+    let resolve_elem_action = |action: &ElemAction<Context<'cx>>| -> Result<(), FlowJsException> {
         match action {
             ElemAction::ReadElem { tout, .. } => resolve_tvar(tout),
             ElemAction::WriteElem { tout, .. } => map_opt(tout),
             ElemAction::CallElem(_, action) => resolve_method_action(action),
         }
     };
-    let resolve_react_tool = |tool: &react::Tool| -> Result<(), FlowJsException> {
+    let resolve_react_tool = |tool: &react::Tool<Context<'cx>>| -> Result<(), FlowJsException> {
         match tool {
             react::Tool::CreateElement { tout, .. } => resolve_tvar(tout),
             react::Tool::ConfigCheck { props } => resolve(props.dupe()),
@@ -137,7 +138,7 @@ pub fn default_resolve_touts(
             SpreadResolve::ResolveSpreadsToMultiflowSubtypeFull(..) => Ok(()),
         }
     };
-    let resolve_cont = |cont: &Cont| -> Result<(), FlowJsException> {
+    let resolve_cont = |cont: &Cont<Context<'cx>>| -> Result<(), FlowJsException> {
         match cont {
             Cont::Upper(use_) => default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), use_),
             Cont::Lower(..) => Ok(()),

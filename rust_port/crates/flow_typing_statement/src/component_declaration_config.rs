@@ -28,7 +28,7 @@ use flow_typing_utils::type_env;
 use crate::destructuring;
 use crate::statement;
 
-pub fn read_react(cx: &Context, loc: ALoc) {
+pub fn read_react<'a>(cx: &Context<'a>, loc: ALoc) {
     type_env::query_var(
         Some(type_env::LookupMode::ForValue),
         cx,
@@ -74,8 +74,8 @@ pub fn rest_type(rest: &Rest) -> Type {
     }
 }
 
-fn destruct(
-    cx: &Context,
+fn destruct<'a>(
+    cx: &Context<'a>,
     use_op: &UseOp,
     name_loc: ALoc,
     name: &str,
@@ -102,7 +102,7 @@ fn destruct(
     t
 }
 
-fn flow_default(cx: &Context, annot_t: &Type, default_t: &Type) {
+fn flow_default<'a>(cx: &Context<'a>, annot_t: &Type, default_t: &Type) {
     let use_op = UseOp::Op(std::sync::Arc::new(
         flow_typing_type::type_::RootUseOp::AssignVar {
             var: Some(type_util::reason_of_t(annot_t).dupe()),
@@ -121,8 +121,8 @@ fn flow_default(cx: &Context, annot_t: &Type, default_t: &Type) {
     );
 }
 
-fn eval_default(
-    cx: &Context,
+fn eval_default<'a>(
+    cx: &Context<'a>,
     always_flow_default: bool,
     annot_t: &Type,
     has_anno: bool,
@@ -147,8 +147,8 @@ fn eval_default(
         .transpose()
 }
 
-pub fn eval_param(
-    cx: &Context,
+pub fn eval_param<'a>(
+    cx: &Context<'a>,
     param: &Param,
 ) -> Result<ParamAst<(ALoc, Type)>, AbnormalControlFlow> {
     let Param {
@@ -272,7 +272,10 @@ pub fn eval_param(
     }
 }
 
-pub fn eval_rest(cx: &Context, rest: &Rest) -> Result<RestAst<(ALoc, Type)>, AbnormalControlFlow> {
+pub fn eval_rest<'a>(
+    cx: &Context<'a>,
+    rest: &Rest,
+) -> Result<RestAst<(ALoc, Type)>, AbnormalControlFlow> {
     let Rest {
         ref t,
         ref loc,

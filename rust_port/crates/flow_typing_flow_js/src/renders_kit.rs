@@ -55,8 +55,8 @@ fn frame_renders_compat(use_op: UseOp) -> UseOp {
     )
 }
 
-pub fn rec_renders_to_renders(
-    cx: &Context,
+pub fn rec_renders_to_renders<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     (reasonl, l): (&Reason, &CanonicalRendersForm),
@@ -331,8 +331,8 @@ pub fn rec_renders_to_renders(
 }
 
 // let possibly_promoted_render_types_of_react_element_type cx (elem_reason, opq) =
-fn possibly_promoted_render_types_of_react_element_type(
-    cx: &Context,
+fn possibly_promoted_render_types_of_react_element_type<'cx>(
+    cx: &Context<'cx>,
     elem_reason: &Reason,
     opq: &NominalType,
 ) -> Result<(Vec<Type>, bool), FlowJsException> {
@@ -434,8 +434,8 @@ fn possibly_promoted_render_types_of_react_element_type(
     }
 }
 
-fn try_promote_render_type_from_react_element_type(
-    cx: &Context,
+fn try_promote_render_type_from_react_element_type<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     elem_reason: &Reason,
@@ -474,8 +474,8 @@ fn try_promote_render_type_from_react_element_type(
     Ok(())
 }
 
-pub fn non_renders_to_renders(
-    cx: &Context,
+pub fn non_renders_to_renders<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     l: &Type,
@@ -622,8 +622,8 @@ enum RenderTypeSynthesisState {
     FailedSynthesisState,
 }
 
-pub fn try_synthesize_render_type(
-    cx: &Context,
+pub fn try_synthesize_render_type<'cx>(
+    cx: &Context<'cx>,
     drop_renders_any: bool,
     t: &Type,
 ) -> Result<Option<(RendersVariant, Vec<Type>)>, FlowJsException> {
@@ -659,8 +659,8 @@ pub fn try_synthesize_render_type(
         }
     }
 
-    fn on_concretized_react_node_types(
-        cx: &Context,
+    fn on_concretized_react_node_types<'cx>(
+        cx: &Context<'cx>,
         ts: Vec<Type>,
         gas: i32,
         drop_renders_any: bool,

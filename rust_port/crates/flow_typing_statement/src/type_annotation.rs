@@ -44,7 +44,6 @@ use flow_typing_type::type_::TypeParam;
 use flow_typing_type::type_util;
 use flow_typing_utils::type_env;
 use flow_typing_utils::typed_ast_utils;
-use once_cell::unsync::Lazy;
 
 use crate::class_sig;
 
@@ -109,8 +108,8 @@ impl crate::func_params_intf::Config for FuncTypeParamsConfig {
         true
     }
 
-    fn subst_param(
-        cx: &Context,
+    fn subst_param<'a>(
+        cx: &Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         param: &Self::Param,
     ) -> Self::Param {
@@ -118,8 +117,8 @@ impl crate::func_params_intf::Config for FuncTypeParamsConfig {
         (t, param.1.clone())
     }
 
-    fn subst_rest(
-        cx: &Context,
+    fn subst_rest<'a>(
+        cx: &Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         rest: &Self::Rest,
     ) -> Self::Rest {
@@ -127,8 +126,8 @@ impl crate::func_params_intf::Config for FuncTypeParamsConfig {
         (t, rest.1.clone())
     }
 
-    fn subst_this(
-        cx: &Context,
+    fn subst_this<'a>(
+        cx: &Context<'a>,
         map: &FlowOrdMap<SubstName, Type>,
         this: &Self::ThisParam,
     ) -> Self::ThisParam {
@@ -136,18 +135,18 @@ impl crate::func_params_intf::Config for FuncTypeParamsConfig {
         (t, this.1.clone())
     }
 
-    fn eval_param(
-        _cx: &Context,
+    fn eval_param<'a>(
+        _cx: &Context<'a>,
         param: &Self::Param,
     ) -> Result<Self::ParamAst, flow_typing_utils::abnormal::AbnormalControlFlow> {
         Ok(param.1.clone())
     }
 
-    fn eval_rest(_cx: &Context, rest: &Self::Rest) -> Self::RestAst {
+    fn eval_rest<'a>(_cx: &Context<'a>, rest: &Self::Rest) -> Self::RestAst {
         rest.1.clone()
     }
 
-    fn eval_this(_cx: &Context, this: &Self::ThisParam) -> Self::ThisAst {
+    fn eval_this<'a>(_cx: &Context<'a>, this: &Self::ThisParam) -> Self::ThisAst {
         this.1.clone()
     }
 }
@@ -170,7 +169,7 @@ impl crate::component_params_intf::Config for TypeAnnotationConfig {
     type ParamAst = ast::types::component_params::Param<ALoc, (ALoc, Type)>;
     type RestAst = ast::types::component_params::RestParam<ALoc, (ALoc, Type)>;
 
-    fn read_react(_cx: &Context, _loc: ALoc) {}
+    fn read_react<'a>(_cx: &Context<'a>, _loc: ALoc) {}
 
     fn param_type_with_name(param: &Self::Param) -> (ALoc, FlowSmolStr, Type) {
         let (t, param_ast) = param;
@@ -195,15 +194,15 @@ impl crate::component_params_intf::Config for TypeAnnotationConfig {
         rest.0.dupe()
     }
 
-    fn eval_param(
-        _cx: &Context,
+    fn eval_param<'a>(
+        _cx: &Context<'a>,
         param: &Self::Param,
     ) -> Result<Self::ParamAst, flow_typing_utils::abnormal::AbnormalControlFlow> {
         Ok(param.1.clone())
     }
 
-    fn eval_rest(
-        _cx: &Context,
+    fn eval_rest<'a>(
+        _cx: &Context<'a>,
         rest: &Self::Rest,
     ) -> Result<Self::RestAst, flow_typing_utils::abnormal::AbnormalControlFlow> {
         Ok(rest.1.clone())
@@ -271,8 +270,8 @@ fn ident_name(id: &ast::Identifier<ALoc, ALoc>) -> FlowSmolStr {
     id.name.dupe()
 }
 
-pub fn error_type(
-    cx: &Context,
+pub fn error_type<'a>(
+    cx: &Context<'a>,
     loc: ALoc,
     msg: ErrorMessage<ALoc>,
     t_in: &ast::types::Type<ALoc, ALoc>,
@@ -285,8 +284,8 @@ pub fn error_type(
     ast::types::Type::new(inner)
 }
 
-fn check_type_arg_arity(
-    cx: &Context,
+fn check_type_arg_arity<'a>(
+    cx: &Context<'a>,
     loc: ALoc,
     t_ast: &ast::types::Type<ALoc, ALoc>,
     params: Option<&ast::types::TypeArgs<ALoc, ALoc>>,
@@ -312,7 +311,7 @@ fn check_type_arg_arity(
     }
 }
 
-fn mk_eval_id(cx: &Context, loc: ALoc) -> type_::eval::Id {
+fn mk_eval_id<'a>(cx: &Context<'a>, loc: ALoc) -> type_::eval::Id {
     if type_env::in_toplevel_scope(cx) {
         type_::eval::Id::of_aloc_id(false, cx.make_aloc_id(&loc))
     } else {
@@ -320,7 +319,7 @@ fn mk_eval_id(cx: &Context, loc: ALoc) -> type_::eval::Id {
     }
 }
 
-fn add_unclear_type_error_if_not_lib_file(cx: &Context, loc: ALoc) {
+fn add_unclear_type_error_if_not_lib_file<'a>(cx: &Context<'a>, loc: ALoc) {
     match loc.source() {
         Some(file) if !file.is_lib_file() => {
             flow_js_utils::add_output_non_speculating(cx, ErrorMessage::EUnclearType(loc));
@@ -329,7 +328,7 @@ fn add_unclear_type_error_if_not_lib_file(cx: &Context, loc: ALoc) {
     }
 }
 
-pub fn polarity(cx: &Context, variance: Option<&ast::Variance<ALoc>>) -> Polarity {
+pub fn polarity<'a>(cx: &Context<'a>, variance: Option<&ast::Variance<ALoc>>) -> Polarity {
     if !cx.ts_syntax() {
         match variance {
             Some(ast::Variance {
@@ -400,8 +399,8 @@ pub fn polarity(cx: &Context, variance: Option<&ast::Variance<ALoc>>) -> Polarit
 // Distributive tparam name helpers
 // =========================================================================
 
-fn use_distributive_tparam_name(
-    cx: &Context,
+fn use_distributive_tparam_name<'a>(
+    cx: &Context<'a>,
     name: &FlowSmolStr,
     name_loc: ALoc,
     tparams_map: &mut FlowOrdMap<SubstName, Type>,
@@ -431,8 +430,8 @@ fn use_distributive_tparam_name(
     }
 }
 
-fn use_distributive_tparam_name_from_ast(
-    cx: &Context,
+fn use_distributive_tparam_name_from_ast<'a>(
+    cx: &Context<'a>,
     ast_type: &ast::types::Type<ALoc, ALoc>,
     tparams_map: &mut FlowOrdMap<SubstName, Type>,
 ) -> Option<SubstName> {
@@ -489,8 +488,8 @@ fn method_kind_to_string(kind: MethodKind) -> &'static str {
 // Transform annotations to types
 // =========================================================================
 
-pub fn error_on_unsupported_variance_annotation(
-    cx: &Context,
+pub fn error_on_unsupported_variance_annotation<'a>(
+    cx: &Context<'a>,
     kind: &str,
     tparams: Option<&ast::types::TypeParams<ALoc, ALoc>>,
 ) {
@@ -565,8 +564,8 @@ fn resolve_computed_key_name(
 // converter
 // =========================================================================
 
-fn convert_inner(
-    cx: &Context,
+fn convert_inner<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     t: &ast::types::Type<ALoc, ALoc>,
 ) -> ast::types::Type<ALoc, (ALoc, Type)> {
@@ -1342,7 +1341,7 @@ fn convert_inner(
                 let id_name = ident;
                 let name = &ident.name;
                 // Comments are innecessary, so they can be stripped to meet the generic requirements
-                let convert_type_params = |cx: &Context,
+                let convert_type_params = |cx,
                                            env: &mut ConvertEnv,
                                            targs: Option<&ast::types::TypeArgs<ALoc, ALoc>>|
                  -> (
@@ -1397,7 +1396,7 @@ fn convert_inner(
                     }))
                 };
                 let local_generic_type =
-                    |cx: &Context,
+                    |cx,
                      env: &mut ConvertEnv,
                      name: &FlowSmolStr,
                      name_loc: ALoc,
@@ -2092,7 +2091,7 @@ fn convert_inner(
                                     let remote_module: Result<type_::ModuleType, Type> = match cx
                                         .builtin_module_opt(&import_specifier)
                                     {
-                                        Some((_, m)) => Ok(m),
+                                        Some((_, m)) => Ok(m.get_forced(cx).dupe()),
                                         None => Err(flow_js_utils::lookup_builtin_module_error(
                                             cx,
                                             value,
@@ -3200,8 +3199,8 @@ fn convert_inner(
     }
 }
 
-fn convert_list_inner(
-    cx: &Context,
+fn convert_list_inner<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     asts: &[ast::types::Type<ALoc, ALoc>],
 ) -> (Vec<Type>, Vec<ast::types::Type<ALoc, (ALoc, Type)>>) {
@@ -3216,8 +3215,8 @@ fn convert_list_inner(
     (ts, tasts)
 }
 
-pub fn convert_opt(
-    cx: &Context,
+pub fn convert_opt<'a>(
+    cx: &Context<'a>,
     tparams_map: &FlowOrdMap<SubstName, Type>,
     ast_opt: Option<&ast::types::Type<ALoc, ALoc>>,
 ) -> (Option<Type>, Option<ast::types::Type<ALoc, (ALoc, Type)>>) {
@@ -3230,16 +3229,16 @@ pub fn convert_opt(
     (t_opt, tast_opt)
 }
 
-pub fn convert_qualification(
-    cx: &Context,
+pub fn convert_qualification<'a>(
+    cx: &Context<'a>,
     reason_prefix: &str,
     id: &ast::types::generic::Identifier<ALoc, ALoc>,
 ) -> (Type, ast::types::generic::Identifier<ALoc, (ALoc, Type)>) {
     convert_qualification_with_lookup_mode(cx, None, reason_prefix, id)
 }
 
-fn convert_qualification_with_lookup_mode(
-    cx: &Context,
+fn convert_qualification_with_lookup_mode<'a>(
+    cx: &Context<'a>,
     lookup_mode: Option<type_env::LookupMode>,
     reason_prefix: &str,
     id: &ast::types::generic::Identifier<ALoc, ALoc>,
@@ -3377,8 +3376,8 @@ fn convert_qualification_with_lookup_mode(
     }
 }
 
-fn convert_typeof(
-    cx: &Context,
+fn convert_typeof<'a>(
+    cx: &Context<'a>,
     reason_prefix: &str,
     target: &ast::types::typeof_::Target<ALoc, ALoc>,
 ) -> (Type, ast::types::typeof_::Target<ALoc, (ALoc, Type)>) {
@@ -3522,8 +3521,8 @@ fn convert_typeof(
     }
 }
 
-fn convert_render_type_inner(
-    cx: &Context,
+fn convert_render_type_inner<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     loc: ALoc,
     renders: &ast::types::Renders<ALoc, ALoc>,
@@ -3574,12 +3573,12 @@ fn convert_render_type_inner(
                 ast::types::RendersVariant::Maybe => type_::RendersVariant::RendersMaybe,
                 ast::types::RendersVariant::Star => type_::RendersVariant::RendersStar,
             };
-            let concretize = move |cx_arg: &Context, t_arg: &Type| -> Vec<Type> {
+            fn concretize_fn<'cx>(cx_arg: &Context<'cx>, t_arg: &Type) -> Vec<Type> {
                 let r = type_util::reason_of_t(t_arg).dupe();
                 FlowJs::possible_concrete_types_for_inspection(cx_arg, &r, t_arg)
                     .expect("Should not be under speculation")
-            };
-            let is_iterable_for_better_error = move |cx_arg: &Context, t_arg: &Type| -> bool {
+            }
+            fn is_iterable_fn<'cx>(cx_arg: &Context<'cx>, t_arg: &Type) -> bool {
                 let r = type_util::reason_of_t(t_arg).dupe();
                 let error_r = type_::any_t::error(r.dupe());
                 let iterable_t = FlowJs::get_builtin_typeapp(
@@ -3590,7 +3589,9 @@ fn convert_render_type_inner(
                     vec![error_r.dupe(), error_r.dupe(), error_r],
                 );
                 FlowJs::speculative_subtyping_succeeds(cx_arg, t_arg, &iterable_t)
-            };
+            }
+            let concretize = concretize_fn;
+            let is_iterable_for_better_error = is_iterable_fn;
             let renders_t = flow_js_utils::render_types::mk_non_generic_render_type(
                 cx,
                 reason,
@@ -3613,8 +3614,8 @@ fn convert_render_type_inner(
     }
 }
 
-fn convert_object(
-    cx: &Context,
+fn convert_object<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     loc: ALoc,
     exact: bool,
@@ -3751,8 +3752,8 @@ fn convert_object(
         }
     }
 
-    fn mk_object(
-        cx: &Context,
+    fn mk_object<'a>(
+        cx: &Context<'a>,
         loc: ALoc,
         src_loc: bool,
         exact: bool,
@@ -3787,8 +3788,8 @@ fn convert_object(
         (reason, obj_t)
     }
 
-    fn mk_object_annot(
-        cx: &Context,
+    fn mk_object_annot<'a>(
+        cx: &Context<'a>,
         loc: ALoc,
         exact: bool,
         call: Option<Type>,
@@ -3823,8 +3824,8 @@ fn convert_object(
         }
     }
 
-    fn named_property(
-        cx: &Context,
+    fn named_property<'a>(
+        cx: &Context<'a>,
         env: &mut ConvertEnv,
         acc: &mut Acc,
         prop: &ast::types::object::NormalProperty<ALoc, ALoc>,
@@ -3859,7 +3860,7 @@ fn convert_object(
                         ),
                     );
                 }
-                let prop_of_name = |cx: &Context,
+                let prop_of_name = |cx,
                                     env: &mut ConvertEnv,
                                     acc: &mut Acc,
                                     key_loc: ALoc,
@@ -4532,8 +4533,8 @@ fn convert_object(
     (t, prop_asts)
 }
 
-fn convert_tuple_element(
-    cx: &Context,
+fn convert_tuple_element<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     element: &ast::types::tuple::Element<ALoc, ALoc>,
 ) -> (
@@ -4680,8 +4681,8 @@ fn convert_tuple_element(
     }
 }
 
-fn check_guard_type(
-    cx: &Context,
+fn check_guard_type<'a>(
+    cx: &Context<'a>,
     fparams: &[type_::FunParam],
     guard_name: &FlowSmolStr,
     guard_t: &Type,
@@ -4701,8 +4702,8 @@ fn check_guard_type(
     }
 }
 
-fn convert_type_guard_inner(
-    cx: &Context,
+fn convert_type_guard_inner<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     fparams: &[type_::FunParam],
     gloc: ALoc,
@@ -4745,8 +4746,8 @@ fn convert_type_guard_inner(
     (bool_t, guard_prime, type_guard)
 }
 
-fn error_type_guard(
-    cx: &Context,
+fn error_type_guard<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     loc: ALoc,
     x: &ast::Identifier<ALoc, ALoc>,
@@ -4776,8 +4777,8 @@ fn error_type_guard(
     (bool_t, guard_prime, None)
 }
 
-fn convert_return_annotation(
-    cx: &Context,
+fn convert_return_annotation<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     meth_kind: MethodKind,
     params: &ast::types::function::Params<ALoc, ALoc>,
@@ -4974,8 +4975,8 @@ fn typed_function_param_ast(
     }
 }
 
-fn mk_method_func_sig(
-    cx: &Context,
+fn mk_method_func_sig<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     meth_kind: MethodKind,
     loc: ALoc,
@@ -4984,8 +4985,8 @@ fn mk_method_func_sig(
     func_class_sig_types::func::Func<FuncTypeParamsConfig>,
     ast::types::Function<ALoc, (ALoc, Type)>,
 ) {
-    fn add_param(
-        cx: &Context,
+    fn add_param<'a>(
+        cx: &Context<'a>,
         env: &mut ConvertEnv,
         x: &mut func_class_sig_types::param::Param<FuncTypeParamsConfig>,
         param: &ast::types::function::Param<ALoc, ALoc>,
@@ -5004,8 +5005,8 @@ fn mk_method_func_sig(
         crate::func_params::add_param::<FuncTypeParamsConfig>((t, typed_param), x);
     }
 
-    fn add_rest(
-        cx: &Context,
+    fn add_rest<'a>(
+        cx: &Context<'a>,
         env: &mut ConvertEnv,
         x: &mut func_class_sig_types::param::Param<FuncTypeParamsConfig>,
         rest_param: &ast::types::function::RestParam<ALoc, ALoc>,
@@ -5030,8 +5031,8 @@ fn mk_method_func_sig(
         crate::func_params::add_rest::<FuncTypeParamsConfig>((t, typed_rest), x);
     }
 
-    fn add_this(
-        cx: &Context,
+    fn add_this<'a>(
+        cx: &Context<'a>,
         env: &mut ConvertEnv,
         x: &mut func_class_sig_types::param::Param<FuncTypeParamsConfig>,
         this_param: &ast::types::function::ThisParam<ALoc, ALoc>,
@@ -5052,8 +5053,8 @@ fn mk_method_func_sig(
         crate::func_params::add_this::<FuncTypeParamsConfig>((t, typed_this), x);
     }
 
-    fn convert_params(
-        cx: &Context,
+    fn convert_params<'a>(
+        cx: &Context<'a>,
         env: &mut ConvertEnv,
         params_node: &ast::types::function::Params<ALoc, ALoc>,
     ) -> (
@@ -5143,8 +5144,8 @@ fn mk_method_func_sig(
     (func_sig, func_ast)
 }
 
-fn mk_type_available_annotation_inner(
-    cx: &Context,
+fn mk_type_available_annotation_inner<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     annotation: &ast::types::Annotation<ALoc, ALoc>,
 ) -> (Type, ast::types::Annotation<ALoc, (ALoc, Type)>) {
@@ -5191,8 +5192,8 @@ fn mk_type_available_annotation_inner(
     )
 }
 
-fn mk_function_type_annotation_inner(
-    cx: &Context,
+fn mk_function_type_annotation_inner<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     func: &(ALoc, ast::types::Function<ALoc, ALoc>),
 ) -> (Type, (ALoc, ast::types::Function<ALoc, (ALoc, Type)>)) {
@@ -5262,8 +5263,8 @@ fn mk_singleton_bigint(loc: ALoc, num: Option<i64>, raw: &str) -> Type {
 
 /// Given the type of expression C and type arguments T1...Tn, return the type of
 /// values described by C<T1,...,Tn>, or C when there are no type arguments.
-fn mk_nominal_type_inner(
-    cx: &Context,
+fn mk_nominal_type_inner<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     reason: Reason,
     c: Type,
@@ -5329,8 +5330,8 @@ fn mk_nominal_type_inner(
     }
 }
 
-fn mk_type_param_inner(
-    cx: &Context,
+fn mk_type_param_inner<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     kind: flow_parser::ast_visitor::TypeParamsContext,
     type_param: &ast::types::TypeParam<ALoc, ALoc>,
@@ -5475,8 +5476,8 @@ fn mk_type_param_inner(
 
 /// take a list of AST type param declarations,
 /// do semantic checking and create types for them.
-fn mk_type_param_declarations_inner(
-    cx: &Context,
+fn mk_type_param_declarations_inner<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     kind: flow_parser::ast_visitor::TypeParamsContext,
     tparams: Option<&ast::types::TypeParams<ALoc, ALoc>>,
@@ -5532,7 +5533,7 @@ fn mk_type_param_declarations_inner(
     }
 }
 
-fn type_identifier(cx: &Context, name: &FlowSmolStr, loc: ALoc) -> Type {
+fn type_identifier<'a>(cx: &Context<'a>, name: &FlowSmolStr, loc: ALoc) -> Type {
     let t = type_env::query_var(
         Some(type_env::LookupMode::ForType),
         cx,
@@ -5543,8 +5544,8 @@ fn type_identifier(cx: &Context, name: &FlowSmolStr, loc: ALoc) -> Type {
     type_util::mod_reason_of_t(&|r: Reason| r.reposition(loc.dupe()), &t)
 }
 
-fn mk_interface_super(
-    cx: &Context,
+fn mk_interface_super<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     generic_with_loc: &(ALoc, ast::types::Generic<ALoc, ALoc>),
 ) -> (
@@ -5632,8 +5633,8 @@ fn convert_indexer_internal(
     (dict, indexer_ast)
 }
 
-fn add_interface_properties(
-    cx: &Context,
+fn add_interface_properties<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     this: Type,
     properties: &[ast::types::object::Property<ALoc, ALoc>],
@@ -6583,8 +6584,8 @@ fn add_interface_properties(
     (s, prop_asts)
 }
 
-fn optional_indexed_access(
-    cx: &Context,
+fn optional_indexed_access<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     loc: ALoc,
     ia: &ast::types::OptionalIndexedAccess<ALoc, ALoc>,
@@ -6682,8 +6683,8 @@ fn optional_indexed_access(
     )
 }
 
-fn mk_component(
-    cx: &Context,
+fn mk_component<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     reason: Reason,
     id_opt: Option<&ast::Identifier<ALoc, ALoc>>,
@@ -6703,7 +6704,7 @@ fn mk_component(
         flow_parser::ast_visitor::TypeParamsContext::ComponentDeclaration,
         tparams_node,
     );
-    let mk_param = |cx_ref: &Context,
+    let mk_param = |cx_ref,
                     env_ref: &mut ConvertEnv,
                     param: &ast::types::component_params::Param<ALoc, ALoc>|
      -> (
@@ -6732,7 +6733,7 @@ fn mk_component(
             },
         )
     };
-    let mk_rest = |cx_ref: &Context,
+    let mk_rest = |cx_ref,
                    env_ref: &mut ConvertEnv,
                    rest: &ast::types::component_params::RestParam<ALoc, ALoc>|
      -> (
@@ -6832,8 +6833,8 @@ fn mk_component(
     (t, tparam_asts, params_ast, renders_ast)
 }
 
-fn mk_super_inner(
-    cx: &Context,
+fn mk_super_inner<'a>(
+    cx: &Context<'a>,
     env: &mut ConvertEnv,
     loc: ALoc,
     c: Type,
@@ -6861,8 +6862,8 @@ fn mk_super_inner(
     }
 }
 
-pub fn mk_interface_sig(
-    cx: &Context,
+pub fn mk_interface_sig<'a>(
+    cx: &Context<'a>,
     intf_loc: ALoc,
     reason: Reason,
     decl: &ast::statement::Interface<ALoc, ALoc>,
@@ -6949,8 +6950,8 @@ pub fn mk_interface_sig(
     )
 }
 
-pub fn mk_declare_component_sig(
-    cx: &Context,
+pub fn mk_declare_component_sig<'a>(
+    cx: &Context<'a>,
     loc: ALoc,
     component: &ast::statement::DeclareComponent<ALoc, ALoc>,
 ) -> (Type, ast::statement::DeclareComponent<ALoc, (ALoc, Type)>) {
@@ -6972,8 +6973,8 @@ pub fn mk_declare_component_sig(
     let params_comments = &component.params.comments;
 
     // Helper to convert annotation_or_hint to annotation
-    fn convert_annot_or_hint(
-        cx: &Context,
+    fn convert_annot_or_hint<'a>(
+        cx: &Context<'a>,
         env: &mut ConvertEnv,
         _loc: &ALoc,
         annot_or_hint: &ast::types::AnnotationOrHint<ALoc, ALoc>,
@@ -6997,8 +6998,8 @@ pub fn mk_declare_component_sig(
     }
     // Process each param: convert statement param to type param for Component_type_params,
     // and build typed statement param for output
-    fn process_param(
-        cx: &Context,
+    fn process_param<'a>(
+        cx: &Context<'a>,
         env: &mut ConvertEnv,
         param: &ast::statement::component_params::Param<ALoc, ALoc>,
     ) -> (
@@ -7160,8 +7161,8 @@ pub fn mk_declare_component_sig(
     }
 
     // Process rest param
-    fn process_rest(
-        cx: &Context,
+    fn process_rest<'a>(
+        cx: &Context<'a>,
         env: &mut ConvertEnv,
         rest_param: &ast::statement::component_params::RestParam<ALoc, ALoc>,
     ) -> (
@@ -7344,8 +7345,8 @@ pub fn mk_declare_component_sig(
     )
 }
 
-pub fn mk_declare_class_sig(
-    cx: &Context,
+pub fn mk_declare_class_sig<'a>(
+    cx: &Context<'a>,
     class_loc: ALoc,
     class_name: &FlowSmolStr,
     reason: Reason,
@@ -7357,8 +7358,8 @@ pub fn mk_declare_class_sig(
 ) {
     use flow_typing_type::type_::*;
 
-    fn mk_mixins(
-        cx: &Context,
+    fn mk_mixins<'a>(
+        cx: &Context<'a>,
         env: &mut ConvertEnv,
         generic_with_loc: &(ALoc, ast::types::Generic<ALoc, ALoc>),
     ) -> (
@@ -7401,7 +7402,6 @@ pub fn mk_declare_class_sig(
             }
     }
 
-    let cx_c = cx.dupe();
     let reason_c = reason.dupe();
     let class_loc_c = class_loc.dupe();
     let class_name_owned = class_name.dupe();
@@ -7410,25 +7410,20 @@ pub fn mk_declare_class_sig(
     use std::cell::RefCell;
     use std::rc::Rc;
 
+    type LazyResult = (
+        Type,
+        Type,
+        func_class_sig_types::class::Class<FuncTypeParamsConfig>,
+        ast::statement::DeclareClass<ALoc, (ALoc, Type)>,
+    );
     let lazy_cell: Rc<
         RefCell<
             Option<
                 Rc<
-                    Lazy<
-                        (
-                            Type,
-                            Type,
-                            func_class_sig_types::class::Class<FuncTypeParamsConfig>,
-                            ast::statement::DeclareClass<ALoc, (ALoc, Type)>,
-                        ),
-                        Box<
-                            dyn FnOnce() -> (
-                                Type,
-                                Type,
-                                func_class_sig_types::class::Class<FuncTypeParamsConfig>,
-                                ast::statement::DeclareClass<ALoc, (ALoc, Type)>,
-                            ),
-                        >,
+                    flow_lazy::Lazy<
+                        Context<'a>,
+                        LazyResult,
+                        Box<dyn FnOnce(&Context<'a>) -> LazyResult + 'a>,
                     >,
                 >,
             >,
@@ -7437,24 +7432,8 @@ pub fn mk_declare_class_sig(
     let lazy_cell_c = lazy_cell.dupe();
 
     let lazy_val: Rc<
-        Lazy<
-            (
-                Type,
-                Type,
-                func_class_sig_types::class::Class<FuncTypeParamsConfig>,
-                ast::statement::DeclareClass<ALoc, (ALoc, Type)>,
-            ),
-            Box<
-                dyn FnOnce() -> (
-                    Type,
-                    Type,
-                    func_class_sig_types::class::Class<FuncTypeParamsConfig>,
-                    ast::statement::DeclareClass<ALoc, (ALoc, Type)>,
-                ),
-            >,
-        >,
-    > = Rc::new(Lazy::new(Box::new(move || {
-        let cx = &cx_c;
+        flow_lazy::Lazy<Context<'a>, LazyResult, Box<dyn FnOnce(&Context<'a>) -> LazyResult + 'a>>,
+    > = Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'_>| {
         let reason = reason_c;
         let class_loc = class_loc_c;
         let class_name = &class_name_owned;
@@ -7462,13 +7441,15 @@ pub fn mk_declare_class_sig(
 
         // Build self type via lazy reference
         let lazy_ref = lazy_cell_c.borrow().as_ref().unwrap().dupe();
-        let lazy_t_for_self: Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>> =
-            Rc::new(Lazy::new(Box::new(move || {
-                let val = &*lazy_ref;
+        let self_ = flow_typing_tvar::mk_fully_resolved_lazy(
+            cx,
+            reason.dupe(),
+            true,
+            Box::new(move |cx: &Context<'_>| {
+                let val = lazy_ref.get_forced(cx);
                 val.0.dupe()
-            })));
-        let self_ =
-            flow_typing_tvar::mk_fully_resolved_lazy(cx, reason.dupe(), true, lazy_t_for_self);
+            }),
+        );
 
         // Now implement f:
         let id_loc = &decl.id.loc;
@@ -7664,7 +7645,7 @@ pub fn mk_declare_class_sig(
 
     *lazy_cell.borrow_mut() = Some(lazy_val.dupe());
 
-    let result = &*lazy_val;
+    let result = lazy_val.get_forced(cx);
     (result.1.dupe(), result.2.clone(), result.3.clone())
 }
 
@@ -7672,8 +7653,8 @@ pub fn mk_declare_class_sig(
 // Public wrapper functions that create env and delegate
 // =========================================================================
 
-pub fn convert(
-    cx: &Context,
+pub fn convert<'a>(
+    cx: &Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     t: &ast::types::Type<ALoc, ALoc>,
 ) -> ast::types::Type<ALoc, (ALoc, Type)> {
@@ -7681,8 +7662,8 @@ pub fn convert(
     convert_inner(cx, &mut env, t)
 }
 
-pub fn convert_list(
-    cx: &Context,
+pub fn convert_list<'a>(
+    cx: &Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     asts: &[ast::types::Type<ALoc, ALoc>],
 ) -> (Vec<Type>, Vec<ast::types::Type<ALoc, (ALoc, Type)>>) {
@@ -7690,8 +7671,8 @@ pub fn convert_list(
     convert_list_inner(cx, &mut env, asts)
 }
 
-pub fn convert_render_type(
-    cx: &Context,
+pub fn convert_render_type<'a>(
+    cx: &Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     loc: ALoc,
     renders: &ast::types::Renders<ALoc, ALoc>,
@@ -7700,8 +7681,8 @@ pub fn convert_render_type(
     convert_render_type_inner(cx, &mut env, loc, renders)
 }
 
-pub fn convert_type_guard(
-    cx: &Context,
+pub fn convert_type_guard<'a>(
+    cx: &Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     fparams: &[type_::FunParam],
     gloc: ALoc,
@@ -7730,7 +7711,7 @@ pub fn convert_indexer(
     convert_indexer_internal(cx, &mut env, indexer)
 }
 
-pub fn mk_empty_interface_type(cx: &Context, loc: ALoc) -> Type {
+pub fn mk_empty_interface_type<'a>(cx: &Context<'a>, loc: ALoc) -> Type {
     let interface_type = ast::types::Type::new(ast::types::TypeInner::Interface {
         loc: loc.dupe(),
         inner: std::sync::Arc::new(ast::types::Interface {
@@ -7753,8 +7734,8 @@ pub fn mk_empty_interface_type(cx: &Context, loc: ALoc) -> Type {
     t.dupe()
 }
 
-pub fn mk_super(
-    cx: &Context,
+pub fn mk_super<'a>(
+    cx: &Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     loc: ALoc,
     c: Type,
@@ -7767,8 +7748,8 @@ pub fn mk_super(
     mk_super_inner(cx, &mut env, loc, c, targs)
 }
 
-pub fn mk_type_available_annotation(
-    cx: &Context,
+pub fn mk_type_available_annotation<'a>(
+    cx: &Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     annotation: &ast::types::Annotation<ALoc, ALoc>,
 ) -> (Type, ast::types::Annotation<ALoc, (ALoc, Type)>) {
@@ -7776,8 +7757,8 @@ pub fn mk_type_available_annotation(
     mk_type_available_annotation_inner(cx, &mut env, annotation)
 }
 
-pub fn mk_function_type_annotation(
-    cx: &Context,
+pub fn mk_function_type_annotation<'a>(
+    cx: &Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     func: &(ALoc, ast::types::Function<ALoc, ALoc>),
 ) -> (Type, (ALoc, ast::types::Function<ALoc, (ALoc, Type)>)) {
@@ -7785,8 +7766,8 @@ pub fn mk_function_type_annotation(
     mk_function_type_annotation_inner(cx, &mut env, func)
 }
 
-pub fn mk_nominal_type(
-    cx: &Context,
+pub fn mk_nominal_type<'a>(
+    cx: &Context<'a>,
     reason: Reason,
     tparams_map: FlowOrdMap<SubstName, Type>,
     c: Type,
@@ -7796,8 +7777,8 @@ pub fn mk_nominal_type(
     mk_nominal_type_inner(cx, &mut env, reason, c, targs)
 }
 
-pub fn mk_type_param(
-    cx: &Context,
+pub fn mk_type_param<'a>(
+    cx: &Context<'a>,
     tparams_map: FlowOrdMap<SubstName, Type>,
     kind: flow_parser::ast_visitor::TypeParamsContext,
     type_param: &ast::types::TypeParam<ALoc, ALoc>,
@@ -7806,8 +7787,8 @@ pub fn mk_type_param(
     mk_type_param_inner(cx, &mut env, kind, type_param)
 }
 
-pub fn mk_type_param_declarations(
-    cx: &Context,
+pub fn mk_type_param_declarations<'a>(
+    cx: &Context<'a>,
     kind: flow_parser::ast_visitor::TypeParamsContext,
     tparams_map: Option<FlowOrdMap<SubstName, Type>>,
     tparams: Option<&ast::types::TypeParams<ALoc, ALoc>>,

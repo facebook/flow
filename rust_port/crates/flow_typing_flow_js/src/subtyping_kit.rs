@@ -104,11 +104,11 @@ use crate::renders_kit;
 use crate::speculation_kit;
 use crate::type_inference_hooks_js;
 
-fn flow_all_in_union(
-    cx: &Context,
+fn flow_all_in_union<'cx>(
+    cx: &Context<'cx>,
     trace: &DepthTrace,
     rep: &union_rep::UnionRep,
-    u: &UseT,
+    u: &UseT<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     flow_js_utils::iter_union(
         |cx, trace, (t, u)| FlowJs::rec_flow(cx, *trace, t, u),
@@ -122,8 +122,8 @@ fn flow_all_in_union(
 }
 
 // let add_output_prop_polarity_mismatch cx use_op (lreason, ureason) props =
-fn add_output_prop_polarity_mismatch(
-    cx: &Context,
+fn add_output_prop_polarity_mismatch<'cx>(
+    cx: &Context<'cx>,
     use_op: UseOp,
     lreason: &Reason,
     ureason: &Reason,
@@ -153,8 +153,8 @@ fn polarity_error_content(
     (propref.dupe(), (lpol, upol))
 }
 
-fn rec_flow_p_inner(
-    cx: &Context,
+fn rec_flow_p_inner<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     use_op: UseOp,
     lower_upper_subtyping_obj_ts: Option<(&Type, &Type)>,
@@ -247,8 +247,8 @@ fn index_of_param(params: &[(Option<Name>, Type)], x: &Name) -> Option<usize> {
     })
 }
 
-fn func_type_guard_compat(
-    cx: &Context,
+fn func_type_guard_compat<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     grd1: (
@@ -307,8 +307,8 @@ fn func_type_guard_compat(
     }
 }
 
-fn flow_obj_to_obj(
-    cx: &Context,
+fn flow_obj_to_obj<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     lreason: &Reason,
@@ -1317,8 +1317,8 @@ fn flow_obj_to_obj(
 // in which case covariant typing is sound (since no alias
 // will break if the subtyped child value is replaced by a
 // non-subtyped value
-fn flow_to_mutable_child(
-    cx: &Context,
+fn flow_to_mutable_child<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     unify_cause: UnifyCause,
@@ -1381,8 +1381,8 @@ fn flow_to_mutable_child(
 //    * [T1, T2] ~> Array<Y>[U1] checks T1 ~> U1
 //    * [T1] ~> Array<Y>[U1, U2] checks T1 ~> U1
 //    * Array<X>[T1, T2] ~> Array<Y>[U1, U2] checks [T1, T2] ~> Array<Y>[U1, U2]
-fn array_flow(
-    cx: &Context,
+fn array_flow<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     lit1: bool,
@@ -1456,8 +1456,8 @@ fn take_n_from_set(n: usize, set: &UnionEnumSet) -> Vec<UnionEnum> {
     set.iter().take(n).cloned().collect()
 }
 
-pub fn union_to_union(
-    cx: &Context,
+pub fn union_to_union<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     l: &Type,
@@ -1518,8 +1518,8 @@ pub fn union_to_union(
     Ok(())
 }
 
-pub fn rec_sub_t(
-    cx: &Context,
+pub fn rec_sub_t<'cx>(
+    cx: &Context<'cx>,
     use_op: UseOp,
     l: &Type,
     u: &Type,
@@ -1842,15 +1842,14 @@ pub fn rec_sub_t(
                     match speculation_kit::try_singleton_custom_throw_on_failure(
                         cx,
                         Box::new({
-                            let cx = cx.dupe();
                             let use_op = use_op.dupe();
                             let lreason = lreason.dupe();
                             let ureason = ureason.dupe();
                             let ltargs = lnom.nominal_type_args.dupe();
                             let utargs = unom.nominal_type_args.dupe();
-                            move || {
+                            move |cx: &Context| {
                                 FlowJs::flow_type_args(
-                                    &cx, trace, use_op, &lreason, &ureason, ltargs, utargs,
+                                    cx, trace, use_op, &lreason, &ureason, ltargs, utargs,
                                 )
                             }
                         }),
@@ -2938,9 +2937,8 @@ pub fn rec_sub_t(
             // correct branch. This process is reused for intersections as well. See
             // comments on try_union and try_intersection.
             let l_for_annot = l.dupe();
-            let cx_clone = cx.dupe();
-            let on_success: Box<dyn FnOnce()> = Box::new(move || {
-                flow_js_utils::update_lit_type_from_annot(&cx_clone, &l_for_annot);
+            let on_success: Box<dyn FnOnce(&Context<'cx>)> = Box::new(move |cx| {
+                flow_js_utils::update_lit_type_from_annot(cx, &l_for_annot);
             });
             speculation_kit::try_union(cx, Some(on_success), trace, use_op, l.dupe(), r.dupe(), rep)
         }
@@ -3495,7 +3493,7 @@ pub fn rec_sub_t(
                 l,
                 use_op.dupe(),
                 reasonl,
-                react::Tool::GetConfig { tout: l.dupe() },
+                react::Tool::<Context<'cx>>::GetConfig { tout: l.dupe() },
                 Polarity::Negative,
                 config,
             )?;
@@ -3530,7 +3528,7 @@ pub fn rec_sub_t(
                 &UseT::new(UseTInner::ReactKitT(
                     use_op.dupe(),
                     reasonl.dupe(),
-                    Box::new(react::Tool::ConfigCheck {
+                    Box::new(react::Tool::<Context<'cx>>::ConfigCheck {
                         props: config.dupe(),
                     }),
                 )),
@@ -3556,7 +3554,7 @@ pub fn rec_sub_t(
                 &UseT::new(UseTInner::ReactKitT(
                     use_op.dupe(),
                     reasonl.dupe(),
-                    Box::new(react::Tool::ConfigCheck {
+                    Box::new(react::Tool::<Context<'cx>>::ConfigCheck {
                         props: config.dupe(),
                     }),
                 )),
@@ -4777,8 +4775,6 @@ pub fn rec_sub_t(
             let opaque_l_reason_c = opaque_l_reason.dupe();
             let use_op_c1 = use_op.dupe();
             let use_op_c2 = use_op.dupe();
-            let cx1 = cx.dupe();
-            let cx2 = cx.dupe();
             speculation_kit::try_custom(
                 cx,
                 Some(use_op),
@@ -4786,23 +4782,23 @@ pub fn rec_sub_t(
                 None,
                 opaque_l_reason.loc().clone(),
                 vec![
-                    Box::new(move || {
+                    Box::new(move |cx: &Context| {
                         let use_op = VirtualUseOp::Frame(
                             Arc::new(VirtualFrameUseOp::OpaqueTypeLowerBound {
                                 opaque_t_reason: opaque_u_reason_c,
                             }),
                             Arc::new(use_op_c1),
                         );
-                        FlowJs::rec_flow_t(&cx1, trace, use_op, &l_clone, &upper_lower)
+                        FlowJs::rec_flow_t(cx, trace, use_op, &l_clone, &upper_lower)
                     }),
-                    Box::new(move || {
+                    Box::new(move |cx: &Context| {
                         let use_op = VirtualUseOp::Frame(
                             Arc::new(VirtualFrameUseOp::OpaqueTypeUpperBound {
                                 opaque_t_reason: opaque_l_reason_c,
                             }),
                             Arc::new(use_op_c2),
                         );
-                        FlowJs::rec_flow_t(&cx2, trace, use_op, &lower_upper, &u_clone)
+                        FlowJs::rec_flow_t(cx, trace, use_op, &lower_upper, &u_clone)
                     }),
                 ],
             )
@@ -4845,8 +4841,6 @@ pub fn rec_sub_t(
             let reason_c = reason.dupe();
             let use_op_c1 = use_op.dupe();
             let use_op_c2 = use_op.dupe();
-            let cx1 = cx.dupe();
-            let cx2 = cx.dupe();
             speculation_kit::try_custom(
                 cx,
                 Some(use_op),
@@ -4854,24 +4848,24 @@ pub fn rec_sub_t(
                 None,
                 reason.loc().clone(),
                 vec![
-                    Box::new(move || {
+                    Box::new(move |cx: &Context| {
                         let use_op = VirtualUseOp::Frame(
                             Arc::new(VirtualFrameUseOp::OpaqueTypeLowerBound {
                                 opaque_t_reason: opaque_u_reason_c,
                             }),
                             Arc::new(use_op_c1),
                         );
-                        FlowJs::rec_flow_t(&cx1, trace, use_op, &l_clone, &upper_lower)
+                        FlowJs::rec_flow_t(cx, trace, use_op, &l_clone, &upper_lower)
                     }),
-                    Box::new(move || {
+                    Box::new(move |cx: &Context| {
                         let repositioned = FlowJs::reposition_reason(
-                            &cx2,
+                            cx,
                             Some(trace),
                             &reason_c,
                             None,
                             &lower_upper,
                         )?;
-                        FlowJs::rec_flow_t(&cx2, trace, use_op_c2, &repositioned, &u_clone)
+                        FlowJs::rec_flow_t(cx, trace, use_op_c2, &repositioned, &u_clone)
                     }),
                 ],
             )
@@ -5312,8 +5306,8 @@ pub fn rec_sub_t(
     }
 }
 
-pub fn rec_flow_p(
-    cx: &Context,
+pub fn rec_flow_p<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     use_op: UseOp,
     report_polarity: bool,

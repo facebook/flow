@@ -20,8 +20,8 @@ use super::*;
 // * subtyping a sequence of arguments with a sequence of parameters *
 // *******************************************************************
 
-pub(super) fn multiflow_call(
-    cx: &Context,
+pub(super) fn multiflow_call<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
@@ -42,8 +42,8 @@ pub(super) fn multiflow_call(
     )
 }
 
-pub(super) fn multiflow_subtype(
-    cx: &Context,
+pub(super) fn multiflow_subtype<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: VirtualUseOp<ALoc>,
     reason: &Reason,
@@ -66,8 +66,8 @@ pub(super) fn multiflow_subtype(
 
 // Like multiflow_partial, but if there is no spread argument, it flows VoidT to
 // all unused parameters
-pub(super) fn multiflow_full(
-    cx: &Context,
+pub(super) fn multiflow_full<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
@@ -121,8 +121,8 @@ pub(super) fn multiflow_full(
 ///  
 /// It is a little trickier in that there may be a single spread argument after
 /// all the regular arguments. There may also be a rest parameter.
-pub(super) fn multiflow_partial(
-    cx: &Context,
+pub(super) fn multiflow_partial<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
@@ -135,14 +135,14 @@ pub(super) fn multiflow_partial(
 ) -> Result<(Vec<(Option<FlowSmolStr>, Type)>, Option<FunRestParam>), FlowJsException> {
     use flow_typing_type::type_::elemt_of_arrtype;
 
-    fn multiflow_non_spreads(
-        cx: &Context,
+    fn multiflow_non_spreads<'cx>(
+        cx: &Context<'cx>,
         use_op: &UseOp,
         n: i32,
         mut arglist: VecDeque<(Type, Option<GenericId>)>,
         mut parlist: VecDeque<(Option<FlowSmolStr>, Type)>,
     ) -> (
-        Vec<(Type, UseT)>,
+        Vec<(Type, UseT<Context<'cx>>)>,
         VecDeque<(Type, Option<GenericId>)>,
         VecDeque<(Option<FlowSmolStr>, Type)>,
     ) {
@@ -269,7 +269,7 @@ pub(super) fn multiflow_partial(
                     let i = elems.len() as i32;
                     let rest_param_t = rest_param_t.dupe();
                     let use_op = use_op.dupe();
-                    flow_typing_tvar::mk_where_result(cx, rest_reason.dupe(), |tout| {
+                    flow_typing_tvar::mk_where_result(cx, rest_reason.dupe(), |cx, tout| {
                         rec_flow(
                             cx,
                             trace,
@@ -315,7 +315,7 @@ pub(super) fn multiflow_partial(
             let arg_array = {
                 let arg_array_reason2 = arg_array_reason.dupe();
                 let use_op = use_op.dupe();
-                flow_typing_tvar::mk_where_result(cx, arg_array_reason.dupe(), |tout| {
+                flow_typing_tvar::mk_where_result(cx, arg_array_reason.dupe(), |cx, tout| {
                     let reason_op = &arg_array_reason2;
                     let instantiable = flow_common::reason::is_instantiable_reason(rest_reason);
                     let element_reason =
@@ -360,8 +360,8 @@ pub(super) fn multiflow_partial(
     }
 }
 
-pub(super) fn resolve_call_list(
-    cx: &Context,
+pub(super) fn resolve_call_list<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     use_op: UseOp,
     reason_op: &Reason,
@@ -393,8 +393,8 @@ pub(super) fn resolve_call_list(
     resolve_spread_list_rec(cx, trace, use_op, reason_op, vec![], unresolved, resolve_to)
 }
 
-pub(super) fn resolve_spread_list(
-    cx: &Context,
+pub(super) fn resolve_spread_list<'cx>(
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason_op: &Reason,
     list: Vec<UnresolvedParam>,
@@ -405,8 +405,8 @@ pub(super) fn resolve_spread_list(
 
 // This function goes through the unresolved elements to find the next rest
 // element to resolve
-pub(super) fn resolve_spread_list_rec(
-    cx: &Context,
+pub(super) fn resolve_spread_list_rec<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     use_op: UseOp,
     reason_op: &Reason,
@@ -447,8 +447,8 @@ pub(super) fn resolve_spread_list_rec(
 }
 
 // Now that everything is resolved, we can construct whatever type we're trying to resolve to.
-pub(super) fn finish_resolve_spread_list(
-    cx: &Context,
+pub(super) fn finish_resolve_spread_list<'cx>(
+    cx: &Context<'cx>,
     trace: Option<DepthTrace>,
     use_op: UseOp,
     reason_op: &Reason,
@@ -469,7 +469,7 @@ pub(super) fn finish_resolve_spread_list(
     use flow_typing_type::type_util::reason_of_resolved_param;
     use flow_typing_type::type_util::type_ex_set;
 
-    fn propagate_dro(cx: &Context, elem: Type, arrtype: &ArrType) -> Type {
+    fn propagate_dro<'cx>(cx: &Context<'cx>, elem: Type, arrtype: &ArrType) -> Type {
         match arrtype {
             ArrType::ROArrayAT(_, Some(l))
             | ArrType::ArrayAT {
@@ -483,8 +483,8 @@ pub(super) fn finish_resolve_spread_list(
     }
 
     // Turn tuple rest params into single params
-    fn flatten_spread_args(
-        cx: &Context,
+    fn flatten_spread_args<'cx>(
+        cx: &Context<'cx>,
         args: &[ResolvedParam],
     ) -> Result<(Vec<ResolvedParam>, bool, bool), FlowJsException> {
         let (args, spread_after_opt, _seen_opt, inexact_spread) = args.iter().try_fold(
@@ -596,8 +596,8 @@ pub(super) fn finish_resolve_spread_list(
         })
     }
 
-    fn finish_array(
-        cx: &Context,
+    fn finish_array<'cx>(
+        cx: &Context<'cx>,
         use_op: UseOp,
         trace: Option<DepthTrace>,
         reason_op: &Reason,
@@ -895,8 +895,8 @@ pub(super) fn finish_resolve_spread_list(
     // However, if we have a spread that resolved to any or to an array of
     // unknown length, then we're in trouble. Basically, any remaining argument
     // might flow to any remaining parameter.
-    fn flatten_call_arg(
-        cx: &Context,
+    fn flatten_call_arg<'cx>(
+        cx: &Context<'cx>,
         use_op: UseOp,
         r: &Reason,
         resolved: &[ResolvedParam],
@@ -907,8 +907,8 @@ pub(super) fn finish_resolve_spread_list(
         ),
         FlowJsException,
     > {
-        fn flatten(
-            cx: &Context,
+        fn flatten<'cx>(
+            cx: &Context<'cx>,
             mut args: Vec<(Type, Option<flow_typing_generics::GenericId>)>,
             spread: Option<(type_ex_set::TypeExSet, Option<ArrType>, array_spread::T)>,
             resolved: &[ResolvedParam],
@@ -1046,7 +1046,7 @@ pub(super) fn finish_resolve_spread_list(
             let arrtype = match last_inexact_tuple {
                 Some(arrtype) => arrtype,
                 None => {
-                    let elem_t = flow_typing_tvar::mk_where_result(cx, r.dupe(), |tvar| {
+                    let elem_t = flow_typing_tvar::mk_where_result(cx, r.dupe(), |cx, tvar| {
                         for type_ex in tset.iter() {
                             helpers::flow(
                                 cx,
@@ -1074,8 +1074,8 @@ pub(super) fn finish_resolve_spread_list(
 
     // This is used for things like Function.prototype.bind, which partially
     // apply arguments and then return the new function.
-    fn finish_multiflow_partial(
-        cx: &Context,
+    fn finish_multiflow_partial<'cx>(
+        cx: &Context<'cx>,
         trace: Option<DepthTrace>,
         use_op: UseOp,
         reason_op: &Reason,
@@ -1146,8 +1146,8 @@ pub(super) fn finish_resolve_spread_list(
 
     // This is used for things like function application, where all the arguments
     // are applied to a function
-    fn finish_multiflow_full(
-        cx: &Context,
+    fn finish_multiflow_full<'cx>(
+        cx: &Context<'cx>,
         trace: Option<DepthTrace>,
         use_op: UseOp,
         reason_op: &Reason,

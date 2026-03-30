@@ -105,7 +105,7 @@ pub fn swap_reason(t2: &Type, t1: &Type) -> Type {
 
 /// This predicate attempts to flatten out OpenTs and AnnotTs before performing a
 /// structural reasonless equality check of two types.
-pub fn eq(cx: &Context, t1: &Type, t2: &Type) -> bool {
+pub fn eq<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> bool {
     if t1.ptr_eq(t2) {
         return true;
     }
@@ -182,7 +182,7 @@ pub fn eq(cx: &Context, t1: &Type, t2: &Type) -> bool {
     }
 }
 
-pub fn eq_targs(cx: &Context, targs1: &[Type], targs2: &[Type]) -> bool {
+pub fn eq_targs<'cx>(cx: &Context<'cx>, targs1: &[Type], targs2: &[Type]) -> bool {
     if targs1.len() != targs2.len() {
         return false;
     }

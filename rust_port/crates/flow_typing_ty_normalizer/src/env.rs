@@ -118,9 +118,9 @@ impl Options {
 
 /// Global environment that does not change during normalization
 #[derive(Clone)]
-pub struct Genv<'a> {
+pub struct Genv<'a, 'cx> {
     /// Full (merged) context
-    pub cx: &'a Context,
+    pub cx: &'a Context<'cx>,
     /// Typed AST of the current file
     pub typed_ast_opt: Option<&'a ast::Program<ALoc, (ALoc, Type)>>,
     /// The file_sig of the current file
@@ -139,9 +139,9 @@ type ImportedNamesMap = FlowOrdMap<ALoc, ALocImportedIdent>;
 pub type SymbolSet = BTreeSet<ALocSymbol>;
 
 #[derive(Clone)]
-pub struct Env<'cx> {
+pub struct Env<'a, 'cx> {
     /// Does not change. Set once in the beginning.
-    pub genv: Genv<'cx>,
+    pub genv: Genv<'a, 'cx>,
     pub infer_tparams: Rc<[TypeParam]>,
     /// For debugging purposes mostly
     pub depth: u32,
@@ -152,8 +152,8 @@ pub struct Env<'cx> {
     pub omit_targ_defaults: bool,
 }
 
-impl<'cx> Env<'cx> {
-    pub fn init(genv: Genv<'cx>) -> Self {
+impl<'a, 'cx> Env<'a, 'cx> {
+    pub fn init(genv: Genv<'a, 'cx>) -> Self {
         let omit_targ_defaults = genv.options.omit_targ_defaults_option;
         Env {
             genv,

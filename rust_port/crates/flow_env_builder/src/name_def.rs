@@ -1150,18 +1150,18 @@ fn function_params_all_annotated(
 }
 
 fn identifier_has_autocomplete(
-    autocomplete_hooks: &AutocompleteHooks<ALoc>,
+    autocomplete_hooks: &AutocompleteHooks<'_, ALoc>,
     id: &ast::Identifier<ALoc, ALoc>,
 ) -> bool {
     (autocomplete_hooks.id_hook)(&id.name, &id.loc)
 }
 
-fn literal_has_autocomplete(autocomplete_hooks: &AutocompleteHooks<ALoc>, loc: &ALoc) -> bool {
+fn literal_has_autocomplete(autocomplete_hooks: &AutocompleteHooks<'_, ALoc>, loc: &ALoc) -> bool {
     (autocomplete_hooks.literal_hook)(loc)
 }
 
 fn expression_has_autocomplete(
-    autocomplete_hooks: &AutocompleteHooks<ALoc>,
+    autocomplete_hooks: &AutocompleteHooks<'_, ALoc>,
     expr: &ast::expression::Expression<ALoc, ALoc>,
 ) -> bool {
     use ast::expression::ExpressionInner;
@@ -1177,13 +1177,13 @@ fn expression_has_autocomplete(
 }
 
 pub fn expression_is_definitely_synthesizable(
-    autocomplete_hooks: &AutocompleteHooks<ALoc>,
+    autocomplete_hooks: &AutocompleteHooks<'_, ALoc>,
     expr: &ast::expression::Expression<ALoc, ALoc>,
 ) -> bool {
     use ast::expression::ExpressionInner;
 
     fn func_is_synthesizable(
-        autocomplete_hooks: &AutocompleteHooks<ALoc>,
+        autocomplete_hooks: &AutocompleteHooks<'_, ALoc>,
         allow_unannotated_this: bool,
         fn_: &ast::function::Function<ALoc, ALoc>,
     ) -> bool {
@@ -1214,7 +1214,7 @@ pub fn expression_is_definitely_synthesizable(
     }
 
     fn synthesizable(
-        autocomplete_hooks: &AutocompleteHooks<ALoc>,
+        autocomplete_hooks: &AutocompleteHooks<'_, ALoc>,
         expr: &ast::expression::Expression<ALoc, ALoc>,
     ) -> bool {
         let _loc = expr.loc().dupe();
@@ -1476,7 +1476,7 @@ fn fail(loc: ALoc, str: &str) -> ! {
 }
 
 struct DefFinder<'a> {
-    autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
+    autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
     react_jsx: bool,
     env_info: &'a crate::env_api::EnvInfo<ALoc>,
 
@@ -1492,7 +1492,7 @@ struct DefFinder<'a> {
 
 impl<'a> DefFinder<'a> {
     fn new(
-        autocomplete_hooks: &'a AutocompleteHooks<ALoc>,
+        autocomplete_hooks: &'a AutocompleteHooks<'a, ALoc>,
         react_jsx: bool,
         env_info: &'a crate::env_api::EnvInfo<ALoc>,
         toplevel_scope: ScopeKind,
@@ -6170,7 +6170,7 @@ impl<'a> AstVisitor<'_, ALoc> for DefFinder<'a> {
 }
 
 pub fn find_defs(
-    autocomplete_hooks: &AutocompleteHooks<ALoc>,
+    autocomplete_hooks: &AutocompleteHooks<'_, ALoc>,
     react_jsx: bool,
     env_info: &crate::env_api::EnvInfo<ALoc>,
     toplevel_scope_kind: ScopeKind,

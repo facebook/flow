@@ -48,54 +48,67 @@ fn pole_todo() -> Polarity {
 /// WARNING: This is only a partial implementation, sufficient for current
 /// purposes but intended to be completed in a later diff.
 pub trait TypeVisitor<Acc> {
-    fn type_(&mut self, cx: &Context, pole: Polarity, acc: Acc, t: &Type) -> Acc {
+    fn type_<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, t: &Type) -> Acc {
         type_default(self, cx, pole, acc, t)
     }
 
-    fn def_type(&mut self, cx: &Context, pole: Polarity, acc: Acc, def_t: &DefT) -> Acc {
+    fn def_type<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, def_t: &DefT) -> Acc {
         def_type_default(self, cx, pole, acc, def_t)
     }
 
-    fn targ(&mut self, cx: &Context, pole: Polarity, acc: Acc, targ: &Targ) -> Acc {
+    fn targ<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, targ: &Targ) -> Acc {
         targ_default(self, cx, pole, acc, targ)
     }
 
-    fn defer_use_type(
+    fn defer_use_type<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         acc: Acc,
         defer_use_t: &flow_typing_type::type_::TypeDestructorT,
     ) -> Acc {
         defer_use_type_default(self, cx, acc, defer_use_t)
     }
 
-    fn selector(&mut self, cx: &Context, acc: Acc, selector: &Selector) -> Acc {
+    fn selector<'cx>(&mut self, cx: &Context<'cx>, acc: Acc, selector: &Selector) -> Acc {
         selector_default(self, cx, acc, selector)
     }
 
-    fn predicate(&mut self, cx: &Context, acc: Acc, predicate: &Predicate) -> Acc {
+    fn predicate<'cx>(&mut self, cx: &Context<'cx>, acc: Acc, predicate: &Predicate) -> Acc {
         predicate_default(self, cx, acc, predicate)
     }
 
-    fn call_arg(&mut self, cx: &Context, pole: Polarity, acc: Acc, arg: &CallArg) -> Acc {
+    fn call_arg<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, arg: &CallArg) -> Acc {
         call_arg_default(self, cx, pole, acc, arg)
     }
 
-    fn destructor(&mut self, cx: &Context, acc: Acc, destructor: &Destructor) -> Acc {
+    fn destructor<'cx>(&mut self, cx: &Context<'cx>, acc: Acc, destructor: &Destructor) -> Acc {
         destructor_default(self, cx, acc, destructor)
     }
 
-    fn tvar(&mut self, cx: &Context, pole: Polarity, acc: Acc, r: &Reason, id: u32) -> Acc {
+    fn tvar<'cx>(
+        &mut self,
+        cx: &Context<'cx>,
+        pole: Polarity,
+        acc: Acc,
+        r: &Reason,
+        id: u32,
+    ) -> Acc {
         tvar_default(self, cx, pole, acc, r, id)
     }
 
-    fn dict_type(&mut self, cx: &Context, pole: Polarity, acc: Acc, dict: &DictType) -> Acc {
+    fn dict_type<'cx>(
+        &mut self,
+        cx: &Context<'cx>,
+        pole: Polarity,
+        acc: Acc,
+        dict: &DictType,
+    ) -> Acc {
         dict_type_default(self, cx, pole, acc, dict)
     }
 
-    fn props(
+    fn props<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: Acc,
         props_id: flow_typing_type::type_::properties::Id,
@@ -103,17 +116,17 @@ pub trait TypeVisitor<Acc> {
         props_default(self, cx, pole, acc, props_id)
     }
 
-    fn prop(&mut self, cx: &Context, pole: Polarity, acc: Acc, prop: &Property) -> Acc {
+    fn prop<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, prop: &Property) -> Acc {
         prop_default(self, cx, pole, acc, prop)
     }
 
-    fn call_prop(&mut self, cx: &Context, pole: Polarity, acc: Acc, id: i32) -> Acc {
+    fn call_prop<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, id: i32) -> Acc {
         call_prop_default(self, cx, pole, acc, id)
     }
 
-    fn exports(
+    fn exports<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: Acc,
         id: flow_typing_type::type_::exports::Id,
@@ -121,9 +134,9 @@ pub trait TypeVisitor<Acc> {
         exports_default(self, cx, pole, acc, id)
     }
 
-    fn eval_id(
+    fn eval_id<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: Acc,
         id: flow_typing_type::type_::eval::Id,
@@ -131,17 +144,23 @@ pub trait TypeVisitor<Acc> {
         eval_id_default(self, cx, pole, acc, id)
     }
 
-    fn type_param(&mut self, cx: &Context, pole: Polarity, acc: Acc, tp: &TypeParam) -> Acc {
+    fn type_param<'cx>(
+        &mut self,
+        cx: &Context<'cx>,
+        pole: Polarity,
+        acc: Acc,
+        tp: &TypeParam,
+    ) -> Acc {
         type_param_default(self, cx, pole, acc, tp)
     }
 
-    fn fun_type(&mut self, cx: &Context, pole: Polarity, acc: Acc, ft: &FunType) -> Acc {
+    fn fun_type<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, ft: &FunType) -> Acc {
         fun_type_default(self, cx, pole, acc, ft)
     }
 
-    fn fun_type_guard(
+    fn fun_type_guard<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: Acc,
         tg: &flow_typing_type::type_::TypeGuard,
@@ -149,9 +168,9 @@ pub trait TypeVisitor<Acc> {
         fun_type_guard_default(self, cx, pole, acc, tg)
     }
 
-    fn obj_flags(
+    fn obj_flags<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: Acc,
         flags: &flow_typing_type::type_::Flags,
@@ -159,13 +178,13 @@ pub trait TypeVisitor<Acc> {
         obj_flags_default(self, cx, pole, acc, flags)
     }
 
-    fn obj_type(&mut self, cx: &Context, pole: Polarity, acc: Acc, obj: &ObjType) -> Acc {
+    fn obj_type<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, obj: &ObjType) -> Acc {
         obj_type_default(self, cx, pole, acc, obj)
     }
 
-    fn namespace_type(
+    fn namespace_type<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: Acc,
         ns: &NamespaceType,
@@ -173,13 +192,13 @@ pub trait TypeVisitor<Acc> {
         namespace_type_default(self, cx, pole, acc, ns)
     }
 
-    fn arr_type(&mut self, cx: &Context, pole: Polarity, acc: Acc, arr: &ArrType) -> Acc {
+    fn arr_type<'cx>(&mut self, cx: &Context<'cx>, pole: Polarity, acc: Acc, arr: &ArrType) -> Acc {
         arr_type_default(self, cx, pole, acc, arr)
     }
 
-    fn tuple_element(
+    fn tuple_element<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: Acc,
         element: &TupleElement,
@@ -187,13 +206,19 @@ pub trait TypeVisitor<Acc> {
         tuple_element_default(self, cx, pole, acc, element)
     }
 
-    fn inst_type(&mut self, cx: &Context, pole: Polarity, acc: Acc, inst: &InstType) -> Acc {
+    fn inst_type<'cx>(
+        &mut self,
+        cx: &Context<'cx>,
+        pole: Polarity,
+        acc: Acc,
+        inst: &InstType,
+    ) -> Acc {
         inst_type_default(self, cx, pole, acc, inst)
     }
 
-    fn instance_type(
+    fn instance_type<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: Acc,
         instance: &InstanceT,
@@ -201,9 +226,9 @@ pub trait TypeVisitor<Acc> {
         instance_type_default(self, cx, pole, acc, instance)
     }
 
-    fn export_types(
+    fn export_types<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         pole: Polarity,
         acc: Acc,
         exports: &ExportTypes,
@@ -211,18 +236,18 @@ pub trait TypeVisitor<Acc> {
         export_types_default(self, cx, pole, acc, exports)
     }
 
-    fn object_kit_spread_operand_slice(
+    fn object_kit_spread_operand_slice<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         acc: Acc,
         slice: &flow_typing_type::type_::object::spread::OperandSlice,
     ) -> Acc {
         object_kit_spread_operand_slice_default(self, cx, acc, slice)
     }
 
-    fn object_kit_spread_operand(
+    fn object_kit_spread_operand<'cx>(
         &mut self,
-        cx: &Context,
+        cx: &Context<'cx>,
         acc: Acc,
         operand: &flow_typing_type::type_::object::spread::Operand,
     ) -> Acc {
@@ -234,9 +259,9 @@ pub trait TypeVisitor<Acc> {
 // Default implementations
 // =============================================================================
 
-pub fn type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     t: &Type,
@@ -336,9 +361,9 @@ pub fn type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn def_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn def_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     def_t: &DefT,
@@ -440,9 +465,9 @@ pub fn def_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn targ_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn targ_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     targ: &Targ,
@@ -453,9 +478,9 @@ pub fn targ_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn defer_use_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn defer_use_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     acc: Acc,
     defer_use_t: &flow_typing_type::type_::TypeDestructorT,
 ) -> Acc {
@@ -463,9 +488,9 @@ pub fn defer_use_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor.destructor(cx, acc, destructor)
 }
 
-pub fn selector_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn selector_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     acc: Acc,
     selector: &Selector,
 ) -> Acc {
@@ -478,9 +503,9 @@ pub fn selector_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn predicate_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn predicate_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     acc: Acc,
     predicate: &Predicate,
 ) -> Acc {
@@ -533,9 +558,9 @@ pub fn predicate_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn call_arg_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn call_arg_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     arg: &CallArg,
@@ -545,9 +570,9 @@ pub fn call_arg_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn destructor_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn destructor_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     acc: Acc,
     destructor: &Destructor,
 ) -> Acc {
@@ -643,9 +668,9 @@ pub fn destructor_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn tvar_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn tvar_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     _visitor: &mut V,
-    _cx: &Context,
+    _cx: &Context<'cx>,
     _pole: Polarity,
     acc: Acc,
     _r: &Reason,
@@ -656,9 +681,9 @@ pub fn tvar_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     acc
 }
 
-pub fn dict_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn dict_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     dict: &DictType,
@@ -672,9 +697,9 @@ pub fn dict_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     )
 }
 
-pub fn props_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn props_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     props_id: flow_typing_type::type_::properties::Id,
@@ -685,9 +710,9 @@ pub fn props_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
         .fold(acc, |acc, prop| visitor.prop(cx, pole, acc, prop))
 }
 
-pub fn prop_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn prop_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     prop: &Property,
@@ -709,9 +734,9 @@ pub fn prop_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn call_prop_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn call_prop_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     id: i32,
@@ -720,9 +745,9 @@ pub fn call_prop_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor.type_(cx, pole, acc, &t)
 }
 
-pub fn exports_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn exports_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     id: flow_typing_type::type_::exports::Id,
@@ -733,9 +758,9 @@ pub fn exports_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     })
 }
 
-pub fn eval_id_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn eval_id_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     id: flow_typing_type::type_::eval::Id,
@@ -747,9 +772,9 @@ pub fn eval_id_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn type_param_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn type_param_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     tp: &TypeParam,
@@ -763,9 +788,9 @@ pub fn type_param_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn fun_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn fun_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     ft: &FunType,
@@ -787,9 +812,9 @@ pub fn fun_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn fun_type_guard_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn fun_type_guard_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     tg: &flow_typing_type::type_::TypeGuard,
@@ -804,9 +829,9 @@ pub fn fun_type_guard_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor.type_(cx, pole, acc, type_guard)
 }
 
-pub fn obj_flags_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn obj_flags_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     flags: &flow_typing_type::type_::Flags,
@@ -817,9 +842,9 @@ pub fn obj_flags_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn obj_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn obj_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     obj: &ObjType,
@@ -844,9 +869,9 @@ pub fn obj_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn namespace_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn namespace_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     ns: &NamespaceType,
@@ -855,9 +880,9 @@ pub fn namespace_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor.props(cx, pole, acc, ns.types_tmap.dupe())
 }
 
-pub fn arr_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn arr_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     arr: &ArrType,
@@ -891,9 +916,9 @@ pub fn arr_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn tuple_element_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn tuple_element_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     element: &TupleElement,
@@ -908,9 +933,9 @@ pub fn tuple_element_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor.type_(cx, Polarity::mult(pole, element.polarity), acc, t)
 }
 
-pub fn inst_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn inst_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     inst: &InstType,
@@ -949,9 +974,9 @@ pub fn inst_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     )
 }
 
-pub fn instance_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn instance_type_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     instance: &InstanceT,
@@ -965,9 +990,9 @@ pub fn instance_type_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor.inst_type(cx, pole, acc, &instance.inst)
 }
 
-pub fn export_types_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn export_types_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     pole: Polarity,
     acc: Acc,
     exports: &ExportTypes,
@@ -981,9 +1006,9 @@ pub fn export_types_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
     }
 }
 
-pub fn object_kit_spread_operand_slice_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn object_kit_spread_operand_slice_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     acc: Acc,
     slice: &flow_typing_type::type_::object::spread::OperandSlice,
 ) -> Acc {
@@ -1017,9 +1042,9 @@ pub fn object_kit_spread_operand_slice_default<Acc, V: TypeVisitor<Acc> + ?Sized
     }
 }
 
-pub fn object_kit_spread_operand_default<Acc, V: TypeVisitor<Acc> + ?Sized>(
+pub fn object_kit_spread_operand_default<'cx, Acc, V: TypeVisitor<Acc> + ?Sized>(
     visitor: &mut V,
-    cx: &Context,
+    cx: &Context<'cx>,
     acc: Acc,
     operand: &flow_typing_type::type_::object::spread::Operand,
 ) -> Acc {

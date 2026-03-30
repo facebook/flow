@@ -41,9 +41,9 @@ pub enum GetDefResult {
     DefError(String),
 }
 
-fn extract_member_def(
+fn extract_member_def<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context,
+    cx: &Context<'cx>,
     file_sig: &std::sync::Arc<FileSig>,
     typed_ast_opt: Option<&ast::Program<ALoc, (ALoc, Type)>>,
     force_instance: bool,
@@ -74,9 +74,9 @@ fn extract_member_def(
     }
 }
 
-fn process_request(
+fn process_request<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context,
+    cx: &Context<'cx>,
     typed_ast_opt: Option<&ast::Program<ALoc, (ALoc, Type)>>,
     file_sig: &std::sync::Arc<FileSig>,
     scope_info: &scope_api::ScopeInfo<Loc>,
@@ -134,7 +134,7 @@ fn process_request(
             use flow_typing_type::type_::*;
 
             let reason = reason::mk_reason(RProperty(Some(Name::new(name.dupe()))), loc.dupe());
-            let props_object = flow_typing_tvar::mk_where(cx, reason.dupe(), |tvar| {
+            let props_object = flow_typing_tvar::mk_where(cx, reason.dupe(), |cx, tvar| {
                 let use_op = UseOp::Op(std::sync::Arc::new(VirtualRootUseOp::UnknownUse));
                 let use_t = UseT::new(UseTInner::ReactKitT(
                     use_op,
@@ -211,9 +211,9 @@ mod depth {
 
 // exception FoundTokenAtRequestLoc of Token.t
 
-pub fn get_def(
+pub fn get_def<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context,
+    cx: &Context<'cx>,
     file_sig: &std::sync::Arc<FileSig>,
     file_content: Option<&str>,
     ast: &ast::Program<Loc, Loc>,
@@ -239,9 +239,9 @@ pub fn get_def(
         AvailableAst::ALocAst(_) => None,
     };
 
-    fn loop_fn(
+    fn loop_fn<'cx>(
         loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-        cx: &Context,
+        cx: &Context<'cx>,
         is_legit_require: &dyn Fn(&ALoc) -> bool,
         typed_ast_opt: Option<&ast::Program<ALoc, (ALoc, Type)>>,
         file_sig: &std::sync::Arc<FileSig>,

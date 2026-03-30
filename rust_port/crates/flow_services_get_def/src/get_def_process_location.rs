@@ -74,8 +74,8 @@ fn def_loc_of_t(t: &Type) -> ALoc {
 ///
 /// for now, we only implement Go to Definition; if we want to do Go to Type
 /// Definition, it would ignore the annot loc.
-pub fn process_type_request(cx: &Context, t: &Type) -> Result<ALoc, String> {
-    fn loop_fn(cx: &Context, mut seen: BTreeSet<i32>, t: &Type) -> Result<ALoc, String> {
+pub fn process_type_request<'cx>(cx: &Context<'cx>, t: &Type) -> Result<ALoc, String> {
+    fn loop_fn<'cx>(cx: &Context<'cx>, mut seen: BTreeSet<i32>, t: &Type) -> Result<ALoc, String> {
         match &**t {
             TypeInner::OpenT(tvar) => {
                 let root = cx.find_root_id(tvar.id() as i32);
@@ -1310,11 +1310,11 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>> Searcher<'a, 
 // class typed_ast_searcher cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers_target ~purpose =
 //   object
 //     inherit [ALoc.t * Type.t] searcher cx ~is_local_use ~is_legit_require ~covers_target ~purpose
-struct TypedAstSearcherCallback<'a> {
-    cx: &'a Context,
+struct TypedAstSearcherCallback<'a, 'cx> {
+    cx: &'a Context<'cx>,
 }
 
-impl<'a> SearcherCallback<(ALoc, Type)> for TypedAstSearcherCallback<'a> {
+impl<'a, 'cx> SearcherCallback<(ALoc, Type)> for TypedAstSearcherCallback<'a, 'cx> {
     //   method private loc_of_annot (loc, _) = loc
     fn loc_of_annot(&self, annot: &(ALoc, Type)) -> ALoc {
         annot.0.dupe()
@@ -1478,11 +1478,11 @@ fn find_imported_name_def_loc_in_node(
     }
 }
 
-struct OnDemandSearcherCallback<'a> {
-    cx: &'a Context,
+struct OnDemandSearcherCallback<'a, 'cx> {
+    cx: &'a Context<'cx>,
 }
 
-impl<'a> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a> {
+impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
     //   method loc_of_annot x = x
     fn loc_of_annot(&self, annot: &ALoc) -> ALoc {
         annot.dupe()
@@ -1608,8 +1608,8 @@ fn search<T: Dupe + PartialEq, C: SearcherCallback<T>>(
     }
 }
 
-pub fn process_location(
-    cx: &Context,
+pub fn process_location<'cx>(
+    cx: &Context<'cx>,
     available_ast: &AvailableAst,
     is_local_use: &dyn Fn(&ALoc) -> bool,
     is_legit_require: &dyn Fn(&ALoc) -> bool,

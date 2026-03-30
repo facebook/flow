@@ -72,8 +72,8 @@ use crate::flow_js::FlowJs;
 use crate::renders_kit;
 use crate::tvar_resolver;
 
-pub fn err_incompatible(
-    cx: &Context,
+pub fn err_incompatible<'cx>(
+    cx: &Context<'cx>,
     use_op: UseOp,
     reason: &Reason,
 ) -> Result<(), FlowJsException> {
@@ -84,8 +84,8 @@ pub fn err_incompatible(
     flow_js_utils::add_output(cx, err)
 }
 
-pub fn component_class(
-    cx: &Context,
+pub fn component_class<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     props: &Type,
 ) -> Result<Type, FlowJsException> {
@@ -111,8 +111,8 @@ enum IntrinsicLiteral {
     General(Literal),
 }
 
-fn get_intrinsic(
-    cx: &Context,
+fn get_intrinsic<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     component_reason: &Reason,
     reason_op: &Reason,
@@ -165,7 +165,7 @@ fn get_intrinsic(
     let intrinsic = tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where_result(
         cx,
         reason.dupe(),
-        |tout_reason, tout_id| {
+        |cx, tout_reason, tout_id| {
             let propref = match literal {
                 IntrinsicLiteral::Literal(name) => {
                     let reason = reason
@@ -234,8 +234,8 @@ fn get_intrinsic(
     )
 }
 
-pub fn subtype_class_component_render(
-    cx: &Context,
+pub fn subtype_class_component_render<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     class_component_instance: &Type,
@@ -283,8 +283,8 @@ pub fn subtype_class_component_render(
 
 // Lookup the defaultProps of a component and flow with upper depending
 // on the given polarity.
-fn lookup_defaults(
-    cx: &Context,
+fn lookup_defaults<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     component: &Type,
     reason_op: &Reason,
@@ -332,8 +332,8 @@ fn lookup_defaults(
 // Get a type for the default props of a component. If a component has no
 // default props then either the type will be Some {||} or we will
 // return None.
-fn get_defaults(
-    cx: &Context,
+fn get_defaults<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     component: &Type,
     reason_op: &Reason,
@@ -352,8 +352,8 @@ fn get_defaults(
     Ok(Some(tvar))
 }
 
-fn add_optional_ref_prop_to_props(
-    cx: &Context,
+fn add_optional_ref_prop_to_props<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     props: &Type,
     reason_op: &Reason,
@@ -393,8 +393,8 @@ fn add_optional_ref_prop_to_props(
     Ok(())
 }
 
-fn props_to_tout(
-    cx: &Context,
+fn props_to_tout<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     component: &Type,
     use_op: &UseOp,
@@ -493,7 +493,7 @@ fn props_to_tout(
                 let i = tvar_resolver::mk_tvar_and_fully_resolve_where_result(
                     cx,
                     reason_op.dupe(),
-                    |tout_t| {
+                    |cx, tout_t| {
                         get_intrinsic(
                             cx,
                             trace,
@@ -514,7 +514,7 @@ fn props_to_tout(
                 let i = tvar_resolver::mk_tvar_and_fully_resolve_where_result(
                     cx,
                     reason_op.dupe(),
-                    |tout_t| {
+                    |cx, tout_t| {
                         get_intrinsic(
                             cx,
                             trace,
@@ -607,13 +607,13 @@ fn props_to_tout(
 // of get_config as an upper bound won't give props a lower bound. However,
 // the places in which this approach stalls are the same places as other type
 // destructor annotations. Like object spread, $Diff, and $Rest.
-pub fn get_config(
-    cx: &Context,
+pub fn get_config<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     component: &Type,
     use_op: UseOp,
     reason_op: &Reason,
-    _u: &react::Tool,
+    _u: &react::Tool<Context<'cx>>,
     pole: Polarity,
     tout: &Type,
 ) -> Result<(), FlowJsException> {
@@ -652,7 +652,7 @@ pub fn get_config(
             .dupe()
             .update_desc(|desc| VirtualReasonDesc::RPropsOfComponent(Arc::new(desc)));
         let use_op_clone = use_op.dupe();
-        flow_typing_tvar::mk_where_result(cx, reason.dupe(), |tout_t| {
+        flow_typing_tvar::mk_where_result(cx, reason.dupe(), |cx, tout_t| {
             props_to_tout(cx, trace, component, &use_op_clone, &reason, tout_t.dupe())
         })?
     };
@@ -691,13 +691,13 @@ pub fn get_config(
 }
 
 // let run cx trace ~use_op reason_op l u =
-pub fn run(
-    cx: &Context,
+pub fn run<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     reason_op: &Reason,
     l: &Type,
-    u: &react::Tool,
+    u: &react::Tool<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     // This function creates a constraint *from* tin *to* props so that props is
     // an upper bound on tin. This is important because when the type of a
@@ -705,8 +705,8 @@ pub fn run(
     // component has an unannotated props argument) we want to create a constraint
     // *from* the props input *to* tin which should then be propagated to the
     // inferred props type.
-    fn tin_to_props(
-        cx: &Context,
+    fn tin_to_props<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: &UseOp,
         reason_op: &Reason,
@@ -871,8 +871,8 @@ pub fn run(
         }
     }
 
-    fn config_check(
-        cx: &Context,
+    fn config_check<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         use_op: UseOp,
         reason_op: &Reason,
@@ -888,7 +888,7 @@ pub fn run(
             (config.dupe(), None)
         } else {
             let use_op_clone = use_op.dupe();
-            let props = flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |tout_t| {
+            let props = flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |cx, tout_t| {
                 tin_to_props(cx, trace, &use_op_clone, reason_op, l, tout_t)
             })?;
             // For class components and function components we want to lookup the
@@ -939,13 +939,13 @@ pub fn run(
         Ok(())
     }
 
-    fn create_element(
-        cx: &Context,
+    fn create_element<'cx>(
+        cx: &Context<'cx>,
         trace: DepthTrace,
         original_use_op: UseOp,
         reason_op: &Reason,
         l: &Type,
-        u: &react::Tool,
+        u: &react::Tool<Context<'cx>>,
         component: &Type,
         jsx_props: &Type,
         should_generalize: bool,
@@ -985,7 +985,7 @@ pub fn run(
             flow_typing_tvar::mk_where_result(
                 cx,
                 type_util::reason_of_t(jsx_props).dupe(),
-                |normalized_config| {
+                |cx, normalized_config| {
                     let reason = type_util::reason_of_t(jsx_props).dupe();
                     FlowJs::rec_flow(
                         cx,
@@ -1073,7 +1073,7 @@ pub fn run(
                 "ExactReactElement_DEPRECATED",
                 vec![
                     component.dupe(),
-                    flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |tout_t| {
+                    flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |cx, tout_t| {
                         get_config(
                             cx,
                             trace,

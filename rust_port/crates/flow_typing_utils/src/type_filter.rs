@@ -82,9 +82,9 @@ pub fn unchanged_result(type_: Type) -> FilterResult {
     }
 }
 
-fn recurse_into_union(
-    cx: &Context,
-    filter_fn: &dyn Fn(&Context, Type) -> FilterResult,
+fn recurse_into_union<'cx>(
+    cx: &Context<'cx>,
+    filter_fn: &dyn Fn(&Context<'cx>, Type) -> FilterResult,
     r: Reason,
     ts: Vec<Type>,
 ) -> FilterResult {
@@ -137,14 +137,14 @@ fn recurse_into_union(
     }
 }
 
-fn recurse_into_intersection(
-    cx: &Context,
+fn recurse_into_intersection<'cx>(
+    cx: &Context<'cx>,
     filter_fn: &dyn Fn(Type) -> FilterResult,
     r: Reason,
     ts: Vec<Type>,
 ) -> FilterResult {
-    fn helper(
-        cx: &Context,
+    fn helper<'cx>(
+        cx: &Context<'cx>,
         filter_fn: &dyn Fn(Type) -> FilterResult,
         _r: &Reason,
         mut t_acc: Vec<Type>,
@@ -324,7 +324,7 @@ pub fn empty(t: Type) -> FilterResult {
     }
 }
 
-pub fn truthy(cx: &Context, t: Type) -> FilterResult {
+pub fn truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     if is_falsy(&t) {
         return changed_result(empty_t::why(reason_of_t(&t).dupe()));
     }
@@ -370,7 +370,7 @@ pub fn truthy(cx: &Context, t: Type) -> FilterResult {
     }
 }
 
-pub fn not_truthy(cx: &Context, t: Type) -> FilterResult {
+pub fn not_truthy<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     if is_falsy(&t) {
         // falsy things pass through
         return unchanged_result(t);
@@ -502,7 +502,7 @@ pub fn not_truthy(cx: &Context, t: Type) -> FilterResult {
     }
 }
 
-pub fn maybe(cx: &Context, t: Type) -> FilterResult {
+pub fn maybe<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::NominalT {
             reason,
@@ -550,7 +550,7 @@ pub fn maybe(cx: &Context, t: Type) -> FilterResult {
     }
 }
 
-pub fn not_maybe(cx: &Context, t: Type) -> FilterResult {
+pub fn not_maybe<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::NominalT {
             reason,
@@ -604,7 +604,7 @@ pub fn null_filter(t: Type) -> FilterResult {
     }
 }
 
-pub fn not_null(cx: &Context, t: Type) -> FilterResult {
+pub fn not_null<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::NominalT {
             reason,
@@ -685,7 +685,7 @@ pub fn undefined(t: Type) -> FilterResult {
     }
 }
 
-pub fn not_undefined(cx: &Context, t: Type) -> FilterResult {
+pub fn not_undefined<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::NominalT {
             reason,
@@ -1385,7 +1385,7 @@ pub fn not_bigint(t: Type) -> FilterResult {
     }
 }
 
-pub fn object_(cx: &Context, t: Type) -> FilterResult {
+pub fn object_<'cx>(cx: &Context<'cx>, t: Type) -> FilterResult {
     match t.deref() {
         TypeInner::DefT(_, d) if matches!(&**d, DefTInner::PolyT { .. }) => {
             map_poly(&|t| object_(cx, t), t)
@@ -1862,7 +1862,7 @@ pub mod type_tag {
 
 pub type TypeTagSet = BTreeSet<type_tag::TypeTag>;
 
-fn tag_of_value(cx: &Context, type_: &Type) -> Option<type_tag::SentinelVal> {
+fn tag_of_value<'cx>(cx: &Context<'cx>, type_: &Type) -> Option<type_tag::SentinelVal> {
     match cx.find_resolved(type_) {
         Some(t) => match t.deref() {
             TypeInner::DefT(_, d) => match d.deref() {
@@ -1886,7 +1886,7 @@ fn tag_of_value(cx: &Context, type_: &Type) -> Option<type_tag::SentinelVal> {
     }
 }
 
-fn sentinel_of_obj(cx: &Context, id: properties::Id) -> type_tag::SentinelMap {
+fn sentinel_of_obj<'cx>(cx: &Context<'cx>, id: properties::Id) -> type_tag::SentinelMap {
     cx.fold_props(
         id,
         |name, prop, acc: type_tag::SentinelMap| match prop.deref() {
@@ -1904,7 +1904,7 @@ fn sentinel_of_obj(cx: &Context, id: properties::Id) -> type_tag::SentinelMap {
     )
 }
 
-fn sentinel_of_tuple(cx: &Context, elements: &[TupleElement]) -> type_tag::SentinelMap {
+fn sentinel_of_tuple<'cx>(cx: &Context<'cx>, elements: &[TupleElement]) -> type_tag::SentinelMap {
     elements
         .iter()
         .enumerate()
@@ -1919,7 +1919,7 @@ fn sentinel_of_tuple(cx: &Context, elements: &[TupleElement]) -> type_tag::Senti
         })
 }
 
-fn tag_of_def_t(cx: &Context, d: &DefTInner) -> Option<TypeTagSet> {
+fn tag_of_def_t<'cx>(cx: &Context<'cx>, d: &DefTInner) -> Option<TypeTagSet> {
     use type_tag::TypeTag;
     use type_tag::TypeTagInner;
     match d {
@@ -2007,7 +2007,7 @@ fn tag_of_inst(inst: &InstType) -> Option<TypeTagSet> {
     Some(tags)
 }
 
-pub fn tag_of_t(cx: &Context, t: &Type) -> Option<TypeTagSet> {
+pub fn tag_of_t<'cx>(cx: &Context<'cx>, t: &Type) -> Option<TypeTagSet> {
     match t.deref() {
         TypeInner::DefT(_, d) => tag_of_def_t(cx, d.deref()),
         TypeInner::ThisInstanceT(box ThisInstanceTData { instance, .. }) => {

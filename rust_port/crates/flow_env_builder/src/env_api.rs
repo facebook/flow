@@ -98,10 +98,10 @@ impl DefLocType {
     }
 }
 
-pub struct AutocompleteHooks<L> {
-    pub id_hook: Box<dyn Fn(&str, &L) -> bool>,
-    pub literal_hook: Box<dyn Fn(&L) -> bool>,
-    pub obj_prop_decl_hook: Box<dyn Fn(&str, &L) -> bool>,
+pub struct AutocompleteHooks<'a, L> {
+    pub id_hook: Box<dyn Fn(&str, &L) -> bool + 'a>,
+    pub literal_hook: Box<dyn Fn(&L) -> bool + 'a>,
+    pub obj_prop_decl_hook: Box<dyn Fn(&str, &L) -> bool + 'a>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]

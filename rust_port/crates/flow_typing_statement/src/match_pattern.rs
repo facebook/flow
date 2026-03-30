@@ -41,14 +41,14 @@ use flow_typing_utils::typed_ast_utils::ErrorMapper;
 // Callback types matching the OCaml signatures
 pub type OnIdentifier<'a> = dyn Fn(
         /*encl_ctx:*/ EnclosingContext,
-        /*cx:*/ &Context,
+        /*cx:*/ &Context<'a>,
         /*id:*/ &ast::IdentifierInner<ALoc, ALoc>,
         /*loc:*/ ALoc,
     ) -> Type
     + 'a;
 
 pub type OnExpression<'a> = dyn Fn(
-        /*cx:*/ &Context,
+        /*cx:*/ &Context<'a>,
         /*expr:*/ &expression::Expression<ALoc, ALoc>,
     ) -> Result<expression::Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow>
     + 'a;
@@ -107,8 +107,8 @@ fn object_named_property(
     })
 }
 
-fn object_property_key(
-    cx: &Context,
+fn object_property_key<'a>(
+    cx: &Context<'a>,
     acc: &expression::Expression<ALoc, ALoc>,
     pattern_kind: MatchObjPatternKind,
     key: &match_pattern::object_pattern::Key<ALoc, ALoc>,
@@ -188,8 +188,8 @@ fn object_property_key(
     }
 }
 
-fn binding(
-    cx: &Context,
+fn binding<'a>(
+    cx: &Context<'a>,
     on_binding: &OnBinding<'_>,
     kind: VariableKind,
     acc: &expression::Expression<ALoc, ALoc>,
@@ -210,8 +210,8 @@ fn binding(
     on_binding(&use_op, name_loc, kind, name, current)
 }
 
-fn binding_identifier(
-    cx: &Context,
+fn binding_identifier<'a>(
+    cx: &Context<'a>,
     on_binding: &OnBinding<'_>,
     in_or_pattern: bool,
     kind: VariableKind,
@@ -244,8 +244,8 @@ fn binding_identifier(
     }
 }
 
-fn binding_pattern(
-    cx: &Context,
+fn binding_pattern<'a>(
+    cx: &Context<'a>,
     on_binding: &OnBinding<'_>,
     in_or_pattern: bool,
     loc: ALoc,
@@ -276,10 +276,10 @@ fn binding_pattern(
     }
 }
 
-fn member(
-    cx: &Context,
-    on_identifier: &OnIdentifier<'_>,
-    on_expression: &OnExpression<'_>,
+fn member<'a>(
+    cx: &Context<'a>,
+    on_identifier: &OnIdentifier<'a>,
+    on_expression: &OnExpression<'a>,
     mem: &MemberPattern<ALoc, ALoc>,
 ) -> Result<
     (
@@ -421,8 +421,8 @@ fn member(
     ))
 }
 
-fn rest_pattern(
-    cx: &Context,
+fn rest_pattern<'a>(
+    cx: &Context<'a>,
     on_binding: &OnBinding<'_>,
     in_or_pattern: bool,
     acc: &expression::Expression<ALoc, ALoc>,
@@ -444,10 +444,10 @@ fn rest_pattern(
     })
 }
 
-fn pattern_(
-    cx: &Context,
-    on_identifier: &OnIdentifier<'_>,
-    on_expression: &OnExpression<'_>,
+fn pattern_<'a>(
+    cx: &Context<'a>,
+    on_identifier: &OnIdentifier<'a>,
+    on_expression: &OnExpression<'a>,
     on_binding: &OnBinding<'_>,
     in_or_pattern: bool,
     acc: &expression::Expression<ALoc, ALoc>,
@@ -724,10 +724,10 @@ fn pattern_(
     })
 }
 
-fn array_pattern(
-    cx: &Context,
-    on_identifier: &OnIdentifier<'_>,
-    on_expression: &OnExpression<'_>,
+fn array_pattern<'a>(
+    cx: &Context<'a>,
+    on_identifier: &OnIdentifier<'a>,
+    on_expression: &OnExpression<'a>,
     on_binding: &OnBinding<'_>,
     in_or_pattern: bool,
     acc: &expression::Expression<ALoc, ALoc>,
@@ -750,10 +750,10 @@ fn array_pattern(
     })
 }
 
-fn array_elements(
-    cx: &Context,
-    on_identifier: &OnIdentifier<'_>,
-    on_expression: &OnExpression<'_>,
+fn array_elements<'a>(
+    cx: &Context<'a>,
+    on_identifier: &OnIdentifier<'a>,
+    on_expression: &OnExpression<'a>,
     on_binding: &OnBinding<'_>,
     in_or_pattern: bool,
     acc: &expression::Expression<ALoc, ALoc>,
@@ -782,10 +782,10 @@ fn array_elements(
         .collect()
 }
 
-fn object_pattern(
-    cx: &Context,
-    on_identifier: &OnIdentifier<'_>,
-    on_expression: &OnExpression<'_>,
+fn object_pattern<'a>(
+    cx: &Context<'a>,
+    on_identifier: &OnIdentifier<'a>,
+    on_expression: &OnExpression<'a>,
     on_binding: &OnBinding<'_>,
     in_or_pattern: bool,
     pattern_kind: MatchObjPatternKind,
@@ -810,10 +810,10 @@ fn object_pattern(
     })
 }
 
-fn object_properties(
-    cx: &Context,
-    on_identifier: &OnIdentifier<'_>,
-    on_expression: &OnExpression<'_>,
+fn object_properties<'a>(
+    cx: &Context<'a>,
+    on_identifier: &OnIdentifier<'a>,
+    on_expression: &OnExpression<'a>,
     on_binding: &OnBinding<'_>,
     in_or_pattern: bool,
     pattern_kind: MatchObjPatternKind,
@@ -906,10 +906,10 @@ fn object_properties(
     Ok(result)
 }
 
-pub fn pattern(
-    cx: &Context,
-    on_identifier: &OnIdentifier<'_>,
-    on_expression: &OnExpression<'_>,
+pub fn pattern<'a>(
+    cx: &Context<'a>,
+    on_identifier: &OnIdentifier<'a>,
+    on_expression: &OnExpression<'a>,
     on_binding: &OnBinding<'_>,
     acc: &expression::Expression<ALoc, ALoc>,
     p: &match_pattern::MatchPattern<ALoc, ALoc>,
@@ -917,10 +917,10 @@ pub fn pattern(
     pattern_(cx, on_identifier, on_expression, on_binding, false, acc, p)
 }
 
-pub fn type_of_member_pattern(
-    cx: &Context,
-    on_identifier: &OnIdentifier<'_>,
-    on_expression: &OnExpression<'_>,
+pub fn type_of_member_pattern<'a>(
+    cx: &Context<'a>,
+    on_identifier: &OnIdentifier<'a>,
+    on_expression: &OnExpression<'a>,
     mem: &MemberPattern<ALoc, ALoc>,
 ) -> Result<Type, AbnormalControlFlow> {
     let (_, typed_mem) = member(cx, on_identifier, on_expression, mem)?;

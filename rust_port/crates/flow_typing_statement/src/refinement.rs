@@ -130,9 +130,9 @@ pub mod keys {
 }
 
 /// get type refinement for expression, if it exists  
-pub fn get<M: Dupe, T: Dupe>(
+pub fn get<'a, M: Dupe, T: Dupe>(
     allow_optional: bool,
-    cx: &Context,
+    cx: &Context<'a>,
     expr: &Expression<M, T>,
     loc: ALoc,
 ) -> Option<Type> {

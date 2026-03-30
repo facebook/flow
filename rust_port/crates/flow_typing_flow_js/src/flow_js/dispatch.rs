@@ -37,13 +37,13 @@ use crate::tvar_resolver;
 /// In OCaml, certain calls in __flow_impl are in tail position and are
 /// optimized by the compiler to reuse the stack frame. In Rust, we return
 /// these as continuations for the trampoline to process iteratively.
-enum TailCall {
+enum TailCall<'cx> {
     /// Replaces a tail call to `flow()` (e.g. from resolve_union):
     /// uses unit_trace, catches LimitExceeded.
-    Flow(Type, UseT),
+    Flow(Type, UseT<Context<'cx>>),
     /// Replaces a tail call to `rec_flow()` (e.g. from EvalT, OpenT handlers):
     /// uses given trace, propagates LimitExceeded.
-    RecFlow(Type, UseT, DepthTrace),
+    RecFlow(Type, UseT<Context<'cx>>, DepthTrace),
 }
 
 /// NOTE: Do not call this function directly. Instead, call the wrapper
@@ -55,9 +55,9 @@ enum TailCall {
 /// `rec_flow cx trace (result, u)` at the end of a match arm are in tail
 /// position and optimized by the compiler. In Rust, we return these as
 /// TailCall continuations and process them in a loop to avoid stack overflow.
-pub(super) fn __flow(
-    cx: &Context,
-    (l, u): (&Type, &UseT),
+pub(super) fn __flow<'cx>(
+    cx: &Context<'cx>,
+    (l, u): (&Type, &UseT<Context<'cx>>),
     trace: DepthTrace,
 ) -> Result<(), FlowJsException> {
     let mut tc = __flow_impl(cx, (l, u), trace)?;
@@ -90,11 +90,11 @@ pub(super) fn __flow(
     Ok(())
 }
 
-fn __flow_impl(
-    cx: &Context,
-    (l, u): (&Type, &UseT),
+fn __flow_impl<'cx>(
+    cx: &Context<'cx>,
+    (l, u): (&Type, &UseT<Context<'cx>>),
     trace: DepthTrace,
-) -> Result<Option<TailCall>, FlowJsException> {
+) -> Result<Option<TailCall<'cx>>, FlowJsException> {
     if flow_typing_type::type_util::ground_subtype_use_t(
         &|t| flow_js_utils::update_lit_type_from_annot(cx, t),
         l,
@@ -103,7 +103,7 @@ fn __flow_impl(
         print_types_if_verbose(cx, &trace, None, l, u);
         return Ok(None);
     }
-    // Fast path: if l is pointer-equal to the Type inside UseT, it's trivially l <: l.
+    // Fast path: if l is pointer-equal to the Type inside UseT<Context<'cx>>, it's trivially l <: l.
     // This must come after ground_subtype_use_t, which has a side effect of recording
     // singleton literal checks needed by implicit instantiation.
     if let UseTInner::UseT(_, t) = u.deref() {
@@ -713,7 +713,7 @@ fn __flow_impl(
                 ),
             )?;
         }
-        // Waits for a def type to become concrete, repositions it as an upper UseT
+        // Waits for a def type to become concrete, repositions it as an upper UseT<Context<'cx>>
         // using the stored reason. This can be used to store a reason as it flows
         // through a tvar. *)
         (_, UseTInner::ReposUseT(reason, use_desc, use_op, l_inner)) => {
@@ -812,7 +812,7 @@ fn __flow_impl(
         // * When we specialize `TypeCastT` when the LHS is an `EnumValueT`, the *
         // * `cast_to_t` of `TypeCastT` must then be resolved. So we call flow   *
         // * with it on the LHS, and `EnumCastT` on the RHS. When we actually    *
-        // * turn this into a `UseT`, it must placed back on the RHS.            *
+        // * turn this into a `UseT<Context<'cx>>`, it must placed back on the RHS.            *
         // ***********************************************************************
         (
             _,
@@ -917,7 +917,7 @@ fn __flow_impl(
                 flow_typing_tvar::mk_no_wrap_where_result(
                     cx,
                     reason.dupe(),
-                    |tvar_reason, tvar_id| {
+                    |cx, tvar_reason, tvar_id| {
                         let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                         rec_flow(
                             cx,
@@ -1007,8 +1007,10 @@ fn __flow_impl(
         ) => {
             let r = tout.reason();
             let ReactDro(dro_loc, dro_type) = dro;
-            let new_type_ =
-                flow_typing_tvar::mk_no_wrap_where_result(cx, r.dupe(), |tvar_reason, tvar_id| {
+            let new_type_ = flow_typing_tvar::mk_no_wrap_where_result(
+                cx,
+                r.dupe(),
+                |cx, tvar_reason, tvar_id| {
                     let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                     // rec_flow cx trace (type_, DeepReadOnlyT (tvar, (dro_loc, dro_type)))
                     rec_flow(
@@ -1023,7 +1025,8 @@ fn __flow_impl(
                         ),
                     )?;
                     Ok::<(), FlowJsException>(())
-                })?;
+                },
+            )?;
             let new_l = Type::new(TypeInner::OptionalT {
                 reason: reason.dupe(),
                 type_: new_type_,
@@ -1041,8 +1044,10 @@ fn __flow_impl(
             UseTInner::HooklikeT(tout),
         ) => {
             let r = tout.reason();
-            let new_type_ =
-                flow_typing_tvar::mk_no_wrap_where_result(cx, r.dupe(), |tvar_reason, tvar_id| {
+            let new_type_ = flow_typing_tvar::mk_no_wrap_where_result(
+                cx,
+                r.dupe(),
+                |cx, tvar_reason, tvar_id| {
                     let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                     // rec_flow cx trace (type_, HooklikeT tvar)
                     rec_flow(
@@ -1051,7 +1056,8 @@ fn __flow_impl(
                         (type_, &UseT::new(UseTInner::HooklikeT(Box::new(tvar)))),
                     )?;
                     Ok::<(), FlowJsException>(())
-                })?;
+                },
+            )?;
             let new_l = Type::new(TypeInner::OptionalT {
                 reason: reason.dupe(),
                 type_: new_type_,
@@ -1063,8 +1069,10 @@ fn __flow_impl(
         (TypeInner::MaybeT(rl, t), UseTInner::DeepReadOnlyT(tout, dro)) => {
             let r = tout.reason();
             let ReactDro(dro_loc, dro_type) = dro;
-            let new_t =
-                flow_typing_tvar::mk_no_wrap_where_result(cx, r.dupe(), |tvar_reason, tvar_id| {
+            let new_t = flow_typing_tvar::mk_no_wrap_where_result(
+                cx,
+                r.dupe(),
+                |cx, tvar_reason, tvar_id| {
                     let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                     rec_flow(
                         cx,
@@ -1078,15 +1086,18 @@ fn __flow_impl(
                         ),
                     )?;
                     Ok::<(), FlowJsException>(())
-                })?;
+                },
+            )?;
             let new_l = Type::new(TypeInner::MaybeT(rl.dupe(), new_t));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
         }
         (TypeInner::MaybeT(rl, t), UseTInner::HooklikeT(tout)) => {
             let r = tout.reason();
-            let new_t =
-                flow_typing_tvar::mk_no_wrap_where_result(cx, r.dupe(), |tvar_reason, tvar_id| {
+            let new_t = flow_typing_tvar::mk_no_wrap_where_result(
+                cx,
+                r.dupe(),
+                |cx, tvar_reason, tvar_id| {
                     let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                     rec_flow(
                         cx,
@@ -1094,7 +1105,8 @@ fn __flow_impl(
                         (t, &UseT::new(UseTInner::HooklikeT(Box::new(tvar)))),
                     )?;
                     Ok::<(), FlowJsException>(())
-                })?;
+                },
+            )?;
             let new_l = Type::new(TypeInner::MaybeT(rl.dupe(), new_t));
             let tout_t = Type::new(TypeInner::OpenT((**tout).dupe()));
             rec_flow_t(cx, trace, unknown_use(), (&new_l, &tout_t))?;
@@ -1609,7 +1621,7 @@ fn __flow_impl(
         // * maybe types *
         // ***************
 
-        // The type maybe(T) is the same as null | undefined | UseT
+        // The type maybe(T) is the same as null | undefined | UseT<Context<'cx>>
         (TypeInner::DefT(r, def_t), UseTInner::FilterMaybeT(use_op, tout))
             if matches!(def_t.deref(), DefTInner::NullT | DefTInner::VoidT) =>
         {
@@ -1692,7 +1704,7 @@ fn __flow_impl(
         // * optional types *
         // ******************
 
-        // The type optional(T) is the same as undefined | UseT
+        // The type optional(T) is the same as undefined | UseT<Context<'cx>>
         (TypeInner::DefT(r, def_t), UseTInner::FilterOptionalT(use_op, tout))
             if matches!(def_t.deref(), DefTInner::VoidT) =>
         {
@@ -2724,7 +2736,7 @@ fn __flow_impl(
                     flow_typing_tvar::mk_no_wrap_where_result(
                         cx,
                         reason.dupe(),
-                        |tvar_reason, tvar_id| {
+                        |cx, tvar_reason, tvar_id| {
                             let tvar = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                             let action = ElemAction::ReadElem {
                                 id: *id,
@@ -4125,7 +4137,7 @@ fn __flow_impl(
             let new_u = UseT::new(UseTInner::ReactKitT(
                 use_op.dupe(),
                 reason_op.dupe(),
-                Box::new(react::Tool::CreateElement {
+                Box::new(react::Tool::<Context<'cx>>::CreateElement {
                     component: component.dupe(),
                     jsx_props: jsx_props.dupe(),
                     should_generalize: *should_generalize,
@@ -4202,7 +4214,7 @@ fn __flow_impl(
             let method_type = flow_typing_tvar::mk_no_wrap_where_result(
                 cx,
                 reason_lookup.dupe(),
-                |tvar_reason, tvar_id| {
+                |cx, tvar_reason, tvar_id| {
                     let tout = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                     let use_t = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
                         use_op: use_op.dupe(),
@@ -4783,7 +4795,7 @@ fn __flow_impl(
             let ret = flow_typing_tvar::mk_no_wrap_where_result(
                 cx,
                 reason_op.dupe(),
-                |tvar_reason, tvar_id| {
+                |cx, tvar_reason, tvar_id| {
                     let tout = Tvar::new(tvar_reason.dupe(), tvar_id as u32);
                     let funtype = MethodCallType {
                         meth_generic_this: None,
@@ -5375,7 +5387,7 @@ fn __flow_impl(
                 inst,
                 &data.propref,
                 &data.reason,
-            )?((*data.tout).dupe())?;
+            )?(cx, (*data.tout).dupe())?;
         }
         (TypeInner::DefT(reason_c, def_t), UseTInner::GetPrivatePropT(gpp_data))
             if let DefTInner::InstanceT(inst_t) = def_t.deref() =>
@@ -5408,7 +5420,7 @@ fn __flow_impl(
             let funt = flow_typing_tvar::mk_no_wrap_where_result(
                 cx,
                 reason_lookup.dupe(),
-                |reason_tout, tout| {
+                |cx, reason_tout, tout| {
                     let tout_tvar = Tvar::new(reason_tout.dupe(), tout as u32);
                     let lookup_action = LookupAction::ReadProp {
                         use_op: use_op.dupe(),
@@ -5440,7 +5452,7 @@ fn __flow_impl(
                         inst,
                         propref,
                         reason_call,
-                    )?(tout_tvar.dupe())?;
+                    )?(cx, tout_tvar.dupe())?;
                     Ok::<(), FlowJsException>(())
                 },
             )?;
@@ -5546,7 +5558,7 @@ fn __flow_impl(
             let super_ = &inst_t.super_;
             let inst = &inst_t.inst;
             // Spread fields from super into an object
-            let obj_super = flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |tvar| {
+            let obj_super = flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |cx, tvar| {
                 let use_t = UseT::new(UseTInner::ObjRestT(
                     reason_op.dupe(),
                     xs.clone(),
@@ -5593,7 +5605,7 @@ fn __flow_impl(
                 union_reason: None,
                 curr_resolve_idx: 0,
             };
-            let o2 = flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |tvar| {
+            let o2 = flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |cx, tvar| {
                 rec_flow(
                     cx,
                     trace,
@@ -5835,7 +5847,7 @@ fn __flow_impl(
                 .id
                 .map(|id| -> Result<_, FlowJsException> {
                     let lookup_default_tout =
-                        flow_typing_tvar::mk_where_result(cx, data.reason.dupe(), |tvar| {
+                        flow_typing_tvar::mk_where_result(cx, data.reason.dupe(), |cx, tvar| {
                             rec_flow_t(
                                 cx,
                                 trace,
@@ -5858,7 +5870,7 @@ fn __flow_impl(
                 reason_obj.dupe(),
                 data.reason.dupe(),
                 lookup_info,
-            )?((*data.tout).dupe())?;
+            )?(cx, (*data.tout).dupe())?;
         }
         (TypeInner::AnyT(_, src), UseTInner::GetPropT(data)) => {
             if let Some(id) = data.id {
@@ -5908,7 +5920,7 @@ fn __flow_impl(
             let t = flow_typing_tvar::mk_no_wrap_where_result(
                 cx,
                 reason_lookup.dupe(),
-                |reason_tout, tout| {
+                |cx, reason_tout, tout| {
                     flow_js_utils::get_prop_t_kit::read_obj_prop::<FlowJs>(
                         cx,
                         &trace,
@@ -5920,7 +5932,7 @@ fn __flow_impl(
                         reason_obj.dupe(),
                         reason_lookup.dupe(),
                         None,
-                    )?(Tvar::new(reason_tout.dupe(), tout as u32))?;
+                    )?(cx, Tvar::new(reason_tout.dupe(), tout as u32))?;
                     Ok::<(), FlowJsException>(())
                 },
             )?;
@@ -6470,7 +6482,7 @@ fn __flow_impl(
                 loop_generic(l, flow_typing_generics::spread_empty())
             };
             let mapped_bound =
-                flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |tout_inner| {
+                flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |cx, tout_inner| {
                     rec_flow(
                         cx,
                         trace,
@@ -7134,7 +7146,7 @@ fn __flow_impl(
             let method_type = flow_typing_tvar::mk_no_wrap_where_result(
                 cx,
                 reason_lookup.dupe(),
-                |tout_reason, tout_id| {
+                |cx, tout_reason, tout_id| {
                     let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
                     let get_prop_u = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
                         use_op: use_op.dupe(),
@@ -7255,7 +7267,7 @@ fn __flow_impl(
                     None,
                     (prop_reason.dupe(), member_name.dupe()),
                 ),
-            )?((*data.tout).dupe())?;
+            )?(cx, (*data.tout).dupe())?;
         }
         (
             TypeInner::DefT(_, def_t),
@@ -7299,7 +7311,7 @@ fn __flow_impl(
             let t = flow_typing_tvar::mk_no_wrap_where_result(
                 cx,
                 lookup_reason.dupe(),
-                |tout_reason, tout_id| {
+                |cx, tout_reason, tout_id| {
                     let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
                     let representation_t = match EnumInfo::deref(enum_info) {
                         EnumInfoInner::ConcreteEnum(ce) => &ce.representation_t,
@@ -7436,7 +7448,7 @@ fn __flow_impl(
             let t = flow_typing_tvar::mk_no_wrap_where_result(
                 cx,
                 lookup_reason.dupe(),
-                |tout_reason, tout_id| {
+                |cx, tout_reason, tout_id| {
                     let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
                     rec_flow(
                         cx,
@@ -7581,11 +7593,12 @@ fn __flow_impl(
             // NonstrictReturning lookups unify their result, but we don't want to
             // unify with the tout tvar directly, so we create an indirection here to
             // ensure we only supply lower bounds to tout.
-            let lookup_default = flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |tvar| {
-                let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
-                rec_flow_t(cx, trace, use_op.dupe(), (tvar, &open_tout))?;
-                Ok::<(), FlowJsException>(())
-            })?;
+            let lookup_default =
+                flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |cx, tvar| {
+                    let open_tout = Type::new(TypeInner::OpenT((**tout).dupe()));
+                    rec_flow_t(cx, trace, use_op.dupe(), (tvar, &open_tout))?;
+                    Ok::<(), FlowJsException>(())
+                })?;
             let name = name_of_propref(propref);
             let reason_prop = match &**propref {
                 PropRef::Named { reason, .. } => reason,
@@ -8938,7 +8951,7 @@ fn __flow_impl(
                 *inexact,
                 *arity,
                 reason_of_use_t(u),
-            )?((*data.tout).dupe())?;
+            )?(cx, (*data.tout).dupe())?;
         }
         (TypeInner::DefT(reason, def_t), _)
             if let DefTInner::ArrT(arr) = def_t.deref()
@@ -9120,7 +9133,7 @@ fn __flow_impl(
             let method_type = flow_typing_tvar::mk_no_wrap_where_result(
                 cx,
                 lookup_r.dupe(),
-                |tout_reason, tout_id| {
+                |cx, tout_reason, tout_id| {
                     let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
                     let get_prop_u = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
                         use_op: use_op.dupe(),

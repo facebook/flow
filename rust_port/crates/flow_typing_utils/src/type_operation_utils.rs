@@ -57,12 +57,16 @@ pub mod distribute_union_intersection {
     /// For a type t, run the check defined by check_base.
     /// This function will break down the unions in t. When it encounters an intersection,
     /// the check can pass as long as the check can pass on one member of intersection
-    pub fn distribute(
-        cx: &Context,
+    pub fn distribute<'cx>(
+        cx: &Context<'cx>,
         use_op: Option<UseOp>,
-        break_up_union: &dyn Fn(&Context, &Reason, &Type) -> Result<Vec<Type>, FlowJsException>,
+        break_up_union: &dyn Fn(
+            &Context<'cx>,
+            &Reason,
+            &Type,
+        ) -> Result<Vec<Type>, FlowJsException>,
         get_no_match_error_loc: &dyn Fn(&Reason) -> ALoc,
-        check_base: &dyn Fn(&Context, &Type) -> Result<(), FlowJsException>,
+        check_base: &dyn Fn(&Context<'cx>, &Type) -> Result<(), FlowJsException>,
         t: &Type,
     ) -> Result<(), FlowJsException> {
         let ts = break_up_union(cx, reason_of_t(t), t)?;
@@ -74,7 +78,7 @@ pub mod distribute_union_intersection {
                         .map(|t| {
                             let t = t.clone();
                             let use_op = use_op.clone();
-                            Box::new(move || {
+                            Box::new(move |cx: &Context<'cx>| {
                                 distribute(
                                     cx,
                                     use_op,
@@ -84,7 +88,9 @@ pub mod distribute_union_intersection {
                                     &t,
                                 )
                             })
-                                as Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>
+                                as Box<
+                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                >
                         })
                         .collect();
                     speculation_flow::try_custom(
@@ -107,12 +113,16 @@ pub mod distribute_union_intersection {
     /// For a pair of type (t1, t2), run the check defined by check_base.
     /// This function will break down the unions in t1 and t2. When it encounters an intersection,
     /// the check can pass as long as the check can pass on one member of intersection
-    pub fn distribute_2(
-        cx: &Context,
+    pub fn distribute_2<'cx>(
+        cx: &Context<'cx>,
         use_op: Option<UseOp>,
-        break_up_union: &dyn Fn(&Context, &Reason, &Type) -> Result<Vec<Type>, FlowJsException>,
+        break_up_union: &dyn Fn(
+            &Context<'cx>,
+            &Reason,
+            &Type,
+        ) -> Result<Vec<Type>, FlowJsException>,
         get_no_match_error_loc: &dyn Fn(&Reason, &Reason) -> ALoc,
-        check_base: &dyn Fn(&Context, (&Type, &Type)) -> Result<(), FlowJsException>,
+        check_base: &dyn Fn(&Context<'cx>, (&Type, &Type)) -> Result<(), FlowJsException>,
         (t1, t2): (&Type, &Type),
     ) -> Result<(), FlowJsException> {
         let t1s = break_up_union(cx, reason_of_t(t1), t1)?;
@@ -132,7 +142,7 @@ pub mod distribute_union_intersection {
                                     let m1 = m1.dupe();
                                     let m2 = m2.dupe();
                                     let use_op = use_op.dupe();
-                                    Box::new(move || {
+                                    Box::new(move |cx: &Context<'cx>| {
                                         distribute_2(
                                             cx,
                                             use_op,
@@ -142,7 +152,10 @@ pub mod distribute_union_intersection {
                                             (&m1, &m2),
                                         )
                                     })
-                                        as Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>
+                                        as Box<
+                                            dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>
+                                                + '_,
+                                        >
                                 })
                             })
                             .collect();
@@ -157,25 +170,30 @@ pub mod distribute_union_intersection {
                     }
                     (TypeInner::IntersectionT(r1, rep1), _) => {
                         let t2_clone = t2i.dupe();
-                        let cases: Vec<Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>> =
-                            rep1.members_iter()
-                                .map(|t1| {
-                                    let t1 = t1.dupe();
-                                    let t2 = t2_clone.dupe();
-                                    let use_op = use_op.clone();
-                                    Box::new(move || {
-                                        distribute_2(
-                                            cx,
-                                            use_op,
-                                            break_up_union,
-                                            get_no_match_error_loc,
-                                            check_base,
-                                            (&t1, &t2),
-                                        )
-                                    })
-                                        as Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>
+                        let cases: Vec<
+                            Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_>,
+                        > = rep1
+                            .members_iter()
+                            .map(|t1| {
+                                let t1 = t1.dupe();
+                                let t2 = t2_clone.dupe();
+                                let use_op = use_op.clone();
+                                Box::new(move |cx: &Context<'cx>| {
+                                    distribute_2(
+                                        cx,
+                                        use_op,
+                                        break_up_union,
+                                        get_no_match_error_loc,
+                                        check_base,
+                                        (&t1, &t2),
+                                    )
                                 })
-                                .collect();
+                                    as Box<
+                                        dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>
+                                            + '_,
+                                    >
+                            })
+                            .collect();
                         speculation_flow::try_custom(
                             cx,
                             use_op.clone(),
@@ -193,7 +211,7 @@ pub mod distribute_union_intersection {
                                 let t2 = t2.dupe();
                                 let t1 = t1_clone.dupe();
                                 let use_op = use_op.dupe();
-                                Box::new(move || {
+                                Box::new(move |cx: &Context<'cx>| {
                                     distribute_2(
                                         cx,
                                         use_op,
@@ -203,7 +221,10 @@ pub mod distribute_union_intersection {
                                         (&t1, &t2),
                                     )
                                 })
-                                    as Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>
+                                    as Box<
+                                        dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException>
+                                            + '_,
+                                    >
                             })
                             .collect();
                         speculation_flow::try_custom(
@@ -229,10 +250,16 @@ pub mod operators {
 
     use super::*;
 
-    pub fn arith(cx: &Context, reason: &Reason, kind: &ArithKind, t1: &Type, t2: &Type) -> Type {
+    pub fn arith<'cx>(
+        cx: &Context<'cx>,
+        reason: &Reason,
+        kind: &ArithKind,
+        t1: &Type,
+        t2: &Type,
+    ) -> Type {
         let kind = kind.clone();
         let reason = reason.dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where_result(cx, reason.dupe(), |tout| {
+        tvar_resolver::mk_tvar_and_fully_resolve_where_result(cx, reason.dupe(), |cx, tout| {
             distribute_union_intersection::distribute_2(
                 cx,
                 None,
@@ -255,8 +282,11 @@ pub mod operators {
         .unwrap()
     }
 
-    pub fn check_comparator(cx: &Context, t1: &Type, t2: &Type) {
-        fn check_base(cx: &Context, (l, r): (&Type, &Type)) -> Result<(), FlowJsException> {
+    pub fn check_comparator<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) {
+        fn check_base<'cx>(
+            cx: &Context<'cx>,
+            (l, r): (&Type, &Type),
+        ) -> Result<(), FlowJsException> {
             match (l.deref(), r.deref()) {
                 (TypeInner::DefT(_, def_l), TypeInner::DefT(_, def_r))
                     if matches!(
@@ -352,7 +382,7 @@ pub mod operators {
         }
     }
 
-    pub fn check_eq(cx: &Context, pair: (&Type, &Type)) {
+    pub fn check_eq<'cx>(cx: &Context<'cx>, pair: (&Type, &Type)) {
         fn get_no_match_error_loc(r1: &Reason, r2: &Reason) -> ALoc {
             flow_error::ordered_reasons((r1.dupe(), r2.dupe()))
                 .0
@@ -453,7 +483,7 @@ pub mod operators {
             }
         }
 
-        fn distribute(cx: &Context, t1: &Type, t2: &Type) -> Result<(), FlowJsException> {
+        fn distribute<'cx>(cx: &Context<'cx>, t1: &Type, t2: &Type) -> Result<(), FlowJsException> {
             if is_always_allowed_one_side_t(t1) || is_always_allowed_one_side_t(t2) {
                 return Ok(());
             }
@@ -465,8 +495,10 @@ pub mod operators {
                         .map(|t1| {
                             let t1 = t1.dupe();
                             let t2 = t2_clone.dupe();
-                            Box::new(move || distribute(cx, &t1, &t2))
-                                as Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>
+                            Box::new(move |cx: &Context<'cx>| distribute(cx, &t1, &t2))
+                                as Box<
+                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                >
                         })
                         .collect();
                     speculation_flow::try_custom(
@@ -485,8 +517,10 @@ pub mod operators {
                         .map(|t2| {
                             let t2 = t2.dupe();
                             let t1 = t1_clone.dupe();
-                            Box::new(move || distribute(cx, &t1, &t2))
-                                as Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>
+                            Box::new(move |cx: &Context<'cx>| distribute(cx, &t1, &t2))
+                                as Box<
+                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                >
                         })
                         .collect();
                     speculation_flow::try_custom(
@@ -542,7 +576,11 @@ pub mod operators {
         distribute(cx, t1, t2).unwrap()
     }
 
-    pub fn check_strict_eq(encl_ctx: &EnclosingContext, cx: &Context, pair: (&Type, &Type)) {
+    pub fn check_strict_eq<'cx>(
+        encl_ctx: &EnclosingContext,
+        cx: &Context<'cx>,
+        pair: (&Type, &Type),
+    ) {
         fn get_no_match_error_loc(r1: &Reason, r2: &Reason) -> ALoc {
             flow_error::ordered_reasons((r1.dupe(), r2.dupe()))
                 .0
@@ -701,8 +739,8 @@ pub mod operators {
             }
         }
 
-        fn distribute_strict(
-            cx: &Context,
+        fn distribute_strict<'cx>(
+            cx: &Context<'cx>,
             encl_ctx: &EnclosingContext,
             t1: &Type,
             t2: &Type,
@@ -722,8 +760,12 @@ pub mod operators {
                         .map(|t1| {
                             let t1 = t1.dupe();
                             let t2 = t2_clone.dupe();
-                            Box::new(move || distribute_strict(cx, encl_ctx, &t1, &t2))
-                                as Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>
+                            Box::new(move |cx: &Context<'cx>| {
+                                distribute_strict(cx, encl_ctx, &t1, &t2)
+                            })
+                                as Box<
+                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                >
                         })
                         .collect();
                     speculation_flow::try_custom(
@@ -742,8 +784,12 @@ pub mod operators {
                         .map(|t2| {
                             let t2 = t2.dupe();
                             let t1 = t1_clone.dupe();
-                            Box::new(move || distribute_strict(cx, encl_ctx, &t1, &t2))
-                                as Box<dyn FnOnce() -> Result<(), FlowJsException> + '_>
+                            Box::new(move |cx: &Context<'cx>| {
+                                distribute_strict(cx, encl_ctx, &t1, &t2)
+                            })
+                                as Box<
+                                    dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + '_,
+                                >
                         })
                         .collect();
                     speculation_flow::try_custom(
@@ -806,10 +852,15 @@ pub mod operators {
         distribute_strict(cx, encl_ctx, t1, t2).unwrap()
     }
 
-    pub fn unary_arith(cx: &Context, reason: &Reason, kind: &UnaryArithKind, t: &Type) -> Type {
+    pub fn unary_arith<'cx>(
+        cx: &Context<'cx>,
+        reason: &Reason,
+        kind: &UnaryArithKind,
+        t: &Type,
+    ) -> Type {
         let reason = reason.dupe();
         let kind = *kind;
-        tvar_resolver::mk_tvar_and_fully_resolve_where_result(cx, reason.dupe(), |tout| {
+        tvar_resolver::mk_tvar_and_fully_resolve_where_result(cx, reason.dupe(), |cx, tout| {
             distribute_union_intersection::distribute(
                 cx,
                 None,
@@ -830,10 +881,10 @@ pub mod operators {
         .unwrap()
     }
 
-    fn mk_tvar_and_resolve_to_logical_union(
-        cx: &Context,
+    fn mk_tvar_and_resolve_to_logical_union<'cx>(
+        cx: &Context<'cx>,
         reason: &Reason,
-        f: impl FnOnce(&Context, &flow_typing_type::type_::Tvar) -> Result<(), FlowJsException>,
+        f: impl FnOnce(&Context<'cx>, &flow_typing_type::type_::Tvar) -> Result<(), FlowJsException>,
     ) -> Result<Type, FlowJsException> {
         use flow_typing_type::type_::Tvar;
         let id = flow_typing_tvar::mk_no_wrap(cx, reason);
@@ -851,7 +902,7 @@ pub mod operators {
         }
     }
 
-    pub fn logical_and(cx: &Context, reason: &Reason, left: &Type, right: &Type) -> Type {
+    pub fn logical_and<'cx>(cx: &Context<'cx>, reason: &Reason, left: &Type, right: &Type) -> Type {
         mk_tvar_and_resolve_to_logical_union(cx, reason, |cx, tout| {
             let ts = FlowJs::possible_concrete_types_for_inspection(
                 cx,
@@ -936,7 +987,7 @@ pub mod operators {
         .unwrap()
     }
 
-    pub fn logical_or(cx: &Context, reason: &Reason, left: &Type, right: &Type) -> Type {
+    pub fn logical_or<'cx>(cx: &Context<'cx>, reason: &Reason, left: &Type, right: &Type) -> Type {
         mk_tvar_and_resolve_to_logical_union(cx, reason, |cx, tout| {
             let ts = FlowJs::possible_concrete_types_for_inspection(
                 cx,
@@ -1003,8 +1054,8 @@ pub mod operators {
         .unwrap()
     }
 
-    pub fn logical_nullish_coalesce(
-        cx: &Context,
+    pub fn logical_nullish_coalesce<'cx>(
+        cx: &Context<'cx>,
         reason: &Reason,
         left: &Type,
         right: &Type,
@@ -1090,7 +1141,7 @@ pub mod operators {
         .unwrap()
     }
 
-    pub fn unary_not(cx: &Context, reason: &Reason, t: &Type) -> Type {
+    pub fn unary_not<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Type {
         fn f(reason: &Reason, t: &Type) -> Type {
             match t.deref() {
                 TypeInner::AnyT(_, src) => flow_typing_type::type_::any_t::why(*src, reason.dupe()),
@@ -1179,7 +1230,7 @@ pub mod operators {
         }
 
         let reason = reason.dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where_result(cx, reason.dupe(), |tout| {
+        tvar_resolver::mk_tvar_and_fully_resolve_where_result(cx, reason.dupe(), |cx, tout| {
             distribute_union_intersection::distribute(
                 cx,
                 None,
@@ -1196,7 +1247,7 @@ pub mod operators {
         .unwrap()
     }
 
-    pub fn non_maybe(cx: &Context, reason: &Reason, t: &Type) -> Type {
+    pub fn non_maybe<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Type {
         fn f(t: &Type) -> Type {
             match t.deref() {
                 TypeInner::DefT(r, def_t)
@@ -1223,7 +1274,7 @@ pub mod operators {
             }
         }
 
-        tvar_resolver::mk_tvar_and_fully_resolve_where_result(cx, reason.dupe(), |tout| {
+        tvar_resolver::mk_tvar_and_fully_resolve_where_result(cx, reason.dupe(), |cx, tout| {
             distribute_union_intersection::distribute(
                 cx,
                 None,
@@ -1245,7 +1296,7 @@ pub mod promise {
 
     use super::*;
 
-    pub fn await_(cx: &Context, reason: &Reason, t: &Type) -> Type {
+    pub fn await_<'cx>(cx: &Context<'cx>, reason: &Reason, t: &Type) -> Type {
         // await distributes over union: await (Promise<T> | void) = T | void
         let ts = FlowJs::possible_concrete_types_for_inspection(cx, reason, t).unwrap();
         let results: Vec<Type> = ts
@@ -1273,8 +1324,8 @@ pub mod promise {
 pub mod special_cased_functions {
     use super::*;
 
-    pub fn object_assign(
-        cx: &Context,
+    pub fn object_assign<'cx>(
+        cx: &Context<'cx>,
         use_op: &UseOp,
         reason: &Reason,
         target_t: &Type,
@@ -1347,8 +1398,8 @@ pub mod special_cased_functions {
         let fix_cache: Rc<RefCell<HashMap<Type, Type>>> = Rc::new(RefCell::new(HashMap::new()));
 
         // let rec assign_from l use_op reason_op to_obj t kind =
-        fn assign_from(
-            cx: &Context,
+        fn assign_from<'cx>(
+            cx: &Context<'cx>,
             reason: &Reason,
             fix_cache: &Rc<RefCell<HashMap<Type, Type>>>,
             l: &Type,
@@ -1379,8 +1430,8 @@ pub mod special_cased_functions {
             }
         }
 
-        fn assign_from_after_concretization(
-            cx: &Context,
+        fn assign_from_after_concretization<'cx>(
+            cx: &Context<'cx>,
             reason: &Reason,
             fix_cache: &Rc<RefCell<HashMap<Type, Type>>>,
             l: &Type,
@@ -1403,15 +1454,17 @@ pub mod special_cased_functions {
                         let cached = fix_cache.borrow().get(member).cloned();
                         let member_tvar = match cached {
                             Some(tv) => tv,
-                            None => {
-                                flow_typing_tvar::mk_where_result(cx, reason_op.dupe(), |tv| {
+                            None => flow_typing_tvar::mk_where_result(
+                                cx,
+                                reason_op.dupe(),
+                                |cx, tv| {
                                     fix_cache.borrow_mut().insert(member.dupe(), tv.dupe());
                                     assign_from(
                                         cx, reason, fix_cache, member, use_op, reason_op, to_obj,
                                         tv, &kind,
                                     )
-                                })?
-                            }
+                                },
+                            )?,
                         };
                         flow_typing_flow_js::flow_js::flow_t(cx, (&member_tvar, &tvar))?;
                         tvar = member_tvar;
@@ -1444,7 +1497,7 @@ pub mod special_cased_functions {
                                 let prop_t = tvar_resolver::mk_tvar_and_fully_resolve_where_result(
                                     cx,
                                     reason_prop.dupe(),
-                                    |tout| -> Result<(), FlowJsException> {
+                                    |cx, tout| -> Result<(), FlowJsException> {
                                         let use_t = UseT::new(UseTInner::FilterOptionalT(
                                             flow_typing_type::type_::unknown_use(),
                                             tout.dupe(),
@@ -1714,7 +1767,7 @@ pub mod special_cased_functions {
         tvar_resolver::mk_tvar_and_fully_resolve_where_result(
             cx,
             reason.dupe(),
-            |tout| -> Result<(), FlowJsException> {
+            |cx, tout| -> Result<(), FlowJsException> {
                 let mut result = target_t.clone();
                 for that in rest_arg_ts {
                     let (that, kind) = match that.deref() {
@@ -1728,7 +1781,7 @@ pub mod special_cased_functions {
                     result = tvar_resolver::mk_tvar_and_fully_resolve_where_result(
                         cx,
                         reason.dupe(),
-                        |inner_t| -> Result<(), FlowJsException> {
+                        |cx, inner_t| -> Result<(), FlowJsException> {
                             let ls = FlowJs::possible_concrete_types_for_object_assign(
                                 cx, &reason, &result,
                             )?;
@@ -1755,7 +1808,7 @@ pub mod special_cased_functions {
                                                 let inner_t = inner_t_clone.dupe();
                                                 let fix_cache = fix_cache.dupe();
                                                 let outer_reason = outer_reason_clone.dupe();
-                                                Box::new(move || {
+                                                Box::new(move |cx: &Context<'cx>| {
                                                     assign_from(
                                                         cx,
                                                         &outer_reason,
@@ -1769,7 +1822,10 @@ pub mod special_cased_functions {
                                                     )
                                                 })
                                                     as Box<
-                                                        dyn FnOnce() -> Result<(), FlowJsException>
+                                                        dyn FnOnce(
+                                                                &Context<'cx>,
+                                                            )
+                                                                -> Result<(), FlowJsException>
                                                             + '_,
                                                     >
                                             })
@@ -1816,7 +1872,7 @@ pub mod special_cased_functions {
 pub mod type_assertions {
     use super::*;
 
-    pub fn assert_binary_in_lhs(cx: &Context, t: &Type) {
+    pub fn assert_binary_in_lhs<'cx>(cx: &Context<'cx>, t: &Type) {
         distribute_union_intersection::distribute(
             cx,
             None,
@@ -1853,7 +1909,7 @@ pub mod type_assertions {
         .unwrap()
     }
 
-    pub fn assert_binary_in_rhs(cx: &Context, t: &Type) {
+    pub fn assert_binary_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) {
         distribute_union_intersection::distribute(
             cx,
             None,
@@ -1882,12 +1938,12 @@ pub mod type_assertions {
         .unwrap()
     }
 
-    pub fn assert_export_is_type(cx: &Context, name: &Name, t: &Type) -> Type {
+    pub fn assert_export_is_type<'cx>(cx: &Context<'cx>, name: &Name, t: &Type) -> Type {
         let reason = reason_of_t(t).dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_where_result(
             cx,
             reason.dupe(),
-            |tout| -> Result<(), FlowJsException> {
+            |cx, tout| -> Result<(), FlowJsException> {
                 let t = FlowJs::singleton_concretize_type_for_imports_exports(cx, &reason, t)?;
                 let t = flow_js_utils::assert_export_is_type_t_kit::on_concrete_type(
                     cx,
@@ -1901,7 +1957,7 @@ pub mod type_assertions {
         .unwrap()
     }
 
-    pub fn assert_for_in_rhs(cx: &Context, t: &Type) {
+    pub fn assert_for_in_rhs<'cx>(cx: &Context<'cx>, t: &Type) {
         distribute_union_intersection::distribute(
             cx,
             None,
@@ -1944,16 +2000,16 @@ pub mod type_assertions {
         .unwrap()
     }
 
-    pub fn assert_non_component_like_base(
-        cx: &Context,
+    pub fn assert_non_component_like_base<'cx>(
+        cx: &Context<'cx>,
         def_loc: ALoc,
         use_reason: &Reason,
         t: &Type,
     ) {
-        fn check_base(
+        fn check_base<'cx>(
             def_loc: &ALoc,
             use_reason: &Reason,
-            cx: &Context,
+            cx: &Context<'cx>,
             t: &Type,
         ) -> Result<(), FlowJsException> {
             match t.deref() {
@@ -2011,7 +2067,7 @@ pub mod type_assertions {
         .unwrap()
     }
 
-    pub fn assert_instanceof_rhs(cx: &Context, t: &Type) {
+    pub fn assert_instanceof_rhs<'cx>(cx: &Context<'cx>, t: &Type) {
         distribute_union_intersection::distribute(
             cx,
             None,
@@ -2044,7 +2100,7 @@ pub mod type_assertions {
         .unwrap()
     }
 
-    pub fn assert_match_instance_pattern_constructor(cx: &Context, t: &Type) {
+    pub fn assert_match_instance_pattern_constructor<'cx>(cx: &Context<'cx>, t: &Type) {
         match crate::exhaustive::get_class_info(cx, t) {
             Some(_) => {}
             None => flow_js_utils::add_output(
@@ -2057,8 +2113,8 @@ pub mod type_assertions {
         }
     }
 
-    pub fn assert_iterable(
-        cx: &Context,
+    pub fn assert_iterable<'cx>(
+        cx: &Context<'cx>,
         loc: ALoc,
         is_async: bool,
         use_op: &UseOp,
@@ -2141,7 +2197,7 @@ pub mod type_assertions {
         }
     }
 
-    pub fn non_exhaustive(cx: &Context, ts: &[Type]) -> bool {
+    pub fn non_exhaustive<'cx>(cx: &Context<'cx>, ts: &[Type]) -> bool {
         for t in ts {
             let concrete_types =
                 FlowJs::possible_concrete_types_for_inspection(cx, reason_of_t(t), t).unwrap();
@@ -2152,8 +2208,8 @@ pub mod type_assertions {
         false
     }
 
-    fn assert_operator_receiver_base(
-        cx: &Context,
+    fn assert_operator_receiver_base<'cx>(
+        cx: &Context<'cx>,
         op_reason: &Reason,
         obj_reason: &Reason,
         obj: &Type,
@@ -2215,8 +2271,8 @@ pub mod type_assertions {
         }
     }
 
-    pub fn check_specialized_assert_operator_property(
-        cx: &Context,
+    pub fn check_specialized_assert_operator_property<'cx>(
+        cx: &Context<'cx>,
         op_reason: &Reason,
         obj_reason: &Reason,
         t: &Type,
@@ -2239,15 +2295,15 @@ pub mod type_assertions {
         .unwrap()
     }
 
-    pub fn check_specialized_assert_operator_lookup(
-        cx: &Context,
+    pub fn check_specialized_assert_operator_lookup<'cx>(
+        cx: &Context<'cx>,
         op_reason: &Reason,
         obj_reason: &Reason,
         t1: &Type,
         t2: &Type,
     ) {
-        fn check_base(
-            cx: &Context,
+        fn check_base<'cx>(
+            cx: &Context<'cx>,
             op_reason: &Reason,
             obj_reason: &Reason,
             (obj, prop): (&Type, &Type),
@@ -2289,7 +2345,7 @@ pub mod type_assertions {
         .unwrap()
     }
 
-    pub fn check_assert_operator_implicitly_nullable(cx: &Context, t: &Type) -> bool {
+    pub fn check_assert_operator_implicitly_nullable<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
         fn valid_target(t: &Type) -> bool {
             match t.deref() {
                 TypeInner::AnyT(_, _) => true,
@@ -2312,7 +2368,7 @@ pub mod type_assertions {
         ts.iter().any(valid_target)
     }
 
-    pub fn check_assert_operator_nullable(cx: &Context, t: &Type) -> bool {
+    pub fn check_assert_operator_nullable<'cx>(cx: &Context<'cx>, t: &Type) -> bool {
         fn valid_target(t: &Type) -> bool {
             match t.deref() {
                 TypeInner::AnyT(_, _) => true,

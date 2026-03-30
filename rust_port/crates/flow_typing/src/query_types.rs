@@ -67,7 +67,7 @@ fn result_of_normalizer_error<A>(loc: Loc, t: Type, err: Error) -> QueryResult<A
 const MAX_SIZE_OF_EVALUATED_TYPE: usize = 100;
 
 pub fn dump_type_at_pos(
-    cx: &Context,
+    cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     loc: Loc,
 ) -> Option<(Loc, String)> {
@@ -80,13 +80,13 @@ pub fn dump_type_at_pos(
     }
 }
 
-pub fn type_at_pos_type(
-    cx: &Context,
+pub fn type_at_pos_type<'a>(
+    cx: &Context<'a>,
     file_sig: Arc<FileSig>,
     omit_targ_defaults: bool,
     verbose_normalizer: bool,
     max_depth: u32,
-    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     no_typed_ast_for_imports: bool,
     include_refs: Option<&dyn Fn(&ALoc) -> Loc>,
     loc: Loc,
@@ -202,12 +202,12 @@ pub fn type_at_pos_type(
     }
 }
 
-pub fn dump_types(
+pub fn dump_types<'a>(
     printer: &dyn Fn(&ALocElt) -> String,
     evaluate_type_destructors: EvaluateTypeDestructorsMode,
-    cx: &Context,
+    cx: &Context<'a>,
     file_sig: Arc<FileSig>,
-    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
 ) -> Vec<(Loc, String)> {
     let options = Options {
         evaluate_type_destructors,
@@ -227,7 +227,7 @@ pub fn dump_types(
 }
 
 pub fn dump_types_for_tool(
-    cx: &Context,
+    cx: &Context<'_>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     depth: i32,
 ) -> Vec<(Loc, String)> {
@@ -260,11 +260,11 @@ pub fn dump_types_for_tool(
     sort_loc_pairs(concretize_loc_pairs(mapped))
 }
 
-pub fn insert_type_normalize(
-    cx: &Context,
+pub fn insert_type_normalize<'a>(
+    cx: &Context<'a>,
     file_sig: Arc<FileSig>,
     omit_targ_defaults: bool,
-    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
     loc: Loc,
     t: &Type,
 ) -> QueryResult<ALocElt> {

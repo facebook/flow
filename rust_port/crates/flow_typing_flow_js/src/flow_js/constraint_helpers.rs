@@ -43,11 +43,11 @@ use super::*;
 // bounds, all the bounds of its root are also included.
 
 /// for each l in ls: l => u
-pub(super) fn flows_to_t(
-    cx: &Context,
+pub(super) fn flows_to_t<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
-    u: &UseT,
+    u: &UseT<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     for (l, (trace_l, use_op)) in ls.iter() {
         let u = flow_use_op(cx, use_op.dupe(), u.dupe());
@@ -57,12 +57,12 @@ pub(super) fn flows_to_t(
 }
 
 /// for each u in us: l => u
-pub(super) fn flows_from_t(
-    cx: &Context,
+pub(super) fn flows_from_t<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     new_use_op: &UseOp,
     l: &Type,
-    us: &BTreeMap<constraint::UseTypeKey, DepthTrace>,
+    us: &BTreeMap<constraint::UseTypeKey<Context<'cx>>, DepthTrace>,
 ) -> Result<(), FlowJsException> {
     for (use_type_key, trace_u) in us.iter() {
         let u = flow_use_op(cx, new_use_op.dupe(), use_type_key.use_t.dupe());
@@ -72,12 +72,12 @@ pub(super) fn flows_from_t(
 }
 
 // for each l in ls, u in us: l => u
-pub(super) fn flows_across(
-    cx: &Context,
+pub(super) fn flows_across<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
-    us: &BTreeMap<constraint::UseTypeKey, DepthTrace>,
+    us: &BTreeMap<constraint::UseTypeKey<Context<'cx>>, DepthTrace>,
 ) -> Result<(), FlowJsException> {
     for (l, (trace_l, use_op_prime)) in ls.iter() {
         for (use_type_key, trace_u) in us.iter() {
@@ -93,7 +93,12 @@ pub(super) fn flows_across(
 }
 
 /// bounds.upper += u
-pub(super) fn add_upper(cx: &Context, id: i32, u: &UseT, trace: DepthTrace) {
+pub(super) fn add_upper<'cx>(
+    cx: &Context<'cx>,
+    id: i32,
+    u: &UseT<Context<'cx>>,
+    trace: DepthTrace,
+) {
     let key = constraint::UseTypeKey {
         use_t: u.dupe(),
         assoc: cx.speculation_id().map(|s| (s.speculation_id, s.case_id)),
@@ -113,7 +118,13 @@ pub(super) fn add_upper(cx: &Context, id: i32, u: &UseT, trace: DepthTrace) {
 }
 
 /// bounds.lower += l
-pub(super) fn add_lower(id: i32, l: &Type, trace: DepthTrace, use_op: UseOp, cx: &Context) {
+pub(super) fn add_lower<'cx>(
+    id: i32,
+    l: &Type,
+    trace: DepthTrace,
+    use_op: UseOp,
+    cx: &Context<'cx>,
+) {
     cx.modify_constraints(id, |_root_id, constraints| {
         if let constraint::Constraints::Unresolved(bounds) = constraints {
             if let Some((existing_trace, existing_use_op)) = bounds.lower.get(l) {
@@ -133,8 +144,8 @@ pub(super) fn add_lower(id: i32, l: &Type, trace: DepthTrace, use_op: UseOp, cx:
 /// so we don't want to redo that work. We also don't want to consider any tvar
 /// that has already been resolved, because the resolved type will be processed
 /// separately, too, as part of the bounds of skip_tvar.
-pub(super) fn iter_with_filter<F, S: std::hash::BuildHasher>(
-    cx: &Context,
+pub(super) fn iter_with_filter<'cx, F, S: std::hash::BuildHasher>(
+    cx: &Context<'cx>,
     bindings: &HashMap<i32, (DepthTrace, UseOp), S>,
     skip_id: i32,
     each: F,
@@ -157,12 +168,12 @@ pub(super) fn iter_with_filter<F, S: std::hash::BuildHasher>(
 ///
 /// As an optimization, skip [id1] when it will become either a resolved root or a
 /// goto node (so that updating its bounds is unnecessary).
-pub(super) fn edges_to_t(
-    cx: &Context,
+pub(super) fn edges_to_t<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     opt: bool,
-    (id1, bounds1): (i32, &constraint::Bounds),
-    t2: &UseT,
+    (id1, bounds1): (i32, &constraint::Bounds<Context<'cx>>),
+    t2: &UseT<Context<'cx>>,
 ) {
     if !opt {
         add_upper(cx, id1, t2, trace);
@@ -184,13 +195,13 @@ pub(super) fn edges_to_t(
 ///
 /// As an optimization, skip [id2] when it will become either a resolved root or a
 /// goto node (so that updating its bounds is unnecessary).
-pub(super) fn edges_from_t(
-    cx: &Context,
+pub(super) fn edges_from_t<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
     t1: &Type,
-    (id2, bounds2): (i32, &constraint::Bounds),
+    (id2, bounds2): (i32, &constraint::Bounds<Context<'cx>>),
 ) {
     if !opt {
         add_lower(id2, t1, trace, new_use_op.dupe(), cx);
@@ -209,13 +220,13 @@ pub(super) fn edges_from_t(
 }
 
 /// for each [id'] in [id] + [bounds.lowertvars], [id'.bounds.upper += us]
-pub(super) fn edges_to_ts(
-    cx: &Context,
+pub(super) fn edges_to_ts<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
-    (id, bounds): (i32, &constraint::Bounds),
-    us: &BTreeMap<constraint::UseTypeKey, DepthTrace>,
+    (id, bounds): (i32, &constraint::Bounds<Context<'cx>>),
+    us: &BTreeMap<constraint::UseTypeKey<Context<'cx>>, DepthTrace>,
 ) {
     for (use_type_key, trace_u) in us.iter() {
         let u = flow_use_op(cx, new_use_op.dupe(), use_type_key.use_t.dupe());
@@ -230,13 +241,13 @@ pub(super) fn edges_to_ts(
 }
 
 /// for each [id'] in [id] + [bounds.uppertvars], [id'.bounds.lower += ls]
-pub(super) fn edges_from_ts(
-    cx: &Context,
+pub(super) fn edges_from_ts<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
     ls: &BTreeMap<Type, (DepthTrace, UseOp)>,
-    (id, bounds): (i32, &constraint::Bounds),
+    (id, bounds): (i32, &constraint::Bounds<Context<'cx>>),
 ) {
     for (l, (trace_l, use_op)) in ls.iter() {
         let new_use_op = pick_use_op(cx, use_op, new_use_op);
@@ -257,12 +268,12 @@ pub(super) fn edges_from_ts(
 ///
 ///   As an invariant, [bounds1.lower] should already contain [id.bounds.lower] for
 ///   each id in [bounds1.lowertvars].
-pub(super) fn edges_and_flows_to_t(
-    cx: &Context,
+pub(super) fn edges_and_flows_to_t<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     opt: bool,
-    (id1, bounds1): (i32, &constraint::Bounds),
-    t2: &UseT,
+    (id1, bounds1): (i32, &constraint::Bounds<Context<'cx>>),
+    t2: &UseT<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     // Skip iff edge exists as part of the speculation path to the current branch
     let skip = {
@@ -292,13 +303,13 @@ pub(super) fn edges_and_flows_to_t(
 ///
 /// As an invariant, [bounds2.upper] should already contain [id.bounds.upper] for
 /// each id in [bounds2.uppertvars].
-pub(super) fn edges_and_flows_from_t(
-    cx: &Context,
+pub(super) fn edges_and_flows_from_t<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     new_use_op: UseOp,
     opt: bool,
     t1: &Type,
-    (id2, bounds2): (i32, &constraint::Bounds),
+    (id2, bounds2): (i32, &constraint::Bounds<Context<'cx>>),
 ) -> Result<(), FlowJsException> {
     if !bounds2.lower.contains_key(t1) {
         edges_from_t(cx, trace, &new_use_op, opt, t1, (id2, bounds2));
@@ -308,8 +319,8 @@ pub(super) fn edges_and_flows_from_t(
 }
 
 /// bounds.uppertvars += id
-pub(super) fn add_uppertvar(
-    cx: &Context,
+pub(super) fn add_uppertvar<'cx>(
+    cx: &Context<'cx>,
     bounds_id: i32,
     id: i32,
     trace: DepthTrace,
@@ -332,8 +343,8 @@ pub(super) fn add_uppertvar(
 }
 
 /// bounds.lowertvars += id
-pub(super) fn add_lowertvar(
-    cx: &Context,
+pub(super) fn add_lowertvar<'cx>(
+    cx: &Context<'cx>,
     bounds_id: i32,
     id: i32,
     trace: DepthTrace,
@@ -362,12 +373,12 @@ pub(super) fn add_lowertvar(
 ///
 /// As an optimization, skip id1 when it will become either a resolved root or a
 /// goto node (so that updating its bounds is unnecessary).
-pub(super) fn edges_to_tvar(
-    cx: &Context,
+pub(super) fn edges_to_tvar<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
-    (id1, bounds1): (i32, &constraint::Bounds),
+    (id1, bounds1): (i32, &constraint::Bounds<Context<'cx>>),
     id2: i32,
 ) {
     if !opt {
@@ -393,13 +404,13 @@ pub(super) fn edges_to_tvar(
 ///
 /// As an optimization, skip id2 when it will become either a resolved root or a
 /// goto node (so that updating its bounds is unnecessary).
-pub(super) fn edges_from_tvar(
-    cx: &Context,
+pub(super) fn edges_from_tvar<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     new_use_op: &UseOp,
     opt: bool,
     id1: i32,
-    (id2, bounds2): (i32, &constraint::Bounds),
+    (id2, bounds2): (i32, &constraint::Bounds<Context<'cx>>),
 ) {
     if !opt {
         add_lowertvar(cx, id2, id1, trace, new_use_op.dupe());
@@ -421,13 +432,13 @@ pub(super) fn edges_from_tvar(
 ///       id.bounds.upper += bounds2.upper
 ///       id.bounds.uppertvars += id2
 ///       id.bounds.uppertvars += bounds2.uppertvars
-pub(super) fn add_upper_edges(
-    cx: &Context,
+pub(super) fn add_upper_edges<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     new_use_op: UseOp,
     opt: bool,
-    (id1, bounds1): (i32, &constraint::Bounds),
-    (id2, bounds2): (i32, &constraint::Bounds),
+    (id1, bounds1): (i32, &constraint::Bounds<Context<'cx>>),
+    (id2, bounds2): (i32, &constraint::Bounds<Context<'cx>>),
 ) {
     edges_to_ts(cx, trace, &new_use_op, opt, (id1, bounds1), &bounds2.upper);
     edges_to_tvar(cx, trace, &new_use_op, opt, (id1, bounds1), id2);
@@ -443,13 +454,13 @@ pub(super) fn add_upper_edges(
 ///       id.bounds.lower += bounds1.lower
 ///       id.bounds.lowertvars += id1
 ///       id.bounds.lowertvars += bounds1.lowertvars
-pub(super) fn add_lower_edges(
-    cx: &Context,
+pub(super) fn add_lower_edges<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     new_use_op: UseOp,
     opt: bool,
-    (id1, bounds1): (i32, &constraint::Bounds),
-    (id2, bounds2): (i32, &constraint::Bounds),
+    (id1, bounds1): (i32, &constraint::Bounds<Context<'cx>>),
+    (id2, bounds2): (i32, &constraint::Bounds<Context<'cx>>),
 ) {
     edges_from_ts(cx, trace, &new_use_op, opt, &bounds1.lower, (id2, bounds2));
     edges_from_tvar(cx, trace, &new_use_op, opt, id1, (id2, bounds2));
@@ -474,12 +485,18 @@ pub(super) fn unify_flip(use_op: UseOp) -> UseOp {
 /// connections necessary when two non-unifiers flow to each other. If one or
 /// both of the roots are resolved, they effectively act like the corresponding
 /// concrete types.
-pub(super) fn goto(
-    cx: &Context,
+pub(super) fn goto<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
-    (id1, root1): (i32, flow_utils_union_find::Root<constraint::Constraints>),
-    (id2, root2): (i32, flow_utils_union_find::Root<constraint::Constraints>),
+    (id1, root1): (
+        i32,
+        flow_utils_union_find::Root<constraint::Constraints<'cx, Context<'cx>>>,
+    ),
+    (id2, root2): (
+        i32,
+        flow_utils_union_find::Root<constraint::Constraints<'cx, Context<'cx>>>,
+    ),
 ) -> Result<(), FlowJsException> {
     //   match (root1.constraints, root2.constraints) with
     match (root1.constraints, root2.constraints) {
@@ -627,8 +644,8 @@ pub(super) fn goto(
 
 /// Unify two type variables. This involves finding their roots, and making one
 /// point to the other. Ranks are used to keep chains short.
-pub(super) fn merge_ids(
-    cx: &Context,
+pub(super) fn merge_ids<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     id1: i32,
@@ -651,8 +668,8 @@ pub(super) fn merge_ids(
 
 /// Resolve a type variable to a type. This involves finding its root,
 /// and resolving to that type.
-pub(super) fn resolve_id(
-    cx: &Context,
+pub(super) fn resolve_id<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     id: i32,

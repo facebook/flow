@@ -82,13 +82,13 @@ mod potential_ordinary_refs_search {
     #[derive(Debug)]
     struct FoundImport(ALoc);
 
-    struct Searcher<'a> {
-        cx: &'a Context,
+    struct Searcher<'ctx, 'refs> {
+        cx: &'ctx Context<'ctx>,
         target_name: String,
-        potential_refs: &'a mut ALocMap<Type>,
+        potential_refs: &'refs mut ALocMap<Type>,
     }
 
-    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundImport> for Searcher<'_> {
+    impl<'ast> AstVisitor<'ast, ALoc, (ALoc, Type), &'ast ALoc, FoundImport> for Searcher<'_, '_> {
         fn normalize_loc(loc: &'ast ALoc) -> &'ast ALoc {
             loc
         }
@@ -173,7 +173,7 @@ mod potential_ordinary_refs_search {
                             );
                             use flow_typing_type::type_::*;
                             let props_object =
-                                flow_typing_tvar::mk_where(self.cx, reason.dupe(), |tvar| {
+                                flow_typing_tvar::mk_where(self.cx, reason.dupe(), |_cx, tvar| {
                                     let use_op = UseOp::Op(Arc::new(VirtualRootUseOp::UnknownUse));
                                     let use_t = UseT::new(UseTInner::ReactKitT(
                                         use_op,
@@ -241,8 +241,8 @@ mod potential_ordinary_refs_search {
         }
     }
 
-    pub fn search(
-        cx: &Context,
+    pub fn search<'cx>(
+        cx: &'cx Context<'cx>,
         target_name: &str,
         potential_refs: &mut ALocMap<Type>,
         ast: &ast::Program<ALoc, (ALoc, Type)>,
@@ -257,9 +257,9 @@ mod potential_ordinary_refs_search {
 }
 
 /// Returns `true` iff the given type is a reference to the symbol we are interested in
-fn type_matches_locs(
+fn type_matches_locs<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context,
+    cx: &Context<'cx>,
     ty: &Type,
     prop_def_info: &Vec1<SinglePropertyDefInfo>,
     name: &str,
@@ -298,8 +298,8 @@ fn type_matches_locs(
         .map(|dl| def_loc_matches_locs(&dl, prop_def_info))
 }
 
-fn get_loc_of_def_info(
-    cx: &Context,
+fn get_loc_of_def_info<'cx>(
+    cx: &Context<'cx>,
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     prop_def_info: &Vec1<SinglePropertyDefInfo>,
@@ -330,9 +330,9 @@ fn get_loc_of_def_info(
     result
 }
 
-fn process_prop_refs(
+fn process_prop_refs<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
-    cx: &Context,
+    cx: &Context<'cx>,
     potential_refs: &ALocMap<Type>,
     file_key: &flow_parser::file_key::FileKey,
     prop_def_info: &Vec1<SinglePropertyDefInfo>,
@@ -365,10 +365,10 @@ fn process_prop_refs(
     })
 }
 
-fn ordinary_property_find_refs_in_file(
+fn ordinary_property_find_refs_in_file<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     ast_info: &flow_services_get_def::find_refs_utils::AstInfo,
-    cx: &Context,
+    cx: &'cx Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     file_key: &flow_parser::file_key::FileKey,
@@ -404,10 +404,10 @@ fn ordinary_property_find_refs_in_file(
     )
 }
 
-pub fn property_find_refs_in_file(
+pub fn property_find_refs_in_file<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     ast_info: &flow_services_get_def::find_refs_utils::AstInfo,
-    cx: &Context,
+    cx: &'cx Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     file_key: &flow_parser::file_key::FileKey,
@@ -440,11 +440,11 @@ pub fn property_find_refs_in_file(
     }
 }
 
-pub fn find_local_refs(
+pub fn find_local_refs<'cx>(
     loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
     file_key: &flow_parser::file_key::FileKey,
     ast_info: &flow_services_get_def::find_refs_utils::AstInfo,
-    cx: &Context,
+    cx: &'cx Context<'cx>,
     typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
     obj_to_obj_map: &BTreeMap<Loc, BTreeSet<flow_typing_type::type_::properties::Id>>,
     loc: &Loc,

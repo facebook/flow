@@ -18,7 +18,12 @@
 use flow_common::reason::Reason;
 use flow_typing_context::Context;
 
-pub(crate) fn guard<T, F>(cx: &Context, id: i32, reason_with_pos: (Reason, i32), f: F) -> T
+pub(crate) fn guard<'cx, T, F>(
+    cx: &Context<'cx>,
+    id: i32,
+    reason_with_pos: (Reason, i32),
+    f: F,
+) -> T
 where
     F: FnOnce(i32) -> T,
 {

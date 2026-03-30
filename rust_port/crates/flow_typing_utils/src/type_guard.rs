@@ -49,8 +49,8 @@ use crate::type_env;
 
 // This check to be performed after the function has been checked to ensure all
 // entries have been prepared for type checking.
-fn check_type_guard_consistency(
-    cx: &Context,
+fn check_type_guard_consistency<'cx>(
+    cx: &Context<'cx>,
     reason: &Reason,
     one_sided: bool,
     param_loc: &ALoc,
@@ -126,7 +126,7 @@ fn check_type_guard_consistency(
                                     tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
                                         cx,
                                         tg_reason.dupe(),
-                                        |tvar_reason, tvar_id| {
+                                        |cx, tvar_reason, tvar_id| {
                                             let tvar = flow_typing_type::type_::Tvar::new(
                                                 tvar_reason.dupe(),
                                                 tvar_id as u32,
@@ -171,8 +171,8 @@ fn check_type_guard_consistency(
     }
 }
 
-pub fn check_type_guard(
-    cx: &Context,
+pub fn check_type_guard<'cx>(
+    cx: &Context<'cx>,
     params: &function::Params<ALoc, ALoc>,
     type_guard_val: &TypeGuard,
 ) {
@@ -252,13 +252,13 @@ pub fn check_type_guard(
 
 // All predicates are allowed to contribute to the inferred type guard except
 // for the trivial truthy predicate to avoid things like: `(x: mixed) => x`.
-fn is_inferable_type_guard_predicate(cx: &Context, p: &Predicate) -> bool {
+fn is_inferable_type_guard_predicate<'cx>(cx: &Context<'cx>, p: &Predicate) -> bool {
     struct InferableTypeGuardVisitor;
 
     impl TypeVisitor<Result<(), ()>> for InferableTypeGuardVisitor {
-        fn predicate(
+        fn predicate<'cx>(
             &mut self,
-            cx: &Context,
+            cx: &Context<'cx>,
             acc: Result<(), ()>,
             p: &Predicate,
         ) -> Result<(), ()> {
@@ -273,8 +273,8 @@ fn is_inferable_type_guard_predicate(cx: &Context, p: &Predicate) -> bool {
     visitor.predicate(cx, Ok(()), p).is_ok()
 }
 
-fn is_inferable_type_guard_read(
-    cx: &Context,
+fn is_inferable_type_guard_read<'cx>(
+    cx: &Context<'cx>,
     read: &flow_env_builder::env_api::Read<ALoc>,
 ) -> bool {
     match type_env::read_to_predicate(cx, read) {
@@ -283,9 +283,9 @@ fn is_inferable_type_guard_read(
     }
 }
 
-fn infer_type_guard_from_read<F>(
+fn infer_type_guard_from_read<'cx, F>(
     infer_expr: &F,
-    cx: &Context,
+    cx: &Context<'cx>,
     name: &flow_parser::ast::Identifier<ALoc, ALoc>,
     return_expr: &Expression<ALoc, ALoc>,
     return_reason: &Reason,
@@ -293,7 +293,7 @@ fn infer_type_guard_from_read<F>(
 ) -> Result<Option<TypeGuard>, AbnormalControlFlow>
 where
     F: Fn(
-        &Context,
+        &Context<'cx>,
         &Expression<ALoc, ALoc>,
     ) -> Result<Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow>,
 {
@@ -352,14 +352,14 @@ where
     })
 }
 
-pub fn infer_type_guard<F>(
-    cx: &Context,
+pub fn infer_type_guard<'cx, F>(
+    cx: &Context<'cx>,
     infer_expr: &F,
     params: &function::Params<ALoc, ALoc>,
 ) -> Result<Option<TypeGuard>, AbnormalControlFlow>
 where
     F: Fn(
-        &Context,
+        &Context<'cx>,
         &Expression<ALoc, ALoc>,
     ) -> Result<Expression<ALoc, (ALoc, Type)>, AbnormalControlFlow>,
 {

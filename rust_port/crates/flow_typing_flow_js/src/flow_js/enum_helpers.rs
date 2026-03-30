@@ -14,8 +14,8 @@ use super::helpers::*;
 use super::*;
 
 #[allow(clippy::too_many_arguments)]
-pub(super) fn enum_exhaustive_check(
-    cx: &Context,
+pub(super) fn enum_exhaustive_check<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     check_reason: &Reason,
     enum_reason: &Reason,
@@ -123,8 +123,8 @@ pub(super) fn enum_exhaustive_check(
     rec_flow(cx, trace, (&obj_t, &exhaustive_check))
 }
 
-pub(super) fn enum_exhaustive_check_incomplete(
-    cx: &Context,
+pub(super) fn enum_exhaustive_check_incomplete<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     reason: &Reason,
     trigger: Option<&Type>,

@@ -33,8 +33,8 @@ pub(super) fn ok_unify(unify_any: bool, t: &Type) -> bool {
     }
 }
 
-pub(super) fn __unify(
-    cx: &Context,
+pub(super) fn __unify<'cx>(
+    cx: &Context<'cx>,
     use_op: UseOp,
     unify_cause: UnifyCause,
     unify_any: bool,
@@ -149,8 +149,8 @@ pub(super) fn __unify(
 }
 
 // Should only be called by __unify
-fn __unify_inner(
-    cx: &Context,
+fn __unify_inner<'cx>(
+    cx: &Context<'cx>,
     use_op: UseOp,
     unify_any: bool,
     t1: &Type,
@@ -596,8 +596,8 @@ fn __unify_inner(
     Ok(())
 }
 
-pub(super) fn unify_props(
-    cx: &Context,
+pub(super) fn unify_props<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     x: &Name,
@@ -680,8 +680,8 @@ pub(super) fn unify_props(
 
 // If some property `x` exists in one object but not another, ensure the
 // property is compatible with a dictionary, or error if none.
-pub(super) fn unify_prop_with_dict(
-    cx: &Context,
+pub(super) fn unify_prop_with_dict<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     x: &Name,
@@ -738,8 +738,8 @@ pub(super) fn unify_prop_with_dict(
 // TODO: Unification between concrete types is still implemented as
 // bidirectional flows. This means that the destructuring work is duplicated,
 // and we're missing some opportunities for nested unification.
-pub(super) fn naive_unify(
-    cx: &Context,
+pub(super) fn naive_unify<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     t1: &Type,
@@ -751,8 +751,8 @@ pub(super) fn naive_unify(
 
 // TODO: either ensure that array_unify is the same as array_flow both ways, or
 // document why not.
-pub(super) fn array_unify(
-    cx: &Context,
+pub(super) fn array_unify<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     (ts1, e1, ts2, e2): (&[Type], &Type, &[Type], &Type),

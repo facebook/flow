@@ -21,10 +21,15 @@ pub trait Config {
     type ParamAst;
     type RestAst;
 
-    fn eval_param(cx: &Context, param: &Self::Param)
-    -> Result<Self::ParamAst, AbnormalControlFlow>;
-    fn eval_rest(cx: &Context, rest: &Self::Rest) -> Result<Self::RestAst, AbnormalControlFlow>;
+    fn eval_param<'a>(
+        cx: &Context<'a>,
+        param: &Self::Param,
+    ) -> Result<Self::ParamAst, AbnormalControlFlow>;
+    fn eval_rest<'a>(
+        cx: &Context<'a>,
+        rest: &Self::Rest,
+    ) -> Result<Self::RestAst, AbnormalControlFlow>;
     fn param_type_with_name(param: &Self::Param) -> (ALoc, FlowSmolStr, Type);
     fn rest_type(rest: &Self::Rest) -> Type;
-    fn read_react(cx: &Context, loc: ALoc);
+    fn read_react<'a>(cx: &Context<'a>, loc: ALoc);
 }

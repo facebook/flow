@@ -17,7 +17,6 @@ use dupe::Dupe;
 use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_aloc::LazyALocTable;
-use flow_aloc::LocToALocMapper;
 use flow_aloc::aloc_representation_do_not_use;
 use flow_common::docblock::Docblock;
 use flow_common::flow_import_specifier::FlowImportSpecifier;
@@ -36,7 +35,6 @@ use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::LOC_NONE;
 use flow_parser::loc::Loc;
-use flow_parser::polymorphic_ast_mapper;
 use flow_parser_utils::file_sig::FileSig;
 use flow_type_sig::compact_table::Index;
 use flow_type_sig::type_sig_pack as Pack;
@@ -62,50 +60,52 @@ use once_cell::unsync::Lazy;
 
 use crate::check_cache::CheckCache;
 
-pub struct CheckFileAndCompEnv<'a> {
-    // TODO: FindRefsTypes not ported — find_ref_request parameter and (FindRefsTypes.single_ref list, string) result return omitted
+pub struct CheckFileAndCompEnv {
+    pub make_cx: Box<
+        dyn FnMut(
+                FileKey,
+                BTreeMap<FlowImportSpecifier, ResolvedModule>,
+                Arc<ast::Program<Loc, Loc>>,
+                Arc<Docblock>,
+                LazyALocTable,
+            ) -> Context<'static>
+            + 'static,
+    >,
     pub check_file: Box<
         dyn FnMut(
-                FileKey,
-                BTreeMap<FlowImportSpecifier, ResolvedModule>,
-                Arc<ast::Program<Loc, Loc>>,
+                &Context<'static>,
+                &FileKey,
                 Arc<FileSig>,
-                Arc<Docblock>,
-                LazyALocTable,
-                // FindRefsTypes.request omitted
-            ) -> (Context, ast::Program<ALoc, (ALoc, Type)>)
-            + 'a,
+                &Metadata,
+                &[flow_parser::ast::Comment<Loc>],
+                &ast::Program<ALoc, ALoc>,
+            ) -> ast::Program<ALoc, (ALoc, Type)>
+            + 'static,
     >,
-    pub compute_env: Box<
-        dyn FnMut(
-                FileKey,
-                BTreeMap<FlowImportSpecifier, ResolvedModule>,
-                Arc<ast::Program<Loc, Loc>>,
-                Arc<Docblock>,
-                LazyALocTable,
-            ) -> (Context, ast::Program<ALoc, ALoc>)
-            + 'a,
-    >,
+    pub compute_env: Box<dyn FnMut(&Context<'static>, &ast::Program<ALoc, ALoc>) + 'static>,
 }
 
-fn typed_builtin_module_opt(
-    cx: &Context,
+fn typed_builtin_module_opt<'cx>(
+    cx: &Context<'cx>,
     builtin_module_name: &Userland,
-) -> Option<Rc<dyn Fn() -> Result<ModuleType, Type>>> {
+) -> Option<Rc<dyn Fn(&Context<'cx>, &Context<'cx>) -> Result<ModuleType, Type> + 'cx>> {
     match cx.builtin_module_opt(builtin_module_name) {
         Some((reason, lazy_module)) => {
-            let lazy_module = lazy_module.dupe();
             let s = type_::constraint::forcing_state::ModuleTypeForcingState::of_lazy_module(
                 reason,
-                move || lazy_module,
+                lazy_module,
             );
-            Some(annotation_inference::force_module_type_thunk(cx, s))
+            let thunk = annotation_inference::force_module_type_thunk(s);
+            Some(thunk)
         }
         None => None,
     }
 }
 
-fn unknown_module_t(cx: &Context, module_name: &FlowImportSpecifier) -> ResolvedRequire {
+fn unknown_module_t<'cx>(
+    cx: &Context<'cx>,
+    module_name: &FlowImportSpecifier,
+) -> ResolvedRequire<'cx> {
     match module_name {
         FlowImportSpecifier::Userland(user_land_module_name) => {
             match typed_builtin_module_opt(cx, user_land_module_name) {
@@ -120,11 +120,11 @@ fn unknown_module_t(cx: &Context, module_name: &FlowImportSpecifier) -> Resolved
     }
 }
 
-fn unchecked_module_t(
-    cx: &Context,
+fn unchecked_module_t<'cx>(
+    cx: &Context<'cx>,
     file_key: &FileKey,
     mref: &FlowImportSpecifier,
-) -> ResolvedRequire {
+) -> ResolvedRequire<'cx> {
     let loc = ALoc::of_loc(Loc {
         source: Some(file_key.dupe()),
         ..LOC_NONE
@@ -159,25 +159,25 @@ fn get_lint_severities(
 pub fn mk_check_file(
     shared_mem: Arc<SharedMem>,
     options: Arc<Options>,
-    master_cx: Arc<MasterContext>,
-    cache: Rc<RefCell<CheckCache>>,
-) -> CheckFileAndCompEnv<'static> {
+    master_cx: &MasterContext,
+    cache: Rc<RefCell<CheckCache<'static>>>,
+) -> CheckFileAndCompEnv {
     let base_metadata = metadata_of_options(&options);
 
-    let mk_builtins_fn: Rc<dyn Fn(Context) -> Builtins> = mk_builtins(&base_metadata, master_cx);
+    let mk_builtins_fn = mk_builtins(&base_metadata, master_cx);
 
     /// Create a type representing the exports of a dependency. For checked
     /// dependencies, we will create a "sig tvar" with a lazy thunk that evaluates
     /// to a ModuleT type.
     fn dep_module_t(
-        cx: &Context,
+        cx: &Context<'static>,
         mref: &FlowImportSpecifier,
         resolved_module: Result<Dependency, Option<FlowImportSpecifier>>,
         shared_mem: &Arc<SharedMem>,
         base_metadata: &Metadata,
-        mk_builtins_fn: &Rc<dyn Fn(Context) -> Builtins>,
-        cache: &Rc<RefCell<CheckCache>>,
-    ) -> ResolvedRequire {
+        mk_builtins_fn: &Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>>,
+        cache: &Rc<RefCell<CheckCache<'static>>>,
+    ) -> ResolvedRequire<'static> {
         match resolved_module {
             Err(mapped_name) => {
                 let m = mapped_name.as_ref().unwrap_or(mref);
@@ -195,22 +195,16 @@ pub fn mk_check_file(
                     FileKeyInner::ResourceFile(f) => {
                         let (reason, lazy_module) =
                             type_sig_merge::merge_resource_module_t(cx, dep_file_key.dupe(), f);
-                        ResolvedRequire::TypedModule(
-                                    annotation_inference::force_module_type_thunk(
-                                        cx,
-                                        type_::constraint::forcing_state::ModuleTypeForcingState::of_lazy_module(
-                                            reason,
-                                            move || {
-                                                let mt = Lazy::force(&*lazy_module);
-                                                mt.dupe()
-                                            },
-                                        ),
-                                    ),
-                                )
+                        let thunk = annotation_inference::force_module_type_thunk(
+                            type_::constraint::forcing_state::ModuleTypeForcingState::of_lazy_module(
+                                reason,
+                                lazy_module,
+                            ),
+                        );
+                        ResolvedRequire::TypedModule(thunk)
                     }
                     _ => match shared_mem.get_typed_parse(&dep_file_key) {
                         Some(parse) => ResolvedRequire::TypedModule(sig_module_t(
-                            cx,
                             &dep_file_key,
                             parse,
                             shared_mem,
@@ -226,44 +220,45 @@ pub fn mk_check_file(
     }
 
     fn sig_module_t(
-        cx: &Context,
         file_key: &FileKey,
         parse: TypedParse,
         shared_mem: &Arc<SharedMem>,
         base_metadata: &Metadata,
-        mk_builtins_fn: &Rc<dyn Fn(Context) -> Builtins>,
-        cache: &Rc<RefCell<CheckCache>>,
-    ) -> Rc<dyn Fn() -> Result<ModuleType, Type>> {
+        mk_builtins_fn: &Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>>,
+        cache: &Rc<RefCell<CheckCache<'static>>>,
+    ) -> Rc<dyn Fn(&Context<'static>, &Context<'static>) -> Result<ModuleType, Type> + 'static>
+    {
         let file_key_for_create = file_key.dupe();
         let parse_for_create = parse.dupe();
         let shared_mem_for_create = shared_mem.dupe();
         let base_metadata_for_create = base_metadata.clone();
         let mk_builtins_for_create = mk_builtins_fn.dupe();
         let cache_for_create = cache.dupe();
-        let create_file = move |ccx: Rc<ComponentT>| -> type_sig_merge::File {
-            dep_file(
-                &file_key_for_create,
-                parse_for_create.dupe(),
-                ccx,
-                &shared_mem_for_create,
-                &base_metadata_for_create,
-                &mk_builtins_for_create,
-                &cache_for_create,
-            )
-        };
-
-        cx.add_reachable_dep(file_key.dupe());
-
+        let cache_for_find = cache.dupe();
+        let file_key_for_closure = file_key.dupe();
         let parse_for_leader = parse.dupe();
         let leader: Lazy<FileKey, Box<dyn FnOnce() -> FileKey>> =
             Lazy::new(Box::new(move || parse_for_leader.leader_unsafe()));
-
-        let file = cache.borrow_mut().find_or_create(
-            || Lazy::force(&leader).dupe(),
-            create_file,
-            file_key.dupe(),
-        );
-        copy_into(cx, &file.cx, file.exports.dupe())
+        Rc::new(move |cx: &Context<'static>, _dst_cx: &Context<'static>| {
+            let create_file = |ccx: Rc<ComponentT<'static>>| {
+                dep_file(
+                    &file_key_for_create,
+                    parse_for_create.dupe(),
+                    ccx,
+                    &shared_mem_for_create,
+                    &base_metadata_for_create,
+                    &mk_builtins_for_create,
+                    &cache_for_create,
+                )
+            };
+            cx.add_reachable_dep(file_key_for_closure.dupe());
+            let (file, dep_cx) = cache_for_find.borrow_mut().find_or_create(
+                || Lazy::force(&leader).dupe(),
+                create_file,
+                file_key_for_closure.dupe(),
+            );
+            copy_into(&dep_cx, cx, file.exports.as_ref())
+        })
     }
 
     /// Create a Type_sig_merge.file record for a dependency, which we use to
@@ -273,12 +268,12 @@ pub fn mk_check_file(
     fn dep_file(
         file_key: &FileKey,
         parse: TypedParse,
-        ccx: Rc<ComponentT>,
+        ccx: Rc<ComponentT<'static>>,
         shared_mem: &Arc<SharedMem>,
         base_metadata: &Metadata,
-        mk_builtins_fn: &Rc<dyn Fn(Context) -> Builtins>,
-        cache: &Rc<RefCell<CheckCache>>,
-    ) -> type_sig_merge::File {
+        mk_builtins_fn: &Rc<dyn Fn(&Context<'static>) -> Builtins<'static, Context<'static>>>,
+        cache: &Rc<RefCell<CheckCache<'static>>>,
+    ) -> (type_sig_merge::File<'static>, Context<'static>) {
         let source = Some(file_key.dupe());
 
         let aloc_table = {
@@ -316,7 +311,13 @@ pub fn mk_check_file(
             RefCell<
                 BTreeMap<
                     FlowImportSpecifier,
-                    Rc<Lazy<ResolvedRequire, Box<dyn FnOnce() -> ResolvedRequire>>>,
+                    Rc<
+                        flow_lazy::Lazy<
+                            Context<'static>,
+                            ResolvedRequire<'static>,
+                            Box<dyn FnOnce(&Context<'static>) -> ResolvedRequire<'static>>,
+                        >,
+                    >,
                 >,
             >,
         > = Rc::new(RefCell::new(BTreeMap::new()));
@@ -325,17 +326,18 @@ pub fn mk_check_file(
             let docblock = parse.docblock_unsafe(file_key);
             let metadata = docblock_overrides(&docblock, file_key, base_metadata.clone());
             let resolved_requires_for_resolve = resolved_requires.dupe();
-            let resolve_require: Rc<dyn Fn(&FlowImportSpecifier) -> ResolvedRequire> =
-                Rc::new(move |mref: &FlowImportSpecifier| {
-                    let rr = resolved_requires_for_resolve.borrow();
-                    let lazy_val = rr.get(mref).unwrap_or_else(|| {
-                        panic!(
-                            "dep_file resolve_require: module reference not found: {:?}",
-                            mref
-                        )
-                    });
-                    Lazy::force(lazy_val).dupe()
+            let resolve_require: Rc<
+                dyn Fn(&Context<'static>, &FlowImportSpecifier) -> ResolvedRequire<'static>,
+            > = Rc::new(move |cx: &Context, mref: &FlowImportSpecifier| {
+                let rr = resolved_requires_for_resolve.borrow();
+                let lazy_val = rr.get(mref).unwrap_or_else(|| {
+                    panic!(
+                        "dep_file resolve_require: module reference not found: {:?}",
+                        mref
+                    )
                 });
+                lazy_val.get_forced(cx).dupe()
+            });
             Context::make(
                 ccx,
                 metadata,
@@ -353,19 +355,15 @@ pub fn mk_check_file(
                 let key = mref.dupe();
                 let mref = mref.dupe();
                 let m = m.to_result();
-                let weak_cx = cx.downgrade();
                 let shared_mem = shared_mem.dupe();
                 let base_metadata = base_metadata.clone();
                 let mk_builtins_fn = mk_builtins_fn.dupe();
                 let cache = cache.dupe();
                 rr.insert(
                     key,
-                    Rc::new(Lazy::new(Box::new(move || {
-                        let cx = weak_cx
-                            .upgrade()
-                            .expect("Context dropped before resolved_require forced");
+                    Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context| {
                         dep_module_t(
-                            &cx,
+                            cx,
                             &mref,
                             m,
                             &shared_mem,
@@ -397,7 +395,8 @@ pub fn mk_check_file(
         // File → Lazy closures (local_defs, remote_refs, etc.) → file_cell → File
         // With Weak, file_cell does not prevent File from being freed when all
         // strong references are dropped.
-        let file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner>>> = Rc::new(OnceCell::new());
+        let file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner<'static>>>> =
+            Rc::new(OnceCell::new());
 
         let file_loc = ALoc::of_loc(Loc {
             source: Some(file_key.dupe()),
@@ -408,275 +407,322 @@ pub fn mk_check_file(
         let file_cell_for_exports = file_cell.dupe();
         let aloc_for_exports = aloc.dupe();
         let module_kind = type_sig.module_kind.clone();
-        let s = type_::constraint::forcing_state::ModuleTypeForcingState::of_lazy_module(
-            reason_for_forcing,
-            move || {
-                let type_export = |te: &Pack::TypeExport<Index<Loc>>| -> Rc<
-                    Lazy<type_::NamedSymbol, Box<dyn FnOnce() -> type_::NamedSymbol>>,
-                > {
+        let lazy_module: Rc<
+            flow_lazy::Lazy<
+                Context<'static>,
+                ModuleType,
+                Box<dyn FnOnce(&Context<'static>) -> ModuleType + 'static>,
+            >,
+        > = Rc::new(flow_lazy::Lazy::new(Box::new(move |src_cx| {
+            let type_export =
+                |te: &Pack::TypeExport<Index<Loc>>| -> type_sig_merge::LazyExport<'static> {
                     let te = te.clone();
                     let file_cell = file_cell_for_exports.dupe();
                     let reason = reason.dupe();
                     let aloc = aloc_for_exports.dupe();
-                    Rc::new(Lazy::new(Box::new(move || {
-                        let te = te.map(&|i| (*aloc)(i));
-                        let file = type_sig_merge::File::from_weak(
-                            file_cell.get().expect("file_rec not initialized"),
-                        );
-                        type_sig_merge::merge_type_export(&file, reason, &te)
-                    })))
+                    Rc::new(flow_lazy::Lazy::new(Box::new(
+                        move |cx: &Context<'static>| {
+                            let te = te.map(&|i| (*aloc)(i));
+                            let file = type_sig_merge::File::from_weak(
+                                file_cell.get().expect("file_rec not initialized"),
+                            );
+                            type_sig_merge::merge_type_export(cx, &file, reason, &te)
+                        },
+                    )))
                 };
-                let cjs_exports_fn = |packed: &Pack::Packed<Index<Loc>>| -> Rc<
-                    Lazy<(Option<ALoc>, Type), Box<dyn FnOnce() -> (Option<ALoc>, Type)>>,
-                > {
+            let cjs_exports_fn =
+                |packed: &Pack::Packed<Index<Loc>>| -> type_sig_merge::LazyCjsExport<'static> {
                     let packed = packed.clone();
                     let file_cell = file_cell_for_exports.dupe();
                     let aloc = aloc_for_exports.dupe();
-                    Rc::new(Lazy::new(Box::new(move || {
-                        let packed = packed.map(&|i| (*aloc)(i));
-                        let file = type_sig_merge::File::from_weak(
-                            file_cell.get().expect("file_rec not initialized"),
-                        );
-                        type_sig_merge::merge_cjs_export_t(&file, &packed)
-                    })))
+                    Rc::new(flow_lazy::Lazy::new(Box::new(
+                        move |cx: &Context<'static>| {
+                            let packed = packed.map(&|i| (*aloc)(i));
+                            let file = type_sig_merge::File::from_weak(
+                                file_cell.get().expect("file_rec not initialized"),
+                            );
+                            type_sig_merge::merge_cjs_export_t(cx, &file, &packed)
+                        },
+                    )))
                 };
-                let es_export = |export: &Pack::Export<Index<Loc>>| -> Rc<
-                    Lazy<type_::NamedSymbol, Box<dyn FnOnce() -> type_::NamedSymbol>>,
-                > {
+            let es_export =
+                |export: &Pack::Export<Index<Loc>>| -> type_sig_merge::LazyExport<'static> {
                     let export = export.clone();
                     let file_cell = file_cell_for_exports.dupe();
                     let aloc = aloc_for_exports.dupe();
-                    Rc::new(Lazy::new(Box::new(move || {
-                        let export = export.map(&|i| (*aloc)(i));
-                        let file = type_sig_merge::File::from_weak(
-                            file_cell.get().expect("file_rec not initialized"),
-                        );
-                        type_sig_merge::merge_export(&file, &export)
-                    })))
+                    Rc::new(flow_lazy::Lazy::new(Box::new(
+                        move |cx: &Context<'static>| {
+                            let export = export.map(&|i| (*aloc)(i));
+                            let file = type_sig_merge::File::from_weak(
+                                file_cell.get().expect("file_rec not initialized"),
+                            );
+                            type_sig_merge::merge_export(cx, &file, &export)
+                        },
+                    )))
                 };
-                let cjs_module = |type_exports_arr: &[Pack::TypeExport<Index<Loc>>],
-                                  exports_opt: &Option<Pack::Packed<Index<Loc>>>,
-                                  info: &Pack::CJSModuleInfo<Index<Loc>>|
-                 -> Exports {
-                    let Pack::CJSModuleInfo {
-                        type_export_keys,
-                        type_stars,
-                        strict,
-                        platform_availability_set,
-                    } = &info.map(&|i| (*aloc_for_exports)(i));
+            let cjs_module = |type_exports_arr: &[Pack::TypeExport<Index<Loc>>],
+                              exports_opt: &Option<Pack::Packed<Index<Loc>>>,
+                              info: &Pack::CJSModuleInfo<Index<Loc>>|
+             -> Exports<'static> {
+                let Pack::CJSModuleInfo {
+                    type_export_keys,
+                    type_stars,
+                    strict,
+                    platform_availability_set,
+                } = &info.map(&|i| (*aloc_for_exports)(i));
 
-                    assert_eq!(
-                        type_export_keys.len(),
-                        type_exports_arr.len(),
-                        "type_export_keys and type_exports length mismatch"
-                    );
-                    let type_exports: BTreeMap<
-                        FlowSmolStr,
-                        Rc<Lazy<type_::NamedSymbol, Box<dyn FnOnce() -> type_::NamedSymbol>>>,
-                    > = type_export_keys
+                assert_eq!(
+                    type_export_keys.len(),
+                    type_exports_arr.len(),
+                    "type_export_keys and type_exports length mismatch"
+                );
+                let type_exports: BTreeMap<FlowSmolStr, type_sig_merge::LazyExport<'static>> =
+                    type_export_keys
                         .iter()
                         .zip(type_exports_arr.iter())
                         .map(|(name, te)| (name.dupe(), type_export(te)))
                         .collect();
 
-                    let exports: Option<
-                        Rc<Lazy<(Option<ALoc>, Type), Box<dyn FnOnce() -> (Option<ALoc>, Type)>>>,
-                    > = exports_opt.as_ref().map(cjs_exports_fn);
+                let exports: Option<type_sig_merge::LazyCjsExport<'static>> =
+                    exports_opt.as_ref().map(cjs_exports_fn);
 
-                    Exports::CJSExports {
-                        type_exports,
-                        exports,
-                        type_stars: type_stars.clone(),
-                        strict: *strict,
-                        platform_availability_set: platform_availability_set.clone(),
-                    }
-                };
-                let es_module = |type_exports_arr: &[Pack::TypeExport<Index<Loc>>],
-                                 exports_arr: &[Pack::Export<Index<Loc>>],
-                                 info: &Pack::ESModuleInfo<Index<Loc>>|
-                 -> Exports {
-                    let Pack::ESModuleInfo {
-                        type_export_keys,
-                        type_stars,
-                        export_keys,
-                        stars,
-                        strict,
-                        platform_availability_set,
-                    } = &info.map(&|i| (*aloc_for_exports)(i));
+                Exports::CJSExports {
+                    type_exports,
+                    exports,
+                    type_stars: type_stars.clone(),
+                    strict: *strict,
+                    platform_availability_set: platform_availability_set.clone(),
+                }
+            };
+            let es_module = |type_exports_arr: &[Pack::TypeExport<Index<Loc>>],
+                             exports_arr: &[Pack::Export<Index<Loc>>],
+                             info: &Pack::ESModuleInfo<Index<Loc>>|
+             -> Exports<'static> {
+                let Pack::ESModuleInfo {
+                    type_export_keys,
+                    type_stars,
+                    export_keys,
+                    stars,
+                    strict,
+                    platform_availability_set,
+                } = &info.map(&|i| (*aloc_for_exports)(i));
 
-                    assert_eq!(
-                        type_export_keys.len(),
-                        type_exports_arr.len(),
-                        "type_export_keys and type_exports length mismatch"
-                    );
-                    let type_exports: BTreeMap<
-                        FlowSmolStr,
-                        Rc<Lazy<type_::NamedSymbol, Box<dyn FnOnce() -> type_::NamedSymbol>>>,
-                    > = type_export_keys
+                assert_eq!(
+                    type_export_keys.len(),
+                    type_exports_arr.len(),
+                    "type_export_keys and type_exports length mismatch"
+                );
+                let type_exports: BTreeMap<FlowSmolStr, type_sig_merge::LazyExport<'static>> =
+                    type_export_keys
                         .iter()
                         .zip(type_exports_arr.iter())
                         .map(|(name, te)| (name.dupe(), type_export(te)))
                         .collect();
 
-                    assert_eq!(
-                        export_keys.len(),
-                        exports_arr.len(),
-                        "export_keys and exports length mismatch"
-                    );
-                    let exports: BTreeMap<
-                        FlowSmolStr,
-                        Rc<Lazy<type_::NamedSymbol, Box<dyn FnOnce() -> type_::NamedSymbol>>>,
-                    > = export_keys
+                assert_eq!(
+                    export_keys.len(),
+                    exports_arr.len(),
+                    "export_keys and exports length mismatch"
+                );
+                let exports: BTreeMap<FlowSmolStr, type_sig_merge::LazyExport<'static>> =
+                    export_keys
                         .iter()
                         .zip(exports_arr.iter())
                         .map(|(name, export)| (name.dupe(), es_export(export)))
                         .collect();
 
-                    Exports::ESExports {
-                        type_exports,
-                        exports,
-                        type_stars: type_stars.clone(),
-                        stars: stars.clone(),
-                        strict: *strict,
-                        platform_availability_set: platform_availability_set.clone(),
-                    }
-                };
-                let exports_info = match &module_kind {
-                    Pack::ModuleKind::CJSModule {
-                        type_exports,
-                        exports,
-                        info,
-                    } => cjs_module(type_exports, exports, info),
-                    Pack::ModuleKind::ESModule {
-                        type_exports,
-                        exports,
-                        info,
-                    } => es_module(type_exports, exports, info),
-                };
-                let file = type_sig_merge::File::from_weak(
-                    file_cell_for_exports
-                        .get()
-                        .expect("file_rec not initialized"),
-                );
-                let module_type_lazy = type_sig_merge::merge_exports(&file, reason, exports_info);
-                //   |> Lazy.force
-                let mt = Lazy::force(&*module_type_lazy);
-                mt.dupe()
-            },
+                Exports::ESExports {
+                    type_exports,
+                    exports,
+                    type_stars: type_stars.clone(),
+                    stars: stars.clone(),
+                    strict: *strict,
+                    platform_availability_set: platform_availability_set.clone(),
+                }
+            };
+            let exports_info = match &module_kind {
+                Pack::ModuleKind::CJSModule {
+                    type_exports,
+                    exports,
+                    info,
+                } => cjs_module(type_exports, exports, info),
+                Pack::ModuleKind::ESModule {
+                    type_exports,
+                    exports,
+                    info,
+                } => es_module(type_exports, exports, info),
+            };
+            let file = type_sig_merge::File::from_weak(
+                file_cell_for_exports
+                    .get()
+                    .expect("file_rec not initialized"),
+            );
+            let module_type_lazy =
+                type_sig_merge::merge_exports(src_cx, &file, reason, exports_info);
+            module_type_lazy.get_forced(src_cx).dupe()
+        })));
+        let s = type_::constraint::forcing_state::ModuleTypeForcingState::of_lazy_module(
+            reason_for_forcing,
+            lazy_module,
         );
-        let exports = annotation_inference::force_module_type_thunk(&cx, s);
+        let thunk = annotation_inference::force_module_type_thunk(s);
+        let exports: Rc<
+            dyn Fn(&Context<'static>, &Context<'static>) -> Result<type_::ModuleType, Type>
+                + 'static,
+        > = thunk;
 
-        let local_def = |file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner>>>,
+        let local_def = |file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner<'static>>>>,
                          def: &Pack::PackedDef<Index<Loc>>| {
-            let cx = cx.dupe();
             let aloc = aloc.dupe();
             let file_cell = file_cell;
             let def = def.clone();
-            Rc::new(Lazy::new(Box::new(move || {
-                let def = def.map(
-                    &mut (),
-                    |_, loc: &Index<Loc>| (*aloc)(loc),
-                    |_, t: &Pack::Packed<Index<Loc>>| t.map(&|i| (*aloc)(i)),
-                );
-                let loc = def.id_loc();
-                let name = def.name().dupe();
-                let reason = type_sig_merge::def_reason(&def);
-                let type_ = |const_decl: bool,
-                             file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner>>>,
-                             cx: Context,
-                             reason: reason::Reason,
-                             def: Pack::PackedDef<ALoc>|
-                 -> Type {
-                    let reason_for_tvar = reason.dupe();
-                    let resolved: Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>> =
-                        Rc::new(Lazy::new(Box::new(move || {
-                            let file = type_sig_merge::File::from_weak(
-                                file_cell.get().expect("file_rec not initialized"),
-                            );
-                            type_sig_merge::merge_def(&file, reason, &def, const_decl)
-                        })));
-                    annotation_inference::mk_sig_tvar(&cx, reason_for_tvar, resolved)
-                };
-                let file_cell2 = file_cell.dupe();
-                let cx2 = cx.dupe();
-                let reason2 = reason.dupe();
-                let def2 = def.clone();
-                (
-                    loc,
-                    name,
-                    Rc::new(Lazy::new(
-                        Box::new(move || type_(false, file_cell, cx, reason, def))
-                            as Box<dyn FnOnce() -> Type>,
-                    )),
-                    Rc::new(Lazy::new(
-                        Box::new(move || type_(true, file_cell2, cx2, reason2, def2))
-                            as Box<dyn FnOnce() -> Type>,
-                    )),
-                )
-            })
-                as Box<
-                    dyn FnOnce() -> (
-                        ALoc,
-                        FlowSmolStr,
-                        Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
-                        Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>>,
-                    ),
-                >))
+            Rc::new(flow_lazy::Lazy::new(
+                Box::new(move |_cx: &Context<'static>| {
+                    let def = def.map(
+                        &mut (),
+                        |_, loc: &Index<Loc>| (*aloc)(loc),
+                        |_, t: &Pack::Packed<Index<Loc>>| t.map(&|i| (*aloc)(i)),
+                    );
+                    let loc = def.id_loc();
+                    let name = def.name().dupe();
+                    let reason = type_sig_merge::def_reason(&def);
+                    let type_ =
+                        |const_decl: bool,
+                         file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner<'static>>>>,
+                         cx: &Context<'static>,
+                         reason: reason::Reason,
+                         def: Pack::PackedDef<ALoc>|
+                         -> Type {
+                            let reason_for_tvar = reason.dupe();
+                            let file_cell2 = file_cell.dupe();
+                            let reason2 = reason.dupe();
+                            let def2 = def.clone();
+                            let resolved: Rc<
+                                flow_lazy::Lazy<
+                                    Context<'static>,
+                                    Type,
+                                    Box<dyn FnOnce(&Context<'static>) -> Type + 'static>,
+                                >,
+                            > = Rc::new(flow_lazy::Lazy::new(Box::new(
+                                move |cx: &Context<'static>| {
+                                    let file = type_sig_merge::File::from_weak(
+                                        file_cell2.get().expect("file_rec not initialized"),
+                                    );
+                                    type_sig_merge::merge_def(cx, &file, reason2, &def2, const_decl)
+                                },
+                            )));
+                            annotation_inference::mk_sig_tvar(cx, reason_for_tvar, resolved)
+                        };
+                    let file_cell2 = file_cell.dupe();
+                    let reason2 = reason.dupe();
+                    let def2 = def.clone();
+                    (
+                        loc,
+                        name,
+                        Rc::new(flow_lazy::Lazy::new(
+                            Box::new(move |cx: &Context<'static>| {
+                                type_(false, file_cell, cx, reason, def)
+                            })
+                                as Box<dyn FnOnce(&Context<'static>) -> Type + 'static>,
+                        )),
+                        Rc::new(flow_lazy::Lazy::new(
+                            Box::new(move |cx: &Context<'static>| {
+                                type_(true, file_cell2, cx, reason2, def2)
+                            })
+                                as Box<dyn FnOnce(&Context<'static>) -> Type + 'static>,
+                        )),
+                    )
+                })
+                    as Box<
+                        dyn FnOnce(
+                                &Context<'static>,
+                            ) -> (
+                                ALoc,
+                                FlowSmolStr,
+                                Rc<
+                                    flow_lazy::Lazy<
+                                        Context<'static>,
+                                        Type,
+                                        Box<dyn FnOnce(&Context<'static>) -> Type + 'static>,
+                                    >,
+                                >,
+                                Rc<
+                                    flow_lazy::Lazy<
+                                        Context<'static>,
+                                        Type,
+                                        Box<dyn FnOnce(&Context<'static>) -> Type + 'static>,
+                                    >,
+                                >,
+                            ) + 'static,
+                    >,
+            ))
         };
 
-        let remote_ref = |file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner>>>,
+        let remote_ref = |file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner<'static>>>>,
                           rref: &Pack::RemoteRef<Index<Loc>>| {
-            let cx = cx.dupe();
             let aloc = aloc.dupe();
             let file_cell = file_cell;
             let rref = rref.clone();
-            Rc::new(Lazy::new(Box::new(move || {
-                let remote_ref = rref.map(&|i| (*aloc)(i));
-                let loc = remote_ref.loc().dupe();
-                let name = remote_ref.name().dupe();
-                let reason = type_sig_merge::remote_ref_reason(&remote_ref);
-                let file_cell2 = file_cell.dupe();
-                let reason2 = reason.dupe();
-                let remote_ref2 = remote_ref.clone();
-                let resolved: Rc<Lazy<Type, Box<dyn FnOnce() -> Type>>> =
-                    Rc::new(Lazy::new(Box::new(move || {
-                        let file = type_sig_merge::File::from_weak(
-                            file_cell2.get().expect("file_rec not initialized"),
-                        );
-                        type_sig_merge::merge_remote_ref(&file, reason2, &remote_ref2)
-                    })));
-                let t = annotation_inference::mk_sig_tvar(&cx, reason.dupe(), resolved);
-                (loc, name, t)
-            })
-                as Box<dyn FnOnce() -> (ALoc, FlowSmolStr, Type)>))
+            Rc::new(flow_lazy::Lazy::new(
+                Box::new(move |cx: &Context<'static>| {
+                    let remote_ref = rref.map(&|i| (*aloc)(i));
+                    let loc = remote_ref.loc().dupe();
+                    let name = remote_ref.name().dupe();
+                    let reason = type_sig_merge::remote_ref_reason(&remote_ref);
+                    let file_cell2 = file_cell.dupe();
+                    let reason2 = reason.dupe();
+                    let remote_ref2 = remote_ref.clone();
+                    let resolved: Rc<
+                        flow_lazy::Lazy<
+                            Context<'static>,
+                            Type,
+                            Box<dyn FnOnce(&Context<'static>) -> Type + 'static>,
+                        >,
+                    > = Rc::new(flow_lazy::Lazy::new(Box::new(
+                        move |cx: &Context<'static>| {
+                            let file = type_sig_merge::File::from_weak(
+                                file_cell2.get().expect("file_rec not initialized"),
+                            );
+                            type_sig_merge::merge_remote_ref(cx, &file, reason2, &remote_ref2)
+                        },
+                    )));
+                    let t = annotation_inference::mk_sig_tvar(cx, reason.dupe(), resolved);
+                    (loc, name, t)
+                })
+                    as Box<dyn FnOnce(&Context<'static>) -> (ALoc, FlowSmolStr, Type) + 'static>,
+            ))
         };
 
-        let pattern_def = |file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner>>>,
+        let pattern_def = |file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner<'static>>>>,
                            def: &Pack::Packed<Index<Loc>>| {
             let aloc = aloc.dupe();
             let file_cell = file_cell;
             let def = def.clone();
-            Rc::new(Lazy::new(Box::new(move || {
-                let def = def.map(&|i| (*aloc)(i));
-                let file = type_sig_merge::File::from_weak(
-                    file_cell.get().expect("file_rec not initialized"),
-                );
-                type_sig_merge::merge(FlowOrdMap::new(), &file, &def)
-            }) as Box<dyn FnOnce() -> Type>))
+            Rc::new(flow_lazy::Lazy::new(
+                Box::new(move |cx: &Context<'static>| {
+                    let def = def.map(&|i| (*aloc)(i));
+                    let file = type_sig_merge::File::from_weak(
+                        file_cell.get().expect("file_rec not initialized"),
+                    );
+                    type_sig_merge::merge(FlowOrdMap::new(), cx, &file, &def)
+                }) as Box<dyn FnOnce(&Context<'static>) -> Type + 'static>,
+            ))
         };
 
-        let pattern = |file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner>>>,
+        let pattern = |file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner<'static>>>>,
                        p: &Pack::Pattern<Index<Loc>>| {
             let aloc = aloc.dupe();
             let file_cell = file_cell;
             let p = p.clone();
-            Rc::new(Lazy::new(Box::new(move || {
-                let p = p.map(&|i| (*aloc)(i));
-                let file = type_sig_merge::File::from_weak(
-                    file_cell.get().expect("file_rec not initialized"),
-                );
-                type_sig_merge::merge_pattern(&file, &p)
-            }) as Box<dyn FnOnce() -> Type>))
+            Rc::new(flow_lazy::Lazy::new(
+                Box::new(move |cx: &Context<'static>| {
+                    let p = p.map(&|i| (*aloc)(i));
+                    let file = type_sig_merge::File::from_weak(
+                        file_cell.get().expect("file_rec not initialized"),
+                    );
+                    type_sig_merge::merge_pattern(cx, &file, &p)
+                }) as Box<dyn FnOnce(&Context<'static>) -> Type + 'static>,
+            ))
         };
 
         let local_defs = {
@@ -706,7 +752,6 @@ pub fn mk_check_file(
         };
 
         let file = type_sig_merge::File::new(
-            cx,
             dependencies,
             exports,
             local_defs,
@@ -717,12 +762,12 @@ pub fn mk_check_file(
         file_cell
             .set(file.downgrade())
             .unwrap_or_else(|_| panic!("file_rec should only be set once"));
-        file
+        (file, cx)
     }
 
     let options = options.dupe();
 
-    let check_file = {
+    let make_cx = {
         let shared_mem = shared_mem.dupe();
         let base_metadata = base_metadata.clone();
         let mk_builtins_fn = mk_builtins_fn.dupe();
@@ -730,32 +775,27 @@ pub fn mk_check_file(
         Box::new(
             move |file_key: FileKey,
                   resolved_modules: BTreeMap<FlowImportSpecifier, ResolvedModule>,
-                  ast: Arc<ast::Program<Loc, Loc>>,
-                  file_sig: Arc<FileSig>,
+                  _ast: Arc<ast::Program<Loc, Loc>>,
                   docblock: Arc<Docblock>,
                   aloc_table: LazyALocTable| {
-                let ast::Program {
-                    all_comments: comments,
-                    ..
-                } = ast.as_ref();
-                let mut mapper = LocToALocMapper;
-                let Ok(aloc_ast) = polymorphic_ast_mapper::program(&mut mapper, &ast);
                 let ccx = Rc::new(make_ccx());
                 let metadata = docblock_overrides(&docblock, &file_key, base_metadata.clone());
-                let resolved_requires: Rc<RefCell<HashMap<FlowImportSpecifier, ResolvedRequire>>> =
-                    Rc::new(RefCell::new(HashMap::new()));
+                let resolved_requires: Rc<
+                    RefCell<HashMap<FlowImportSpecifier, ResolvedRequire<'static>>>,
+                > = Rc::new(RefCell::new(HashMap::new()));
                 let resolved_requires_for_resolve = resolved_requires.dupe();
-                let resolve_require: Rc<dyn Fn(&FlowImportSpecifier) -> ResolvedRequire> =
-                    Rc::new(move |mref: &FlowImportSpecifier| {
-                        resolved_requires_for_resolve
-                            .borrow()
-                            .get(mref)
-                            .unwrap_or_else(|| {
-                                panic!("resolve_require: module reference not found: {:?}", mref)
-                            })
-                            .dupe()
-                    });
-                let cx = Context::make(
+                let resolve_require: Rc<
+                    dyn Fn(&Context<'static>, &FlowImportSpecifier) -> ResolvedRequire<'static>,
+                > = Rc::new(move |_cx: &Context<'static>, mref: &FlowImportSpecifier| {
+                    resolved_requires_for_resolve
+                        .borrow()
+                        .get(mref)
+                        .unwrap_or_else(|| {
+                            panic!("resolve_require: module reference not found: {:?}", mref)
+                        })
+                        .dupe()
+                });
+                let cx: Context<'static> = Context::make(
                     ccx,
                     metadata.clone(),
                     file_key.dupe(),
@@ -778,77 +818,47 @@ pub fn mk_check_file(
                         rr.insert(mref.dupe(), r);
                     }
                 }
-                annotation_inference::set_dst_cx(&cx);
-                // TODO: Obj_to_obj_hook not ported
-                let lint_severities = get_lint_severities(&metadata, &options);
-                let typed_ast = type_inference::infer_file(
+                cx
+            },
+        )
+    };
+
+    let check_file = {
+        let options = options.dupe();
+        Box::new(
+            move |cx: &Context<'static>,
+                  file_key: &FileKey,
+                  file_sig: Arc<FileSig>,
+                  metadata: &Metadata,
+                  comments: &[flow_parser::ast::Comment<Loc>],
+                  aloc_ast: &ast::Program<ALoc, ALoc>| {
+                // Set merge_dst_cx to self to establish the chain for copy_into:
+                // nested copy_into calls read this to find the ultimate error
+                // destination (the file being checked).
+                cx.set_merge_dst_cx(cx);
+                let lint_severities = get_lint_severities(metadata, &options);
+                type_inference::infer_file(
                     &lint_severities,
-                    &cx,
-                    &file_key,
+                    cx,
+                    file_key,
                     file_sig,
-                    &metadata,
+                    metadata,
                     comments,
-                    &aloc_ast,
-                );
-                // TODO: FindRefs_js not ported
-                (cx, typed_ast)
+                    aloc_ast,
+                )
             },
         )
     };
 
     let compute_env = Box::new(
-        move |file_key: FileKey,
-              resolved_modules: BTreeMap<FlowImportSpecifier, ResolvedModule>,
-              ast: Arc<ast::Program<Loc, Loc>>,
-              docblock: Arc<Docblock>,
-              aloc_table: LazyALocTable| {
-            let mut mapper = LocToALocMapper;
-            let Ok(aloc_ast) = polymorphic_ast_mapper::program(&mut mapper, &ast);
-            let ccx = Rc::new(make_ccx());
-            let metadata = docblock_overrides(&docblock, &file_key, base_metadata.clone());
-            let resolved_requires: Rc<RefCell<BTreeMap<FlowImportSpecifier, ResolvedRequire>>> =
-                Rc::new(RefCell::new(BTreeMap::new()));
-            let resolved_requires_for_resolve = resolved_requires.dupe();
-            let resolve_require: Rc<dyn Fn(&FlowImportSpecifier) -> ResolvedRequire> =
-                Rc::new(move |mref: &FlowImportSpecifier| {
-                    resolved_requires_for_resolve
-                        .borrow()
-                        .get(mref)
-                        .unwrap_or_else(|| {
-                            panic!("resolve_require: module reference not found: {:?}", mref)
-                        })
-                        .dupe()
-                });
-            let cx = Context::make(
-                ccx,
-                metadata,
-                file_key.dupe(),
-                aloc_table,
-                resolve_require,
-                mk_builtins_fn.dupe(),
-            );
-            {
-                let mut rr = resolved_requires.borrow_mut();
-                for (mref, m) in &resolved_modules {
-                    let r = dep_module_t(
-                        &cx,
-                        mref,
-                        m.to_result(),
-                        &shared_mem,
-                        &base_metadata,
-                        &mk_builtins_fn,
-                        &cache,
-                    );
-                    rr.insert(mref.dupe(), r);
-                }
-            }
-            annotation_inference::set_dst_cx(&cx);
-            type_inference::initialize_env(&cx, None, &aloc_ast);
-            (cx, aloc_ast)
+        move |cx: &Context<'static>, aloc_ast: &ast::Program<ALoc, ALoc>| {
+            cx.set_merge_dst_cx(cx);
+            type_inference::initialize_env(cx, None, aloc_ast);
         },
     );
 
     CheckFileAndCompEnv {
+        make_cx,
         check_file,
         compute_env,
     }

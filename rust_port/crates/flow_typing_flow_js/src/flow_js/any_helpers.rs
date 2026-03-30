@@ -16,7 +16,7 @@ use super::*;
 /// the any-expanded type and the original will handle the any-propagation to any relevant positions,
 /// some of which may invoke this function when they hit the any propagation functions in the
 /// recusive call to __flow.
-pub(super) fn expand_any(_cx: &Context, any: &Type, t: &Type) -> Type {
+pub(super) fn expand_any<'cx>(_cx: &Context<'cx>, any: &Type, t: &Type) -> Type {
     let only_any = |_: &Type| any.dupe();
     //   match t with
     match t.deref() {
@@ -129,8 +129,8 @@ pub(super) fn any_prop_to_function(
     covariant_flow(use_op, &funtype.return_t)
 }
 
-pub(super) fn invariant_any_propagation_flow(
-    cx: &Context,
+pub(super) fn invariant_any_propagation_flow<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: UseOp,
     any: &Type,
@@ -139,8 +139,8 @@ pub(super) fn invariant_any_propagation_flow(
     rec_unify(cx, trace, use_op, UnifyCause::Uncategorized, None, any, t)
 }
 
-pub(super) fn any_prop_call_prop(
-    cx: &Context,
+pub(super) fn any_prop_call_prop<'cx>(
+    cx: &Context<'cx>,
     use_op: &UseOp,
     covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
     call_t: &Option<i32>,
@@ -155,8 +155,8 @@ pub(super) fn any_prop_call_prop(
     Ok(())
 }
 
-pub(super) fn any_prop_properties(
-    cx: &Context,
+pub(super) fn any_prop_properties<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: &UseOp,
     covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
@@ -187,8 +187,8 @@ pub(super) fn any_prop_properties(
     Ok(())
 }
 
-pub(super) fn any_prop_obj(
-    cx: &Context,
+pub(super) fn any_prop_obj<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: &UseOp,
     covariant_flow: &dyn Fn(&UseOp, &Type) -> Result<(), FlowJsException>,
@@ -217,13 +217,13 @@ pub(super) fn any_prop_obj(
 
 // FullyResolved tvars cannot contain non-FullyResolved parts, so there's no need to
 // deeply traverse them!
-pub(super) fn any_prop_tvar(cx: &Context, tvar: i32) -> bool {
+pub(super) fn any_prop_tvar<'cx>(cx: &Context<'cx>, tvar: i32) -> bool {
     let (_, constraints) = cx.find_constraints(tvar);
     matches!(constraints, constraint::Constraints::FullyResolved(_))
 }
 
-pub(super) fn any_prop_to_type_args(
-    cx: &Context,
+pub(super) fn any_prop_to_type_args<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: &UseOp,
     any: &Type,
@@ -250,8 +250,8 @@ pub(super) fn any_prop_to_type_args(
 // appear in type_args if they are bound at the interface itself. We handle those
 // in the more general way, since they are used so rarely that non-termination is not
 // an issue (for now!)
-pub(super) fn any_prop_inst(
-    cx: &Context,
+pub(super) fn any_prop_inst<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: &UseOp,
     any: &Type,
@@ -323,11 +323,11 @@ pub(super) fn any_prop_inst(
 // types trapped for any propagation. Returns true if this function handles the any case, either
 // by propagating or by doing the trivial case. False if the usetype needs to be handled
 // separately.
-pub(super) fn any_propagated(
-    cx: &Context,
+pub(super) fn any_propagated<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     any: &Type,
-    u: &UseT,
+    u: &UseT<Context<'cx>>,
 ) -> Result<bool, FlowJsException> {
     let covariant_flow = |use_op: &UseOp, t: &Type| -> Result<(), FlowJsException> {
         rec_flow_t(cx, trace, use_op.dupe(), (any, t))
@@ -509,8 +509,8 @@ pub(super) fn any_propagated(
 
 /// Propagates any flows in case of contravariant/invariant subtypes: the any must pollute
 /// all types in contravariant positions when t <: any.
-pub(super) fn any_propagated_use(
-    cx: &Context,
+pub(super) fn any_propagated_use<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     use_op: &UseOp,
     any: &Type,

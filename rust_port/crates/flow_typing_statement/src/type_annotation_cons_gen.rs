@@ -29,8 +29,8 @@ use flow_typing_type::type_::hint_unavailable;
 use flow_typing_type::type_::unknown_use;
 use flow_typing_type::type_util::reason_of_t;
 
-pub fn specialize(
-    cx: &Context,
+pub fn specialize<'a>(
+    cx: &Context<'a>,
     c: Type,
     use_op: UseOp,
     reason_op: Reason,
@@ -38,11 +38,9 @@ pub fn specialize(
     targs: Option<Vec<Type>>,
 ) -> Type {
     let reason = reason_of_t(&c).dupe();
-    let cx_inner = cx.dupe();
     let reason_inner = reason.dupe();
-    let f = move |c: Type| -> Type {
-        let cx_ref = &cx_inner;
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx_ref, reason_inner.dupe(), move |tvar| {
+    let f = move |cx: &Context<'_>, c: Type| -> Type {
+        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_inner.dupe(), move |cx, tvar| {
             let use_t = UseT::new(UseTInner::SpecializeT(
                 use_op,
                 reason_op,
@@ -50,35 +48,31 @@ pub fn specialize(
                 targs.map(Rc::from),
                 tvar.dupe(),
             ));
-            flow_js::flow_non_speculating(cx_ref, (&c, &use_t));
+            flow_js::flow_non_speculating(cx, (&c, &use_t));
         })
     };
     map_on_resolved_type(cx, reason, c, f)
 }
 
-pub fn mixin(cx: &Context, reason: Reason, i: Type) -> Type {
-    let cx_inner = cx.dupe();
+pub fn mixin<'a>(cx: &Context<'a>, reason: Reason, i: Type) -> Type {
     let reason_inner = reason.dupe();
-    let f = move |i: Type| -> Type {
-        let cx_ref = &cx_inner;
+    let f = move |cx: &Context<'_>, i: Type| -> Type {
         let reason_for_mixin = reason_inner.dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx_ref, reason_inner, move |tout| {
+        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_inner, move |cx, tout| {
             let use_t = UseT::new(UseTInner::MixinT(reason_for_mixin, tout.dupe()));
-            flow_js::flow_non_speculating(cx_ref, (&i, &use_t));
+            flow_js::flow_non_speculating(cx, (&i, &use_t));
         })
     };
     map_on_resolved_type(cx, reason, i, f)
 }
 
-pub fn obj_test_proto(cx: &Context, reason: Reason, t: Type) -> Type {
-    let cx_inner = cx.dupe();
+pub fn obj_test_proto<'a>(cx: &Context<'a>, reason: Reason, t: Type) -> Type {
     let reason_inner = reason.dupe();
-    let f = move |t: Type| -> Type {
-        let cx_ref = &cx_inner;
+    let f = move |cx: &Context<'_>, t: Type| -> Type {
         let reason_for_proto = reason_inner.dupe();
-        tvar_resolver::mk_tvar_and_fully_resolve_where(cx_ref, reason_inner, move |tout| {
+        tvar_resolver::mk_tvar_and_fully_resolve_where(cx, reason_inner, move |cx, tout| {
             let use_t = UseT::new(UseTInner::ObjTestProtoT(reason_for_proto, tout.dupe()));
-            flow_js::flow_non_speculating(cx_ref, (&t, &use_t));
+            flow_js::flow_non_speculating(cx, (&t, &use_t));
         })
     };
     map_on_resolved_type(cx, reason, t, f)
@@ -105,8 +99,8 @@ pub fn obj_test_proto(cx: &Context, reason: Reason, t: Type) -> Type {
 //     )
 //   in
 //   map_on_resolved_type cx op_reason l f
-pub fn get_prop(
-    cx: &Context,
+pub fn get_prop<'a>(
+    cx: &Context<'a>,
     use_op: UseOp,
     reason: Reason,
     op_reason: Option<Reason>,
@@ -114,15 +108,13 @@ pub fn get_prop(
     l: Type,
 ) -> Type {
     let op_reason = op_reason.unwrap_or_else(|| reason.dupe());
-    let cx_inner = cx.dupe();
     let op_reason_inner = op_reason.dupe();
-    let f = move |l: Type| -> Type {
-        let cx_ref = &cx_inner;
+    let f = move |cx: &Context<'_>, l: Type| -> Type {
         let op_reason_for_flow = op_reason_inner.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-            cx_ref,
+            cx,
             op_reason_inner,
-            move |tout_reason, tout_id| {
+            move |cx, tout_reason, tout_id| {
                 let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
                 let use_t = UseT::new(UseTInner::GetPropT(Box::new(GetPropTData {
                     use_op,
@@ -138,30 +130,28 @@ pub fn get_prop(
                     tout: Box::new(tout),
                     hint: hint_unavailable(),
                 })));
-                flow_js::flow_non_speculating(cx_ref, (&l, &use_t))
+                flow_js::flow_non_speculating(cx, (&l, &use_t))
             },
         )
     };
     map_on_resolved_type(cx, op_reason, l, f)
 }
 
-pub fn qualify_type(
-    cx: &Context,
+pub fn qualify_type<'a>(
+    cx: &Context<'a>,
     use_op: UseOp,
     reason: Reason,
     op_reason: Reason,
     prop_name: Name,
     l: Type,
 ) -> Type {
-    let cx_inner = cx.dupe();
     let op_reason_inner = op_reason.dupe();
-    let f = move |l: Type| -> Type {
-        let cx_ref = &cx_inner;
+    let f = move |cx: &Context<'_>, l: Type| -> Type {
         let op_reason_for_flow = op_reason_inner.dupe();
         tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-            cx_ref,
+            cx,
             op_reason_inner,
-            move |tout_reason, tout_id| {
+            move |cx, tout_reason, tout_id| {
                 let tout = Tvar::new(tout_reason.dupe(), tout_id as u32);
                 let use_t = UseT::new(UseTInner::GetTypeFromNamespaceT {
                     use_op,
@@ -169,15 +159,15 @@ pub fn qualify_type(
                     prop_ref: (reason, prop_name),
                     tout: Box::new(tout),
                 });
-                flow_js::flow_non_speculating(cx_ref, (&l, &use_t));
+                flow_js::flow_non_speculating(cx, (&l, &use_t));
             },
         )
     };
     map_on_resolved_type(cx, op_reason, l, f)
 }
 
-pub fn mk_instance(
-    cx: &Context,
+pub fn mk_instance<'a>(
+    cx: &Context<'a>,
     instance_reason: Reason,
     l: Type,
     type_t_kind: Option<TypeTKind>,
@@ -185,21 +175,19 @@ pub fn mk_instance(
 ) -> Type {
     let type_t_kind = type_t_kind.unwrap_or(TypeTKind::InstanceKind);
     let use_desc = use_desc.unwrap_or(false);
-    let cx_clone = cx.dupe();
     let instance_reason_clone = instance_reason.dupe();
-    let f = move |t: Type| {
-        let t =
-            FlowJs::singleton_concrete_type_for_inspection(&cx_clone, &instance_reason_clone, &t)
-                .expect("Should not be under speculation");
+    let f = move |cx: &Context<'_>, t: Type| {
+        let t = FlowJs::singleton_concrete_type_for_inspection(cx, &instance_reason_clone, &t)
+            .expect("Should not be under speculation");
         let t = value_to_type_reference_transform::run_on_concrete_type(
-            &cx_clone,
+            cx,
             unknown_use(),
             &instance_reason_clone,
             type_t_kind,
             t,
         )
         .expect("Should not be under speculation");
-        tvar_resolver::resolved_t(tvar_resolver::default_no_lowers, true, &cx_clone, t)
+        tvar_resolver::resolved_t(tvar_resolver::default_no_lowers, true, cx, t)
     };
     Type::new(TypeInner::AnnotT(
         instance_reason.dupe(),

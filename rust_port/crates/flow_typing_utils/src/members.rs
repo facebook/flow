@@ -71,7 +71,7 @@ pub type Members = GenericT<
     BTreeMap<FlowSmolStr, (Option<Vec1<ALoc>>, Type)>,
 >;
 
-fn merge_type(cx: &Context, pair: (Type, Type)) -> Type {
+fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
     fn create_union(rep: union_rep::UnionRep) -> Type {
         Type::new(TypeInner::UnionT(
             locationless_reason(VirtualReasonDesc::RUnionType),
@@ -610,7 +610,7 @@ fn merge_type(cx: &Context, pair: (Type, Type)) -> Type {
     }
 }
 
-fn instantiate_poly_t(cx: &Context, t: Type, args: Option<&[Type]>) -> Type {
+fn instantiate_poly_t<'cx>(cx: &Context<'cx>, t: Type, args: Option<&[Type]>) -> Type {
     match t.deref() {
         TypeInner::DefT(_, def_t) => match def_t.deref() {
             DefTInner::PolyT {
@@ -677,8 +677,8 @@ fn instantiate_poly_t(cx: &Context, t: Type, args: Option<&[Type]>) -> Type {
     }
 }
 
-pub fn intersect_members(
-    cx: &Context,
+pub fn intersect_members<'cx>(
+    cx: &Context<'cx>,
     members: Vec<BTreeMap<FlowSmolStr, (Option<Vec1<ALoc>>, Type)>>,
 ) -> BTreeMap<FlowSmolStr, (Option<Vec1<ALoc>>, Type)> {
     if members.is_empty() {
@@ -772,7 +772,7 @@ pub fn to_command_result(
     }
 }
 
-fn find_props(cx: &Context, id: properties::Id) -> BTreeMap<FlowSmolStr, Property> {
+fn find_props<'cx>(cx: &Context<'cx>, id: properties::Id) -> BTreeMap<FlowSmolStr, Property> {
     let props = cx.find_props(id);
     // Filter out keys starting with "$" and convert Name -> String
     let mut result = BTreeMap::new();
@@ -786,7 +786,7 @@ fn find_props(cx: &Context, id: properties::Id) -> BTreeMap<FlowSmolStr, Propert
     result
 }
 
-fn resolve_tvar(cx: &Context, id: u32) -> Type {
+fn resolve_tvar<'cx>(cx: &Context<'cx>, id: u32) -> Type {
     let ts = flow_js_utils::possible_types(cx, id as i32);
     // The list of types returned by possible_types is often empty, and the
     // most common reason is that we don't have enough type coverage to
@@ -805,7 +805,7 @@ fn resolve_tvar(cx: &Context, id: u32) -> Type {
     ts.into_iter().fold(init, |u, t| merge_type(cx, (t, u)))
 }
 
-pub fn resolve_type(cx: &Context, t: Type) -> Type {
+pub fn resolve_type<'cx>(cx: &Context<'cx>, t: Type) -> Type {
     match t.deref() {
         TypeInner::OpenT(tvar) => {
             let resolved = resolve_tvar(cx, tvar.id());
@@ -816,7 +816,7 @@ pub fn resolve_type(cx: &Context, t: Type) -> Type {
     }
 }
 
-pub fn extract_type(cx: &Context, this_t: Type) -> GenericT<Type, Type> {
+pub fn extract_type<'cx>(cx: &Context<'cx>, this_t: Type) -> GenericT<Type, Type> {
     match this_t.deref() {
         TypeInner::OpenT(_) | TypeInner::AnnotT(_, _, _) => {
             let resolved = resolve_type(cx, this_t);
@@ -989,9 +989,9 @@ pub fn extract_type(cx: &Context, this_t: Type) -> GenericT<Type, Type> {
     }
 }
 
-pub fn extract_members(
+pub fn extract_members<'cx>(
     exclude_proto_members: bool,
-    cx: &Context,
+    cx: &Context<'cx>,
     extracted: GenericT<Type, Type>,
 ) -> Members {
     match extracted {
@@ -1182,14 +1182,14 @@ pub fn extract_members(
     }
 }
 
-pub fn extract(exclude_proto_members: bool, cx: &Context, t: Type) -> Members {
+pub fn extract<'cx>(exclude_proto_members: bool, cx: &Context<'cx>, t: Type) -> Members {
     let extracted = extract_type(cx, t);
     extract_members(exclude_proto_members, cx, extracted)
 }
 
-fn extract_members_as_map(
+fn extract_members_as_map<'cx>(
     exclude_proto_members: bool,
-    cx: &Context,
+    cx: &Context<'cx>,
     this_t: Type,
 ) -> BTreeMap<FlowSmolStr, (Option<Vec1<ALoc>>, Type)> {
     to_command_result(extract(exclude_proto_members, cx, this_t)).unwrap_or_default()

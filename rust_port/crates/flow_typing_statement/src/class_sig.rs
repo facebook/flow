@@ -559,8 +559,8 @@ fn to_field<C: ConfigTypes>(entry: &class_types::FieldPrime<C>) -> Property {
     })
 }
 
-fn to_method<C: crate::func_params_intf::Config>(
-    cx: &Context,
+fn to_method<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     this_default: &Type,
     info: &class_types::FuncInfo<C>,
 ) -> Property {
@@ -575,8 +575,8 @@ fn to_method<C: crate::func_params_intf::Config>(
     })
 }
 
-pub fn fields_to_prop_map<C: ConfigTypes>(
-    cx: &Context,
+pub fn fields_to_prop_map<'a, C: ConfigTypes>(
+    cx: &Context<'a>,
     fields: &BTreeMap<FlowSmolStr, class_types::FieldPrime<C>>,
 ) -> properties::Id {
     let mut pmap = properties::PropertiesMap::new();
@@ -586,8 +586,8 @@ pub fn fields_to_prop_map<C: ConfigTypes>(
     cx.generate_property_map(pmap)
 }
 
-fn methods_to_prop_map<C: crate::func_params_intf::Config>(
-    cx: &Context,
+fn methods_to_prop_map<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     this_default: &Type,
     methods: &BTreeMap<FlowSmolStr, class_types::FuncInfo<C>>,
 ) -> properties::Id {
@@ -599,8 +599,8 @@ fn methods_to_prop_map<C: crate::func_params_intf::Config>(
 }
 
 // (* let elements cx ~this ?constructor s super = *)
-fn elements<C: crate::func_params_intf::Config>(
-    cx: &Context,
+fn elements<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     this: Type,
     constructor: Option<(Option<ALoc>, Type)>,
     s: &class_types::Signature<C>,
@@ -807,13 +807,13 @@ fn elements<C: crate::func_params_intf::Config>(
     (initialized_fields, fields, methods_props, call)
 }
 
-fn specialize(cx: &Context, use_op: UseOp, targs: Option<Vec<Type>>, c: Type) -> Type {
+fn specialize<'a>(cx: &Context<'a>, use_op: UseOp, targs: Option<Vec<Type>>, c: Type) -> Type {
     let reason = type_util::reason_of_t(&c).dupe();
     type_annotation_cons_gen::specialize(cx, c, use_op, reason.dupe(), reason, targs)
 }
 
-fn statictype<C: crate::func_params_intf::Config>(
-    cx: &Context,
+fn statictype<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     static_proto: Type,
     x: &class_types::Class<C>,
 ) -> (FlowOrdSet<FlowSmolStr>, ObjType) {
@@ -853,8 +853,8 @@ fn statictype<C: crate::func_params_intf::Config>(
     }
 }
 
-fn insttype<C: crate::func_params_intf::Config>(
-    cx: &Context,
+fn insttype<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     initialized_static_fields: FlowOrdSet<FlowSmolStr>,
     inst_kind: Option<InstanceKind>,
     s: &class_types::Class<C>,
@@ -955,7 +955,7 @@ fn insttype<C: crate::func_params_intf::Config>(
     })
 }
 
-pub fn mk_this(self_: Type, cx: &Context, reason: Reason) -> (TypeParam, Type) {
+pub fn mk_this<'a>(self_: Type, cx: &Context<'a>, reason: Reason) -> (TypeParam, Type) {
     let this_reason = reason.replace_desc(VirtualReasonDesc::RThisType);
     let this_tp = TypeParam::new(TypeParamInner {
         name: SubstName::name(FlowSmolStr::new("this")),
@@ -970,7 +970,7 @@ pub fn mk_this(self_: Type, cx: &Context, reason: Reason) -> (TypeParam, Type) {
     (this_tp, generic)
 }
 
-fn supertype<C: ConfigTypes>(cx: &Context, x: &class_types::Class<C>) -> (Type, Type) {
+fn supertype<'a, C: ConfigTypes>(cx: &Context<'a>, x: &class_types::Class<C>) -> (Type, Type) {
     let super_reason = x
         .instance
         .reason
@@ -1103,8 +1103,8 @@ fn supertype<C: ConfigTypes>(cx: &Context, x: &class_types::Class<C>) -> (Type, 
     }
 }
 
-fn this_instance_type<C: crate::func_params_intf::Config>(
-    cx: &Context,
+fn this_instance_type<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     inst_kind: Option<InstanceKind>,
     x: &class_types::Class<C>,
 ) -> (Reason, InstanceT) {
@@ -1151,8 +1151,8 @@ fn this_instance_type<C: crate::func_params_intf::Config>(
     )
 }
 
-pub fn thistype<C: crate::func_params_intf::Config>(
-    cx: &Context,
+pub fn thistype<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     x: &class_types::Class<C>,
 ) -> Type {
     let (reason, instance_t) = this_instance_type(cx, None, x);
@@ -1162,8 +1162,8 @@ pub fn thistype<C: crate::func_params_intf::Config>(
     ))
 }
 
-fn check_methods<C: crate::func_params_intf::Config>(
-    cx: &Context,
+fn check_methods<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     def_reason: Reason,
     x: &class_types::Class<C>,
 ) {
@@ -1224,8 +1224,8 @@ fn check_methods<C: crate::func_params_intf::Config>(
     );
 }
 
-fn check_implements<C: crate::func_params_intf::Config>(
-    cx: &Context,
+fn check_implements<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     def_reason: Reason,
     x: &class_types::Class<C>,
 ) {
@@ -1265,8 +1265,8 @@ fn check_implements<C: crate::func_params_intf::Config>(
     }
 }
 
-fn check_super<C: crate::func_params_intf::Config>(
-    cx: &Context,
+fn check_super<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     def_reason: Reason,
     x: &class_types::Class<C>,
 ) {
@@ -1340,8 +1340,8 @@ fn check_super<C: crate::func_params_intf::Config>(
     );
 }
 
-pub fn check_signature_compatibility<C: crate::func_params_intf::Config>(
-    cx: &Context,
+pub fn check_signature_compatibility<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     def_reason: Reason,
     x: &class_types::Class<C>,
 ) {
@@ -1352,8 +1352,8 @@ pub fn check_signature_compatibility<C: crate::func_params_intf::Config>(
 
 // TODO: Ideally we should check polarity for all class types, but this flag is
 // flipped off for interface/declare class currently.
-pub fn classtype<C: crate::func_params_intf::Config>(
-    cx: &Context,
+pub fn classtype<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     check_polarity_flag: bool,
     inst_kind: InstanceKind,
     x: &class_types::Class<C>,
@@ -1409,14 +1409,17 @@ pub fn classtype<C: crate::func_params_intf::Config>(
     (t_inner, poly(t_outer))
 }
 
-pub fn mk_class_binding<C: ConfigTypes>(_cx: &Context, x: &class_types::Class<C>) -> ClassBinding {
+pub fn mk_class_binding<'a, C: ConfigTypes>(
+    _cx: &Context<'a>,
+    x: &class_types::Class<C>,
+) -> ClassBinding {
     ClassBinding {
         class_binding_id: x.id.dupe(),
     }
 }
 
-pub fn make_thises<C: ConfigTypes>(
-    cx: &Context,
+pub fn make_thises<'a, C: ConfigTypes>(
+    cx: &Context<'a>,
     x: &class_types::Class<C>,
 ) -> (Type, Type, Type, Type) {
     let super_reason = x
@@ -1476,8 +1479,8 @@ pub fn make_thises<C: ConfigTypes>(
 }
 
 /// Processes the bodies of instance and static class members.
-pub fn toplevels<C: crate::func_params_intf::Config>(
-    cx: &Context,
+pub fn toplevels<'a, C: crate::func_params_intf::Config>(
+    cx: &Context<'a>,
     x: &class_types::Class<C>,
 ) -> Result<(), AbnormalControlFlow> {
     type_env::in_class_scope(cx, x.class_loc.dupe(), || {

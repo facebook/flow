@@ -8,3 +8,6 @@
 pub mod builtins;
 
 pub use builtins::Builtins;
+pub use builtins::LazyModule;
+pub use builtins::LazyModuleType;
+pub use builtins::LazyVal;

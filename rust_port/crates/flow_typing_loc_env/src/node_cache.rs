@@ -21,7 +21,9 @@ use crate::component_sig_types;
 use crate::func_class_sig_types;
 use crate::match_pattern_ir;
 
-struct Cache {
+pub type DeferredTypeGuardCheck<'cx, CX> = Option<Rc<dyn Fn(&CX) + 'cx>>;
+
+struct Cache<'cx, CX: Clone> {
     annotations: ALocMap<ast::types::Annotation<ALoc, (ALoc, Type)>>,
     expressions: ALocMap<ast::expression::Expression<ALoc, (ALoc, Type)>>,
     statements: ALocMap<ast::statement::Statement<ALoc, (ALoc, Type)>>,
@@ -33,6 +35,7 @@ struct Cache {
     function_sigs: ALocMap<(
         func_class_sig_types::func::Func<func_class_sig_types::StmtConfigTypes>,
         func_class_sig_types::func::Reconstruct,
+        DeferredTypeGuardCheck<'cx, CX>,
     )>,
     aliases: ALocMap<(Type, ast::statement::TypeAlias<ALoc, (ALoc, Type)>)>,
     opaques: ALocMap<(Type, ast::statement::OpaqueType<ALoc, (ALoc, Type)>)>,
@@ -44,13 +47,13 @@ struct Cache {
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Rc<dyn Fn(Type) -> ast::class::Class<ALoc, (ALoc, Type)>>,
+        Rc<dyn Fn(&CX, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'cx>,
     )>,
     record_sigs: ALocMap<(
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Rc<dyn Fn(Type) -> ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>>,
+        Rc<dyn Fn(&CX, Type) -> ast::statement::RecordDeclaration<ALoc, (ALoc, Type)> + 'cx>,
     )>,
     tparams: ALocMap<(AstTypeParam<ALoc, (ALoc, Type)>, TypeParam, Type)>,
     component_sigs: ALocMap<(
@@ -58,14 +61,14 @@ struct Cache {
         component_sig_types::component_sig::ReconstructComponent,
     )>,
     match_patterns: ALocMap<(ast::match_pattern::MatchPattern<ALoc, (ALoc, Type)>, bool)>,
-    match_pattern_value_unions: ALocMap<match_pattern_ir::value_union::ValueUnion>,
+    match_pattern_value_unions: ALocMap<match_pattern_ir::value_union::ValueUnion<'cx, CX>>,
     // Intermediate PatternUnion state for incremental building
     match_pattern_unions: ALocMap<(match_pattern_ir::pattern_union::PatternUnion, i32)>,
 }
 
-pub struct NodeCache(Rc<RefCell<Cache>>);
+pub struct NodeCache<'cx, CX: Clone>(Rc<RefCell<Cache<'cx, CX>>>);
 
-impl NodeCache {
+impl<'cx, CX: Clone> NodeCache<'cx, CX> {
     /// Clear all cached entries, releasing any closures that may hold
     /// strong references to Context (breaking Rc cycles).
     pub fn clear(&self) {
@@ -91,7 +94,7 @@ impl NodeCache {
         cache.match_pattern_unions = ALocMap::new();
     }
 
-    pub fn mk_empty() -> NodeCache {
+    pub fn mk_empty() -> NodeCache<'cx, CX> {
         NodeCache(Rc::new(RefCell::new(Cache {
             annotations: ALocMap::new(),
             expressions: ALocMap::new(),
@@ -157,6 +160,7 @@ impl NodeCache {
         func_sig: (
             func_class_sig_types::func::Func<func_class_sig_types::StmtConfigTypes>,
             func_class_sig_types::func::Reconstruct,
+            DeferredTypeGuardCheck<'cx, CX>,
         ),
     ) {
         self.0.borrow_mut().function_sigs.insert(loc, func_sig);
@@ -220,7 +224,7 @@ impl NodeCache {
             Type,
             Type,
             func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-            Rc<dyn Fn(Type) -> ast::class::Class<ALoc, (ALoc, Type)>>,
+            Rc<dyn Fn(&CX, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'cx>,
         ),
     ) {
         self.0.borrow_mut().class_sigs.insert(loc, class_);
@@ -233,7 +237,7 @@ impl NodeCache {
             Type,
             Type,
             func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-            Rc<dyn Fn(Type) -> ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>>,
+            Rc<dyn Fn(&CX, Type) -> ast::statement::RecordDeclaration<ALoc, (ALoc, Type)> + 'cx>,
         ),
     ) {
         self.0.borrow_mut().record_sigs.insert(loc, record);
@@ -268,7 +272,7 @@ impl NodeCache {
     pub fn set_match_pattern_value_union(
         &self,
         loc: ALoc,
-        v: match_pattern_ir::value_union::ValueUnion,
+        v: match_pattern_ir::value_union::ValueUnion<'cx, CX>,
     ) {
         self.0
             .borrow_mut()
@@ -318,6 +322,7 @@ impl NodeCache {
     ) -> Option<(
         func_class_sig_types::func::Func<func_class_sig_types::StmtConfigTypes>,
         func_class_sig_types::func::Reconstruct,
+        DeferredTypeGuardCheck<'cx, CX>,
     )> {
         self.0.borrow().function_sigs.get(loc).cloned()
     }
@@ -378,7 +383,7 @@ impl NodeCache {
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Rc<dyn Fn(Type) -> ast::class::Class<ALoc, (ALoc, Type)>>,
+        Rc<dyn Fn(&CX, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'cx>,
     )> {
         self.0.borrow().class_sigs.get(loc).cloned()
     }
@@ -390,7 +395,7 @@ impl NodeCache {
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Rc<dyn Fn(Type) -> ast::statement::RecordDeclaration<ALoc, (ALoc, Type)>>,
+        Rc<dyn Fn(&CX, Type) -> ast::statement::RecordDeclaration<ALoc, (ALoc, Type)> + 'cx>,
     )> {
         self.0.borrow().record_sigs.get(loc).cloned()
     }
@@ -422,7 +427,7 @@ impl NodeCache {
     pub fn get_match_pattern_value_union(
         &self,
         loc: &ALoc,
-    ) -> Option<match_pattern_ir::value_union::ValueUnion> {
+    ) -> Option<match_pattern_ir::value_union::ValueUnion<'cx, CX>> {
         self.0.borrow().match_pattern_value_unions.get(loc).cloned()
     }
 

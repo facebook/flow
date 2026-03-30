@@ -61,29 +61,29 @@ use vec1::Vec1;
 use crate::default_resolve;
 use crate::flow_js::FlowJs;
 
-enum CasesSpec<'a> {
+enum CasesSpec<'cx, 'a> {
     UnionCases {
         use_op: UseOp,
         reason_op: Reason,
         l: Type,
         union_rep: &'a union_rep::UnionRep,
         us: Vec<Type>,
-        on_success: Option<Box<dyn FnOnce() + 'a>>,
+        on_success: Option<Box<dyn FnOnce(&Context<'cx>) + 'a>>,
     },
     IntersectionCases {
         intersection_reason: Reason,
         ls: Vec<Type>,
-        use_t: UseT,
+        use_t: UseT<Context<'cx>>,
     },
-    SingletonCase(Type, UseT),
+    SingletonCase(Type, UseT<Context<'cx>>),
     SingletonUnifyCase(Type, UseOp, Type),
-    SingletonCustomCase(Option<Box<dyn FnOnce() -> Result<(), FlowJsException> + 'a>>),
+    SingletonCustomCase(Option<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + 'a>>),
     CustomCases {
         use_op: Option<UseOp>,
         no_match_error_loc: ALoc,
-        use_t: Option<UseT>,
-        default_resolve: Option<Box<dyn FnOnce() -> Result<(), FlowJsException> + 'a>>,
-        cases: Vec<Box<dyn FnOnce() -> Result<(), FlowJsException> + 'a>>,
+        use_t: Option<UseT<Context<'cx>>>,
+        default_resolve: Option<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + 'a>>,
+        cases: Vec<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + 'a>>,
     },
 }
 
@@ -91,8 +91,8 @@ fn mk_intersection_reason(r: &Reason, _ls: &[Type]) -> Reason {
     r.dupe().replace_desc(VirtualReasonDesc::RIntersection)
 }
 
-fn log_synthesis_result(
-    cx: &Context,
+fn log_synthesis_result<'cx>(
+    cx: &Context<'cx>,
     _trace: DepthTrace,
     case: &SpeculationCase,
     speculation_id: i32,
@@ -136,7 +136,7 @@ fn log_synthesis_result(
     }
 }
 
-fn log_specialized_use(use_t: &UseT, case: &SpeculationCase, speculation_id: i32) {
+fn log_specialized_use<CX>(use_t: &UseT<CX>, case: &SpeculationCase, speculation_id: i32) {
     match use_t.deref() {
         UseTInner::CallT {
             call_action:
@@ -184,7 +184,7 @@ fn log_specialized_use(use_t: &UseT, case: &SpeculationCase, speculation_id: i32
     }
 }
 
-fn log_specialized_callee(spec: &CasesSpec, case: &SpeculationCase, speculation_id: i32) {
+fn log_specialized_callee(spec: &CasesSpec<'_, '_>, case: &SpeculationCase, speculation_id: i32) {
     match spec {
         CasesSpec::IntersectionCases { use_t, .. } => {
             log_specialized_use(use_t, case, speculation_id);
@@ -198,9 +198,9 @@ fn log_specialized_callee(spec: &CasesSpec, case: &SpeculationCase, speculation_
     }
 }
 
-enum CaseSpec<'a> {
-    CustomCase(Box<dyn FnOnce() -> Result<(), FlowJsException> + 'a>),
-    FlowCase(Type, UseT),
+enum CaseSpec<'cx, 'a> {
+    CustomCase(Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + 'a>),
+    FlowCase(Type, UseT<Context<'cx>>),
     UnifyCase(Type, UseOp, Type),
 }
 
@@ -314,9 +314,9 @@ impl SpecMatchError {
 // Every choice-making process on a union or intersection type is assigned a
 // unique identifier, called the speculation_id. This identifier keeps track of
 // unresolved tvars encountered when trying to fully resolve types.
-pub fn try_union(
-    cx: &Context,
-    on_success: Option<Box<dyn FnOnce()>>,
+pub fn try_union<'cx>(
+    cx: &Context<'cx>,
+    on_success: Option<Box<dyn FnOnce(&Context<'cx>)>>,
     trace: DepthTrace,
     use_op: UseOp,
     l: Type,
@@ -339,10 +339,10 @@ pub fn try_union(
     .map_err(SpecMatchError::expect_speculative)
 }
 
-pub fn try_intersection(
-    cx: &Context,
+pub fn try_intersection<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
-    use_t: UseT,
+    use_t: UseT<Context<'cx>>,
     intersection_reason: Reason,
     rep: &inter_rep::InterRep,
 ) -> Result<(), FlowJsException> {
@@ -359,13 +359,13 @@ pub fn try_intersection(
     .map_err(SpecMatchError::expect_speculative)
 }
 
-pub fn try_custom<'a>(
-    cx: &Context,
+pub fn try_custom<'cx, 'a>(
+    cx: &Context<'cx>,
     use_op: Option<UseOp>,
-    use_t: Option<UseT>,
-    default_resolve: Option<Box<dyn FnOnce() -> Result<(), FlowJsException> + 'a>>,
+    use_t: Option<UseT<Context<'cx>>>,
+    default_resolve: Option<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + 'a>>,
     no_match_error_loc: ALoc,
-    cases: Vec<Box<dyn FnOnce() -> Result<(), FlowJsException> + 'a>>,
+    cases: Vec<Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + 'a>>,
 ) -> Result<(), FlowJsException> {
     speculative_matches(
         cx,
@@ -385,19 +385,19 @@ pub fn try_custom<'a>(
 /// between (t, u) in a speculative environment. If an error is raised then a
 /// SpeculationSingletonError exception is raised. This needs to be caught by
 /// the caller of this function.
-pub fn try_singleton_throw_on_failure(
-    cx: &Context,
+pub fn try_singleton_throw_on_failure<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     t: Type,
-    u: UseT,
+    u: UseT<Context<'cx>>,
 ) -> Result<(), FlowJsException> {
     speculative_matches(cx, trace, CasesSpec::SingletonCase(t, u))
         .map_err(SpecMatchError::into_flow_js_exception)
 }
 
-pub fn try_singleton_custom_throw_on_failure<'a>(
-    cx: &Context,
-    f: Box<dyn FnOnce() -> Result<(), FlowJsException> + 'a>,
+pub fn try_singleton_custom_throw_on_failure<'cx, 'a>(
+    cx: &Context<'cx>,
+    f: Box<dyn FnOnce(&Context<'cx>) -> Result<(), FlowJsException> + 'a>,
 ) -> Result<(), FlowJsException> {
     speculative_matches(
         cx,
@@ -407,8 +407,8 @@ pub fn try_singleton_custom_throw_on_failure<'a>(
     .map_err(SpecMatchError::into_flow_js_exception)
 }
 
-pub fn try_unify(
-    cx: &Context,
+pub fn try_unify<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     t1: Type,
     use_op: UseOp,
@@ -428,8 +428,8 @@ pub fn try_unify(
 // during the matching might be processed. See comments in Speculation for
 // details on branches. See also speculative_matches, which calls this function
 // iteratively and processes its results.
-fn speculative_match(
-    cx: &Context,
+fn speculative_match<'cx>(
+    cx: &Context<'cx>,
     branch: SpeculationBranch,
     f: impl FnOnce() -> Result<(), FlowJsException>,
 ) -> Result<Option<SpeculativeError>, FlowJsException> {
@@ -463,10 +463,10 @@ fn speculative_match(
 // Because this process is common to checking union and intersection types, we
 // abstract the latter into a so-called "spec." The spec is used to customize
 // error messages.
-fn speculative_matches(
-    cx: &Context,
+fn speculative_matches<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
-    mut spec: CasesSpec,
+    mut spec: CasesSpec<'cx, '_>,
 ) -> Result<(), SpecMatchError> {
     // explore optimization opportunities
     if optimize_spec_try_shortcut(cx, trace, &mut spec)? {
@@ -476,10 +476,10 @@ fn speculative_matches(
     }
 }
 
-fn long_path_speculative_matches(
-    cx: &Context,
+fn long_path_speculative_matches<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
-    spec: &mut CasesSpec,
+    spec: &mut CasesSpec<'cx, '_>,
 ) -> Result<(), SpecMatchError> {
     let speculation_id = flow_common::reason::mk_id() as i32;
     // extract stuff to ignore while considering actions
@@ -495,9 +495,9 @@ fn long_path_speculative_matches(
     let cc_base_level = cx.constraint_cache().level_count();
     cx.constraint_cache_mut().push_level();
 
-    fn return_errs<'a>(
-        cx: &Context,
-        spec: &mut CasesSpec<'a>,
+    fn return_errs<'cx, 'a>(
+        cx: &Context<'cx>,
+        spec: &mut CasesSpec<'cx, 'a>,
         msgs: Vec<ErrorMessage<ALoc>>,
     ) -> Result<(), SpecMatchError> {
         // make a really detailed error message listing out the
@@ -555,7 +555,7 @@ fn long_path_speculative_matches(
                     )),
                 )?;
                 if let Some(f) = default_resolve.take() {
-                    f()?;
+                    f(cx)?;
                 }
                 Ok(())
             }
@@ -680,7 +680,7 @@ fn long_path_speculative_matches(
                     )?;
                     Ok(())
                 }
-                CaseSpec::CustomCase(f) => f(),
+                CaseSpec::CustomCase(f) => f(cx),
             },
         )?;
 
@@ -720,7 +720,7 @@ fn long_path_speculative_matches(
 }
 
 // and trials_of_spec = function
-fn trials_of_spec<'a>(spec: &mut CasesSpec<'a>) -> Vec<(i32, CaseSpec<'a>)> {
+fn trials_of_spec<'cx, 'a>(spec: &mut CasesSpec<'cx, 'a>) -> Vec<(i32, CaseSpec<'cx, 'a>)> {
     match spec {
         // NB: Even though we know the use_op for the original constraint, don't
         // embed it in the nested constraints to avoid unnecessary verbosity. We
@@ -798,10 +798,10 @@ fn trials_of_spec<'a>(spec: &mut CasesSpec<'a>) -> Vec<(i32, CaseSpec<'a>)> {
 // union and try to guess and record sentinel properties across object types in the union. Later,
 // during speculative matching, by checking sentinel properties first we force immediate match
 // failures in the vast majority of cases without having to do any useless additional work.
-fn optimize_spec_try_shortcut(
-    cx: &Context,
+fn optimize_spec_try_shortcut<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
-    spec: &mut CasesSpec,
+    spec: &mut CasesSpec<'cx, '_>,
 ) -> Result<bool, FlowJsException> {
     match spec {
         CasesSpec::UnionCases {
@@ -881,7 +881,7 @@ fn optimize_spec_try_shortcut(
                 Ok(_) => {}
             }
             if let Some(f) = on_success.take() {
-                f();
+                f(cx);
             }
             Ok(true)
         }
@@ -958,7 +958,7 @@ fn optimize_spec_try_shortcut(
             };
             if result {
                 if let Some(f) = on_success.take() {
-                    f();
+                    f(cx);
                 }
             }
             Ok(result)
@@ -971,8 +971,8 @@ fn optimize_spec_try_shortcut(
     }
 }
 
-fn shortcut_enum(
-    cx: &Context,
+fn shortcut_enum<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     reason_op: &Reason,
     use_op: &UseOp,
@@ -987,8 +987,8 @@ fn shortcut_enum(
     quick_mem_result(cx, trace, reason_op, use_op, l, result)
 }
 
-fn shortcut_disjoint_union(
-    cx: &Context,
+fn shortcut_disjoint_union<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     reason_op: &Reason,
     use_op: &UseOp,
@@ -1005,8 +1005,8 @@ fn shortcut_disjoint_union(
     quick_mem_result(cx, trace, reason_op, use_op, l, result)
 }
 
-fn quick_mem_result(
-    cx: &Context,
+fn quick_mem_result<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
     reason_op: &Reason,
     use_op: &UseOp,
@@ -1042,10 +1042,10 @@ fn quick_mem_result(
     }
 }
 
-fn fire_actions(
-    cx: &Context,
+fn fire_actions<'cx>(
+    cx: &Context<'cx>,
     trace: DepthTrace,
-    spec: &CasesSpec,
+    spec: &CasesSpec<'cx, '_>,
     case: SpeculationCase,
     speculation_id: i32,
 ) -> Result<(), FlowJsException> {
