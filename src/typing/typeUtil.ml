@@ -458,6 +458,7 @@ let rec mod_loc_of_virtual_use_op f =
     | UnifyFlip -> UnifyFlip
     | EnumRepresentationTypeCompatibility { lower; upper } ->
       EnumRepresentationTypeCompatibility { lower = mod_reason lower; upper = mod_reason upper }
+    | UnionRepresentative { union } -> UnionRepresentative { union = mod_reason union }
   in
   function
   | Op op -> Op (mod_loc_of_root_use_op f op)

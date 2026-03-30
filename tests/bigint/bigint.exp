@@ -101,8 +101,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:47:3
 
-Cannot cast `x` to `typeof b` because bigint literal `0n` [1] is incompatible with bigint literal `1n` [2].
-[incompatible-type]
+Cannot cast `x` to `typeof b` because at least one member of union type [1], e.g. bigint literal `0n` [2], is
+incompatible with bigint literal `1n` [3]. [incompatible-type]
 
    bigint.js:47:3
    47|   x as typeof b; // ERROR typeof b is `1n`
@@ -111,10 +111,13 @@ Cannot cast `x` to `typeof b` because bigint literal `0n` [1] is incompatible wi
 References:
    bigint.js:44:20
    44|   declare const x: 0n | 1n;
-                          ^^ [1]
+                          ^^^^^^^ [1]
+   bigint.js:44:20
+   44|   declare const x: 0n | 1n;
+                          ^^ [2]
    bigint.js:47:8
    47|   x as typeof b; // ERROR typeof b is `1n`
-              ^^^^^^^^ [2]
+              ^^^^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- bigint.js:49:3

@@ -193,7 +193,7 @@ let flip_frame = function
   | ( TupleAssignment _ | TypeParamBound _ | OpaqueTypeLowerBound _ | OpaqueTypeUpperBound _
     | FunMissingArg _ | ImplicitTypeParam | ReactGetConfig _ | OpaqueTypeCustomErrorCompatibility _
     | UnifyFlip | ConstrainedAssignment _ | MappedTypeKeyCompatibility _ | TypeGuardCompatibility
-    | RendersCompatibility | ReactDeepReadOnly _ ) as use_op ->
+    | RendersCompatibility | ReactDeepReadOnly _ | UnionRepresentative _ ) as use_op ->
     use_op
 
 let post_process_errors original_errors =
@@ -1127,6 +1127,14 @@ let rec make_intermediate_error :
           ~use_op
           ~frame:FrameTypePredicate
           ~custom_error_message
+      | Frame (UnionRepresentative { union }, use_op) ->
+        unwrap_frame
+          ~loc
+          ~frames
+          ~frame_reason:union
+          ~use_op
+          ~frame:(FrameUnionRepresentative union)
+          ~custom_error_message
       | Frame (FunCompatibility { lower; _ }, use_op) ->
         next_with_loc ~loc ~frames ~frame_reason:lower ~use_op ~custom_error_message
       | Frame (OpaqueTypeLowerBound { opaque_t_reason = _ }, use_op) ->
@@ -1322,6 +1330,12 @@ let rec make_intermediate_error :
       in
       make_error op message
     | Frame (RendersCompatibility, _) -> make_error lower (MessageDoesNotRender { lower; upper })
+    | Frame (UnionRepresentative { union }, inner_use_op) ->
+      mk_use_op_error_reason
+        union
+        inner_use_op
+        ?explanation:additional_explanation
+        (MessageIncompatibleWithUnionRepresentative { union; lower; upper })
     | _ ->
       let root_use_op = root_of_use_op use_op in
       (match root_use_op with
@@ -2079,6 +2093,7 @@ let to_printable_error :
     | FrameTypePredicate -> (None, [text "the type predicate"])
     | FrameReturnValue { incompatibility_pair } ->
       (map incompatibility_pair, [text "the return value"])
+    | FrameUnionRepresentative union -> (None, [text "at least one member of "; ref union])
   in
   let root_msg_to_root_kind_and_friendly_msgs = function
     | RootCannotAccessIndex { index; object_ } ->
@@ -3893,6 +3908,15 @@ let to_printable_error :
       ]
     | MessageIncompatibleGeneral { lower; upper } ->
       [ref lower; text " is incompatible with "; ref upper]
+    | MessageIncompatibleWithUnionRepresentative { union; lower; upper } ->
+      [
+        text "at least one member of ";
+        ref union;
+        text ", e.g. ";
+        ref lower;
+        text ", is incompatible with ";
+        ref upper;
+      ]
     | MessageIncompatibleGeneralWithPrintedTypes { lower_loc; upper_loc; lower_desc; upper_desc } ->
       [
         ref_of_ty_or_desc lower_loc lower_desc;

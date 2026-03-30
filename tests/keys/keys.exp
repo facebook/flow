@@ -1,11 +1,11 @@
 Error ---------------------------------------------------------------------------------------------------- errors.js:9:1
 
-Cannot cast `k` to string literal `c` because key set [1] is incompatible with string literal `c` [2].
-[incompatible-type]
+Cannot cast `k` to string literal `c` because at least one member of key set [1], e.g. string literal `a` [2], is
+incompatible with string literal `c` [3]. [incompatible-type]
 
    errors.js:9:1
    9| k as 'c';
-      ^
+      ^ [2]
 
 References:
    errors.js:8:16
@@ -13,7 +13,7 @@ References:
                      ^ [1]
    errors.js:9:6
    9| k as 'c';
-           ^^^ [2]
+           ^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------------- errors.js:10:1

@@ -338,7 +338,8 @@ fn flip_frame<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         | MappedTypeKeyCompatibility { .. }
         | TypeGuardCompatibility
         | RendersCompatibility
-        | ReactDeepReadOnly(..) => frame,
+        | ReactDeepReadOnly(..)
+        | UnionRepresentative { .. } => frame,
     }
 }
 
@@ -2070,6 +2071,29 @@ where
                             )
                         }
 
+                        VirtualFrameUseOp::UnionRepresentative { union } => {
+                            let frame_loc = loc_of_aloc(&union.loc);
+                            let final_loc = if frame_loc.contains(&loc) {
+                                loc
+                            } else {
+                                frame_loc
+                            };
+                            let (mut all_frames, explanations) = frames;
+                            all_frames
+                                .insert(0, ErrorFrame::FrameUnionRepresentative(union.dupe()));
+                            loop_impl(
+                                final_loc,
+                                (all_frames, explanations),
+                                inner.as_ref().clone(),
+                                custom_error_message,
+                                loc_of_aloc,
+                                loc_of_prop_compatibility_reason,
+                                loop_to_form_access_chain,
+                                opt_incompatibility_pair,
+                                speculation,
+                            )
+                        }
+
                         VirtualFrameUseOp::ReactDeepReadOnly(props_loc, DroType::Props) => {
                             let (all_frames, mut explanations) = frames;
                             explanations.insert(
@@ -3066,6 +3090,17 @@ where
                 VirtualFrameUseOp::RendersCompatibility => make_error(
                     &lower,
                     Message::MessageDoesNotRender {
+                        lower: lower.dupe(),
+                        upper: upper.dupe(),
+                    },
+                ),
+
+                VirtualFrameUseOp::UnionRepresentative { union } => mk_use_op_error_reason(
+                    union,
+                    inner_use_op.as_ref().clone(),
+                    additional_explanation.clone(),
+                    Message::MessageIncompatibleWithUnionRepresentative {
+                        union: union.dupe(),
                         lower: lower.dupe(),
                         upper: upper.dupe(),
                     },
@@ -4250,6 +4285,10 @@ where
                 map_incompatibility(incompatibility_pair),
                 friendly::Message(vec![text("the return value")]),
             ),
+            FrameUnionRepresentative(union) => (
+                None,
+                friendly::Message(vec![text("at least one member of "), ref_(union)]),
+            ),
         }
     };
 
@@ -4770,6 +4809,18 @@ where
             MessageIncompatibleGeneral { lower, upper } => friendly::Message(vec![
                 ref_(lower),
                 text(" is incompatible with "),
+                ref_(upper),
+            ]),
+            MessageIncompatibleWithUnionRepresentative {
+                union,
+                lower,
+                upper,
+            } => friendly::Message(vec![
+                text("at least one member of "),
+                ref_(union),
+                text(", e.g. "),
+                ref_(lower),
+                text(", is incompatible with "),
                 ref_(upper),
             ]),
             MessageIncompatibleImplicitReturn { lower, upper } => friendly::Message(vec![

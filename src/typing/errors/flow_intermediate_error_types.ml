@@ -492,6 +492,7 @@ type 'loc frame =
   | FrameTypeParameterBound of string
   | FrameTypePredicate
   | FrameReturnValue of { incompatibility_pair: ('loc virtual_reason * 'loc virtual_reason) option }
+  | FrameUnionRepresentative of 'loc virtual_reason
 
 type 'loc root_message =
   | RootCannotAccessIndex of {
@@ -925,6 +926,11 @@ type 'loc message =
     }
   | MessageIncompatibleComponentRestParam of 'loc virtual_reason
   | MessageIncompatibleGeneral of {
+      lower: 'loc virtual_reason;
+      upper: 'loc virtual_reason;
+    }
+  | MessageIncompatibleWithUnionRepresentative of {
+      union: 'loc virtual_reason;
       lower: 'loc virtual_reason;
       upper: 'loc virtual_reason;
     }

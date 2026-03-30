@@ -2730,50 +2730,117 @@ pub fn rec_sub_t<'cx>(
                     _ => {}
                 }
             }
-            let check = |elt: UnionEnum| -> Result<(), FlowJsException> {
-                if !rep.is_optimized_finally() {
-                    rep.optimize_enum_only(|t| type_mapper::union_flatten(cx, t.duped()));
-                }
-                match rep.check_enum_with_tag() {
-                    Some((enums, enum_tag)) if enum_tag == union_rep::tag_of_member(u) => {
-                        if !enums.iter().all(|e| *e == elt) {
-                            flow_js_utils::add_output(
+            if !rep.is_optimized_finally() {
+                rep.optimize_enum_only(|t| type_mapper::union_flatten(cx, t.duped()));
+            }
+            match rep.check_enum_with_tag() {
+                Some((enums, Some(tag))) => {
+                    let mut members = rep.members_iter();
+                    match members.next() {
+                        None => {}
+                        Some(representative) => {
+                            let representative = representative.dupe();
+                            drop(members);
+                            match speculation_kit::try_singleton_throw_on_failure(
                                 cx,
-                                ErrorMessage::EIncompatibleWithUseOp {
-                                    reason_lower: type_util::reason_of_t(l).dupe(),
-                                    reason_upper: type_util::reason_of_t(u).dupe(),
-                                    use_op: use_op.dupe(),
-                                    explanation: None,
-                                },
-                            )?;
+                                trace,
+                                representative.dupe(),
+                                UseT::new(UseTInner::UseT(use_op.dupe(), u.dupe())),
+                            ) {
+                                Err(FlowJsException::SpeculationSingletonError) => {
+                                    // When the representative is itself a union
+                                    // (possibly wrapped in AnnotT/OpenT from a
+                                    // type alias), the recursive flow will add
+                                    // its own UnionRepresentative frame. Skip
+                                    // the outer one to avoid doubled "at least
+                                    // one member of" messages.
+                                    let use_op = match cx.find_resolved(&representative) {
+                                        Some(resolved)
+                                            if matches!(&*resolved, TypeInner::UnionT(_, _)) =>
+                                        {
+                                            use_op
+                                        }
+                                        _ => VirtualUseOp::Frame(
+                                            Arc::new(VirtualFrameUseOp::UnionRepresentative {
+                                                union: type_util::reason_of_t(l).dupe(),
+                                            }),
+                                            Arc::new(use_op),
+                                        ),
+                                    };
+                                    FlowJs::rec_flow(
+                                        cx,
+                                        trace,
+                                        &representative,
+                                        &UseT::new(UseTInner::UseT(use_op, u.dupe())),
+                                    )?;
+                                }
+                                Ok(()) => {
+                                    let singleton_check =
+                                        |elt: UnionEnum| -> Result<(), FlowJsException> {
+                                            if Some(tag) == union_rep::tag_of_member(u) {
+                                                if !enums.iter().all(|e| *e == elt) {
+                                                    flow_js_utils::add_output(
+                                                        cx,
+                                                        ErrorMessage::EIncompatibleWithUseOp {
+                                                            reason_lower: type_util::reason_of_t(l)
+                                                                .dupe(),
+                                                            reason_upper: type_util::reason_of_t(u)
+                                                                .dupe(),
+                                                            use_op: use_op.dupe(),
+                                                            explanation: None,
+                                                        },
+                                                    )?;
+                                                }
+                                            } else {
+                                                flow_all_in_union(
+                                                    cx,
+                                                    &trace,
+                                                    rep,
+                                                    &UseT::new(UseTInner::UseT(
+                                                        use_op.dupe(),
+                                                        u.dupe(),
+                                                    )),
+                                                )?;
+                                            }
+                                            Ok(())
+                                        };
+                                    match u.deref() {
+                                        TypeInner::DefT(_, ud)
+                                            if let DefTInner::SingletonStrT {
+                                                value: x, ..
+                                            } = ud.deref() =>
+                                        {
+                                            singleton_check(UnionEnum::Str(x.dupe()))?;
+                                        }
+                                        TypeInner::DefT(_, ud)
+                                            if let DefTInner::SingletonBoolT {
+                                                value: x, ..
+                                            } = ud.deref() =>
+                                        {
+                                            singleton_check(UnionEnum::Bool(*x))?;
+                                        }
+                                        TypeInner::DefT(_, ud)
+                                            if let DefTInner::SingletonNumT {
+                                                value: x, ..
+                                            } = ud.deref() =>
+                                        {
+                                            singleton_check(UnionEnum::Num(x.dupe()))?;
+                                        }
+                                        _ => {
+                                            flow_all_in_union(
+                                                cx,
+                                                &trace,
+                                                rep,
+                                                &UseT::new(UseTInner::UseT(use_op, u.dupe())),
+                                            )?;
+                                        }
+                                    }
+                                }
+                                Err(e) => return Err(e),
+                            }
                         }
                     }
-                    _ => {
-                        flow_all_in_union(
-                            cx,
-                            &trace,
-                            rep,
-                            &UseT::new(UseTInner::UseT(use_op.dupe(), u.dupe())),
-                        )?;
-                    }
-                }
-                Ok(())
-            };
-            match u.deref() {
-                TypeInner::DefT(_, ud)
-                    if let DefTInner::SingletonStrT { value: x, .. } = ud.deref() =>
-                {
-                    check(UnionEnum::Str(x.dupe()))
-                }
-                TypeInner::DefT(_, ud)
-                    if let DefTInner::SingletonBoolT { value: x, .. } = ud.deref() =>
-                {
-                    check(UnionEnum::Bool(*x))
-                }
-                TypeInner::DefT(_, ud)
-                    if let DefTInner::SingletonNumT { value: x, .. } = ud.deref() =>
-                {
-                    check(UnionEnum::Num(x.dupe()))
+                    Ok(())
                 }
                 _ => flow_all_in_union(
                     cx,

@@ -475,7 +475,7 @@ References:
 
 Error ---------------------------------------------------------------------------------------------------- test.js:47:15
 
-Cannot call `f` because in type argument `Key`: at least one member of `Key` [1], e.g. string `2` [2], is incompatible
+Cannot call `f` because in type argument `Key`: at least one member of `Key` [1], e.g. string `1` [2], is incompatible
 with number [3]. [incompatible-type]
 
    test.js:47:15
@@ -500,7 +500,7 @@ References:
 
 Error ----------------------------------------------------------------------------------------------------- test.js:62:5
 
-Cannot cast `x` to number because at least one member of `K` [1], e.g. string `2` [1], is incompatible with number [2].
+Cannot cast `x` to number because at least one member of `K` [1], e.g. string `1` [1], is incompatible with number [2].
 [incompatible-type]
 
    test.js:62:5

@@ -615,6 +615,7 @@ pub enum Frame<L: Dupe> {
     FrameReturnValue {
         incompatibility_pair: Option<(VirtualReason<L>, VirtualReason<L>)>,
     },
+    FrameUnionRepresentative(VirtualReason<L>),
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -1183,6 +1184,12 @@ pub enum Message<L: Dupe> {
     MessageIncompatibleComponentRestParam(VirtualReason<L>),
 
     MessageIncompatibleGeneral {
+        lower: VirtualReason<L>,
+        upper: VirtualReason<L>,
+    },
+
+    MessageIncompatibleWithUnionRepresentative {
+        union: VirtualReason<L>,
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
     },

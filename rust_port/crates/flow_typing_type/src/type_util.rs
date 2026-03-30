@@ -1409,6 +1409,9 @@ where
                     upper: mod_reason(upper),
                 }
             }
+            UnionRepresentative { union } => UnionRepresentative {
+                union: mod_reason(union),
+            },
         }
     }
 

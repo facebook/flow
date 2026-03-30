@@ -955,6 +955,9 @@ pub enum VirtualFrameUseOp<L: Dupe + PartialEq + Eq + PartialOrd + Ord> {
         lower: VirtualReason<L>,
         upper: VirtualReason<L>,
     },
+    UnionRepresentative {
+        union: VirtualReason<L>,
+    },
 }
 
 #[derive(Debug, Clone, Dupe)]
@@ -11022,6 +11025,7 @@ pub fn string_of_frame_use_op<L: Dupe + PartialEq + Eq + PartialOrd + Ord>(
         VirtualFrameUseOp::EnumRepresentationTypeCompatibility { .. } => {
             "EnumRepresentationTypeCompatibility"
         }
+        VirtualFrameUseOp::UnionRepresentative { .. } => "UnionRepresentative",
     }
 }
 

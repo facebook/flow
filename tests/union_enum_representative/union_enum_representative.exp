@@ -1,0 +1,236 @@
+Error ------------------------------------------------------------------------------- union_enum_representative.js:20:24
+
+Cannot call `createObjectFrom` because in type argument `TKey`: at least one member of `TKey` [1], e.g. number literal
+`35` [2], is incompatible with string [3]. [incompatible-type]
+
+   union_enum_representative.js:20:24
+   20| const navigationKeys = createObjectFrom([
+                              ^^^^^^^^^^^^^^^^
+
+References:
+   union_enum_representative.js:13:35
+   13| declare function createObjectFrom<TKey: string>(
+                                         ^^^^ [1]
+   union_enum_representative.js:10:8
+   10|   END: 35,
+              ^^ [2]
+   union_enum_representative.js:13:41
+   13| declare function createObjectFrom<TKey: string>(
+                                               ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------- union_enum_representative.js:30:20
+
+Cannot call `createObjectFrom` because in type argument `TKey`: at least one member of `TKey` [1], e.g. number literal
+`35` [2], is incompatible with string [3]. [incompatible-type]
+
+   union_enum_representative.js:30:20
+   30| const deleteKeys = createObjectFrom([Keys.HOME, Keys.END]);
+                          ^^^^^^^^^^^^^^^^
+
+References:
+   union_enum_representative.js:13:35
+   13| declare function createObjectFrom<TKey: string>(
+                                         ^^^^ [1]
+   union_enum_representative.js:10:8
+   10|   END: 35,
+              ^^ [2]
+   union_enum_representative.js:13:41
+   13| declare function createObjectFrom<TKey: string>(
+                                               ^^^^^^ [3]
+
+
+Error ------------------------------------------------------------------------------- union_enum_representative.js:35:13
+
+Cannot call `needsString` with `k` bound to `x` because at least one member of union type [1], e.g. number literal
+`38` [2], is incompatible with string [3]. [incompatible-type]
+
+   union_enum_representative.js:35:13
+   35| needsString(k);
+                   ^
+
+References:
+   union_enum_representative.js:33:18
+   33| declare const k: 38 | 40 | 37;
+                        ^^^^^^^^^^^^ [1]
+   union_enum_representative.js:33:18
+   33| declare const k: 38 | 40 | 37;
+                        ^^ [2]
+   union_enum_representative.js:34:33
+   34| declare function needsString(x: string): void;
+                                       ^^^^^^ [3]
+
+
+Error -------------------------------------------------------------------------------- union_enum_representative.js:39:2
+
+Cannot cast `nums` to string because number literal `1` [1] is incompatible with string [2]. [incompatible-type]
+
+   union_enum_representative.js:39:2
+   39| (nums as string);
+        ^^^^
+
+References:
+   union_enum_representative.js:38:21
+   38| declare const nums: 1 | 2 | 3;
+                           ^ [1]
+   union_enum_representative.js:39:10
+   39| (nums as string);
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- union_enum_representative.js:39:2
+
+Cannot cast `nums` to string because number literal `2` [1] is incompatible with string [2]. [incompatible-type]
+
+   union_enum_representative.js:39:2
+   39| (nums as string);
+        ^^^^
+
+References:
+   union_enum_representative.js:38:25
+   38| declare const nums: 1 | 2 | 3;
+                               ^ [1]
+   union_enum_representative.js:39:10
+   39| (nums as string);
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- union_enum_representative.js:39:2
+
+Cannot cast `nums` to string because number literal `3` [1] is incompatible with string [2]. [incompatible-type]
+
+   union_enum_representative.js:39:2
+   39| (nums as string);
+        ^^^^
+
+References:
+   union_enum_representative.js:38:29
+   38| declare const nums: 1 | 2 | 3;
+                                   ^ [1]
+   union_enum_representative.js:39:10
+   39| (nums as string);
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- union_enum_representative.js:43:2
+
+Cannot cast `mixed` to null because number literal `1` [1] is incompatible with null [2]. [incompatible-type]
+
+   union_enum_representative.js:43:2
+   43| (mixed as null);
+        ^^^^^
+
+References:
+   union_enum_representative.js:42:22
+   42| declare const mixed: 1 | "two" | true;
+                            ^ [1]
+   union_enum_representative.js:43:11
+   43| (mixed as null);
+                 ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- union_enum_representative.js:43:2
+
+Cannot cast `mixed` to null because string literal `two` [1] is incompatible with null [2]. [incompatible-type]
+
+   union_enum_representative.js:43:2
+   43| (mixed as null);
+        ^^^^^
+
+References:
+   union_enum_representative.js:42:26
+   42| declare const mixed: 1 | "two" | true;
+                                ^^^^^ [1]
+   union_enum_representative.js:43:11
+   43| (mixed as null);
+                 ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- union_enum_representative.js:43:2
+
+Cannot cast `mixed` to null because boolean literal `true` [1] is incompatible with null [2]. [incompatible-type]
+
+   union_enum_representative.js:43:2
+   43| (mixed as null);
+        ^^^^^
+
+References:
+   union_enum_representative.js:42:34
+   42| declare const mixed: 1 | "two" | true;
+                                        ^^^^ [1]
+   union_enum_representative.js:43:11
+   43| (mixed as null);
+                 ^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- union_enum_representative.js:47:2
+
+Cannot cast `strs` to number because string literal `a` [1] is incompatible with number [2]. [incompatible-type]
+
+   union_enum_representative.js:47:2
+   47| (strs as number);
+        ^^^^
+
+References:
+   union_enum_representative.js:46:21
+   46| declare const strs: "a" | "b" | "c";
+                           ^^^ [1]
+   union_enum_representative.js:47:10
+   47| (strs as number);
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- union_enum_representative.js:47:2
+
+Cannot cast `strs` to number because string literal `b` [1] is incompatible with number [2]. [incompatible-type]
+
+   union_enum_representative.js:47:2
+   47| (strs as number);
+        ^^^^
+
+References:
+   union_enum_representative.js:46:27
+   46| declare const strs: "a" | "b" | "c";
+                                 ^^^ [1]
+   union_enum_representative.js:47:10
+   47| (strs as number);
+                ^^^^^^ [2]
+
+
+Error -------------------------------------------------------------------------------- union_enum_representative.js:47:2
+
+Cannot cast `strs` to number because string literal `c` [1] is incompatible with number [2]. [incompatible-type]
+
+   union_enum_representative.js:47:2
+   47| (strs as number);
+        ^^^^
+
+References:
+   union_enum_representative.js:46:33
+   46| declare const strs: "a" | "b" | "c";
+                                       ^^^ [1]
+   union_enum_representative.js:47:10
+   47| (strs as number);
+                ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------------- union_enum_representative.js:57:13
+
+Cannot call `needsNumber` with `combined` bound to `x` because at least one member of `A` [1], e.g. string literal
+`a1` [1], is incompatible with number [2]. [incompatible-type]
+
+   union_enum_representative.js:57:13
+   57| needsNumber(combined);
+                   ^^^^^^^^
+
+References:
+   union_enum_representative.js:56:23
+   56| declare var combined: A | B;
+                             ^ [1]
+   union_enum_representative.js:55:33
+   55| declare function needsNumber(x: number): void;
+                                       ^^^^^^ [2]
+
+
+
+Found 13 errors

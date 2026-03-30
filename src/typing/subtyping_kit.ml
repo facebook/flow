@@ -1461,29 +1461,59 @@ module Make (Flow : INPUT) : OUTPUT = struct
         | IntersectionT _ -> prerr_endline "UnionT ~> IntersectionT slow case"
         | _ -> ()
       );
-      let check elt =
-        if not (UnionRep.is_optimized_finally rep) then
-          UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep;
-        match UnionRep.check_enum_with_tag rep with
-        | Some (enums, enum_tag) when enum_tag = UnionRep.tag_of_member u ->
-          if not (UnionEnumSet.for_all (( = ) elt) enums) then
-            add_output
-              cx
-              (Error_message.EIncompatibleWithUseOp
-                 {
-                   reason_lower = reason_of_t l;
-                   reason_upper = reason_of_t u;
-                   use_op;
-                   explanation = None;
-                 }
-              )
-        | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
-      in
+      (* For homogeneous enum unions (uniform tag), try a single representative
+         speculatively. If it fails, emit one error instead of N identical ones.
+         If it succeeds, check singleton membership (D62284942) or distribute. *)
+      if not (UnionRep.is_optimized_finally rep) then
+        UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep;
       begin
-        match u with
-        | DefT (_, SingletonStrT { value = x; _ }) -> check (UnionEnum.Str x)
-        | DefT (_, SingletonBoolT { value = x; _ }) -> check (UnionEnum.Bool x)
-        | DefT (_, SingletonNumT { value = x; _ }) -> check (UnionEnum.Num x)
+        match UnionRep.check_enum_with_tag rep with
+        | Some (enums, Some tag) ->
+          (match UnionRep.members rep with
+          | [] -> ()
+          | representative :: _ ->
+            (match
+               SpeculationKit.try_singleton_throw_on_failure
+                 cx
+                 trace
+                 representative
+                 (UseT (use_op, u))
+             with
+            | exception Flow_js_utils.SpeculationSingletonError ->
+              (* When the representative is itself a union (possibly wrapped
+                 in AnnotT/OpenT from a type alias), the recursive flow will
+                 add its own UnionRepresentative frame. Skip the outer one
+                 to avoid doubled "at least one member of" messages. *)
+              let use_op =
+                match Context.find_resolved cx representative with
+                | Some (UnionT _) -> use_op
+                | _ -> Frame (UnionRepresentative { union = reason_of_t l }, use_op)
+              in
+              rec_flow cx trace (representative, UseT (use_op, u))
+            | () ->
+              let singleton_check elt =
+                if Some tag = UnionRep.tag_of_member u then begin
+                  if not (UnionEnumSet.for_all (( = ) elt) enums) then
+                    add_output
+                      cx
+                      (Error_message.EIncompatibleWithUseOp
+                         {
+                           reason_lower = reason_of_t l;
+                           reason_upper = reason_of_t u;
+                           use_op;
+                           explanation = None;
+                         }
+                      )
+                end else
+                  flow_all_in_union cx trace rep (UseT (use_op, u))
+              in
+              begin
+                match u with
+                | DefT (_, SingletonStrT { value = x; _ }) -> singleton_check (UnionEnum.Str x)
+                | DefT (_, SingletonBoolT { value = x; _ }) -> singleton_check (UnionEnum.Bool x)
+                | DefT (_, SingletonNumT { value = x; _ }) -> singleton_check (UnionEnum.Num x)
+                | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
+              end))
         | _ -> flow_all_in_union cx trace rep (UseT (use_op, u))
       end
     | (_, IntersectionT (_, rep)) ->
