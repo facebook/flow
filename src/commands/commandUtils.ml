@@ -1415,6 +1415,12 @@ let make_options
     | Some ("0" | "false") -> false
     | _ -> FlowConfig.saved_state_direct_serialization flowconfig
   in
+  let opt_saved_state_persist_export_index =
+    match Sys.getenv_opt "FLOW_SAVED_STATE_PERSIST_EXPORT_INDEX" with
+    | Some ("1" | "true") -> true
+    | Some ("0" | "false") -> false
+    | _ -> FlowConfig.saved_state_persist_export_index flowconfig
+  in
   let opt_lazy_mode =
     match Base.Option.first_some lazy_mode (FlowConfig.lazy_mode flowconfig) with
     | Some FlowConfig.Lazy -> true
@@ -1642,6 +1648,7 @@ let make_options
     opt_saved_state_fetcher;
     opt_saved_state_force_recheck = saved_state_options_flags.saved_state_force_recheck;
     opt_saved_state_direct_serialization;
+    opt_saved_state_persist_export_index;
     opt_saved_state_no_fallback = saved_state_options_flags.saved_state_no_fallback;
     opt_saved_state_skip_version_check =
       saved_state_options_flags.saved_state_skip_version_check

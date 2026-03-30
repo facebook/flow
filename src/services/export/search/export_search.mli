@@ -16,6 +16,8 @@ type search_options = Fuzzy_path.options = {
 
 val init : Export_index.t -> t
 
+val get_index : t -> Export_index.t
+
 val merge_available_exports : Export_index.t -> Export_index.t -> t -> t
 
 val merge_export_import : Export_index.t -> t -> t

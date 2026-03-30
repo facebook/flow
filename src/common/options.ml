@@ -189,6 +189,7 @@ type t = {
   opt_saved_state_fetcher: saved_state_fetcher;
   opt_saved_state_force_recheck: bool;
   opt_saved_state_direct_serialization: bool;
+  opt_saved_state_persist_export_index: bool;
   opt_saved_state_no_fallback: bool;
   opt_saved_state_skip_version_check: bool;
   opt_saved_state_verify: bool;
@@ -404,6 +405,8 @@ let saved_state_fetcher opts = opts.opt_saved_state_fetcher
 let saved_state_force_recheck opts = opts.opt_saved_state_force_recheck
 
 let saved_state_direct_serialization opts = opts.opt_saved_state_direct_serialization
+
+let saved_state_persist_export_index opts = opts.opt_saved_state_persist_export_index
 
 let saved_state_no_fallback opts = opts.opt_saved_state_no_fallback
 

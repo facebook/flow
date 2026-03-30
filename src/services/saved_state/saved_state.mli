@@ -61,6 +61,7 @@ type saved_state_env_data = {
   node_modules_containers: SSet.t SMap.t;
   dependency_info: Dependency_info.t;
   duplicate_providers: (File_key.t * File_key.t Nel.t) SMap.t;
+  export_index: Export_index.t option;
 }
 
 type loaded_saved_state =

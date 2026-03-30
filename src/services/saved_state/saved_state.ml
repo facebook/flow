@@ -80,6 +80,7 @@ type saved_state_env_data = {
   node_modules_containers: SSet.t SMap.t;
   dependency_info: Dependency_info.t;
   duplicate_providers: (File_key.t * File_key.t Nel.t) SMap.t;
+  export_index: Export_index.t option;
 }
 
 type loaded_saved_state =
@@ -504,6 +505,12 @@ end = struct
       let node_modules_containers = collect_node_modules_containers root in
       let dependency_info = env.ServerEnv.dependency_info in
       let flowconfig_hash = collect_flowconfig_hash ~options in
+      let export_index =
+        if Options.saved_state_persist_export_index options then
+          Option.map Export_search.get_index env.ServerEnv.exports
+        else
+          None
+      in
       {
         flowconfig_hash;
         parsed_files;
@@ -514,6 +521,7 @@ end = struct
         node_modules_containers;
         dependency_info;
         duplicate_providers;
+        export_index;
       }
 
     let save ~saved_state_filename ~genv ~env ~profiling =
@@ -800,6 +808,7 @@ end = struct
         node_modules_containers;
         dependency_info;
         duplicate_providers;
+        export_index;
       } =
         data
       in
@@ -817,6 +826,7 @@ end = struct
         node_modules_containers;
         dependency_info;
         duplicate_providers;
+        export_index;
       }
 
     let load ~options ~profiling fd =
