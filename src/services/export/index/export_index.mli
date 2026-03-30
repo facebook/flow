@@ -36,6 +36,8 @@ val add : string -> source -> kind -> t -> t
 
 val merge : t -> t -> t
 
+val merge_all : t list -> t
+
 val merge_export_import : t -> t -> t
 
 (* Returns tuple of two disjoint index: (addition_index, removal_index),
