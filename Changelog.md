@@ -1,3 +1,7 @@
+### 0.307.1
+
+* Misc: Store exports index in saved state
+
 ### 0.307.0
 
 Notable bug fixes:
