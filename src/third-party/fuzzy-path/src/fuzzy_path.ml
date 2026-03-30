@@ -26,6 +26,7 @@ type t
 external ext_create : unit -> t = "fuzzy_create"
 external ext_add_candidate : t -> string -> int -> unit = "fuzzy_add_candidate"
 external ext_add_candidates : t -> (string * int) list -> unit = "fuzzy_add_candidates"
+external ext_add_candidates_array : t -> (string * int) array -> unit = "fuzzy_add_candidates_array"
 external ext_remove_candidate : t -> string -> unit = "fuzzy_remove_candidate"
 external ext_match : t -> string -> options -> match_result list = "fuzzy_match"
 
@@ -56,6 +57,11 @@ let remove_candidates t to_rem = List.fold_left remove_candidate t to_rem
 let init candidates =
   let t = ext_create () in
   let t = add_candidates t candidates in
+  t
+
+let init_from_array candidates =
+  let t = ext_create () in
+  ext_add_candidates_array t candidates;
   t
 
 external ext_fuzzy_score : string -> string -> bool -> bool -> int option = "fuzzy_score"

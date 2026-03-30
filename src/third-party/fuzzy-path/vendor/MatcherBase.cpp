@@ -219,6 +219,51 @@ void MatcherBase::addCandidate(const std::string &candidate, int weight) {
   }
 }
 
+void MatcherBase::addCandidatesBulk(const std::string *candidates, const int *weights, size_t count) {
+  size_t base = candidates_.size();
+  candidates_.resize(base + count);
+
+  // Build CandidateData entries in parallel (string copy + lowercase + bitmask)
+  size_t num_threads = std::min((size_t)std::thread::hardware_concurrency(), (size_t)8);
+  if (num_threads <= 1 || count < 10000) {
+    for (size_t i = 0; i < count; i++) {
+      CandidateData &data = candidates_[base + i];
+      data.value = candidates[i];
+      data.lowercase = str_to_lower(candidates[i]);
+      data.bitmask = letter_bitmask(data.lowercase);
+      data.last_match = true;
+      data.weight = weights[i];
+    }
+  } else {
+    std::vector<std::thread> threads;
+    size_t chunk = (count + num_threads - 1) / num_threads;
+    for (size_t t = 0; t < num_threads; t++) {
+      size_t start = t * chunk;
+      size_t end = std::min(start + chunk, count);
+      if (start >= end) break;
+      threads.emplace_back([&, start, end, base]() {
+        for (size_t i = start; i < end; i++) {
+          CandidateData &data = candidates_[base + i];
+          data.value = candidates[i];
+          data.lowercase = str_to_lower(candidates[i]);
+          data.bitmask = letter_bitmask(data.lowercase);
+          data.last_match = true;
+          data.weight = weights[i];
+        }
+      });
+    }
+    for (auto &t : threads) {
+      t.join();
+    }
+  }
+
+  // Build lookup map sequentially (fast - just inserts, no finds)
+  lookup_.reserve(lookup_.size() + count);
+  for (size_t i = 0; i < count; i++) {
+    lookup_[candidates_[base + i].value] = base + i;
+  }
+}
+
 void MatcherBase::removeCandidate(const std::string &candidate) {
   auto it = lookup_.find(candidate);
   if (it != lookup_.end()) {

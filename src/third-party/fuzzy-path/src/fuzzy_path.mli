@@ -26,6 +26,8 @@ val default_options : options
 
 val init : (string * int) list -> t
 
+val init_from_array : (string * int) array -> t
+
 val search : ?options:options -> string -> t -> match_result list
 
 val add_candidate : t -> string -> int -> t
