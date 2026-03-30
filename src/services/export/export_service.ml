@@ -364,10 +364,12 @@ let index ~workers ~reader parsed :
   Hh_logger.info "Indexing files: creating index...";
   MonitorRPC.status_update
     ~event:ServerStatus.(Indexing_progress { finished = 0; total = Some total_count });
-  (* each job returns two Export_index.t's. we cons them onto lists and merge them all
+  (* each job returns Export_index.t's. we cons them onto lists and merge them all
      afterwards because the ~merge function blocks talking to workers so it needs to
      be as fast as possible in order to keep the workers busy. [Export_index.merge]
-     was found to be slow enough for this to matter. *)
+     was found to be slow enough for this to matter. Using a large max_size reduces
+     the number of batches (and thus merge_all work) while still providing enough
+     batches for good load balancing across workers. *)
   let%lwt (new_available_exports, old_available_exports, imports_to_add, imports_to_remove, _count)
       =
     MultiWorkerLwt.call
@@ -391,33 +393,15 @@ let index ~workers ~reader parsed :
           imports_to_remove :: imports_to_remove_acc,
           finished
         ))
-      ~next:(MultiWorkerLwt.next workers parsed)
+      ~next:(MultiWorkerLwt.next ~max_size:16000 workers parsed)
   in
   Hh_logger.info "Indexing files: indexing post-process...";
   MonitorRPC.status_update ~event:ServerStatus.Indexing_post_process;
 
-  let new_available_exports =
-    Base.List.fold new_available_exports ~init:Export_index.empty ~f:(fun acc index ->
-        Export_index.merge index acc
-    )
-  in
-  let old_available_exports =
-    Base.List.fold old_available_exports ~init:Export_index.empty ~f:(fun acc index ->
-        Export_index.merge index acc
-    )
-  in
-
-  let imports_to_add =
-    Base.List.fold imports_to_add ~init:Export_index.empty ~f:(fun acc index ->
-        Export_index.merge index acc
-    )
-  in
-
-  let imports_to_remove =
-    Base.List.fold imports_to_remove ~init:Export_index.empty ~f:(fun acc index ->
-        Export_index.merge index acc
-    )
-  in
+  let new_available_exports = Export_index.merge_all new_available_exports in
+  let old_available_exports = Export_index.merge_all old_available_exports in
+  let imports_to_add = Export_index.merge_all imports_to_add in
+  let imports_to_remove = Export_index.merge_all imports_to_remove in
 
   Lwt.return (new_available_exports, old_available_exports, imports_to_add, imports_to_remove)
 

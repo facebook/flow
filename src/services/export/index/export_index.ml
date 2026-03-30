@@ -115,11 +115,34 @@ let add : string -> source -> kind -> t -> t =
   in
   (fun name file_key kind t -> SMap.update name (add_file file_key kind) t)
 
-let merge x y =
-  SMap.union
-    ~combine:(fun _key a b -> Some (ExportMap.union ~combine:(fun _key a b -> Some (a + b)) a b))
-    x
-    y
+let combine_counts _key a b = Some (a + b)
+
+let combine_export_maps _key a b = Some (ExportMap.union ~combine:combine_counts a b)
+
+let merge x y = SMap.union ~combine:combine_export_maps x y
+
+let merge_all (indices : t list) : t =
+  (* Batch indices into groups and fold each group separately, then fold
+     the group results. This improves cache locality since early merges
+     operate on small maps that fit in cache. *)
+  let batch_size = 64 in
+  let rec batch_fold acc batch batch_len = function
+    | [] ->
+      let batched = Base.List.fold batch ~init:empty ~f:(fun a b -> merge b a) in
+      batched :: acc
+    | x :: rest ->
+      if batch_len >= batch_size then begin
+        let batched = Base.List.fold batch ~init:empty ~f:(fun a b -> merge b a) in
+        batch_fold (batched :: acc) [x] 1 rest
+      end else
+        batch_fold acc (x :: batch) (batch_len + 1) rest
+  in
+  match indices with
+  | [] -> empty
+  | [x] -> x
+  | _ ->
+    let batched = batch_fold [] [] 0 indices in
+    Base.List.fold batched ~init:empty ~f:(fun acc index -> merge index acc)
 
 let merge_export_import add t =
   let f k add acc =
