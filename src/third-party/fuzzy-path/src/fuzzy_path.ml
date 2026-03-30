@@ -64,6 +64,11 @@ let init_from_array candidates =
   ext_add_candidates_array t candidates;
   t
 
+external ext_init_pair_from_arrays :
+  (string * int) array -> (string * int) array -> t * t = "fuzzy_init_pair_from_arrays"
+
+let init_pair_from_arrays a b = ext_init_pair_from_arrays a b
+
 external ext_fuzzy_score : string -> string -> bool -> bool -> int option = "fuzzy_score"
 
 let fuzzy_score

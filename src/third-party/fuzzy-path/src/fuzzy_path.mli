@@ -28,6 +28,8 @@ val init : (string * int) list -> t
 
 val init_from_array : (string * int) array -> t
 
+val init_pair_from_arrays : (string * int) array -> (string * int) array -> t * t
+
 val search : ?options:options -> string -> t -> match_result list
 
 val add_candidate : t -> string -> int -> t

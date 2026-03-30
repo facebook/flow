@@ -7,6 +7,7 @@
 
 #include <stdlib.h>
 #include <string>
+#include <thread>
 
 #include "fuzzy_path_wrapper.h"
 
@@ -90,6 +91,38 @@ void matcher_add_candidates_bulk(matcher_t *m, const char **candidates, const in
     strs[i] = candidates[i];
   }
   obj->addCandidatesBulk(strs.data(), weights, count);
+}
+
+void matcher_init_pair_bulk(
+    matcher_t **out_a, const char **candidates_a, const int *weights_a, size_t count_a,
+    matcher_t **out_b, const char **candidates_b, const int *weights_b, size_t count_b) {
+  matcher_t *ma = matcher_create();
+  matcher_t *mb = matcher_create();
+  if (ma == nullptr || mb == nullptr) {
+    *out_a = ma;
+    *out_b = mb;
+    return;
+  }
+  MatcherBase *obj_a = static_cast<MatcherBase *>(ma->obj);
+  MatcherBase *obj_b = static_cast<MatcherBase *>(mb->obj);
+
+  std::vector<std::string> strs_a(count_a);
+  for (size_t i = 0; i < count_a; i++) {
+    strs_a[i] = candidates_a[i];
+  }
+  std::vector<std::string> strs_b(count_b);
+  for (size_t i = 0; i < count_b; i++) {
+    strs_b[i] = candidates_b[i];
+  }
+
+  std::thread t([&]() {
+    obj_b->addCandidatesBulk(strs_b.data(), weights_b, count_b);
+  });
+  obj_a->addCandidatesBulk(strs_a.data(), weights_a, count_a);
+  t.join();
+
+  *out_a = ma;
+  *out_b = mb;
 }
 
 void matcher_remove_candidate(matcher_t *m, const char *candidate) {
