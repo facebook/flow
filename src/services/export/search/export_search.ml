@@ -65,8 +65,10 @@ let get_index t = t.index
 
 let init index =
   let { values; types } = partition_candidates index in
-  let value_matcher = Fuzzy_path.init values in
-  let type_matcher = Fuzzy_path.init types in
+  let values = Array.of_list values in
+  let types = Array.of_list types in
+  let value_matcher = Fuzzy_path.init_from_array values in
+  let type_matcher = Fuzzy_path.init_from_array types in
   { index; value_matcher; type_matcher }
 
 let merge_available_exports

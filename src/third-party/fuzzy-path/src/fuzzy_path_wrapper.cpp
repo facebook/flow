@@ -81,6 +81,17 @@ void matcher_add_candidate(matcher_t *m, const char *candidate, int weight) {
   obj->addCandidate(s, weight);
 }
 
+void matcher_add_candidates_bulk(matcher_t *m, const char **candidates, const int *weights, size_t count) {
+  if (m == nullptr) return;
+  MatcherBase *obj = static_cast<MatcherBase *>(m->obj);
+  // Convert const char* to std::string
+  std::vector<std::string> strs(count);
+  for (size_t i = 0; i < count; i++) {
+    strs[i] = candidates[i];
+  }
+  obj->addCandidatesBulk(strs.data(), weights, count);
+}
+
 void matcher_remove_candidate(matcher_t *m, const char *candidate) {
   MatcherBase *obj;
   if (m == nullptr) {

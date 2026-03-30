@@ -42,6 +42,7 @@ typedef struct match_results {
 matcher_t *matcher_create();
 match_results_t matcher_find(matcher_t *m, const char *query, matcher_options_t options);
 void matcher_add_candidate(matcher_t *m, const char *candidate, int weight);
+void matcher_add_candidates_bulk(matcher_t *m, const char **candidates, const int *weights, size_t count);
 void matcher_remove_candidate(matcher_t *m, const char *candidate);
 void matcher_clear(matcher_t *m);
 void matcher_reserve(matcher_t *m, size_t n);

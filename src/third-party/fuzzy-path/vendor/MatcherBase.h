@@ -75,6 +75,7 @@ public:
   std::vector<MatchResult> findMatches(const std::string &query,
                                        const MatcherOptions &options);
   void addCandidate(const std::string &candidate, int weight);
+  void addCandidatesBulk(const std::string *candidates, const int *weights, size_t count);
   void removeCandidate(const std::string &candidate);
   void clear();
   void reserve(size_t n);

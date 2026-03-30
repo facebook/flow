@@ -84,6 +84,31 @@ value fuzzy_add_candidates(value matcher, value candidates) {
   CAMLreturn (Val_unit);
 }
 
+value fuzzy_add_candidates_array(value matcher, value candidates) {
+  CAMLparam2(matcher, candidates);
+  matcher_t *m = Matcher_val(matcher);
+  size_t count = Wosize_val(candidates);
+
+  /* Extract strings and weights into C arrays, then call bulk add
+     which parallelizes the string processing in C++ threads. */
+  const char **strs = (const char **)malloc(count * sizeof(const char *));
+  int *weights = (int *)malloc(count * sizeof(int));
+  if (strs == NULL || weights == NULL) {
+    free(strs);
+    free(weights);
+    caml_raise_out_of_memory();
+  }
+  for (size_t i = 0; i < count; i++) {
+    value pair = Field(candidates, i);
+    strs[i] = String_val(Field(pair, 0));
+    weights[i] = Int_val(Field(pair, 1));
+  }
+  matcher_add_candidates_bulk(m, strs, weights, count);
+  free(strs);
+  free(weights);
+  CAMLreturn (Val_unit);
+}
+
 value fuzzy_remove_candidate(value matcher, value candidate) {
   CAMLparam2(matcher, candidate);
   matcher_remove_candidate(Matcher_val(matcher), String_val(candidate));
