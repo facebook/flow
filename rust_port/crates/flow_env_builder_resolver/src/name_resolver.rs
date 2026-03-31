@@ -1561,9 +1561,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                 {
                     havoc.dupe()
                 }
-                _ => ssa_val::merge(&mut ValCache::new(), v1.dupe(), v2.dupe()),
+                _ => ssa_val::merge(&mut self.cache.borrow_mut(), v1.dupe(), v2.dupe()),
             },
-            None => ssa_val::merge(&mut ValCache::new(), v1.dupe(), v2.dupe()),
+            None => ssa_val::merge(&mut self.cache.borrow_mut(), v1.dupe(), v2.dupe()),
         }
     }
 
@@ -4163,7 +4163,7 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
                                         }
                                     } else {
                                         let v = ssa_val::merge(
-                                            &mut ValCache::new(),
+                                            &mut self.cache.borrow_mut(),
                                             rhv1.dupe(),
                                             rhv2.dupe(),
                                         );
@@ -5453,9 +5453,9 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         for (ssa_id, (lookup, refinement_id)) in &applied {
             let ssa_id = *ssa_id;
             let refinement_id = *refinement_id;
-            let refine_val = |_: &mut Self, v: Val<ALoc>| {
+            let refine_val = |this: &mut Self, v: Val<ALoc>| {
                 if ssa_val::base_id_of_val(&v) == ssa_id {
-                    ssa_val::refinement(&mut ValCache::new(), refinement_id.0, v)
+                    ssa_val::refinement(&mut this.cache.borrow_mut(), refinement_id.0, v)
                 } else {
                     v
                 }
@@ -5483,8 +5483,8 @@ impl<'a, Cx: Context, Fl: Flow<Cx = Cx>> NameResolver<'a, Cx, Fl> {
         self.env_state.latest_refinements.pop();
         for (lookup, refinement_id) in applied.values() {
             let refinement_id = *refinement_id;
-            let unrefine_deeply = |_: &mut Self, x: Val<ALoc>| {
-                ssa_val::unrefine_deeply(&mut ValCache::new(), refinement_id.0, x)
+            let unrefine_deeply = |this: &mut Self, x: Val<ALoc>| {
+                ssa_val::unrefine_deeply(&mut this.cache.borrow_mut(), refinement_id.0, x)
             };
             self.map_val_with_lookup(lookup, None::<fn(&mut Self) -> Val<ALoc>>, unrefine_deeply);
         }
