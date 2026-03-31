@@ -10450,8 +10450,8 @@ fn binary<'a>(
             let t2 = right_ast.loc().1.dupe();
             let desc = RBinaryOperator(Box::new((
                 FlowSmolStr::from("arithmetic operation"),
-                Arc::new(reason_of_t(&t1).desc(false).clone()),
-                Arc::new(reason_of_t(&t2).desc(false).clone()),
+                Arc::new(reason_of_t(&t1).desc(true).clone()),
+                Arc::new(reason_of_t(&t2).desc(true).clone()),
             )));
             let reason = mk_reason(desc, loc.dupe());
             let arith_kind = type_::arith_kind::ArithKind::of_binary_operator(expr.operator);
@@ -10884,7 +10884,7 @@ fn assign_member<'a>(
                 |cx, prop_t| {
                     let use_op = make_op(
                         reason.dupe(),
-                        mk_reason(lhs_prop_reason.desc(false).clone(), prop_loc.dupe()),
+                        mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
                     );
                     flow_js::flow_non_speculating(
                         cx,
@@ -10951,7 +10951,7 @@ fn assign_member<'a>(
                 tvar_resolver::mk_tvar_and_fully_resolve_where(cx, prop_reason, |_cx, prop_t| {
                     let use_op = make_op(
                         reason.dupe(),
-                        mk_reason(lhs_prop_reason.desc(false).clone(), prop_loc.dupe()),
+                        mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
                     );
                     run_maybe_optional_chain(
                         &o,
@@ -11013,7 +11013,7 @@ fn assign_member<'a>(
                     |_cx, prop_t| {
                         let use_op = make_op(
                             reason.dupe(),
-                            mk_reason(lhs_prop_reason.desc(false).clone(), prop_loc.dupe()),
+                            mk_reason(lhs_prop_reason.desc(true).clone(), prop_loc.dupe()),
                         );
                         run_maybe_optional_chain(
                             &o,
@@ -11088,7 +11088,7 @@ fn assign_member<'a>(
             let i = typed_index.loc().1.dupe();
             let use_op = make_op(
                 reason.dupe(),
-                mk_reason(lhs_prop_reason.desc(false).clone(), iloc.dupe()),
+                mk_reason(lhs_prop_reason.desc(true).clone(), iloc.dupe()),
             );
             run_maybe_optional_chain(
                 &o,
@@ -14892,7 +14892,7 @@ pub fn mk_class_sig<'a>(
                                         Type::new(TypeInner::OptionalT {
                                             reason: mk_reason(
                                                 VirtualReasonDesc::ROptional(
-                                                    Arc::new(field_reason.desc(false).clone()),
+                                                    Arc::new(field_reason.desc(true).clone()),
                                                 ),
                                                 id_loc.dupe(),
                                             ),
@@ -16363,7 +16363,7 @@ pub fn mk_record_sig<'a>(
                                         Type::new(TypeInner::OptionalT {
                                             reason: mk_reason(
                                                 VirtualReasonDesc::ROptional(Arc::new(
-                                                    field_reason.desc(false).clone(),
+                                                    field_reason.desc(true).clone(),
                                                 )),
                                                 key_loc.dupe(),
                                             ),

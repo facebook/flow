@@ -5985,9 +5985,7 @@ pub fn objt_to_obj_rest<'cx>(
         props.remove(&Name::new(x.dupe()));
     }
     let use_op: UseOp = VirtualUseOp::Op(std::sync::Arc::new(VirtualRootUseOp::ObjectRest {
-        op: reason_op
-            .dupe()
-            .replace_desc(reason_obj.desc(false).clone()),
+        op: reason_op.dupe().replace_desc(reason_obj.desc(true).clone()),
     }));
 
     let props = {

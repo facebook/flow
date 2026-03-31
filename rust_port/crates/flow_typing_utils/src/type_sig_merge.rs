@@ -2066,7 +2066,7 @@ fn merge_annot<'cx>(
             renders_env.in_renders_arg = true;
             let t = merge_impl(&renders_env, cx, file, arg, false, false);
             let reason = reason::mk_annot_reason(
-                RRenderType(Arc::new(type_util::reason_of_t(&t).desc(false).clone())),
+                RRenderType(Arc::new(type_util::reason_of_t(&t).desc(true).clone())),
                 loc.dupe(),
             );
             match type_util::mk_possibly_generic_render_type(*variant, reason.dupe(), t.dupe()) {
@@ -3888,7 +3888,7 @@ fn merge_component<'cx>(
                 })
                 .collect();
             let config_reason = reason::mk_reason(
-                RPropsOfComponent(Arc::new(reason2.desc(false).clone())),
+                RPropsOfComponent(Arc::new(reason2.desc(true).clone())),
                 def.params_loc.dupe(),
             );
             let rest_t = match &def.rest_param {

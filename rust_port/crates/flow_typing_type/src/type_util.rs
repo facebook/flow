@@ -2243,9 +2243,9 @@ pub fn typeof_annotation(reason: Reason, t: Type, targs: Option<Vec<Type>>) -> T
     use flow_common::reason::mk_annot_reason;
 
     let annot_loc = reason.loc().dupe();
-    let desc_for_tapp = reason.desc(false).clone();
+    let desc_for_tapp = reason.desc(true).clone();
     let t_annot = Type::new(TypeInner::AnnotT(
-        reason.opt_annotate(Some(annot_loc.dupe())),
+        reason.dupe().opt_annotate(Some(annot_loc.dupe())),
         t,
         false,
     ));
@@ -2254,9 +2254,8 @@ pub fn typeof_annotation(reason: Reason, t: Type, targs: Option<Vec<Type>>) -> T
         Some(targs) => {
             let desc = flow_common::reason::VirtualReasonDesc::RTypeApp(Arc::new(desc_for_tapp));
             let reason_tapp = mk_annot_reason(desc, annot_loc.dupe());
-            let reason_for_app = mk_reason(reason_tapp.desc(false).clone(), annot_loc);
             let use_op = UseOp::Op(Arc::new(RootUseOp::TypeApplication { type_: reason_tapp }));
-            typeapp_with_use_op(true, false, reason_for_app, use_op, t_annot, targs)
+            typeapp_with_use_op(true, false, reason, use_op, t_annot, targs)
         }
     }
 }

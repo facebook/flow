@@ -1208,7 +1208,7 @@ fn flow_obj_to_obj<'cx>(
                 ObjKind::Inexact => {
                     let r = flow_common::reason::mk_reason(
                         VirtualReasonDesc::RUnknownUnspecifiedProperty(Arc::new(
-                            lreason.desc(false).clone(),
+                            lreason.desc(true).clone(),
                         )),
                         lreason.loc().dupe(),
                     );

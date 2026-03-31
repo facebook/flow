@@ -199,7 +199,7 @@ pub fn type_optionality_and_missing_property(prop: &object::Prop) -> (Type, bool
             use_desc,
         } => {
             let is_missing_property_desc = matches!(
-                reason.desc(false),
+                reason.desc(true),
                 VirtualReasonDesc::RPossiblyMissingPropFromObj(..)
             );
             (t.dupe(), true, *use_desc && is_missing_property_desc)

@@ -310,7 +310,7 @@ pub(super) fn multiflow_partial<'cx>(
             let arg_array_reason = reason_op
                 .dupe()
                 .replace_desc(VirtualReasonDesc::RRestArrayLit(Arc::new(
-                    reason_op.desc(false).clone(),
+                    reason_op.desc(true).clone(),
                 )));
             let arg_array = {
                 let arg_array_reason2 = arg_array_reason.dupe();

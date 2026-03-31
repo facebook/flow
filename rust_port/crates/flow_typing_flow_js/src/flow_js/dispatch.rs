@@ -568,7 +568,7 @@ fn __flow_impl<'cx>(
             // TODO: directly derive loc and desc from the reason of tvar
             let loc = r.loc().dupe();
             let desc = if *use_desc {
-                Some(r.desc(false).clone())
+                Some(r.desc(true).clone())
             } else {
                 None
             };
@@ -604,7 +604,7 @@ fn __flow_impl<'cx>(
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
             let r = r.dupe().reposition(loc.dupe()).opt_annotate(annot_loc);
             let r = if *use_desc {
-                r.replace_desc(reason.desc(false).clone())
+                r.replace_desc(reason.desc(true).clone())
             } else {
                 r
             };
@@ -628,7 +628,7 @@ fn __flow_impl<'cx>(
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
             let r = r.dupe().reposition(loc.dupe()).opt_annotate(annot_loc);
             let r = if *use_desc {
-                r.replace_desc(reason.desc(false).clone())
+                r.replace_desc(reason.desc(true).clone())
             } else {
                 r
             };
@@ -657,7 +657,7 @@ fn __flow_impl<'cx>(
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
             let r = r.dupe().reposition(loc.dupe()).opt_annotate(annot_loc);
             let r = if *use_desc {
-                r.replace_desc(reason.desc(false).clone())
+                r.replace_desc(reason.desc(true).clone())
             } else {
                 r
             };
@@ -694,7 +694,7 @@ fn __flow_impl<'cx>(
             let annot_loc = reason.annot_loc().map(|l| l.dupe());
             let r = r.dupe().reposition(loc.dupe()).opt_annotate(annot_loc);
             let r = if *use_desc {
-                r.replace_desc(reason.desc(false).clone())
+                r.replace_desc(reason.desc(true).clone())
             } else {
                 r
             };
@@ -1748,7 +1748,7 @@ fn __flow_impl<'cx>(
             // reposition the entire maybe type. *)
             let loc = reason_op.loc().dupe();
             let desc = if *use_desc {
-                Some(reason_op.desc(false).clone())
+                Some(reason_op.desc(true).clone())
             } else {
                 None
             };

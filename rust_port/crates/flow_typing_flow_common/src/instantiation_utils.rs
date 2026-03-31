@@ -48,9 +48,9 @@ pub mod implicit_type_argument {
         let loc_op = reason_op.loc().dupe();
         let desc = VirtualReasonDesc::RTypeParam(Box::new((
             typeparam.name.dupe(),
-            (Arc::new(reason_op.desc(false).clone()), loc_op.dupe()),
+            (Arc::new(reason_op.desc(true).clone()), loc_op.dupe()),
             (
-                Arc::new(reason_tapp.desc(false).clone()),
+                Arc::new(reason_tapp.desc(true).clone()),
                 reason_tapp.def_loc().dupe(),
             ),
         )));
@@ -65,7 +65,7 @@ pub mod implicit_type_argument {
     pub fn abstract_targ(tvar: &Type) -> Option<Type> {
         let tvar_inner = open_tvar(tvar);
         let reason = tvar_inner.reason();
-        let desc = reason.desc(false).clone();
+        let desc = reason.desc(true).clone();
         match &desc {
             VirtualReasonDesc::RTypeParam(box (_, _, _)) => {
                 let reason = locationless_reason(desc);

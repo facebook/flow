@@ -3533,7 +3533,7 @@ fn convert_render_type_inner<'a>(
     env.in_renders_arg = old_in_renders_arg;
     let (_, t) = t_ast.loc();
     let t = t.dupe();
-    let arg_desc = Arc::new(type_util::reason_of_t(&t).desc(false).clone());
+    let arg_desc = Arc::new(type_util::reason_of_t(&t).desc(true).clone());
     let reason_desc = match renders.variant {
         ast::types::RendersVariant::Normal => reason::VirtualReasonDesc::RRenderType(arg_desc),
         ast::types::RendersVariant::Maybe => reason::VirtualReasonDesc::RRenderMaybeType(arg_desc),
