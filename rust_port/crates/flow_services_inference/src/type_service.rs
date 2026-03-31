@@ -754,7 +754,7 @@ mod check_files {
             let check_start_time = Instant::now();
             let max_size = options.max_files_checked_per_worker as usize;
             let num_workers = pool.num_workers();
-            let (next, mk_next_merge) = job_utils::mk_next(
+            let (next, mk_next_merge, files_completed) = job_utils::mk_next(
                 intermediate_result_callback,
                 max_size,
                 num_workers,
@@ -848,10 +848,11 @@ mod check_files {
                                 deque.push(file);
                             }
 
-                            // Process files from deque — other workers can steal the rest
-                            let (results, unfinished) =
-                                job_utils::mk_job_stealing(&mut **check, &options, deque);
-                            mk_next_merge(acc, (results, unfinished));
+                            // Process files from deque — other workers can steal the rest.
+                            // On timeout, remaining files stay on the deque for idle
+                            // workers to steal via the work-stealing mechanism.
+                            let results = job_utils::mk_job_stealing(&mut **check, &options, deque);
+                            mk_next_merge(acc, results);
                         });
 
                         // Break Rc cycles AND free cached dependency files after each batch.
@@ -866,7 +867,9 @@ mod check_files {
                 |a: &mut Vec<_>, b: Vec<_>| {
                     a.extend(b);
                 },
-                // steal: called when this worker is idle (between batches)
+                // steal: called when this worker is idle (between batches).
+                // Steals files left on other workers' deques (including files
+                // that remained after a timeout) and processes them directly.
                 move |acc: &mut Vec<_>| -> bool {
                     for stealer in stealers_for_steal.iter() {
                         if let crossbeam::deque::Steal::Success(file) = stealer.steal() {
@@ -884,6 +887,9 @@ mod check_files {
                                 };
                                 acc.push((file, mapped));
                             });
+                            // Increment shared counter so mk_next knows this
+                            // file has been completed (for termination detection).
+                            files_completed.fetch_add(1, std::sync::atomic::Ordering::Release);
                             return true;
                         }
                     }

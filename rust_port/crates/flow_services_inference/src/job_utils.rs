@@ -6,6 +6,8 @@
  */
 
 use std::sync::Arc;
+use std::sync::atomic::AtomicUsize;
+use std::sync::atomic::Ordering;
 use std::time::Instant;
 
 use dupe::Dupe;
@@ -61,33 +63,25 @@ pub fn mk_job<A, B, C>(
 }
 
 /// Like `job_helper`, but pops from a work-stealing deque instead of
-/// iterating a slice. Files remaining in the deque can be stolen by
-/// idle workers via the deque's Stealer handle.
+/// iterating a slice. On timeout, remaining files are left on the deque
+/// so idle workers can steal them immediately rather than re-queuing
+/// through the producer.
 fn job_helper_stealing<A, B, C>(
     check: &mut dyn FnMut(FileKey) -> Result<Option<(A, B)>, C>,
     options: &Options,
     start_time: Instant,
     mut acc: Vec<(FileKey, Result<Option<B>, C>)>,
     deque: &crossbeam::deque::Worker<FileKey>,
-) -> (Vec<(FileKey, Result<Option<B>, C>)>, Vec<FileKey>) {
+) -> Vec<(FileKey, Result<Option<B>, C>)> {
     loop {
         if out_of_time(options, start_time) {
-            // Drain remaining from deque as unfinished
-            // (files already stolen by others are gone — not double-counted)
-            let mut unfinished = Vec::new();
-            while let Some(f) = deque.pop() {
-                unfinished.push(f);
-            }
-            eprintln!(
-                "Bucket timed out! {} files finished, {} files unfinished",
-                acc.len(),
-                unfinished.len()
-            );
-            return (acc, unfinished);
+            // Leave remaining files on the deque for idle workers to steal.
+            // Files already stolen by others are gone — not double-counted.
+            return acc;
         }
         let Some(file) = deque.pop() else {
             // Deque empty — either all processed locally or some were stolen
-            return (acc, vec![]);
+            return acc;
         };
         let result = match check(file.dupe()) {
             Ok(Some((_, acc))) => Ok(Some(acc)),
@@ -101,17 +95,38 @@ fn job_helper_stealing<A, B, C>(
 /// Like `mk_job`, but uses a work-stealing deque. The caller pushes
 /// files onto the deque before calling this. Other workers can steal
 /// from the deque via its Stealer handle while this worker processes.
+///
+/// On timeout, remaining files stay on the deque rather than being
+/// drained and returned. This allows idle workers to steal them
+/// immediately via the work-stealing mechanism.
 pub fn mk_job_stealing<A, B, C>(
     check: &mut dyn FnMut(FileKey) -> Result<Option<(A, B)>, C>,
     options: &Options,
     deque: &crossbeam::deque::Worker<FileKey>,
-) -> (Vec<(FileKey, Result<Option<B>, C>)>, Vec<FileKey>) {
+) -> Vec<(FileKey, Result<Option<B>, C>)> {
     let start_time = Instant::now();
     job_helper_stealing(check, options, start_time, vec![], deque)
 }
 
-/// A stateful (next, merge) pair. This lets us re-queue unfinished files which are returned
-/// when a bucket times out
+/// A stateful (next, merge) pair plus a shared files-completed counter.
+///
+/// In the OCaml version, next() and merge() run on the same cooperative
+/// Lwt event loop, so merge always re-queues unfinished files before
+/// next() is called again. In our multi-threaded Rust version, the
+/// producer thread calls next() independently from workers, so it can
+/// see an empty queue while workers still have files on their
+/// work-stealing deques.
+///
+/// Instead of re-queuing timed-out files through the producer (which
+/// adds latency), we leave them on the work-stealing deques and track
+/// completion via a shared atomic counter. The `next` function returns
+/// `Wait` (not `Done`) when the queue is empty but not all files have
+/// been completed, allowing idle workers to steal remaining files
+/// directly from busy workers' deques.
+///
+/// The returned `files_completed` counter must also be incremented by
+/// the steal closure (one per stolen file) so that termination is
+/// correctly detected.
 pub fn mk_next<R>(
     intermediate_result_callback: Arc<dyn Fn(&[R]) + Send + Sync>,
     max_size: usize,
@@ -119,22 +134,20 @@ pub fn mk_next<R>(
     files: Vec<FileKey>,
 ) -> (
     impl Next<FileKey>,
-    impl Fn(&mut Vec<R>, (Vec<R>, Vec<FileKey>)) + Send + Sync,
+    impl Fn(&mut Vec<R>, Vec<R>) + Send + Sync,
+    Arc<AtomicUsize>,
 )
 where
     R: 'static,
 {
-    // let total_count = List.length files in
     let total_count = files.len();
-    // let todo = ref (files, total_count) in
     let todo = Arc::new(Mutex::new((files, total_count)));
-    // let finished_count = ref 0 in
-    let finished_count = Arc::new(Mutex::new(0usize));
+    let files_completed = Arc::new(AtomicUsize::new(0));
     let num_workers = num_workers.max(1);
 
-    let finished_count_for_status = finished_count.dupe();
+    let files_completed_for_status = files_completed.dupe();
     let status_update = move || {
-        let finished = *finished_count_for_status.lock();
+        let finished = files_completed_for_status.load(Ordering::Acquire);
         eprintln!(
             "Checking progress: {}/{} files finished",
             finished, total_count
@@ -142,6 +155,7 @@ where
     };
 
     let todo_for_next = todo.dupe();
+    let files_completed_for_next = files_completed.dupe();
     let next = move || {
         let mut todo_guard = todo_for_next.lock();
         let (ref mut remaining_files, ref mut remaining_count) = *todo_guard;
@@ -157,28 +171,27 @@ where
         let bucket_size = bucket.len();
         *remaining_count -= bucket_size;
         if bucket_size == 0 {
-            Bucket::Done
+            // All files have been distributed. Check if they've all been
+            // completed (by batch processing or work stealing).
+            if files_completed_for_next.load(Ordering::Acquire) >= total_count {
+                Bucket::Done
+            } else {
+                // Files still being processed on work-stealing deques.
+                Bucket::Wait
+            }
         } else {
             Bucket::Job(bucket)
         }
     };
 
-    let todo_for_merge = todo;
-    let merge =
-        move |acc: &mut Vec<R>, (finished_file_accs, unfinished_files): (Vec<R>, Vec<FileKey>)| {
-            intermediate_result_callback(&finished_file_accs);
-            let mut todo_guard = todo_for_merge.lock();
-            let (ref mut remaining_files, ref mut remaining_count) = *todo_guard;
-            let unfinished_count = unfinished_files.len();
-            let mut new_remaining = unfinished_files;
-            new_remaining.append(remaining_files);
-            *remaining_files = new_remaining;
-            *remaining_count += unfinished_count;
-            let finished_len = finished_file_accs.len();
-            *finished_count.lock() += finished_len;
-            status_update();
-            acc.extend(finished_file_accs);
-        };
+    let files_completed_for_merge = files_completed.dupe();
+    let merge = move |acc: &mut Vec<R>, finished_file_accs: Vec<R>| {
+        intermediate_result_callback(&finished_file_accs);
+        let finished_len = finished_file_accs.len();
+        files_completed_for_merge.fetch_add(finished_len, Ordering::Release);
+        status_update();
+        acc.extend(finished_file_accs);
+    };
 
-    (next, merge)
+    (next, merge, files_completed)
 }
