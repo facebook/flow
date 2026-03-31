@@ -207,119 +207,14 @@ async function func(): Promise<number> {
 }
 ```
 
-### Predicate Functions
-
-:::warning
-Predicate functions are deprecated and will be removed in a future version. Use [type guards](../type-guards) instead.
-:::
-
-Sometimes you will want to move the condition from an `if` statement into a function:
+You can also use a special return type to declare that your function refines the type of a parameter.
+These are called [type guards](../type-guards):
 
 ```js flow-check
-function concat(a: ?string, b: ?string): string {
-  if (a != null && b != null) {
-    return a + b;
-  }
-  return '';
+function isString(x: mixed): x is string {
+  return typeof x === 'string';
 }
 ```
-
-However, Flow will error in the code below:
-
-```js flow-check
-function truthy(a: ?string, b: ?string): boolean {
-  return a != null && b != null;
-}
-
-function concat(a: ?string, b: ?string): string {
-  if (truthy(a, b)) {
-    return a + b; // Error!
-  }
-  return '';
-}
-```
-
-This is because the refinement information of `a` and `b` as `string` instead of `?string` is lost when returning from the `truthy` function.
-
-You can fix this by making `truthy` a *predicate function*, by using the `%checks` annotation like so:
-
-```js flow-check
-function truthy(a: ?string, b: ?string): boolean %checks {
-  return a != null && b != null;
-}
-
-function concat(a: ?string, b: ?string): string {
-  if (truthy(a, b)) {
-    return a + b;
-  }
-  return '';
-}
-```
-
-#### Limitations of predicate functions
-
-The body of these predicate functions need to be expressions (i.e. local variable declarations are not supported).
-But it's possible to call other predicate functions inside a predicate function.
-For example:
-
-```js flow-check
-function isString(y: unknown): %checks {
-  return typeof y === "string";
-}
-
-function isNumber(y: unknown): %checks {
-  return typeof y === "number";
-}
-
-function isNumberOrString(y: unknown): %checks {
-  return isString(y) || isNumber(y);
-}
-
-function foo(x: string | number | Array<unknown>): string | number {
-  if (isNumberOrString(x)) {
-    return x + x;
-  } else {
-    return x.length; // no error, because Flow infers that x can only be an array
-  }
-}
-
-foo('a');
-foo(5);
-foo([]);
-```
-
-Another limitation is on the range of predicates that can be encoded. The refinements
-that are supported in a predicate function must refer directly to the value that
-is passed in as an argument to the respective call.
-
-For example, consider the *inlined* refinement
-
-```js flow-check
-declare const obj: {n?: number};
-
-if (obj.n != null) {
-  const n: number = obj.n;
-}
-```
-Here, Flow will let you refine `obj.n` from `?number` to `number`. Note that the
-refinement here is on the property `n` of `obj`, rather than `obj` itself.
-
-If you tried to create a *predicate* function to encode the same condition,
-then the following refinement would fail
-
-```js flow-check
-function bar(a: {n?: number, ...}): %checks {
-  return a.n != null;
-}
-
-declare const obj: {n?: number};
-
-if (bar(obj)) {
-  const n: number = obj.n; // Error
-}
-```
-This is because the only refinements supported through `bar` would be on `obj` itself.
-
 
 ## Callable Objects
 
