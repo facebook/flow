@@ -1119,6 +1119,7 @@ fn merge_upper_bounds<'cx>(
                 constraint::Constraints::Resolved(t) => Ok(filter_placeholder(t)),
                 constraint::Constraints::Unresolved(bounds) => {
                     let uppers: Vec<_> = bounds
+                        .borrow()
                         .upper
                         .iter()
                         .map(|(k, v)| (k.use_t.dupe(), *v))
@@ -1184,7 +1185,8 @@ fn merge_lower_bounds<'cx>(cx: &Context<'cx>, t: &Type) -> Result<Option<Type>, 
             let constraints = cx.find_graph(id);
             match constraints {
                 constraint::Constraints::Unresolved(bounds) => {
-                    for (key, _) in bounds.upper.iter() {
+                    let upper = bounds.borrow().upper.clone();
+                    for (key, _) in upper.iter() {
                         if let UseTInner::ReposUseT(_, _, _, ref l) = *key.use_t {
                             FlowJs::flow_t(cx, l, t)?;
                         }
@@ -1219,11 +1221,10 @@ fn merge_lower_bounds<'cx>(cx: &Context<'cx>, t: &Type) -> Result<Option<Type>, 
                     }
                 }
                 constraint::Constraints::Unresolved(bounds) => {
-                    let lowers = &bounds.lower;
-                    if lowers.is_empty() {
+                    let lower_types: Vec<Type> = bounds.borrow().lower.keys().duped().collect();
+                    if lower_types.is_empty() {
                         None
                     } else {
-                        let lower_types: Vec<Type> = lowers.keys().duped().collect();
                         let mut seen = BTreeSet::new();
                         seen.insert(id);
                         let mut collected = Vec::new();

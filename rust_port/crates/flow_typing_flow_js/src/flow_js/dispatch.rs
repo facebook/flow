@@ -243,6 +243,11 @@ fn __flow_impl<'cx>(
                     constraint::Constraints::Unresolved(bounds2),
                 ) => {
                     if not_linked((id1, &bounds1), (id2, &bounds2)) {
+                        let (lower, upper) = {
+                            let bounds1 = bounds1.borrow();
+                            let bounds2 = bounds2.borrow();
+                            (bounds1.lower.clone(), bounds2.upper.clone())
+                        };
                         add_upper_edges(
                             cx,
                             trace,
@@ -259,7 +264,7 @@ fn __flow_impl<'cx>(
                             (id1, &bounds1),
                             (id2, &bounds2),
                         );
-                        flows_across(cx, trace, use_op.dupe(), &bounds1.lower, &bounds2.upper)?;
+                        flows_across(cx, trace, use_op.dupe(), &lower, &upper)?;
                     }
                 }
                 (

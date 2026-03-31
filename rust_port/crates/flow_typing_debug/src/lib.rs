@@ -1450,6 +1450,7 @@ fn dump_tvar_(depth: u32, tvars: &mut BTreeSet<i32>, cx: &Context, id: i32) -> S
                 format!("{}, FullyResolved {}", id, payload)
             }
             Constraints::Unresolved(bounds) => {
+                let bounds = bounds.borrow();
                 if bounds.lower.is_empty() && bounds.upper.is_empty() {
                     format!("{}", id)
                 } else {

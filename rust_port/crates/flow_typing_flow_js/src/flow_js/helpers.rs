@@ -22,13 +22,13 @@ use crate::speculation_kit;
 use crate::tvar_resolver;
 
 pub(super) fn not_linked<CX>(
-    (id1, _bounds1): (i32, &constraint::Bounds<CX>),
-    (_id2, bounds2): (i32, &constraint::Bounds<CX>),
+    (id1, _bounds1): (i32, &constraint::BoundsRef<CX>),
+    (_id2, bounds2): (i32, &constraint::BoundsRef<CX>),
 ) -> bool {
     // It suffices to check that id1 is not already in the lower bounds of
     // id2. Equivalently, we could check that id2 is not already in the upper
     // bounds of id1.
-    !bounds2.lowertvars.contains_key(&id1)
+    !bounds2.borrow().lowertvars.contains_key(&id1)
 }
 
 thread_local! {

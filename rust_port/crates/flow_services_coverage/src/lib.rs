@@ -163,7 +163,7 @@ impl CoverageVisitor {
                         }
                         Constraints::Unresolved(bounds) => {
                             let keys: Vec<FlowType> =
-                                bounds.lower.keys().map(|k| k.dupe()).collect();
+                                bounds.borrow().lower.keys().map(|k| k.dupe()).collect();
                             self.types_list(cx, OpMode::OpOr, &keys)
                         }
                     };

@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::cell::RefCell;
 use std::rc::Rc;
 
 use dupe::Dupe;
@@ -22,9 +23,9 @@ pub fn mk_no_wrap<'cx>(cx: &Context<'cx>, reason: &Reason) -> i32 {
     let tvar = mk_id() as i32;
     cx.add_tvar(
         tvar,
-        Node::create_root(constraint::Constraints::Unresolved(Rc::new(
+        Node::create_root(constraint::Constraints::Unresolved(Rc::new(RefCell::new(
             constraint::Bounds::default(),
-        ))),
+        )))),
     );
     if cx.is_verbose() {
         eprintln!(

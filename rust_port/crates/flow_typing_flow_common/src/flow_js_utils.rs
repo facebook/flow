@@ -56,7 +56,7 @@ use vec1::Vec1;
 // bounds of the solution, or a singleton containing the solution itself.
 pub fn types_of<'cx>(cx: &Context<'cx>, constraints: &Constraints<'cx, Context<'cx>>) -> Vec<Type> {
     match constraints {
-        Constraints::Unresolved(bounds) => bounds.lower.keys().duped().collect(),
+        Constraints::Unresolved(bounds) => bounds.borrow().lower.keys().duped().collect(),
         Constraints::Resolved(t) => vec![t.dupe()],
         Constraints::FullyResolved(s) => vec![cx.force_fully_resolved_tvar(s)],
     }
@@ -67,9 +67,12 @@ pub fn uses_of<'cx>(
     constraints: &Constraints<'cx, Context<'cx>>,
 ) -> Vec<UseT<Context<'cx>>> {
     match constraints {
-        Constraints::Unresolved(bounds) => {
-            bounds.upper.keys().map(|key| key.use_t.dupe()).collect()
-        }
+        Constraints::Unresolved(bounds) => bounds
+            .borrow()
+            .upper
+            .keys()
+            .map(|key| key.use_t.dupe())
+            .collect(),
         Constraints::Resolved(t) => vec![UseT::new(UseTInner::UseT(unknown_use(), t.dupe()))],
         Constraints::FullyResolved(s) => {
             vec![UseT::new(UseTInner::UseT(
@@ -652,7 +655,8 @@ pub mod tvar_visitors {
                     Constraints::Resolved(t) => self.type_(cx, pole, Ok(seen), &t),
                     Constraints::Unresolved(bounds) => {
                         let mut result = Ok(seen);
-                        for t in bounds.lower.keys() {
+                        let lower: Vec<_> = bounds.borrow().lower.keys().cloned().collect();
+                        for t in lower.iter() {
                             result = Ok(self.type_(cx, pole, result, t)?);
                         }
                         result
@@ -2542,7 +2546,9 @@ pub fn mk_distributive_tparam_subst_fn<'cx>(
                     lowertvars: HashMap::default(),
                     uppertvars: HashMap::default(),
                 };
-                let node = Node::create_root(Constraints::Unresolved(Rc::new(bounds)));
+                let node = Node::create_root(Constraints::Unresolved(Rc::new(
+                    std::cell::RefCell::new(bounds),
+                )));
                 cx.add_tvar(tvar_id, node);
 
                 Type::new(TypeInner::OpenT(flow_typing_type::type_::Tvar::new(

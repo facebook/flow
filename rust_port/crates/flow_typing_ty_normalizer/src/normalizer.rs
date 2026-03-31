@@ -177,7 +177,7 @@ pub mod lookahead {
                             loop_(cx, acc, seen, &t)
                         }
                         Constraints::Unresolved(bounds) => {
-                            let ts: Vec<_> = bounds.lower.keys().cloned().collect();
+                            let ts: Vec<_> = bounds.borrow().lower.keys().cloned().collect();
                             for t in ts {
                                 loop_(cx, acc, seen, &t)?;
                             }
@@ -864,6 +864,7 @@ fn type_variable<'cx>(
             cont(env, state, Some(IdKey::TVarKey(id)), &t)
         }
         Constraints::Unresolved(bounds) => {
+            let bounds = bounds.borrow();
             let lower_bounds = resolve_from_lower_bounds(env, state, cont, id, &bounds)?;
             if lower_bounds.is_empty() {
                 empty_with_upper_bounds(env, state, cont, id, &bounds)

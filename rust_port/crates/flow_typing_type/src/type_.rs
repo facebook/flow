@@ -9621,15 +9621,17 @@ pub mod constraint {
     #[derive(Debug, Clone)]
     pub enum Constraints<'a, CX = ()> {
         Resolved(Type),
-        Unresolved(Rc<Bounds<CX>>),
+        Unresolved(BoundsRef<CX>),
         FullyResolved(forcing_state::ForcingState<'a, CX>),
     }
 
     impl<CX> Default for Constraints<'_, CX> {
         fn default() -> Self {
-            Constraints::Unresolved(Rc::new(Bounds::default()))
+            Constraints::Unresolved(Rc::new(std::cell::RefCell::new(Bounds::default())))
         }
     }
+
+    pub type BoundsRef<CX = ()> = Rc<std::cell::RefCell<Bounds<CX>>>;
 
     #[derive(Debug)]
     pub struct Bounds<CX = ()> {
@@ -10062,7 +10064,7 @@ impl<'a, CX: 'a> TypeContext<'a, CX> {
                         // with LazyHintT(Rc<dyn Fn>) closures that capture cx.
                         // Clear them to break: Context → graph → Bounds → UseT
                         // → LazyHintT → cx → Context.
-                        *Rc::make_mut(bounds) = Default::default();
+                        *bounds.borrow_mut() = Default::default();
                     }
                     constraint::Constraints::Resolved(_) => {
                         // Resolved contains a plain Type (no closures).
