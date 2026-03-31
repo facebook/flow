@@ -10,6 +10,8 @@ use std::rc::Rc;
 
 use dupe::Dupe;
 use flow_aloc::ALoc;
+use flow_aloc::ALocFuzzy;
+use flow_aloc::ALocFuzzySet;
 use flow_aloc::ALocMap;
 use flow_aloc::ALocSet;
 use flow_common::reason::Name;
@@ -178,9 +180,12 @@ enum Permissiveness {
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 enum HookResult {
-    HookCallee(ALocSet),
-    MaybeHookCallee { hooks: ALocSet, non_hooks: ALocSet },
-    NotHookCallee(ALocSet),
+    HookCallee(ALocFuzzySet),
+    MaybeHookCallee {
+        hooks: ALocFuzzySet,
+        non_hooks: ALocFuzzySet,
+    },
+    NotHookCallee(ALocFuzzySet),
     AnyCallee,
 }
 
@@ -251,8 +256,8 @@ fn hook_callee<'a>(cx: &Context<'a>, t: Type) -> HookResult {
         }
     }
 
-    fn set_of_reason(r: &Reason) -> ALocSet {
-        [r.def_loc().dupe()].into_iter().collect()
+    fn set_of_reason(r: &Reason) -> ALocFuzzySet {
+        [ALocFuzzy::new(r.def_loc().dupe())].into_iter().collect()
     }
 
     fn recur_id<'a>(cx: &Context<'a>, seen: &mut TvarSeenSet<u32>, t: &Type) -> HookResult {
@@ -2014,8 +2019,8 @@ impl<'b, 'cx, 't> ast_visitor::AstVisitor<'t, ALoc, (ALoc, Type), &'t ALoc, !>
             }
             HookResult::MaybeHookCallee { hooks, non_hooks } => {
                 do_hook_error(error_message::HookRule::MaybeHook {
-                    hooks: hooks.into_iter().collect(),
-                    non_hooks: non_hooks.into_iter().collect(),
+                    hooks: hooks.into_iter().map(|hook| hook.0).collect(),
+                    non_hooks: non_hooks.into_iter().map(|non_hook| non_hook.0).collect(),
                 });
             }
             HookResult::NotHookCallee(_) => {

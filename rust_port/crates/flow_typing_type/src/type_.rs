@@ -105,9 +105,19 @@ impl<T: Hash + Eq + Copy> TvarSeenSet<T> {
 #[derive(Debug, Clone, Dupe)]
 pub struct NumberLiteral(pub f64, pub FlowSmolStr);
 
+fn normalized_number_literal_bits(value: f64) -> u64 {
+    if value == 0.0 {
+        0.0f64.to_bits()
+    } else if value.is_nan() {
+        f64::NAN.to_bits()
+    } else {
+        value.to_bits()
+    }
+}
+
 impl PartialEq for NumberLiteral {
     fn eq(&self, other: &Self) -> bool {
-        self.0.to_bits() == other.0.to_bits() && self.1 == other.1
+        normalized_number_literal_bits(self.0) == normalized_number_literal_bits(other.0)
     }
 }
 
@@ -121,17 +131,15 @@ impl PartialOrd for NumberLiteral {
 
 impl Ord for NumberLiteral {
     fn cmp(&self, other: &Self) -> std::cmp::Ordering {
-        match self.0.total_cmp(&other.0) {
-            std::cmp::Ordering::Equal => self.1.cmp(&other.1),
-            ord => ord,
-        }
+        let lhs = f64::from_bits(normalized_number_literal_bits(self.0));
+        let rhs = f64::from_bits(normalized_number_literal_bits(other.0));
+        lhs.total_cmp(&rhs)
     }
 }
 
 impl std::hash::Hash for NumberLiteral {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.0.to_bits().hash(state);
-        self.1.hash(state);
+        normalized_number_literal_bits(self.0).hash(state);
     }
 }
 
@@ -6392,10 +6400,7 @@ impl PartialEq for UnionEnum {
     fn eq(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Str(a), Self::Str(b)) => a == b,
-            // compare numeric literals based on float representation
-            (Self::Num(NumberLiteral(a, _)), Self::Num(NumberLiteral(b, _))) => {
-                a.to_bits() == b.to_bits()
-            }
+            (Self::Num(a), Self::Num(b)) => a == b,
             (Self::Bool(a), Self::Bool(b)) => a == b,
             (Self::BigInt(a), Self::BigInt(b)) => a == b,
             (Self::Void, Self::Void) | (Self::Null, Self::Null) => true,
@@ -6426,8 +6431,7 @@ impl Ord for UnionEnum {
         }
         match (self, other) {
             (Self::Str(a), Self::Str(b)) => a.cmp(b),
-            // compare numeric literals based on float representation
-            (Self::Num(NumberLiteral(a, _)), Self::Num(NumberLiteral(b, _))) => a.total_cmp(b),
+            (Self::Num(a), Self::Num(b)) => a.cmp(b),
             (Self::Bool(a), Self::Bool(b)) => a.cmp(b),
             (Self::BigInt(a), Self::BigInt(b)) => a.cmp(b),
             _ => discriminant(self).cmp(&discriminant(other)),
@@ -6440,7 +6444,7 @@ impl std::hash::Hash for UnionEnum {
         std::mem::discriminant(self).hash(state);
         match self {
             Self::Str(s) => s.hash(state),
-            Self::Num(NumberLiteral(f, _)) => f.to_bits().hash(state),
+            Self::Num(n) => n.hash(state),
             Self::Bool(b) => b.hash(state),
             Self::BigInt(b) => b.hash(state),
             Self::Void | Self::Null => {}
@@ -11871,5 +11875,136 @@ pub fn empty_tuple_view() -> TupleView {
         elements: Rc::from([]),
         arity: (0, 0),
         inexact: false,
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use std::collections::HashSet;
+
+    use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+
+    use super::NumberLiteral;
+    use super::UnionEnum;
+
+    #[test]
+    fn number_literal_neg_zero_equals_pos_zero() {
+        // IEEE 754: -0.0 and 0.0 have different bit representations but OCaml
+        // compare treats them as equal. The fix normalizes zeros before comparing.
+        let neg_zero = NumberLiteral(-0.0, FlowSmolStr::new_inline("-0"));
+        let pos_zero = NumberLiteral(0.0, FlowSmolStr::new_inline("0"));
+        assert_eq!(neg_zero, pos_zero, "-0.0 and 0.0 should be equal");
+    }
+
+    #[test]
+    fn number_literal_nan_equality() {
+        // Different NaN bit patterns should compare as equal after normalization.
+        let nan1 = NumberLiteral(f64::NAN, FlowSmolStr::new_inline("NaN"));
+        let nan2 = NumberLiteral(
+            f64::from_bits(0x7FF8_0000_0000_0001),
+            FlowSmolStr::new_inline("NaN"),
+        );
+        assert_ne!(
+            f64::NAN.to_bits(),
+            f64::from_bits(0x7FF8_0000_0000_0001).to_bits(),
+            "precondition: the two NaN bit patterns should differ"
+        );
+        assert_eq!(nan1, nan2, "different NaN bit patterns should be equal");
+    }
+
+    #[test]
+    fn number_literal_string_excluded_from_equality() {
+        // The string representation should not affect equality.
+        // NumberLiteral(0.0, "0") should equal NumberLiteral(0.0, "0.0").
+        let a = NumberLiteral(0.0, FlowSmolStr::new_inline("0"));
+        let b = NumberLiteral(0.0, FlowSmolStr::new_inline("0.0"));
+        assert_eq!(a, b, "string representation should not affect equality");
+    }
+
+    #[test]
+    fn number_literal_hash_consistency_for_equal_values() {
+        // Equal values must produce equal hashes.
+        let mut set = HashSet::new();
+
+        // -0.0 and 0.0 are equal, so inserting both should result in one entry
+        let neg_zero = NumberLiteral(-0.0, FlowSmolStr::new_inline("-0"));
+        let pos_zero = NumberLiteral(0.0, FlowSmolStr::new_inline("0"));
+        set.insert(neg_zero);
+        set.insert(pos_zero);
+        assert_eq!(
+            set.len(),
+            1,
+            "-0.0 and 0.0 should hash to same bucket and deduplicate"
+        );
+
+        // Same float with different string should also deduplicate
+        let mut set2 = HashSet::new();
+        let a = NumberLiteral(42.0, FlowSmolStr::new_inline("42"));
+        let b = NumberLiteral(42.0, FlowSmolStr::new_inline("42.0"));
+        set2.insert(a);
+        set2.insert(b);
+        assert_eq!(
+            set2.len(),
+            1,
+            "same float with different string repr should deduplicate"
+        );
+    }
+
+    #[test]
+    fn number_literal_ordering_neg_zero_pos_zero() {
+        // -0.0 and 0.0 should have Equal ordering after normalization.
+        let neg_zero = NumberLiteral(-0.0, FlowSmolStr::new_inline("-0"));
+        let pos_zero = NumberLiteral(0.0, FlowSmolStr::new_inline("0"));
+        assert_eq!(
+            neg_zero.cmp(&pos_zero),
+            std::cmp::Ordering::Equal,
+            "-0.0 and 0.0 should have Equal ordering"
+        );
+    }
+
+    #[test]
+    fn number_literal_ordering_string_excluded() {
+        // Ordering should not consider the string representation.
+        let a = NumberLiteral(1.0, FlowSmolStr::new_inline("1"));
+        let b = NumberLiteral(1.0, FlowSmolStr::new_inline("1.0"));
+        assert_eq!(
+            a.cmp(&b),
+            std::cmp::Ordering::Equal,
+            "ordering should not consider string representation"
+        );
+    }
+
+    #[test]
+    fn number_literal_normal_values_still_compare_correctly() {
+        // Sanity check: normal distinct values should still be unequal.
+        let one = NumberLiteral(1.0, FlowSmolStr::new_inline("1"));
+        let two = NumberLiteral(2.0, FlowSmolStr::new_inline("2"));
+        assert_ne!(one, two);
+        assert!(one < two);
+    }
+
+    #[test]
+    fn union_enum_num_neg_zero_equals_pos_zero() {
+        let a = UnionEnum::Num(NumberLiteral(-0.0, FlowSmolStr::new_inline("-0")));
+        let b = UnionEnum::Num(NumberLiteral(0.0, FlowSmolStr::new_inline("0")));
+        assert_eq!(a, b, "UnionEnum::Num should delegate to NumberLiteral eq");
+    }
+
+    #[test]
+    fn union_enum_num_different_string_repr() {
+        let a = UnionEnum::Num(NumberLiteral(5.0, FlowSmolStr::new_inline("5")));
+        let b = UnionEnum::Num(NumberLiteral(5.0, FlowSmolStr::new_inline("5.0")));
+        assert_eq!(a, b, "UnionEnum::Num should ignore string in NumberLiteral");
+    }
+
+    #[test]
+    fn union_enum_num_ordering_delegates_to_number_literal() {
+        let a = UnionEnum::Num(NumberLiteral(-0.0, FlowSmolStr::new_inline("-0")));
+        let b = UnionEnum::Num(NumberLiteral(0.0, FlowSmolStr::new_inline("0")));
+        assert_eq!(
+            a.cmp(&b),
+            std::cmp::Ordering::Equal,
+            "UnionEnum::Num ordering should delegate to NumberLiteral"
+        );
     }
 }

@@ -2030,6 +2030,16 @@ impl<'a> DefFinder<'a> {
                 Def::Binding(Binding::Root(source)),
             );
         }
+        let Ok(()) = ast_visitor::component_param_default(
+            self,
+            &ast::statement::component_params::Param {
+                loc: loc.dupe(),
+                name: param.name.clone(),
+                local: local.clone(),
+                default: None,
+                shorthand: param.shorthand,
+            },
+        );
     }
 
     fn visit_component_rest_param(
@@ -2129,6 +2139,7 @@ impl<'a> DefFinder<'a> {
                 Def::Binding(Binding::Root(source)),
             );
         }
+        let Ok(()) = ast_visitor::component_rest_param_default(self, param);
     }
 
     #[allow(clippy::too_many_arguments)]
