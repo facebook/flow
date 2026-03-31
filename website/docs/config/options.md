@@ -1098,9 +1098,6 @@ The default value is `/tmp/flow`.
 
 Type: `boolean`
 
-For more on types-first mode, see the
-[types-first docs](../../lang/types-first/).
-
 Flow builds intermediate artifacts to represent signatures of modules as they
 are checked. If this option is set to `false`, then these artifacts are built
 using inferred type information. If this option is set to `true`, then they are
@@ -1123,7 +1120,7 @@ Enforce the following restrictions on file exports:
   `signature-verification-failure`s.
 
 This option is set to `true` by default, since it is implied by
-[`types_first`](#toc-types-first-boolean), but the option is useful on its own
+[`types_first`](#toc-types-first), but the option is useful on its own
 when upgrading a project from classic mode to types-first mode.
 
 ### well_formed_exports.includes <SinceVersion version="0.128.0" /> <UntilVersion version="0.142" /> {#toc-well-formed-exports-includes}

@@ -73,7 +73,6 @@ module.exports = {
         'lang/depth-subtyping',
         'lang/width-subtyping',
         'lang/refinements',
-        'lang/types-first',
         'lang/annotation-requirement',
       ],
     },
@@ -143,12 +142,7 @@ module.exports = {
     {
       type: 'category',
       label: 'Flow CLI',
-      items: [
-        'cli/index',
-        'cli/apply-code-action',
-        'cli/coverage',
-        'cli/annotate-exports',
-      ],
+      items: ['cli/index', 'cli/apply-code-action', 'cli/coverage'],
     },
     {
       type: 'category',

@@ -306,5 +306,40 @@ when calling `useState`:
 const [str, setStr] = useState<?string>("");
 ```
 
+## Module Exports {#toc-module-exports}
+
+Flow builds type signatures for each module based solely on the module's exports,
+without analyzing the module's internal implementation. This means exported values
+must have enough type information at the export site for Flow to determine their types.
+
+For example, an exported function needs parameter and return annotations:
+
+```js flow-check
+// Works: Flow can build a signature from the annotations
+export function getLength(x: string): number {
+  return x.length;
+}
+
+// Error: Flow cannot determine the parameter or return type
+export function getLength2(x) {
+  return x.length;
+}
+```
+
+Exported variables typically don't need annotations when their type can be
+determined from the initializer:
+
+```js
+export const name = "Alice"; // OK: type is clearly 'string'
+export const count = items.length; // OK: type determined from .length
+```
+
+If Flow cannot determine the type of an export, you'll see a `[signature-verification-failure]`
+error. The fix is to add a type annotation to the export.
+
+This requirement enables Flow to typecheck modules in parallel and provide faster
+IDE feedback, since each module's type can be understood without typechecking its
+dependencies' implementations.
+
 ## Empty Array Literals {#toc-empty-array-literals}
 Empty array literals (`[]`) are handled specially in Flow. You can read about their [behavior and requirements](../../types/arrays/#toc-empty-array-literals).
