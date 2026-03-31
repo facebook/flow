@@ -1480,15 +1480,7 @@ module Make (Flow : INPUT) : OUTPUT = struct
                  (UseT (use_op, u))
              with
             | exception Flow_js_utils.SpeculationSingletonError ->
-              (* When the representative is itself a union (possibly wrapped
-                 in AnnotT/OpenT from a type alias), the recursive flow will
-                 add its own UnionRepresentative frame. Skip the outer one
-                 to avoid doubled "at least one member of" messages. *)
-              let use_op =
-                match Context.find_resolved cx representative with
-                | Some (UnionT _) -> use_op
-                | _ -> Frame (UnionRepresentative { union = reason_of_t l }, use_op)
-              in
+              let use_op = Flow_js_utils.union_representative_use_op cx ~l ~representative use_op in
               rec_flow cx trace (representative, UseT (use_op, u))
             | () ->
               let singleton_check elt =

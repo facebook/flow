@@ -13215,20 +13215,20 @@ References:
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:35:9
 
-Cannot cast `x.raw` to string literal `No` because string literal `Maybe` [1] is incompatible with string literal
-`No` [2]. [incompatible-type]
+Cannot cast `x.raw` to string literal `No` because at least one member of `x.raw` [1], e.g. string literal `Maybe` [2],
+is incompatible with string literal `No` [3]. [incompatible-type]
 
    tagged_union.js:35:9
    35|   else (x.raw: 'No'); // error, Carrot.raw = Maybe
-               ^^^^^
+               ^^^^^ [1]
 
 References:
    tagged_union.js:29:50
    29| type Carrot = { kind: 'Veg', taste: 'Good', raw: 'Maybe' }
-                                                        ^^^^^^^ [1]
+                                                        ^^^^^^^ [2]
    tagged_union.js:35:16
    35|   else (x.raw: 'No'); // error, Carrot.raw = Maybe
-                      ^^^^ [2]
+                      ^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- tagged_union.js:40:6

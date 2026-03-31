@@ -772,8 +772,90 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (TypeInner::UnionT(_, rep1), UseTInner::TypeCastT(_, _)) => {
-            flow_all_in_union(cx, trace, rep1, u)?;
+        // | (UnionT (_, rep1), TypeCastT (use_op, cast_to_t)) ->
+        (TypeInner::UnionT(_, rep1), UseTInner::TypeCastT(use_op, cast_to_t)) => {
+            //   (* For homogeneous enum unions, try a single representative member
+            //      speculatively. If it fails, emit just that one error (all members
+            //      would fail identically). If it succeeds, fall through to normal
+            //      distribution to catch members that might fail. *)
+            //   let flowed_single =
+            let flowed_single = {
+                //     if not (UnionRep.is_optimized_finally rep1) then
+                //       UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep1;
+                if !rep1.is_optimized_finally() {
+                    rep1.optimize_enum_only(|ts| {
+                        flow_typing_visitors::type_mapper::union_flatten(cx, ts.duped())
+                    });
+                }
+                //     match UnionRep.check_enum_with_tag rep1 with
+                match rep1.check_enum_with_tag() {
+                    //     | Some (enums, Some _) when UnionEnumSet.cardinal enums > 1 ->
+                    Some((enums, Some(_))) if enums.len() > 1 => {
+                        //       let representative = UnionRep.members rep1 |> List.hd in
+                        let mut members = rep1.members_iter();
+                        match members.next() {
+                            None => false,
+                            Some(representative) => {
+                                let representative = representative.dupe();
+                                drop(members);
+                                //       (match
+                                //          SpeculationKit.try_singleton_throw_on_failure
+                                //            cx
+                                //            trace
+                                //            representative
+                                //            (TypeCastT (use_op, cast_to_t))
+                                match speculation_kit::try_singleton_throw_on_failure(
+                                    cx,
+                                    trace,
+                                    representative.dupe(),
+                                    UseT::new(UseTInner::TypeCastT(
+                                        use_op.dupe(),
+                                        cast_to_t.dupe(),
+                                    )),
+                                ) {
+                                    //        with
+                                    //       | exception Flow_js_utils.SpeculationSingletonError ->
+                                    Err(FlowJsException::SpeculationSingletonError) => {
+                                        //         let use_op =
+                                        //           Flow_js_utils.union_representative_use_op cx ~l ~representative use_op
+                                        //         in
+                                        let use_op = flow_js_utils::union_representative_use_op(
+                                            cx,
+                                            l,
+                                            &representative,
+                                            use_op.dupe(),
+                                        );
+                                        //         rec_flow cx trace (representative, TypeCastT (use_op, cast_to_t));
+                                        rec_flow(
+                                            cx,
+                                            trace,
+                                            (
+                                                &representative,
+                                                &UseT::new(UseTInner::TypeCastT(
+                                                    use_op,
+                                                    cast_to_t.dupe(),
+                                                )),
+                                            ),
+                                        )?;
+                                        //         true
+                                        true
+                                    }
+                                    //       | () -> false)
+                                    Ok(()) => false,
+                                    Err(e) => return Err(e),
+                                }
+                            }
+                        }
+                    }
+                    //     | _ -> false
+                    _ => false,
+                }
+            };
+            //   in
+            //   if not flowed_single then flow_all_in_union cx trace rep1 u
+            if !flowed_single {
+                flow_all_in_union(cx, trace, rep1, u)?;
+            }
         }
         (_, UseTInner::TypeCastT(use_op, cast_to_t)) => {
             let reason_l = reason_of_t(l);

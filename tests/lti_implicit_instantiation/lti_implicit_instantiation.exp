@@ -817,36 +817,24 @@ References:
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:103:3
 
-Cannot cast `r2[2]` to empty because number literal `1` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `r2[2]` to empty because at least one member of inferred union of array element types (alternatively,
+provide an annotation to summarize the array element type) [1], e.g. number literal `1` [2], is incompatible with
+empty [3]. [incompatible-type]
 
    upper_non_t.js:103:3
    103|   r2[2] as empty; // error
           ^^^^^
 
 References:
+   upper_non_t.js:96:14
+    96|   const r2 = ArrRest(...([1, 2] as [1, 2])); // ok
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ [1]
    upper_non_t.js:96:37
     96|   const r2 = ArrRest(...([1, 2] as [1, 2])); // ok
-                                            ^ [1]
+                                            ^ [2]
    upper_non_t.js:103:12
    103|   r2[2] as empty; // error
-                   ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------- upper_non_t.js:103:3
-
-Cannot cast `r2[2]` to empty because number literal `2` [1] is incompatible with empty [2]. [incompatible-type]
-
-   upper_non_t.js:103:3
-   103|   r2[2] as empty; // error
-          ^^^^^
-
-References:
-   upper_non_t.js:96:40
-    96|   const r2 = ArrRest(...([1, 2] as [1, 2])); // ok
-                                               ^ [1]
-   upper_non_t.js:103:12
-   103|   r2[2] as empty; // error
-                   ^^^^^ [2]
+                   ^^^^^ [3]
 
 
 Error --------------------------------------------------------------------------------------------- upper_non_t.js:104:6
@@ -954,4 +942,4 @@ References:
 
 
 
-Found 62 errors
+Found 61 errors

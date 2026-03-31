@@ -699,7 +699,34 @@ struct
           union_to_union cx trace use_op l rep u
         | (UnionT _, TypeCastT (use_op, AnnotT (r, t, use_desc))) ->
           rec_flow cx trace (t, ReposUseT (r, use_desc, use_op, l))
-        | (UnionT (_, rep1), TypeCastT _) -> flow_all_in_union cx trace rep1 u
+        | (UnionT (_, rep1), TypeCastT (use_op, cast_to_t)) ->
+          (* For homogeneous enum unions, try a single representative member
+             speculatively. If it fails, emit just that one error (all members
+             would fail identically). If it succeeds, fall through to normal
+             distribution to catch members that might fail. *)
+          let flowed_single =
+            if not (UnionRep.is_optimized_finally rep1) then
+              UnionRep.optimize_enum_only ~flatten:(Type_mapper.union_flatten cx) rep1;
+            match UnionRep.check_enum_with_tag rep1 with
+            | Some (enums, Some _) when UnionEnumSet.cardinal enums > 1 ->
+              let representative = UnionRep.members rep1 |> List.hd in
+              (match
+                 SpeculationKit.try_singleton_throw_on_failure
+                   cx
+                   trace
+                   representative
+                   (TypeCastT (use_op, cast_to_t))
+               with
+              | exception Flow_js_utils.SpeculationSingletonError ->
+                let use_op =
+                  Flow_js_utils.union_representative_use_op cx ~l ~representative use_op
+                in
+                rec_flow cx trace (representative, TypeCastT (use_op, cast_to_t));
+                true
+              | () -> false)
+            | _ -> false
+          in
+          if not flowed_single then flow_all_in_union cx trace rep1 u
         | (_, TypeCastT (use_op, cast_to_t)) ->
           (match FlowJs.singleton_concrete_type_for_inspection cx (reason_of_t l) l with
           | DefT (reason, EnumValueT enum_info) ->

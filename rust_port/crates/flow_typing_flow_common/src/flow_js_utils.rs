@@ -912,6 +912,37 @@ pub enum FlowJsException {
     LimitExceeded,
 }
 
+// (* When emitting a single error for a representative union member, wrap the
+//    [use_op] with a [UnionRepresentative] frame so the error says "at least one
+//    member of …".  Skip the frame when [representative] itself resolves to a
+//    union, because the recursive flow will add its own frame. *)
+// let union_representative_use_op cx ~l ~representative use_op =
+//   match Context.find_resolved cx representative with
+//   | Some (UnionT _) -> use_op
+//   | _ -> Frame (UnionRepresentative { union = reason_of_t l }, use_op)
+pub fn union_representative_use_op(
+    cx: &Context,
+    l: &Type,
+    representative: &Type,
+    use_op: UseOp,
+) -> UseOp {
+    use flow_typing_type::type_::VirtualFrameUseOp;
+    use flow_typing_type::type_::VirtualUseOp;
+    use flow_typing_type::type_util::reason_of_t;
+
+    match cx.find_resolved(representative) {
+        // | Some (UnionT _) -> use_op
+        Some(resolved) if matches!(&*resolved, TypeInner::UnionT(_, _)) => use_op,
+        // | _ -> Frame (UnionRepresentative { union = reason_of_t l }, use_op)
+        _ => VirtualUseOp::Frame(
+            Arc::new(VirtualFrameUseOp::UnionRepresentative {
+                union: reason_of_t(l).dupe(),
+            }),
+            Arc::new(use_op),
+        ),
+    }
+}
+
 // [src_cx] is the context in which the error is created, and [dst_cx] the context
 // in which it is recorded.
 pub fn add_output_generic<'src, 'dst>(

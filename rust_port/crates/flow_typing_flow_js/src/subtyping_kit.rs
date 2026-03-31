@@ -2748,25 +2748,13 @@ pub fn rec_sub_t<'cx>(
                                 UseT::new(UseTInner::UseT(use_op.dupe(), u.dupe())),
                             ) {
                                 Err(FlowJsException::SpeculationSingletonError) => {
-                                    // When the representative is itself a union
-                                    // (possibly wrapped in AnnotT/OpenT from a
-                                    // type alias), the recursive flow will add
-                                    // its own UnionRepresentative frame. Skip
-                                    // the outer one to avoid doubled "at least
-                                    // one member of" messages.
-                                    let use_op = match cx.find_resolved(&representative) {
-                                        Some(resolved)
-                                            if matches!(&*resolved, TypeInner::UnionT(_, _)) =>
-                                        {
-                                            use_op
-                                        }
-                                        _ => VirtualUseOp::Frame(
-                                            Arc::new(VirtualFrameUseOp::UnionRepresentative {
-                                                union: type_util::reason_of_t(l).dupe(),
-                                            }),
-                                            Arc::new(use_op),
-                                        ),
-                                    };
+                                    // Flow_js_utils.union_representative_use_op cx ~l ~representative use_op
+                                    let use_op = flow_js_utils::union_representative_use_op(
+                                        cx,
+                                        l,
+                                        &representative,
+                                        use_op,
+                                    );
                                     FlowJs::rec_flow(
                                         cx,
                                         trace,

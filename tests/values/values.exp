@@ -34,24 +34,8 @@ References:
 
 Error --------------------------------------------------------------------------------------------------- arrays.js:23:3
 
-Cannot cast `x` to empty because string literal `a` [1] is incompatible with empty [2]. [incompatible-type]
-
-   arrays.js:23:3
-   23|   x as empty; // ERROR
-         ^
-
-References:
-   arrays.js:21:20
-   21|   declare const x: Tup;
-                          ^^^ [1]
-   arrays.js:23:8
-   23|   x as empty; // ERROR
-              ^^^^^ [2]
-
-
-Error --------------------------------------------------------------------------------------------------- arrays.js:23:3
-
-Cannot cast `x` to empty because string literal `b` [1] is incompatible with empty [2]. [incompatible-type]
+Cannot cast `x` to empty because at least one member of `Values` [1], e.g. string literal `a` [1], is incompatible with
+empty [2]. [incompatible-type]
 
    arrays.js:23:3
    23|   x as empty; // ERROR
@@ -742,4 +726,4 @@ References:
 
 
 
-Found 48 errors
+Found 47 errors
