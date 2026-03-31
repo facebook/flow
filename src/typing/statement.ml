@@ -2044,7 +2044,7 @@ module Make
     | (loc, ExportAssignment { Ast.Statement.ExportAssignment.expression = e; comments }) ->
       let expr = expression cx e in
       (loc, ExportAssignment { Ast.Statement.ExportAssignment.expression = expr; comments })
-    | (loc, NamespaceExportDeclaration _) as s when not (Context.tslib_syntax cx) ->
+    | (loc, NamespaceExportDeclaration _) as s ->
       Flow_js_utils.add_output
         cx
         (Error_message.EUnsupportedSyntax
@@ -2054,7 +2054,6 @@ module Make
            )
         );
       Tast_utils.error_mapper#statement s
-    | (_, NamespaceExportDeclaration _) as s -> Tast_utils.error_mapper#statement s
     | ( loc,
         ExportNamedDeclaration
           ( { ExportNamedDeclaration.declaration; specifiers; source; export_kind; comments = _ } as
@@ -2607,7 +2606,7 @@ module Make
       } =
         decl
       in
-      if abstract && not (Context.abstract_classes cx) then
+      if abstract then
         Flow_js_utils.add_output
           cx
           (Error_message.ETSSyntax { kind = Error_message.AbstractClass; loc });
@@ -8480,7 +8479,7 @@ module Make
                 (Error_message.ETSSyntax { kind = Error_message.TSClassAccessibility kind; loc })
             | None -> ()
         in
-        if abstract && not (Context.abstract_classes cx) then
+        if abstract then
           Flow_js_utils.add_output
             cx
             (Error_message.ETSSyntax { kind = Error_message.AbstractClass; loc = class_loc });
@@ -8916,30 +8915,27 @@ module Make
                   public_seen_names
                 )
               | Body.DeclareMethod (loc, _) as elem ->
-                if not (Context.tslib_syntax cx && Context.under_declaration_context cx) then
-                  Flow.add_output
-                    cx
-                    (Error_message.EUnsupportedSyntax
-                       (loc, Flow_intermediate_error_types.ClassDeclareMethod)
-                    );
+                Flow.add_output
+                  cx
+                  (Error_message.EUnsupportedSyntax
+                     (loc, Flow_intermediate_error_types.ClassDeclareMethod)
+                  );
                 ( c,
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
                 )
               | Body.AbstractMethod (loc, _) as elem ->
-                if not (Context.abstract_classes cx) then
-                  Flow_js_utils.add_output
-                    cx
-                    (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
+                Flow_js_utils.add_output
+                  cx
+                  (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
                 ( c,
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names
                 )
               | Body.AbstractProperty (loc, _) as elem ->
-                if not (Context.abstract_classes cx) then
-                  Flow_js_utils.add_output
-                    cx
-                    (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
+                Flow_js_utils.add_output
+                  cx
+                  (Error_message.ETSSyntax { kind = Error_message.AbstractMethod; loc });
                 ( c,
                   (fun () -> Tast_utils.error_mapper#class_element elem) :: rev_elements,
                   public_seen_names

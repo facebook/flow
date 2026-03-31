@@ -3621,15 +3621,13 @@ fn statement_<'a>(
             }
         }
         StatementInner::NamespaceExportDeclaration { .. } => {
-            if !cx.tslib_syntax() {
-                flow_js::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::EUnsupportedSyntax(
-                        loc.dupe(),
-                        UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::NamespaceExportDeclaration),
-                    ),
-                );
-            }
+            flow_js::add_output_non_speculating(
+                cx,
+                ErrorMessage::EUnsupportedSyntax(
+                    loc.dupe(),
+                    UnsupportedSyntax::TSLibSyntax(TsLibSyntaxKind::NamespaceExportDeclaration),
+                ),
+            );
             {
                 let Ok(v) =
                     polymorphic_ast_mapper::statement(&mut typed_ast_utils::ErrorMapper, stmt);
@@ -4521,7 +4519,7 @@ pub fn declare_class<'a>(
     let id = &decl.id;
     let name = &id.name;
     let abstract_ = decl.abstract_;
-    if abstract_ && !cx.metadata().frozen.abstract_classes {
+    if abstract_ {
         flow_js_utils::add_output_non_speculating(
             cx,
             ErrorMessage::ETSSyntax {
@@ -15045,7 +15043,7 @@ pub fn mk_class_sig<'a>(
                     }
                 };
 
-                if abstract_ && !cx.metadata().frozen.abstract_classes {
+                if abstract_ {
                     flow_js_utils::add_output_non_speculating(
                         cx,
                         ErrorMessage::ETSSyntax {
@@ -15762,15 +15760,13 @@ pub fn mk_class_sig<'a>(
                         }
                         BodyElement::DeclareMethod(_dm) => {
                             let loc = &_dm.loc;
-                            if !(cx.tslib_syntax() && cx.under_declaration_context()) {
-                                flow_js::add_output_non_speculating(
-                                    cx,
-                                    ErrorMessage::EUnsupportedSyntax(
-                                        loc.dupe(),
-                                        UnsupportedSyntax::ClassDeclareMethod,
-                                    ),
-                                );
-                            }
+                            flow_js::add_output_non_speculating(
+                                cx,
+                                ErrorMessage::EUnsupportedSyntax(
+                                    loc.dupe(),
+                                    UnsupportedSyntax::ClassDeclareMethod,
+                                ),
+                            );
                             let elem_c = elem.clone();
                             rev_elements.push(Box::new(move |_cx| {
                                 let Ok(v) = polymorphic_ast_mapper::class_element(
@@ -15782,15 +15778,13 @@ pub fn mk_class_sig<'a>(
                         }
                         BodyElement::AbstractMethod(_am) => {
                             let loc = &_am.loc;
-                            if !cx.metadata().frozen.abstract_classes {
-                                flow_js_utils::add_output_non_speculating(
-                                    cx,
-                                    ErrorMessage::ETSSyntax {
-                                        kind: TSSyntaxKind::AbstractMethod,
-                                        loc: loc.dupe(),
-                                    },
-                                );
-                            }
+                            flow_js_utils::add_output_non_speculating(
+                                cx,
+                                ErrorMessage::ETSSyntax {
+                                    kind: TSSyntaxKind::AbstractMethod,
+                                    loc: loc.dupe(),
+                                },
+                            );
                             let elem_c = elem.clone();
                             rev_elements.push(Box::new(move |_cx| {
                                 let Ok(v) = polymorphic_ast_mapper::class_element(
@@ -15802,15 +15796,13 @@ pub fn mk_class_sig<'a>(
                         }
                         BodyElement::AbstractProperty(_ap) => {
                             let loc = &_ap.loc;
-                            if !cx.metadata().frozen.abstract_classes {
-                                flow_js_utils::add_output_non_speculating(
-                                    cx,
-                                    ErrorMessage::ETSSyntax {
-                                        kind: TSSyntaxKind::AbstractMethod,
-                                        loc: loc.dupe(),
-                                    },
-                                );
-                            }
+                            flow_js_utils::add_output_non_speculating(
+                                cx,
+                                ErrorMessage::ETSSyntax {
+                                    kind: TSSyntaxKind::AbstractMethod,
+                                    loc: loc.dupe(),
+                                },
+                            );
                             let elem_c = elem.clone();
                             rev_elements.push(Box::new(move |_cx| {
                                 let Ok(v) = polymorphic_ast_mapper::class_element(

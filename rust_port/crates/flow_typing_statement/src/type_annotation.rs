@@ -3153,32 +3153,28 @@ fn convert_inner<'a>(
             })
         }
         TypeInner::TemplateLiteral { loc, .. } => {
-            if !cx.tslib_syntax() {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::EUnsupportedSyntax(
-                        loc.dupe(),
-                        intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
-                            TsLibSyntaxKind::TemplateLiteralType,
-                        ),
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EUnsupportedSyntax(
+                    loc.dupe(),
+                    intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                        TsLibSyntaxKind::TemplateLiteralType,
                     ),
-                );
-            }
+                ),
+            );
             let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
             v
         }
         TypeInner::ConstructorType { loc, .. } => {
-            if !cx.tslib_syntax() {
-                flow_js_utils::add_output_non_speculating(
-                    cx,
-                    ErrorMessage::EUnsupportedSyntax(
-                        loc.dupe(),
-                        intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
-                            TsLibSyntaxKind::ConstructorType,
-                        ),
+            flow_js_utils::add_output_non_speculating(
+                cx,
+                ErrorMessage::EUnsupportedSyntax(
+                    loc.dupe(),
+                    intermediate_error_types::UnsupportedSyntax::TSLibSyntax(
+                        TsLibSyntaxKind::ConstructorType,
                     ),
-                );
-            }
+                ),
+            );
             let Ok(v) = polymorphic_ast_mapper::type_(&mut typed_ast_utils::ErrorMapper, t);
             v
         }
@@ -5818,9 +5814,10 @@ fn add_interface_properties<'a>(
                     _ => {}
                 }
                 if is_ts_private {
-                    // Private members are excluded from the declare class's public interface
+                    // Private members are excluded from the declare class's public
+                    // interface, so we skip adding them to the class signature.
                     let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
-                        &mut typed_ast_utils::ErrorMapper,
+                        &mut typed_ast_utils::UncheckedMapper,
                         prop,
                     );
                     prop_asts.push(error_prop);
@@ -6572,9 +6569,10 @@ fn add_interface_properties<'a>(
                         ),
                     );
                 }
-                // #private; placeholder in declare class — skip, no type contribution
+                // Private fields are intentionally ignored — they are not part of the
+                // public interface, so skipping them is correct behavior.
                 let Ok(error_prop) = polymorphic_ast_mapper::object_type_property(
-                    &mut typed_ast_utils::ErrorMapper,
+                    &mut typed_ast_utils::UncheckedMapper,
                     prop,
                 );
                 prop_asts.push(error_prop);

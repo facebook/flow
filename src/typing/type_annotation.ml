@@ -1752,23 +1752,20 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
           }
       )
     | (loc, TemplateLiteral _) as t ->
-      if not (Context.tslib_syntax env.cx) then
-        Flow_js_utils.add_output
-          env.cx
-          (Error_message.EUnsupportedSyntax
-             (loc, Flow_intermediate_error_types.(TSLibSyntax TemplateLiteralType))
-          );
+      Flow_js_utils.add_output
+        env.cx
+        (Error_message.EUnsupportedSyntax
+           (loc, Flow_intermediate_error_types.(TSLibSyntax TemplateLiteralType))
+        );
       Tast_utils.error_mapper#type_ t
     | (loc, ConstructorType _) as t ->
-      if not (Context.tslib_syntax env.cx) then
-        Flow_js_utils.add_output
-          env.cx
-          (Error_message.EUnsupportedSyntax
-             ( loc,
-               Flow_intermediate_error_types.TSLibSyntax
-                 Flow_intermediate_error_types.ConstructorType
-             )
-          );
+      Flow_js_utils.add_output
+        env.cx
+        (Error_message.EUnsupportedSyntax
+           ( loc,
+             Flow_intermediate_error_types.TSLibSyntax Flow_intermediate_error_types.ConstructorType
+           )
+        );
       Tast_utils.error_mapper#type_ t
     | (loc, (Exists _ as t_ast)) ->
       Flow_js_utils.add_output
@@ -3168,7 +3165,8 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                 (* Private members are excluded from the declare class's public
                    interface, so we skip adding them to the class signature. *)
                 ( x,
-                  Tast_utils.error_mapper#object_type_property (Ast.Type.Object.Property (loc, prop))
+                  Tast_utils.unchecked_mapper#object_type_property
+                    (Ast.Type.Object.Property (loc, prop))
                   :: rev_prop_asts
                 )
               else (
@@ -3545,8 +3543,9 @@ module Make (Statement : Statement_sig.S) : Type_annotation_sig.S = struct
                   (Error_message.EUnsupportedSyntax
                      (loc, Flow_intermediate_error_types.(TSLibSyntax PrivateClassField))
                   );
-              (* #private; placeholder in declare class — skip, no type contribution *)
-              (x, Tast_utils.error_mapper#object_type_property prop :: rev_prop_asts)
+              (* Private fields are intentionally ignored — they are not part of the
+                 public interface, so skipping them is correct behavior. *)
+              (x, Tast_utils.unchecked_mapper#object_type_property prop :: rev_prop_asts)
         )
         (s, [])
         properties

@@ -1,1 +1,1 @@
-export as namespace Foo; // OK - (ignored)
+export as namespace Foo; // ERROR

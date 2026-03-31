@@ -1,9 +1,9 @@
 class Person {
-  get name(): string;
-  set name(value: string): void;
-  get age(): number;
-  static get count(): number;
-  static set count(value: number): void;
+  get name(): string; // ERROR: Declare method in classes not supported
+  set name(value: string): void; // ERROR: Declare method in classes not supported
+  get age(): number; // ERROR: Declare method in classes not supported
+  static get count(): number; // ERROR: Declare method in classes not supported
+  static set count(value: number): void; // ERROR: Declare method in classes not supported
 }
 
 declare export { Person };

@@ -701,6 +701,14 @@ References:
                               ^^^^^^ [2]
 
 
+Error --------------------------------------------------------------------------------------- export_as_namespace.js:1:1
+
+`export as namespace` is not enabled. [unsupported-syntax]
+
+   1| export as namespace Foo; // ERROR
+      ^^^^^^^^^^^^^^^^^^^^^^^^
+
+
 Error ----------------------------------------------------------------------------------- generic_tagged_template.js:4:1
 
 Cannot cast template string to empty because number [1] is incompatible with empty [2]. [incompatible-type]
@@ -1370,4 +1378,4 @@ References:
 
 
 
-Found 90 errors
+Found 91 errors

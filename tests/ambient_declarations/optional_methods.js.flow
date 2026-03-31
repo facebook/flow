@@ -1,8 +1,8 @@
 class OptionalMethods {
-  optionalMethod?(x: number): void;
-  static optionalStaticMethod?(): string;
-  optionalGeneric?<T>(x: T): T;
-  regularMethod(x: number): void;
+  optionalMethod?(x: number): void; // ERROR: Declare method in classes not supported
+  static optionalStaticMethod?(): string; // ERROR: Declare method in classes not supported
+  optionalGeneric?<T>(x: T): T; // ERROR: Declare method in classes not supported
+  regularMethod(x: number): void; // ERROR: Declare method in classes not supported
 }
 
 export {OptionalMethods};

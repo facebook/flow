@@ -1,11 +1,11 @@
-abstract class Foo {
-  abstract getName(): string;
+abstract class Foo { // ERROR
+  abstract getName(): string; // ERROR
 
   concreteMethod(): void {}
 }
 
-declare abstract class Bar {
-  abstract getName(): string;
+declare abstract class Bar { // ERROR
+  abstract getName(): string; // ERROR
 
   meth(): void;
 }

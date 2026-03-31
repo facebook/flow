@@ -10,7 +10,7 @@ Error --------------------------------------------------------------------------
 
 Declare methods in classes are not supported. [unsupported-syntax]
 
-   3|   method(x: number): void;
+   3|   method(x: number): void; // ERROR: Declare method in classes not supported
         ^^^^^^^^^^^^^^^^^^^^^^^
 
 
@@ -18,8 +18,48 @@ Error --------------------------------------------------------------------------
 
 Declare methods in classes are not supported. [unsupported-syntax]
 
-   4|   static staticMethod(): string;
+   4|   static staticMethod(): string; // ERROR: Declare method in classes not supported
         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- getters_setters.js.flow:2:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   2|   get name(): string; // ERROR: Declare method in classes not supported
+        ^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- getters_setters.js.flow:3:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   3|   set name(value: string): void; // ERROR: Declare method in classes not supported
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- getters_setters.js.flow:4:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   4|   get age(): number; // ERROR: Declare method in classes not supported
+        ^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- getters_setters.js.flow:5:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   5|   static get count(): number; // ERROR: Declare method in classes not supported
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error -------------------------------------------------------------------------------------- getters_setters.js.flow:6:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   6|   static set count(value: number): void; // ERROR: Declare method in classes not supported
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error ----------------------------------------------------------------------------------------------- not_ambient.js:3:7
@@ -28,6 +68,38 @@ Const must be initialized [ParseError]
 
    3| const x: string; // Error - const must be initialized
             ^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- optional_methods.js.flow:2:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   2|   optionalMethod?(x: number): void; // ERROR: Declare method in classes not supported
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- optional_methods.js.flow:3:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   3|   static optionalStaticMethod?(): string; // ERROR: Declare method in classes not supported
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- optional_methods.js.flow:4:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   4|   optionalGeneric?<T>(x: T): T; // ERROR: Declare method in classes not supported
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+
+Error ------------------------------------------------------------------------------------- optional_methods.js.flow:5:3
+
+Declare methods in classes are not supported. [unsupported-syntax]
+
+   5|   regularMethod(x: number): void; // ERROR: Declare method in classes not supported
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 
 Error --------------------------------------------------------------------------------- use_component_namespace.js:13:49
@@ -300,7 +372,7 @@ Cannot assign `p.age` to `badAge` because number [1] is incompatible with string
 
 References:
    getters_setters.js.flow:4:14
-    4|   get age(): number;
+    4|   get age(): number; // ERROR: Declare method in classes not supported
                     ^^^^^^ [1]
    use_getters_setters.js:16:15
    16| const badAge: string = p.age; // ERROR: number ~> string
@@ -317,7 +389,7 @@ Cannot assign `123` to `p.name` because number [1] is incompatible with string [
 
 References:
    getters_setters.js.flow:3:19
-    3|   set name(value: string): void;
+    3|   set name(value: string): void; // ERROR: Declare method in classes not supported
                          ^^^^^^ [2]
 
 
@@ -348,7 +420,7 @@ Cannot assign `"not a number"` to `Person.count` because string [1] is incompati
 
 References:
    getters_setters.js.flow:6:27
-    6|   static set count(value: number): void;
+    6|   static set count(value: number): void; // ERROR: Declare method in classes not supported
                                  ^^^^^^ [2]
 
 
@@ -644,7 +716,7 @@ Cannot cast `instance.optionalMethod` to function type because undefined [1] is 
 
 References:
    optional_methods.js.flow:2:18
-   2|   optionalMethod?(x: number): void;
+   2|   optionalMethod?(x: number): void; // ERROR: Declare method in classes not supported
                        ^^^^^^^^^^^ [1]
    use_optional_methods.js:7:28
    7| instance.optionalMethod as (x: number) => void; // ERROR: could be void
@@ -662,7 +734,7 @@ type [2]. [incompatible-type]
 
 References:
    optional_methods.js.flow:3:31
-    3|   static optionalStaticMethod?(): string;
+    3|   static optionalStaticMethod?(): string; // ERROR: Declare method in classes not supported
                                      ^^ [1]
    use_optional_methods.js:11:41
    11| OptionalMethods.optionalStaticMethod as () => string; // ERROR: could be void
@@ -680,7 +752,7 @@ Cannot cast `instance.optionalGeneric` to function type because undefined [1] is
 
 References:
    optional_methods.js.flow:4:19
-    4|   optionalGeneric?<T>(x: T): T;
+    4|   optionalGeneric?<T>(x: T): T; // ERROR: Declare method in classes not supported
                          ^^^ [1]
    use_optional_methods.js:15:29
    15| instance.optionalGeneric as <T>(x: T) => T; // ERROR: could be void
@@ -785,4 +857,4 @@ References:
 
 
 
-Found 48 errors
+Found 57 errors
