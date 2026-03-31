@@ -1584,9 +1584,9 @@ pub fn string_of_reason(cx: &Context, reason: &Reason) -> String {
 }
 
 pub fn string_of_file(cx: &Context) -> String {
-    let filename = cx.file().as_str();
+    let filename = cx.file().to_absolute();
     match cx.is_verbose() {
-        false => filename.to_owned(),
+        false => filename,
         true => {
             let root_str = format!(
                 "{}{}",
@@ -1594,9 +1594,9 @@ pub fn string_of_file(cx: &Context) -> String {
                 std::path::MAIN_SEPARATOR
             );
             if filename.starts_with(&root_str) {
-                flow_common::files::relative_path(std::path::Path::new(&root_str), filename)
+                flow_common::files::relative_path(std::path::Path::new(&root_str), &filename)
             } else {
-                filename.to_owned()
+                filename
             }
         }
     }

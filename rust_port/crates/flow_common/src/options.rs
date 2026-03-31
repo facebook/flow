@@ -257,20 +257,20 @@ impl Options {
     /// Checks if hook compatibility is enabled for a given file.
     /// Returns true if the file path matches any include pattern and does not match any exclude pattern.
     pub fn hook_compatibility_in_file(&self, file: &flow_parser::file_key::FileKey) -> bool {
-        let path = file.as_str();
+        let path = file.to_absolute();
         let included = if self.hook_compatibility_includes.is_empty() {
             false
         } else {
             self.hook_compatibility_includes
                 .iter()
-                .any(|r| r.is_match(path))
+                .any(|r| r.is_match(&path))
         };
         let excluded = if self.hook_compatibility_excludes.is_empty() {
             false
         } else {
             self.hook_compatibility_excludes
                 .iter()
-                .any(|r| r.is_match(path))
+                .any(|r| r.is_match(&path))
         };
         included || (self.hook_compatibility && !excluded)
     }

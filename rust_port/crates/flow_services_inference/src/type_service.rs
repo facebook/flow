@@ -1081,7 +1081,7 @@ fn filter_out_node_modules(options: &Options, files: &FlowOrdSet<FileKey>) -> Fl
     let mut result = files.dupe();
     let is_in_node_modules = files::generate_is_within_node_modules_fn(root, file_options);
     for file in files {
-        if is_in_node_modules(file.as_str()) {
+        if is_in_node_modules(&file.to_absolute()) {
             result.remove(file);
         }
     }
@@ -2790,7 +2790,8 @@ pub fn libdef_check_for_lazy_init(
     let parsed: FlowOrdSet<FileKey> = env
         .all_unordered_libs
         .iter()
-        .map(|n| FileKey::new(flow_parser::file_key::FileKeyInner::LibFile(n.to_string())))
+        // File_key.lib_file_of_absolute name
+        .map(|n| FileKey::lib_file_of_absolute(n))
         .collect();
     check_files_for_init(
         options,

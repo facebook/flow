@@ -19,7 +19,7 @@ fn normalize_filename_dir_sep(path: &str) -> String {
 /// Checks if Relay integration is enabled for a given file.
 /// Returns true if the file path does not match any of the exclude patterns.
 pub fn enabled_for_file(excludes: &[Regex], file: &FileKey) -> bool {
-    let path = normalize_filename_dir_sep(file.as_str());
+    let path = normalize_filename_dir_sep(&file.to_absolute());
     !excludes.iter().any(|r| r.is_match(&path))
 }
 
@@ -33,7 +33,7 @@ pub fn module_prefix_for_file(
 ) -> Option<String> {
     match module_prefix {
         Some(prefix) => {
-            let path = normalize_filename_dir_sep(file.as_str());
+            let path = normalize_filename_dir_sep(&file.to_absolute());
             if includes.iter().any(|r| r.is_match(&path)) {
                 Some(prefix.to_string())
             } else {
@@ -46,10 +46,20 @@ pub fn module_prefix_for_file(
 
 #[cfg(test)]
 mod tests {
+    use std::sync::Once;
+
     use flow_parser::file_key::FileKey;
     use flow_parser::file_key::FileKeyInner;
 
     use super::*;
+
+    static INIT: Once = Once::new();
+    fn init_roots() {
+        INIT.call_once(|| {
+            flow_parser::file_key::set_project_root("");
+            flow_parser::file_key::set_flowlib_root("");
+        });
+    }
 
     #[test]
     fn test_normalize_filename_dir_sep() {
@@ -65,6 +75,7 @@ mod tests {
 
     #[test]
     fn test_enabled_for_file_with_no_excludes() {
+        init_roots();
         let excludes: Vec<Regex> = vec![];
         let file = FileKey::new(FileKeyInner::SourceFile("src/test.js".to_string()));
         assert!(enabled_for_file(&excludes, &file));
@@ -72,6 +83,7 @@ mod tests {
 
     #[test]
     fn test_enabled_for_file_with_non_matching_exclude() {
+        init_roots();
         let excludes = vec![Regex::new("^node_modules/").unwrap()];
         let file = FileKey::new(FileKeyInner::SourceFile("src/test.js".to_string()));
         assert!(enabled_for_file(&excludes, &file));
@@ -79,6 +91,7 @@ mod tests {
 
     #[test]
     fn test_enabled_for_file_with_matching_exclude() {
+        init_roots();
         let excludes = vec![Regex::new("^node_modules/").unwrap()];
         let file = FileKey::new(FileKeyInner::SourceFile("node_modules/test.js".to_string()));
         assert!(!enabled_for_file(&excludes, &file));
@@ -86,6 +99,7 @@ mod tests {
 
     #[test]
     fn test_module_prefix_for_file_with_no_prefix() {
+        init_roots();
         let includes = vec![Regex::new("^src/").unwrap()];
         let file = FileKey::new(FileKeyInner::SourceFile("src/test.js".to_string()));
         assert_eq!(module_prefix_for_file(&includes, &file, None), None);
@@ -93,6 +107,7 @@ mod tests {
 
     #[test]
     fn test_module_prefix_for_file_with_matching_include() {
+        init_roots();
         let includes = vec![Regex::new("^src/").unwrap()];
         let file = FileKey::new(FileKeyInner::SourceFile("src/test.js".to_string()));
         let result = module_prefix_for_file(&includes, &file, Some("MyPrefix"));
@@ -101,6 +116,7 @@ mod tests {
 
     #[test]
     fn test_module_prefix_for_file_with_non_matching_include() {
+        init_roots();
         let includes = vec![Regex::new("^src/").unwrap()];
         let file = FileKey::new(FileKeyInner::SourceFile("lib/test.js".to_string()));
         let result = module_prefix_for_file(&includes, &file, Some("MyPrefix"));
@@ -109,6 +125,7 @@ mod tests {
 
     #[test]
     fn test_module_prefix_for_file_with_multiple_includes() {
+        init_roots();
         let includes = vec![
             Regex::new("^src/").unwrap(),
             Regex::new("^components/").unwrap(),

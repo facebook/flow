@@ -311,7 +311,7 @@ impl ErrorSuppressions {
     fn in_node_modules(root: &Path, file_options: Option<&FileOptions>, loc: &Loc) -> bool {
         match (loc.source.as_ref(), file_options) {
             (Some(file), Some(options)) => {
-                flow_common::files::is_within_node_modules(root, options, file.as_str())
+                flow_common::files::is_within_node_modules(root, options, &file.to_absolute())
             }
             _ => false,
         }
@@ -320,7 +320,7 @@ impl ErrorSuppressions {
     fn in_declarations(file_options: Option<&FileOptions>, loc: &Loc) -> bool {
         match (loc.source.as_ref(), file_options) {
             (Some(file), Some(options)) => {
-                flow_common::files::is_declaration(options, file.as_str())
+                flow_common::files::is_declaration(options, &file.to_absolute())
             }
             _ => false,
         }

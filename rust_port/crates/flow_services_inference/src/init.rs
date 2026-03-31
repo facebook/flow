@@ -28,7 +28,6 @@ use flow_imports_exports::exports;
 use flow_imports_exports::exports::Exports;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
-use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_type_sig::type_sig_options::TypeSigOptions;
 use flow_typing::merge;
@@ -66,7 +65,7 @@ fn load_lib_files(
     let mut ok = true;
     let mut ordered_asts: Vec<(Option<String>, Arc<ast::Program<Loc, Loc>>)> = Vec::new();
     for (scoped_dir_opt, file) in files {
-        let lib_file = FileKey::new(FileKeyInner::LibFile(file.clone()));
+        let lib_file = FileKey::lib_file_of_absolute(file);
         match reader.get_ast(&lib_file) {
             Some(ast) => {
                 ordered_asts.push((scoped_dir_opt.clone(), ast));

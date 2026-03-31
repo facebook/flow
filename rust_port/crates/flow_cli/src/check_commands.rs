@@ -17,7 +17,6 @@ use flow_common_errors::error_utils::cli_output;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_parser::file_key::FileKey;
-use flow_parser::file_key::FileKeyInner;
 use flow_services_inference::type_service;
 use flow_utils_concurrency::thread_pool::ThreadCount;
 use flow_utils_concurrency::thread_pool::ThreadPool;
@@ -246,9 +245,7 @@ fn run_focus_check(args: &command_spec::Values) {
         .map(|file| {
             let abs_path = flow_common::files::cached_canonicalize(Path::new(file.as_str()))
                 .unwrap_or_else(|_| std::path::PathBuf::from(file.as_str()));
-            FileKey::new(FileKeyInner::SourceFile(
-                abs_path.to_string_lossy().to_string(),
-            ))
+            FileKey::source_file_of_absolute(&abs_path.to_string_lossy())
         })
         .collect();
 

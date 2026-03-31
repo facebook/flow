@@ -192,9 +192,12 @@ pub fn mk_check_file(
                     )
                 }
                 Some(dep_file_key) => match dep_file_key.inner() {
-                    FileKeyInner::ResourceFile(f) => {
-                        let (reason, lazy_module) =
-                            type_sig_merge::merge_resource_module_t(cx, dep_file_key.dupe(), f);
+                    FileKeyInner::ResourceFile(_) => {
+                        let (reason, lazy_module) = type_sig_merge::merge_resource_module_t(
+                            cx,
+                            dep_file_key.dupe(),
+                            &dep_file_key.to_absolute(),
+                        );
                         let thunk = annotation_inference::force_module_type_thunk(
                             type_::constraint::forcing_state::ModuleTypeForcingState::of_lazy_module(
                                 reason,

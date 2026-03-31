@@ -1018,37 +1018,37 @@ pub fn in_range(loc: &Loc, range: &Loc) -> bool {
 }
 
 pub fn string_of_source(strip_root: Option<&str>, source: &FileKey) -> String {
-    use flow_parser::file_key::FileKeyInner::*;
+    use flow_parser::file_key::FileKeyInner;
+    let file = source.to_absolute();
     match source.inner() {
-        LibFile(file) => {
+        FileKeyInner::LibFile(_) => {
             if let Some(root) = strip_root {
                 let root_str = format!("{}/", root);
                 if file.starts_with(&root_str) {
                     format!("[LIB] {}", &file[root_str.len()..])
                 } else {
-                    // Just show basename if not under root
                     format!(
                         "[LIB] {}",
-                        std::path::Path::new(file)
+                        std::path::Path::new(&file)
                             .file_name()
                             .and_then(|s| s.to_str())
-                            .unwrap_or(file)
+                            .unwrap_or(&file)
                     )
                 }
             } else {
-                file.to_string()
+                file
             }
         }
-        SourceFile(file) | JsonFile(file) | ResourceFile(file) => {
+        FileKeyInner::SourceFile(_) | FileKeyInner::JsonFile(_) | FileKeyInner::ResourceFile(_) => {
             if let Some(root) = strip_root {
                 let root_str = format!("{}/", root);
                 if file.starts_with(&root_str) {
                     file[root_str.len()..].to_string()
                 } else {
-                    file.to_string()
+                    file
                 }
             } else {
-                file.to_string()
+                file
             }
         }
     }

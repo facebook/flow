@@ -15,11 +15,20 @@ use pretty_assertions::assert_eq;
 
 use crate::file_sig::*;
 
+static INIT: std::sync::Once = std::sync::Once::new();
+fn init_roots() {
+    INIT.call_once(|| {
+        flow_parser::file_key::set_project_root("/");
+        flow_parser::file_key::set_flowlib_root("/");
+    });
+}
+
 fn visit(source: &str) -> FileSig {
     visit_with_opts(source, &FileSigOptions::default())
 }
 
 fn visit_with_opts(source: &str, opts: &FileSigOptions) -> FileSig {
+    init_roots();
     let (ast, _errors) = parse_program_without_file(true, None, None, Ok(source));
     let file_key = FileKey::new(FileKeyInner::SourceFile("test.js".to_string()));
     FileSig::from_program(&file_key, &ast, opts)

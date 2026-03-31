@@ -10,7 +10,6 @@ use std::path::Path;
 use flow_common::files;
 use flow_parser::ast;
 use flow_parser::file_key::FileKey;
-use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
 use flow_parser::loc::Position;
 use flow_parser_utils_output::js_layout_generator;
@@ -54,12 +53,11 @@ fn main_of_package(
         -> Option<Result<flow_parser_utils::package_json::PackageJson, ()>>,
     package_dir: &str,
 ) -> Option<String> {
-    let file_key = FileKey::new(FileKeyInner::JsonFile(
-        Path::new(package_dir)
+    let file_key = FileKey::json_file_of_absolute(
+        &Path::new(package_dir)
             .join("package.json")
-            .to_string_lossy()
-            .into_owned(),
-    ));
+            .to_string_lossy(),
+    );
     match get_package_info(&file_key) {
         Some(Ok(package)) => package.main().map(|main| main.to_string()),
         Some(Err(())) | None => None,
@@ -235,9 +233,9 @@ fn node_path(
     ) -> Option<String> {
         let (package_dir, rest) = to_req.split_first()?;
         let package_dir_rev = [vec![package_dir.clone()], ancestor_rev.to_vec()].concat();
-        let package_json = FileKey::new(FileKeyInner::JsonFile(path_parts_rev_to_absolute(
+        let package_json = FileKey::json_file_of_absolute(&path_parts_rev_to_absolute(
             &[vec!["package.json".to_string()], package_dir_rev.clone()].concat(),
-        )));
+        ));
         match get_package_info(&package_json) {
             Some(Ok(package_info))
                 if can_import_as_node_package(
@@ -278,9 +276,10 @@ fn node_path(
                 let prefix_matches = match src_prefix_opt {
                     None => true,
                     Some(prefix) => {
-                        files::is_prefix(prefix, src_dir)
-                            || src_dir.ends_with(&format!("/{prefix}"))
-                            || src_dir.contains(&format!("/{prefix}/"))
+                        let relative_src_dir = flow_parser::file_key::strip_project_root(src_dir);
+                        files::is_prefix(prefix, &relative_src_dir)
+                            || relative_src_dir.ends_with(&format!("/{prefix}"))
+                            || relative_src_dir.contains(&format!("/{prefix}/"))
                     }
                 };
                 if prefix_matches {

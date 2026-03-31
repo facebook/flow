@@ -355,7 +355,6 @@ mod node {
     use flow_data_structure_wrapper::smol_str::FlowSmolStr;
     use flow_heap::parsing_heaps::SharedMem;
     use flow_parser::file_key::FileKey;
-    use flow_parser::file_key::FileKeyInner;
     use flow_parser_utils::package_json::PackageJson;
     use vec1::Vec1;
 
@@ -450,7 +449,7 @@ mod node {
 
     fn parse_package(shared_mem: &SharedMem, package_filename: &str) -> Arc<PackageJson> {
         let package_filename = super::resolve_symlinks(package_filename);
-        let file_key = FileKey::new(FileKeyInner::JsonFile(package_filename));
+        let file_key = FileKey::json_file_of_absolute(&package_filename);
 
         shared_mem
             .get_package_info(&file_key)
@@ -887,8 +886,8 @@ mod node {
         mut phantom_acc: Option<&mut PhantomAcc>,
         import_specifier: &str,
     ) -> Option<Dependency> {
-        let file = importing_file.as_str();
-        let importing_file_dir = Path::new(file).parent()?.to_str()?;
+        let file = importing_file.to_absolute();
+        let importing_file_dir = Path::new(&file).parent()?.to_str()?;
 
         if super::is_relative_or_absolute(import_specifier) {
             resolve_relative(
@@ -1080,29 +1079,32 @@ mod haste {
         file: &FileKey,
         package_info: &PackageInfo,
     ) -> Option<HasteModuleInfo> {
-        let namespace_of_path = |path: &str| -> Bitset {
-            FlowProjects::from_path(&options.projects_options, path)
+        let namespace_of_path = |fk: &FileKey| -> Bitset {
+            FlowProjects::from_path(&options.projects_options, fk.suffix())
                 .map(|p| p.to_bitset())
-                .unwrap_or_else(|| panic!("Path {} doesn't match any Haste namespace.", path))
+                .unwrap_or_else(|| {
+                    panic!("Path {} doesn't match any Haste namespace.", fk.suffix())
+                })
         };
 
+        let abs_path = file.to_absolute();
         match file.inner() {
-            FileKeyInner::SourceFile(path) => {
+            FileKeyInner::SourceFile(_) => {
                 if is_mock(file) {
                     Some(HasteModuleInfo::mk(
                         short_module_name_of(file).into(),
-                        namespace_of_path(path),
+                        namespace_of_path(file),
                     ))
                 } else {
                     files::haste_name_opt(&options.file_options, file)
-                        .map(|name| HasteModuleInfo::mk(name.into(), namespace_of_path(path)))
+                        .map(|name| HasteModuleInfo::mk(name.into(), namespace_of_path(file)))
                 }
             }
-            FileKeyInner::JsonFile(path) => {
+            FileKeyInner::JsonFile(_) => {
                 if let PackageInfo(Some(pkg)) = package_info {
-                    if pkg.haste_commonjs() || !is_within_node_modules(options, path) {
+                    if pkg.haste_commonjs() || !is_within_node_modules(options, &abs_path) {
                         pkg.name()
-                            .map(|name| HasteModuleInfo::mk(name.dupe(), namespace_of_path(path)))
+                            .map(|name| HasteModuleInfo::mk(name.dupe(), namespace_of_path(file)))
                     } else {
                         None
                     }
@@ -1117,7 +1119,8 @@ mod haste {
     fn package_dir_opt(shared_mem: &SharedMem, file: &FileKey) -> Option<String> {
         if shared_mem.is_package_file(file) {
             use std::path::Path;
-            Path::new(file.as_str())
+            let abs = file.to_absolute();
+            Path::new(&abs)
                 .parent()
                 .and_then(|p| p.to_str())
                 .map(|s| s.to_string())
@@ -1244,7 +1247,8 @@ mod haste {
         namespace_opt: Option<Bitset>,
         import_specifier: &str,
     ) -> Option<Dependency> {
-        let importing_file_dir = Path::new(importing_file.as_str())
+        let importing_file_abs = importing_file.to_absolute();
+        let importing_file_dir = Path::new(&importing_file_abs)
             .parent()
             .and_then(|p| p.to_str())
             .unwrap_or("");
@@ -1299,7 +1303,8 @@ mod haste {
         mut phantom_acc: Option<&mut PhantomAcc>,
         import_specifier: &str,
     ) -> Option<Dependency> {
-        let importing_file_dir = Path::new(importing_file.as_str())
+        let importing_file_abs = importing_file.to_absolute();
+        let importing_file_dir = Path::new(&importing_file_abs)
             .parent()
             .and_then(|p| p.to_str())
             .unwrap_or("");
@@ -1509,7 +1514,8 @@ mod haste {
             } => {
                 let candidates = super::module_name_candidates(options, name);
                 let import_specifier_str = candidates.first();
-                let importing_file_dir = Path::new(importing_file.as_str())
+                let importing_file_abs = importing_file.to_absolute();
+                let importing_file_dir = Path::new(&importing_file_abs)
                     .parent()
                     .and_then(|p| p.to_str())
                     .unwrap_or("");

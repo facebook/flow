@@ -432,28 +432,29 @@ fn mk_fun(
 
 fn symbol_from_loc<'cx>(env: &mut Env<'_, 'cx>, sym_def_loc: ALoc, sym_name: Name) -> ALocSymbol {
     let symbol_source = sym_def_loc.source();
-    let sym_provenance = match symbol_source.as_ref().map(|fk| fk.inner()) {
-        Some(FileKeyInner::LibFile(def_source)) => {
-            let current_source = env.genv.cx.file();
-            if current_source.as_str() == def_source {
-                Provenance::Local
-            } else {
-                Provenance::Library(flow_common_ty::ty_symbol::RemoteInfo {
-                    imported_as: env.imported_names().get(&sym_def_loc).cloned(),
-                })
+    let current_source = env.genv.cx.file();
+    let sym_provenance = match symbol_source {
+        Some(def_file) => match def_file.inner() {
+            FileKeyInner::LibFile(_) => {
+                if current_source == def_file {
+                    Provenance::Local
+                } else {
+                    Provenance::Library(flow_common_ty::ty_symbol::RemoteInfo {
+                        imported_as: env.imported_names().get(&sym_def_loc).cloned(),
+                    })
+                }
             }
-        }
-        Some(FileKeyInner::SourceFile(def_source)) => {
-            let current_source = env.genv.cx.file();
-            if current_source.as_str() == def_source {
-                Provenance::Local
-            } else {
-                Provenance::Remote(flow_common_ty::ty_symbol::RemoteInfo {
-                    imported_as: env.imported_names().get(&sym_def_loc).cloned(),
-                })
+            FileKeyInner::SourceFile(_) => {
+                if current_source == def_file {
+                    Provenance::Local
+                } else {
+                    Provenance::Remote(flow_common_ty::ty_symbol::RemoteInfo {
+                        imported_as: env.imported_names().get(&sym_def_loc).cloned(),
+                    })
+                }
             }
-        }
-        Some(FileKeyInner::JsonFile(_)) | Some(FileKeyInner::ResourceFile(_)) => Provenance::Local,
+            FileKeyInner::JsonFile(_) | FileKeyInner::ResourceFile(_) => Provenance::Local,
+        },
         None => Provenance::Local,
     };
     let sym_anonymous = sym_name == Name::new("<<anonymous class>>");

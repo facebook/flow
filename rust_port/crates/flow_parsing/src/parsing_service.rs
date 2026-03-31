@@ -386,9 +386,9 @@ fn reducer(
         return;
     }
 
-    let filename_string = file_key.as_str();
+    let filename_string = file_key.to_absolute();
 
-    let content = match std::fs::read_to_string(filename_string) {
+    let content = match std::fs::read_to_string(&filename_string) {
         Ok(content) => content,
         Err(_) => {
             let haste_module_info =
@@ -433,7 +433,7 @@ fn reducer(
         return;
     }
 
-    if files::is_untyped(&options.file_options, file_key.as_str()) {
+    if files::is_untyped(&options.file_options, &file_key.to_absolute()) {
         docblock.flow = Some(flow_common::docblock::FlowMode::OptOut);
     }
 

@@ -811,7 +811,7 @@ pub fn infer_ast<'a>(
     assert!(cx.is_checked());
     // Check if the file is in declarations mode and we're not in IDE mode.
     // IDE services should still get full type checking even for declaration files.
-    if files::is_declaration(&cx.file_options(), filename.as_str())
+    if files::is_declaration(&cx.file_options(), &filename.to_absolute())
         && !type_inference_hooks_js::is_for_ide()
     {
         {

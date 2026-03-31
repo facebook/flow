@@ -305,6 +305,9 @@ pub(super) fn make_options(
     flow_flowlib::extract(&flowlib_dir);
     let flowlib_path = flow_flowlib::path_of_libdir(&flowlib_dir).to_path_buf();
 
+    flow_parser::file_key::set_project_root(&root.to_string_lossy());
+    flow_parser::file_key::set_flowlib_root(&flowlib_path.to_string_lossy());
+
     let casting_syntax_only_support_as_excludes: Arc<[Regex]> =
         casting_syntax_only_support_as_excludes
             .iter()
@@ -499,10 +502,9 @@ pub(super) fn make_options(
                 .into_iter()
                 .map(|(k, v)| (k, v.into_iter().collect()))
                 .collect();
-        let root_clone = root.clone();
         let map_path = move |path: String| {
-            let expanded = flow_common::files::expand_project_root_token(&root_clone, &path);
-            Regex::new(&expanded).unwrap()
+            let expanded = flow_common::files::expand_project_root_token_as_relative(&path);
+            Regex::new(&format!("^{}", expanded)).unwrap()
         };
 
         Arc::new(ProjectsOptions::mk(
@@ -605,7 +607,7 @@ pub(super) fn make_options(
                 .map(|(applicable_dir_opt, dirname)| {
                     (
                         applicable_dir_opt
-                            .map(|s| flow_common::files::expand_project_root_token(&root, &s)),
+                            .map(|s| flow_common::files::expand_project_root_token_as_relative(&s)),
                         dirname,
                     )
                 })

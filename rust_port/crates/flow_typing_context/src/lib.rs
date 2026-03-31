@@ -937,9 +937,9 @@ impl<'cx> Context<'cx> {
         match dirs {
             [] => false,
             _ => {
-                let filename = self.0.file.as_str();
+                let filename = self.0.file.to_absolute();
                 let normalized_filename =
-                    flow_common::sys_utils::normalize_filename_dir_sep(filename);
+                    flow_common::sys_utils::normalize_filename_dir_sep(&filename);
                 dirs.iter().any(|r| r.is_match(&normalized_filename))
             }
         }
@@ -1049,9 +1049,9 @@ impl<'cx> Context<'cx> {
         match self.0.metadata.frozen.deprecated_utilities.get(t) {
             None => false,
             Some(dirs) => {
-                let filename = self.0.file.as_str();
+                let filename = self.0.file.to_absolute();
                 let normalized_filename =
-                    flow_common::sys_utils::normalize_filename_dir_sep(filename);
+                    flow_common::sys_utils::normalize_filename_dir_sep(&filename);
                 let is_excluded = self
                     .0
                     .metadata
@@ -1231,9 +1231,10 @@ impl<'cx> Context<'cx> {
                 if file.is_lib_file() {
                     v.enabled_during_flowlib
                 } else {
-                    v.focused_files
-                        .as_ref()
-                        .is_some_and(|files| files.iter().any(|f| f == file.as_str()))
+                    v.focused_files.as_ref().is_some_and(|files| {
+                        let abs = file.to_absolute();
+                        files.iter().any(|f| f == &abs)
+                    })
                 }
             }
         }
@@ -1338,9 +1339,9 @@ impl<'cx> Context<'cx> {
         match &*self.0.metadata.frozen.deprecated_colon_extends {
             [] => false,
             dirs => {
-                let filename = self.0.file.as_str();
+                let filename = self.0.file.to_absolute();
                 let normalized_filename =
-                    flow_common::sys_utils::normalize_filename_dir_sep(filename);
+                    flow_common::sys_utils::normalize_filename_dir_sep(&filename);
                 let is_excluded = self
                     .0
                     .metadata

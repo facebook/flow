@@ -184,7 +184,8 @@ pub fn haste_name_opt(options: &FileOptions, file: &FileKey) -> Option<String> {
     }
 
     // Standardize \ to / in path for Windows
-    let normalized_file_name = normalize_filename_dir_sep(file.as_str());
+    let abs_path = file.to_absolute();
+    let normalized_file_name = normalize_filename_dir_sep(&abs_path);
 
     let matches_includes = options
         .haste_paths_includes
@@ -1017,7 +1018,6 @@ pub fn filename_from_string(
     path: &str,
 ) -> flow_parser::file_key::FileKey {
     use flow_parser::file_key::FileKey;
-    use flow_parser::file_key::FileKeyInner;
 
     let ext = Path::new(path)
         .extension()
@@ -1025,15 +1025,15 @@ pub fn filename_from_string(
         .map(|s| format!(".{}", s));
 
     match ext.as_deref() {
-        Some(".json") => FileKey::new(FileKeyInner::JsonFile(path.to_string())),
+        Some(".json") => FileKey::json_file_of_absolute(path),
         Some(ext) if options.module_resource_exts.contains(ext) => {
-            FileKey::new(FileKeyInner::ResourceFile(path.to_string()))
+            FileKey::resource_file_of_absolute(path)
         }
         _ => {
             if consider_libdefs && all_unordered_libs.contains(path) {
-                FileKey::new(FileKeyInner::LibFile(path.to_string()))
+                FileKey::lib_file_of_absolute(path)
             } else {
-                FileKey::new(FileKeyInner::SourceFile(path.to_string()))
+                FileKey::source_file_of_absolute(path)
             }
         }
     }

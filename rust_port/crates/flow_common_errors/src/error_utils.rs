@@ -1656,20 +1656,17 @@ fn read_lines_in_file(
     })
 }
 
-fn file_of_source(source: Option<&FileKey>) -> Option<&str> {
-    use flow_parser::file_key::FileKeyInner;
-    match source.map(|fk| fk.inner()) {
-        Some(FileKeyInner::LibFile(filename)) => {
-            let filename = if is_short_lib(filename) {
-                &filename[LIB_PREFIX.len()..]
+fn file_of_source(source: Option<&FileKey>) -> Option<String> {
+    match source {
+        Some(file_key) => {
+            let filename = file_key.to_absolute();
+            let filename = if is_short_lib(&filename) {
+                filename[LIB_PREFIX.len()..].to_string()
             } else {
-                filename.as_str()
+                filename
             };
             Some(filename)
         }
-        Some(FileKeyInner::SourceFile(filename))
-        | Some(FileKeyInner::JsonFile(filename))
-        | Some(FileKeyInner::ResourceFile(filename)) => Some(filename),
         None => None,
     }
 }
@@ -2371,13 +2368,13 @@ pub mod cli_output {
             let pos = format!(":{}:{}", line, column + 1);
             match &loc.source {
                 Some(file_key) => match file_key.inner() {
-                    FileKeyInner::LibFile(filename) => {
-                        relative_lib_path(strip_root, filename.as_str()) + &pos
+                    FileKeyInner::LibFile(_) => {
+                        relative_lib_path(strip_root, &file_key.to_absolute()) + &pos
                     }
-                    FileKeyInner::SourceFile(filename)
-                    | FileKeyInner::JsonFile(filename)
-                    | FileKeyInner::ResourceFile(filename) => {
-                        relative_path(strip_root, filename.as_str()) + &pos
+                    FileKeyInner::SourceFile(_)
+                    | FileKeyInner::JsonFile(_)
+                    | FileKeyInner::ResourceFile(_) => {
+                        relative_path(strip_root, &file_key.to_absolute()) + &pos
                     }
                 },
                 None => String::new(),
@@ -3106,19 +3103,16 @@ pub mod cli_output {
         }
     }
 
-    /// Prints a FileKey to a string.
     fn print_file_key(strip_root: Option<&std::path::Path>, file_key: Option<&FileKey>) -> String {
         use flow_parser::file_key::FileKeyInner;
 
-        match file_key.map(|fk| fk.inner()) {
-            Some(FileKeyInner::LibFile(filename)) => {
-                relative_lib_path(strip_root, filename.as_str())
-            }
-            Some(FileKeyInner::SourceFile(filename))
-            | Some(FileKeyInner::JsonFile(filename))
-            | Some(FileKeyInner::ResourceFile(filename)) => {
-                relative_path(strip_root, filename.as_str())
-            }
+        match file_key {
+            Some(fk) => match fk.inner() {
+                FileKeyInner::LibFile(_) => relative_lib_path(strip_root, &fk.to_absolute()),
+                FileKeyInner::SourceFile(_)
+                | FileKeyInner::JsonFile(_)
+                | FileKeyInner::ResourceFile(_) => relative_path(strip_root, &fk.to_absolute()),
+            },
             None => "(builtins)".to_string(),
         }
     }
@@ -3378,7 +3372,7 @@ pub mod cli_output {
                     (file_tags, Vec::new(), Vec::new()),
                     |(tags, opened, mut code_frames), loc| {
                         // Read the lines from this location.
-                        let lines = read_lines_in_file(&loc, filename, stdin_file);
+                        let lines = read_lines_in_file(&loc, filename.as_deref(), stdin_file);
                         let Some((first_line, rest_lines)) = lines else {
                             // Failed to read the file, so skip this code frame
                             return (tags, opened, code_frames);
@@ -3660,7 +3654,7 @@ pub mod cli_output {
             // Get the lines for the location...
             let filename = file_of_source(loc.source.as_ref());
             let source_code_lines = filename
-                .as_ref()
+                .as_deref()
                 .and_then(|f| read_lines_in_file(loc, Some(f), stdin_file));
             let colored = |text: &str| -> (tty::Style, String) {
                 match id {
@@ -4485,7 +4479,7 @@ pub mod json_output {
                 let filename = file_of_source(loc.source.as_ref());
                 match filename {
                     None => Value::Null,
-                    Some(filename) => match read_lines_in_file(loc, Some(filename), stdin_file) {
+                    Some(filename) => match read_lines_in_file(loc, Some(&filename), stdin_file) {
                         Some((first_line, _)) => json!(first_line),
                         None => Value::Null,
                     },
@@ -4505,7 +4499,7 @@ pub mod json_output {
                 let filename = file_of_source(loc.source.as_ref());
                 match filename {
                     None => Value::Null,
-                    Some(filename) => match read_lines_in_file(loc, Some(filename), stdin_file) {
+                    Some(filename) => match read_lines_in_file(loc, Some(&filename), stdin_file) {
                         // Read the lines referenced in the loc
                         Some((first_line, rest_lines)) => {
                             let mut all_lines = vec![first_line];
