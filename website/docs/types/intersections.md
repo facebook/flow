@@ -89,14 +89,14 @@ different results based on the input we pass in. Suppose for example
 that we want to write the type of a function that:
 * returns a string, when we pass in the value `"string"`,
 * returns a number, when we pass in the value `"number"`, and
-* returns any possible type (`mixed`), when we pass in any other string.
+* returns any possible type (`unknown`), when we pass in any other string.
 
 The type of this function will be
 ```js flow-check
 type Fn =
   & ((x: "string") => string)
   & ((x: "number") => number)
-  & ((x: string) => mixed);
+  & ((x: string) => unknown);
 ```
 Each line in the above definition is called an *overload*, and we say that functions
 of type `Fn` are *overloaded*.
@@ -111,7 +111,7 @@ Using the above definition we can declare a function `fn` that has the following
 declare const fn:
   & ((x: "string") => string)
   & ((x: "number") => number)
-  & ((x: string) => mixed);
+  & ((x: string) => unknown);
 
 const s: string = fn("string"); // Works
 const n: number = fn("number"); // Works

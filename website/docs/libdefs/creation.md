@@ -7,7 +7,7 @@ import {SinceVersion} from '../../components/VersionTags';
 
 Before spending the time to write your own libdef, we recommend that you look to
 see if there is already a libdef for the third-party code that you're addressing.
-`flow-typed` is a [tool and repository](https://github.com/flowtype/flow-typed/)
+`flow-typed` is a [tool and repository](https://github.com/flow-typed/flow-typed/)
 for sharing common libdefs within the Flow community -- so it's a good way to
 knock out a good chunk of any public libdefs you might need for your project.
 

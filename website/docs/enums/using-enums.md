@@ -128,7 +128,7 @@ const statuses: Array<?Status> = strings.map((input) => Status.cast(input)); // 
 
 Runtime cost: For [mirrored string enums](../defining-enums/#toc-string-enums) (e.g `enum E {A, B}`), as the member names are the same as the values, the runtime cost is constant -
 equivalent to calling `.hasOwnProperty`. For other enums, a `Map` is created on the first call, and subsequent calls simply call `.has` on the cached map.
-Thus the cost is amoritzed constant.
+Thus the cost is amortized constant.
 
 #### .isValid {#toc-isvalid}
 Type: `isValid(input: ?TRepresentationType): boolean`
@@ -599,7 +599,7 @@ if (typeof val === 'string') {
 
 
 ### Exporting enums {#toc-exporting-enums}
-An enum is a type and a value (like a class is). To export both the type and the value, export it like a you would a value:
+An enum is a type and a value (like a class is). To export both the type and the value, export it like you would a value:
 
 ```js flow-check
 export enum Status {}

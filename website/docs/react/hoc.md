@@ -14,8 +14,8 @@ Flow. If you don't already know what a higher-order component is then make sure
 to read the [React documentation on higher-order components][] before
 continuing.
 
-[higher-order component pattern]: https://facebook.github.io/react/docs/higher-order-components.html
-[React documentation on higher-order components]: https://facebook.github.io/react/docs/higher-order-components.html
+[higher-order component pattern]: https://legacy.reactjs.org/docs/higher-order-components.html
+[React documentation on higher-order components]: https://legacy.reactjs.org/docs/higher-order-components.html
 
 You can make use of the [Component Types](../component-types/) to annotate your higher order components.
 
@@ -117,7 +117,7 @@ const ref = React.createRef<MyComponent>();
 
 We get this error message because component type doesn't declare the `ref` prop,
 so it is treated as `React.RefSetter<void>`. If we wanted to preserve the instance type
-of the component, we can use [`React.forwardRef`](https://reactjs.org/docs/forwarding-refs.html):
+of the component, we can use [`React.forwardRef`](https://react.dev/reference/react/forwardRef):
 
 ```js
 import * as React from 'react';

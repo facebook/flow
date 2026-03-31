@@ -69,7 +69,7 @@ non-hooks. Flow will use this information to enforce a number of the rules of ho
 ### Preventing Unsafe Mutation
 According to the [Rules of React](https://react.dev/reference/rules), refs aren’t allowed
 to be read from or written to while a component is rendering, and the return value of
-other hooks (especially `useState``) cannot be safely mutated directly at all. By making
+other hooks (especially `useState`) cannot be safely mutated directly at all. By making
 Flow aware of hooks as a first-class concept, we can now detect these issues in many cases
 and raise errors early, rather than depending on testing to uncover them.
 

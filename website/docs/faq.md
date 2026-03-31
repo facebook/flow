@@ -42,7 +42,7 @@ function myFunc(foo: Param): string {
 
 ## I checked that my value is of type A, so why does Flow still believe it's A | B?
 
-Refinement invalidation can also occur variables are updated:
+Refinement invalidation can also occur when variables are updated:
 
 ```js flow-check
 type T = string | number;
@@ -112,7 +112,7 @@ Flow will make conservative assumptions to try to be sound.
 
 ## Why can't I use a function in my if-clause to check the type of a property?
 
-Flow doesn't track [refinements](.././lang/refinements/) made in separate function calls:
+Flow doesn't track [refinements](../lang/refinements/) made in separate function calls:
 
 ```js flow-check
 const add = (first: number, second: number) => first + second;

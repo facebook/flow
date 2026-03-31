@@ -9,7 +9,7 @@ import TabItem from '@theme/TabItem';
 ## Setup Compiler
 
 First you'll need to setup a compiler to strip away Flow types. You can
-choose between [Babel](http://babeljs.io/) and
+choose between [Babel](https://babeljs.io/) and
 [flow-remove-types](https://github.com/facebook/flow/tree/master/packages/flow-remove-types).
 
 <Tabs
@@ -20,7 +20,7 @@ choose between [Babel](http://babeljs.io/) and
   ]}>
 <TabItem value="babel">
 
-[Babel](http://babeljs.io/) is a compiler for JavaScript code that has
+[Babel](https://babeljs.io/) is a compiler for JavaScript code that has
 support for Flow. Babel will take your Flow code and strip out any type
 annotations. If you already use Babel in your project, see [using Babel](../tools/babel).
 
@@ -36,7 +36,7 @@ Next you need to create a `.babelrc` file at the root of your project with the `
 ```json
 {
   "presets": ["@babel/preset-flow"],
-  "plugins": ["babel-plugin-syntax-hermes-parser"],
+  "plugins": ["babel-plugin-syntax-hermes-parser"]
 }
 ```
 

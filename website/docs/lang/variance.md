@@ -117,7 +117,7 @@ it is *not* safe to use `invariantCity` in a context where:
 - an `InvariantOf<SanFrancisco>` is needed, because reading `prop` could return a `City` which
 may not be `SanFrancisco`.
 
-In orther words, `InvariantOf<City>` is neither a subtype of `InvariantOf<Noun>` nor
+In other words, `InvariantOf<City>` is neither a subtype of `InvariantOf<Noun>` nor
 a subtype of `InvariantOf<SanFrancisco>`.
 
 

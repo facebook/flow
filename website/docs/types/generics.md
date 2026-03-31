@@ -215,7 +215,7 @@ let three: 3 = identity(42); // Error
 
 ### Adding types to generics {#toc-adding-types-to-generics}
 
-Similar to  `mixed`, generics have an "unknown" type. You're not allowed to use
+Similar to `unknown`, generics have an "unknown" type. You're not allowed to use
 a generic as if it were a specific type.
 
 ```js flow-check

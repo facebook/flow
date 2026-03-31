@@ -26,7 +26,7 @@ function f(x: 'a' | 'b'): number {
     case 'b':
       return 2;
     default:
-      return (x: empty);
+      return x as empty;
   }
 }
 ```
@@ -44,10 +44,10 @@ However since no values can be `empty`, this is "safe", unlike with [`any`](../a
 const str = "hello";
 
 if (typeof str === "string") {
-  (str: string); // Yes it's a string
+  str as string; // Yes it's a string
 } else {
   // Works! Since we will never enter this branch
-  (str: empty);
+  str as empty;
   const n: number = str + 1;
 }
 ```

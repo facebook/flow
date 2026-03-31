@@ -786,7 +786,7 @@ Type: `boolean`
 This option enables Flow's [Relay](https://relay.dev) integration. With the
 integration enabled Flow will infer the types of `graphql` tagged template
 literals as being the types that the Relay compiler emitted for that
-fragment/mutaiton/query/etc. This allows users to omit type parameters from
+fragment/mutation/query/etc. This allows users to omit type parameters from
 common Relay APIs like `useFragment` and `usePreloadedQuery`.
 
 ### relay_integration.esmodules {#toc-relay-integration-esmodules}

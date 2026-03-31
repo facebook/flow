@@ -79,7 +79,7 @@ The great thing about Flow is that you can get near real-time feedback on the st
 flow
 ```
 
-The first time this is run, the [Flow background process](#toc-run-flow-background-process) will be spawned and all of your Flow files will be checked. Then, as you continue to iterate on your project, the background process will continuously monitor your code such that when you run `flow` again, the updated result will be near instantaneous.
+The first time this is run, the [Flow background process](#toc-run-the-flow-background-process) will be spawned and all of your Flow files will be checked. Then, as you continue to iterate on your project, the background process will continuously monitor your code such that when you run `flow` again, the updated result will be near instantaneous.
 
 For the [code above](#toc-write-flow-code), running `flow` will yield:
 

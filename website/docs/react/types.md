@@ -233,7 +233,7 @@ Note that `typeof Component` must be the type *of* a React component so you need
 ## `React.ElementProps<typeof Component>` <UntilVersion version="0.287" /> {#toc-react-elementprops}
 
 :::warning
-Because [`React.ElementProps`](#toc-react-elementprops) does not preserve the optionality of `defaultProps`, [`React.ElementConfig`](#toc-react-elementconfig) (which does) is the right choice, especially for simple props pass-through as with [higher-order components](../hoc/#toc-supporting-defaultprops-with-react-elementconfig).
+Because [`React.ElementProps`](#toc-react-elementprops) does not preserve the optionality of `defaultProps`, [`React.ElementConfig`](#toc-react-elementconfig) (which does) is the right choice, especially for simple props pass-through as with [higher-order components](../hoc/).
 Therefore, this type was removed in 0.288.0.
 :::
 
@@ -388,3 +388,4 @@ type Ref<C> =
   | string
   | (instance: React.ElementRef<C> | null) => unknown;
   | { -current: React.ElementRef<ElementType> | null, ... }
+```

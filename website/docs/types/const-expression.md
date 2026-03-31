@@ -37,7 +37,7 @@ const nonConstObject = { g: 42 };
 const constObject = { f: nonConstObject } as const;
 ```
 the type of `nonConstObject` will be `{g: number}` and the type of `constObject` will
-be `{+f: {g: number}}`. In other words, only the top-level property `prop` will
+be `{+f: {g: number}}`. In other words, only the top-level property `f` will
 be read-only.
 
 Finally, it is an error to apply `as const` to non-literal expressions:
