@@ -335,6 +335,7 @@ fn main_impl(args: &command_spec::Values) {
         root.clone(),
         std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned()),
         true, // no_flowlib for ls command
+        crate::command_utils::MakeOptionsOverrides::default(),
     );
     let options = Arc::new(options);
 

@@ -18,6 +18,7 @@ use flow_common::options::Format;
 use flow_common::options::GcControl;
 use flow_common::options::LogSaving;
 use flow_common::options::Options;
+use flow_common::options::SavedStateFetcher;
 use flow_common::path_matcher::PathMatcher;
 use flow_common_exit_status::FlowExitStatus;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
@@ -72,6 +73,17 @@ fn make_includes(
     matcher
 }
 
+#[derive(Clone, Copy, Debug, Default)]
+pub(crate) struct MakeOptionsOverrides {
+    pub(crate) autoimports: Option<bool>,
+    pub(crate) lazy_mode: Option<bool>,
+    pub(crate) saved_state_fetcher: Option<SavedStateFetcher>,
+    pub(crate) saved_state_force_recheck: Option<bool>,
+    pub(crate) saved_state_no_fallback: Option<bool>,
+    pub(crate) saved_state_skip_version_check: Option<bool>,
+    pub(crate) saved_state_verify: Option<bool>,
+}
+
 pub(super) fn make_options(
     flowconfig: FlowConfig,
     flowconfig_hash: String,
@@ -79,6 +91,7 @@ pub(super) fn make_options(
     root: std::path::PathBuf,
     temp_dir: String,
     cli_no_flowlib: bool,
+    overrides: MakeOptionsOverrides,
 ) -> Options {
     let FlowConfig {
         rollouts,
@@ -217,8 +230,18 @@ pub(super) fn make_options(
         version: _version,
     } = flowconfig;
 
+    let MakeOptionsOverrides {
+        autoimports: autoimports_override,
+        lazy_mode: lazy_mode_override,
+        saved_state_fetcher: saved_state_fetcher_override,
+        saved_state_force_recheck,
+        saved_state_no_fallback,
+        saved_state_skip_version_check: saved_state_skip_version_check_override,
+        saved_state_verify,
+    } = overrides;
+
     let all = all.unwrap_or(false);
-    let autoimports = autoimports.unwrap_or(true);
+    let autoimports = autoimports_override.unwrap_or(autoimports.unwrap_or(true));
     let autoimports_min_characters = autoimports_min_characters.unwrap_or(0) as i32;
     let autoimports_ranked_by_usage_boost_exact_match_min_length =
         autoimports_ranked_by_usage_boost_exact_match_min_length as i32;
@@ -238,10 +261,10 @@ pub(super) fn make_options(
     let enable_records = records.unwrap_or(false);
     let estimate_recheck_time = estimate_recheck_time.unwrap_or(true);
     let exact_by_default = exact_by_default.unwrap_or(true);
-    let lazy_mode = matches!(
+    let lazy_mode = lazy_mode_override.unwrap_or(matches!(
         lazy_mode,
         Some(LazyMode::Lazy) | Some(LazyMode::WatchmanDeprecated)
-    );
+    ));
     let max_files_checked_per_worker =
         max_files_checked_per_worker_rust_port.unwrap_or(max_files_checked_per_worker) as i32;
     let max_header_tokens = max_header_tokens as i32;
@@ -609,11 +632,12 @@ pub(super) fn make_options(
         relay_integration_module_prefix_includes,
         root: Arc::new(root),
         root_name: root_name.map(FlowSmolStr::new),
-        saved_state_fetcher,
-        saved_state_force_recheck: false, // Not in flowconfig, set to false
-        saved_state_no_fallback: false,   // Not in flowconfig, set to false
-        saved_state_skip_version_check,
-        saved_state_verify: false, // Not in flowconfig, set to false
+        saved_state_fetcher: saved_state_fetcher_override.unwrap_or(saved_state_fetcher),
+        saved_state_force_recheck: saved_state_force_recheck.unwrap_or(false),
+        saved_state_no_fallback: saved_state_no_fallback.unwrap_or(false),
+        saved_state_skip_version_check: saved_state_skip_version_check_override.unwrap_or(false)
+            || saved_state_skip_version_check,
+        saved_state_verify: saved_state_verify.unwrap_or(false),
         slow_to_check_logging: Default::default(), // Not in flowconfig, use default
         strict_es6_import_export,
         strict_mode,

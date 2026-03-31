@@ -10,6 +10,7 @@ use std::sync::Arc;
 
 use dupe::Dupe;
 use flow_common::options::Options;
+use flow_common::options::SavedStateFetcher;
 use flow_common::verbose::Verbose;
 use flow_common_errors::error_utils::ConcreteLocPrintableErrorSet;
 use flow_common_errors::error_utils::cli_output;
@@ -85,8 +86,23 @@ fn error_flags(options: &Options, show_all_errors: bool) -> cli_output::ErrorFla
     }
 }
 
+fn foreground_check_overrides(disable_saved_state: bool) -> command_utils::MakeOptionsOverrides {
+    let mut overrides = command_utils::MakeOptionsOverrides {
+        autoimports: Some(false),
+        lazy_mode: Some(false),
+        ..Default::default()
+    };
+    if disable_saved_state {
+        overrides.saved_state_fetcher = Some(SavedStateFetcher::DummyFetcher);
+        overrides.saved_state_force_recheck = Some(false);
+        overrides.saved_state_no_fallback = Some(false);
+        overrides.saved_state_skip_version_check = Some(false);
+        overrides.saved_state_verify = Some(false);
+    }
+    overrides
+}
+
 fn run_check(force_full_check: bool, args: &command_spec::Values) {
-    let _force_full_check = force_full_check;
     let flowconfig_name = command_spec::get(
         args,
         "--flowconfig-name",
@@ -118,6 +134,7 @@ fn run_check(force_full_check: bool, args: &command_spec::Values) {
         ignore_version,
         &root,
         &flowconfig_name,
+        foreground_check_overrides(force_full_check),
     );
     if strip_root {
         Arc::make_mut(&mut options).strip_root = true;
@@ -203,6 +220,7 @@ fn run_focus_check(args: &command_spec::Values) {
         ignore_version,
         &root,
         &flowconfig_name,
+        foreground_check_overrides(false),
     );
     if strip_root {
         Arc::make_mut(&mut options).strip_root = true;

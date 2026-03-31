@@ -88,6 +88,7 @@ pub(crate) fn get_options(cli_no_flowlib: bool, ignore_version: bool) -> Arc<Opt
         ignore_version,
         Path::new("."),
         ".flowconfig",
+        command_utils::MakeOptionsOverrides::default(),
     )
 }
 
@@ -96,6 +97,7 @@ pub(crate) fn get_options_with_root_and_flowconfig_name(
     ignore_version: bool,
     root: &Path,
     flowconfig_name: &str,
+    overrides: command_utils::MakeOptionsOverrides,
 ) -> Arc<Options> {
     let flowconfig_path = root.join(flowconfig_name);
     let flowconfig_path_str = flowconfig_path.to_string_lossy();
@@ -132,6 +134,7 @@ pub(crate) fn get_options_with_root_and_flowconfig_name(
         root,
         std::env::var("FLOW_TEMP_DIR").unwrap_or_else(|_| "/tmp/flow".to_owned()),
         cli_no_flowlib,
+        overrides,
     );
     Arc::new(options)
 }
