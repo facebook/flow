@@ -29,3 +29,9 @@ export declare function restArr(...[a, b]: [number, string]): number;
 export type ArrowDestructObj = ({a, b}: {a: number, b: string}) => number;
 export type ArrowDestructArr = ([a, b]: [number, string]) => number;
 export type ArrowDestructRename = ({x: x1}: {x: number}) => number;
+// Arrow function types with destructuring using named type references
+export type ObjParams = {a: number, b: string};
+export type TupleParams = [number, string];
+export type ArrowDestructNamedObj = ({a, b}: ObjParams) => number;
+export type ArrowDestructNamedArr = ([a, b]: TupleParams) => number;
+export declare const arrowDestructNamedConst: ({a, b}: ObjParams) => number;

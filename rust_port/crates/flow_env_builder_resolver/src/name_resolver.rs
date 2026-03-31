@@ -10342,10 +10342,19 @@ impl<'ast, 'a, Cx: Context, Fl: Flow<Cx = Cx>>
 
     // Skip destructuring patterns in function type params (e.g. in
     // `declare function f({a}: T): R`), as they are not runtime bindings.
+    // But still visit the type annotation so type references get registered.
     fn function_param_type_pattern(
         &mut self,
-        _patt: &'ast flow_parser::ast::pattern::Pattern<ALoc, ALoc>,
+        patt: &'ast flow_parser::ast::pattern::Pattern<ALoc, ALoc>,
     ) -> Result<(), AbruptCompletion> {
+        use flow_parser::ast::pattern::Pattern;
+        let annot = match patt {
+            Pattern::Object { inner, .. } => &inner.annot,
+            Pattern::Array { inner, .. } => &inner.annot,
+            Pattern::Identifier { inner, .. } => &inner.annot,
+            Pattern::Expression { .. } => return Ok(()),
+        };
+        self.type_annotation_hint(annot)?;
         Ok(())
     }
 }
@@ -11014,10 +11023,19 @@ impl<'ast, 'a, Cx: Context> AstVisitor<'ast, ALoc, ALoc, &'ast ALoc, !> for Dead
 
     // Skip destructuring patterns in function type params (e.g. in
     // `declare function f({a}: T): R`), as they are not runtime bindings.
+    // But still visit the type annotation so type references get registered.
     fn function_param_type_pattern(
         &mut self,
-        _patt: &'ast flow_parser::ast::pattern::Pattern<ALoc, ALoc>,
+        patt: &'ast flow_parser::ast::pattern::Pattern<ALoc, ALoc>,
     ) -> Result<(), !> {
+        use flow_parser::ast::pattern::Pattern;
+        let annot = match patt {
+            Pattern::Object { inner, .. } => &inner.annot,
+            Pattern::Array { inner, .. } => &inner.annot,
+            Pattern::Identifier { inner, .. } => &inner.annot,
+            Pattern::Expression { .. } => return Ok(()),
+        };
+        let Ok(()) = self.type_annotation_hint(annot);
         Ok(())
     }
 }

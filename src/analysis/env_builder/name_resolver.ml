@@ -2211,8 +2211,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
           (loc, ParamProperty prop)
 
       (* Skip destructuring patterns in function type params (e.g. in
-         `declare function f({a}: T): R`), as they are not runtime bindings. *)
-      method! function_param_type_pattern (patt : (ALoc.t, ALoc.t) Ast.Pattern.t) = patt
+         `declare function f({a}: T): R`), as they are not runtime bindings.
+         But still visit the type annotation so type references get registered. *)
+      method! function_param_type_pattern (patt : (ALoc.t, ALoc.t) Ast.Pattern.t) =
+        let open Ast.Pattern in
+        let (_annot, p) = patt in
+        (match p with
+        | Object { Object.annot; _ }
+        | Array { Array.annot; _ }
+        | Identifier { Identifier.annot; _ } ->
+          ignore (this#type_annotation_hint annot)
+        | Expression _ -> ());
+        patt
 
       (* This method is called during every read of an identifier. We need to ensure that
        * if the identifier is refined that we record the refiner as the write that reaches
@@ -6956,8 +6966,18 @@ module Make (Context : C) (FlowAPIUtils : F with type cx = Context.t) :
         | _ -> super#function_param param
 
       (* Skip destructuring patterns in function type params (e.g. in
-         `declare function f({a}: T): R`), as they are not runtime bindings. *)
-      method! function_param_type_pattern (patt : (ALoc.t, ALoc.t) Ast.Pattern.t) = patt
+         `declare function f({a}: T): R`), as they are not runtime bindings.
+         But still visit the type annotation so type references get registered. *)
+      method! function_param_type_pattern (patt : (ALoc.t, ALoc.t) Ast.Pattern.t) =
+        let open Ast.Pattern in
+        let (_annot, p) = patt in
+        (match p with
+        | Object { Object.annot; _ }
+        | Array { Array.annot; _ }
+        | Identifier { Identifier.annot; _ } ->
+          ignore (this#type_annotation_hint annot)
+        | Expression _ -> ());
+        patt
 
       method! import_named_specifier ~import_kind specifier =
         import_named_specifier

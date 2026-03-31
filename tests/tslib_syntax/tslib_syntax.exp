@@ -701,6 +701,58 @@ References:
                               ^^^^^^ [2]
 
 
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:71:1
+
+Cannot cast `arrowNamedObj(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:71:1
+   71| arrowNamedObj({a: 1, b: "hello"}) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:35:60
+   35| export type ArrowDestructNamedObj = ({a, b}: ObjParams) => number;
+                                                                  ^^^^^^ [1]
+   destructuring_function_type_usage.js:71:38
+   71| arrowNamedObj({a: 1, b: "hello"}) as string; // ERROR
+                                            ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:75:1
+
+Cannot cast `arrowNamedArr(...)` to string because number [1] is incompatible with string [2]. [incompatible-type]
+
+   destructuring_function_type_usage.js:75:1
+   75| arrowNamedArr([1, "hello"]) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:36:62
+   36| export type ArrowDestructNamedArr = ([a, b]: TupleParams) => number;
+                                                                    ^^^^^^ [1]
+   destructuring_function_type_usage.js:75:32
+   75| arrowNamedArr([1, "hello"]) as string; // ERROR
+                                      ^^^^^^ [2]
+
+
+Error ------------------------------------------------------------------------ destructuring_function_type_usage.js:78:1
+
+Cannot cast `arrowDestructNamedConst(...)` to string because number [1] is incompatible with string [2].
+[incompatible-type]
+
+   destructuring_function_type_usage.js:78:1
+   78| arrowDestructNamedConst({a: 1, b: "hello"}) as string; // ERROR
+       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+References:
+   destructuring_function_type.d.ts:37:70
+   37| export declare const arrowDestructNamedConst: ({a, b}: ObjParams) => number;
+                                                                            ^^^^^^ [1]
+   destructuring_function_type_usage.js:78:48
+   78| arrowDestructNamedConst({a: 1, b: "hello"}) as string; // ERROR
+                                                      ^^^^^^ [2]
+
+
 Error --------------------------------------------------------------------------------------- export_as_namespace.js:1:1
 
 `export as namespace` is not enabled. [unsupported-syntax]
@@ -1378,4 +1430,4 @@ References:
 
 
 
-Found 91 errors
+Found 94 errors

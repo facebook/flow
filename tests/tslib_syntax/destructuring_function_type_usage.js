@@ -1,5 +1,5 @@
-import {f, g, h, nested, rest, optObj, optArr, C, restArr} from "./destructuring_function_type";
-import type {I, ArrowDestructObj, ArrowDestructArr, ArrowDestructRename} from "./destructuring_function_type";
+import {f, g, h, nested, rest, optObj, optArr, C, restArr, arrowDestructNamedConst} from "./destructuring_function_type";
+import type {I, ArrowDestructObj, ArrowDestructArr, ArrowDestructRename, ArrowDestructNamedObj, ArrowDestructNamedArr} from "./destructuring_function_type";
 
 // Object destructuring with shorthand properties
 f({a: 1, b: "hello"}) as number; // OK
@@ -64,3 +64,15 @@ arrowArr([1, "hello"]) as string; // ERROR
 declare const arrowRename: ArrowDestructRename;
 arrowRename({x: 1}) as number; // OK
 arrowRename({x: 1}) as string; // ERROR
+
+// Arrow function types with destructuring using named type references
+declare const arrowNamedObj: ArrowDestructNamedObj;
+arrowNamedObj({a: 1, b: "hello"}) as number; // OK
+arrowNamedObj({a: 1, b: "hello"}) as string; // ERROR
+
+declare const arrowNamedArr: ArrowDestructNamedArr;
+arrowNamedArr([1, "hello"]) as number; // OK
+arrowNamedArr([1, "hello"]) as string; // ERROR
+
+arrowDestructNamedConst({a: 1, b: "hello"}) as number; // OK
+arrowDestructNamedConst({a: 1, b: "hello"}) as string; // ERROR

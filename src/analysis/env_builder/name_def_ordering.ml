@@ -399,8 +399,18 @@ struct
         method! function_param_type_identifier (id : ('loc, 'loc) Ast.Identifier.t) = id
 
         (* Skip destructuring patterns in function type params (e.g. in
-           `declare function f({a}: T): R`), as they are not runtime bindings. *)
-        method! function_param_type_pattern (patt : ('loc, 'loc) Ast.Pattern.t) = patt
+           `declare function f({a}: T): R`), as they are not runtime bindings.
+           But still visit the type annotation so type references get registered. *)
+        method! function_param_type_pattern (patt : ('loc, 'loc) Ast.Pattern.t) =
+          let open Ast.Pattern in
+          let (_annot, p) = patt in
+          (match p with
+          | Object { Object.annot; _ }
+          | Array { Array.annot; _ }
+          | Identifier { Identifier.annot; _ } ->
+            ignore (this#type_annotation_hint annot)
+          | Expression _ -> ());
+          patt
 
         method! member_property_identifier (id : (ALoc.t, ALoc.t) Ast.Identifier.t) = id
 

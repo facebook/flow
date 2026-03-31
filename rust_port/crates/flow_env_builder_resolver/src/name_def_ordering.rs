@@ -1101,10 +1101,19 @@ where
 
     // Skip destructuring patterns in function type params (e.g. in
     // `declare function f({a}: T): R`), as they are not runtime bindings.
+    // But still visit the type annotation so type references get registered.
     fn function_param_type_pattern(
         &mut self,
-        _patt: &ast::pattern::Pattern<ALoc, ALoc>,
+        patt: &ast::pattern::Pattern<ALoc, ALoc>,
     ) -> Result<(), !> {
+        use ast::pattern::Pattern;
+        let annot = match patt {
+            Pattern::Object { inner, .. } => &inner.annot,
+            Pattern::Array { inner, .. } => &inner.annot,
+            Pattern::Identifier { inner, .. } => &inner.annot,
+            Pattern::Expression { .. } => return Ok(()),
+        };
+        let Ok(()) = self.type_annotation_hint(annot);
         Ok(())
     }
 
