@@ -609,318 +609,48 @@ When not specified, the type of the remainder is just `string`.
 
 ## Removed utility types
 
-These utility types used to exist, but no longer exist in latest versions of Flow.
+These utility types have been removed. Use the recommended replacements instead.
 
 ### `$Diff<A, B>` <UntilVersion version="0.267" /> {#toc-diff}
 
-NOTE: Please use `Omit` type instead.
-
-As the name hints, `$Diff<A, B>` is the type representing the set difference of `A` and `B`, i.e. `A \ B`, where `A` and `B` are both [object types](../objects/). Here's an example:
-
-```js flow-check
-type Props = {name: string, age: number, ...};
-type DefaultProps = {age: number};
-type RequiredProps = $Diff<Props, DefaultProps>;
-
-function setProps(props: RequiredProps) {
-  // ...
-}
-
-setProps({name: 'foo'}); // Works
-setProps({name: 'foo', age: 42, baz: false}); // Works, you can pass extra props too
-setProps({age: 42}); // Error! `name` is required
-```
-
-As you may have noticed, the example is not a random one.
-`$Diff` is exactly what the React definition file uses to define the type of the props accepted by a React Component.
-
-Note that `$Diff<A, B>` will error if the object you are removing properties from does not have the property being removed, i.e. if `B` has a key that doesn't exist in `A`:
-
-```js
-type Props = {name: string, age: number};
-type DefaultProps = {age: number, other: string};
-type RequiredProps = $Diff<Props, DefaultProps>; // Error!
-
-function setProps(props: RequiredProps) {
-  props.name;
-  // ...
-}
-```
-
-As a workaround, you can specify the property not present in `A` as optional. For example:
-
-```js
-type A = $Diff<{}, {nope: number}>; // Error!
-type B = $Diff<{}, {nope: number | void}>; // Works
-
-const a: A = {};
-const b: B = {};
-```
+Removed. Use [`Omit`](#toc-omit) instead.
 
 ### `$Rest<A, B>` <UntilVersion version="0.266" /> {#toc-rest}
 
-NOTE: Please use `Omit` type instead.
-
-`$Rest<A, B>` is the type that represents the runtime object rest operation, e.g.: `const {foo, ...rest} = obj`, where `A` and `B` are both [object types](../objects/).
-The resulting type from this operation will be an object type containing `A`'s *own* properties that are not *own* properties in `B`.
-In flow, we treat all properties on [exact object types](../objects/#exact-and-inexact-object-types) as [own](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/hasOwnProperty).
-For inexact objects, a property may or may not be own.
-
-For example:
-
-```js
-type Props = {name: string, age: number};
-
-const props: Props = {name: 'Jon', age: 42};
-const {age, ...otherProps} = props;
-otherProps as $Rest<Props, {age: number}>;
-otherProps.age;  // Error!
-```
-
-The main difference with [`$Diff<A, B>`](#toc-diff), is that `$Rest<A, B>` aims to represent the true runtime rest operation,
-which implies that exact object types are treated differently in `$Rest<A, B>`.
-For example, `$Rest<{n: number}, {...}>` will result in `{n?: number}` because an in-exact empty object may have an `n` property,
-while `$Diff<{n: number}, {...}>` will result in `{n: number}`.
+Removed. Use [`Omit`](#toc-omit) instead.
 
 ### `$PropertyType<T, k>` <UntilVersion version="0.265" /> {#toc-propertytype}
 
-`$PropertyType<T, 'k'>` is equivalent to the `T['k']` [indexed access type](../indexed-access).
+Removed. Use the `T['k']` [indexed access type](../indexed-access) instead.
 
 ### `$ElementType<T, K>` <UntilVersion version="0.265" /> {#toc-elementtype}
 
-`$ElementType<T, K>` is equivalent to the `T[K]` [indexed access type](../indexed-access).
+Removed. Use the `T[K]` [indexed access type](../indexed-access) instead.
 
 ### `$TupleMap<T, F>` <UntilVersion version="0.247" /> {#toc-tuplemap}
 
-`$TupleMap<T, F>` takes an iterable type `T` (e.g.: [`Tuple`](../tuples) or [`Array`](../arrays)), and a [function type](../functions) `F`,
-and returns the iterable type obtained by mapping the type of each value in the iterable with the provided function type `F`.
-This is analogous to the JavaScript function `map`.
-
-Following our example from [`$ObjMap<T>`](#toc-objmap), let's assume that `run` takes an array of functions, instead of an object, and maps over them returning an array of the function call results. We could annotate its return type like this:
-
-```js
-// Function type that takes a `() => V` and returns a `V` (its return type)
-type ExtractReturnType = <V>(() => V) => V
-
-function run<A, I: Array<() => A>>(iter: I): $TupleMap<I, ExtractReturnType> {
-  return iter.map(fn => fn());
-}
-
-const arr = [() => 'foo', () => 'bar'];
-run(arr)[0] as string; // Works
-run(arr)[1] as string; // Works
-run(arr)[1] as boolean; // Error!
-```
+Removed. Use [Mapped Types](../mapped-types) instead.
 
 ### `$Call<F, T...>` <UntilVersion version="0.247" /> {#toc-call}
 
-NOTE: Please use [Conditional Types](../conditional) or [Indexed Access Types](../indexed-access) to extract types instead.
-
-`$Call<F, T...>` is a type that represents the result of calling the given [function type](../functions) `F` with 0 or more arguments `T...`.
-This is analogous to calling a function at runtime (or more specifically, it's analogous to calling [`Function.prototype.call`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Function/call)), but at the type level; this means that function type calls happens statically, i.e. not at runtime.
-
-Let's see a couple of examples:
-```js
-// Takes an object type, returns the type of its `prop` key
-type ExtractPropType = <T>({prop: T, ...}) => T;
-type Obj = {prop: number};
-type PropType = $Call<ExtractPropType, Obj>;  // Call `ExtractPropType` with `Obj` as an argument
-type Nope = $Call<ExtractPropType, {nope: number}>;  // Error! Argument doesn't match `Obj`.
-
-5 as PropType; // Works
-true as PropType;  // Error! PropType is a number
-```
-
-```js
-// Takes a function type, and returns its return type
-type ExtractReturnType = <R>(() => R) => R;
-type Fn = () => number;
-type ReturnType = $Call<ExtractReturnType, Fn>;
-
-5 as ReturnType;  // Works
-true as ReturnType;  // Error! ReturnType is a number
-```
-
-`$Call` can be very powerful because it allows you to make calls in type-land that you would otherwise have to do at runtime.
-The type-land calls happen statically and will be erased at runtime.
-
-```js
-// Getting return types:
-function getFirstValue<V>(map: Map<string, V>): ?V {
-  for (const [key, value] of map.entries()) {
-    return value;
-  }
-  return null;
-}
-
-// Using $Call, we can get the actual return type of the function above:
-type Value = $Call<typeof getFirstValue, Map<string, number>>;
-
-5 as Value;
-true as Value;  // Error! Value is a `number`
-
-// We could generalize it further:
-type GetMapValue<M> =
-  $Call<typeof getFirstValue, M>;
-
-5 as GetMapValue<Map<string, number>>;
-true as GetMapValue<Map<string, boolean>>;
-true as GetMapValue<Map<string, number>>;  // Error! value is a `number`
-```
+Removed. Use [Conditional Types](../conditional) or [Indexed Access Types](../indexed-access) instead.
 
 ### `$ObjMap<T, F>` <UntilVersion version="0.246" /> {#toc-objmap}
 
-NOTE: Please use [Mapped Types](../mapped-types) instead.
-
-`ObjMap<T, F>` takes an [object type](../objects) `T`, and a [function type](../functions) `F`, and returns the object type obtained by mapping the type of each value in the object with the provided function type `F`. In other words, `$ObjMap` will [call](#toc-call) (at the type level) the given function type `F` for every property value type in `T`, and return the resulting object type from those calls.
-
-Let's see an example. Suppose you have a function called `run` that takes an object of thunks (functions in the form `() => A`) as input:
-
-```js
-function run<O: {[key: string]: (...ReadonlyArray<unknown>) => unknown}>(o: O): $FlowFixMe {
-  return Object.keys(o).reduce<{[string]: (...ReadonlyArray<unknown>) => unknown}>(
-    (acc, k) => ({...acc, [(k: string)]: o[k]()}),
-    {},
-  );
-}
-```
-
-The function's purpose is to run all the thunks and return an object made of values. What's the return type of this function?
-
-The keys are the same, but the values have a different type, namely the return type of each function.
-At a value level (the implementation of the function) we're essentially mapping over the object to produce new values for the keys.
-How to express this at a type level?
-
-This is where `ObjMap<T, F>` comes in handy
-
-```js
-// let's write a function type that takes a `() => V` and returns a `V` (its return type)
-type ExtractReturnType = <V>(() => V) => V;
-
-declare function run<O: {[key: string]: (...ReadonlyArray<unknown>) => unknown}>(o: O): $ObjMap<O, ExtractReturnType>;
-
-const o = {
-  a: () => true,
-  b: () => 'foo'
-};
-
-run(o).a as boolean; // Works
-run(o).b as string;  // Works
-run(o).b as boolean; // Error! `b` is a string
-run(o).c;            // Error! `c` was not in the original object
-```
-
-This is extremely useful for expressing the return type of functions that manipulate objects values.
-You could use a similar approach (for instance) to provide the return type of bluebird's [`Promise.props`](http://bluebirdjs.com/docs/api/promise.props.html) function,
-which is like `Promise.all` but takes an object as input.
-
-Here's a possible declaration of this function, which is very similar to our first example:
-
-```js
-declare function props<A, O: {[key: string]: A}>(promises: O): Promise<$ObjMap<O, <T>(p: Promise<T> | T) => T>>>;
-
-const promises = {a: Promise.resolve(42)};
-props(promises).then(o => {
-  o.a as 42; // Works
-  o.a as 43; // Error! Flow knows it's 42
-});
-```
+Removed. Use [Mapped Types](../mapped-types) instead.
 
 ### `$ObjMapi<T, F>` <UntilVersion version="0.246" /> {#toc-objmapi}
 
-NOTE: Please use [Mapped Types](../mapped-types) instead.
-
-`ObjMapi<T, F>` is similar to [`ObjMap<T, F>`](#toc-objmap). The difference is that function
-type `F` will be [called](#toc-call) with both the key and value types of the elements of
-the object type `T`, instead of just the value types. For example:
-
-```js
-const o = {
-  a: () => true,
-  b: () => 'foo'
-};
-
-type ExtractReturnObjectType = <K, V>(K, () => V) => { k: K, v: V };
-
-declare function run<O: {...}>(o: O): $ObjMapi<O, ExtractReturnObjectType>;
-
-run(o).a as {k: 'a', v: boolean}; // Works
-run(o).b as {k: 'b', v: string};  // Works
-run(o).a as {k: 'b', v: boolean}; // Error! `a.k` is "a"
-run(o).b as {k: 'b', v: number};  // Error! `b.v` is a string
-run(o).c;                         // Error! `c` was not in the original object
-```
+Removed. Use [Mapped Types](../mapped-types) instead.
 
 ### `$ObjMapConst<O, T>` <UntilVersion version="0.246" /> {#toc-objmapconst}
 
-NOTE: Please use [Mapped Types](../mapped-types) instead.
-
-`$ObjMapConst<Obj, T>` is a special case of `$ObjMap<Obj, F>`, when `F` is a constant
-function type, e.g. `() => T`. Instead of writing `$ObjMap<Obj, () => T>`, you
-can write `$ObjMapConst<Obj, T>`. For example:
-```js
-const obj = {
-  a: true,
-  b: 'foo'
-};
-
-declare function run<O: {...}>(o: O): $ObjMapConst<O, number>;
-
-// newObj is of type {a: number, b: number}
-const newObj = run(obj);
-
-newObj.a as number; // Works
-newObj.b as string; // Error! Property `b` is a number
-```
-
-Tip: Prefer using `$ObjMapConst` instead of `$ObjMap` (if possible) to fix certain
-kinds of `[invalid-exported-annotation]` errors.
+Removed. Use [Mapped Types](../mapped-types) instead.
 
 ### `$Partial` <UntilVersion version="0.202" />
-A former alias of [Partial](#toc-partial). Support was removed in version 0.203.
+
+Removed. Use [`Partial`](#toc-partial) instead.
 
 ### `$Shape<T>` <UntilVersion version="0.206" /> {#toc-shape}
 
-NOTE: This utility is unsafe - please use [`Partial`](#toc-partial) documented above to make all of an object's fields optional.
-
-A variable of type `$Shape<T>`, where `T` is some object type, can be assigned objects `o`
-that contain a subset of the properties included in `T`. For each property `p: S` of `T`,
-the type of a potential binding of `p` in `o` must be compatible with `S`.
-
-For example
-```js
-type Person = {
-  age: number,
-  name: string,
-};
-// $FlowIgnore[deprecated-utility]
-type PersonDetails = $Shape<Person>;
-
-const person1: Person = {age: 28};  // ERROR: missing `name`
-const person2: Person = {name: 'a'};  // ERROR: missing `age`
-const person3: PersonDetails = {age: 28};  // OK
-const person4: PersonDetails = {name: 'a'};  // OK
-const person5: PersonDetails = {age: 28, name: 'a'};  // OK
-const person6: PersonDetails = {age: '28'};  // ERROR: string is incompatible with number
-```
-
-NOTE: `$Shape<T>` is **not** equivalent to `T` with all its fields marked as optional.
-In particular, Flow unsoundly allows `$Shape<T>` to be used as a `T` in several
-contexts. For example in
-
-```js
-const personShape: PersonDetails = {age: 28};
-personShape as Person;
-```
-Flow will unsoundly allow this last cast to succeed.
-
-It is also not equivalent to itself in some contexts:
-
-```js
-function f<T>(input: $Shape<T>): $Shape<T> {
-  return input; // ERROR: `T` is incompatible with `$Shape` of `T`
-}
-```
-
-This utility type is deprecated and will be deleted in the future -
-use [`Partial`](#toc-partial) instead.
+Removed. Use [`Partial`](#toc-partial) instead.
