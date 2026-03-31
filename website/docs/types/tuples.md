@@ -239,13 +239,13 @@ You can still type this value as the appropriate `Array<T>` type - only the tupl
 const a: [foo?: 1] = [];
 const b = [0, ...a, 2]; // At runtime this is `[0, 2]`
 b as [0, 1 | void, 2]; // ERROR
-b as Array<number | void>; // OK
+b as ReadonlyArray<number | void>; // OK
 
 const c: [0, foo?: 1] = [0];
 const d: [bar?: 2] = [2];
 const e = [...c, ...d]; // At runtime this is `[0, 2]`
 e as [0, foo?: 1, bar?: 2]; // ERROR
-e as Array<number | void>; // OK
+e as ReadonlyArray<number | void>; // OK
 ```
 
 ## Inexact tuples
@@ -263,10 +263,10 @@ If you spread an inexact tuple, the result is also inexact.
 You cannot define elements after the spread of an inexact tuple, since we wouldn't know at what index they should be.
 
 ```js flow-check
-declare const x: [1, ...];
+declare const x: [number, ...];
 const y = [0, ...x];
-y as [0, 1]; // ERROR: it's inexact
-y as [0, 1, ...]; // OK
+y as [number, number]; // ERROR: it's inexact
+y as [number, number, ...]; // OK
 
 [...x, 2]; // ERROR: can't have element after inexact spread
 ```

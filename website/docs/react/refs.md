@@ -7,13 +7,13 @@ React allows you to grab the instance of an element or component with [refs](htt
 
 ##  Refs in Functional Components {#toc-refs-in-functional-components}
 
-Inside a functional component, refs are accessed with the `useRef` hook:
+Inside a component, refs are accessed with the `useRef` hook:
 
 ```js flow-check
 import {useRef} from 'react';
 import * as React from 'react';
 
-function MyComponent() {
+component MyComponent() {
   const buttonRef = useRef<null | HTMLButtonElement>(null);
   buttonRef as {current: null | HTMLButtonElement}; // useRef wraps the ref value in an object
   return <button ref={buttonRef}>Toggle</button>;
@@ -36,7 +36,7 @@ class MyComponent extends React.Component<{}> {
   buttonRef: {current: null | HTMLButtonElement};
 
   constructor() {
-    super();
+    super({});
     this.buttonRef = React.createRef<HTMLButtonElement>();
   }
 

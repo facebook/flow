@@ -65,7 +65,7 @@ value;
 Using type cast expressions you can assert that values are certain types.
 
 ```js flow-check
-let value = 42;
+const value = 42;
 
 value as 42;     // Works!
 value as number; // Works!
@@ -81,7 +81,7 @@ value with the provided type. If you hold onto the resulting value, it will
 have the new type.
 
 ```js flow-check
-let value = 42;
+const value = 42;
 
 value as 42;     // Works!
 value as number; // Works!
@@ -175,9 +175,9 @@ const clone = cloneObject({
   baz: 'three'
 });
 
-clone.foo as 1;       // Works!
-clone.bar as true;    // Works!
-clone.baz as 'three'; // Works!
+clone.foo as number;  // Works!
+clone.bar as boolean; // Works!
+clone.baz as string;  // Works!
 ```
 
 ## Legacy casting syntax

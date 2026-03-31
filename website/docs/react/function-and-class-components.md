@@ -179,7 +179,7 @@ This way you avoid duplicating the properties that happen to have a default valu
 > **Note:** You can also apply this format of default props to functional components
 > by adding a `defaultProps` property to a the component function. However, it is generally
 > simpler to use the destructuring pattern described above.
-> ```js flow-check
+> ```js
 > function MyComponent(props: {foo: number}) {}
 > MyComponent.defaultProps = {foo: 42};
 > ```

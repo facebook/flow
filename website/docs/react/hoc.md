@@ -51,8 +51,8 @@ import * as React from 'react';
 
 type InjectedProps = {foo: number}
 
-function injectProp<Config>(
-  Component: component(...{...Config, ...InjectedProps})
+function injectProp<Config: {...}>(
+  Component: component(...{...Config, ...InjectedProps, ...})
 ): component(...Config) {
   return function WrapperComponent(
     props: Config,
@@ -65,6 +65,7 @@ function MyComponent(props: {
   a: number,
   b: number,
   ...InjectedProps,
+  ...
 }): React.Node {}
 
 const MyEnhancedComponent = injectProp(MyComponent);
@@ -82,7 +83,7 @@ Recall that the instance type of a function component is `void`. Our example
 above wraps a component in a function, so the returned component has the instance
 type `void`.
 
-```js flow-check
+```js
 import * as React from 'react';
 
 type InjectedProps = {foo: number}
@@ -118,7 +119,7 @@ We get this error message because component type doesn't declare the `ref` prop,
 so it is treated as `React.RefSetter<void>`. If we wanted to preserve the instance type
 of the component, we can use [`React.forwardRef`](https://reactjs.org/docs/forwarding-refs.html):
 
-```js flow-check
+```js
 import * as React from 'react';
 
 type InjectedProps = {foo: number}
