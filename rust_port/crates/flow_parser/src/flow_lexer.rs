@@ -2126,6 +2126,33 @@ fn decode_html_entity(entity: &str) -> Option<u32> {
     }
 }
 
+// In OCaml sedlex, jsx_child_text uses longest-match semantics. The pattern
+// `Plus (Compl ('<' | '{' | '&' | eof | line_terminator_sequence_start))`
+// includes '>' and '}'. When '>' or '}' appears and is followed by more
+// "normal" chars, the Plus pattern produces a longer match than the single-char
+// '>' or '}' patterns, so no error is emitted. The error only fires when
+// '>' or '}' would tie at length 1 (i.e., the next char is '<', '{', '&',
+// a line terminator, or eof), and the earlier error pattern wins the tie.
+//
+// This helper checks whether a following character would extend a
+// `Plus (Compl ...)` match beyond a single '>' or '}'.
+fn jsx_child_text_remainder_has_normal(remainder: &str) -> bool {
+    // match multi-char substrings that don't contain the start chars of the above patterns
+    match remainder.chars().next() {
+        None => false, // eof
+        Some('<') => false,
+        Some('{') => false,
+        Some('&') => false,
+        // line_terminator_sequence_start
+        Some('\r') => false,
+        Some('\n') => false,
+        Some('\u{2028}') => false,
+        Some('\u{2029}') => false,
+        Some(_) => true,
+    }
+}
+
+// (* let rec jsx_child_text env buf raw lexbuf = *)
 fn jsx_child_text<'a>(
     mut lexer: logos::Lexer<'a, JsxChildTextToken>,
     env: &mut LexEnv,
@@ -2133,6 +2160,14 @@ fn jsx_child_text<'a>(
     buf: &mut String,
     raw: &mut String,
 ) -> logos::Lexer<'a, JsxChildTextToken> {
+    // In OCaml, `normal_prev` doesn't exist. Instead, sedlex longest-match
+    // semantics handle '>' and '}' within `Plus (Compl ...)`. The Rust logos
+    // lexer tokenizes them separately, so we simulate the sedlex behavior:
+    // - If preceded by normal text (`normal_prev`), '>' and '}' are always
+    //   part of the text (the `Plus` already started matching).
+    // - If NOT preceded by normal text, '>' and '}' are only text if followed
+    //   by a "normal" char (making `Plus (Compl ...)` match 2+ chars, winning
+    //   over the single-char error pattern). Otherwise, the error pattern wins.
     let mut normal_prev = false;
     loop {
         let remainder = lexer.remainder();
@@ -2144,7 +2179,10 @@ fn jsx_child_text<'a>(
 
         match lexer.next() {
             Some(Ok(JsxChildTextToken::GreaterThan)) => {
-                if normal_prev {
+                // In OCaml sedlex, '>' is in `Compl ('<' | '{' | '&' | eof | lt_start)`.
+                // When preceded by normal text, or when followed by a "normal" char,
+                // `Plus (Compl ...)` matches it as text. Otherwise, the '>' error arm wins.
+                if normal_prev || jsx_child_text_remainder_has_normal(lexer.remainder()) {
                     let c = lexer.slice();
                     raw.push_str(c);
                     buf.push_str(c);
@@ -2156,7 +2194,8 @@ fn jsx_child_text<'a>(
                 }
             }
             Some(Ok(JsxChildTextToken::RCurly)) => {
-                if normal_prev {
+                // Same longest-match logic as '>' above.
+                if normal_prev || jsx_child_text_remainder_has_normal(lexer.remainder()) {
                     let c = lexer.slice();
                     raw.push_str(c);
                     buf.push_str(c);
