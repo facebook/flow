@@ -262,13 +262,35 @@ The default value for `jest_integration` is `false`.
 
 Type: `boolean`
 
-For more on lazy modes, see the [lazy modes docs](../../lang/lazy-modes/).
-
 Setting `lazy_mode` in the `.flowconfig` will cause new Flow servers for that
 root to use lazy mode (or no lazy mode if set to `false`). This option can be
 overridden from the CLI using the `--lazy-mode` flag.
 
 The default value is `false`.
+
+In lazy mode, Flow classifies files into four categories:
+
+1. **Focused files** — files the user is actively working on.
+2. **Dependent files** — files that depend on focused files (changes to focused files might cause errors here).
+3. **Dependency files** — files needed to typecheck the focused and dependent files.
+4. **Unchecked files** — everything else. These are parsed but not typechecked.
+
+Flow determines focused files by watching for changes on disk (using Watchman or
+its built-in file watcher). For files that changed while Flow was not running,
+Flow uses your version control system (Git or Mercurial) to find all files that
+have changed since the mergebase with your main branch. You can configure which
+branch to diff against with `file_watcher.mergebase_with` (e.g. set it to
+`origin/master` if working from a clone).
+
+The result is that lazy mode finds the same errors as a full check, as long as
+there are no errors upstream. For example, if CI ensures no errors on your main
+branch, it's redundant for Flow to recheck all unchanged files.
+
+You can manually force Flow to treat specific files as focused:
+
+```bash
+flow force-recheck --focus path/to/A.js path/to/B.js
+```
 
 ### max_header_tokens {#toc-max-header-tokens}
 

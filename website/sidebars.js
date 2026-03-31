@@ -73,7 +73,6 @@ module.exports = {
         'lang/depth-subtyping',
         'lang/width-subtyping',
         'lang/refinements',
-        'lang/lazy-modes',
         'lang/types-first',
         'lang/annotation-requirement',
       ],
