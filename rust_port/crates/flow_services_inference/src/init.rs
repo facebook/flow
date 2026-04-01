@@ -14,6 +14,7 @@
 //! future.
 
 use std::cell::LazyCell;
+use std::collections::BTreeMap;
 use std::rc::Rc;
 use std::sync::Arc;
 
@@ -22,7 +23,6 @@ use flow_aloc::ALoc;
 use flow_aloc::ALocTable;
 use flow_common::flow_projects::FlowProjects;
 use flow_common::options::Options;
-use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_heap::parsing_heaps::SharedMem;
 use flow_imports_exports::exports;
 use flow_imports_exports::exports::Exports;
@@ -161,20 +161,16 @@ fn load_lib_files(
 
 pub struct InitResult {
     pub ok: bool,
-    pub errors: FlowOrdMap<FileKey, ErrorSet>,
-    pub warnings: FlowOrdMap<FileKey, ErrorSet>,
+    pub errors: BTreeMap<FileKey, ErrorSet>,
+    pub warnings: BTreeMap<FileKey, ErrorSet>,
     pub suppressions: ErrorSuppressions,
     pub exports: (Exports, Vec<(FlowProjects, Exports)>),
     pub master_cx: Arc<MasterContext>,
 }
 
 // OCaml: let error_set_to_filemap ~init err_set =
-fn error_set_to_filemap(
-    init: &FlowOrdMap<FileKey, ErrorSet>,
-    err_set: ErrorSet,
-) -> FlowOrdMap<FileKey, ErrorSet> {
-    let map = init.dupe();
-    err_set.fold(map, |mut map, error: FlowError<ALoc>| {
+fn error_set_to_filemap(map: &mut BTreeMap<FileKey, ErrorSet>, err_set: ErrorSet) {
+    err_set.fold((), |(), error: FlowError<ALoc>| {
         let file = error.source_file().dupe();
         match map.get(&file) {
             None => {
@@ -186,8 +182,7 @@ fn error_set_to_filemap(
                 map.insert(file, new_set);
             }
         }
-        map
-    })
+    });
 }
 
 /// initialize builtins:
@@ -201,11 +196,7 @@ pub fn init(
     let ccx = Rc::new(flow_typing_context::make_ccx());
     let (ok, master_cx, cx_opt, exports) = load_lib_files(&ccx, options, reader, &lib_files);
     let (errors, warnings, suppressions) = match cx_opt {
-        None => (
-            FlowOrdMap::new(),
-            FlowOrdMap::new(),
-            ErrorSuppressions::empty(),
-        ),
+        None => (BTreeMap::new(), BTreeMap::new(), ErrorSuppressions::empty()),
         Some(cx) => {
             let errors = cx.errors();
             let suppressions = cx.error_suppressions().clone();
@@ -221,15 +212,15 @@ pub fn init(
             );
             // Break Rc cycles in the init Context before dropping it.
             cx.post_inference_cleanup();
-            let mut init = FlowOrdMap::new();
+            let mut error_map = BTreeMap::new();
+            let mut warning_map = BTreeMap::new();
             for (file, _) in aloc_tables.iter() {
-                init.insert(file.dupe(), ErrorSet::empty());
+                error_map.insert(file.dupe(), ErrorSet::empty());
+                warning_map.insert(file.dupe(), ErrorSet::empty());
             }
-            (
-                error_set_to_filemap(&init, errors),
-                error_set_to_filemap(&init, warnings),
-                suppressions,
-            )
+            error_set_to_filemap(&mut error_map, errors);
+            error_set_to_filemap(&mut warning_map, warnings);
+            (error_map, warning_map, suppressions)
         }
     };
     InitResult {

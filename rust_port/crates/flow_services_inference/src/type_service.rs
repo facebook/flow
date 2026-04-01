@@ -31,7 +31,6 @@ use flow_common_modulename::Modulename;
 use flow_common_tarjan::topsort;
 use flow_common_utils::checked_set::CheckedSet;
 use flow_common_utils::graph::Graph;
-use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_heap::parsing_heaps::SharedMem;
@@ -106,19 +105,19 @@ pub(crate) fn clear_errors(files: &FlowOrdSet<FileKey>, mut errors: Errors) -> E
 }
 
 pub(crate) fn filter_errors(files: &FlowOrdSet<FileKey>, errors: &Errors) -> Errors {
-    let local_errors: FlowOrdMap<FileKey, ErrorSet> = errors
+    let local_errors: BTreeMap<FileKey, ErrorSet> = errors
         .local_errors
         .iter()
         .filter(|(file, _)| files.contains(file))
         .map(|(k, v)| (k.dupe(), v.dupe()))
         .collect();
-    let merge_errors: FlowOrdMap<FileKey, ErrorSet> = errors
+    let merge_errors: BTreeMap<FileKey, ErrorSet> = errors
         .merge_errors
         .iter()
         .filter(|(file, _)| files.contains(file))
         .map(|(k, v)| (k.dupe(), v.dupe()))
         .collect();
-    let warnings: FlowOrdMap<FileKey, ErrorSet> = errors
+    let warnings: BTreeMap<FileKey, ErrorSet> = errors
         .warnings
         .iter()
         .filter(|(file, _)| files.contains(file))
@@ -135,27 +134,20 @@ pub(crate) fn filter_errors(files: &FlowOrdSet<FileKey>, errors: &Errors) -> Err
     }
 }
 
-fn update_errset(
-    mut map: FlowOrdMap<FileKey, ErrorSet>,
-    file: FileKey,
-    errset: ErrorSet,
-) -> FlowOrdMap<FileKey, ErrorSet> {
-    if errset.is_empty() {
-        map
-    } else {
+fn update_errset(map: &mut BTreeMap<FileKey, ErrorSet>, file: FileKey, errset: ErrorSet) {
+    if !errset.is_empty() {
         let errset = match map.get(&file) {
             Some(prev_errset) => prev_errset.union(&errset),
             None => errset,
         };
         map.insert(file, errset);
-        map
     }
 }
 
 fn merge_error_maps(
-    mut left: FlowOrdMap<FileKey, ErrorSet>,
-    right: FlowOrdMap<FileKey, ErrorSet>,
-) -> FlowOrdMap<FileKey, ErrorSet> {
+    mut left: BTreeMap<FileKey, ErrorSet>,
+    right: BTreeMap<FileKey, ErrorSet>,
+) -> BTreeMap<FileKey, ErrorSet> {
     for (file, errset) in right {
         let errset = match left.get(&file) {
             Some(prev_errset) => prev_errset.union(&errset),
@@ -183,7 +175,7 @@ fn collate_parse_results(parse_results: parsing_service::ParseResults) -> Collat
         failed
             .iter()
             .zip(errors.iter())
-            .fold(FlowOrdMap::new(), |acc, (file, error)| {
+            .fold(BTreeMap::new(), |mut acc, (file, error)| {
                 let errset = match error {
                     parsing_service::ParseFailure::UncaughtException(exn) => {
                         inference_utils::set_of_parse_exception(
@@ -198,7 +190,8 @@ fn collate_parse_results(parse_results: parsing_service::ParseResults) -> Collat
                         inference_utils::set_of_docblock_errors(file.dupe(), errs)
                     }
                 };
-                update_errset(acc, file.dupe(), errset)
+                update_errset(&mut acc, file.dupe(), errset);
+                acc
             });
     let failed_set: FlowOrdSet<FileKey> = failed.into_iter().collect();
     let unparsed = unparsed.union(failed_set);
@@ -219,7 +212,7 @@ struct CollatedParseResults {
     unchanged: FlowOrdSet<FileKey>,
     not_found: FlowOrdSet<FileKey>,
     dirty_modules: BTreeSet<Modulename>,
-    local_errors: FlowOrdMap<FileKey, ErrorSet>,
+    local_errors: BTreeMap<FileKey, ErrorSet>,
     package_json: (
         Vec<FileKey>,
         Vec<Option<(Loc, flow_parser::parse_error::ParseError)>>,
@@ -453,12 +446,12 @@ fn update_first_internal_error(
 }
 
 fn add_internal_error(
-    errors: FlowOrdMap<FileKey, ErrorSet>,
+    errors: &mut BTreeMap<FileKey, ErrorSet>,
     file: FileKey,
     err: (ALoc, InternalError),
-) -> FlowOrdMap<FileKey, ErrorSet> {
+) {
     let new_errors = error_set_of_internal_error(file.dupe(), err);
-    update_errset(errors, file, new_errors)
+    update_errset(errors, file, new_errors);
 }
 
 fn update_merge_results(
@@ -492,18 +485,20 @@ fn update_slow_files(
     }
 }
 
-fn update_check_results(
-    acc: (
-        (
-            FlowOrdMap<FileKey, ErrorSet>,
-            FlowOrdMap<FileKey, ErrorSet>,
-            ErrorSuppressions,
-            BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
-            Result<Vec<()>, String>,
-            Option<String>,
-        ),
-        (i32, f64, Option<FileKey>),
+type CheckAcc = (
+    (
+        BTreeMap<FileKey, ErrorSet>,
+        BTreeMap<FileKey, ErrorSet>,
+        ErrorSuppressions,
+        BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
+        Result<Vec<()>, String>,
+        Option<String>,
     ),
+    (i32, f64, Option<FileKey>),
+);
+
+fn update_check_results(
+    mut acc: CheckAcc,
     (file, result): (
         FileKey,
         Result<
@@ -517,82 +512,42 @@ fn update_check_results(
             (ALoc, InternalError),
         >,
     ),
-) -> (
-    (
-        FlowOrdMap<FileKey, ErrorSet>,
-        FlowOrdMap<FileKey, ErrorSet>,
-        ErrorSuppressions,
-        BTreeMap<FileKey, flow_services_coverage::FileCoverage>,
-        Result<Vec<()>, String>,
-        Option<String>,
-    ),
-    (i32, f64, Option<FileKey>),
-) {
+) -> CheckAcc {
     let (
         (
-            mut errors,
-            mut warnings,
-            mut suppressions,
-            mut coverage,
-            find_ref_results,
-            first_internal_error,
+            ref mut errors,
+            ref mut warnings,
+            ref mut suppressions,
+            ref mut coverage,
+            ref mut find_ref_results,
+            ref mut first_internal_error,
         ),
-        slow_files,
+        ref mut slow_files,
     ) = acc;
     match result {
-        Ok(None) => (
-            (
-                errors,
-                warnings,
-                suppressions,
-                coverage,
-                find_ref_results,
-                first_internal_error,
-            ),
-            slow_files,
-        ),
+        Ok(None) => {}
         Ok(Some((new_errors, new_warnings, new_suppressions, new_coverage, check_time))) => {
             errors.remove(&file);
             warnings.remove(&file);
             suppressions.remove(&file);
             coverage.remove(&file);
-            let errors = update_errset(errors, file.dupe(), new_errors);
-            let warnings = update_errset(warnings, file.dupe(), new_warnings);
+            update_errset(errors, file.dupe(), new_errors);
+            update_errset(warnings, file.dupe(), new_warnings);
             suppressions.update_suppressions(new_suppressions);
             coverage.insert(file.dupe(), new_coverage);
-            let slow_files = update_slow_files(slow_files, file, check_time);
-            (
-                (
-                    errors,
-                    warnings,
-                    suppressions,
-                    coverage,
-                    find_ref_results,
-                    first_internal_error,
-                ),
-                slow_files,
-            )
+            *slow_files = update_slow_files(std::mem::take(slow_files), file, check_time);
         }
         Err(e) => {
             errors.remove(&file);
             warnings.remove(&file);
             suppressions.remove(&file);
             coverage.remove(&file);
-            let first_internal_error = update_first_internal_error(first_internal_error, &e);
-            let errors = add_internal_error(errors, file, e);
-            (
-                (
-                    errors,
-                    warnings,
-                    suppressions,
-                    coverage,
-                    find_ref_results,
-                    first_internal_error,
-                ),
-                slow_files,
-            )
+            *first_internal_error = update_first_internal_error(first_internal_error.take(), &e);
+            add_internal_error(errors, file, e);
+            *find_ref_results = Err(String::new());
         }
     }
+    acc
 }
 
 fn run_merge_service(
@@ -896,7 +851,6 @@ mod check_files {
                     false
                 },
             );
-            let ret = ret;
             // Drop WorkerState on all worker threads to reclaim memory.
             // Each worker accumulated Context objects in its thread-local
             // across all batches. Dropping the WorkerState allows the
@@ -1025,16 +979,16 @@ fn init_libs(
     options: &Arc<Options>,
     shared_mem: &Arc<SharedMem>,
     ordered_libs: Vec<(Option<String>, String)>,
-    local_errors: FlowOrdMap<FileKey, ErrorSet>,
-    warnings: FlowOrdMap<FileKey, ErrorSet>,
+    local_errors: BTreeMap<FileKey, ErrorSet>,
+    warnings: BTreeMap<FileKey, ErrorSet>,
     suppressions: ErrorSuppressions,
 ) -> (
-    bool,                          // ok
-    FlowOrdMap<FileKey, ErrorSet>, // local_errors
-    FlowOrdMap<FileKey, ErrorSet>, // warnings
-    ErrorSuppressions,             // suppressions
-    (),                            // exports (placeholder)
-    Arc<MasterContext>,            // master_cx
+    bool,                        // ok
+    BTreeMap<FileKey, ErrorSet>, // local_errors
+    BTreeMap<FileKey, ErrorSet>, // warnings
+    ErrorSuppressions,           // suppressions
+    (),                          // exports (placeholder)
+    Arc<MasterContext>,          // master_cx
 ) {
     with_memory_timer(options, "InitLibs", || {
         let init::InitResult {
@@ -1265,10 +1219,10 @@ pub(crate) mod recheck {
         let errors = std::mem::replace(
             &mut env.errors,
             Errors {
-                local_errors: FlowOrdMap::new(),
+                local_errors: BTreeMap::new(),
                 duplicate_providers: BTreeMap::new(),
-                merge_errors: FlowOrdMap::new(),
-                warnings: FlowOrdMap::new(),
+                merge_errors: BTreeMap::new(),
+                warnings: BTreeMap::new(),
                 suppressions: ErrorSuppressions::empty(),
             },
         );
@@ -2335,20 +2289,21 @@ pub fn init_from_scratch(
             dirty_modules.into_iter().collect();
 
         // Parsing won't raise warnings
-        let warnings = FlowOrdMap::new();
+        let warnings = BTreeMap::new();
         let package_errors = package_json_files_list
             .iter()
             .zip(package_json_errors.iter())
             .fold(
-                FlowOrdMap::new(),
-                |acc, (source_file, parse_error)| match parse_error {
+                BTreeMap::new(),
+                |mut acc, (source_file, parse_error)| match parse_error {
                     None => acc,
                     Some((loc, err)) => {
                         let error_set = inference_utils::set_of_parse_error(
                             source_file.dupe(),
                             (loc.dupe(), err.clone()),
                         );
-                        update_errset(acc, source_file.dupe(), error_set)
+                        update_errset(&mut acc, source_file.dupe(), error_set);
+                        acc
                     }
                 },
             );
@@ -2434,7 +2389,7 @@ pub fn init_from_scratch(
         let errors = Errors {
             local_errors,
             duplicate_providers,
-            merge_errors: FlowOrdMap::new(),
+            merge_errors: BTreeMap::new(),
             warnings,
             suppressions,
         };

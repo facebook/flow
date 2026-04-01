@@ -11,7 +11,6 @@ use std::sync::Arc;
 
 use flow_common::options::Options;
 use flow_common_utils::checked_set::CheckedSet;
-use flow_data_structure_wrapper::ord_map::FlowOrdMap;
 use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::file_key::FileKey;
@@ -46,16 +45,16 @@ pub struct Genv {
 pub struct Errors {
     /// errors are stored in a map from file path to error set, so that the errors
     /// from checking particular files can be cleared during recheck. *)
-    pub local_errors: FlowOrdMap<FileKey, ErrorSet>,
+    pub local_errors: BTreeMap<FileKey, ErrorSet>,
     /// duplicate providers found during commit_modules are stored separately so
-    /// they can be cleared easily  
+    /// they can be cleared easily
     pub duplicate_providers: BTreeMap<FlowSmolStr, (FileKey, Vec1<FileKey>)>,
     /// errors encountered during merge have to be stored separately so
     /// dependencies can be cleared during merge. *)
-    pub merge_errors: FlowOrdMap<FileKey, ErrorSet>,
+    pub merge_errors: BTreeMap<FileKey, ErrorSet>,
     /// warnings are stored in a map from file path to error set, so that the warnings
     /// from checking particular files can be cleared during recheck. *)
-    pub warnings: FlowOrdMap<FileKey, ErrorSet>,
+    pub warnings: BTreeMap<FileKey, ErrorSet>,
     /// error suppressions in the code
     pub suppressions: ErrorSuppressions,
 }
