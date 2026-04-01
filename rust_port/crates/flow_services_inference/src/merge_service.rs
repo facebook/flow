@@ -698,6 +698,8 @@ fn mk_check_file(
         let Ok(aloc_ast) = flow_parser::polymorphic_ast_mapper::program(&mut mapper, &ast_ref);
         let metadata = cx.metadata().clone();
         let typed_ast = check_file(&cx, &file, file_sig.dupe(), &metadata, comments, &aloc_ast);
+        drop(aloc_ast);
+        drop(ast_ref);
         let coverage = file_coverage(&cx, &typed_ast);
         let errors = cx.errors();
         let tolerable_error_set =

@@ -4109,7 +4109,7 @@ fn merge_declare_class<'cx>(
         calls,
         dict,
         static_dict: _,
-    } = def.clone();
+    } = def;
     let this_reason = reason.dupe().replace_desc(RThisType);
     let class_name_owned = class_name.dupe();
     let id_owned = id.dupe();
@@ -4132,15 +4132,8 @@ fn merge_declare_class<'cx>(
             });
             flow_js_utils::generic_of_tparam(cx, |x| x.dupe(), &this_tp)
         };
-        let (super_, static_proto) = merge_class_extends(
-            env,
-            cx,
-            file,
-            this.dupe(),
-            reason_c.dupe(),
-            &extends,
-            &mixins,
-        );
+        let (super_, static_proto) =
+            merge_class_extends(env, cx, file, this.dupe(), reason_c.dupe(), extends, mixins);
         let implements: Vec<Type> = implements
             .iter()
             .map(|t| merge_impl(env, cx, file, t, false, false))
@@ -4151,10 +4144,10 @@ fn merge_declare_class<'cx>(
             let static_reason = reason_c.dupe().update_desc(|d| RStatics(Arc::new(d)));
             let mut props_smap: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
             for (k, prop) in static_props {
-                let p = merge_interface_prop(&env, cx, file, &prop, true);
+                let p = merge_interface_prop(&env, cx, file, prop, true);
                 props_smap.insert(k.dupe(), p);
             }
-            for (key, prop) in &computed_static_props {
+            for (key, prop) in computed_static_props {
                 if let Some(name) = resolve_computed_key(&env, cx, file, key) {
                     let name_str = name.into_smol_str();
                     let t = merge_interface_prop(&env, cx, file, prop, true);
@@ -4233,7 +4226,7 @@ fn merge_declare_class<'cx>(
                     (k.dupe(), p)
                 })
                 .collect();
-            fold_computed_interface_props(&computed_own_props, &mut props);
+            fold_computed_interface_props(computed_own_props, &mut props);
             let pmap: type_::properties::PropertiesMap =
                 props.into_iter().map(|(k, v)| (Name::new(k), v)).collect();
             cx.generate_property_map(pmap)
@@ -4241,11 +4234,11 @@ fn merge_declare_class<'cx>(
         let proto_props = {
             let mut proto_map: BTreeMap<FlowSmolStr, type_::Property> = BTreeMap::new();
             for (k, prop) in proto_props {
-                let p = merge_interface_prop(&env, cx, file, &prop, false);
+                let p = merge_interface_prop(&env, cx, file, prop, false);
                 proto_map.insert(k.dupe(), p);
             }
-            add_default_constructor(reason_c.dupe(), &extends, &mut proto_map);
-            fold_computed_interface_props(&computed_proto_props, &mut proto_map);
+            add_default_constructor(reason_c.dupe(), extends, &mut proto_map);
+            fold_computed_interface_props(computed_proto_props, &mut proto_map);
             let pmap: type_::properties::PropertiesMap = proto_map
                 .into_iter()
                 .map(|(k, v)| (Name::new(k), v))
@@ -4338,7 +4331,7 @@ fn merge_declare_class<'cx>(
         file,
         reason,
         t,
-        &tparams,
+        tparams,
     )
 }
 
@@ -4878,11 +4871,11 @@ pub fn merge_builtins<'cx>(
         let def = def.clone();
         let file_and_dep = file_and_dependency_map_rec.dupe();
         Rc::new(flow_lazy::Lazy::new(Box::new(move |_cx: &Context<'cx>| {
-            let def = def.map(
+            let def = Rc::new(def.map(
                 &mut (),
                 |_, loc: &Index<Loc>| (*aloc)(loc),
                 |_, t: &Pack::Packed<Index<Loc>>| t.map(&|i| (*aloc)(i)),
-            );
+            ));
             let loc = def.id_loc();
             let name = def.name().dupe();
             let reason = def_reason(&def);
@@ -4892,7 +4885,7 @@ pub fn merge_builtins<'cx>(
                 let file_and_dep = file_and_dep.dupe();
                 let reason = reason.dupe();
                 let reason_for_tvar = reason.dupe();
-                let def = def.clone();
+                let def = def.dupe();
                 Rc::new(flow_lazy::Lazy::new(Box::new(move |cx: &Context<'cx>| {
                     let once_resolved: Rc<
                         flow_lazy::Lazy<

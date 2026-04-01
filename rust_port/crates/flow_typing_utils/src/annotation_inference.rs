@@ -523,7 +523,7 @@ fn get_fully_resolved_type<'cx>(cx: &Context<'cx>, dst_cx: &Context<'cx>, id: i3
 fn mk_lazy_tvar<'cx>(
     cx: &Context<'cx>,
     reason: Reason,
-    f: Box<dyn FnOnce(&Context<'cx>, i32) + 'cx>,
+    f: impl FnOnce(&Context<'cx>, i32) + 'cx,
 ) -> Type {
     let id = mk_id() as i32;
     let tvar = Type::new(TypeInner::OpenT(type_::Tvar::new(reason.dupe(), id as u32)));
@@ -550,15 +550,11 @@ pub fn mk_sig_tvar<'cx>(
     resolved: Rc<flow_lazy::Lazy<Context<'cx>, Type, Box<dyn FnOnce(&Context<'cx>) -> Type + 'cx>>>,
 ) -> Type {
     let reason2 = reason.dupe();
-    mk_lazy_tvar(
-        cx,
-        reason.dupe(),
-        Box::new(move |cx, id| {
-            let t = resolved.get_forced(cx).dupe();
-            let dst_cx = cx.merge_dst_cx().unwrap_or_else(|| cx.dupe());
-            resolve_id(cx, &dst_cx, reason2, id, t);
-        }),
-    )
+    mk_lazy_tvar(cx, reason.dupe(), move |cx, id| {
+        let t = resolved.get_forced(cx).dupe();
+        let dst_cx = cx.merge_dst_cx().unwrap_or_else(|| cx.dupe());
+        resolve_id(cx, &dst_cx, reason2, id, t);
+    })
 }
 
 /// [resolve_id cx id1 t] resolves an annotation tvar [id1] to a type [t] *
@@ -2758,24 +2754,20 @@ pub fn mk_type_reference<'cx>(
     let reason2 = reason.dupe();
     let type_t_kind2 = type_t_kind;
     let c2 = c.dupe();
-    let tvar = mk_lazy_tvar(
-        cx,
-        reason.dupe(),
-        Box::new(move |cx, id| {
-            let dst_cx = effective_dst_cx(cx);
-            let t = elab_t(
-                cx,
-                &dst_cx,
-                None,
-                c2.dupe(),
-                Op::new(OpInner::AnnotUseTTypeT {
-                    reason: reason2.dupe(),
-                    kind: type_t_kind2,
-                }),
-            );
-            resolve_id(cx, &dst_cx, reason2.dupe(), id, t);
-        }),
-    );
+    let tvar = mk_lazy_tvar(cx, reason.dupe(), move |cx, id| {
+        let dst_cx = effective_dst_cx(cx);
+        let t = elab_t(
+            cx,
+            &dst_cx,
+            None,
+            c2.dupe(),
+            Op::new(OpInner::AnnotUseTTypeT {
+                reason: reason2.dupe(),
+                kind: type_t_kind2,
+            }),
+        );
+        resolve_id(cx, &dst_cx, reason2.dupe(), id, t);
+    });
     Type::new(TypeInner::AnnotT(reason, tvar, false))
 }
 
@@ -2904,49 +2896,41 @@ pub fn qualify_type<'cx>(
     let use_op2 = use_op.dupe();
     let prop_name2 = prop_name.dupe();
     let t2 = t.dupe();
-    mk_lazy_tvar(
-        cx,
-        op_reason.dupe(),
-        Box::new(move |cx, id| {
-            let dst_cx = effective_dst_cx(cx);
-            let t = elab_t(
-                cx,
-                &dst_cx,
-                None,
-                t2.dupe(),
-                Op::new(OpInner::AnnotGetTypeFromNamespaceT {
-                    reason: op_reason2.dupe(),
-                    use_op: use_op2.dupe(),
-                    prop_ref: (reason2.dupe(), prop_name2.dupe()),
-                }),
-            );
-            resolve_id(cx, &dst_cx, op_reason2, id, t);
-        }),
-    )
+    mk_lazy_tvar(cx, op_reason.dupe(), move |cx, id| {
+        let dst_cx = effective_dst_cx(cx);
+        let t = elab_t(
+            cx,
+            &dst_cx,
+            None,
+            t2.dupe(),
+            Op::new(OpInner::AnnotGetTypeFromNamespaceT {
+                reason: op_reason2.dupe(),
+                use_op: use_op2.dupe(),
+                prop_ref: (reason2.dupe(), prop_name2.dupe()),
+            }),
+        );
+        resolve_id(cx, &dst_cx, op_reason2, id, t);
+    })
 }
 
 pub fn assert_export_is_type<'cx>(cx: &Context<'cx>, reason: Reason, name: &str, t: Type) -> Type {
     let reason2 = reason.dupe();
     let name2 = Name::new(name);
     let t2 = t.dupe();
-    mk_lazy_tvar(
-        cx,
-        reason.dupe(),
-        Box::new(move |cx, id| {
-            let dst_cx = effective_dst_cx(cx);
-            let t = elab_t(
-                cx,
-                &dst_cx,
-                None,
-                t2.dupe(),
-                Op::new(OpInner::AnnotAssertExportIsTypeT {
-                    reason: reason2.dupe(),
-                    name: name2.dupe(),
-                }),
-            );
-            resolve_id(cx, &dst_cx, reason2, id, t);
-        }),
-    )
+    mk_lazy_tvar(cx, reason.dupe(), move |cx, id| {
+        let dst_cx = effective_dst_cx(cx);
+        let t = elab_t(
+            cx,
+            &dst_cx,
+            None,
+            t2.dupe(),
+            Op::new(OpInner::AnnotAssertExportIsTypeT {
+                reason: reason2.dupe(),
+                name: name2.dupe(),
+            }),
+        );
+        resolve_id(cx, &dst_cx, reason2, id, t);
+    })
 }
 
 pub fn cjs_require<'cx>(

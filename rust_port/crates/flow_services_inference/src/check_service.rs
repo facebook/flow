@@ -581,11 +581,11 @@ pub fn mk_check_file(
             let def = def.clone();
             Rc::new(flow_lazy::Lazy::new(
                 Box::new(move |_cx: &Context<'static>| {
-                    let def = def.map(
+                    let def = Rc::new(def.map(
                         &mut (),
                         |_, loc: &Index<Loc>| (*aloc)(loc),
                         |_, t: &Pack::Packed<Index<Loc>>| t.map(&|i| (*aloc)(i)),
-                    );
+                    ));
                     let loc = def.id_loc();
                     let name = def.name().dupe();
                     let reason = type_sig_merge::def_reason(&def);
@@ -594,12 +594,12 @@ pub fn mk_check_file(
                          file_cell: Rc<OnceCell<Weak<type_sig_merge::FileInner<'static>>>>,
                          cx: &Context<'static>,
                          reason: reason::Reason,
-                         def: Pack::PackedDef<ALoc>|
+                         def: Rc<Pack::PackedDef<ALoc>>|
                          -> Type {
                             let reason_for_tvar = reason.dupe();
                             let file_cell2 = file_cell.dupe();
                             let reason2 = reason.dupe();
-                            let def2 = def.clone();
+                            let def2 = def.dupe();
                             let resolved: Rc<
                                 flow_lazy::Lazy<
                                     Context<'static>,
@@ -618,7 +618,7 @@ pub fn mk_check_file(
                         };
                     let file_cell2 = file_cell.dupe();
                     let reason2 = reason.dupe();
-                    let def2 = def.clone();
+                    let def2 = def.dupe();
                     (
                         loc,
                         name,
