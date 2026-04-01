@@ -267,7 +267,7 @@ Flow Enums with unknown members could be used instead of the added `'%future add
 
 ## Enums at runtime {#toc-enums-at-runtime}
 Enums exist as values at runtime. We use a [Babel transform](https://www.npmjs.com/package/babel-plugin-transform-flow-enums) to transform
-Flow Enum declarations into calls to the [enums runtime](https://www.npmjs.com/package/flow-enums-runtime) (read more in the [enabling enums documentation](../enabling-enums/)).
+Flow Enum declarations into calls to the [enums runtime](https://www.npmjs.com/package/flow-enums-runtime) (read more in the [enabling enums section](../../enums/#toc-enabling-enums)).
 We use a runtime so all enums can share an implementation of the enum [methods](../using-enums/#toc-methods).
 
 We use `Object.create(null)` for enums' prototype (which has the enum methods), so properties in `Object.prototype` will not pollute enums.

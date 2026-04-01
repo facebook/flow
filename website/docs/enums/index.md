@@ -8,8 +8,7 @@ Flow Enums define a fixed set of constants which create their own type.
 
 Unlike other features of Flow, Flow Enums exist as values at runtime, as well as existing as types.
 
-[Read how to enable Flow Enums in your project](./enabling-enums/).
-
+To get started, see [how to enable Flow Enums in your project](#toc-enabling-enums).
 
 ## Benefits {#toc-benefits}
 Enums provide several benefits over existing patterns:
@@ -101,6 +100,21 @@ switch (status) {
 Read more about [exhaustively checking enums](./using-enums/#toc-exhaustively-checking-enums-with-a-switch).
 
 Check out the [the full docs on using enums](./using-enums/) to learn more.
+
+
+## Enabling Enums {#toc-enabling-enums}
+
+To enable Flow Enums in your project:
+
+1. In your `.flowconfig`, under the `[options]` heading, add `enums=true`.
+2. Add the Babel transform [babel-plugin-transform-flow-enums](https://www.npmjs.com/package/babel-plugin-transform-flow-enums) to your dev dependencies and Babel config. It converts enum declarations into calls to the runtime.
+3. Add the runtime package [flow-enums-runtime](https://www.npmjs.com/package/flow-enums-runtime) to your production dependencies.
+
+We also recommend enabling these ESLint rules to prevent common `switch` statement issues:
+- [no-fallthrough](https://eslint.org/docs/rules/no-fallthrough): Prevents accidentally forgetting `break` statements.
+- [no-case-declarations](https://eslint.org/docs/rules/no-case-declarations): Prevents lexically scoped declarations in switch cases without a block.
+
+Additional Flow Enums ESLint rules are available in [eslint-plugin-fb-flow](https://www.npmjs.com/package/eslint-plugin-fb-flow).
 
 
 ## When to use Flow Enums {#toc-when-to-use-flow-enums}

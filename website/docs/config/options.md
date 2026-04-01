@@ -102,7 +102,7 @@ The default value for `emoji` is `false`.
 Type: `boolean`
 
 Set this to `true` to enable [Flow Enums](../../enums).
-[Additional steps](../../enums/enabling-enums/) are required beyond just
+[Additional setup steps](../../enums/#toc-enabling-enums) are required beyond just
 enabling the `.flowconfig` option.
 
 The default value for `enums` is `false`.

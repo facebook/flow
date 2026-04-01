@@ -98,7 +98,6 @@ module.exports = {
       label: 'Flow Enums',
       items: [
         'enums/index',
-        'enums/enabling-enums',
         'enums/defining-enums',
         'enums/using-enums',
         'enums/migrating-legacy-patterns',
