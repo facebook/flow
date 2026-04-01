@@ -5,9 +5,6 @@
  * LICENSE file in the root directory of this source tree.
  */
 
-// module Ast = Flow_ast
-// open Typed_ast_finder
-
 use std::collections::BTreeSet;
 use std::sync::Arc;
 
@@ -260,8 +257,8 @@ pub fn dump_types_for_tool(
     sort_loc_pairs(concretize_loc_pairs(mapped))
 }
 
-pub fn insert_type_normalize<'a>(
-    cx: &Context<'a>,
+pub fn insert_type_normalize<'a, 'cx>(
+    cx: &'a Context<'cx>,
     file_sig: Arc<FileSig>,
     omit_targ_defaults: bool,
     typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,

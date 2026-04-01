@@ -1,0 +1,3639 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ *
+ * This source code is licensed under the MIT license found in the
+ * LICENSE file in the root directory of this source tree.
+ */
+
+//! Port of `services/code_action/code_action_service.ml`
+
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+use std::collections::HashMap;
+use std::sync::Arc;
+
+use dupe::Dupe;
+use dupe::IterDupedExt;
+use flow_aloc::ALoc;
+use flow_analysis::scope_api::ScopeInfo;
+use flow_common::options::CastingSyntax;
+use flow_common::options::Options;
+use flow_common::reason::VirtualReasonDesc;
+use flow_common_errors::error_codes::ErrorCode;
+use flow_common_ty::ty_printer;
+use flow_common_ty::ty_printer::PrinterOptions;
+use flow_common_ty::ty_utils;
+use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_env_builder::env_api::WriteLoc;
+use flow_heap::parsing_heaps::SharedMem;
+use flow_parser::ast;
+use flow_parser::ast::types::TypeInner;
+use flow_parser::file_key::FileKey;
+use flow_parser::loc::LOC_NONE;
+use flow_parser::loc::Loc;
+use flow_parser::loc::Position;
+use flow_parser::parse_error::ParseError;
+use flow_parser_utils::file_sig::FileSig;
+use flow_parser_utils::flow_ast_differ;
+use flow_parser_utils_output::ast_diff_printer;
+use flow_parser_utils_output::js_layout_generator;
+use flow_parser_utils_output::replacement_printer;
+use flow_server_env::server_env::Env;
+use flow_services_autocomplete::code_action_text_edits::CodeActionTextEdits;
+use flow_services_autocomplete::insert_jsdoc;
+use flow_services_autocomplete::lsp_import_edits;
+use flow_services_autocomplete::module_system_info::LspModuleSystemInfo;
+use flow_services_export::export_index;
+use flow_services_export::export_search;
+use flow_services_export::export_search::ExportSearch;
+use flow_services_inference::type_contents;
+use flow_services_inference::types_js_types::FileArtifacts;
+use flow_services_inference::types_js_types::ParseArtifacts;
+use flow_services_inference::types_js_types::TypecheckArtifacts;
+use flow_type_sig::signature_error::TolerableError;
+use flow_typing_context::Context;
+use flow_typing_errors::error_message::BindingError;
+use flow_typing_errors::error_message::EInvariantSubtypingWithUseOpData;
+use flow_typing_errors::error_message::EPropsNotFoundInInvariantSubtypingData;
+use flow_typing_errors::error_message::EnumErrorKind;
+use flow_typing_errors::error_message::ErrorMessage;
+use flow_typing_errors::error_message::FriendlyMessageRecipe;
+use flow_typing_errors::error_message::InOutVariance;
+use flow_typing_errors::error_message::MatchErrorKind;
+use flow_typing_errors::error_message::ReadonlyTypeKind;
+use flow_typing_errors::error_message::RecordErrorKind;
+use flow_typing_errors::error_message::TSSyntaxKind;
+use flow_typing_errors::error_message::UpperKind;
+use flow_typing_errors::flow_error::ErrorSet;
+use flow_typing_errors::flow_error::FlowError;
+use flow_typing_errors::intermediate_error::make_intermediate_error;
+use flow_typing_errors::intermediate_error_types::Explanation;
+use flow_typing_errors::intermediate_error_types::ExplanationWithLazyParts;
+use flow_typing_errors::intermediate_error_types::IncorrectType;
+use flow_typing_errors::intermediate_error_types::InternalType;
+use flow_typing_errors::intermediate_error_types::InvalidRenderTypeKind;
+use flow_typing_type::type_::Type;
+use flow_typing_type::type_::type_or_type_desc::TypeOrTypeDescT;
+use lsp_types::CodeAction;
+use lsp_types::CodeActionKind;
+use lsp_types::CodeActionOrCommand;
+use lsp_types::Command;
+use lsp_types::Diagnostic;
+use lsp_types::NumberOrString;
+use lsp_types::Position as LspPosition;
+use lsp_types::Range as LspRange;
+use lsp_types::TextEdit;
+use lsp_types::Url;
+use lsp_types::WorkspaceEdit;
+
+use crate::autofix_casting_syntax;
+use crate::autofix_class_member_access;
+use crate::autofix_enum_member_name;
+use crate::autofix_exports;
+use crate::autofix_imports;
+use crate::autofix_interface;
+use crate::autofix_legacy_flow_syntax;
+use crate::autofix_match_syntax;
+use crate::autofix_method;
+use crate::autofix_missing_local_annots;
+use crate::autofix_new_to_record;
+use crate::autofix_object_to_record;
+use crate::autofix_optional_chaining;
+use crate::autofix_prop_typo;
+use crate::autofix_record_declaration;
+use crate::autofix_renders_variant;
+use crate::autofix_replace_type;
+use crate::autofix_ts_syntax;
+use crate::autofix_type_name;
+use crate::autofix_type_to_value_import;
+use crate::autofix_unused_promise;
+use crate::code_action_utils;
+use crate::convert_type_to_readonly_form;
+use crate::insert_inferred_render_type;
+use crate::insert_type;
+use crate::refactor_add_jsx_props;
+use crate::refactor_arrow_functions;
+use crate::refactor_extract;
+use crate::refactor_match_discriminant;
+use crate::refactor_switch_to_match_statement;
+use crate::stub_unbound_name;
+
+fn flow_position_to_lsp_position(pos: Position) -> LspPosition {
+    LspPosition::new(pos.line.saturating_sub(1) as u32, pos.column.max(0) as u32)
+}
+
+fn loc_to_lsp_range(loc: Loc) -> LspRange {
+    LspRange::new(
+        flow_position_to_lsp_position(loc.start),
+        flow_position_to_lsp_position(loc.end),
+    )
+}
+
+fn add_missing_imports_kind() -> CodeActionKind {
+    CodeActionKind::new("source.addMissingImports.flow")
+}
+
+fn is_kind(prefix: &CodeActionKind, kind: &CodeActionKind) -> bool {
+    let prefix_str = prefix.as_str();
+    let kind_str = kind.as_str();
+    // prefix is a prefix of kind: either equal, or kind starts with prefix + "."
+    kind_str == prefix_str || kind_str.starts_with(&format!("{}.", prefix_str))
+}
+
+fn include_code_action(only: Option<&[CodeActionKind]>, kind: &CodeActionKind) -> bool {
+    match only {
+        None => true,
+        Some(only) => only.iter().any(|prefix| is_kind(prefix, kind)),
+    }
+}
+
+fn include_quick_fixes(only: Option<&[CodeActionKind]>) -> bool {
+    include_code_action(only, &CodeActionKind::QUICKFIX)
+}
+
+fn include_extract_refactors(only: Option<&[CodeActionKind]>) -> bool {
+    include_code_action(only, &CodeActionKind::REFACTOR_EXTRACT)
+}
+
+fn include_rewrite_refactors(only: Option<&[CodeActionKind]>) -> bool {
+    include_code_action(only, &CodeActionKind::REFACTOR_REWRITE)
+}
+
+fn include_add_missing_imports_action(only: Option<&[CodeActionKind]>) -> bool {
+    include_code_action(only, &add_missing_imports_kind())
+}
+
+fn include_organize_imports_actions(only: Option<&[CodeActionKind]>) -> bool {
+    include_code_action(only, &CodeActionKind::SOURCE_ORGANIZE_IMPORTS)
+}
+
+fn flow_loc_patch_to_lsp_edits(patch: &[(Loc, String)]) -> Vec<TextEdit> {
+    patch
+        .iter()
+        .map(|(loc, text)| TextEdit {
+            range: loc_to_lsp_range(loc.dupe()),
+            new_text: text.clone(),
+        })
+        .collect()
+}
+
+fn mk_log_command(title: &str, diagnostic_title: &str) -> Command {
+    Command {
+        title: "".to_string(),
+        command: "log".to_string(),
+        arguments: Some(vec![
+            serde_json::Value::String("textDocument/codeAction".to_string()),
+            serde_json::Value::String(diagnostic_title.to_string()),
+            serde_json::Value::String(title.to_string()),
+        ]),
+    }
+}
+
+//             ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+fn autofix_insert_type_annotation_helper(
+    options: &Options,
+    ast: &ast::Program<Loc, Loc>,
+    diagnostics: &[Diagnostic],
+    uri: &Url,
+    new_ast: &ast::Program<Loc, Loc>,
+) -> Vec<CodeActionOrCommand> {
+    let diff = insert_type::mk_diff(ast, new_ast);
+    let opts = code_action_utils::layout_options(options);
+    let edits =
+        flow_loc_patch_to_lsp_edits(&replacement_printer::mk_loc_patch_ast_differ(&opts, &diff));
+    let title = "Insert type annotation to fix signature-verification-failure error";
+    //       (* Handing back the diagnostics we were given is a placeholder for
+    //          eventually generating the diagnostics for the errors we are fixing *)
+    //           ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+    vec![CodeActionOrCommand::CodeAction(CodeAction {
+        title: title.to_string(),
+        kind: Some(CodeActionKind::QUICKFIX),
+        diagnostics: Some(diagnostics.to_vec()),
+        edit: Some(WorkspaceEdit {
+            changes: Some(HashMap::from([(uri.clone(), edits)])),
+            ..Default::default()
+        }),
+        command: Some(mk_log_command(
+            title,
+            "insert_type_for_sig_verification_failure",
+        )),
+        is_preferred: None,
+        disabled: None,
+        data: None,
+    })]
+}
+
+//     fix_signature_verification_error_at_loc
+fn autofix_exports_code_actions<'a, 'b>(
+    options: &Options,
+    cx: &Context<'a>,
+    loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
+    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
+    get_type_sig: &'b dyn Fn(
+        &FileKey,
+    ) -> Option<
+        flow_type_sig::packed_type_sig::Module<
+            flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+        >,
+    >,
+    ast: &ast::Program<Loc, Loc>,
+    file_sig: &Arc<FileSig>,
+    tolerable_errors: &[TolerableError<Loc>],
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    diagnostics: &[Diagnostic],
+    uri: &Url,
+    loc: Loc,
+) -> Result<Vec<CodeActionOrCommand>, insert_type::Errors> {
+    let fixable_locs =
+        autofix_exports::set_of_fixable_signature_verification_locations(tolerable_errors);
+    if fixable_locs.contains(&loc) {
+        //   fix_signature_verification_error_at_loc
+        let new_ast = autofix_exports::fix_signature_verification_error_at_loc(
+            None, // remote_converter
+            cx,
+            loc_of_aloc,
+            get_ast_from_shared_mem,
+            get_haste_module_info,
+            get_type_sig,
+            file_sig,
+            typed_ast,
+            ast,
+            loc,
+        )?;
+        Ok(autofix_insert_type_annotation_helper(
+            options,
+            ast,
+            diagnostics,
+            uri,
+            &new_ast,
+        ))
+    } else {
+        Ok(vec![])
+    }
+}
+
+//     fix_missing_param_annot_at_loc
+fn autofix_missing_local_annot_code_actions<'a, 'b>(
+    options: &Options,
+    cx: &Context<'a>,
+    loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
+    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
+    get_type_sig: &'b dyn Fn(
+        &FileKey,
+    ) -> Option<
+        flow_type_sig::packed_type_sig::Module<
+            flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+        >,
+    >,
+    ast: &ast::Program<Loc, Loc>,
+    file_sig: &Arc<FileSig>,
+    _tolerable_errors: &[TolerableError<Loc>],
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    diagnostics: &[Diagnostic],
+    uri: &Url,
+    loc: Loc,
+) -> Result<Vec<CodeActionOrCommand>, insert_type::Errors> {
+    let fixable_locs = autofix_missing_local_annots::map_of_fixable_missing_local_params(cx);
+    let entry = fixable_locs
+        .iter()
+        .find(|(err_loc, _)| Loc::contains(err_loc, &loc));
+    match entry {
+        Some((_, type_t)) => {
+            //   fix_missing_param_annot_at_loc
+            let new_ast = autofix_missing_local_annots::fix_missing_param_annot_at_loc(
+                None, // remote_converter
+                cx,
+                loc_of_aloc,
+                get_ast_from_shared_mem,
+                get_haste_module_info,
+                get_type_sig,
+                file_sig,
+                typed_ast,
+                ast,
+                loc,
+                type_t.dupe(),
+            )?;
+            Ok(autofix_insert_type_annotation_helper(
+                options,
+                ast,
+                diagnostics,
+                uri,
+                &new_ast,
+            ))
+        }
+        None => Ok(vec![]),
+    }
+}
+
+fn code_action_insert_inferred_render_type<'a, 'b>(
+    options: &Options,
+    cx: &Context<'a>,
+    loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
+    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
+    get_type_sig: &'b dyn Fn(
+        &FileKey,
+    ) -> Option<
+        flow_type_sig::packed_type_sig::Module<
+            flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+        >,
+    >,
+    ast: &ast::Program<Loc, Loc>,
+    file_sig: &Arc<FileSig>,
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    uri: &Url,
+    loc: Loc,
+) -> Result<Vec<CodeActionOrCommand>, String> {
+    let result = insert_inferred_render_type::insert_render_type_at_loc(
+        None, // remote_converter
+        cx,
+        loc_of_aloc,
+        get_ast_from_shared_mem,
+        get_haste_module_info,
+        get_type_sig,
+        file_sig,
+        typed_ast,
+        ast,
+        loc,
+    )
+    .map_err(|e| format!("{:?}", e))?;
+    match result {
+        Some(new_ast_result) => {
+            let new_ast = new_ast_result.map_err(|e| format!("{:?}", e))?;
+            let diff = insert_type::mk_diff(ast, &new_ast);
+            let opts = code_action_utils::layout_options(options);
+            let edits = flow_loc_patch_to_lsp_edits(&replacement_printer::mk_loc_patch_ast_differ(
+                &opts, &diff,
+            ));
+            let title = "Insert inferred render type";
+            //             ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+            Ok(vec![CodeActionOrCommand::CodeAction(CodeAction {
+                title: title.to_string(),
+                kind: Some(CodeActionKind::REFACTOR),
+                diagnostics: Some(vec![]),
+                edit: Some(WorkspaceEdit {
+                    changes: Some(HashMap::from([(uri.clone(), edits)])),
+                    ..Default::default()
+                }),
+                command: Some(mk_log_command(title, "insert_inferred_render_type")),
+                is_preferred: None,
+                disabled: None,
+                data: None,
+            })])
+        }
+        None => Ok(vec![]),
+    }
+}
+
+fn refactor_extract_and_stub_out_code_actions<'a, 'b>(
+    options: &Options,
+    support_experimental_snippet_text_edit: bool,
+    file_contents: &str,
+    ast: &ast::Program<Loc, Loc>,
+    cx: &Context<'a>,
+    file_sig: &Arc<FileSig>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+    loc_of_aloc: &'b dyn Fn(&ALoc) -> Loc,
+    get_ast_from_shared_mem: &'b dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_haste_module_info: &'b dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
+    get_type_sig: &'b dyn Fn(
+        &FileKey,
+    ) -> Option<
+        flow_type_sig::packed_type_sig::Module<
+            flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+        >,
+    >,
+    only: Option<&[CodeActionKind]>,
+    uri: &Url,
+    loc: Loc,
+) -> Vec<CodeActionOrCommand> {
+    match loc.source {
+        None => vec![],
+        Some(ref file) => {
+            //           ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+            let lsp_action_from_refactor = |diagnostic_title: &str,
+                                            kind: CodeActionKind,
+                                            refactor: &refactor_extract::Refactor|
+             -> CodeActionOrCommand {
+                let diff = insert_type::mk_diff(ast, &refactor.new_ast);
+                let opts = code_action_utils::layout_options(options);
+                let mut patch = autofix_imports::add_imports(&opts, &refactor.added_imports, ast);
+                patch.extend(replacement_printer::mk_loc_patch_ast_differ(&opts, &diff));
+                let edits = flow_loc_patch_to_lsp_edits(&patch);
+                CodeActionOrCommand::CodeAction(CodeAction {
+                    title: refactor.title.clone(),
+                    kind: Some(kind),
+                    diagnostics: Some(vec![]),
+                    edit: Some(WorkspaceEdit {
+                        changes: Some(HashMap::from([(uri.clone(), edits)])),
+                        ..Default::default()
+                    }),
+                    command: Some(mk_log_command(&refactor.title, diagnostic_title)),
+                    is_preferred: None,
+                    disabled: None,
+                    data: None,
+                })
+            };
+            let mut refactors: Vec<CodeActionOrCommand> =
+                if !include_extract_refactors(only) || loc.start == loc.end {
+                    vec![]
+                } else {
+                    let use_strict = options.modules_are_use_strict;
+                    let module_ref_prefix = options.haste_module_ref_prefix.clone();
+                    let assert_operator = options.assert_operator.parse();
+                    let parse_options = flow_parser::ParseOptions {
+                        use_strict,
+                        assert_operator,
+                        module_ref_prefix,
+                        ..flow_parser::PERMISSIVE_PARSE_OPTIONS
+                    };
+                    let tokens = crate::ast_extraction_utils::ast_extractor::tokens(
+                        Some(parse_options),
+                        Some(file.dupe()),
+                        file_contents,
+                    );
+                    //          (lsp_action_from_refactor
+                    refactor_extract::provide_available_refactors(
+                        &tokens,
+                        ast,
+                        cx,
+                        file,
+                        file_sig.dupe(),
+                        typed_ast,
+                        loc_of_aloc,
+                        get_ast_from_shared_mem,
+                        get_haste_module_info,
+                        get_type_sig,
+                        support_experimental_snippet_text_edit,
+                        &loc,
+                    )
+                    .iter()
+                    .map(|r| {
+                        lsp_action_from_refactor(
+                            "refactor_extract",
+                            CodeActionKind::REFACTOR_EXTRACT,
+                            r,
+                        )
+                    })
+                    .collect()
+                };
+            //     Stub_unbound_name.stub
+            match stub_unbound_name::stub(
+                ast,
+                cx,
+                &file.dupe(),
+                file_sig,
+                typed_ast,
+                loc_of_aloc,
+                get_ast_from_shared_mem,
+                get_haste_module_info,
+                get_type_sig,
+                loc.dupe(),
+            ) {
+                None => {}
+                Some(r) => {
+                    refactors.insert(
+                        0,
+                        lsp_action_from_refactor("stub_out", CodeActionKind::QUICKFIX, &r),
+                    );
+                }
+            }
+            // refactors
+            refactors
+        }
+    }
+}
+
+fn insert_inferred_type_as_cast_code_actions<'a>(
+    options: &Options,
+    file_contents: &str,
+    ast: &ast::Program<Loc, Loc>,
+    cx: &Context<'a>,
+    file_sig: &Arc<FileSig>,
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
+    get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
+    get_haste_module_info: Arc<dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>>,
+    get_type_sig: Arc<
+        dyn Fn(
+            &FileKey,
+        ) -> Option<
+            flow_type_sig::packed_type_sig::Module<flow_type_sig::compact_table::Index<ALoc>>,
+        >,
+    >,
+    uri: &Url,
+    loc: Loc,
+) -> Vec<CodeActionOrCommand> {
+    if loc.start == loc.end {
+        return vec![];
+    }
+    match loc.source {
+        None => vec![],
+        Some(ref file) => {
+            let use_strict = options.modules_are_use_strict;
+            let module_ref_prefix = options.haste_module_ref_prefix.clone();
+            let assert_operator = options.assert_operator.parse();
+            let parse_options = flow_parser::ParseOptions {
+                use_strict,
+                assert_operator,
+                module_ref_prefix,
+                ..flow_parser::PERMISSIVE_PARSE_OPTIONS
+            };
+            let tokens = crate::ast_extraction_utils::ast_extractor::tokens(
+                Some(parse_options),
+                Some(file.dupe()),
+                file_contents,
+            );
+            let extraction_result =
+                crate::ast_extraction_utils::ast_extractor::extract(&tokens, ast, loc.dupe());
+            match extraction_result.extracted_expression {
+                None => vec![],
+                Some(ref extracted) => {
+                    let expression_loc = extracted.expression.loc().dupe();
+                    let remote_converter =
+                        crate::insert_type_imports::imports_helper::RemoteConverter::new(
+                            &*loc_of_aloc,
+                            options.file_options.dupe(),
+                            &*get_haste_module_info,
+                            &*get_type_sig,
+                            0, // iteration
+                            file.dupe(),
+                            Default::default(), // reserved_names: SSet.empty
+                        );
+                    let mut remote_converter = remote_converter;
+                    match insert_type::insert_type(
+                        cx,
+                        &*loc_of_aloc,
+                        &*get_ast_from_shared_mem,
+                        &*get_haste_module_info,
+                        &*get_type_sig,
+                        file_sig,
+                        typed_ast,
+                        false, // omit_targ_defaults
+                        false, // strict
+                        Some(&mut remote_converter),
+                        ast,
+                        expression_loc,
+                    ) {
+                        Err(_) => vec![],
+                        Ok(new_ast) => {
+                            let added_imports = remote_converter.to_import_bindings();
+                            let diff = insert_type::mk_diff(ast, &new_ast);
+                            let opts = code_action_utils::layout_options(options);
+                            let mut patch =
+                                autofix_imports::add_imports(&opts, &added_imports, ast);
+                            patch
+                                .extend(replacement_printer::mk_loc_patch_ast_differ(&opts, &diff));
+                            let edits = flow_loc_patch_to_lsp_edits(&patch);
+                            let title = "Insert inferred type as a type cast";
+                            let code_action = CodeActionOrCommand::CodeAction(CodeAction {
+                                title: title.to_string(),
+                                kind: Some(CodeActionKind::REFACTOR),
+                                diagnostics: Some(vec![]),
+                                edit: Some(WorkspaceEdit {
+                                    changes: Some(HashMap::from([(uri.clone(), edits)])),
+                                    ..Default::default()
+                                }),
+                                command: Some(mk_log_command(
+                                    title,
+                                    "insert_inferred_type_as_cast",
+                                )),
+                                is_preferred: None,
+                                disabled: None,
+                                data: None,
+                            });
+                            vec![code_action]
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+fn insert_jsdoc_code_actions(
+    options: &Options,
+    ast: &ast::Program<Loc, Loc>,
+    uri: &Url,
+    loc: Loc,
+) -> Vec<CodeActionOrCommand> {
+    match insert_jsdoc::insert_stub_for_target(false, loc, ast) {
+        Some((ast_prime, _)) => {
+            //     ast'
+            let diff = flow_ast_differ::program(ast, &ast_prime);
+            let opts = code_action_utils::layout_options(options);
+            let edits = flow_loc_patch_to_lsp_edits(&replacement_printer::mk_loc_patch_ast_differ(
+                &opts, &diff,
+            ));
+            //            (* This hack is needed because the differ doesn't differentiate between
+            let edits = edits
+                .into_iter()
+                .map(|edit| TextEdit {
+                    new_text: format!("{}\n", edit.new_text),
+                    ..edit
+                })
+                .collect::<Vec<_>>();
+            let title = "Add JSDoc documentation";
+            //               ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+            vec![CodeActionOrCommand::CodeAction(CodeAction {
+                title: title.to_string(),
+                kind: Some(CodeActionKind::REFACTOR),
+                diagnostics: Some(vec![]),
+                edit: Some(WorkspaceEdit {
+                    changes: Some(HashMap::from([(uri.clone(), edits)])),
+                    ..Default::default()
+                }),
+                command: Some(mk_log_command(title, "add_jsdocs")),
+                is_preferred: None,
+                disabled: None,
+                data: None,
+            })]
+        }
+        _ => vec![],
+    }
+}
+
+//       Convert_type_to_readonly_form.convert
+//         ast
+//         loc
+fn convert_type_to_readonly_form_code_actions(
+    options: &Options,
+    ast: &ast::Program<Loc, Loc>,
+    only: Option<&[CodeActionKind]>,
+    uri: &Url,
+    loc: Loc,
+) -> Vec<CodeActionOrCommand> {
+    if include_rewrite_refactors(only) {
+        //   Convert_type_to_readonly_form.convert
+        //     ast
+        //     loc
+        match convert_type_to_readonly_form::convert(options.ts_utility_syntax, ast, loc) {
+            None => vec![],
+            Some((ast_prime, conversion_kind)) => {
+                let diff = flow_ast_differ::program(ast, &ast_prime);
+                let opts = code_action_utils::layout_options(options);
+                let edits = flow_loc_patch_to_lsp_edits(
+                    &replacement_printer::mk_loc_patch_ast_differ(&opts, &diff),
+                );
+                let title = match conversion_kind {
+                    convert_type_to_readonly_form::ConversionKind::ConversionToReadOnlyArray => {
+                        "Make the array readonly"
+                    }
+                    convert_type_to_readonly_form::ConversionKind::ConversionToReadOnlyObject => {
+                        "Make the object readonly"
+                    }
+                    convert_type_to_readonly_form::ConversionKind::ConversionToReadOnlyMap => {
+                        "Make the Map readonly"
+                    }
+                    convert_type_to_readonly_form::ConversionKind::ConversionToReadOnlySet => {
+                        "Make the Set readonly"
+                    }
+                };
+                //           ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                vec![CodeActionOrCommand::CodeAction(CodeAction {
+                    title: title.to_string(),
+                    kind: Some(CodeActionKind::REFACTOR_REWRITE),
+                    diagnostics: Some(vec![]),
+                    edit: Some(WorkspaceEdit {
+                        changes: Some(HashMap::from([(uri.clone(), edits)])),
+                        ..Default::default()
+                    }),
+                    command: Some(mk_log_command(
+                        title,
+                        "refactor_rewrite_readonly_conversion",
+                    )),
+                    is_preferred: None,
+                    disabled: None,
+                    data: None,
+                })]
+            }
+        }
+    } else {
+        vec![]
+    }
+}
+
+fn refactor_arrow_function_code_actions(
+    ast: &ast::Program<Loc, Loc>,
+    scope_info: &ScopeInfo<Loc>,
+    options: &Options,
+    only: Option<&[CodeActionKind]>,
+    uri: &Url,
+    loc: Loc,
+) -> Vec<CodeActionOrCommand> {
+    if include_rewrite_refactors(only) {
+        match refactor_arrow_functions::add_or_remove_braces(ast, scope_info, &loc) {
+            Some((ast_prime, title)) => {
+                //   ast'
+                let diff = flow_ast_differ::program(ast, &ast_prime);
+                let opts = code_action_utils::layout_options(options);
+                let edits = flow_loc_patch_to_lsp_edits(
+                    &replacement_printer::mk_loc_patch_ast_differ(&opts, &diff),
+                );
+                //             ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                vec![CodeActionOrCommand::CodeAction(CodeAction {
+                    title: title.clone(),
+                    kind: Some(CodeActionKind::REFACTOR_REWRITE),
+                    diagnostics: Some(vec![]),
+                    edit: Some(WorkspaceEdit {
+                        changes: Some(HashMap::from([(uri.clone(), edits)])),
+                        ..Default::default()
+                    }),
+                    command: Some(mk_log_command(&title, "refactor_arrow_function")),
+                    is_preferred: None,
+                    disabled: None,
+                    data: None,
+                })]
+            }
+            None => vec![],
+        }
+    } else {
+        vec![]
+    }
+}
+
+//     Context.enable_pattern_matching cx
+//     && (include_quick_fixes only || include_rewrite_refactors only)
+//   then
+fn refactor_switch_to_match_statement_actions(
+    cx: &Context,
+    ast: &ast::Program<Loc, Loc>,
+    options: &Options,
+    only: Option<&[CodeActionKind]>,
+    uri: &Url,
+    loc: Loc,
+) -> Vec<CodeActionOrCommand> {
+    //   Context.enable_pattern_matching cx
+    //   && (include_quick_fixes only || include_rewrite_refactors only)
+    // then
+    if cx.enable_pattern_matching()
+        && (include_quick_fixes(only) || include_rewrite_refactors(only))
+    {
+        match refactor_switch_to_match_statement::refactor(ast, loc) {
+            Some(ast_prime) => {
+                let diff = flow_ast_differ::program(ast, &ast_prime);
+                let opts = code_action_utils::layout_options(options);
+                let edits = flow_loc_patch_to_lsp_edits(
+                    &replacement_printer::mk_loc_patch_ast_differ(&opts, &diff),
+                );
+                let title = "Refactor `switch` to `match`";
+                //           ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                vec![CodeActionOrCommand::CodeAction(CodeAction {
+                    title: title.to_string(),
+                    kind: Some(CodeActionKind::QUICKFIX),
+                    diagnostics: Some(vec![]),
+                    edit: Some(WorkspaceEdit {
+                        changes: Some(HashMap::from([(uri.clone(), edits)])),
+                        ..Default::default()
+                    }),
+                    command: Some(mk_log_command(title, "refactor_switch_to_match")),
+                    is_preferred: None,
+                    disabled: None,
+                    data: None,
+                })]
+            }
+            None => vec![],
+        }
+    } else {
+        vec![]
+    }
+}
+
+//     Context.enable_pattern_matching cx
+//     && (include_quick_fixes only || include_rewrite_refactors only)
+//   then
+fn refactor_match_coded_like_switch(
+    cx: &Context,
+    ast: &ast::Program<Loc, Loc>,
+    options: &Options,
+    only: Option<&[CodeActionKind]>,
+    loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    uri: &Url,
+    loc: Loc,
+) -> Vec<CodeActionOrCommand> {
+    if cx.enable_pattern_matching()
+        && (include_quick_fixes(only) || include_rewrite_refactors(only))
+        && cx.errors().exists(|error| {
+            let intermediate = make_intermediate_error(loc_of_aloc, false, error);
+            Loc::contains(&intermediate.loc, &loc)
+        })
+    {
+        match refactor_match_discriminant::refactor(ast, loc) {
+            Some(ast_prime) => {
+                let diff = flow_ast_differ::program(ast, &ast_prime);
+                let opts = code_action_utils::layout_options(options);
+                let edits = flow_loc_patch_to_lsp_edits(
+                    &replacement_printer::mk_loc_patch_ast_differ(&opts, &diff),
+                );
+                let title = "Refactor `match` coded like a switch";
+                //           ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                vec![CodeActionOrCommand::CodeAction(CodeAction {
+                    title: title.to_string(),
+                    kind: Some(CodeActionKind::QUICKFIX),
+                    diagnostics: Some(vec![]),
+                    edit: Some(WorkspaceEdit {
+                        changes: Some(HashMap::from([(uri.clone(), edits)])),
+                        ..Default::default()
+                    }),
+                    command: Some(mk_log_command(title, "refactor_switch_to_match")),
+                    is_preferred: None,
+                    disabled: None,
+                    data: None,
+                })]
+            }
+            None => vec![],
+        }
+    } else {
+        vec![]
+    }
+}
+
+fn add_jsx_props_code_actions(
+    snippets_enabled: bool,
+    cx: &Context,
+    ast: &ast::Program<Loc, Loc>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+    options: &Options,
+    uri: &Url,
+    loc: Loc,
+) -> Vec<CodeActionOrCommand> {
+    match refactor_add_jsx_props::fill_props(cx, snippets_enabled, ast, typed_ast, loc) {
+        None => vec![],
+        Some(xs) => {
+            //   xs
+            let patch: Vec<(Loc, String)> = xs
+                .into_iter()
+                .map(|(loc, attr)| {
+                    let opts = code_action_utils::layout_options(options);
+                    let text = ast_diff_printer::text_of_layout(
+                        js_layout_generator::jsx_opening_attr(&opts, &attr),
+                    );
+                    let text = format!(" {}", text);
+                    (loc, text)
+                })
+                .collect();
+            let edits = flow_loc_patch_to_lsp_edits(&patch);
+            let title = "Add missing attributes";
+            //             ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+            vec![CodeActionOrCommand::CodeAction(CodeAction {
+                title: title.to_string(),
+                kind: Some(CodeActionKind::QUICKFIX),
+                diagnostics: Some(vec![]),
+                edit: Some(WorkspaceEdit {
+                    changes: Some(HashMap::from([(uri.clone(), edits)])),
+                    ..Default::default()
+                }),
+                command: Some(mk_log_command(title, "add_missing_jsx_props")),
+                is_preferred: None,
+                disabled: None,
+                data: None,
+            })]
+        }
+    }
+}
+
+fn preferred_import(
+    ast: &ast::Program<Loc, Loc>,
+    exports: &ExportSearch,
+    name: &str,
+    loc: Loc,
+) -> Option<export_index::Export> {
+    let files = if autofix_imports::loc_is_type(ast, loc) {
+        export_search::get_types(name, exports)
+    } else {
+        export_search::get_values(name, exports)
+    };
+    if files.len() == 1 {
+        files.into_keys().next()
+    } else {
+        None
+    }
+}
+
+//     imports
+fn maybe_sort_by_usage(
+    imports_ranked_usage: bool,
+    mut imports: Vec<(export_index::Export, i32)>,
+) -> Vec<(export_index::Export, i32)> {
+    if imports_ranked_usage {
+        imports.sort_by(|(_, a), (_, b)| b.cmp(a));
+    }
+    imports
+}
+
+fn find_unbound_names_from_scope(
+    loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    cx: &Context,
+    query_loc: Loc,
+) -> Vec<(Loc, FlowSmolStr)> {
+    let already_handled_unbound_names_with_error =
+        cx.errors()
+            .fold(BTreeSet::<Loc>::new(), |mut loc_set, error| {
+                let error_message = ErrorMessage::map_loc_of_error_message(
+                    |aloc: ALoc| loc_of_aloc(&aloc),
+                    error.msg_of_error().clone(),
+                );
+                match error_message {
+                    ErrorMessage::EBuiltinNameLookupFailed {
+                        loc: error_loc,
+                        name: _,
+                    } => {
+                        loc_set.insert(error_loc);
+                        loc_set
+                    }
+                    _ => loc_set,
+                }
+            });
+    let env = cx.environment();
+    let env_values = &env.var_info.env_values;
+    let mut acc = vec![];
+    for (aloc, read) in env_values.iter() {
+        match read.write_locs.as_slice() {
+            [WriteLoc::Global(name)] => {
+                let loc = loc_of_aloc(aloc);
+                if loc.intersects(&query_loc)
+                    && !already_handled_unbound_names_with_error.contains(&loc)
+                {
+                    //       then (loc, name) :: acc
+                    acc.push((loc, name.dupe()));
+                }
+            }
+            _ => {}
+        }
+    }
+    acc
+}
+
+// Lsp_helpers.ranges_overlap
+fn ranges_overlap(a: &LspRange, b: &LspRange) -> bool {
+    a.start <= b.end && b.start <= a.end
+}
+
+fn suggest_imports(
+    cx: &Context,
+    layout_options: &js_layout_generator::Opts,
+    module_system_info: &LspModuleSystemInfo,
+    ast: &ast::Program<Loc, Loc>,
+    diagnostics: &[Diagnostic],
+    imports_ranked_usage: bool,
+    exports: &ExportSearch,
+    name: &str,
+    uri: &Url,
+    loc: Loc,
+) -> Vec<CodeActionOrCommand> {
+    let files = if autofix_imports::loc_is_type(ast, loc.dupe()) {
+        export_search::get_types(name, exports)
+    } else {
+        export_search::get_values(name, exports)
+    };
+    if files.is_empty() {
+        return vec![];
+    }
+    let src_dir = match uri.to_file_path() {
+        Ok(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
+        Err(_) => None,
+    };
+    let error_range = loc_to_lsp_range(loc);
+    let lsp_code = ErrorCode::CannotResolveName.as_str();
+    let relevant_diagnostics: Vec<Diagnostic> = diagnostics
+        .iter()
+        .filter(|d| {
+            d.source.as_deref() == Some("Flow")
+                && d.code == Some(NumberOrString::String(lsp_code.to_string()))
+                && ranges_overlap(&d.range, &error_range)
+        })
+        .cloned()
+        .collect();
+    let is_available_autoimport_result = lsp_import_edits::is_available_autoimport_result(cx);
+    // files
+    let mut filtered: Vec<(export_index::Export, i32)> = files
+        .into_iter()
+        .filter(|(export_index::Export(source, _), _)| is_available_autoimport_result(name, source))
+        .collect();
+    filtered = maybe_sort_by_usage(imports_ranked_usage, filtered);
+    let mut acc: Vec<CodeActionOrCommand> = vec![];
+    for (export_index::Export(source, export_kind), _num) in filtered {
+        match lsp_import_edits::text_edits_of_import(
+            layout_options,
+            module_system_info,
+            src_dir.as_deref(),
+            ast,
+            &export_kind,
+            name,
+            &source,
+        ) {
+            None => {}
+            Some(CodeActionTextEdits {
+                edits,
+                title,
+                from: _,
+            }) => {
+                //                  ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+                let command = CodeActionOrCommand::CodeAction(CodeAction {
+                    title: title.clone(),
+                    kind: Some(CodeActionKind::QUICKFIX),
+                    diagnostics: Some(relevant_diagnostics.clone()),
+                    edit: Some(WorkspaceEdit {
+                        changes: Some(HashMap::from([(uri.clone(), edits)])),
+                        ..Default::default()
+                    }),
+                    command: Some(mk_log_command(&title, "import")),
+                    ..Default::default()
+                });
+                //          command :: acc
+                acc.push(command);
+            }
+        }
+    }
+    acc.reverse();
+    acc
+}
+
+pub type AstTransform = Box<
+    dyn Fn(
+        &Context,
+        Arc<FileSig>,
+        &ast::Program<Loc, Loc>,
+        &ast::Program<ALoc, (ALoc, Type)>,
+        Loc,
+    ) -> Option<ast::Program<Loc, Loc>>,
+>;
+
+pub enum QuickfixConfidence {
+    WillFixErrorAndSafeForRunningOnSave,
+    BestEffort,
+}
+
+//   title: string;
+//   diagnostic_title: string;
+//   transform: ast_transform;
+//   target_loc: Loc.t;
+//   confidence: quickfix_confidence;
+pub struct AstTransformOfError {
+    pub title: String,
+    pub diagnostic_title: String,
+    pub transform: AstTransform,
+    pub target_loc: Loc,
+    pub confidence: QuickfixConfidence,
+}
+
+//   Some (transform ast loc)
+pub fn untyped_ast_transform(
+    transform: Box<dyn Fn(&ast::Program<Loc, Loc>, Loc) -> ast::Program<Loc, Loc>>,
+) -> AstTransform {
+    // Some (transform ast loc)
+    Box::new(
+        move |_cx: &Context, _file_sig: Arc<FileSig>, ast, _typed_ast, loc| {
+            // Some (transform ast loc)
+            Some(transform(ast, loc))
+        },
+    )
+}
+
+fn autofix_in_upstream_file(
+    cx: &Context,
+    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    file_sig: Arc<FileSig>,
+    diagnostics: &[Diagnostic],
+    ast: &ast::Program<Loc, Loc>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+    options: &Options,
+    title: &str,
+    transform: &AstTransform,
+    diagnostic_title: &str,
+    uri: &Url,
+    loc: Loc,
+) -> Option<CodeActionOrCommand> {
+    let src = loc.source.dupe();
+    let ast_src = &ast.loc.source;
+    let (ast, uri) = if *ast_src != src {
+        match src {
+            None => return None,
+            Some(source_file) => match get_ast_from_shared_mem(&source_file) {
+                None => (ast.clone(), uri.clone()),
+                Some(upstream_ast) => {
+                    let file_path = source_file.to_path_buf();
+                    let file_uri = Url::from_file_path(&file_path).unwrap_or_else(|_| {
+                        Url::parse(&format!("file://{}", file_path.display()))
+                            .unwrap_or_else(|_| uri.clone())
+                    });
+                    (upstream_ast, file_uri)
+                }
+            },
+        }
+    } else {
+        (ast.clone(), uri.clone())
+    };
+    let new_ast = transform(cx, file_sig, &ast, typed_ast, loc)?;
+    let diff = flow_ast_differ::program(&ast, &new_ast);
+    let opts = code_action_utils::layout_options(options);
+    let patch = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
+    let edits = flow_loc_patch_to_lsp_edits(&patch);
+    match edits.as_slice() {
+        [] => None,
+        _ => Some(CodeActionOrCommand::CodeAction(CodeAction {
+            title: title.to_string(),
+            kind: Some(CodeActionKind::QUICKFIX),
+            // (* Handing back the diagnostics we were given is a placeholder for
+            //    eventually generating the diagnostics for the errors we are fixing *)
+            diagnostics: Some(diagnostics.to_vec()),
+            edit: Some(WorkspaceEdit {
+                changes: Some(HashMap::from([(uri, edits)])),
+                ..Default::default()
+            }),
+            command: Some(mk_log_command(title, diagnostic_title)),
+            is_preferred: None,
+            disabled: None,
+            data: None,
+        })),
+    }
+}
+
+fn loc_opt_intersects(loc: Option<Loc>, error_loc: Loc) -> bool {
+    match loc {
+        None => true,
+        Some(loc) => Loc::intersects(&error_loc, &loc),
+    }
+}
+
+pub fn ast_transforms_of_error(
+    loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
+    lazy_error_loc: Option<Loc>,
+    get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
+    get_haste_module_info: Arc<dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>>,
+    get_type_sig: Arc<
+        dyn Fn(
+            &FileKey,
+        ) -> Option<
+            flow_type_sig::packed_type_sig::Module<
+                flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+            >,
+        >,
+    >,
+    loc: Option<Loc>,
+    error_message: &ErrorMessage<Loc>, /* Loc.t Error_message.t' */
+) -> Vec<AstTransformOfError> {
+    // Shared body for EInvariantSubtypingWithUseOp and EPropsNotFoundInInvariantSubtyping
+    // (OCaml uses a combined match arm with |)
+    let invariant_subtyping_actions = |lower_loc: Loc,
+                                       upper_loc: Loc,
+                                       upper_ty: &flow_common_ty::ty::ALocTy,
+                                       lazy_error_loc: &Option<Loc>,
+                                       loc: Option<Loc>|
+     -> Vec<AstTransformOfError> {
+        let error_loc_opt = match lazy_error_loc {
+            Some(error_loc) if loc_opt_intersects(loc.dupe(), error_loc.dupe()) => {
+                Some(error_loc.dupe())
+            }
+            _ => {
+                if loc_opt_intersects(loc.dupe(), lower_loc.dupe()) {
+                    Some(lower_loc.dupe())
+                } else {
+                    None
+                }
+            }
+        };
+        //     Convert_type_to_readonly_form.convert
+        let make_readonly_code_action =
+            |upper_ty: &flow_common_ty::ty::Ty<ALoc>, upper_loc: Loc| -> Vec<AstTransformOfError> {
+                let transform: AstTransform = Box::new(
+                    |cx: &Context, _file_sig: Arc<FileSig>, ast, _typed_ast, loc| {
+                        // Convert_type_to_readonly_form.convert
+                        convert_type_to_readonly_form::convert(cx.ts_utility_syntax(), ast, loc)
+                            .map(|(ast, _kind)| ast)
+                    },
+                );
+                let opts = PrinterOptions {
+                    ts_syntax: true,
+                    ..PrinterOptions::default()
+                };
+                vec![AstTransformOfError {
+                    title: format!(
+                        "Make `{}` readonly",
+                        ty_printer::string_of_t_single_line(upper_ty, &opts)
+                    ),
+                    diagnostic_title: "fix_invariant_subtyping_error_with_readonly_conversion"
+                        .to_string(),
+                    transform,
+                    target_loc: upper_loc,
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            };
+        // (match error_loc_opt with
+        match error_loc_opt {
+            None => vec![],
+            Some(_) => {
+                let upper_ty = ty_utils::simplify_type(true, None, upper_ty.dupe());
+                //      ast lower_loc upper_ty
+                let lower_loc_clone = lower_loc.dupe();
+                let upper_ty_clone = upper_ty.dupe();
+                let loc_of_aloc_clone = loc_of_aloc.dupe();
+                let get_ast_from_shared_mem_clone = get_ast_from_shared_mem.dupe();
+                let get_haste_module_info_clone = get_haste_module_info.dupe();
+                let get_type_sig_clone = get_type_sig.dupe();
+                let transform: AstTransform = Box::new(
+                    move |cx: &Context,
+                          file_sig: Arc<FileSig>,
+                          ast: &ast::Program<Loc, Loc>,
+                          typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+                          _loc| {
+                        let result = insert_type::insert_type_ty(
+                            cx,
+                            &*loc_of_aloc_clone,
+                            &*get_ast_from_shared_mem_clone,
+                            &*get_haste_module_info_clone,
+                            &*get_type_sig_clone,
+                            &file_sig,
+                            typed_ast,
+                            false, // ~strict:false
+                            None,  // no remote_converter
+                            ast,
+                            lower_loc_clone.dupe(),
+                            upper_ty_clone.dupe(),
+                        );
+                        result.ok()
+                    },
+                );
+                let mut actions = vec![AstTransformOfError {
+                    title: "Add suggested annotation to the literal".to_string(),
+                    diagnostic_title: "fix_invariant_subtyping_error_with_annot".to_string(),
+                    transform,
+                    target_loc: lower_loc,
+                    confidence: QuickfixConfidence::BestEffort,
+                }];
+                actions.extend(make_readonly_code_action(&upper_ty, upper_loc));
+                actions
+            }
+        }
+    };
+    match error_message {
+        ErrorMessage::EDeprecatedBool(error_loc) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                //       untyped_ast_transform
+                vec![AstTransformOfError {
+                    title: "Replace `bool` with `boolean`".to_string(),
+                    diagnostic_title: "replace_bool".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_replace_type::replace_type(
+                            &|t: &TypeInner<Loc, Loc>| match t {
+                                TypeInner::Boolean {
+                                    raw: _,
+                                    comments,
+                                    loc,
+                                } => TypeInner::Boolean {
+                                    loc: loc.dupe(),
+                                    raw: ast::types::BooleanRaw::Boolean,
+                                    comments: comments.clone(),
+                                },
+                                unexpected => unexpected.clone(),
+                            },
+                            ast,
+                            loc,
+                        )
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EDuplicateComponentProp {
+            spread: error_loc,
+            duplicates,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                //     ...
+                let duplicates = duplicates.clone();
+                vec![AstTransformOfError {
+                    title: "Wrap spread prop with Omit".to_string(),
+                    diagnostic_title: "wrap_spread_prop_with_omit".to_string(),
+                    transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                        use std::sync::Arc;
+                        let duplicates = duplicates.clone();
+                        autofix_replace_type::replace_type(
+                            &move |t: &TypeInner<Loc, Loc>| {
+                                let string_lit_annot_of_duplicate =
+                                    |(_loc, x, _loc2): &(Loc, flow_common::reason::Name, Loc)| -> ast::types::Type<Loc, Loc> {
+                                        let n = x.as_str().to_string();
+                                        ast::types::Type::new(TypeInner::StringLiteral {
+                                            loc: LOC_NONE,
+                                            literal: ast::StringLiteral {
+                                                value: n.clone().into(),
+                                                raw: format!("\"{}\"", n).into(),
+                                                comments: None,
+                                            },
+                                        })
+                                    };
+                                let n1 = duplicates.first();
+                                let rest = &duplicates[1..];
+                                let omitted_keys_annot = if rest.is_empty() {
+                                    string_lit_annot_of_duplicate(n1)
+                                } else {
+                                    let first = string_lit_annot_of_duplicate(n1);
+                                    let second = string_lit_annot_of_duplicate(&rest[0]);
+                                    let remaining: Vec<_> = rest[1..]
+                                        .iter()
+                                        .map(string_lit_annot_of_duplicate)
+                                        .collect();
+                                    ast::types::Type::new(TypeInner::Union {
+                                        loc: LOC_NONE,
+                                        inner: Arc::new(ast::types::Union {
+                                            types: (first, second, remaining),
+                                            comments: None,
+                                        }),
+                                    })
+                                };
+                                // Generic { Generic.id = ...; targs = Some ...; comments = None }
+                                TypeInner::Generic {
+                                    loc: LOC_NONE,
+                                    inner: Arc::new(ast::types::Generic {
+                                        id: ast::types::generic::Identifier::Unqualified(
+                                            ast::Identifier(Arc::new(ast::IdentifierInner {
+                                                loc: LOC_NONE,
+                                                name: "Omit".into(),
+                                                comments: None,
+                                            })),
+                                        ),
+                                        targs: Some(ast::types::TypeArgs {
+                                            loc: LOC_NONE,
+                                            arguments: Arc::from(vec![
+                                                ast::types::Type::new(t.clone()),
+                                                omitted_keys_annot,
+                                            ]),
+                                            comments: None,
+                                        }),
+                                        comments: None,
+                                    }),
+                                }
+                            },
+                            ast,
+                            loc,
+                        )
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberAccess {
+            reason,
+            suggestion: Some(fixed_prop_name),
+            ..
+        }) => {
+            let error_loc = reason.loc().dupe();
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let original_prop_name = flow_common::reason::string_of_desc::<Loc>(&reason.desc);
+                let title = format!("Replace {} with `{}`", original_prop_name, fixed_prop_name);
+                let fixed_prop_name: FlowSmolStr = fixed_prop_name.as_str().into();
+                vec![AstTransformOfError {
+                    title,
+                    diagnostic_title: "replace_enum_prop_typo_at_target".to_string(),
+                    transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                        autofix_prop_typo::replace_prop_typo_at_target(
+                            fixed_prop_name.dupe(),
+                            ast,
+                            loc,
+                        )
+                    })),
+                    target_loc: error_loc,
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EEnumError(EnumErrorKind::EnumInvalidMemberName {
+            loc: error_loc,
+            member_name,
+            ..
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let mut chars = member_name.chars();
+                let fixed_name = match chars.next() {
+                    None => String::new(),
+                    Some(c) => c.to_uppercase().collect::<String>() + chars.as_str(),
+                };
+                let title = format!("Replace `{}` with `{}`", member_name, fixed_name);
+                let fixed_name: FlowSmolStr = fixed_name.into();
+                vec![AstTransformOfError {
+                    title,
+                    diagnostic_title: "capitalize_enum_member".to_string(),
+                    transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                        autofix_enum_member_name::capitalize_at_target(fixed_name.dupe(), ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EClassToObject {
+            reason_class,
+            reason_obj,
+            ..
+        } => {
+            let error_loc = reason_class.loc().dupe();
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let obj_loc = reason_obj.def_loc().dupe();
+                let original = flow_common::reason::string_of_desc::<Loc>(&reason_obj.desc);
+                let title = format!("Rewrite {} as an interface", original);
+                vec![AstTransformOfError {
+                    title,
+                    diagnostic_title: "replace_obj_with_interface".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_interface::replace_object_at_target(ast, loc)
+                    })),
+                    target_loc: obj_loc,
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EMethodUnbinding {
+            reason_op,
+            reason_prop,
+            ..
+        } => {
+            let error_loc = reason_op.loc().dupe();
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let method_loc = reason_prop.def_loc().dupe();
+                let original = flow_common::reason::string_of_desc::<Loc>(&reason_prop.desc);
+                let title = format!("Rewrite {} as an arrow function", original);
+                vec![AstTransformOfError {
+                    title,
+                    diagnostic_title: "replace_method_with_arrow".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_method::replace_method_at_target(ast, loc)
+                    })),
+                    target_loc: method_loc,
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EUnusedPromise {
+            loc: error_loc,
+            async_,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let insert_async = AstTransformOfError {
+                    title: "Insert `await`".to_string(),
+                    diagnostic_title: "insert_await".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_unused_promise::insert_await(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::BestEffort,
+                };
+                let insert_void = AstTransformOfError {
+                    title: "Insert `void`".to_string(),
+                    diagnostic_title: "insert_void".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_unused_promise::insert_void(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::BestEffort,
+                };
+                if *async_ {
+                    vec![insert_async, insert_void]
+                } else {
+                    vec![insert_void]
+                }
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSUnknown,
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `mixed`".to_string(),
+                    diagnostic_title: "convert_unknown_type".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_unknown_type(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSNever,
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `empty`".to_string(),
+                    diagnostic_title: "convert_never_type".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_never_type(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSUndefined,
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `void`".to_string(),
+                    diagnostic_title: "convert_undefined_type".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_undefined_type(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSKeyof,
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `$Keys<T>`".to_string(),
+                    diagnostic_title: "convert_keyof_type".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_keyof_type(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSTypeParamExtends,
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `: T`".to_string(),
+                    diagnostic_title: "convert_type_param_extends".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_type_param_extends(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::DeprecatedTypeParamColon,
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `extends T`".to_string(),
+                    diagnostic_title: "convert_type_param_colon".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_type_param_colon(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSReadonlyVariance,
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `+`".to_string(),
+                    diagnostic_title: "convert_readonly_variance".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_readonly_variance(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSInOutVariance(InOutVariance::In),
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `-`".to_string(),
+                    diagnostic_title: "convert_in_variance".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_in_variance(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSInOutVariance(InOutVariance::Out),
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `+`".to_string(),
+                    diagnostic_title: "convert_out_variance".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_out_variance(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSInOutVariance(InOutVariance::InOut),
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Remove".to_string(),
+                    diagnostic_title: "remove_in_out_variance".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::remove_in_out_variance(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSSatisfiesType(enabled_casting_syntax),
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let title = match enabled_casting_syntax {
+                    CastingSyntax::As | CastingSyntax::Both => {
+                        "Convert to `as` expression `<expr> as <type>`"
+                    }
+                };
+                vec![AstTransformOfError {
+                    title: title.to_string(),
+                    diagnostic_title: "convert_satisfies_expression".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_casting_syntax::convert_satisfies_expression(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSReadonlyType(Some(ReadonlyTypeKind::Array)),
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `ReadonlyArray`".to_string(),
+                    diagnostic_title: "convert_readonly_array_type".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_readonly_array_type(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ETSSyntax {
+            kind: TSSyntaxKind::TSReadonlyType(Some(ReadonlyTypeKind::Tuple)),
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `Readonly`".to_string(),
+                    diagnostic_title: "convert_readonly_tuple_type".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_ts_syntax::convert_readonly_tuple_type(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EInvalidTypeCastSyntax {
+            loc: error_loc,
+            enabled_casting_syntax,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                //     ( "Convert to `as` expression `<expr> as <type>`",
+                //       "convert_colon_cast",
+                //       Autofix_casting_syntax.convert_colon_cast )
+                let (title, diagnostic_title) = match enabled_casting_syntax {
+                    CastingSyntax::As | CastingSyntax::Both => (
+                        "Convert to `as` expression `<expr> as <type>`",
+                        "convert_colon_cast",
+                    ),
+                };
+                vec![AstTransformOfError {
+                    title: title.to_string(),
+                    diagnostic_title: diagnostic_title.to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_casting_syntax::convert_colon_cast(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EIncorrectTypeWithReplacement {
+            kind: IncorrectType::DollarKeys,
+            loc: error_loc,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Convert to `keyof`".to_string(),
+                    diagnostic_title: "convert_dollar_keys_type".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_legacy_flow_syntax::convert_dollar_keys_type(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EIncorrectTypeWithReplacement {
+            kind,
+            loc: error_loc,
+        } => {
+            let incorrect_name = kind.incorrect_of_kind();
+            let replacement_name = kind.replacement_of_kind();
+            let title = format!("Convert to `{}`", replacement_name);
+            let diagnostic_title = format!("convert_{}_type", incorrect_name);
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let kind = *kind;
+                vec![AstTransformOfError {
+                    title,
+                    diagnostic_title,
+                    transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                        autofix_type_name::convert_incorrect_type(kind, ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        //     ( error_loc,
+        ErrorMessage::EInternalType(
+            error_loc,
+            InternalType::DollarUtilityTypeWithNonDollarAliases(replacement_name),
+        ) => {
+            let incorrect_name = format!("${}", replacement_name);
+            let title = format!("Convert to `{}`", replacement_name);
+            let diagnostic_title = format!("convert_dollar_{}_type", replacement_name);
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let incorrect_name: FlowSmolStr = incorrect_name.into();
+                let replacement_name: FlowSmolStr = replacement_name.as_str().into();
+                vec![AstTransformOfError {
+                    title,
+                    diagnostic_title,
+                    transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                        autofix_type_name::convert_type(
+                            incorrect_name.dupe(),
+                            replacement_name.dupe(),
+                            ast,
+                            loc,
+                        )
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        //     ( error_loc,
+        //         replacement_name_without_react
+        ErrorMessage::EInternalType(
+            error_loc,
+            InternalType::ReactDollarUtilityTypesWithNonDollarAliases(
+                replacement_name_without_react,
+            ),
+        ) => {
+            let incorrect_name = format!("React${}", replacement_name_without_react);
+            let replacement_name = format!("React.{}", replacement_name_without_react);
+            let title = format!("Convert to `{}`", replacement_name);
+            //   Printf.sprintf "convert_react_dollar_%s_type" replacement_name_without_react
+            let diagnostic_title = format!(
+                "convert_react_dollar_{}_type",
+                replacement_name_without_react
+            );
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let incorrect_name: FlowSmolStr = incorrect_name.into();
+                let replacement_name: FlowSmolStr = replacement_name.into();
+                vec![AstTransformOfError {
+                    title,
+                    diagnostic_title,
+                    transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                        autofix_type_name::convert_type(
+                            incorrect_name.dupe(),
+                            replacement_name.dupe(),
+                            ast,
+                            loc,
+                        )
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EInvalidRendersTypeArgument {
+            loc: error_loc,
+            renders_variant,
+            invalid_render_type_kind,
+            ..
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                match (renders_variant, invalid_render_type_kind) {
+                    (
+                        ast::types::RendersVariant::Star,
+                        InvalidRenderTypeKind::InvalidRendersNullVoidFalse
+                        | InvalidRenderTypeKind::InvalidRendersIterable,
+                    ) => vec![AstTransformOfError {
+                        title: "Simplify `renders*`".to_string(),
+                        diagnostic_title: "simplify_renders_star".to_string(),
+                        transform: untyped_ast_transform(Box::new(|ast, loc| {
+                            autofix_renders_variant::to_renders_star_with_best_effort_fixes(
+                                ast, loc,
+                            )
+                        })),
+                        target_loc: error_loc.dupe(),
+                        confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                    }],
+                    (
+                        ast::types::RendersVariant::Maybe,
+                        InvalidRenderTypeKind::InvalidRendersNullVoidFalse,
+                    ) => vec![AstTransformOfError {
+                        title: "Simplify `renders?`".to_string(),
+                        diagnostic_title: "simplify_renders_maybe".to_string(),
+                        transform: untyped_ast_transform(Box::new(|ast, loc| {
+                            autofix_renders_variant::to_renders_maybe_with_best_effort_fixes(
+                                ast, loc,
+                            )
+                        })),
+                        target_loc: error_loc.dupe(),
+                        confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                    }],
+                    (_, InvalidRenderTypeKind::InvalidRendersNullVoidFalse) => {
+                        vec![AstTransformOfError {
+                            title: "Switch to `renders?`".to_string(),
+                            diagnostic_title: "switch_to_renders_maybe".to_string(),
+                            transform: untyped_ast_transform(Box::new(|ast, loc| {
+                                autofix_renders_variant::to_renders_maybe_with_best_effort_fixes(
+                                    ast, loc,
+                                )
+                            })),
+                            target_loc: error_loc.dupe(),
+                            confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                        }]
+                    }
+                    (_, InvalidRenderTypeKind::InvalidRendersIterable) => {
+                        vec![AstTransformOfError {
+                            title: "Switch to `renders*`".to_string(),
+                            diagnostic_title: "switch_to_renders_star".to_string(),
+                            transform: untyped_ast_transform(Box::new(|ast, loc| {
+                                autofix_renders_variant::to_renders_star_with_best_effort_fixes(
+                                    ast, loc,
+                                )
+                            })),
+                            target_loc: error_loc.dupe(),
+                            confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                        }]
+                    }
+                    _ => vec![],
+                }
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EBuiltinNameLookupFailed {
+            loc: error_loc,
+            name,
+        } => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let name = name.to_string();
+                let loc_of_aloc = loc_of_aloc.dupe();
+                vec![AstTransformOfError {
+                    title: "Prefix with `this.`".to_string(),
+                    diagnostic_title: "prefix_with_this".to_string(),
+                    transform: Box::new(move |cx, file_sig: Arc<FileSig>, ast, typed_ast, loc| {
+                        autofix_class_member_access::fix(
+                            cx,
+                            file_sig,
+                            &*loc_of_aloc,
+                            ast,
+                            typed_ast,
+                            &name,
+                            loc,
+                        )
+                    }),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EBindingError(
+            BindingError::ETypeInValuePosition { name, .. },
+            error_loc,
+            _,
+            _,
+        ) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                //   Autofix_type_to_value_import.convert_type_to_value_import ast loc
+                let name = name.to_string();
+                vec![AstTransformOfError {
+                    title: format!("Convert type import of `{}` to value import", name),
+                    diagnostic_title: "convert_type_to_value_import".to_string(),
+                    transform: Box::new(|_cx, _file_sig, ast, _typed_ast, loc| {
+                        autofix_type_to_value_import::convert_type_to_value_import(ast, loc)
+                    }),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidObjectShorthand {
+            loc: error_loc,
+            name,
+            pattern_kind: _,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![
+                    AstTransformOfError {
+                        title: format!("Convert to `const {}`", name),
+                        diagnostic_title: "convert_match_object_shorthand_to_const".to_string(),
+                        transform: untyped_ast_transform(Box::new(|ast, loc| {
+                            autofix_match_syntax::convert_object_shorthand_to_const(ast, loc)
+                        })),
+                        target_loc: error_loc.dupe(),
+                        confidence: QuickfixConfidence::BestEffort,
+                    },
+                    AstTransformOfError {
+                        title: format!("Convert to `{}: {}`", name, name),
+                        diagnostic_title: "convert_match_object_shorthand_to_reference".to_string(),
+                        transform: untyped_ast_transform(Box::new(|ast, loc| {
+                            autofix_match_syntax::convert_object_shorthand_to_reference(ast, loc)
+                        })),
+                        target_loc: error_loc.dupe(),
+                        confidence: QuickfixConfidence::BestEffort,
+                    },
+                ]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EMatchError(MatchErrorKind::MatchStatementInvalidBody { loc: error_loc }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Wrap in a block".to_string(),
+                    diagnostic_title: "fix_invalid_match_statement_body".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_match_syntax::fix_invalid_match_statement_body(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidBindingKind {
+            loc: error_loc,
+            kind: current_kind,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let kind_str = flow_parser::ast_utils::string_of_variable_kind(*current_kind);
+                vec![AstTransformOfError {
+                    title: format!("Replace `{}` with `const`", kind_str),
+                    diagnostic_title: "fix_match_invalid_binding_kind".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_match_syntax::fix_invalid_binding_kind(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidWildcardSyntax(error_loc)) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Replace `default` with `_`".to_string(),
+                    diagnostic_title: "fix_match_invalid_wildcard_syntax".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_match_syntax::fix_invalid_wildcard_syntax(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EMatchError(MatchErrorKind::MatchInvalidCaseSyntax {
+            loc: error_loc,
+            kind: _,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Fix invalid match syntax".to_string(),
+                    diagnostic_title: "fix_match_invalid_case_syntax".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_match_syntax::fix_invalid_case_syntax(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EMatchError(MatchErrorKind::MatchNonExhaustiveObjectPattern {
+            loc: error_loc,
+            rest,
+            missing_props,
+            pattern_kind: _,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let add_only_rest = AstTransformOfError {
+                    title: "Add rest `...` to object pattern".to_string(),
+                    diagnostic_title: "fix_match_non_exhaustive_object_pattern_add_rest"
+                        .to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_match_syntax::fix_non_exhaustive_object_pattern(
+                            true,
+                            vec![],
+                            ast,
+                            loc,
+                        )
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::BestEffort,
+                };
+                let missing_props_prefix_text = |props: &[_]| {
+                    if props.len() == 1 {
+                        "Add the missing property".to_string()
+                    } else {
+                        format!("Add {} missing properties", props.len())
+                    }
+                };
+                match (missing_props.as_slice(), rest) {
+                    ([], _) => vec![add_only_rest],
+                    (missing_props_slice, None) if !missing_props_slice.is_empty() => {
+                        let missing_props_clone: Vec<_> =
+                            missing_props_slice.iter().duped().collect();
+                        vec![
+                            AstTransformOfError {
+                                title: format!(
+                                    "{} to object pattern",
+                                    missing_props_prefix_text(missing_props_slice)
+                                ),
+                                diagnostic_title:
+                                    "fix_match_non_exhaustive_object_pattern_add_props".to_string(),
+                                transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                                    let props: Vec<String> =
+                                        missing_props_clone.iter().map(|s| s.to_string()).collect();
+                                    autofix_match_syntax::fix_non_exhaustive_object_pattern(
+                                        false, props, ast, loc,
+                                    )
+                                })),
+                                target_loc: error_loc.dupe(),
+                                confidence: QuickfixConfidence::BestEffort,
+                            },
+                            add_only_rest,
+                        ]
+                    }
+                    (missing_props_slice, Some(_)) if !missing_props_slice.is_empty() => {
+                        let missing_props_clone: Vec<_> =
+                            missing_props_slice.iter().duped().collect();
+                        vec![
+                            AstTransformOfError {
+                                title: format!(
+                                    "{} and rest `...` to object pattern",
+                                    missing_props_prefix_text(missing_props_slice)
+                                ),
+                                diagnostic_title:
+                                    "fix_match_non_exhaustive_object_pattern_add_props_and_rest"
+                                        .to_string(),
+                                transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                                    let props: Vec<String> =
+                                        missing_props_clone.iter().map(|s| s.to_string()).collect();
+                                    autofix_match_syntax::fix_non_exhaustive_object_pattern(
+                                        true, props, ast, loc,
+                                    )
+                                })),
+                                target_loc: error_loc.dupe(),
+                                confidence: QuickfixConfidence::BestEffort,
+                            },
+                            add_only_rest,
+                        ]
+                    }
+                    _ => vec![add_only_rest],
+                }
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EMatchError(MatchErrorKind::MatchNotExhaustive {
+            loc: error_loc,
+            examples,
+            missing_pattern_asts,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let num_examples = examples.len();
+                let num_asts = missing_pattern_asts.len();
+                let prefix = if num_asts == 1 {
+                    "Add the missing case".to_string()
+                } else {
+                    format!("Add {} missing cases", num_asts)
+                };
+                let suffix = if num_asts == num_examples {
+                    " to make `match` exhaustively checked".to_string()
+                } else {
+                    format!(" (out of a total of {})", num_examples)
+                };
+                let missing_pattern_asts = missing_pattern_asts.clone();
+                vec![AstTransformOfError {
+                    title: format!("{}{}", prefix, suffix),
+                    diagnostic_title: "fix_match_not_exhaustive".to_string(),
+                    transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                        autofix_match_syntax::fix_not_exhaustive(
+                            missing_pattern_asts.clone(),
+                            ast,
+                            loc,
+                        )
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::EMatchError(MatchErrorKind::MatchUnusedPattern {
+            reason,
+            already_seen: _,
+        }) => {
+            let error_loc = reason.loc().dupe();
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Remove".to_string(),
+                    diagnostic_title: "fix_match_unused_pattern".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_match_syntax::remove_unused_pattern(ast, loc)
+                    })),
+                    target_loc: error_loc,
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ERecordError(RecordErrorKind::RecordDeclarationInvalidSyntax {
+            loc: error_loc,
+            kind: _,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                vec![AstTransformOfError {
+                    title: "Fix invalid record syntax".to_string(),
+                    diagnostic_title: "fix_record_invalid_syntax".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_record_declaration::fix_invalid_syntax(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        //         Some
+        ErrorMessage::EIncompatibleWithUseOp {
+            explanation:
+                Some(Explanation::ExplanationObjectLiteralNeedsRecordSyntax {
+                    record_name,
+                    obj_reason,
+                }),
+            ..
+        } => {
+            let error_loc = obj_reason.loc().dupe();
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let record_name_str = record_name.to_string();
+                let record_name_smol: FlowSmolStr = record_name.as_str().into();
+                vec![AstTransformOfError {
+                    title: format!("Convert to record `{} {{...}}`", record_name_str),
+                    diagnostic_title: "convert_object_literal_to_record_expression".to_string(),
+                    transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                        autofix_object_to_record::convert_object_to_record_expression(
+                            record_name_smol.dupe(),
+                            ast,
+                            loc,
+                        )
+                    })),
+                    target_loc: error_loc,
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        ErrorMessage::ERecordError(RecordErrorKind::RecordInvalidNew {
+            record_name,
+            loc: error_loc,
+        }) => {
+            if loc_opt_intersects(loc, error_loc.dupe()) {
+                let record_name = record_name.to_string();
+                vec![AstTransformOfError {
+                    title: format!("Convert to record `{} {{...}}`", record_name),
+                    diagnostic_title: "convert_new_to_record_expression".to_string(),
+                    transform: untyped_ast_transform(Box::new(|ast, loc| {
+                        autofix_new_to_record::convert_new_to_record_expression(ast, loc)
+                    })),
+                    target_loc: error_loc.dupe(),
+                    confidence: QuickfixConfidence::BestEffort,
+                }]
+            } else {
+                vec![]
+            }
+        }
+        //   when match lower_desc with
+        ErrorMessage::EInvariantSubtypingWithUseOp(box EInvariantSubtypingWithUseOpData {
+            explanation,
+            ..
+        }) if {
+            // Extract (lower_loc, upper_loc, lower_desc, upper_ty) from explanation
+            matches!(
+                explanation,
+                Some(
+                    ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
+                        lower_array_desc: TypeOrTypeDescT::TypeDesc(Err(
+                            VirtualReasonDesc::RObjectLit
+                            | VirtualReasonDesc::RObjectLitUnsound
+                            | VirtualReasonDesc::RArrayLit
+                            | VirtualReasonDesc::RArrayLitUnsound,
+                        )),
+                        upper_array_desc: TypeOrTypeDescT::TypeDesc(Ok(_)),
+                        ..
+                    }
+                    | ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
+                        lower_obj_desc: TypeOrTypeDescT::TypeDesc(Err(
+                            VirtualReasonDesc::RObjectLit
+                            | VirtualReasonDesc::RObjectLitUnsound
+                            | VirtualReasonDesc::RArrayLit
+                            | VirtualReasonDesc::RArrayLitUnsound,
+                        )),
+                        upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(_)),
+                        ..
+                    }
+                    | ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperties {
+                        lower_obj_desc: TypeOrTypeDescT::TypeDesc(Err(
+                            VirtualReasonDesc::RObjectLit
+                            | VirtualReasonDesc::RObjectLitUnsound
+                            | VirtualReasonDesc::RArrayLit
+                            | VirtualReasonDesc::RArrayLitUnsound,
+                        )),
+                        upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(_)),
+                        ..
+                    }
+                )
+            )
+        } =>
+        {
+            // Extract the common bindings from the matched explanation
+            let (lower_loc, upper_loc, upper_ty) = if let Some(
+                ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableArray {
+                    lower_array_loc,
+                    upper_array_loc,
+                    upper_array_desc: TypeOrTypeDescT::TypeDesc(Ok(upper_ty)),
+                    ..
+                },
+            ) = explanation.as_ref()
+            {
+                (
+                    lower_array_loc.dupe(),
+                    upper_array_loc.dupe(),
+                    upper_ty.dupe(),
+                )
+            } else if let Some(
+                ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperty {
+                    lower_obj_loc,
+                    upper_obj_loc,
+                    upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(upper_ty)),
+                    ..
+                },
+            ) = explanation.as_ref()
+            {
+                (lower_obj_loc.dupe(), upper_obj_loc.dupe(), upper_ty.dupe())
+            } else if let Some(
+                ExplanationWithLazyParts::LazyExplanationInvariantSubtypingDueToMutableProperties {
+                    lower_obj_loc,
+                    upper_obj_loc,
+                    upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(upper_ty)),
+                    ..
+                },
+            ) = explanation.as_ref()
+            {
+                (lower_obj_loc.dupe(), upper_obj_loc.dupe(), upper_ty.dupe())
+            } else {
+                // The outer match guard (matches!) ensures explanation is Some and
+                // contains one of the three variants with TypeDesc(Ok(_)) for upper_*_desc.
+                return vec![];
+            };
+            invariant_subtyping_actions(lower_loc, upper_loc, &upper_ty, &lazy_error_loc, loc)
+        }
+        ErrorMessage::EPropsNotFoundInInvariantSubtyping(
+            box EPropsNotFoundInInvariantSubtypingData {
+                lower_obj_loc,
+                upper_obj_loc,
+                lower_obj_desc:
+                    TypeOrTypeDescT::TypeDesc(Err(
+                        VirtualReasonDesc::RObjectLit
+                        | VirtualReasonDesc::RObjectLitUnsound
+                        | VirtualReasonDesc::RArrayLit
+                        | VirtualReasonDesc::RArrayLitUnsound,
+                    )),
+                upper_obj_desc: TypeOrTypeDescT::TypeDesc(Ok(upper_ty)),
+                ..
+            },
+        ) => {
+            // Same body as EInvariantSubtypingWithUseOp above
+            // (OCaml uses a combined match arm with |)
+            invariant_subtyping_actions(
+                lower_obj_loc.dupe(),
+                upper_obj_loc.dupe(),
+                upper_ty,
+                &lazy_error_loc,
+                loc,
+            )
+        }
+        error_message => {
+            // (match error_message |> Error_message.friendly_message_of_msg with ...)
+            match error_message.clone().friendly_message_of_msg() {
+                FriendlyMessageRecipe::PropMissingInLookup {
+                    loc: error_loc,
+                    suggestion: Some(suggestion),
+                    prop: Some(prop_name),
+                    ..
+                } => {
+                    if loc_opt_intersects(loc, error_loc.dupe()) {
+                        let title = format!("Replace `{}` with `{}`", prop_name, suggestion);
+                        let suggestion: FlowSmolStr = suggestion.as_str().into();
+                        vec![AstTransformOfError {
+                            title,
+                            diagnostic_title: "replace_prop_typo_at_target".to_string(),
+                            transform: untyped_ast_transform(Box::new(move |ast, loc| {
+                                autofix_prop_typo::replace_prop_typo_at_target(
+                                    suggestion.dupe(),
+                                    ast,
+                                    loc,
+                                )
+                            })),
+                            target_loc: error_loc,
+                            confidence: QuickfixConfidence::BestEffort,
+                        }]
+                    } else {
+                        vec![]
+                    }
+                }
+                FriendlyMessageRecipe::IncompatibleUse {
+                    loc: error_loc,
+                    upper_kind: UpperKind::IncompatibleGetPropT(..),
+                    reason_lower,
+                    ..
+                } => {
+                    match (
+                        loc_opt_intersects(loc, error_loc.dupe()),
+                        &reason_lower.desc,
+                    ) {
+                        (
+                            true,
+                            r @ (VirtualReasonDesc::RVoid
+                            | VirtualReasonDesc::RNull
+                            | VirtualReasonDesc::RVoidedNull
+                            | VirtualReasonDesc::RNullOrVoid),
+                        ) => {
+                            let desc_str = flow_common::reason::string_of_desc::<Loc>(r);
+                            let title = format!(
+                                "Add optional chaining for object that might be `{}`",
+                                desc_str
+                            );
+                            vec![AstTransformOfError {
+                                title,
+                                diagnostic_title: "add_optional_chaining".to_string(),
+                                transform: untyped_ast_transform(Box::new(|ast, loc| {
+                                    autofix_optional_chaining::add_optional_chaining(ast, loc)
+                                })),
+                                target_loc: error_loc,
+                                confidence: QuickfixConfidence::BestEffort,
+                            }]
+                        }
+                        _ => vec![],
+                    }
+                }
+                _ => vec![],
+            }
+        }
+    }
+}
+
+//   ...
+fn fix_all_in_file_code_actions(
+    options: &Options,
+    loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    ast: &ast::Program<Loc, Loc>,
+    diagnostics: &[Diagnostic],
+    errors: ErrorSet,
+    loc: Loc,
+    uri: &Url,
+) -> Vec<CodeActionOrCommand> {
+    // (* Step 1: Check if there's an EInvalidTypeCastSyntax error at the requested location *)
+    let has_invalid_cast_at_loc = errors.exists(|error| {
+        let error_message = ErrorMessage::map_loc_of_error_message(
+            |aloc: ALoc| loc_of_aloc(&aloc),
+            error.msg_of_error().clone(),
+        );
+        match &error_message {
+            ErrorMessage::EInvalidTypeCastSyntax { .. } => match error_message.loc_of_msg() {
+                Some(error_loc) => Loc::intersects(&error_loc, &loc),
+                None => false,
+            },
+            _ => false,
+        }
+    });
+    if !has_invalid_cast_at_loc {
+        vec![]
+    } else {
+        //   (* Step 2: Generate code action using convert_all_colon_casts *)
+        let new_ast = autofix_casting_syntax::convert_all_colon_casts(ast);
+        if new_ast == *ast {
+            return vec![];
+        }
+        let opts = code_action_utils::layout_options(options);
+        let diff = flow_ast_differ::program(ast, &new_ast);
+        let edits = flow_loc_patch_to_lsp_edits(&replacement_printer::mk_loc_patch_ast_differ(
+            &opts, &diff,
+        ));
+        //               ( WorkspaceEdit.{ changes = UriMap.singleton uri edits },
+        let title = "Convert all colon casts to `as` expressions";
+        vec![CodeActionOrCommand::CodeAction(CodeAction {
+            title: title.to_string(),
+            kind: Some(CodeActionKind::QUICKFIX),
+            diagnostics: Some(diagnostics.to_vec()),
+            edit: Some(WorkspaceEdit {
+                changes: Some(HashMap::from([(uri.clone(), edits)])),
+                ..Default::default()
+            }),
+            command: Some(mk_log_command(title, "convert_all_colon_cast")),
+            is_preferred: None,
+            disabled: None,
+            data: None,
+        })]
+    }
+}
+
+//     uri loc =
+//   ...
+fn code_actions_of_errors(
+    options: &Options,
+    loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
+    get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
+    module_system_info: &LspModuleSystemInfo,
+    get_type_sig: Arc<
+        dyn Fn(
+            &FileKey,
+        ) -> Option<
+            flow_type_sig::packed_type_sig::Module<
+                flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+            >,
+        >,
+    >,
+    cx: &Context,
+    file_sig: &Arc<FileSig>,
+    env: &Env,
+    ast: &ast::Program<Loc, Loc>,
+    typed_ast: &ast::Program<ALoc, (ALoc, Type)>,
+    diagnostics: &[Diagnostic],
+    errors: ErrorSet,
+    only: Option<&[CodeActionKind]>,
+    imports_ranked_usage: bool,
+    uri: &Url,
+    loc: Loc,
+) -> Vec<CodeActionOrCommand> {
+    let include_quick_fixes = include_quick_fixes(only);
+    let (actions, has_missing_import) = errors.fold(
+        (vec![], false),
+        |(mut actions, mut has_missing_import), error| {
+            let error_message = ErrorMessage::map_loc_of_error_message(
+                |aloc: ALoc| loc_of_aloc(&aloc),
+                error.msg_of_error().clone(),
+            );
+            //     when Options.autoimports options -> ...
+            //     when Options.autoimports options ->
+            let (suggest_imports_actions, new_has_missing_import): (
+                Vec<CodeActionOrCommand>,
+                bool,
+            ) = match (&error_message, &env.exports) {
+                (
+                    ErrorMessage::EBuiltinNameLookupFailed {
+                        loc: error_loc,
+                        name,
+                    },
+                    Some(exports),
+                ) if options.autoimports => {
+                    let actions = if include_quick_fixes && Loc::intersects(error_loc, &loc) {
+                        suggest_imports(
+                            cx,
+                            &code_action_utils::layout_options(options),
+                            module_system_info,
+                            ast,
+                            diagnostics,
+                            imports_ranked_usage,
+                            exports,
+                            name.as_str(),
+                            uri,
+                            loc.dupe(),
+                        )
+                    } else {
+                        vec![]
+                    };
+                    (actions, true)
+                }
+                _ => (vec![], has_missing_import),
+            };
+            has_missing_import = new_has_missing_import;
+            let quick_fix_actions: Vec<CodeActionOrCommand> = if include_quick_fixes {
+                let lazy_error_loc = {
+                    let loc_of_aloc_ref = &loc_of_aloc;
+                    let intermediate =
+                        make_intermediate_error(|aloc: &ALoc| loc_of_aloc_ref(aloc), false, &error);
+                    intermediate.loc
+                };
+                //     ast_transforms_of_error
+                //       error_message
+                let transforms = ast_transforms_of_error(
+                    loc_of_aloc.dupe(),
+                    Some(lazy_error_loc),
+                    get_ast_from_shared_mem.dupe(),
+                    module_system_info.get_haste_module_info.dupe(),
+                    get_type_sig.dupe(),
+                    Some(loc.dupe()),
+                    &error_message,
+                );
+                //            autofix_in_upstream_file
+                //              uri target_loc)
+                transforms
+                    .iter()
+                    .filter_map(|t| {
+                        autofix_in_upstream_file(
+                            cx,
+                            &*get_ast_from_shared_mem,
+                            file_sig.dupe(),
+                            diagnostics,
+                            ast,
+                            typed_ast,
+                            options,
+                            &t.title,
+                            &t.transform,
+                            &t.diagnostic_title,
+                            uri,
+                            t.target_loc.dupe(),
+                        )
+                    })
+                    .collect()
+            } else {
+                vec![]
+            };
+            let mut result = suggest_imports_actions;
+            result.extend(quick_fix_actions);
+            result.extend(actions);
+            actions = result;
+            (actions, has_missing_import)
+        },
+    );
+    //   actions
+    if include_add_missing_imports_action(only) && has_missing_import {
+        let mut result = vec![CodeActionOrCommand::CodeAction(CodeAction {
+            title: "Add all missing imports".to_string(),
+            kind: Some(add_missing_imports_kind()),
+            diagnostics: Some(vec![]),
+            edit: None,
+            command: Some(Command {
+                title: "".to_string(),
+                command: "source.addMissingImports".to_string(),
+                arguments: Some(vec![serde_json::json!({"uri": uri.as_str()})]),
+            }),
+            is_preferred: None,
+            disabled: None,
+            data: None,
+        })];
+        result.extend(actions);
+        result
+    } else {
+        actions
+    }
+}
+
+//     ... :: acc
+//     acc
+fn code_action_for_parser_error_with_suggestion(
+    mut acc: Vec<CodeActionOrCommand>,
+    diagnostics: &[Diagnostic],
+    uri: &Url,
+    error_loc: Loc,
+    editor_loc: Loc,
+    title: &str,
+    new_text: &str,
+) -> Vec<CodeActionOrCommand> {
+    if Loc::intersects(&error_loc, &editor_loc) {
+        let error_range = loc_to_lsp_range(error_loc);
+        let relevant_diagnostics: Vec<Diagnostic> = diagnostics
+            .iter()
+            .filter(|d| d.range == error_range)
+            .cloned()
+            .collect();
+        let text_edit = TextEdit {
+            range: error_range,
+            new_text: new_text.to_string(),
+        };
+        //         ( WorkspaceEdit.{ changes = UriMap.singleton uri [textEdit] },
+        acc.push(CodeActionOrCommand::CodeAction(CodeAction {
+            title: title.to_string(),
+            kind: Some(CodeActionKind::QUICKFIX),
+            diagnostics: Some(relevant_diagnostics),
+            edit: Some(WorkspaceEdit {
+                changes: Some(HashMap::from([(uri.clone(), vec![text_edit])])),
+                ..Default::default()
+            }),
+            command: Some(mk_log_command(title, "fix_parse_error")),
+            is_preferred: None,
+            disabled: None,
+            data: None,
+        }));
+        acc
+    } else {
+        // acc
+        acc
+    }
+}
+
+//     parse_errors
+fn code_actions_of_parse_errors(
+    diagnostics: &[Diagnostic],
+    uri: &Url,
+    loc: Loc,
+    parse_errors: &[(Loc, ParseError)],
+) -> Vec<CodeActionOrCommand> {
+    parse_errors
+        .iter()
+        .fold(vec![], |acc, (error_loc, parse_error)| {
+            match parse_error {
+                ParseError::UnexpectedTokenWithSuggestion(token, suggestion) => {
+                    let title = format!("Replace `{}` with `{}`", token, suggestion);
+                    code_action_for_parser_error_with_suggestion(
+                        acc,
+                        diagnostics,
+                        uri,
+                        error_loc.dupe(),
+                        loc.dupe(),
+                        &title,
+                        suggestion,
+                    )
+                }
+                ParseError::InvalidComponentRenderAnnotation {
+                    has_nested_render: false,
+                } => {
+                    let title = "Replace `:` with `renders`";
+                    code_action_for_parser_error_with_suggestion(
+                        acc,
+                        diagnostics,
+                        uri,
+                        error_loc.dupe(),
+                        loc.dupe(),
+                        title,
+                        " renders",
+                    )
+                }
+                ParseError::InvalidComponentRenderAnnotation {
+                    has_nested_render: true,
+                } => {
+                    let title = "Remove `:`";
+                    code_action_for_parser_error_with_suggestion(
+                        acc,
+                        diagnostics,
+                        uri,
+                        error_loc.dupe(),
+                        loc.dupe(),
+                        title,
+                        "",
+                    )
+                }
+                ParseError::InvalidComponentStringParameterBinding { optional, name } => {
+                    let title = "Use as-renaming";
+                    //   Utils_js.(spf " as %s%s" (camelize name) (if optional then "?" else ":"))
+                    let replacement = format!(
+                        " as {}{}",
+                        flow_parser::parse_error::camelize(name),
+                        if *optional { "?" } else { ":" }
+                    );
+                    code_action_for_parser_error_with_suggestion(
+                        acc,
+                        diagnostics,
+                        uri,
+                        error_loc.dupe(),
+                        loc.dupe(),
+                        title,
+                        &replacement,
+                    )
+                }
+                _ => acc,
+            }
+        })
+}
+
+fn supported_code_actions() -> Vec<CodeActionKind> {
+    vec![
+        CodeActionKind::QUICKFIX,
+        add_missing_imports_kind(),
+        CodeActionKind::new("source.organizeImports.flow"),
+        CodeActionKind::REFACTOR_EXTRACT,
+    ]
+}
+
+//       only
+pub fn kind_is_supported(only: Option<&[CodeActionKind]>) -> bool {
+    match only {
+        None => true,
+        //     only
+        Some(only) => {
+            // is a sub-kind of kind (i.e., is_kind(kind, supported_kind))
+            let supported = supported_code_actions();
+            only.iter()
+                .any(|kind| supported.iter().any(|s| is_kind(kind, s)))
+        }
+    }
+}
+
+fn organize_imports_code_action(uri: &Url) -> CodeActionOrCommand {
+    CodeActionOrCommand::CodeAction(CodeAction {
+        title: "Organize imports".to_string(),
+        kind: Some(CodeActionKind::new("source.organizeImports.flow")),
+        diagnostics: Some(vec![]),
+        edit: None,
+        command: Some(Command {
+            title: "".to_string(),
+            command: "source.organizeImports".to_string(),
+            arguments: Some(vec![serde_json::json!({"uri": uri.as_str()})]),
+        }),
+        is_preferred: None,
+        disabled: None,
+        data: None,
+    })
+}
+
+//   Ok actions
+pub fn code_actions_at_loc<'a>(
+    options: &Options,
+    lsp_init_params: &lsp_types::InitializeParams,
+    imports_ranked_usage: bool,
+    env: &Env,
+    loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
+    get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
+    get_type_sig: Arc<
+        dyn Fn(
+            &FileKey,
+        ) -> Option<
+            flow_type_sig::packed_type_sig::Module<
+                flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+            >,
+        >,
+    >,
+    module_system_info: &LspModuleSystemInfo,
+    cx: &Context<'a>,
+    file_sig: &Arc<FileSig>,
+    tolerable_errors: &[TolerableError<Loc>],
+    file_contents: &str,
+    ast: &ast::Program<Loc, Loc>,
+    typed_ast: &'a ast::Program<ALoc, (ALoc, Type)>,
+    scope_info: &ScopeInfo<Loc>,
+    parse_errors: &[(Loc, ParseError)],
+    diagnostics: &[Diagnostic],
+    only: Option<&[CodeActionKind]>,
+    uri: &Url,
+    loc: Loc,
+) -> Result<Vec<CodeActionOrCommand>, String> {
+    let support_experimental_snippet_text_edit = lsp_init_params
+        .capabilities
+        .experimental
+        .as_ref()
+        .and_then(|v| v.get("snippetTextEdit"))
+        .and_then(|v| v.as_bool())
+        .unwrap_or(false);
+    // get_haste_module_info:module_system_info.get_haste_module_info
+    let get_haste_module_info: &dyn Fn(
+        &FileKey,
+    ) -> Option<flow_common_modulename::HasteModuleInfo> =
+        &*module_system_info.get_haste_module_info;
+    let autofix_exports_actions = autofix_exports_code_actions(
+        options,
+        cx,
+        &*loc_of_aloc,
+        &*get_ast_from_shared_mem,
+        get_haste_module_info,
+        &*get_type_sig,
+        ast,
+        file_sig,
+        tolerable_errors,
+        typed_ast,
+        diagnostics,
+        uri,
+        loc.dupe(),
+    )
+    .map_err(|e| format!("{:?}", e))?;
+    let autofix_missing_local_annot_actions = autofix_missing_local_annot_code_actions(
+        options,
+        cx,
+        &*loc_of_aloc,
+        &*get_ast_from_shared_mem,
+        get_haste_module_info,
+        &*get_type_sig,
+        ast,
+        file_sig,
+        tolerable_errors,
+        typed_ast,
+        diagnostics,
+        uri,
+        loc.dupe(),
+    )
+    .map_err(|e| format!("{:?}", e))?;
+    let insert_inferred_render_type_actions = code_action_insert_inferred_render_type(
+        options,
+        cx,
+        &*loc_of_aloc,
+        &*get_ast_from_shared_mem,
+        get_haste_module_info,
+        &*get_type_sig,
+        ast,
+        file_sig,
+        typed_ast,
+        uri,
+        loc.dupe(),
+    )?;
+    let mut refactor_actions = refactor_extract_and_stub_out_code_actions(
+        options,
+        support_experimental_snippet_text_edit,
+        file_contents,
+        ast,
+        cx,
+        file_sig,
+        typed_ast,
+        &*loc_of_aloc,
+        &*get_ast_from_shared_mem,
+        get_haste_module_info,
+        &*get_type_sig,
+        only,
+        uri,
+        loc.dupe(),
+    );
+    refactor_actions.extend(insert_jsdoc_code_actions(options, ast, uri, loc.dupe()));
+    refactor_actions.extend(convert_type_to_readonly_form_code_actions(
+        options,
+        ast,
+        only,
+        uri,
+        loc.dupe(),
+    ));
+    refactor_actions.extend(refactor_arrow_function_code_actions(
+        ast,
+        scope_info,
+        options,
+        only,
+        uri,
+        loc.dupe(),
+    ));
+    refactor_actions.extend(refactor_switch_to_match_statement_actions(
+        cx,
+        ast,
+        options,
+        only,
+        uri,
+        loc.dupe(),
+    ));
+    refactor_actions.extend(refactor_match_coded_like_switch(
+        cx,
+        ast,
+        options,
+        only,
+        &*loc_of_aloc,
+        uri,
+        loc.dupe(),
+    ));
+    refactor_actions.extend(add_jsx_props_code_actions(
+        support_experimental_snippet_text_edit,
+        cx,
+        ast,
+        typed_ast,
+        options,
+        uri,
+        loc.dupe(),
+    ));
+    let fix_all_in_file_actions = if include_quick_fixes(only) {
+        fix_all_in_file_code_actions(
+            options,
+            &*loc_of_aloc,
+            ast,
+            diagnostics,
+            cx.errors(),
+            loc.dupe(),
+            uri,
+        )
+    } else {
+        vec![]
+    };
+    let error_fixes = code_actions_of_errors(
+        options,
+        loc_of_aloc.dupe(),
+        get_ast_from_shared_mem.dupe(),
+        module_system_info,
+        get_type_sig.dupe(),
+        cx,
+        file_sig,
+        env,
+        ast,
+        typed_ast,
+        diagnostics,
+        cx.errors(),
+        only,
+        imports_ranked_usage,
+        uri,
+        loc.dupe(),
+    );
+    let scope_based_auto_import_fixes: Vec<CodeActionOrCommand> = match &env.exports {
+        Some(exports) if options.autoimports && include_quick_fixes(only) => {
+            let unbound_names = find_unbound_names_from_scope(&*loc_of_aloc, cx, loc.dupe());
+            unbound_names
+                .into_iter()
+                .flat_map(|(error_loc, name)| {
+                    suggest_imports(
+                        cx,
+                        &code_action_utils::layout_options(options),
+                        module_system_info,
+                        ast,
+                        diagnostics,
+                        imports_ranked_usage,
+                        exports,
+                        name.as_str(),
+                        uri,
+                        error_loc,
+                    )
+                })
+                .collect()
+        }
+        _ => vec![],
+    };
+    let inspection_related_code_actions: Vec<CodeActionOrCommand> =
+        if autofix_exports_actions.is_empty() {
+            // insert_inferred_type_as_cast_code_actions
+            insert_inferred_type_as_cast_code_actions(
+                options,
+                file_contents,
+                ast,
+                cx,
+                file_sig,
+                typed_ast,
+                loc_of_aloc.dupe(),
+                get_ast_from_shared_mem.dupe(),
+                module_system_info.get_haste_module_info.dupe(),
+                get_type_sig.dupe(),
+                uri,
+                loc.dupe(),
+            )
+        } else {
+            vec![]
+        };
+    let parse_error_fixes = code_actions_of_parse_errors(diagnostics, uri, loc, parse_errors);
+    //   parse_error_fixes
+    //   @ autofix_exports_code_actions
+    //   @ autofix_missing_local_annot_code_actions
+    //   @ fix_all_in_file_actions
+    //   @ error_fixes
+    //   @ scope_based_auto_import_fixes
+    //   @ insert_inferred_render_type_code_actions
+    //   @ refactor_code_actions
+    //   @ inspection_related_code_actions
+    let mut actions = vec![];
+    actions.extend(parse_error_fixes);
+    actions.extend(autofix_exports_actions);
+    actions.extend(autofix_missing_local_annot_actions);
+    actions.extend(fix_all_in_file_actions);
+    actions.extend(error_fixes);
+    actions.extend(scope_based_auto_import_fixes);
+    actions.extend(insert_inferred_render_type_actions);
+    actions.extend(refactor_actions);
+    actions.extend(inspection_related_code_actions);
+    //     organize_imports_code_action uri :: actions
+    //     actions
+    if include_organize_imports_actions(only) {
+        let organize = organize_imports_code_action(uri);
+        actions.insert(0, organize);
+    }
+    // Ok actions
+    Ok(actions)
+}
+
+fn autofix_imports_fn(
+    options: &Options,
+    env: &Env,
+    loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    module_system_info: &LspModuleSystemInfo,
+    cx: &Context,
+    ast: &ast::Program<Loc, Loc>,
+    src_dir: Option<&str>,
+) -> Vec<(Loc, String)> {
+    let errors = cx.errors();
+    type ExportSourceMap =
+        BTreeMap<export_index::Source, BTreeMap<export_index::Kind, Vec<FlowSmolStr>>>;
+    let (imports, _): (ExportSourceMap, BTreeSet<FlowSmolStr>) = errors.fold(
+        (BTreeMap::new(), BTreeSet::new()),
+        |(mut imports, mut unbound_names), error| {
+            let error_message = ErrorMessage::map_loc_of_error_message(
+                |aloc: ALoc| loc_of_aloc(&aloc),
+                error.msg_of_error().clone(),
+            );
+            match (&error_message, &env.exports) {
+                (
+                    ErrorMessage::EBuiltinNameLookupFailed {
+                        loc: error_loc,
+                        name,
+                    },
+                    Some(exports),
+                ) if options.autoimports => {
+                    match preferred_import(ast, exports, name.as_str(), error_loc.dupe()) {
+                        Some(export_index::Export(source, export_kind))
+                            if !unbound_names.contains(name) =>
+                        {
+                            let bindings = imports.entry(source).or_insert_with(BTreeMap::new);
+                            let names = bindings.entry(export_kind).or_insert_with(Vec::new);
+                            names.push(name.dupe());
+                            unbound_names.insert(name.dupe());
+                            (imports, unbound_names)
+                        }
+                        _ => (imports, unbound_names),
+                    }
+                }
+                _ => (imports, unbound_names),
+            }
+        },
+    );
+    //   ExportSourceMap.fold
+    //         ExportKindMap.fold (fun export_kind names added_imports -> ...) names_of_kinds added_imports)
+    //     imports []
+    let mut added_imports: Vec<(String, autofix_imports::Bindings)> = vec![];
+    for (source, names_of_kinds) in &imports {
+        let from = lsp_import_edits::from_of_source(module_system_info, src_dir, source);
+        match from {
+            None => {}
+            Some(from) => {
+                //   ExportKindMap.fold (fun export_kind names added_imports -> ...)
+                for (export_kind, names) in names_of_kinds {
+                    match export_kind {
+                        export_index::Kind::DefaultType => {
+                            for name in names {
+                                added_imports.push((
+                                    from.clone(),
+                                    autofix_imports::Bindings::DefaultType(name.to_string()),
+                                ));
+                            }
+                        }
+                        export_index::Kind::Default => {
+                            for name in names {
+                                added_imports.push((
+                                    from.clone(),
+                                    autofix_imports::Bindings::Default(name.to_string()),
+                                ));
+                            }
+                        }
+                        export_index::Kind::Named => {
+                            let named_bindings: Vec<autofix_imports::NamedBinding> = names
+                                .iter()
+                                .map(|name| autofix_imports::NamedBinding {
+                                    remote_name: name.to_string(),
+                                    local_name: None,
+                                })
+                                .collect();
+                            added_imports.push((
+                                from.clone(),
+                                autofix_imports::Bindings::Named(named_bindings),
+                            ));
+                        }
+                        export_index::Kind::NamedType => {
+                            let named_bindings: Vec<autofix_imports::NamedBinding> = names
+                                .iter()
+                                .map(|name| autofix_imports::NamedBinding {
+                                    remote_name: name.to_string(),
+                                    local_name: None,
+                                })
+                                .collect();
+                            added_imports.push((
+                                from.clone(),
+                                autofix_imports::Bindings::NamedType(named_bindings),
+                            ));
+                        }
+                        export_index::Kind::Namespace => {
+                            for name in names {
+                                added_imports.push((
+                                    from.clone(),
+                                    autofix_imports::Bindings::Namespace(name.to_string()),
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    let opts = code_action_utils::layout_options(options);
+    autofix_imports::add_imports(&opts, &added_imports, ast)
+}
+
+fn with_type_checked_file<T>(
+    options: &Options,
+    env: &Env,
+    shared_mem: Arc<SharedMem>,
+    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
+    file_key: &FileKey,
+    file_content: &str,
+    f: &dyn Fn(
+        &Context,
+        &Arc<FileSig>,
+        &ast::Program<Loc, Loc>,
+        &ast::Program<ALoc, (ALoc, Type)>,
+    ) -> Result<T, String>,
+) -> Result<T, String> {
+    let file_artifacts = {
+        let intermediate_result = type_contents::parse_contents(options, file_content, file_key);
+        let (ref _parse_artifacts_opt, ref parse_errs) = intermediate_result;
+        if !parse_errs.is_empty() {
+            Err(parse_errs.clone())
+        } else {
+            type_contents::type_parse_artifacts(
+                options,
+                shared_mem,
+                env.master_cx.dupe(),
+                file_key.clone(),
+                intermediate_result,
+                node_modules_containers,
+            )
+        }
+    };
+    match file_artifacts {
+        Ok((ParseArtifacts { ast, file_sig, .. }, TypecheckArtifacts { cx, typed_ast, .. })) => {
+            f(&cx, &file_sig, &ast, &typed_ast)
+        }
+        _ => Err("Failed to parse or check file".to_string()),
+    }
+}
+
+pub fn autofix_errors_cli(
+    options: &Options,
+    env: &Env,
+    shared_mem: Arc<SharedMem>,
+    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
+    loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
+    get_ast_from_shared_mem: Arc<dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>>,
+    module_system_info: &LspModuleSystemInfo,
+    get_type_sig: Arc<
+        dyn Fn(
+            &FileKey,
+        ) -> Option<
+            flow_type_sig::packed_type_sig::Module<
+                flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+            >,
+        >,
+    >,
+    include_best_effort_fix: bool,
+    file_key: &FileKey,
+    file_content: &str,
+) -> Result<Vec<(Loc, String)>, String> {
+    with_type_checked_file(
+        options,
+        env,
+        shared_mem,
+        node_modules_containers,
+        file_key,
+        file_content,
+        &|cx: &Context,
+          file_sig: &Arc<FileSig>,
+          ast: &ast::Program<Loc, Loc>,
+          typed_ast: &ast::Program<ALoc, (ALoc, Type)>| {
+            let (safe_transforms, best_effort_transforms): (
+                Vec<AstTransformOfError>,
+                Vec<AstTransformOfError>,
+            ) = cx
+                .errors()
+                .fold((vec![], vec![]), |(mut safe, mut best_effort), error| {
+                    let lazy_error_loc = {
+                        let loc_of_aloc_ref = &loc_of_aloc;
+                        make_intermediate_error(|aloc: &ALoc| loc_of_aloc_ref(aloc), false, &error)
+                            .loc
+                    };
+                    let mapped_error =
+                        FlowError::map_loc_of_error(|aloc: ALoc| loc_of_aloc(&aloc), error);
+                    let transforms = ast_transforms_of_error(
+                        loc_of_aloc.dupe(),
+                        Some(lazy_error_loc),
+                        get_ast_from_shared_mem.dupe(),
+                        module_system_info.get_haste_module_info.dupe(),
+                        get_type_sig.dupe(),
+                        None,
+                        mapped_error.msg_of_error(),
+                    );
+                    match transforms.into_iter().next() {
+                        None => (safe, best_effort),
+                        Some(transform) => {
+                            match transform.confidence {
+                                QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave => {
+                                    safe.push(transform);
+                                }
+                                QuickfixConfidence::BestEffort => {
+                                    if include_best_effort_fix {
+                                        best_effort.push(transform);
+                                    }
+                                }
+                            }
+                            (safe, best_effort)
+                        }
+                    }
+                });
+            let all_transforms: Vec<AstTransformOfError> = safe_transforms
+                .into_iter()
+                .chain(best_effort_transforms)
+                .collect();
+            let (new_ast, _) = all_transforms.into_iter().fold(
+                (ast.clone(), false),
+                |(current_ast, has_run_best_effort), transform| match (
+                    transform.confidence,
+                    has_run_best_effort,
+                ) {
+                    (QuickfixConfidence::BestEffort, true) => (current_ast, true),
+                    (QuickfixConfidence::WillFixErrorAndSafeForRunningOnSave, _) => {
+                        let result = (transform.transform)(
+                            cx,
+                            file_sig.dupe(),
+                            &current_ast,
+                            typed_ast,
+                            transform.target_loc,
+                        );
+                        let new = result.unwrap_or(current_ast);
+                        (new, has_run_best_effort)
+                    }
+                    (QuickfixConfidence::BestEffort, false) => {
+                        let result = (transform.transform)(
+                            cx,
+                            file_sig.dupe(),
+                            &current_ast,
+                            typed_ast,
+                            transform.target_loc,
+                        );
+                        match result {
+                            Some(new) => (new, true),
+                            None => (current_ast, false),
+                        }
+                    }
+                },
+            );
+            let opts = code_action_utils::layout_options(options);
+            let diff = flow_ast_differ::program(ast, &new_ast);
+            let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
+            Ok(edits)
+        },
+    )
+}
+
+pub fn autofix_imports_cli(
+    options: &Options,
+    env: &Env,
+    shared_mem: Arc<SharedMem>,
+    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
+    loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    module_system_info: &LspModuleSystemInfo,
+    file_key: &FileKey,
+    file_content: &str,
+) -> Result<Vec<(Loc, String)>, String> {
+    let src_dir = std::path::Path::new(file_key.as_str())
+        .parent()
+        .map(|p| p.to_string_lossy().to_string());
+    with_type_checked_file(
+        options,
+        env,
+        shared_mem,
+        node_modules_containers,
+        file_key,
+        file_content,
+        &|cx: &Context,
+          _file_sig: &Arc<FileSig>,
+          ast: &ast::Program<Loc, Loc>,
+          _typed_ast: &ast::Program<ALoc, (ALoc, Type)>| {
+            let edits = autofix_imports_fn(
+                options,
+                env,
+                loc_of_aloc,
+                module_system_info,
+                cx,
+                ast,
+                src_dir.as_deref(),
+            );
+            Ok(edits)
+        },
+    )
+}
+
+pub fn suggest_imports_cli(
+    options: &Options,
+    env: &Env,
+    shared_mem: Arc<SharedMem>,
+    node_modules_containers: &BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>,
+    loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    module_system_info: &LspModuleSystemInfo,
+    file_key: &FileKey,
+    file_content: &str,
+) -> Result<HashMap<String, Vec<CodeActionOrCommand>>, String> {
+    let uri =
+        Url::from_file_path(file_key.as_str()).unwrap_or_else(|_| Url::parse("file:///").unwrap());
+    with_type_checked_file(
+        options,
+        env,
+        shared_mem,
+        node_modules_containers,
+        file_key,
+        file_content,
+        &|cx: &Context,
+          _file_sig: &Arc<FileSig>,
+          ast: &ast::Program<Loc, Loc>,
+          _typed_ast: &ast::Program<ALoc, (ALoc, Type)>| {
+            let errors = cx.errors();
+            let (imports, _): (
+                HashMap<String, Vec<CodeActionOrCommand>>,
+                BTreeSet<FlowSmolStr>,
+            ) = errors.fold(
+                (HashMap::new(), BTreeSet::new()),
+                |(mut imports, mut unbound_names), error| {
+                    let error_message = ErrorMessage::map_loc_of_error_message(
+                        |aloc: ALoc| loc_of_aloc(&aloc),
+                        error.msg_of_error().clone(),
+                    );
+                    match (&error_message, &env.exports) {
+                        (
+                            ErrorMessage::EBuiltinNameLookupFailed {
+                                loc: error_loc,
+                                name,
+                            },
+                            Some(exports),
+                        ) if options.autoimports => {
+                            let ranked_imports = suggest_imports(
+                                cx,
+                                &code_action_utils::layout_options(options),
+                                module_system_info,
+                                ast,
+                                &[],  // diagnostics = []
+                                true, // imports_ranked_usage
+                                exports,
+                                name.as_str(),
+                                &uri,
+                                error_loc.dupe(),
+                            );
+                            imports.insert(name.to_string(), ranked_imports);
+                            unbound_names.insert(name.dupe());
+                            (imports, unbound_names)
+                        }
+                        _ => (imports, unbound_names),
+                    }
+                },
+            );
+            Ok(imports)
+        },
+    )
+}
+
+pub fn autofix_imports_lsp(
+    options: &Options,
+    env: &Env,
+    loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    module_system_info: &LspModuleSystemInfo,
+    cx: &Context,
+    ast: &ast::Program<Loc, Loc>,
+    uri: &Url,
+) -> Vec<TextEdit> {
+    let src_dir = match uri.to_file_path() {
+        Ok(p) => p.parent().map(|d| d.to_string_lossy().to_string()),
+        Err(_) => None,
+    };
+    let edits = autofix_imports_fn(
+        options,
+        env,
+        loc_of_aloc,
+        module_system_info,
+        cx,
+        ast,
+        src_dir.as_deref(),
+    );
+    flow_loc_patch_to_lsp_edits(&edits)
+}
+
+pub fn autofix_exports_fn<'a>(
+    options: &Options,
+    loc_of_aloc: Arc<dyn Fn(&ALoc) -> Loc>,
+    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_haste_module_info: Arc<dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>>,
+    get_type_sig: Arc<
+        dyn Fn(
+            &FileKey,
+        ) -> Option<
+            flow_type_sig::packed_type_sig::Module<
+                flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+            >,
+        >,
+    >,
+    file_key: FileKey,
+    _file_content: &str,
+    file_artifacts: Result<&'a FileArtifacts<'a>, &ErrorSet>,
+) -> Result<(Vec<(Loc, String)>, Vec<String>), String> {
+    match file_artifacts {
+        //        Typecheck_artifacts { cx; typed_ast; obj_to_obj_map = _ } ) ->
+        Ok((parse_artifacts, typecheck_artifacts)) => {
+            let ParseArtifacts {
+                ast,
+                file_sig,
+                tolerable_errors,
+                ..
+            } = parse_artifacts;
+            let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
+            let sv_errors =
+                autofix_exports::set_of_fixable_signature_verification_locations(tolerable_errors);
+            // fix_signature_verification_errors
+            let (new_ast, it_errs) = autofix_exports::fix_signature_verification_errors(
+                file_key,
+                cx,
+                &*loc_of_aloc,
+                options.file_options.dupe(),
+                get_ast_from_shared_mem,
+                &*get_haste_module_info,
+                &*get_type_sig,
+                file_sig,
+                typed_ast,
+                ast.clone(),
+                &sv_errors,
+            );
+            let opts = code_action_utils::layout_options(options);
+            let diff = flow_ast_differ::program(ast, &new_ast);
+            let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
+            Ok((edits, it_errs))
+        }
+        Err(_) => Err("Failed to type-check file".to_string()),
+    }
+}
+
+pub fn autofix_missing_local_annot_fn<'a>(
+    options: &Options,
+    loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_haste_module_info: &dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
+    get_type_sig: &dyn Fn(
+        &FileKey,
+    ) -> Option<
+        flow_type_sig::packed_type_sig::Module<
+            flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+        >,
+    >,
+    _file_content: &str,
+    file_artifacts: Result<&'a FileArtifacts<'a>, &ErrorSet>,
+) -> Result<Vec<(Loc, String)>, String> {
+    match file_artifacts {
+        Ok((parse_artifacts, typecheck_artifacts)) => {
+            let ParseArtifacts { ast, file_sig, .. } = parse_artifacts;
+            let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
+            let new_ast = autofix_missing_local_annots::fix_all_missing_param_annot_errors_in_file(
+                None, // no remote_converter
+                cx,
+                loc_of_aloc,
+                get_ast_from_shared_mem,
+                get_haste_module_info,
+                get_type_sig,
+                file_sig,
+                typed_ast,
+                ast.clone(),
+            )
+            .map_err(|e| format!("FailedToInsertType: {:?}", e))?;
+            let opts = code_action_utils::layout_options(options);
+            let diff = flow_ast_differ::program(ast, &new_ast);
+            let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
+            Ok(edits)
+        }
+        Err(_) => Err("Failed to type-check file".to_string()),
+    }
+}
+
+pub fn insert_type_fn<'a>(
+    options: &Options,
+    loc_of_aloc: &dyn Fn(&ALoc) -> Loc,
+    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    get_haste_module_info: &dyn Fn(&FileKey) -> Option<flow_common_modulename::HasteModuleInfo>,
+    get_type_sig: &dyn Fn(
+        &FileKey,
+    ) -> Option<
+        flow_type_sig::packed_type_sig::Module<
+            flow_type_sig::compact_table::Index<flow_aloc::ALoc>,
+        >,
+    >,
+    _file_content: &str,
+    target: Loc,
+    omit_targ_defaults: bool,
+    strict: bool,
+    file_artifacts: Result<&'a FileArtifacts<'a>, &ErrorSet>,
+) -> Result<Vec<(Loc, String)>, String> {
+    match file_artifacts {
+        //        Typecheck_artifacts { cx; typed_ast; _ } ) ->
+        Ok((parse_artifacts, typecheck_artifacts)) => {
+            let ParseArtifacts { ast, file_sig, .. } = parse_artifacts;
+            let TypecheckArtifacts { cx, typed_ast, .. } = typecheck_artifacts;
+            // (try
+            //   ...
+            let new_ast = insert_type::insert_type(
+                cx,
+                loc_of_aloc,
+                get_ast_from_shared_mem,
+                get_haste_module_info,
+                get_type_sig,
+                file_sig,
+                typed_ast,
+                omit_targ_defaults,
+                strict,
+                None, // no remote_converter
+                ast,
+                target,
+            )
+            .map_err(|err| insert_type::error_to_string(&err))?;
+            let opts = code_action_utils::layout_options(options);
+            let diff = flow_ast_differ::program(ast, &new_ast);
+            let edits = replacement_printer::mk_loc_patch_ast_differ(&opts, &diff);
+            Ok(edits)
+        }
+        Err(_) => Err("Failed to type-check file".to_string()),
+    }
+}
+
+pub fn organize_imports_fn(options: &Options, ast: &ast::Program<Loc, Loc>) -> Vec<TextEdit> {
+    let opts = code_action_utils::layout_options(options);
+    flow_loc_patch_to_lsp_edits(&autofix_imports::organize_imports(&opts, ast))
+}

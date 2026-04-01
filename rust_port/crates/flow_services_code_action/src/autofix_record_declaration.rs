@@ -8,6 +8,7 @@
 use std::sync::Arc;
 
 use dupe::Dupe;
+use dupe::IterDupedExt;
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
 use flow_parser::ast;
 use flow_parser::ast::IdentifierInner;
@@ -58,18 +59,18 @@ fn add_void_union_to_annotation(
         comments: None,
     });
     let new_type = match &**type_ {
-        _ if definitely_includes_void(type_) => type_.clone(),
+        _ if definitely_includes_void(type_) => type_.dupe(),
         TypeInner::Union {
             loc: type_loc,
             inner,
         } => {
             let (t1, t2, rest) = &inner.types;
-            let mut new_rest = vec![t2.clone()];
-            new_rest.extend(rest.iter().cloned());
+            let mut new_rest = vec![t2.dupe()];
+            new_rest.extend(rest.iter().duped());
             ast::types::Type::new(TypeInner::Union {
                 loc: type_loc.dupe(),
                 inner: Arc::new(ast::types::Union {
-                    types: (void_type, t1.clone(), new_rest),
+                    types: (void_type, t1.dupe(), new_rest),
                     comments: inner.comments.clone(),
                 }),
             })
@@ -79,7 +80,7 @@ fn add_void_union_to_annotation(
             ast::types::Type::new(TypeInner::Union {
                 loc: type_loc.dupe(),
                 inner: Arc::new(ast::types::Union {
-                    types: (type_.clone(), void_type, vec![]),
+                    types: (type_.dupe(), void_type, vec![]),
                     comments: None,
                 }),
             })

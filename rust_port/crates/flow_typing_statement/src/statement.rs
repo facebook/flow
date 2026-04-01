@@ -515,7 +515,6 @@ pub mod object_expression_acc {
                                     .collect();
                                 (t, ts, None)
                             }
-                            //   | (Slice { slice_pmap = prop_map; computed_props }, Spread t :: ts) ->
                             (
                                 Element::Slice {
                                     slice_pmap: prop_map,
@@ -565,7 +564,6 @@ pub mod object_expression_acc {
                                             .collect();
                                         (t, ts, Some(head_slice))
                                     }
-                                    //   | _ -> failwith "Invariant Violation: spread list has two slices in a row"
                                     _ => panic!(
                                         "Invariant Violation: spread list has two slices in a row"
                                     ),
@@ -956,13 +954,6 @@ fn syntactically_unhandled_promises<'a>(
     }
 }
 
-// (* In positions where an annotation may be present or an annotation can be pushed down,
-//  * we should prefer the annotation over the pushed-down annotation. *)
-// let mk_inference_target_with_annots ~has_hint annot_or_inferred =
-//   match (annot_or_inferred, has_hint) with
-//   | (Annotated _, _) -> annot_or_inferred
-//   | (_, true) -> Annotated (type_t_of_annotated_or_inferred annot_or_inferred)
-//   | _ -> annot_or_inferred
 // In positions where an annotation may be present or an annotation can be pushed down,
 // we should prefer the annotation over the pushed-down annotation.
 fn mk_inference_target_with_annots(
@@ -1019,13 +1010,6 @@ fn new_call<'a>(
     (t, ctor_t)
 }
 
-// let func_call_opt_use
-//     cx loc reason ~use_op ?(call_strict_arity = true) targts argts specialized_callee =
-//   let opt_app =
-//     mk_opt_functioncalltype reason targts argts call_strict_arity specialized_callee
-//   in
-//   let return_hint = Type_env.get_hint cx loc in
-//   OptCallT { use_op; reason; opt_funcalltype = opt_app; return_hint }
 fn func_call_opt_use<'a>(
     cx: &Context<'a>,
     loc: ALoc,
@@ -1052,13 +1036,6 @@ fn func_call_opt_use<'a>(
     }
 }
 
-// let func_call cx loc reason ~use_op ?(call_strict_arity = true) func_t targts argts t_callee =
-//   let opt_use =
-//     func_call_opt_use cx loc reason ~use_op ~call_strict_arity targts argts t_callee
-//   in
-//   Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun t ->
-//       Flow.flow cx (func_t, apply_opt_use opt_use t)
-//   )
 fn func_call<'a>(
     cx: &Context<'a>,
     loc: ALoc,
@@ -1177,9 +1154,7 @@ fn method_call<'a>(
     argts: Vec<CallArg>,
 ) -> (Type, Type) {
     let expr_loc = expr.loc().dupe();
-    // match Refinement.get ~allow_optional:true cx expr (loc_of_reason reason) with
     match refinement::get(true, cx, expr, reason.loc().dupe()) {
-        // | Some f ->
         Some(f) => {
             // Note: the current state of affairs is that we understand
             // member expressions as having refined types, rather than
@@ -1342,9 +1317,6 @@ fn identifier_<'a>(
     }
 }
 
-// let identifier cx syntactic_flags { Ast.Identifier.name; comments = _ } loc =
-//   let t = identifier_ cx syntactic_flags name loc in
-//   t
 fn identifier_inner<'a>(
     cx: &Context<'a>,
     syntactic_flags: &SyntacticFlags<'a>,
@@ -1360,7 +1332,6 @@ fn string_literal_value<'a>(
     loc: ALoc,
     value: &FlowSmolStr,
 ) -> Type {
-    // let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     let SyntacticFlags {
         as_const, frozen, ..
     } = syntactic_flags;
@@ -1419,7 +1390,6 @@ fn boolean_literal_inner<'a>(
     loc: ALoc,
     lit: &ast::BooleanLiteral<ALoc>,
 ) -> Type {
-    // let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     let SyntacticFlags {
         as_const, frozen, ..
     } = syntactic_flags;
@@ -1466,7 +1436,6 @@ fn number_literal_inner<'a>(
 ) -> Type {
     let value = lit.value;
     let raw = lit.raw.dupe();
-    // let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     let SyntacticFlags {
         as_const, frozen, ..
     } = syntactic_flags;
@@ -1514,7 +1483,6 @@ fn bigint_literal_inner<'a>(
 ) -> Type {
     let value = lit.value;
     let raw = lit.raw.dupe();
-    // let { Natural_inference.as_const; frozen; _ } = syntactic_flags in
     let SyntacticFlags {
         as_const, frozen, ..
     } = syntactic_flags;
@@ -1929,7 +1897,6 @@ fn export_specifiers<'a>(
                         source.expect("source must be present for ExportBatchSpecifier with id");
                     let id_loc = id.loc.dupe();
                     let name = &id.name;
-                    //   let reason = mk_reason (RIdentifier (OrdinaryName name)) id_loc in
                     let reason = mk_reason(
                         VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
                         id_loc.dupe(),
@@ -2254,7 +2221,6 @@ fn statement_<'a>(
                                   loc: ALoc,
                                   f: &statement::DeclareFunction<ALoc, ALoc>|
      -> statement::DeclareFunction<ALoc, (ALoc, Type)> {
-        // let { id = (id_loc, id_name); annot; predicate; comments; implicit_declare } = f in
         let statement::DeclareFunction {
             id: id_name,
             annot,
@@ -4160,7 +4126,6 @@ pub fn type_alias<'a>(
     let id = &alias.id;
     let name = &id.name;
     let cache = cx.node_cache();
-    // | Some info ->
     if let Some(info) = cache.get_alias(&loc) {
         flow_typing_debug::verbose::print_if_verbose_lazy(cx, None, None, None, || {
             vec![format!("Alias cache hit at {}", loc.debug_to_string(false))]
@@ -4655,7 +4620,6 @@ fn declare_module<'a>(
         cx,
         flow_env_builder::name_def_types::ScopeKind::DeclareModule,
     );
-    //   let elements_ast = statement_list cx elements in
     let elements_ast = statement_list(cx, elements);
     for stmt in elements_ast.iter() {
         let loc = stmt.loc();
@@ -6588,16 +6552,6 @@ fn expression_<'a>(
                 }
             }
         }
-        //   | New
-        //       {
-        //         New.callee =
-        //           ( callee_loc,
-        //             Identifier (id_loc, ({ Ast.Identifier.name = "Function"; comments = _ } as name))
-        //           );
-        //         targs;
-        //         arguments;
-        //         comments;
-        //       } ->
         ExpressionInner::New { inner, .. }
             if let ExpressionInner::Identifier {
                 loc: callee_loc,
@@ -6702,16 +6656,6 @@ fn expression_<'a>(
                 }
             }
         }
-        //   | New
-        //       {
-        //         New.callee =
-        //           ( callee_loc,
-        //             Identifier (id_loc, ({ Ast.Identifier.name = "Array" as n; comments = _ } as name))
-        //           );
-        //         targs;
-        //         arguments;
-        //         comments;
-        //       } ->
         ExpressionInner::New { inner, .. }
             if let ExpressionInner::Identifier {
                 loc: callee_loc,
@@ -7088,7 +7032,6 @@ fn expression_<'a>(
         {
             let module_prefix = cx.relay_integration_module_prefix();
             let t = match graphql::extract_module_name(&inner.quasi.1, module_prefix.as_deref()) {
-                //       | Ok module_name ->
                 Ok(module_name) => {
                     let module_name_smol = FlowSmolStr::from(module_name.as_str());
                     let module_name_userland =
@@ -8544,7 +8487,6 @@ pub fn optional_chain<'a>(
                         )
                     }
                 };
-                //     let property = Member.PropertyIdentifier ((ploc, lhs_t), id) in
                 let property = expression::member::Property::PropertyIdentifier(
                     ast::Identifier::new(ast::IdentifierInner {
                         loc: (ploc.dupe(), lhs_t.dupe()),
@@ -8818,7 +8760,6 @@ pub fn optional_chain<'a>(
         AbnormalControlFlow,
     > {
         match opt {
-            //   | NonOptional ->
             OptState::NonOptional => {
                 let ChainingConf {
                     refinement_action,
@@ -8918,10 +8859,9 @@ pub fn optional_chain<'a>(
         } else {
             // If the type of the callee has been specialized (due to implicit
             // instantiation or overload resolution) then use that type.
-            let callee_aloc = callee.loc().0.dupe();
             let t_init = callee.loc().1.dupe();
             let t = union_of_ts(reason_of_t(&t_init).dupe(), finalized.clone(), None);
-            flow_parser::ast_utils::push_toplevel_type((callee_aloc, t), callee)
+            flow_parser::ast_utils::push_toplevel_type(t, callee)
         }
     }
 
@@ -10528,9 +10468,7 @@ fn logical<'a>(
     // If the LHS does not throw, and the RHS does throw, then we cannot say that the
     // entire expression throws, because we only evaluate the RHS depending on the value of the LHS.
     // Thus, we catch abnormal control flow exceptions on the RHS and do not rethrow them.
-    //   let (t, op) = match operator with
     let (t, op) = match expr.operator {
-        // | Or ->
         LogicalOperator::Or => {
             check_default_pattern(cx, expr.left.loc().dupe(), &expr.right);
             let left = condition(
@@ -10862,7 +10800,6 @@ fn assign_member<'a>(
                     // the nullable output for the optional chain.
                     optional_chain::run(cx, lhs_type, &reason, lhs_reason, &use_t, &None).unwrap();
                 }
-                //     | _ -> Flow.flow cx (lhs, use_t)
                 _ => {
                     flow_js::flow_non_speculating(cx, (lhs_type, &use_t));
                 }
@@ -11513,7 +11450,6 @@ fn op_assignment<'a>(
                         update_env(&result_t)?;
                         (lhs_t, lhs_pattern_ast, rhs_ast)
                     }
-                    //   | _ -> assert_false "Unexpected operator"
                     _ => panic!("Unexpected operator"),
                 },
             }
@@ -11859,7 +11795,6 @@ fn jsx_title<'a>(
     AbnormalControlFlow,
 > {
     let (loc_element, loc_opening, loc_children) = locs;
-    //   let (loc, { Opening.name; targs; attributes; self_closing }) = opening_element in
     let ast::jsx::Opening {
         loc,
         name,
@@ -12610,11 +12545,8 @@ pub fn jsx_mk_props<'a>(
         },
     )?;
     let attributes = atts;
-    //   let (unresolved_params, ((loc_children, _) as children)) = collapse_children cx children in
     let (unresolved_params, children) = collapse_children(cx, children)?;
     let loc_children = children.0.dupe();
-    //   let acc =
-    //     match unresolved_params with
     let acc = match unresolved_params.as_slice() {
         [] => acc,
         // We add children to the React.createElement() call for React. Not to the
@@ -13004,7 +12936,7 @@ fn jsx_body<'a>(
         }
         ast::jsx::Child::ExpressionContainer { inner: ec, .. } => {
             let comments = ec.comments.dupe();
-            let (unresolved_param, typed_ex, result_loc, t) = match &ec.expression {
+            let (unresolved_param, typed_ex, t) = match &ec.expression {
                 ast::jsx::expression_container::Expression::Expression(e) => {
                     let typed_e = expression_inner(
                         Some(EnclosingContext::JsxAttrOrChildrenContext),
@@ -13024,7 +12956,6 @@ fn jsx_body<'a>(
                             None,
                         )),
                         ast::jsx::expression_container::Expression::Expression(typed_e),
-                        e_loc,
                         e_t,
                     )
                 }
@@ -13033,7 +12964,6 @@ fn jsx_body<'a>(
                     (
                         None,
                         ast::jsx::expression_container::Expression::EmptyExpression,
-                        loc.dupe(),
                         any_t,
                     )
                 }
@@ -13041,7 +12971,7 @@ fn jsx_body<'a>(
             (
                 unresolved_param,
                 ast::jsx::Child::ExpressionContainer {
-                    loc: (result_loc, t),
+                    loc: (loc, t),
                     inner: ast::jsx::ExpressionContainer {
                         expression: typed_ex,
                         comments,
@@ -13138,11 +13068,11 @@ fn jsx_title_member_to_expression(
             })
         }
         ast::jsx::member_expression::Object::Identifier(id) => {
-            let ident = mk_ident(
-                id.loc.dupe(),
-                id.comments.dupe().map(|_| ()),
-                id.name.dupe(),
-            );
+            let ident = ast::Identifier::new(ast::IdentifierInner {
+                loc: id.loc.dupe(),
+                name: id.name.dupe(),
+                comments: id.comments.dupe(),
+            });
             expression::Expression::new(expression::ExpressionInner::Identifier {
                 loc: id.loc.dupe(),
                 inner: ident,
@@ -13150,11 +13080,11 @@ fn jsx_title_member_to_expression(
         }
     };
     let prop_id = &member.property;
-    let property = mk_ident(
-        prop_id.loc.dupe(),
-        prop_id.comments.dupe().map(|_| ()),
-        prop_id.name.dupe(),
-    );
+    let property = ast::Identifier::new(ast::IdentifierInner {
+        loc: prop_id.loc.dupe(),
+        name: prop_id.name.dupe(),
+        comments: prop_id.comments.dupe(),
+    });
     expression::Expression::new(expression::ExpressionInner::Member {
         loc: mloc,
         inner: std::sync::Arc::new(expression::Member {
@@ -13751,7 +13681,6 @@ fn static_method_call_object<'a>(
                     Some(call_targs) => {
                         let [expression::CallTypeArg::Explicit(targ)] = &*call_targs.arguments
                         else {
-                            //   | _ -> assert_false "unexpected type argument to Object.defineProperty, match guard failed"
                             panic!(
                                 "unexpected type argument to Object.defineProperty, match guard failed"
                             )
@@ -14113,7 +14042,7 @@ pub fn mk_class_sig<'a>(
         Type,
         Type,
         func_class_sig_types::class::Class<func_class_sig_types::StmtConfigTypes>,
-        Box<dyn FnOnce(&Context<'a>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'a>,
+        Rc<dyn Fn(&Context<'a>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'a>,
     ),
     AbnormalControlFlow,
 > {
@@ -15051,9 +14980,6 @@ pub fn mk_class_sig<'a>(
                     InstanceKind::RecordKind { .. } => intermediate_error_types::ClassKind::Record,
                 };
 
-                // let check_duplicate_name public_seen_names member_loc name ~static ~private_ kind =
-                //   check_duplicate_class_member cx public_seen_names member_loc name ~static ~private_ kind class_kind
-                // in
                 let check_duplicate_name =
                     |public_seen_names: &mut SeenNames,
                      member_loc: ALoc,
@@ -15547,70 +15473,66 @@ pub fn mk_class_sig<'a>(
                                 }
                             }
                         }
-                        BodyElement::Property(prop) => {
-                            match &prop.key {
-                                Key::PrivateName(_) => {
-                                    panic!(
-                                        "Internal Error: Found non-private field with private name"
+                        BodyElement::Property(prop) => match &prop.key {
+                            Key::PrivateName(_) => {
+                                panic!("Internal Error: Found non-private field with private name");
+                            }
+                            Key::Identifier(id_pair) => {
+                                let loc = &prop.loc;
+                                let id_loc = &id_pair.loc;
+                                let name = &id_pair.name;
+                                let annot = &prop.annot;
+                                let value = &prop.value;
+                                let static_ = prop.static_;
+                                let optional = prop.optional;
+                                let variance = &prop.variance;
+                                let ts_accessibility = &prop.ts_accessibility;
+                                let decorators = &prop.decorators;
+                                let prop_comments = &prop.comments;
+
+                                check_ts_accessibility(cx, ts_accessibility);
+                                if optional && !cx.tslib_syntax() {
+                                    flow_js::add_output_non_speculating(
+                                        cx,
+                                        ErrorMessage::EUnsupportedSyntax(
+                                            loc.dupe(),
+                                            UnsupportedSyntax::TSLibSyntax(
+                                                TsLibSyntaxKind::OptionalClassProperty,
+                                            ),
+                                        ),
                                     );
                                 }
-                                Key::Identifier(id_pair) => {
-                                    let loc = &prop.loc;
-                                    let id_loc = &id_pair.loc;
-                                    let name = &id_pair.name;
-                                    let annot = &prop.annot;
-                                    let value = &prop.value;
-                                    let static_ = prop.static_;
-                                    let optional = prop.optional;
-                                    let variance = &prop.variance;
-                                    let ts_accessibility = &prop.ts_accessibility;
-                                    let decorators = &prop.decorators;
-                                    let prop_comments = &prop.comments;
-
-                                    check_ts_accessibility(cx, ts_accessibility);
-                                    if optional && !cx.tslib_syntax() {
-                                        flow_js::add_output_non_speculating(
-                                            cx,
-                                            ErrorMessage::EUnsupportedSyntax(
-                                                loc.dupe(),
-                                                UnsupportedSyntax::TSLibSyntax(
-                                                    TsLibSyntaxKind::OptionalClassProperty,
-                                                ),
-                                            ),
+                                let field_reason = mk_reason(
+                                    VirtualReasonDesc::RProperty(Some(Name::new(name.dupe()))),
+                                    loc.dupe(),
+                                );
+                                let polarity = type_annotation::polarity(cx, variance.as_ref());
+                                let decorators_ast: Vec<_> = decorators
+                                    .iter()
+                                    .map(|d| {
+                                        let Ok(v) = polymorphic_ast_mapper::class_decorator(
+                                            &mut typed_ast_utils::ErrorMapper,
+                                            d,
                                         );
-                                    }
-                                    let field_reason = mk_reason(
-                                        VirtualReasonDesc::RProperty(Some(Name::new(name.dupe()))),
-                                        loc.dupe(),
-                                    );
-                                    let polarity = type_annotation::polarity(cx, variance.as_ref());
-                                    //   let decorators = ...
-                                    let decorators_ast: Vec<_> = decorators
-                                        .iter()
-                                        .map(|d| {
-                                            let Ok(v) = polymorphic_ast_mapper::class_decorator(
-                                                &mut typed_ast_utils::ErrorMapper,
-                                                d,
-                                            );
-                                            v
-                                        })
-                                        .collect();
-                                    let (field, annot_t, annot_ast, get_value) = mk_field(
-                                        cx,
-                                        &tparams_map_with_this,
-                                        field_reason,
-                                        annot,
-                                        value,
-                                    )?;
-                                    let loc_c = loc.dupe();
-                                    let annot_t_c = annot_t.dupe();
-                                    let id_loc_c = id_loc.dupe();
-                                    let id_pair_c = id_pair.clone();
-                                    let static_c = static_;
-                                    let variance_c = variance.clone();
-                                    let ts_accessibility_c = ts_accessibility.clone();
-                                    let prop_comments_c = prop_comments.clone();
-                                    let get_element =
+                                        v
+                                    })
+                                    .collect();
+                                let (field, annot_t, annot_ast, get_value) = mk_field(
+                                    cx,
+                                    &tparams_map_with_this,
+                                    field_reason,
+                                    annot,
+                                    value,
+                                )?;
+                                let loc_c = loc.dupe();
+                                let annot_t_c = annot_t.dupe();
+                                let id_loc_c = id_loc.dupe();
+                                let id_pair_c = id_pair.clone();
+                                let static_c = static_;
+                                let variance_c = variance.clone();
+                                let ts_accessibility_c = ts_accessibility.clone();
+                                let prop_comments_c = prop_comments.clone();
+                                let get_element =
                                         Box::new(
                                             move |_cx: &Context<'_>| -> ast::class::BodyElement<
                                                 ALoc,
@@ -15638,64 +15560,63 @@ pub fn mk_class_sig<'a>(
                                                 })
                                             },
                                         );
-                                    check_duplicate_name(
-                                        &mut public_seen_names,
-                                        id_loc.dupe(),
-                                        name,
-                                        static_,
-                                        false,
-                                        ClassMemberKind::ClassMemberField,
-                                    );
-                                    class_sig::add_field(
-                                        static_,
-                                        name.dupe(),
-                                        id_loc.dupe(),
-                                        polarity,
-                                        field,
-                                        &mut class_sig,
-                                    );
-                                    rev_elements.push(get_element);
-                                }
-                                Key::StringLiteral(_)
-                                | Key::NumberLiteral(_)
-                                | Key::BigIntLiteral(_) => {
-                                    let loc = &prop.loc;
-                                    flow_js::add_output_non_speculating(
-                                        cx,
-                                        ErrorMessage::EUnsupportedSyntax(
-                                            loc.dupe(),
-                                            UnsupportedSyntax::ClassPropertyLiteral,
-                                        ),
-                                    );
-                                    let elem_c = elem.clone();
-                                    rev_elements.push(Box::new(move |_cx| {
-                                        let Ok(v) = polymorphic_ast_mapper::class_element(
-                                            &mut typed_ast_utils::ErrorMapper,
-                                            &elem_c,
-                                        );
-                                        v
-                                    }));
-                                }
-                                Key::Computed(_) => {
-                                    let loc = &prop.loc;
-                                    flow_js::add_output_non_speculating(
-                                        cx,
-                                        ErrorMessage::EUnsupportedSyntax(
-                                            loc.dupe(),
-                                            UnsupportedSyntax::ClassPropertyComputed,
-                                        ),
-                                    );
-                                    let elem_c = elem.clone();
-                                    rev_elements.push(Box::new(move |_cx| {
-                                        let Ok(v) = polymorphic_ast_mapper::class_element(
-                                            &mut typed_ast_utils::ErrorMapper,
-                                            &elem_c,
-                                        );
-                                        v
-                                    }));
-                                }
+                                check_duplicate_name(
+                                    &mut public_seen_names,
+                                    id_loc.dupe(),
+                                    name,
+                                    static_,
+                                    false,
+                                    ClassMemberKind::ClassMemberField,
+                                );
+                                class_sig::add_field(
+                                    static_,
+                                    name.dupe(),
+                                    id_loc.dupe(),
+                                    polarity,
+                                    field,
+                                    &mut class_sig,
+                                );
+                                rev_elements.push(get_element);
                             }
-                        }
+                            Key::StringLiteral(_)
+                            | Key::NumberLiteral(_)
+                            | Key::BigIntLiteral(_) => {
+                                let loc = &prop.loc;
+                                flow_js::add_output_non_speculating(
+                                    cx,
+                                    ErrorMessage::EUnsupportedSyntax(
+                                        loc.dupe(),
+                                        UnsupportedSyntax::ClassPropertyLiteral,
+                                    ),
+                                );
+                                let elem_c = elem.clone();
+                                rev_elements.push(Box::new(move |_cx| {
+                                    let Ok(v) = polymorphic_ast_mapper::class_element(
+                                        &mut typed_ast_utils::ErrorMapper,
+                                        &elem_c,
+                                    );
+                                    v
+                                }));
+                            }
+                            Key::Computed(_) => {
+                                let loc = &prop.loc;
+                                flow_js::add_output_non_speculating(
+                                    cx,
+                                    ErrorMessage::EUnsupportedSyntax(
+                                        loc.dupe(),
+                                        UnsupportedSyntax::ClassPropertyComputed,
+                                    ),
+                                );
+                                let elem_c = elem.clone();
+                                rev_elements.push(Box::new(move |_cx| {
+                                    let Ok(v) = polymorphic_ast_mapper::class_element(
+                                        &mut typed_ast_utils::ErrorMapper,
+                                        &elem_c,
+                                    );
+                                    v
+                                }));
+                            }
+                        },
 
                         // fields
                         BodyElement::PrivateField(pf) => {
@@ -15967,21 +15888,50 @@ pub fn mk_class_sig<'a>(
                         >,
                     >,
                 > = Rc::new(RefCell::new(Some(extends_ast_f)));
+                // In OCaml, the element and extends closures are regular closures that
+                // can be called multiple times. In Rust they are FnOnce. We evaluate
+                // them on the first call and cache the computed body and extends, so
+                // that subsequent calls (which occur in practice) can reuse them.
+                let cached_body: Rc<
+                    RefCell<Option<Arc<[ast::class::BodyElement<ALoc, (ALoc, Type)>]>>>,
+                > = Rc::new(RefCell::new(None));
+                let cached_extends: Rc<
+                    RefCell<Option<Option<ast::class::Extends<ALoc, (ALoc, Type)>>>>,
+                > = Rc::new(RefCell::new(None));
                 let reconstruct: Rc<
                     dyn Fn(&Context<'a>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'a,
                 > = Rc::new(move |cx, class_t: Type| {
-                    let elements = elements_cell
-                        .borrow_mut()
-                        .take()
-                        .expect("class reconstruct called more than once");
-                    let body: Vec<ast::class::BodyElement<ALoc, (ALoc, Type)>> =
-                        elements.into_iter().map(|f| f(cx)).collect();
-                    //     extends = extends_ast_f ();
-                    let extends_fn = extends_ast_f_cell
-                        .borrow_mut()
-                        .take()
-                        .expect("class reconstruct called more than once");
-                    let extends = extends_fn(cx).unwrap_or(None);
+                    //   body = Base.List.map ~f:(fun f -> f ()) elements;
+                    let body = {
+                        let mut cached = cached_body.borrow_mut();
+                        if let Some(b) = cached.as_ref() {
+                            b.clone()
+                        } else {
+                            let elements = elements_cell
+                                .borrow_mut()
+                                .take()
+                                .expect("elements already consumed without caching");
+                            let b: Arc<[ast::class::BodyElement<ALoc, (ALoc, Type)>]> =
+                                elements.into_iter().map(|f| f(cx)).collect();
+                            *cached = Some(b.clone());
+                            b
+                        }
+                    };
+                    //   extends = extends_ast_f ();
+                    let extends = {
+                        let mut cached = cached_extends.borrow_mut();
+                        if let Some(e) = cached.as_ref() {
+                            e.clone()
+                        } else {
+                            let extends_fn = extends_ast_f_cell
+                                .borrow_mut()
+                                .take()
+                                .expect("extends_ast_f already consumed without caching");
+                            let e = extends_fn(cx).unwrap_or(None);
+                            *cached = Some(e.clone());
+                            e
+                        }
+                    };
                     ast::class::Class {
                         id: id_c.as_ref().map(|ident| {
                             ast::Identifier::new(ast::IdentifierInner {
@@ -15992,7 +15942,7 @@ pub fn mk_class_sig<'a>(
                         }),
                         body: ast::class::Body {
                             loc: body_loc_c.dupe(),
-                            body: body.into(),
+                            body,
                             comments: body_comments_c.clone(),
                         },
                         tparams: tparams_ast_c.clone(),
@@ -16080,10 +16030,7 @@ pub fn mk_class_sig<'a>(
         result_ref.0.dupe(),
         result_ref.1.dupe(),
         result_ref.2.clone(),
-        {
-            let reconstruct_fn = result_ref.3.dupe();
-            Box::new(move |cx: &Context<'a>, t: Type| reconstruct_fn(cx, t))
-        },
+        result_ref.3.dupe(),
     ))
 }
 

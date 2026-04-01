@@ -1081,40 +1081,42 @@ pub fn loc_of_return_annot<L: Dupe>(annot: &function::ReturnAnnot<L, L>) -> &L {
 // except for the case of Identifier and Member, where we push the type within the
 // identifier and member property type position as well. This is to ensure that
 // type-at-pos searcher will detect the updated type.
-pub fn push_toplevel_type<M: Dupe, T: Dupe>(
-    t: T,
-    exp: expression::Expression<M, T>,
-) -> expression::Expression<M, T> {
-    let push_toplevel_identifier = |id: &Identifier<M, T>, t: &T| -> Identifier<M, T> {
+pub fn push_toplevel_type<M: Dupe, A: Dupe, B: Dupe>(
+    t: B,
+    exp: expression::Expression<M, (A, B)>,
+) -> expression::Expression<M, (A, B)> {
+    let push_toplevel_identifier = |id: &Identifier<M, (A, B)>, t: &B| -> Identifier<M, (A, B)> {
         Identifier::new(IdentifierInner {
-            loc: t.dupe(),
+            loc: (id.loc.0.dupe(), t.dupe()),
             name: id.name.dupe(),
             comments: id.comments.clone(),
         })
     };
-    let push_to_member = |mem: &expression::Member<M, T>, t: &T| -> expression::Member<M, T> {
-        match &mem.property {
-            expression::member::Property::PropertyIdentifier(id) => expression::Member {
-                object: mem.object.dupe(),
-                property: expression::member::Property::PropertyIdentifier(
-                    push_toplevel_identifier(id, t),
-                ),
-                comments: mem.comments.clone(),
-            },
-            _ => mem.clone(),
-        }
-    };
+    let push_to_member =
+        |mem: &expression::Member<M, (A, B)>, t: &B| -> expression::Member<M, (A, B)> {
+            match &mem.property {
+                expression::member::Property::PropertyIdentifier(id) => expression::Member {
+                    object: mem.object.dupe(),
+                    property: expression::member::Property::PropertyIdentifier(
+                        push_toplevel_identifier(id, t),
+                    ),
+                    comments: mem.comments.clone(),
+                },
+                _ => mem.clone(),
+            }
+        };
+    let exp_loc = exp.loc().0.dupe();
     let e = match exp.deref() {
         ExpressionInner::Identifier { loc: _, inner } => ExpressionInner::Identifier {
-            loc: t.dupe(),
+            loc: (exp_loc, t.dupe()),
             inner: push_toplevel_identifier(inner, &t),
         },
         ExpressionInner::Member { loc: _, inner } => ExpressionInner::Member {
-            loc: t.dupe(),
+            loc: (exp_loc, t.dupe()),
             inner: Arc::new(push_to_member(inner, &t)),
         },
         ExpressionInner::OptionalMember { loc: _, inner } => ExpressionInner::OptionalMember {
-            loc: t.dupe(),
+            loc: (exp_loc, t.dupe()),
             inner: Arc::new(expression::OptionalMember {
                 member: push_to_member(&inner.member, &t),
                 filtered_out: inner.filtered_out.dupe(),
@@ -1123,16 +1125,13 @@ pub fn push_toplevel_type<M: Dupe, T: Dupe>(
         },
         other => {
             let mut cloned = other.clone();
-            *cloned.loc_mut() = t;
+            *cloned.loc_mut() = (exp_loc, t);
             return expression::Expression::new(cloned);
         }
     };
     expression::Expression::new(e)
 }
 
-// let hook_name s =
-//   let is_cap c = c = Char.uppercase_ascii c in
-//   String.starts_with ~prefix:"use" s && (String.length s = 3 || is_cap s.[3])
 pub fn hook_name(s: &str) -> bool {
     // OCaml's is_cap checks c = Char.uppercase_ascii c, which is true for
     // uppercase letters, digits, underscores, and any non-lowercase character.
@@ -1372,7 +1371,6 @@ pub fn string_of_bigint<M: Dupe>(bigint: &BigIntLiteral<M>) -> String {
     //  It must contain only decimal digits and not include numeric separators `_` or the suffix `n`.
     match bigint.value {
         Some(value) => value.to_string(),
-        // | None ->
         // Remove the 'n' suffix and the underscores.
         None => {
             let raw = &bigint.raw;

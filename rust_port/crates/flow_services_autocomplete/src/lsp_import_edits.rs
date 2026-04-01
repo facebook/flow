@@ -429,7 +429,7 @@ fn haste_package_path(
     )
 }
 
-fn from_of_source(
+pub fn from_of_source(
     module_system_info: &LspModuleSystemInfo,
     src_dir: Option<&str>,
     source: &export_index::Source,

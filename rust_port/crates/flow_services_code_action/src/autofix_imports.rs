@@ -68,7 +68,7 @@ mod import_source {
     }
 
     pub fn is_lower(source: &str) -> bool {
-        source.len() > 1 && matches!(source.as_bytes()[0], b'a'..=b'z')
+        source.len() > 1 && source.as_bytes()[0].is_ascii_lowercase()
     }
 }
 

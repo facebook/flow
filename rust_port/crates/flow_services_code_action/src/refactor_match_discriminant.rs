@@ -192,9 +192,9 @@ impl<'ast> AstVisitor<'ast, Loc> for MemberReplacer {
                 if let expression::member::Property::PropertyIdentifier(prop_id) =
                     &inner.property =>
             {
-                let _object = &inner.object;
+                let object = &inner.object;
                 let name = &prop_id.name;
-                match get_identifier_from_expr(_object) {
+                match get_identifier_from_expr(object) {
                     Some(obj_name) if obj_name == self.base_obj_name => {
                         expression::Expression::new(ExpressionInner::Identifier {
                             loc: loc.dupe(),
@@ -349,9 +349,9 @@ impl Mapper {
                 if let expression::member::Property::PropertyIdentifier(prop_id) =
                     &inner.property =>
             {
-                let _object = &inner.object;
+                let object = &inner.object;
                 let name = &prop_id.name;
-                match get_identifier_from_expr(_object) {
+                match get_identifier_from_expr(object) {
                     Some(base_name) => {
                         let all_simple = cases
                             .iter()

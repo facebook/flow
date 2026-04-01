@@ -6,6 +6,7 @@
  */
 
 use flow_data_structure_wrapper::smol_str::FlowSmolStr;
+use flow_parser::ParseOptions;
 use flow_parser::file_key::FileKey;
 use flow_parser::file_key::FileKeyInner;
 use flow_parser::loc::Loc;
@@ -24,12 +25,20 @@ fn init_roots() {
 }
 
 fn visit(source: &str) -> FileSig {
-    visit_with_opts(source, &FileSigOptions::default())
+    visit_with_opts_and_parse_options(source, &FileSigOptions::default(), None)
 }
 
 fn visit_with_opts(source: &str, opts: &FileSigOptions) -> FileSig {
+    visit_with_opts_and_parse_options(source, opts, None)
+}
+
+fn visit_with_opts_and_parse_options(
+    source: &str,
+    opts: &FileSigOptions,
+    parse_options: Option<ParseOptions>,
+) -> FileSig {
     init_roots();
-    let (ast, _errors) = parse_program_without_file(true, None, None, Ok(source));
+    let (ast, _errors) = parse_program_without_file(true, None, parse_options, Ok(source));
     let file_key = FileKey::new(FileKeyInner::SourceFile("test.js".to_string()));
     FileSig::from_program(&file_key, &ast, opts)
 }
@@ -367,13 +376,34 @@ fn test_cjs_require_typeapp() {
 #[test]
 fn test_cjs_module_ref() {
     let source = "moduleRefConsumer('m#foo')";
-    // Note: The Rust parser doesn't support module_ref_prefix parsing yet,
-    // so this won't be recognized as a require
-    let file_sig = visit(source);
+    let parse_options = ParseOptions {
+        module_ref_prefix: Some(FlowSmolStr::new("m#")),
+        ..Default::default()
+    };
+    let file_sig = visit_with_opts_and_parse_options(
+        source,
+        &FileSigOptions {
+            haste_module_ref_prefix: Some(FlowSmolStr::new("m#")),
+            ..Default::default()
+        },
+        Some(parse_options),
+    );
     let requires = file_sig.requires();
-    // TODO: When module_ref_prefix support is added to the Rust parser,
-    // this should expect 1 require with prefix = Some("m#")
-    assert_eq!(requires.len(), 0);
+    assert_eq!(requires.len(), 1);
+    match &requires[0] {
+        Require::Require {
+            source: src,
+            require_loc,
+            bindings: _,
+            prefix,
+        } => {
+            assert_eq!(substring_loc(source, &src.0), "'m#foo'");
+            assert_eq!(src.1.as_str(), "foo");
+            assert_eq!(substring_loc(source, require_loc), "'m#foo'");
+            assert_eq!(prefix.as_ref().map(|s| s.as_str()), Some("m#"));
+        }
+        _ => panic!("Unexpected requires"),
+    }
 }
 
 #[test]

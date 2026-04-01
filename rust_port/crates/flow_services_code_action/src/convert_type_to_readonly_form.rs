@@ -42,6 +42,7 @@ fn prop_name_contains_target_loc(
         Property::CallProperty(_) => false,
         Property::InternalSlot(_) => false,
         Property::MappedType(_) => false,
+        Property::PrivateField(_) => false,
     }
 }
 
@@ -251,7 +252,7 @@ impl AstVisitor<'_, Loc> for Mapper {
                         )),
                         targs: Some(ast::types::TypeArgs {
                             loc: LOC_NONE,
-                            arguments: Arc::from([inner.argument.clone()]),
+                            arguments: Arc::from([inner.argument.dupe()]),
                             comments: None,
                         }),
                         comments: inner.comments.clone(),

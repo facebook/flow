@@ -339,7 +339,6 @@ pub mod type_at_pos {
             if self.covers_target(loc) {
                 self.find_loc(loc, t, true)
             } else {
-                // Note: OCaml calls super#t_identifier (not super#type_identifier_reference)
                 ast_visitor::identifier_default(self, id)
             }
         }

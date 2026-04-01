@@ -1529,7 +1529,7 @@ fn block(opts: &Opts, loc: &Loc, b: &ast::statement::Block<Loc, Loc>) -> LayoutN
     )
 }
 
-pub(crate) fn expression(
+pub fn expression(
     opts: &Opts,
     ctxt: Option<&ExpressionContext>,
     expr: &ast::expression::Expression<Loc, Loc>,
@@ -5105,7 +5105,7 @@ fn jsx_self_closing(opts: &Opts, opening: &ast::jsx::Opening<Loc, Loc>) -> Layou
     )
 }
 
-fn jsx_closing(closing: &ast::jsx::Closing<Loc, Loc>) -> LayoutNode {
+pub fn jsx_closing(closing: &ast::jsx::Closing<Loc, Loc>) -> LayoutNode {
     source_location_with_comments(
         &closing.loc,
         None::<&ast::Syntax<Loc, ()>>,
@@ -5708,7 +5708,7 @@ fn component_type_param(
     )
 }
 
-pub(crate) fn type_(opts: &Opts, t: &ast::types::Type<Loc, Loc>) -> LayoutNode {
+pub fn type_(opts: &Opts, t: &ast::types::Type<Loc, Loc>) -> LayoutNode {
     let loc = t.loc();
     source_location_with_comments(
         loc,
@@ -7626,10 +7626,7 @@ pub(crate) fn jsx_identifier(id: &ast::jsx::Identifier<Loc, Loc>) -> LayoutNode 
     identifier_with_comments(&id.loc, id.name.as_str(), id.comments.as_ref())
 }
 
-pub(crate) fn jsx_opening_attr(
-    opts: &Opts,
-    attr: &ast::jsx::OpeningAttribute<Loc, Loc>,
-) -> LayoutNode {
+pub fn jsx_opening_attr(opts: &Opts, attr: &ast::jsx::OpeningAttribute<Loc, Loc>) -> LayoutNode {
     match attr {
         ast::jsx::OpeningAttribute::Attribute(attr) => jsx_attribute(opts, attr),
         ast::jsx::OpeningAttribute::SpreadAttribute(attr) => jsx_spread_attribute(opts, attr),

@@ -138,7 +138,7 @@ pub fn from_type(genv: &Genv<'_, '_>, t: &Type) -> Result<ALocElt, Error> {
     NoFlowNormalizer::run_type(genv, &mut state, t)
 }
 
-pub fn mk_genv<'a: 'cx, 'cx>(
+pub fn mk_genv<'a, 'cx: 'a>(
     options: Options,
     cx: &'a Context<'cx>,
     typed_ast_opt: Option<&'a ast::Program<ALoc, (ALoc, Type)>>,
@@ -167,7 +167,7 @@ pub fn mk_genv<'a: 'cx, 'cx>(
     }
 }
 
-pub fn mk_default_genv<'a: 'cx, 'cx>(
+pub fn mk_default_genv<'a, 'cx: 'a>(
     options: Option<Options>,
     cx: &'a Context<'cx>,
 ) -> Genv<'a, 'cx> {
@@ -187,7 +187,7 @@ pub fn mk_default_genv<'a: 'cx, 'cx>(
     mk_genv(options.unwrap_or_default(), cx, typed_ast_opt, file_sig)
 }
 
-pub fn debug_string_of_t<'a: 'cx, 'cx>(cx: &'a Context<'cx>, t: &Type) -> String {
+pub fn debug_string_of_t<'a, 'cx: 'a>(cx: &'a Context<'cx>, t: &Type) -> String {
     let genv = mk_default_genv(None, cx);
     match from_type(&genv, t) {
         Err(e) => format!("<Error {}>", e.kind),

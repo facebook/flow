@@ -365,7 +365,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `class mapreduce_ty_base` → `trait TyMapReduceBase<Env, L>`
       - [x] ty_debug.ml → `flow_common_ty/src/ty_debug.rs`
           - [x] Debug trait implementations for all Ty types
-      - [x] ty_printer.ml → `flow_common_ty/src/ty_printer.rs` (9/9 functions, 100% complete)
+      - [x] ty_printer.ml → `flow_common_ty/src/ty_printer.rs`
           - [x] `better_quote` → `better_quote()`
           - [x] `property_key_quotes_needed` → `property_key_quotes_needed()`
           - [x] `string_of_elt` → `string_of_elt()`
@@ -373,6 +373,7 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `string_of_decl_single_line` → `string_of_decl_single_line()`
           - [x] `string_of_t` → `string_of_t()`
           - [x] `string_of_t_single_line` → `string_of_t_single_line()`
+          - [x] `string_of_symbol_set` → `string_of_symbol_set()`
           - [x] `string_of_type_at_pos_result` → `string_of_type_at_pos_result()`
           - [x] `utf8_escape` → `utf8_escape()`
       - [x] ty_serializer.ml → `flow_common_ty/src/ty_serializer.rs` (1/1 functions, 100% complete)
@@ -863,10 +864,10 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] lsp/
       - [ ] __tests__/
           - [ ] lsp_fmt_test.ml
-        - [ ] lsp.ml
+        - [x] lsp.ml → `lsp_types` crate (standard LSP types) + `flow_server_env/src/lsp_prot.rs` (Flow extensions)
         - [ ] lsp_fmt.ml
         - [ ] lsp_helpers.ml
-        - [ ] lsp_mapper.ml
+        - [x] lsp_mapper.ml → `flow_server_env/src/lsp_mapper.rs` (uses `lsp_types` crate)
     - [ ] lsp_writers/
         - [ ] lsp_writers.ml
     - [ ] marshal_tools/
@@ -926,9 +927,32 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [ ] flowServerMonitorLogger.ml
   - [ ] rpc/
       - [ ] monitorRPC.ml
-  - [ ] status/
-      - [ ] fileWatcherStatus.ml
-      - [ ] serverStatus.ml
+  - [x] status/
+      - [x] fileWatcherStatus.ml → `flow_server_env/src/file_watcher_status.rs`
+          - [x] `file_watcher` type → `FileWatcher`
+          - [x] `status'` type → `StatusKind`
+          - [x] `status` type → `Status`
+          - [x] `string_of_file_watcher`
+          - [x] `string_of_status`
+      - [x] serverStatus.ml → `flow_server_env/src/server_status.rs`
+          - [x] `progress` type → `Progress`
+          - [x] `deadline` type → `Deadline`
+          - [x] `event` type → `Event`
+          - [x] `typecheck_status` type → `TypecheckStatus`
+          - [x] `restart_reason` type → `RestartReason`
+          - [x] `typecheck_mode` type → `TypecheckMode`
+          - [x] `status` type → `Status`
+          - [x] `string_of_progress`
+          - [x] `string_of_event`
+          - [x] `string_of_typecheck_status`
+          - [x] `string_of_restart_reason`
+          - [x] `string_of_status`
+          - [x] `update`
+          - [x] `initial_status` → `INITIAL_STATUS`
+          - [x] `is_free`
+          - [x] `is_significant_transition`
+          - [x] `get_progress`
+          - [x] `change_init_to_restart`
   - [ ] utils/
       - [ ] exitSignal.ml
     - [ ] fileWatcher.ml
@@ -1410,10 +1434,42 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [x] `t` type → `PersistentConnection`
           - [x] `empty`
   - [ ] protocol/
-      - [ ] lspProt.ml → autocomplete-facing pieces currently use `fbsource//third-party/rust:lsp-types`
-      - [ ] monitorProt.ml
-      - [ ] serverCommandWithContext.ml
-      - [x] serverProt.ml → `flow_services_autocomplete/src/server_prot.rs`
+      - [x] lspProt.ml → `flow_server_env/src/lsp_prot.rs` (Flow-specific LSP extension types; standard LSP types use `lsp_types` crate)
+          - [x] `client_id` type → `ClientId`
+          - [x] `error_kind` type → `ErrorKind`
+          - [x] `error_info` type → `ErrorInfo`
+          - [x] `metadata` type → `Metadata`
+          - [x] `empty_metadata`
+          - [x] `request` type → `Request`
+          - [x] `request_with_metadata` type → `RequestWithMetadata`
+          - [x] `errors_reason` type → `ErrorsReason`
+          - [x] `error_response_kind` type → `ErrorResponseKind`
+          - [x] `live_errors_failure` type → `LiveErrorsFailure`
+          - [x] `live_errors_response` type → `LiveErrorsResponse`
+          - [x] `response` type → `Response`
+          - [x] `response_with_metadata` type → `ResponseWithMetadata`
+          - [x] `recheck_stats` type → `RecheckStats`
+          - [x] `telemetry_from_server` type → `TelemetryFromServer`
+          - [x] `notification_from_server` type → `NotificationFromServer`
+          - [x] `message_from_server` type → `MessageFromServer`
+          - [x] `string_of_request`
+          - [x] `string_of_request_with_metadata`
+          - [x] `json_of_request`
+          - [x] `string_of_response`
+          - [x] `message_from_server_mapper` type → `MessageFromServerMapper`
+          - [x] `default_message_from_server_mapper`
+      - [x] monitorProt.ml → `flow_server_env/src/monitor_prot.rs`
+          - [x] `request_id` type → `RequestId`
+          - [x] `file_watcher_metadata` type → `FileWatcherMetadata`
+          - [x] `empty_file_watcher_metadata`
+          - [x] `merge_file_watcher_metadata`
+          - [x] `please_die_reason` type → `PleaseDieReason`
+          - [x] `monitor_to_server_message` type → `MonitorToServerMessage`
+          - [x] `server_to_monitor_message` type → `ServerToMonitorMessage`
+          - [x] `monitor_to_client_message` type → `MonitorToClientMessage`
+      - [x] serverCommandWithContext.ml → `flow_server_env/src/server_command_with_context.rs`
+          - [x] `t` type → `ServerCommandWithContext`
+      - [x] serverProt.ml → `flow_server_env/src/server_prot.rs`
           - [x] `Infer_type_options`
           - [x] `Inlay_hint_options`
           - [x] `Type_of_name_options`
@@ -1468,36 +1524,36 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
     - [ ] serverWorker.ml
     - [ ] server_daemon.ml
 - [ ] services/
-  - [ ] autocomplete/ → `flow_services_autocomplete`
-    - [ ] __tests__/
-        - [ ] autocomplete_sigil_tests.ml
-        - [ ] autocomplete_tests.ml
+  - [x] autocomplete/ → `flow_services_autocomplete`
+    - [x] __tests__/
+        - [x] autocomplete_sigil_tests.ml → `flow_services_autocomplete/src/autocomplete_sigil_tests.rs`
+        - [x] autocomplete_tests.ml → irrelevant (OUnit runner)
       - [x] autocompleteService_js.ml → `flow_services_autocomplete/src/autocomplete_service_js.rs`
       - [x] autocomplete_js.ml → `flow_services_autocomplete/src/autocomplete_js.rs`
       - [x] autocomplete_sigil.ml → `flow_services_autocomplete/src/autocomplete_sigil.rs`
       - [x] find_method.ml → `flow_services_autocomplete/src/find_method.rs`
       - [x] keywords.ml → `flow_services_autocomplete/src/keywords.rs`
-  - [ ] code_action/ → `flow_services_code_action`
-    - [ ] __tests__/
-        - [ ] autofix_imports_tests.ml
-        - [ ] autofix_type_to_value_import_tests.ml
-        - [ ] code_action_service_tests.ml
-        - [ ] code_action_tests.ml
-        - [ ] insert_type_utils_tests.ml
-        - [ ] refactor_extract_tests.ml
-        - [ ] refactor_extract_utils_tests.ml
-        - [ ] validation_tests.ml
-      - [ ] ast_extraction_utils.ml
+  - [x] code_action/ → `flow_services_code_action`
+    - [x] __tests__/
+        - [x] autofix_imports_tests.ml → `flow_services_code_action/src/autofix_imports_tests.rs`
+        - [x] autofix_type_to_value_import_tests.ml → `flow_services_code_action/src/autofix_type_to_value_import_tests.rs`
+        - [x] code_action_service_tests.ml → `flow_services_code_action/src/code_action_service_tests.rs`
+        - [x] code_action_tests.ml → irrelevant (OUnit runner, test discovery automatic in Rust)
+        - [x] insert_type_utils_tests.ml → `flow_services_code_action/src/insert_type_utils_tests.rs`
+        - [x] refactor_extract_tests.ml → `flow_services_code_action/src/refactor_extract_tests.rs`
+        - [x] refactor_extract_utils_tests.ml → `flow_services_code_action/src/refactor_extract_utils_tests.rs`
+        - [x] validation_tests.ml → `flow_services_code_action/src/validation_tests.rs`
+      - [x] ast_extraction_utils.ml → `flow_services_code_action/src/ast_extraction_utils.rs` (has Rust-specific helper functions for OCaml class-based AST visitors)
       - [x] autofix_casting_syntax.ml → `flow_services_code_action/src/autofix_casting_syntax.rs`
-      - [ ] autofix_class_member_access.ml
+      - [x] autofix_class_member_access.ml → `flow_services_code_action/src/autofix_class_member_access.rs`
       - [x] autofix_enum_member_name.ml → `flow_services_code_action/src/autofix_enum_member_name.rs`
-      - [ ] autofix_exports.ml
+      - [x] autofix_exports.ml → `flow_services_code_action/src/autofix_exports.rs`
       - [x] autofix_imports.ml → `flow_services_code_action/src/autofix_imports.rs`
       - [x] autofix_interface.ml → `flow_services_code_action/src/autofix_interface.rs`
       - [x] autofix_legacy_flow_syntax.ml → `flow_services_code_action/src/autofix_legacy_flow_syntax.rs`
       - [x] autofix_match_syntax.ml → `flow_services_code_action/src/autofix_match_syntax.rs`
       - [x] autofix_method.ml → `flow_services_code_action/src/autofix_method.rs`
-      - [ ] autofix_missing_local_annots.ml
+      - [x] autofix_missing_local_annots.ml → `flow_services_code_action/src/autofix_missing_local_annots.rs`
       - [x] autofix_new_to_record.ml → `flow_services_code_action/src/autofix_new_to_record.rs`
       - [x] autofix_object_to_record.ml → `flow_services_code_action/src/autofix_object_to_record.rs`
       - [x] autofix_optional_chaining.ml → `flow_services_code_action/src/autofix_optional_chaining.rs`
@@ -1509,24 +1565,24 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] autofix_type_name.ml → `flow_services_code_action/src/autofix_type_name.rs`
       - [x] autofix_type_to_value_import.ml → `flow_services_code_action/src/autofix_type_to_value_import.rs`
       - [x] autofix_unused_promise.ml → `flow_services_code_action/src/autofix_unused_promise.rs`
-      - [ ] code_action_service.ml
+      - [x] code_action_service.ml → `flow_services_code_action/src/code_action_service.rs`
       - [x] code_action_text_edits.ml → `flow_services_code_action/src/code_action_text_edits.rs` (shared copy in `flow_services_autocomplete/src/code_action_text_edits.rs`)
       - [x] code_action_utils.ml → `flow_services_code_action/src/code_action_utils.rs`
       - [x] convert_type_to_readonly_form.ml → `flow_services_code_action/src/convert_type_to_readonly_form.rs`
-      - [ ] document_paste.ml
-      - [ ] insert_inferred_render_type.ml
-      - [ ] insert_type.ml
-      - [ ] insert_type_imports.ml
-      - [ ] insert_type_utils.ml
+      - [x] document_paste.ml → `flow_services_code_action/src/document_paste.rs`
+      - [x] insert_inferred_render_type.ml → `flow_services_code_action/src/insert_inferred_render_type.rs`
+      - [x] insert_type.ml → `flow_services_code_action/src/insert_type.rs`
+      - [x] insert_type_imports.ml → `flow_services_code_action/src/insert_type_imports.rs` (uses named ConvertTyVisitor struct with stored error state instead of OCaml inline visitor object)
+      - [x] insert_type_utils.ml → `flow_services_code_action/src/insert_type_utils.rs`
       - [x] lsp_import_edits.ml → `flow_services_autocomplete/src/lsp_import_edits.rs` (shared helper used by autocomplete)
       - [x] lsp_module_system_info.ml → `flow_services_code_action/src/lsp_module_system_info.rs` (shared copy in `flow_services_autocomplete/src/module_system_info.rs`)
-      - [ ] refactor_add_jsx_props.ml
+      - [x] refactor_add_jsx_props.ml → `flow_services_code_action/src/refactor_add_jsx_props.rs`
       - [x] refactor_arrow_functions.ml → `flow_services_code_action/src/refactor_arrow_functions.rs`
-      - [ ] refactor_extract.ml
-      - [ ] refactor_extract_utils.ml
+      - [x] refactor_extract.ml → `flow_services_code_action/src/refactor_extract.rs`
+      - [x] refactor_extract_utils.ml → `flow_services_code_action/src/refactor_extract_utils.rs`
       - [x] refactor_match_discriminant.ml → `flow_services_code_action/src/refactor_match_discriminant.rs`
       - [x] refactor_switch_to_match_statement.ml → `flow_services_code_action/src/refactor_switch_to_match_statement.rs`
-      - [ ] stub_unbound_name.ml
+      - [x] stub_unbound_name.ml → `flow_services_code_action/src/stub_unbound_name.rs`
   - [x] coverage/
       - [x] coverage.ml → `flow_services_coverage/src/coverage.rs` (fully ported)
           - [x] `op_mode` type → `OpMode`
@@ -1727,13 +1783,13 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
           - [ ] `init` (saved state init — not yet ported)
           - [ ] `init_from_saved_state` (not yet ported)
           - [ ] `handle_updates_since_saved_state` (not yet ported)
-  - [ ] jsdoc/
+  - [x] jsdoc/
       - [x] find_documentation.ml → `flow_services_autocomplete/src/find_documentation.rs`
       - [x] insert_jsdoc.ml → `flow_services_autocomplete/src/insert_jsdoc.rs`
       - [x] jsdoc_stub.ml → `flow_services_autocomplete/src/jsdoc_stub.rs`
-  - [ ] jsx/
-      - [ ] auto_close_jsx.ml
-      - [ ] linked_editing_jsx.ml
+  - [x] jsx/ → `flow_services_jsx`
+      - [x] auto_close_jsx.ml → `flow_services_jsx/src/auto_close_jsx.rs`
+      - [x] linked_editing_jsx.ml → `flow_services_jsx/src/linked_editing_jsx.rs`
   - [ ] module/
       - [x] module_js.ml → `flow_services_module/src/lib.rs` (6/6 functions, 100% complete)
           - [x] `exported_module` → `exported_module()`
@@ -1789,11 +1845,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
         - [ ] saved_state_local_fetcher.ml
         - [ ] saved_state_scm_fetcher.ml
       - [ ] saved_state.ml
-  - [ ] type_info/
-      - [ ] signature_help.ml
-      - [ ] type_info_service.ml
-  - [ ] type_of_name/
-      - [ ] type_of_name.ml
+  - [x] type_info/ → `flow_services_type_info`
+      - [x] signature_help.ml → `flow_services_type_info/src/signature_help.rs`
+      - [x] type_info_service.ml → `flow_services_type_info/src/type_info_service.rs`
+  - [x] type_of_name/ → `flow_services_type_of_name`
+      - [x] type_of_name.ml → `flow_services_type_of_name/src/type_of_name.rs`
 - [ ] state/
   - [ ] heaps/
     - [ ] context/
@@ -1926,11 +1982,11 @@ This file tracks the progress of porting OCaml files from `flow/src/` to Rust.
       - [x] ppx_sedlex.ml → `irrelevant` (rust port uses logos)
       - [x] sedlex_cset.ml → `irrelevant` (rust port uses logos)
 - [ ] typing/
-  - [ ] __tests__/
-      - [ ] type_hint_test.ml
-      - [ ] type_test.ml
-      - [ ] typed_ast_test.ml
-      - [ ] typing_tests.ml
+  - [x] __tests__/
+      - [x] type_hint_test.ml → `flow_typing/src/type_hint_test.rs`
+      - [x] type_test.ml → `flow_typing/src/type_test.rs`
+      - [x] typed_ast_test.ml → `flow_typing/src/typed_ast_test.rs`
+      - [x] typing_tests.ml → irrelevant (OUnit runner)
   - [x] errors/
       - [x] error_message.ml → `flow_typing_errors/src/error_message.rs`
       - [x] error_suppressions.ml → `flow_typing_errors/src/error_suppressions.rs`

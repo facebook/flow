@@ -5,6 +5,7 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+#[derive(Debug, Clone)]
 pub enum FileInput {
     FileName(String),
     FileContent(Option<String>, String),

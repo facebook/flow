@@ -152,7 +152,7 @@ impl<'ast> AstVisitor<'ast, Loc> for Mapper {
             Kind::InvalidMatchStatementBody if self.contains.target_contained_by(loc) => self
                 .map_match_(loc, m, |visitor, stmt| {
                     let stmt_loc = stmt.loc();
-                    let body = if !visitor.contains.is_target(stmt_loc) {
+                    if !visitor.contains.is_target(stmt_loc) {
                         visitor.map_statement(stmt)
                     } else {
                         let wrapped = statement::Statement::new(StatementInner::Block {
@@ -163,8 +163,7 @@ impl<'ast> AstVisitor<'ast, Loc> for Mapper {
                             }),
                         });
                         visitor.map_statement(&wrapped)
-                    };
-                    body
+                    }
                 }),
             Kind::NotExhaustive(patterns_to_add) if self.contains.is_target(match_keyword_loc) => {
                 let match_::Match {

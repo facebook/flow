@@ -138,7 +138,7 @@ fn layout_of_node(opts: &Opts, node: &Node) -> LayoutNode {
     }
 }
 
-fn text_of_layout(layout: LayoutNode) -> String {
+pub fn text_of_layout(layout: LayoutNode) -> String {
     // wrap these layout fragments in a group so they try to fit on one line
     let layout = layout::group(vec![layout]);
     pretty_printer::print(true, &layout).contents()

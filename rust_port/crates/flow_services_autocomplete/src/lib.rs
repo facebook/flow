@@ -20,4 +20,6 @@ pub mod jsdoc_stub;
 pub mod keywords;
 pub mod lsp_import_edits;
 pub mod module_system_info;
-pub mod server_prot;
+
+#[cfg(test)]
+mod autocomplete_sigil_tests;

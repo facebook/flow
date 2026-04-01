@@ -15,7 +15,7 @@ use flow_parser_utils::package_json::PackageJson;
 pub struct LspModuleSystemInfo {
     pub file_options: Arc<FileOptions>,
     pub haste_module_system: bool,
-    pub get_haste_module_info: Box<dyn Fn(&FileKey) -> Option<HasteModuleInfo>>,
+    pub get_haste_module_info: Arc<dyn Fn(&FileKey) -> Option<HasteModuleInfo>>,
     pub get_package_info: Box<dyn Fn(&FileKey) -> Option<Result<PackageJson, ()>>>,
     pub is_package_file: Box<dyn Fn(&str, &str) -> bool>,
     pub node_resolver_root_relative_dirnames: Vec<(Option<String>, String)>,

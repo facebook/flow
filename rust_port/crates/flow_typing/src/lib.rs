@@ -19,3 +19,10 @@ pub mod ty_normalizer_flow;
 pub mod ty_normalizer_imports;
 pub mod type_inference;
 pub mod typed_ast_finder;
+
+#[cfg(test)]
+mod type_hint_test;
+#[cfg(test)]
+mod type_test;
+#[cfg(test)]
+mod typed_ast_test;

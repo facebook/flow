@@ -151,7 +151,6 @@ pub(crate) enum Found {
 }
 
 pub(crate) trait SearcherCallback<T: Dupe> {
-    // method virtual loc_of_annot : 'T -> ALoc.t
     fn loc_of_annot(&self, annot: &T) -> ALoc;
 
     fn annot_loc(annot: &T) -> &ALoc;
@@ -535,11 +534,6 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
         ast_visitor::import_declaration_default(self, loc, decl)
     }
 
-    // method! export_source source_annot ({ Ast.StringLiteral.value = module_name; _ } as lit) =
-    //   if this#annot_covers_target source_annot then begin
-    //     this#module_def (this#get_module_def_loc source_annot module_name)
-    //   end;
-    //   super#export_source source_annot lit
     fn export_source(
         &mut self,
         source_annot: &'ast T,
@@ -552,7 +546,6 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
                 .get_module_def_loc(source_annot, module_name)?;
             self.module_def(loc)?;
         }
-        // super#export_source source_annot lit
         ast_visitor::export_source_default(self, source_annot, source)
     }
 
@@ -968,13 +961,6 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>>
         ast_visitor::type_default(self, type_)
     }
 
-    // method! type_param_identifier id =
-    //   let (annot, { Ast.Identifier.name; comments = _ }) = id in
-    //   let loc = this#loc_of_annot annot in
-    //   if covers_target loc then this#own_named_def loc name;
-    //   id
-    // NOTE: In AstVisitor, type_param_identifier is handled via binding_type_identifier
-    // which is called from type_param_default
     fn binding_type_identifier(&mut self, id: &'ast ast::Identifier<ALoc, T>) -> Result<(), Found> {
         let annot = &id.loc;
         let loc = self.callback.loc_of_annot(annot);
@@ -1307,15 +1293,11 @@ impl<'a, 'ast, T: Dupe + PartialEq + 'ast, C: SearcherCallback<T>> Searcher<'a, 
     }
 }
 
-// class typed_ast_searcher cx ~typed_ast:_ ~is_local_use ~is_legit_require ~covers_target ~purpose =
-//   object
-//     inherit [ALoc.t * Type.t] searcher cx ~is_local_use ~is_legit_require ~covers_target ~purpose
 struct TypedAstSearcherCallback<'a, 'cx> {
     cx: &'a Context<'cx>,
 }
 
 impl<'a, 'cx> SearcherCallback<(ALoc, Type)> for TypedAstSearcherCallback<'a, 'cx> {
-    //   method private loc_of_annot (loc, _) = loc
     fn loc_of_annot(&self, annot: &(ALoc, Type)) -> ALoc {
         annot.0.dupe()
     }
@@ -1483,7 +1465,6 @@ struct OnDemandSearcherCallback<'a, 'cx> {
 }
 
 impl<'a, 'cx> SearcherCallback<ALoc> for OnDemandSearcherCallback<'a, 'cx> {
-    //   method loc_of_annot x = x
     fn loc_of_annot(&self, annot: &ALoc) -> ALoc {
         annot.dupe()
     }

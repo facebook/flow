@@ -214,7 +214,7 @@ impl AstVisitor<'_, Loc> for NormalizeTypeLocAndCommentMapper {
     }
 
     fn map_type_(&mut self, t: &ast::types::Type<Loc, Loc>) -> ast::types::Type<Loc, Loc> {
-        let with_none_loc = ast::types::Type::new(Self::with_none_loc(&**t));
+        let with_none_loc = ast::types::Type::new(Self::with_none_loc(t));
         map_type_default(self, &with_none_loc)
     }
 }
@@ -239,7 +239,7 @@ fn mod_t(
             ) && inner
                 .targs
                 .as_ref()
-                .map_or(false, |ta| ta.arguments.len() == 1) =>
+                .is_some_and(|ta| ta.arguments.len() == 1) =>
         {
             let targs = inner.targs.as_ref().unwrap();
             Ok(Some(targs.arguments[0].dupe()))
@@ -269,30 +269,30 @@ fn mod_ts(
     if ts_rev.is_empty() || !transformed {
         return None;
     }
+    let mut normalize = NormalizeTypeLocAndCommentMapper;
     let last = ts_rev.last().unwrap().dupe();
     let ts_rev_rest = &ts_rev[..ts_rev.len() - 1];
-    let mut normalize = NormalizeTypeLocAndCommentMapper;
-    let first = ts_rev[0].dupe();
-    let rest = &ts_rev[1..];
-    let init_normalized = normalize.map_type_(&first);
+    let init_normalized = normalize.map_type_(&last);
     let init_seen: AstTypeSet = {
         let mut s = BTreeSet::new();
         s.insert(init_normalized);
         s
     };
-    let init_acc: Vec<ast::types::Type<Loc, Loc>> = vec![first];
-    let (_, acc) = rest
-        .iter()
-        .fold((init_seen, init_acc), |(mut seen, mut acc), t| {
-            let normalized = normalize.map_type_(t);
-            if seen.contains(&normalized) {
-                (seen, acc)
-            } else {
-                seen.insert(normalized);
-                acc.push(t.dupe());
-                (seen, acc)
-            }
-        });
+    let init_acc: Vec<ast::types::Type<Loc, Loc>> = vec![last];
+    let (_, acc) =
+        ts_rev_rest
+            .iter()
+            .rev()
+            .fold((init_seen, init_acc), |(mut seen, mut acc), t| {
+                let normalized = normalize.map_type_(t);
+                if seen.contains(&normalized) {
+                    (seen, acc)
+                } else {
+                    seen.insert(normalized);
+                    acc.push(t.dupe());
+                    (seen, acc)
+                }
+            });
     Some(acc)
 }
 

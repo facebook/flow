@@ -369,6 +369,7 @@ pub mod response {
     use crate::server_prot::Patch;
     use crate::server_prot::PrintableError;
 
+    #[derive(Debug, Clone, PartialEq, Eq)]
     pub struct LazyStats {
         pub lazy_mode: bool,
         pub checked_files: i32,
@@ -618,10 +619,3 @@ pub mod response {
         }
     }
 }
-
-#[allow(unused_imports)]
-use response::InsertReplaceEdit as insert_replace_edit;
-#[allow(unused_imports)]
-use response::TextEdit as textedit;
-#[allow(unused_imports)]
-use response::completion::CompletionItem as completion_item;

@@ -18,18 +18,17 @@ use flow_data_structure_wrapper::ord_set::FlowOrdSet;
 use flow_parser::file_key::FileKey;
 use flow_parser::loc::Loc;
 
+use crate::monitor_prot::FileWatcherMetadata;
+use crate::monitor_prot::empty_file_watcher_metadata;
+use crate::monitor_prot::merge_file_watcher_metadata;
 use crate::server_env::Env;
 use crate::workload_stream::ParallelizableWorkload;
 use crate::workload_stream::Workload;
 use crate::workload_stream::WorkloadHandler;
 use crate::workload_stream::WorkloadStream;
 
-// module FilenameSet = Utils_js.FilenameSet
-
-// type env_update = ServerEnv.env -> ServerEnv.env
 pub type EnvUpdate = Box<dyn FnOnce(Env) -> Env + Send>;
 
-// Workloads are client requests which we processes FIFO
 static WORKLOAD_STREAM: std::sync::LazyLock<WorkloadStream> =
     std::sync::LazyLock::new(WorkloadStream::create);
 
@@ -69,12 +68,8 @@ pub fn requeue_deferred_parallelizable_workloads() {
     WORKLOAD_NOTIFY.0.send(()).unwrap();
 }
 
-// (* Env updates are...well...updates to our env. They must be handled in the main thread. Also FIFO
-//  * but are quick to handle *)
-// let (env_update_stream, push_new_env_update) = Lwt_stream.create ()
 static ENV_UPDATE_STREAM: Mutex<Vec<EnvUpdate>> = Mutex::new(Vec::new());
 
-// let push_new_env_update env_update = push_new_env_update (Some env_update)
 pub fn push_new_env_update(env_update: EnvUpdate) {
     ENV_UPDATE_STREAM.lock().unwrap().push(env_update);
     ENV_UPDATE_NOTIFY.0.send(()).unwrap();
@@ -97,11 +92,15 @@ pub fn cancellation_requests() -> &'static Mutex<BTreeSet<String>> {
     &CANCELLATION_REQUESTS
 }
 
+/// Placeholder for (FindRefsTypes.request * Persistent_connection.single_client *
+///   ((FindRefsTypes.single_ref list, string) result -> LspProt.response * LspProt.metadata))
+/// Until Persistent_connection and LspProt are fully ported, this bundles
+/// request+client+references_to_lsp_response as an opaque type.
+#[allow(dead_code)]
+pub struct FindRefCommand(Box<dyn FnOnce() + Send>);
+
 struct RecheckMsg {
-    // file_watcher_metadata: MonitorProt.file_watcher_metadata option;
-    // Note: MonitorProt.file_watcher_metadata not yet ported; using unit placeholder.
-    // When ported, this will carry file watcher metadata for logging/telemetry.
-    _file_watcher_metadata: (),
+    file_watcher_metadata: Option<FileWatcherMetadata>,
     files: RecheckFiles,
 }
 
@@ -116,12 +115,9 @@ enum RecheckFiles {
         /// in the files changed since mergebase.
         skip_incompatible: bool,
     },
-    // Note: Persistent_connection.single_client and LspProt response types not yet ported.
-    // Using Loc list for def_locs; the callback and client are represented as placeholder types.
     GlobalFindRef {
         def_locs: Vec<Loc>,
-        // request, client, references_to_lsp_response stored as opaque callback
-        _find_ref_callback: Box<dyn FnOnce() + Send>,
+        find_ref_command: FindRefCommand,
     },
     DependenciesToPrioritize(FlowOrdSet<FileKey>),
     FilesToReinit {
@@ -131,19 +127,29 @@ enum RecheckFiles {
     },
 }
 
-// Files which have changed
 static RECHECK_STREAM: Mutex<Vec<RecheckMsg>> = Mutex::new(Vec::new());
 
-fn push_recheck_msg(files: RecheckFiles) {
+fn push_recheck_msg_with_metadata(metadata: Option<FileWatcherMetadata>, files: RecheckFiles) {
     RECHECK_STREAM.lock().unwrap().push(RecheckMsg {
-        _file_watcher_metadata: (),
+        file_watcher_metadata: metadata,
         files,
     });
     RECHECK_NOTIFY.0.send(()).unwrap();
 }
 
+fn push_recheck_msg(files: RecheckFiles) {
+    push_recheck_msg_with_metadata(None, files);
+}
+
 pub fn push_files_to_recheck(changed_files: BTreeSet<String>) {
     push_recheck_msg(RecheckFiles::ChangedFiles(changed_files, false));
+}
+
+pub fn push_files_to_recheck_with_metadata(
+    metadata: Option<FileWatcherMetadata>,
+    changed_files: BTreeSet<String>,
+) {
+    push_recheck_msg_with_metadata(metadata, RecheckFiles::ChangedFiles(changed_files, false));
 }
 
 pub fn push_files_to_prioritize(changed_files: BTreeSet<String>) {
@@ -157,15 +163,10 @@ pub fn push_files_to_force_focused_and_recheck(files: BTreeSet<String>) {
     });
 }
 
-// Note: request/client/references_to_lsp_response bundled as opaque callback until
-// Persistent_connection and LspProt are ported.
-pub fn push_global_find_ref_request(
-    def_locs: Vec<Loc>,
-    find_ref_callback: Box<dyn FnOnce() + Send>,
-) {
+pub fn push_global_find_ref_request(def_locs: Vec<Loc>, find_ref_command: FindRefCommand) {
     push_recheck_msg(RecheckFiles::GlobalFindRef {
         def_locs,
-        _find_ref_callback: find_ref_callback,
+        find_ref_command,
     });
 }
 
@@ -179,8 +180,6 @@ pub fn push_lazy_init(files: BTreeSet<String>) {
     });
 }
 
-// let push_dependencies_to_prioritize dependencies =
-//   push_recheck_msg (DependenciesToPrioritize dependencies)
 pub fn push_dependencies_to_prioritize(dependencies: FlowOrdSet<FileKey>) {
     push_recheck_msg(RecheckFiles::DependenciesToPrioritize(dependencies));
 }
@@ -223,8 +222,8 @@ pub struct RecheckWorkload {
     pub files_to_prioritize: FlowOrdSet<FileKey>,
     pub files_to_recheck: FlowOrdSet<FileKey>,
     pub files_to_force: CheckedSet,
-    // find_ref_command: not yet ported (needs Persistent_connection.single_client, LspProt)
-    // metadata: not yet ported (needs MonitorProt.file_watcher_metadata)
+    pub find_ref_command: Option<FindRefCommand>,
+    pub metadata: FileWatcherMetadata,
     pub require_full_check_reinit: bool,
 }
 
@@ -244,6 +243,8 @@ fn empty_recheck_workload() -> RecheckWorkload {
         files_to_prioritize: FlowOrdSet::new(),
         files_to_recheck: FlowOrdSet::new(),
         files_to_force: CheckedSet::empty(),
+        find_ref_command: None,
+        metadata: empty_file_watcher_metadata(),
         require_full_check_reinit: false,
     }
 }
@@ -264,6 +265,8 @@ fn update_workload(
     files_to_prioritize: Option<&FlowOrdSet<FileKey>>,
     files_to_recheck: Option<&FlowOrdSet<FileKey>>,
     files_to_force: Option<&CheckedSet>,
+    find_ref_command: Option<FindRefCommand>,
+    metadata: Option<&FileWatcherMetadata>,
 ) -> bool {
     let mut changed = false;
     if let Some(new_files) = files_to_prioritize {
@@ -288,6 +291,17 @@ fn update_workload(
         let before = workload.files_to_force.cardinal();
         workload.files_to_force.union(new_force.dupe());
         if workload.files_to_force.cardinal() != before {
+            changed = true;
+        }
+    }
+    if find_ref_command.is_some() {
+        workload.find_ref_command = find_ref_command;
+        changed = true;
+    }
+    if let Some(new_metadata) = metadata {
+        let merged = merge_file_watcher_metadata(new_metadata, &workload.metadata);
+        if workload.metadata != merged {
+            workload.metadata = merged;
             changed = true;
         }
     }
@@ -341,21 +355,25 @@ pub fn recheck_fetch(
     let mut changed = false;
     with_recheck_acc(|workload| {
         for msg in msgs {
-            let msg_changed = match msg.files {
+            let RecheckMsg {
+                files,
+                file_watcher_metadata,
+            } = msg;
+            let msg_changed = match files {
                 RecheckFiles::ChangedFiles(changed_files, urgent) => {
                     match process_updates(false, &changed_files) {
                         Updates::NormalUpdates(updates) => {
                             if urgent {
-                                update_workload(workload, Some(&updates), None, None)
+                                update_workload(workload, Some(&updates), None, None, None, None)
                             } else {
-                                update_workload(workload, None, Some(&updates), None)
+                                update_workload(workload, None, Some(&updates), None, None, None)
                             }
                         }
                         Updates::RequiredFullCheckReinit(updates) => {
                             let w_changed = if urgent {
-                                update_workload(workload, Some(&updates), None, None)
+                                update_workload(workload, Some(&updates), None, None, None, None)
                             } else {
-                                update_workload(workload, None, Some(&updates), None)
+                                update_workload(workload, None, Some(&updates), None, None, None)
                             };
                             let r_changed = update_to_require_reinit(workload);
                             w_changed || r_changed
@@ -379,7 +397,14 @@ pub fn recheck_fetch(
                         };
                         let mut files_to_force = CheckedSet::empty();
                         files_to_force.add(Some(focused), None, None);
-                        update_workload(workload, None, Some(&updates), Some(&files_to_force))
+                        update_workload(
+                            workload,
+                            None,
+                            Some(&updates),
+                            Some(&files_to_force),
+                            None,
+                            None,
+                        )
                     }
                     Updates::RequiredFullCheckReinit(updates) => {
                         let focused = {
@@ -394,31 +419,39 @@ pub fn recheck_fetch(
                         };
                         let mut files_to_force = CheckedSet::empty();
                         files_to_force.add(Some(focused), None, None);
-                        let w_changed =
-                            update_workload(workload, None, Some(&updates), Some(&files_to_force));
+                        let w_changed = update_workload(
+                            workload,
+                            None,
+                            Some(&updates),
+                            Some(&files_to_force),
+                            None,
+                            None,
+                        );
                         let r_changed = update_to_require_reinit(workload);
                         w_changed || r_changed
                     }
                 },
                 RecheckFiles::GlobalFindRef {
                     def_locs,
-                    _find_ref_callback: _,
+                    find_ref_command,
                 } => {
                     let files_to_recheck: FlowOrdSet<FileKey> = def_locs
                         .iter()
                         .filter_map(|loc| loc.source())
                         .cloned()
                         .collect();
-                    // Note: find_ref_command update not yet ported
-                    update_workload(workload, None, Some(&files_to_recheck), None)
+                    update_workload(
+                        workload,
+                        None,
+                        Some(&files_to_recheck),
+                        None,
+                        Some(find_ref_command),
+                        None,
+                    )
                 }
                 RecheckFiles::DependenciesToPrioritize(dependencies) => {
                     let mut to_prioritize = CheckedSet::empty();
                     to_prioritize.add(None, None, Some(dependencies));
-                    // if we're doing a normal recheck, don't filter out dependencies that are
-                    // already being checked, because we want to cancel this recheck and do a
-                    // faster priority check. but if we're already doing a priority check, we
-                    // don't want to cancel it just to start another with the same files.
                     let files_to_force = match priority {
                         Priority::Normal => to_prioritize,
                         Priority::Priority => {
@@ -428,27 +461,30 @@ pub fn recheck_fetch(
                             result
                         }
                     };
-                    update_workload(workload, None, None, Some(&files_to_force))
+                    //       update ~files_to_force workload
+                    update_workload(workload, None, None, Some(&files_to_force), None, None)
                 }
                 RecheckFiles::FilesToReinit {
                     files_to_prioritize,
                     files_to_recheck,
                     files_to_force,
                 } => {
-                    // pushing files to reinit should not trigger a "change", because
-                    // these files are not caused by a distinct event, like a file
-                    // watcher event; they're a continuation of the existing reinit
-                    // event.
                     update_workload(
                         workload,
                         Some(&files_to_prioritize),
                         Some(&files_to_recheck),
                         Some(&files_to_force),
+                        None,
+                        None,
                     );
                     false
                 }
             };
-            changed = changed || msg_changed;
+            let metadata_changed = match &file_watcher_metadata {
+                None => false,
+                Some(metadata) => update_workload(workload, None, None, None, None, Some(metadata)),
+            };
+            changed = changed || msg_changed || metadata_changed;
         }
     });
     changed
@@ -473,8 +509,8 @@ pub fn requeue_workload(workload: RecheckWorkload) {
             prev.files_to_recheck.insert(f.dupe());
         }
         prev.files_to_force.union(workload.files_to_force);
-        // Note: find_ref_command merge not yet ported
-        // Note: metadata merge not yet ported
+        prev.find_ref_command = workload.find_ref_command.or(prev.find_ref_command.take());
+        prev.metadata = merge_file_watcher_metadata(&prev.metadata, &workload.metadata);
         if prev.require_full_check_reinit || workload.require_full_check_reinit {
             eprintln!(
                 "Previous recheck requires restart: {}; new workload requires restart: {}",
@@ -497,35 +533,39 @@ pub fn get_and_clear_recheck_workload(
         files_to_prioritize,
         files_to_recheck,
         files_to_force,
+        find_ref_command,
+        metadata,
         require_full_check_reinit,
     } = workload;
-    // if there are any dependencies to force, then we will return them first and leave everything
-    // else in the queue for the next recheck.
     let (dependencies_to_force, files_to_force) = files_to_force.partition_dependencies();
     if dependencies_to_force.is_empty() {
         let workload = RecheckWorkload {
             files_to_prioritize,
             files_to_recheck,
             files_to_force,
+            find_ref_command,
+            metadata,
             require_full_check_reinit,
         };
         *guard = Some(empty_recheck_workload());
         (Priority::Normal, workload)
     } else {
-        // include all files_to_recheck in files_to_prioritize, so that we update the dependency
-        // graph and merge all known changes.
         let priority_files_to_prioritize =
             files_to_prioritize.dupe().union(files_to_recheck.dupe());
         let priority_workload = RecheckWorkload {
             files_to_force: dependencies_to_force,
             files_to_prioritize: priority_files_to_prioritize,
             files_to_recheck: FlowOrdSet::new(),
+            find_ref_command: None,
+            metadata: empty_file_watcher_metadata(),
             require_full_check_reinit: false,
         };
         let remaining_workload = RecheckWorkload {
             files_to_force,
             files_to_prioritize: FlowOrdSet::new(),
             files_to_recheck,
+            find_ref_command,
+            metadata,
             require_full_check_reinit,
         };
         *guard = Some(remaining_workload);

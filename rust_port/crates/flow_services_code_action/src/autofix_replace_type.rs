@@ -37,7 +37,7 @@ where
     fn map_type_(&mut self, t: &ast::types::Type<Loc, Loc>) -> ast::types::Type<Loc, Loc> {
         let loc = t.loc();
         if self.contains.is_target(loc) {
-            ast::types::Type::new((self.f)(&**t))
+            ast::types::Type::new((self.f)(t))
         } else {
             map_type_default(self, t)
         }

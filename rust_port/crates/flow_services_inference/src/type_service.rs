@@ -957,9 +957,6 @@ fn ensure_parsed(
     })
 }
 
-// let ensure_parsed_or_trigger_recheck ~options ~profiling ~workers ~reader files =
-//   try%lwt ensure_parsed ~options ~profiling ~workers ~reader files with
-//   | Unexpected_file_changes changed_files -> handle_unexpected_file_changes changed_files
 pub fn ensure_parsed_or_trigger_recheck(
     pool: &ThreadPool,
     shared_mem: &Arc<SharedMem>,
@@ -1984,8 +1981,16 @@ pub(crate) fn recheck_impl(
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> Result<(Box<dyn FnOnce()>, RecheckStats, Env), RecheckError> {
-    let (env, stats, record_recheck_time, _find_ref_results, _first_internal_error) =
+) -> Result<
+    (
+        Box<dyn FnOnce()>,
+        RecheckStats,
+        Result<Vec<()>, String>,
+        Env,
+    ),
+    RecheckError,
+> {
+    let (env, stats, record_recheck_time, find_ref_results, _first_internal_error) =
         with_transaction("recheck", |_transaction| {
             recheck::full(
                 pool,
@@ -2081,8 +2086,7 @@ pub(crate) fn recheck_impl(
         top_cycle,
     };
 
-    // NOTE: find_ref_results omitted in Rust port (not used in full-check-only mode)
-    Ok((log_recheck_event, recheck_stats, env))
+    Ok((log_recheck_event, recheck_stats, find_ref_results, env))
 }
 
 // NOTE: RecheckStats corresponds to LspProt.recheck_stats in OCaml, defined in a different module.
@@ -2451,7 +2455,12 @@ pub fn reinit(
     _files_to_force: CheckedSet,
     _will_be_checked_files: &mut CheckedSet,
     _env: Env,
-) -> (Box<dyn FnOnce()>, RecheckStats, Env) {
+) -> (
+    Box<dyn FnOnce()>,
+    RecheckStats,
+    Result<Vec<()>, String>,
+    Env,
+) {
     // TODO: reinit: saved state not yet ported
     panic!("reinit: saved state not yet ported")
 }
@@ -2466,7 +2475,12 @@ pub fn reinit_full_check(
     files_to_force: CheckedSet,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> (Box<dyn FnOnce()>, RecheckStats, Env) {
+) -> (
+    Box<dyn FnOnce()>,
+    RecheckStats,
+    Result<Vec<()>, String>,
+    Env,
+) {
     eprintln!("Reiniting with a full check.");
     // TODO: init_with_initial_state depends on saved state; env passed through unchanged for now
     let env = env;
@@ -2491,7 +2505,7 @@ pub fn reinit_full_check(
         changed_file_count: 0,
         top_cycle: None,
     };
-    (log_recheck_event, recheck_stats, env)
+    (log_recheck_event, recheck_stats, Ok(vec![]), env)
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -2508,7 +2522,15 @@ pub fn recheck(
     node_modules_containers: &Arc<RwLock<BTreeMap<FlowSmolStr, BTreeSet<FlowSmolStr>>>>,
     will_be_checked_files: &mut CheckedSet,
     env: Env,
-) -> Result<(Box<dyn FnOnce()>, RecheckStats, Env), RecheckError> {
+) -> Result<
+    (
+        Box<dyn FnOnce()>,
+        RecheckStats,
+        Result<Vec<()>, String>,
+        Env,
+    ),
+    RecheckError,
+> {
     let did_change_mergebase = changed_mergebase.unwrap_or(false);
     if require_full_check_reinit {
         Ok(reinit_full_check(
@@ -2625,7 +2647,6 @@ pub fn check_files_for_init(
 
         // Merge stage
         eprintln!("Merging {} components...", components.len());
-        // (* ~suppressions:errors.ServerEnv.suppressions *)
         let merge_result = merge(
             pool,
             shared_mem,
@@ -2779,10 +2800,9 @@ pub fn full_check_for_init(
 }
 
 /// Performs a single full check from scratch: initializes the environment,
-/// Combines init_from_scratch + full_check_for_init into a single call that
+/// combines init_from_scratch + full_check_for_init into a single call that
 /// runs type checking (optionally focused on specific files), and returns
 /// errors and warnings.
-// NOTE: Rust-only convenience function, no OCaml equivalent.
 pub fn check_once(
     options: Arc<Options>,
     pool: &ThreadPool,

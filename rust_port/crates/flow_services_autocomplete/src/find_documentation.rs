@@ -5,10 +5,14 @@
  * LICENSE file in the root directory of this source tree.
  */
 
+use std::collections::BTreeMap;
+use std::collections::BTreeSet;
+
 use dupe::Dupe;
 use flow_parser::ast;
 use flow_parser::ast_visitor;
 use flow_parser::ast_visitor::AstVisitor;
+use flow_parser::file_key::FileKey;
 use flow_parser::jsdoc;
 use flow_parser::loc::Loc;
 
@@ -157,6 +161,189 @@ fn search_jsdoc(def_loc: &Loc, ast: &ast::Program<Loc, Loc>) -> Option<jsdoc::Js
         Ok(()) => None,
         Err(FoundJsdoc::Found(jsdoc)) => Some(jsdoc),
     }
+}
+
+fn search_jsdocs(
+    target_locs: &BTreeSet<Loc>,
+    ast: &ast::Program<Loc, Loc>,
+) -> BTreeMap<Loc, jsdoc::Jsdoc> {
+    let mut results = BTreeMap::new();
+    let mut searcher = JsdocBatchSearcher {
+        target_locs,
+        results: &mut results,
+    };
+    match searcher.program(ast) {
+        Ok(()) | Err(()) => {}
+    }
+    results
+}
+
+struct JsdocBatchSearcher<'a> {
+    target_locs: &'a BTreeSet<Loc>,
+    results: &'a mut BTreeMap<Loc, jsdoc::Jsdoc>,
+}
+
+impl<'a> JsdocBatchSearcher<'a> {
+    fn find_jsdoc_batch<T: Dupe>(
+        &mut self,
+        found_loc: &Loc,
+        comments: Option<&ast::Syntax<Loc, T>>,
+    ) -> Result<(), ()> {
+        if self.target_locs.contains(found_loc) {
+            if let Some((_, jsdoc)) = jsdoc::of_comments(comments) {
+                self.results.insert(found_loc.clone(), jsdoc);
+            }
+        }
+        Ok(())
+    }
+}
+
+impl<'ast, 'a> AstVisitor<'ast, Loc, Loc, &'ast Loc, ()> for JsdocBatchSearcher<'a> {
+    fn normalize_loc(loc: &'ast Loc) -> &'ast Loc {
+        loc
+    }
+
+    fn normalize_type(type_: &'ast Loc) -> &'ast Loc {
+        type_
+    }
+
+    fn function_declaration(
+        &mut self,
+        loc: &'ast Loc,
+        decl: &'ast ast::function::Function<Loc, Loc>,
+    ) -> Result<(), ()> {
+        self.find_jsdoc_batch(loc, decl.comments.as_ref())?;
+        ast_visitor::function_declaration_default(self, loc, decl)
+    }
+
+    fn declare_function(
+        &mut self,
+        loc: &'ast Loc,
+        decl: &'ast ast::statement::DeclareFunction<Loc, Loc>,
+    ) -> Result<(), ()> {
+        self.find_jsdoc_batch(loc, decl.comments.as_ref())?;
+        ast_visitor::declare_function_default(self, loc, decl)
+    }
+
+    fn class_declaration(
+        &mut self,
+        loc: &'ast Loc,
+        class: &'ast ast::class::Class<Loc, Loc>,
+    ) -> Result<(), ()> {
+        self.find_jsdoc_batch(loc, class.comments.as_ref())?;
+        ast_visitor::class_declaration_default(self, loc, class)
+    }
+
+    fn type_alias(
+        &mut self,
+        loc: &'ast Loc,
+        alias: &'ast ast::statement::TypeAlias<Loc, Loc>,
+    ) -> Result<(), ()> {
+        self.find_jsdoc_batch(loc, alias.comments.as_ref())?;
+        ast_visitor::type_alias_default(self, loc, alias)
+    }
+
+    fn opaque_type(
+        &mut self,
+        loc: &'ast Loc,
+        opaque: &'ast ast::statement::OpaqueType<Loc, Loc>,
+    ) -> Result<(), ()> {
+        self.find_jsdoc_batch(loc, opaque.comments.as_ref())?;
+        ast_visitor::opaque_type_default(self, loc, opaque)
+    }
+
+    fn interface(
+        &mut self,
+        loc: &'ast Loc,
+        interface: &'ast ast::statement::Interface<Loc, Loc>,
+    ) -> Result<(), ()> {
+        self.find_jsdoc_batch(loc, interface.comments.as_ref())?;
+        ast_visitor::interface_default(self, loc, interface)
+    }
+
+    fn enum_declaration(
+        &mut self,
+        loc: &'ast Loc,
+        enum_: &'ast ast::statement::EnumDeclaration<Loc, Loc>,
+    ) -> Result<(), ()> {
+        self.find_jsdoc_batch(loc, enum_.comments.as_ref())?;
+        ast_visitor::enum_declaration_default(self, loc, enum_)
+    }
+
+    fn variable_declaration(
+        &mut self,
+        loc: &'ast Loc,
+        decl: &'ast ast::statement::VariableDeclaration<Loc, Loc>,
+    ) -> Result<(), ()> {
+        self.find_jsdoc_batch(loc, decl.comments.as_ref())?;
+        ast_visitor::variable_declaration_default(self, loc, decl)
+    }
+
+    fn class_method(&mut self, method: &'ast ast::class::Method<Loc, Loc>) -> Result<(), ()> {
+        self.find_jsdoc_batch(&method.loc, method.comments.as_ref())?;
+        ast_visitor::class_method_default(self, method)
+    }
+
+    fn class_property(&mut self, prop: &'ast ast::class::Property<Loc, Loc>) -> Result<(), ()> {
+        self.find_jsdoc_batch(&prop.loc, prop.comments.as_ref())?;
+        ast_visitor::class_property_default(self, prop)
+    }
+
+    fn class_private_field(
+        &mut self,
+        prop: &'ast ast::class::PrivateField<Loc, Loc>,
+    ) -> Result<(), ()> {
+        self.find_jsdoc_batch(&prop.loc, prop.comments.as_ref())?;
+        ast_visitor::class_private_field_default(self, prop)
+    }
+
+    fn object_property_type(
+        &mut self,
+        prop: &'ast ast::types::object::NormalProperty<Loc, Loc>,
+    ) -> Result<(), ()> {
+        self.find_jsdoc_batch(&prop.loc, prop.comments.as_ref())?;
+        ast_visitor::object_property_type_default(self, prop)
+    }
+}
+
+pub fn jsdocs_of_getdef_locs(
+    ast: &ast::Program<Loc, Loc>,
+    get_ast_from_shared_mem: &dyn Fn(&FileKey) -> Option<ast::Program<Loc, Loc>>,
+    def_locs: &[Loc],
+) -> BTreeMap<Loc, jsdoc::Jsdoc> {
+    let mut by_file: BTreeMap<FileKey, BTreeSet<Loc>> = BTreeMap::new();
+    for loc in def_locs {
+        match loc.source() {
+            None => {}
+            Some(source) => {
+                by_file
+                    .entry(source.dupe())
+                    .or_default()
+                    .insert(loc.clone());
+            }
+        }
+    }
+    let get_file_ast = |source: &FileKey| -> Option<&ast::Program<Loc, Loc>> {
+        match ast.loc.source() {
+            Some(current_source) if *current_source == *source => Some(ast),
+            _ => None,
+        }
+    };
+    let mut results: BTreeMap<Loc, jsdoc::Jsdoc> = BTreeMap::new();
+    for (source, locs) in &by_file {
+        if let Some(file_ast) = get_file_ast(source) {
+            let file_results = search_jsdocs(locs, file_ast);
+            for (k, v) in file_results {
+                results.entry(k).or_insert(v);
+            }
+        } else if let Some(file_ast) = get_ast_from_shared_mem(source) {
+            let file_results = search_jsdocs(locs, &file_ast);
+            for (k, v) in file_results {
+                results.entry(k).or_insert(v);
+            }
+        }
+    }
+    results
 }
 
 pub fn jsdoc_of_getdef_loc(

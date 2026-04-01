@@ -17,7 +17,10 @@ impl ContainsMapper {
         Self { target }
     }
 
-    #[allow(dead_code)]
+    pub fn target_ref(&self) -> &Loc {
+        &self.target
+    }
+
     pub fn target_contains(&self, loc: &Loc) -> bool {
         self.target.contains(loc)
     }

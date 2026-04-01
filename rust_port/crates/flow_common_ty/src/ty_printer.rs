@@ -1543,13 +1543,34 @@ pub fn string_of_decl_single_line<L: Dupe>(d: &Decl<L>, opts: &PrinterOptions) -
     string_of_elt_single_line(&Elt::Decl(d.clone()), opts)
 }
 
-pub fn string_of_type_at_pos_result<L: Dupe + PartialEq>(
+pub fn string_of_symbol_set<L: Clone + Ord>(
+    syms: &std::collections::BTreeSet<Symbol<L>>,
+) -> Vec<(String, L)> {
+    let mut elems: Vec<_> = syms.iter().collect();
+    elems.sort_by(|s1, s2| s1.sym_name.as_str().cmp(s2.sym_name.as_str()));
+    elems
+        .into_iter()
+        .map(|sym| {
+            let Symbol {
+                sym_name,
+                sym_def_loc,
+                ..
+            } = sym;
+            (sym_name.as_str().to_string(), sym_def_loc.clone())
+        })
+        .collect()
+}
+
+pub fn string_of_type_at_pos_result<L: Dupe + PartialEq, R: Clone + Ord>(
     unevaluated: &Elt<L>,
     evaluated: &Option<Elt<L>>,
+    refs: &Option<std::collections::BTreeSet<Symbol<R>>>,
     opts: &PrinterOptions,
-) -> String {
+) -> (String, Option<Vec<(String, R)>>) {
     let layout = layout_of_type_at_pos_types(opts, unevaluated, evaluated);
-    layout::print_pretty(&layout)
+    let type_str = layout::print_pretty(&layout);
+    let refs = refs.as_ref().map(|r| string_of_symbol_set(r));
+    (type_str, refs)
 }
 
 fn layout_of_type_at_pos_types<L: Dupe + PartialEq>(

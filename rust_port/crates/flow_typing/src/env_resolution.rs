@@ -1879,20 +1879,7 @@ fn resolve_class<'cx>(
     };
     let sig_info =
         statement::mk_class_sig(cx, id_loc, class_loc.dupe(), inst_kind, reason, class_)?;
-    let (class_t, class_t_internal, class_sig, reconstruct) = sig_info;
-    // Convert Box<dyn FnOnce(&Context, Type)> to Rc<dyn Fn(Type)> for node_cache storage.
-    // Thread cx through the cache boundary. The Rc<dyn Fn + 'cx> is valid because
-    // NodeCache<'cx> now carries the 'cx lifetime.
-    let reconstruct_cell: std::cell::Cell<
-        Option<Box<dyn FnOnce(&Context<'cx>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'cx>>,
-    > = std::cell::Cell::new(Some(reconstruct));
-    let reconstruct_fn: Rc<
-        dyn Fn(&Context<'cx>, Type) -> ast::class::Class<ALoc, (ALoc, Type)> + 'cx,
-    > = Rc::new(move |cx: &Context<'cx>, t| {
-        reconstruct_cell
-            .take()
-            .expect("class reconstruct called more than once")(cx, t)
-    });
+    let (class_t, class_t_internal, class_sig, reconstruct_fn) = sig_info;
     cache.set_class_sig(
         class_loc.dupe(),
         (
