@@ -3,6 +3,10 @@ title: Function/Class Components
 slug: /react/function-and-class-components
 ---
 
+:::danger
+Function and class component typing patterns are legacy. For new code, use [Component Syntax](../component-syntax) instead.
+:::
+
 Adding Flow types to your [React components](https://react.dev/learn/your-first-component) is incredibly powerful. After typing
 your component, Flow will statically ensure that you are using the component in
 the way it was designed to be used.
