@@ -3259,6 +3259,29 @@ and conditional_type
   let (extends_type_loc, extends_type) =
     annot_with_loc opts (ConditionalTypeExtends conditional_type_extends) tbls xs extends_type
   in
+  (* Ensure all hoisted infer type parameters get registered, even if they were
+     inside constructs that short-circuited to Any without visiting their children
+     (e.g. $Shape, $Partial, unsupported TS utilities, TemplateLiteral, etc.). *)
+  List.iter
+    (fun ( _,
+           {
+             T.Infer.tparam = (_, { T.TypeParam.name = (_, { Ast.Identifier.name; _ }); _ }) as tp;
+             comments = _;
+           }
+         ) ->
+      if
+        not
+          (Base.List.exists
+             conditional_type_extends.infer_tparams_rev
+             ~f:(fun (TParam { name = n; _ }) -> n = name
+           )
+          )
+      then begin
+        let tp = tparam opts scope tbls xs tp in
+        conditional_type_extends.infer_tparams_rev <-
+          tp :: conditional_type_extends.infer_tparams_rev
+      end)
+    hoisted_infer_types;
   let infer_tparams =
     match List.rev conditional_type_extends.infer_tparams_rev with
     | [] -> Mono

@@ -5851,6 +5851,25 @@ fn conditional_type<'arena, 'ast>(
     ));
     let (extends_type_loc, extends_type) =
         annot_with_loc(opts, extends_scope, scopes, tbls, xs, &t.extends_type);
+    // Ensure all hoisted infer type parameters get registered, even if they were
+    // inside constructs that short-circuited to Any without visiting their children
+    // (e.g. $Shape, $Partial, unsupported TS utilities, TemplateLiteral, etc.).
+    for (_, infer) in &hoisted_infer_types {
+        let name = &infer.tparam.name.name;
+        let already_registered = match scopes.get(extends_scope) {
+            scope::Scope::ConditionalTypeExtends(cond_scope) => {
+                cond_scope.infer_tparams.iter().any(|tp| &tp.name == name)
+            }
+            _ => unreachable!(),
+        };
+        if !already_registered {
+            let tp = tparam(opts, scope, scopes, tbls, xs, &infer.tparam);
+            if let scope::Scope::ConditionalTypeExtends(cond_scope) = scopes.get_mut(extends_scope)
+            {
+                cond_scope.infer_tparams.push(tp);
+            }
+        }
+    }
     let infer_tparams = match scopes.get(extends_scope) {
         scope::Scope::ConditionalTypeExtends(cond_scope) => {
             if let Ok(tparams) = Vec1::try_from_vec(cond_scope.infer_tparams.to_vec()) {

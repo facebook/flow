@@ -4,6 +4,9 @@ import type {
   InferTypeOverlapGenerics,
   InvalidInfer,
   Exclude,
+  InferInTemplateLiteral,
+  InferInConstructorType,
+  InferInReadOnly,
 } from './type_sig_defs';
 
 ("": BasicConditionalType); // ok
@@ -23,3 +26,7 @@ type A_or_C = Exclude<A|B|C, B>;
 (new B(): A_or_C); // error: B ~> A|C
 (new C(): A_or_C); // ok
 (new D(): A_or_C); // error: D ~> A|C
+
+"foo" as InferInTemplateLiteral<"bar">; // OK: no crash
+"foo" as InferInConstructorType<string>; // OK: no crash
+"foo" as InferInReadOnly<{x: string}>; // OK: no crash
