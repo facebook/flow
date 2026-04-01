@@ -579,10 +579,10 @@ pub fn fields_to_prop_map<'a, C: ConfigTypes>(
     cx: &Context<'a>,
     fields: &BTreeMap<FlowSmolStr, class_types::FieldPrime<C>>,
 ) -> properties::Id {
-    let mut pmap = properties::PropertiesMap::new();
-    for (name, entry) in fields {
-        pmap.insert(Name::new(name.as_str()), to_field(entry));
-    }
+    let pmap: properties::PropertiesMap = fields
+        .iter()
+        .map(|(name, entry)| (Name::new(name.dupe()), to_field(entry)))
+        .collect();
     cx.generate_property_map(pmap)
 }
 
@@ -591,10 +591,10 @@ fn methods_to_prop_map<'a, C: crate::func_params_intf::Config>(
     this_default: &Type,
     methods: &BTreeMap<FlowSmolStr, class_types::FuncInfo<C>>,
 ) -> properties::Id {
-    let mut pmap = properties::PropertiesMap::new();
-    for (name, info) in methods {
-        pmap.insert(Name::new(name.as_str()), to_method(cx, this_default, info));
-    }
+    let pmap: properties::PropertiesMap = methods
+        .iter()
+        .map(|(name, info)| (Name::new(name.dupe()), to_method(cx, this_default, info)))
+        .collect();
     cx.generate_property_map(pmap)
 }
 
@@ -821,17 +821,23 @@ fn statictype<'a, C: crate::func_params_intf::Config>(
     let loc = x.static_.reason.loc().dupe();
     let this = type_util::class_type(this_or_mixed(loc, x), false, None);
     let (inited_fields, fields, methods, call) = elements(cx, this, None, s, &x.super_);
-    let mut props = properties::PropertiesMap::new();
-    for (name, prop) in fields.iter().chain(methods.iter()) {
-        let name_key = Name::new(name.as_str());
-        if props.get(&name_key).is_some() {
-            panic!(
-                "static fields and methods must be disjoint: {}",
-                flow_common::reason::dump_reason(None, &s.reason)
-            );
-        }
-        props.insert(name_key, prop.dupe());
-    }
+    let props: properties::PropertiesMap = {
+        let mut seen = std::collections::BTreeSet::new();
+        fields
+            .iter()
+            .chain(methods.iter())
+            .map(|(name, prop)| {
+                let name_key = Name::new(name.as_str());
+                if !seen.insert(name_key.dupe()) {
+                    panic!(
+                        "static fields and methods must be disjoint: {}",
+                        flow_common::reason::dump_reason(None, &s.reason)
+                    );
+                }
+                (name_key, prop.dupe())
+            })
+            .collect()
+    };
     // Statics are not exact, because we allow width subtyping between them.
     // Specifically, given class A and class B extends A, Class<B> <: Class<A>.
     let static_ = obj_type::mk_with_proto(
@@ -920,14 +926,14 @@ fn insttype<'a, C: crate::func_params_intf::Config>(
             sig_.reason.dupe(),
         )
     };
-    let mut own_pmap = properties::PropertiesMap::new();
-    for (name, prop) in &fields {
-        own_pmap.insert(Name::new(name.dupe()), prop.dupe());
-    }
-    let mut proto_pmap = properties::PropertiesMap::new();
-    for (name, prop) in &methods {
-        proto_pmap.insert(Name::new(name.dupe()), prop.dupe());
-    }
+    let own_pmap: properties::PropertiesMap = fields
+        .iter()
+        .map(|(name, prop)| (Name::new(name.dupe()), prop.dupe()))
+        .collect();
+    let proto_pmap: properties::PropertiesMap = methods
+        .iter()
+        .map(|(name, prop)| (Name::new(name.dupe()), prop.dupe()))
+        .collect();
     InstType::new(InstTypeInner {
         class_id: s.id.dupe(),
         inst_react_dro: None,

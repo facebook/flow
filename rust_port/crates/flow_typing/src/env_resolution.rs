@@ -628,12 +628,14 @@ fn resolve_hint<'cx>(
                         ObjectPropPatternHint::ObjectPropPatternHint(n, l, h) => {
                             let t = resolve_hint_node(cx, loc.dupe(), h);
                             acc.add_prop(move |mut props_map| {
-                                props_map.add_field(
+                                props_map.insert(
                                     reason::Name::new(n),
-                                    flow_common::polarity::Polarity::Neutral,
-                                    None,
-                                    Some(l),
-                                    t,
+                                    type_::Property::new(type_::PropertyInner::Field {
+                                        preferred_def_locs: None,
+                                        key_loc: Some(l),
+                                        type_: t,
+                                        polarity: flow_common::polarity::Polarity::Neutral,
+                                    }),
                                 );
                                 props_map
                             })
@@ -1280,10 +1282,14 @@ fn resolve_binding<'cx>(
                                         let name_loc = id.loc.dupe();
                                         let name = id.name.dupe();
                                         acc.add_prop(move |mut props_map| {
-                                            props_map.add_method(
+                                            props_map.insert(
                                                 reason::Name::new(name),
-                                                Some(name_loc.dupe()),
-                                                t,
+                                                type_::Property::new(
+                                                    type_::PropertyInner::Method {
+                                                        key_loc: Some(name_loc.dupe()),
+                                                        type_: t,
+                                                    },
+                                                ),
                                             );
                                             props_map
                                         })
@@ -1291,10 +1297,14 @@ fn resolve_binding<'cx>(
                                     Key::StringLiteral((name_loc, lit)) => {
                                         let name = lit.value.dupe();
                                         acc.add_prop(move |mut props_map| {
-                                            props_map.add_method(
+                                            props_map.insert(
                                                 reason::Name::new(name),
-                                                Some(name_loc.dupe()),
-                                                t,
+                                                type_::Property::new(
+                                                    type_::PropertyInner::Method {
+                                                        key_loc: Some(name_loc.dupe()),
+                                                        type_: t,
+                                                    },
+                                                ),
                                             );
                                             props_map
                                         })
@@ -1312,12 +1322,15 @@ fn resolve_binding<'cx>(
                                         let name_loc = id.loc.dupe();
                                         let name = id.name.dupe();
                                         acc.add_prop(move |mut props_map| {
-                                            props_map.add_field(
+                                            props_map.insert(
                                                 reason::Name::new(name),
-                                                flow_common::polarity::Polarity::Neutral,
-                                                None,
-                                                Some(name_loc.dupe()),
-                                                t,
+                                                type_::Property::new(type_::PropertyInner::Field {
+                                                    preferred_def_locs: None,
+                                                    key_loc: Some(name_loc.dupe()),
+                                                    type_: t,
+                                                    polarity:
+                                                        flow_common::polarity::Polarity::Neutral,
+                                                }),
                                             );
                                             props_map
                                         })
@@ -1325,12 +1338,15 @@ fn resolve_binding<'cx>(
                                     Key::StringLiteral((name_loc, lit)) => {
                                         let name = lit.value.dupe();
                                         acc.add_prop(move |mut props_map| {
-                                            props_map.add_field(
+                                            props_map.insert(
                                                 reason::Name::new(name),
-                                                flow_common::polarity::Polarity::Neutral,
-                                                None,
-                                                Some(name_loc.dupe()),
-                                                t,
+                                                type_::Property::new(type_::PropertyInner::Field {
+                                                    preferred_def_locs: None,
+                                                    key_loc: Some(name_loc.dupe()),
+                                                    type_: t,
+                                                    polarity:
+                                                        flow_common::polarity::Polarity::Neutral,
+                                                }),
                                             );
                                             props_map
                                         })

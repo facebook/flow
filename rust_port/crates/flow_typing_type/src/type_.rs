@@ -6843,6 +6843,10 @@ pub mod properties {
             Self(Rc::new(BTreeMap::new()))
         }
 
+        pub fn from_btree_map(map: BTreeMap<Name, Property>) -> Self {
+            Self(Rc::new(map))
+        }
+
         pub fn is_empty(&self) -> bool {
             self.0.is_empty()
         }
@@ -6873,70 +6877,6 @@ pub mod properties {
 
         pub fn keys(&self) -> impl Iterator<Item = &Name> {
             self.0.keys()
-        }
-
-        pub fn add_field(
-            &mut self,
-            name: Name,
-            polarity: Polarity,
-            preferred_def_locs: Option<Vec1<ALoc>>,
-            key_loc: Option<ALoc>,
-            type_: Type,
-        ) {
-            self.insert(
-                name,
-                Property::new(PropertyInner::Field {
-                    preferred_def_locs,
-                    key_loc,
-                    type_,
-                    polarity,
-                }),
-            );
-        }
-
-        pub fn add_getter(&mut self, name: Name, get_key_loc: Option<ALoc>, get_type: Type) {
-            let new_prop = match self.get(&name).map(|p| p.deref()) {
-                Some(PropertyInner::Set {
-                    key_loc: set_key_loc,
-                    type_: set_type,
-                }) => Property::new(PropertyInner::GetSet {
-                    get_key_loc,
-                    get_type,
-                    set_key_loc: set_key_loc.dupe(),
-                    set_type: set_type.dupe(),
-                }),
-                _ => Property::new(PropertyInner::Get {
-                    key_loc: get_key_loc,
-                    type_: get_type,
-                }),
-            };
-            self.insert(name, new_prop);
-        }
-
-        pub fn add_setter(&mut self, name: Name, set_key_loc: Option<ALoc>, set_type: Type) {
-            let new_prop = match self.get(&name).map(|p| p.deref()) {
-                Some(PropertyInner::Get {
-                    key_loc: get_key_loc,
-                    type_: get_type,
-                }) => Property::new(PropertyInner::GetSet {
-                    get_key_loc: get_key_loc.dupe(),
-                    get_type: get_type.dupe(),
-                    set_key_loc,
-                    set_type,
-                }),
-                _ => Property::new(PropertyInner::Set {
-                    key_loc: set_key_loc,
-                    type_: set_type,
-                }),
-            };
-            self.insert(name, new_prop);
-        }
-
-        pub fn add_method(&mut self, name: Name, key_loc: Option<ALoc>, type_: Type) {
-            self.insert(
-                name,
-                Property::new(PropertyInner::Method { key_loc, type_ }),
-            );
         }
 
         pub fn extract_named_exports(&self) -> BTreeMap<Name, NamedSymbol> {

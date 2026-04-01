@@ -143,10 +143,10 @@ pub fn mapped_type_of_keys<'cx>(
             key_loc,
         }
     };
-    let mut props: object::Props = object::Props::new();
-    for (key, key_reason) in &keys_with_reasons {
-        props.insert(key.dupe(), mixed_prop_t(key_reason));
-    }
+    let props: object::Props = keys_with_reasons
+        .iter()
+        .map(|(key, key_reason)| (key.dupe(), mixed_prop_t(key_reason)))
+        .collect();
     let generics = flow_typing_generics::spread_empty();
     let obj_kind = match indexers.as_slice() {
         [] => ObjKind::Exact,

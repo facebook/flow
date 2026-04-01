@@ -421,38 +421,40 @@ fn add_record_constructor<'cx>(
     let record_reason = reason.dupe().replace_desc(RRecordType(name.dupe()));
     let return_t = type_::void::why(reason.dupe());
     let statics = type_::dummy_static(reason.dupe());
-    let mut props = type_::properties::PropertiesMap::new();
-    for (prop_name, prop) in own_props {
-        let new_prop = match &**prop {
-            type_::PropertyInner::Field {
-                preferred_def_locs,
-                key_loc,
-                type_,
-                polarity,
-            } => {
-                if defaulted_props.contains(prop_name) {
-                    let r = type_util::reason_of_t(type_).dupe();
-                    let optional_reason = r.dupe().update_desc_new(|desc| {
-                        reason::VirtualReasonDesc::ROptional(Arc::new(desc))
-                    });
-                    type_::Property::new(type_::PropertyInner::Field {
-                        preferred_def_locs: preferred_def_locs.clone(),
-                        key_loc: key_loc.dupe(),
-                        type_: Type::new(type_::TypeInner::OptionalT {
-                            reason: optional_reason,
-                            type_: type_.dupe(),
-                            use_desc: false,
-                        }),
-                        polarity: polarity.clone(),
-                    })
-                } else {
-                    prop.dupe()
+    let props: type_::properties::PropertiesMap = own_props
+        .iter()
+        .map(|(prop_name, prop)| {
+            let new_prop = match &**prop {
+                type_::PropertyInner::Field {
+                    preferred_def_locs,
+                    key_loc,
+                    type_,
+                    polarity,
+                } => {
+                    if defaulted_props.contains(prop_name) {
+                        let r = type_util::reason_of_t(type_).dupe();
+                        let optional_reason = r.dupe().update_desc_new(|desc| {
+                            reason::VirtualReasonDesc::ROptional(Arc::new(desc))
+                        });
+                        type_::Property::new(type_::PropertyInner::Field {
+                            preferred_def_locs: preferred_def_locs.clone(),
+                            key_loc: key_loc.dupe(),
+                            type_: Type::new(type_::TypeInner::OptionalT {
+                                reason: optional_reason,
+                                type_: type_.dupe(),
+                                use_desc: false,
+                            }),
+                            polarity: polarity.clone(),
+                        })
+                    } else {
+                        prop.dupe()
+                    }
                 }
-            }
-            _ => prop.dupe(),
-        };
-        props.insert(Name::new(prop_name.dupe()), new_prop);
-    }
+                _ => prop.dupe(),
+            };
+            (Name::new(prop_name.dupe()), new_prop)
+        })
+        .collect();
     let param = obj_type::mk_with_proto(
         cx,
         record_reason.dupe(),
@@ -483,7 +485,7 @@ fn add_record_constructor<'cx>(
     class_props.insert(FlowSmolStr::new_inline("constructor"), constructor);
 }
 
-fn add_name_field(reason: Reason, props: &mut type_::properties::PropertiesMap) {
+fn add_name_field(reason: Reason, props: &mut BTreeMap<Name, type_::Property>) {
     let name_key = Name::new(FlowSmolStr::new("name"));
     if !props.contains_key(&name_key) {
         let prop = type_::Property::new(type_::PropertyInner::Field {
@@ -3263,8 +3265,9 @@ fn merge_interface<'cx>(
     let static_ = {
         let static_reason = reason.dupe().update_desc(|d| RStatics(Arc::new(d)));
         // interfaces don't have a name field, or even statics
-        let mut props = type_::properties::PropertiesMap::new();
-        add_name_field(reason.dupe(), &mut props);
+        let mut props_map = BTreeMap::new();
+        add_name_field(reason.dupe(), &mut props_map);
+        let props = type_::properties::PropertiesMap::from_btree_map(props_map);
         let proto = Type::new(type_::TypeInner::NullProtoT(static_reason.dupe()));
         obj_type::mk_with_proto(
             cx,
@@ -3535,12 +3538,15 @@ fn merge_this_class_t<'cx>(
         // let static =
         let static_ = {
             let static_reason = reason.dupe().update_desc(|d| RStatics(Arc::new(d)));
-            let mut props = type_::properties::PropertiesMap::new();
-            for (k, prop) in static_props {
-                let p = merge_class_prop(&env, cx, file, &prop);
-                props.insert(Name::new(k.dupe()), p);
-            }
-            add_name_field(reason.dupe(), &mut props);
+            let mut props_map: BTreeMap<Name, type_::Property> = static_props
+                .iter()
+                .map(|(k, prop)| {
+                    let p = merge_class_prop(&env, cx, file, prop);
+                    (Name::new(k.dupe()), p)
+                })
+                .collect();
+            add_name_field(reason.dupe(), &mut props_map);
+            let props = type_::properties::PropertiesMap::from_btree_map(props_map);
             obj_type::mk_with_proto(
                 cx,
                 static_reason,
@@ -4162,11 +4168,12 @@ fn merge_declare_class<'cx>(
                     }
                 }
             }
-            let mut props: type_::properties::PropertiesMap = props_smap
+            let mut props_map: BTreeMap<Name, type_::Property> = props_smap
                 .into_iter()
                 .map(|(k, v)| (Name::new(k), v))
                 .collect();
-            add_name_field(reason_c.dupe(), &mut props);
+            add_name_field(reason_c.dupe(), &mut props_map);
+            let props = type_::properties::PropertiesMap::from_btree_map(props_map);
             let call = {
                 let ts: Vec<Type> = static_calls
                     .iter()

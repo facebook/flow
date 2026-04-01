@@ -276,17 +276,12 @@ fn merge_type<'cx>(cx: &Context<'cx>, pair: (Type, Type)) -> Type {
                 let should_merge = merge_map.values().all(|x| *x) && o1.proto_t == o2.proto_t;
                 match (should_merge, &obj_kind, merge_call) {
                     (true, ObjKind::Indexed(_), Some(call)) => {
-                        let mut map = properties::PropertiesMap::new();
-                        for (name, p) in map1.iter() {
-                            if map2.get(name).is_none() {
-                                map.insert(name.dupe(), p.dupe());
-                            }
-                        }
-                        for (name, p) in map2.iter() {
-                            if map1.get(name).is_none() {
-                                map.insert(name.dupe(), p.dupe());
-                            }
-                        }
+                        let map: properties::PropertiesMap = map1
+                            .iter()
+                            .filter(|(name, _)| map2.get(name).is_none())
+                            .chain(map2.iter().filter(|(name, _)| map1.get(name).is_none()))
+                            .map(|(name, p)| (name.dupe(), p.dupe()))
+                            .collect();
                         let id = cx.generate_property_map(map);
                         let flags = Flags {
                             obj_kind,

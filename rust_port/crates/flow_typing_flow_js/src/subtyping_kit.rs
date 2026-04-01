@@ -3024,8 +3024,10 @@ pub fn rec_sub_t<'cx>(
                 eprintln!("trapped");
             }
             for (x, p) in cx.find_props(obj.props_tmap.dupe()).iter() {
-                let mut pmap = properties::PropertiesMap::new();
-                pmap.insert(x.dupe(), p.clone());
+                let pmap =
+                    properties::PropertiesMap::from_btree_map(std::collections::BTreeMap::from([
+                        (x.dupe(), p.clone()),
+                    ]));
                 let id = cx.generate_property_map(pmap);
                 let new_obj = ObjType {
                     flags: obj.flags.clone(),

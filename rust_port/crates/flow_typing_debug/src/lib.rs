@@ -750,24 +750,22 @@ fn dump_use_t_<CX>(
             use type_::property::first_loc;
             use type_::property::read_t;
             use type_::property::write_t;
-            let mut props: type_::object::Props = type_::object::Props::new();
-            for (k, p) in prop_map {
-                match (read_t(p), write_t(p)) {
-                    (Some(t), _) | (_, Some(t)) => {
-                        props.insert(
-                            k.clone(),
-                            type_::object::Prop {
-                                prop_t: t,
-                                is_own: true,
-                                is_method: false,
-                                polarity: Polarity::Neutral,
-                                key_loc: first_loc(p),
-                            },
-                        );
-                    }
-                    _ => {}
-                }
-            }
+            let props: type_::object::Props = prop_map
+                .iter()
+                .filter_map(|(k, p)| match (read_t(p), write_t(p)) {
+                    (Some(t), _) | (_, Some(t)) => Some((
+                        k.clone(),
+                        type_::object::Prop {
+                            prop_t: t,
+                            is_own: true,
+                            is_method: false,
+                            polarity: Polarity::Neutral,
+                            key_loc: first_loc(p),
+                        },
+                    )),
+                    _ => None,
+                })
+                .collect();
             let obj_kind = match dict {
                 None => ObjKind::Exact,
                 Some(d) => ObjKind::Indexed(d.clone()),

@@ -2104,22 +2104,19 @@ pub fn namespace_type<'cx>(
     use flow_typing_type::type_::PropertyInner;
     use flow_typing_type::type_::properties::PropertiesMap;
 
-    fn add(name: Name, symbol: &flow_typing_type::type_::NamedSymbol, acc: &mut PropertiesMap) {
-        acc.insert(
-            name,
-            Property::new(PropertyInner::Field {
-                preferred_def_locs: symbol.preferred_def_locs.clone(),
-                key_loc: symbol.name_loc.dupe(),
-                type_: symbol.type_.dupe(),
-                polarity: Polarity::Positive,
-            }),
-        );
-    }
+    let mk_prop = |symbol: &flow_typing_type::type_::NamedSymbol| -> Property {
+        Property::new(PropertyInner::Field {
+            preferred_def_locs: symbol.preferred_def_locs.clone(),
+            key_loc: symbol.name_loc.dupe(),
+            type_: symbol.type_.dupe(),
+            polarity: Polarity::Positive,
+        })
+    };
 
-    let mut props = PropertiesMap::new();
-    for (name, symbol) in values {
-        add(name.dupe(), symbol, &mut props);
-    }
+    let props: PropertiesMap = values
+        .iter()
+        .map(|(name, symbol)| (name.dupe(), mk_prop(symbol)))
+        .collect();
 
     let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
     let values_type = crate::obj_type::mk_with_proto(
@@ -2133,10 +2130,10 @@ pub fn namespace_type<'cx>(
         proto,
     );
 
-    let mut types_props = PropertiesMap::new();
-    for (name, symbol) in types {
-        add(name.dupe(), symbol, &mut types_props);
-    }
+    let types_props: PropertiesMap = types
+        .iter()
+        .map(|(name, symbol)| (name.dupe(), mk_prop(symbol)))
+        .collect();
     let types_tmap = cx.generate_property_map(types_props);
     Type::new(TypeInner::NamespaceT(std::rc::Rc::new(NamespaceType {
         namespace_symbol,
@@ -3425,35 +3422,32 @@ pub mod import_module_ns_t_kit {
                 polarity: Polarity::Positive,
             })
         };
-        let mut value_props: properties::PropertiesMap = value_exports_tmap
+        let default_entry = if !cx.facebook_module_interop() {
+            exports.cjs_export.as_ref().map(|(def_loc_opt, type_)| {
+                let key_loc = Some(match def_loc_opt {
+                    None => type_util::def_loc_of_t(type_).dupe(),
+                    Some(l) => l.dupe(),
+                });
+                let p = Property::new(PropertyInner::Field {
+                    preferred_def_locs: None,
+                    key_loc,
+                    type_: type_.dupe(),
+                    polarity: Polarity::Positive,
+                });
+                (Name::new("default"), p)
+            })
+        } else {
+            None
+        };
+        let value_props: properties::PropertiesMap = value_exports_tmap
             .iter()
             .map(|(name, ns)| (name.dupe(), named_symbol_to_field(ns)))
+            .chain(default_entry)
             .collect();
         let type_props: properties::PropertiesMap = type_exports_tmap
             .iter()
             .map(|(name, ns)| (name.dupe(), named_symbol_to_field(ns)))
             .collect();
-        let value_props = if cx.facebook_module_interop() {
-            value_props
-        } else {
-            match &exports.cjs_export {
-                Some((def_loc_opt, type_)) => {
-                    let key_loc = Some(match def_loc_opt {
-                        None => type_util::def_loc_of_t(type_).dupe(),
-                        Some(l) => l.dupe(),
-                    });
-                    let p = Property::new(PropertyInner::Field {
-                        preferred_def_locs: None,
-                        key_loc,
-                        type_: type_.dupe(),
-                        polarity: Polarity::Positive,
-                    });
-                    value_props.insert(Name::new("default"), p);
-                    value_props
-                }
-                None => value_props,
-            }
-        };
         let obj_kind = if exports.has_every_named_export {
             ObjKind::Indexed(DictType {
                 key: str_module_t::why(reason.dupe()),
@@ -4192,12 +4186,11 @@ pub mod cjs_extract_named_exports_t_kit {
 
                     let extract_named_exports = |id: properties::Id| -> exports::T {
                         let props = cx.find_props(id);
-                        let mut filtered = properties::PropertiesMap::new();
-                        for (name, prop) in props.iter() {
-                            if !is_munged_prop_name(cx, name) {
-                                filtered.insert(name.dupe(), prop.dupe());
-                            }
-                        }
+                        let filtered: properties::PropertiesMap = props
+                            .iter()
+                            .filter(|(name, _)| !is_munged_prop_name(cx, name))
+                            .map(|(name, prop)| (name.dupe(), prop.dupe()))
+                            .collect();
                         filtered.extract_named_exports().into_iter().collect()
                     };
 

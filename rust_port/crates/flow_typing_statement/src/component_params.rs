@@ -123,21 +123,25 @@ pub fn config<'a, C: Config>(
     use flow_common::polarity::Polarity;
     use flow_typing_type::type_::*;
 
-    let mut pmap = properties::PropertiesMap::new();
     let mut ref_prop: Option<(ALoc, Type)> = None;
-    for p in params {
-        let (key_loc, key, t) = C::param_type_with_name(p);
-        if key.as_str() == "ref" {
-            ref_prop = Some((key_loc.dupe(), t.dupe()));
-        }
-        pmap.add_field(
-            flow_common::reason::Name::new(key),
-            Polarity::Positive,
-            None,
-            Some(key_loc),
-            t,
-        );
-    }
+    let pmap: properties::PropertiesMap = params
+        .iter()
+        .map(|p| {
+            let (key_loc, key, t) = C::param_type_with_name(p);
+            if key.as_str() == "ref" {
+                ref_prop = Some((key_loc.dupe(), t.dupe()));
+            }
+            (
+                flow_common::reason::Name::new(key),
+                Property::new(PropertyInner::Field {
+                    preferred_def_locs: None,
+                    key_loc: Some(key_loc),
+                    type_: t,
+                    polarity: Polarity::Positive,
+                }),
+            )
+        })
+        .collect();
     let rest_t = match rest {
         None => flow_typing_flow_common::obj_type::mk_with_proto(
             cx,

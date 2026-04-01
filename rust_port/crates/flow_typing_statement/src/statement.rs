@@ -188,7 +188,7 @@ pub mod object_expression_acc {
 
     #[derive(Debug, Clone)]
     pub struct ObjectExpressionAcc {
-        pub(super) obj_pmap: properties::PropertiesMap,
+        pub(super) obj_pmap: BTreeMap<Name, type_::Property>,
         pub(super) computed_props: Option<DictType>,
         pub(super) tail: Vec<Element>,
         pub(super) proto: Option<Type>,
@@ -198,7 +198,7 @@ pub mod object_expression_acc {
     impl ObjectExpressionAcc {
         pub fn empty() -> Self {
             Self {
-                obj_pmap: properties::PropertiesMap::new(),
+                obj_pmap: BTreeMap::new(),
                 computed_props: None,
                 tail: vec![],
                 proto: None,
@@ -218,7 +218,7 @@ pub mod object_expression_acc {
                 None
             } else {
                 Some(Element::Slice {
-                    slice_pmap: self.obj_pmap.dupe(),
+                    slice_pmap: properties::PropertiesMap::from_btree_map(self.obj_pmap.clone()),
                     computed_props: self.computed_props.clone(),
                 })
             }
@@ -226,7 +226,7 @@ pub mod object_expression_acc {
 
         pub fn add_prop(
             self,
-            f: impl FnOnce(properties::PropertiesMap) -> properties::PropertiesMap,
+            f: impl FnOnce(BTreeMap<Name, type_::Property>) -> BTreeMap<Name, type_::Property>,
         ) -> Self {
             Self {
                 obj_pmap: f(self.obj_pmap),
@@ -252,7 +252,7 @@ pub mod object_expression_acc {
             };
             tail.push(Element::Spread(t));
             Self {
-                obj_pmap: properties::PropertiesMap::new(),
+                obj_pmap: BTreeMap::new(),
                 tail,
                 computed_props: self.computed_props,
                 proto: self.proto,
@@ -274,9 +274,10 @@ pub mod object_expression_acc {
                     named_set_opt,
                 } => {
                     let overlapping_name_map: properties::PropertiesMap = match named_set_opt {
-                        None => {
-                            let mut result = properties::PropertiesMap::new();
-                            for (prop_name, prop_val) in self.obj_pmap.iter() {
+                        None => self
+                            .obj_pmap
+                            .iter()
+                            .filter(|&(prop_name, _)| {
                                 let prop_t = Type::new(TypeInner::DefT(
                                     mk_reason(
                                         VirtualReasonDesc::RStringLit(prop_name.dupe()),
@@ -287,23 +288,17 @@ pub mod object_expression_acc {
                                         value: prop_name.dupe(),
                                     }),
                                 ));
-                                if speculation_flow::is_subtyping_successful(cx, prop_t, key.dupe())
+                                speculation_flow::is_subtyping_successful(cx, prop_t, key.dupe())
                                     .unwrap_or(false)
-                                {
-                                    result.insert(prop_name.dupe(), prop_val.dupe());
-                                }
-                            }
-                            result
-                        }
-                        Some(named_set) => {
-                            let mut result = properties::PropertiesMap::new();
-                            for (n, prop_val) in self.obj_pmap.iter() {
-                                if !named_set.contains(n) {
-                                    result.insert(n.dupe(), prop_val.dupe());
-                                }
-                            }
-                            result
-                        }
+                            })
+                            .map(|(n, v)| (n.dupe(), v.dupe()))
+                            .collect(),
+                        Some(named_set) => self
+                            .obj_pmap
+                            .iter()
+                            .filter(|&(n, _)| !named_set.contains(n))
+                            .map(|(n, v)| (n.dupe(), v.dupe()))
+                            .collect(),
                     };
                     if overlapping_name_map.is_empty() {
                         match self.computed_props {
@@ -4914,12 +4909,14 @@ fn object_prop<'a>(
                             );
                             let t_clone = t.dupe();
                             let acc = acc.add_prop(|mut pmap| {
-                                pmap.add_field(
+                                pmap.insert(
                                     Name::new(name.dupe()),
-                                    polarity,
-                                    None,
-                                    Some(loc.dupe()),
-                                    t_clone,
+                                    type_::Property::new(type_::PropertyInner::Field {
+                                        preferred_def_locs: None,
+                                        key_loc: Some(loc.dupe()),
+                                        type_: t_clone,
+                                        polarity,
+                                    }),
                                 );
                                 pmap
                             });
@@ -4976,7 +4973,13 @@ fn object_prop<'a>(
                         mk_function_expression(cx, false, reason, fn_loc.dupe(), func)?;
                     let t_clone = t.dupe();
                     let acc = acc.add_prop(|mut pmap| {
-                        pmap.add_method(Name::new(name.dupe()), Some(loc.dupe()), t_clone);
+                        pmap.insert(
+                            Name::new(name.dupe()),
+                            type_::Property::new(type_::PropertyInner::Method {
+                                key_loc: Some(loc.dupe()),
+                                type_: t_clone,
+                            }),
+                        );
                         pmap
                     });
                     (
@@ -5044,11 +5047,23 @@ fn object_prop<'a>(
                     let return_t = type_::extract_getter_type(&function_type);
                     let return_t_clone = return_t.dupe();
                     let acc = acc.add_prop(|mut pmap| {
-                        pmap.add_getter(
-                            Name::new(name.dupe()),
-                            Some(id_loc.dupe()),
-                            return_t_clone,
-                        );
+                        let prop_name = Name::new(name.dupe());
+                        let new_prop = match pmap.get(&prop_name).map(|p| p.deref()) {
+                            Some(type_::PropertyInner::Set {
+                                key_loc: set_key_loc,
+                                type_: set_type,
+                            }) => type_::Property::new(type_::PropertyInner::GetSet {
+                                get_key_loc: Some(id_loc.dupe()),
+                                get_type: return_t_clone,
+                                set_key_loc: set_key_loc.dupe(),
+                                set_type: set_type.dupe(),
+                            }),
+                            _ => type_::Property::new(type_::PropertyInner::Get {
+                                key_loc: Some(id_loc.dupe()),
+                                type_: return_t_clone,
+                            }),
+                        };
+                        pmap.insert(prop_name, new_prop);
                         pmap
                     });
                     (
@@ -5114,7 +5129,23 @@ fn object_prop<'a>(
                     let param_t = type_::extract_setter_type(&function_type);
                     let param_t_clone = param_t.dupe();
                     let acc = acc.add_prop(|mut pmap| {
-                        pmap.add_setter(Name::new(name.dupe()), Some(id_loc.dupe()), param_t_clone);
+                        let prop_name = Name::new(name.dupe());
+                        let new_prop = match pmap.get(&prop_name).map(|p| p.deref()) {
+                            Some(type_::PropertyInner::Get {
+                                key_loc: get_key_loc,
+                                type_: get_type,
+                            }) => type_::Property::new(type_::PropertyInner::GetSet {
+                                get_key_loc: get_key_loc.dupe(),
+                                get_type: get_type.dupe(),
+                                set_key_loc: Some(id_loc.dupe()),
+                                set_type: param_t_clone,
+                            }),
+                            _ => type_::Property::new(type_::PropertyInner::Set {
+                                key_loc: Some(id_loc.dupe()),
+                                type_: param_t_clone,
+                            }),
+                        };
+                        pmap.insert(prop_name, new_prop);
                         pmap
                     });
                     (
@@ -5165,7 +5196,10 @@ fn prop_map_of_object<'a>(
             Ok((map, prop_asts))
         },
     )?;
-    Ok((acc.obj_pmap, prop_asts))
+    Ok((
+        properties::PropertiesMap::from_btree_map(acc.obj_pmap),
+        prop_asts,
+    ))
 }
 
 fn create_computed_prop<'a>(
@@ -11762,8 +11796,7 @@ fn jsx_fragment<'a>(
             None => type_::null::at(expr_loc.dupe()),
             Some(fragment_children_prop) => {
                 let reason_props = mk_reason(VirtualReasonDesc::RReactProps, loc_children.dupe());
-                let mut props_map = properties::PropertiesMap::new();
-                props_map.insert(
+                let props_map = properties::PropertiesMap::from_btree_map(BTreeMap::from([(
                     Name::new(FlowSmolStr::from("children")),
                     type_::Property::new(type_::PropertyInner::Field {
                         preferred_def_locs: None,
@@ -11771,7 +11804,7 @@ fn jsx_fragment<'a>(
                         type_: fragment_children_prop,
                         polarity: Polarity::Neutral,
                     }),
-                );
+                )]));
                 let proto = type_::obj_proto::make(reason_props.dupe());
                 obj_type::mk_with_proto(
                     cx,
@@ -12523,12 +12556,14 @@ pub fn jsx_mk_props<'a>(
                             let id_loc_clone = id_loc.dupe();
                             let aname_clone = aname.dupe();
                             acc.add_prop(|mut pmap| {
-                                pmap.add_field(
+                                pmap.insert(
                                     Name::new(aname_clone),
-                                    Polarity::Neutral,
-                                    None,
-                                    Some(id_loc_clone),
-                                    atype_clone,
+                                    type_::Property::new(type_::PropertyInner::Field {
+                                        preferred_def_locs: None,
+                                        key_loc: Some(id_loc_clone),
+                                        type_: atype_clone,
+                                        polarity: Polarity::Neutral,
+                                    }),
                                 );
                                 pmap
                             })
@@ -12588,12 +12623,14 @@ pub fn jsx_mk_props<'a>(
             match react_jsx_normalize_children_prop(cx, loc_children, unresolved_params.clone()) {
                 None => acc,
                 Some(children_prop) => acc.add_prop(|mut pmap| {
-                    pmap.add_field(
+                    pmap.insert(
                         Name::new(FlowSmolStr::from("children")),
-                        Polarity::Neutral,
-                        None,
-                        None,
-                        children_prop,
+                        type_::Property::new(type_::PropertyInner::Field {
+                            preferred_def_locs: None,
+                            key_loc: None,
+                            type_: children_prop,
+                            polarity: Polarity::Neutral,
+                        }),
                     );
                     pmap
                 }),
@@ -13500,7 +13537,7 @@ fn static_method_call_object<'a>(
             let (pmap, properties_typed) = prop_map_of_object(cx, obj_properties)?;
             let propdesc_type =
                 flow_js_utils::lookup_builtin_type(cx, "PropertyDescriptor", reason.dupe());
-            let mut props = properties::PropertiesMap::new();
+            let mut props_entries: BTreeMap<Name, Property> = BTreeMap::new();
             for (x, p) in pmap.iter() {
                 let key_loc = property::read_loc(p);
                 match property::read_t(p) {
@@ -13546,10 +13583,11 @@ fn static_method_call_object<'a>(
                             type_: t,
                             polarity: Polarity::Neutral,
                         });
-                        props.insert(x.dupe(), prop);
+                        props_entries.insert(x.dupe(), prop);
                     }
                 }
             }
+            let props = properties::PropertiesMap::from_btree_map(props_entries);
             let t = obj_type::mk_with_proto(
                 cx,
                 reason.dupe(),
@@ -14849,68 +14887,77 @@ pub fn mk_class_sig<'a>(
                         func_class_sig_types::StmtConfigTypes,
                     > {
                         // Build an object type with properties for each instance field.
-                        let mut props = properties::PropertiesMap::new();
-                        for elem in elements.iter() {
-                            use ast::class::BodyElement;
-                            use ast::class::Property;
-                            match elem {
-                                BodyElement::Property(Property {
-                                    key: expression::object::Key::Identifier(id_pair),
-                                    annot,
-                                    static_: false,
-                                    ..
-                                }) => {
-                                    let id_loc = &id_pair.loc;
-                                    let name = &id_pair.name;
-                                    let field_t = match annot {
-                                        ast::types::AnnotationOrHint::Available(annot) => {
-                                            let (t, _) =
-                                                type_annotation::mk_type_available_annotation(
-                                                    cx,
-                                                    tparams_map_with_this
-                                                        .iter()
-                                                        .map(|(k, v)| (k.dupe(), v.dupe()))
-                                                        .collect(),
-                                                    annot,
-                                                );
-                                            t
-                                        }
-                                        ast::types::AnnotationOrHint::Missing(loc) => {
-                                            any_t::at(type_::AnySource::AnyError(None), loc.dupe())
-                                        }
-                                    };
-                                    // Create an optional property if it has an initializer (i.e. has a default value).
-                                    let prop_t = if defaulted_props.contains(name) {
-                                        let field_reason = mk_reason(
-                                            VirtualReasonDesc::RProperty(
-                                                Some(Name::new(name.dupe())),
-                                            ),
-                                            id_loc.dupe(),
-                                        );
-                                        Type::new(TypeInner::OptionalT {
-                                            reason: mk_reason(
-                                                VirtualReasonDesc::ROptional(
-                                                    Arc::new(field_reason.desc(true).clone()),
+                        let props: properties::PropertiesMap = elements
+                            .iter()
+                            .filter_map(|elem| {
+                                use ast::class::BodyElement;
+                                use ast::class::Property;
+                                match elem {
+                                    BodyElement::Property(Property {
+                                        key: expression::object::Key::Identifier(id_pair),
+                                        annot,
+                                        static_: false,
+                                        ..
+                                    }) => {
+                                        let id_loc = &id_pair.loc;
+                                        let name = &id_pair.name;
+                                        let field_t = match annot {
+                                            ast::types::AnnotationOrHint::Available(annot) => {
+                                                let (t, _) =
+                                                    type_annotation::mk_type_available_annotation(
+                                                        cx,
+                                                        tparams_map_with_this
+                                                            .iter()
+                                                            .map(|(k, v)| (k.dupe(), v.dupe()))
+                                                            .collect(),
+                                                        annot,
+                                                    );
+                                                t
+                                            }
+                                            ast::types::AnnotationOrHint::Missing(loc) => {
+                                                any_t::at(
+                                                    type_::AnySource::AnyError(None),
+                                                    loc.dupe(),
+                                                )
+                                            }
+                                        };
+                                        // Create an optional property if it has an initializer (i.e. has a default value).
+                                        let prop_t = if defaulted_props.contains(name) {
+                                            let field_reason = mk_reason(
+                                                VirtualReasonDesc::RProperty(
+                                                    Some(Name::new(name.dupe())),
                                                 ),
                                                 id_loc.dupe(),
-                                            ),
-                                            type_: field_t,
-                                            use_desc: false,
-                                        })
-                                    } else {
-                                        field_t
-                                    };
-                                    props.add_field(
-                                        Name::new(name.dupe()),
-                                        Polarity::Positive,
-                                        None,
-                                        Some(id_loc.dupe()),
-                                        prop_t,
-                                    );
+                                            );
+                                            Type::new(TypeInner::OptionalT {
+                                                reason: mk_reason(
+                                                    VirtualReasonDesc::ROptional(
+                                                        Arc::new(
+                                                            field_reason.desc(true).clone(),
+                                                        ),
+                                                    ),
+                                                    id_loc.dupe(),
+                                                ),
+                                                type_: field_t,
+                                                use_desc: false,
+                                            })
+                                        } else {
+                                            field_t
+                                        };
+                                        Some((
+                                            Name::new(name.dupe()),
+                                            type_::Property::new(type_::PropertyInner::Field {
+                                                preferred_def_locs: None,
+                                                key_loc: Some(id_loc.dupe()),
+                                                type_: prop_t,
+                                                polarity: Polarity::Positive,
+                                            }),
+                                        ))
+                                    }
+                                    _ => None,
                                 }
-                                _ => {}
-                            }
-                        }
+                            })
+                            .collect();
                         let record_reason = mk_reason(
                             VirtualReasonDesc::RRecordType(
                                 record_name.dupe(),
@@ -16327,55 +16374,59 @@ pub fn mk_record_sig<'a>(
                      record_name_str: &FlowSmolStr,
                      name_loc: ALoc|
                      -> func::Func<StmtConfigTypes> {
-                        let mut props = properties::PropertiesMap::new();
-                        for elem in elements.iter() {
-                            match elem {
-                                statement::record_declaration::BodyElement::Property(prop) => {
-                                    let key = &prop.key;
-                                    let annot = &prop.annot;
-                                    let (annot_t, _) =
-                                        type_annotation::mk_type_available_annotation(
-                                            cx,
-                                            tparams_map_with_this
-                                                .iter()
-                                                .map(|(k, v)| (k.dupe(), v.dupe()))
-                                                .collect(),
-                                            annot,
-                                        );
-                                    let (key_loc, name) =
-                                        flow_parser_utils::record_utils::loc_and_string_of_property_key(key)
-                                            .expect("Record property must have a valid key");
-                                    let prop_t = if defaulted_props.contains(&name) {
-                                        let field_reason = mk_reason(
-                                            VirtualReasonDesc::RProperty(Some(Name::new(
-                                                name.dupe(),
-                                            ))),
-                                            key_loc.dupe(),
-                                        );
-                                        Type::new(TypeInner::OptionalT {
-                                            reason: mk_reason(
-                                                VirtualReasonDesc::ROptional(Arc::new(
-                                                    field_reason.desc(true).clone(),
-                                                )),
+                        let props: properties::PropertiesMap = elements
+                            .iter()
+                            .filter_map(|elem| {
+                                match elem {
+                                    statement::record_declaration::BodyElement::Property(prop) => {
+                                        let key = &prop.key;
+                                        let annot = &prop.annot;
+                                        let (annot_t, _) =
+                                            type_annotation::mk_type_available_annotation(
+                                                cx,
+                                                tparams_map_with_this
+                                                    .iter()
+                                                    .map(|(k, v)| (k.dupe(), v.dupe()))
+                                                    .collect(),
+                                                annot,
+                                            );
+                                        let (key_loc, name) =
+                                            flow_parser_utils::record_utils::loc_and_string_of_property_key(key)
+                                                .expect("Record property must have a valid key");
+                                        let prop_t = if defaulted_props.contains(&name) {
+                                            let field_reason = mk_reason(
+                                                VirtualReasonDesc::RProperty(Some(Name::new(
+                                                    name.dupe(),
+                                                ))),
                                                 key_loc.dupe(),
-                                            ),
-                                            type_: annot_t,
-                                            use_desc: false,
-                                        })
-                                    } else {
-                                        annot_t
-                                    };
-                                    props.add_field(
-                                        Name::new(name),
-                                        Polarity::Positive,
-                                        None,
-                                        Some(key_loc),
-                                        prop_t,
-                                    );
+                                            );
+                                            Type::new(TypeInner::OptionalT {
+                                                reason: mk_reason(
+                                                    VirtualReasonDesc::ROptional(Arc::new(
+                                                        field_reason.desc(true).clone(),
+                                                    )),
+                                                    key_loc.dupe(),
+                                                ),
+                                                type_: annot_t,
+                                                use_desc: false,
+                                            })
+                                        } else {
+                                            annot_t
+                                        };
+                                        Some((
+                                            Name::new(name),
+                                            type_::Property::new(type_::PropertyInner::Field {
+                                                preferred_def_locs: None,
+                                                key_loc: Some(key_loc),
+                                                type_: prop_t,
+                                                polarity: Polarity::Positive,
+                                            }),
+                                        ))
+                                    }
+                                    _ => None,
                                 }
-                                _ => {}
-                            }
-                        }
+                            })
+                            .collect();
                         let record_reason = mk_reason(
                             VirtualReasonDesc::RRecordType(record_name_str.dupe()),
                             name_loc.dupe(),
@@ -17854,24 +17905,26 @@ pub fn mk_func_sig<'a>(
     let return_t =
         mk_inference_target_with_annots(type_env::has_hint(cx, ret_loc.dupe()), return_t);
     let statics_t = {
-        let mut props = properties::PropertiesMap::new();
-        for (name, env_key) in statics.iter() {
-            let expr_t = type_env::find_write(
-                cx,
-                env_key.def_loc_type,
-                mk_reason(
-                    VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
-                    env_key.loc.dupe(),
-                ),
-            );
-            let field = type_::Property::new(type_::PropertyInner::Field {
-                preferred_def_locs: None,
-                key_loc: Some(env_key.loc.dupe()),
-                type_: expr_t,
-                polarity: Polarity::Neutral,
-            });
-            props.insert(Name::new(name.dupe()), field);
-        }
+        let props: properties::PropertiesMap = statics
+            .iter()
+            .map(|(name, env_key)| {
+                let expr_t = type_env::find_write(
+                    cx,
+                    env_key.def_loc_type,
+                    mk_reason(
+                        VirtualReasonDesc::RIdentifier(Name::new(name.dupe())),
+                        env_key.loc.dupe(),
+                    ),
+                );
+                let field = type_::Property::new(type_::PropertyInner::Field {
+                    preferred_def_locs: None,
+                    key_loc: Some(env_key.loc.dupe()),
+                    type_: expr_t,
+                    polarity: Polarity::Neutral,
+                });
+                (Name::new(name.dupe()), field)
+            })
+            .collect();
         obj_type::mk_with_proto(
             cx,
             reason.dupe(),

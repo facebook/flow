@@ -954,18 +954,20 @@ fn mk_module_type<'a>(
                 (Some(def_loc.dupe()), t.dupe())
             }
             module_info::CjsExportsState::CJSExportNames(named) => {
-                let mut props = properties::PropertiesMap::new();
-                for (name, (key_loc, type_)) in named {
-                    props.insert(
-                        Name::new(name.dupe()),
-                        Property::new(PropertyInner::Field {
-                            preferred_def_locs: None,
-                            key_loc: Some(key_loc.dupe()),
-                            polarity: Polarity::Positive,
-                            type_: type_.dupe(),
-                        }),
-                    );
-                }
+                let props: properties::PropertiesMap = named
+                    .iter()
+                    .map(|(name, (key_loc, type_))| {
+                        (
+                            Name::new(name.dupe()),
+                            Property::new(PropertyInner::Field {
+                                preferred_def_locs: None,
+                                key_loc: Some(key_loc.dupe()),
+                                polarity: Polarity::Positive,
+                                type_: type_.dupe(),
+                            }),
+                        )
+                    })
+                    .collect();
                 let proto = Type::new(TypeInner::ObjProtoT(reason.dupe()));
                 (
                     None,

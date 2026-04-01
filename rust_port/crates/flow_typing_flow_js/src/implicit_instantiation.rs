@@ -684,8 +684,7 @@ fn t_of_use_t<'cx>(
                     UseTResult::UpperEmpty => Ok(UseTResult::UpperEmpty),
                     UseTResult::UpperNonT(u) => Ok(UseTResult::UpperNonT(u)),
                     UseTResult::UpperT(t) => {
-                        let mut pmap = properties::PropertiesMap::new();
-                        pmap.insert(
+                        let pmap = properties::PropertiesMap::from_btree_map(BTreeMap::from([(
                             flow_common::reason::Name::new("ref"),
                             Property::new(PropertyInner::Field {
                                 preferred_def_locs: None,
@@ -693,7 +692,7 @@ fn t_of_use_t<'cx>(
                                 type_: ref_t.dupe(),
                                 polarity: Polarity::Neutral,
                             }),
-                        );
+                        )]));
                         let reversed = reverse_component_check_config(cx, r, &pmap, &t)?;
                         match merge_lower_bounds(cx, &reversed)? {
                             None => Ok(UseTResult::UpperEmpty),

@@ -3639,7 +3639,7 @@ fn convert_object<'a>(
     #[derive(Clone)]
     struct Acc {
         dict: Option<DictType>,
-        pmap: type_::properties::PropertiesMap,
+        pmap: std::collections::BTreeMap<Name, type_::Property>,
         tail: Vec<AccElement>,
         proto: Option<Type>,
         calls: Vec<Type>,
@@ -3649,7 +3649,7 @@ fn convert_object<'a>(
         fn empty() -> Self {
             Self {
                 dict: None,
-                pmap: type_::properties::PropertiesMap::new(),
+                pmap: std::collections::BTreeMap::new(),
                 tail: Vec::new(),
                 proto: None,
                 calls: Vec::new(),
@@ -3662,7 +3662,7 @@ fn convert_object<'a>(
             } else {
                 Some(AccElement::Slice {
                     dict: self.dict.clone(),
-                    pmap: self.pmap.clone(),
+                    pmap: type_::properties::PropertiesMap::from_btree_map(self.pmap.clone()),
                 })
             }
         }
@@ -3686,7 +3686,10 @@ fn convert_object<'a>(
             Ok(())
         }
 
-        fn add_prop(&mut self, f: impl FnOnce(&mut type_::properties::PropertiesMap)) {
+        fn add_prop(
+            &mut self,
+            f: impl FnOnce(&mut std::collections::BTreeMap<Name, type_::Property>),
+        ) {
             f(&mut self.pmap);
         }
 
@@ -3711,7 +3714,7 @@ fn convert_object<'a>(
             }
             tail.push(AccElement::Spread(t));
             self.dict = None;
-            self.pmap = type_::properties::PropertiesMap::new();
+            self.pmap = std::collections::BTreeMap::new();
             self.tail = tail;
         }
 
@@ -4144,7 +4147,22 @@ fn convert_object<'a>(
                     let id_loc_clone = id_loc.dupe();
                     let return_t_clone = return_t.dupe();
                     acc.add_prop(move |pmap| {
-                        pmap.add_getter(prop_name, Some(id_loc_clone), return_t_clone);
+                        let new_prop = match pmap.get(&prop_name).map(|p| p.deref()) {
+                            Some(type_::PropertyInner::Set {
+                                key_loc: set_key_loc,
+                                type_: set_type,
+                            }) => type_::Property::new(type_::PropertyInner::GetSet {
+                                get_key_loc: Some(id_loc_clone),
+                                get_type: return_t_clone,
+                                set_key_loc: set_key_loc.dupe(),
+                                set_type: set_type.dupe(),
+                            }),
+                            _ => type_::Property::new(type_::PropertyInner::Get {
+                                key_loc: Some(id_loc_clone),
+                                type_: return_t_clone,
+                            }),
+                        };
+                        pmap.insert(prop_name, new_prop);
                     });
                     ast::types::object::NormalProperty {
                         loc: prop.loc.dupe(),
@@ -4207,7 +4225,22 @@ fn convert_object<'a>(
                     let id_loc_clone = id_loc.dupe();
                     let param_t_clone = param_t.dupe();
                     acc.add_prop(move |pmap| {
-                        pmap.add_setter(prop_name, Some(id_loc_clone), param_t_clone);
+                        let new_prop = match pmap.get(&prop_name).map(|p| p.deref()) {
+                            Some(type_::PropertyInner::Get {
+                                key_loc: get_key_loc,
+                                type_: get_type,
+                            }) => type_::Property::new(type_::PropertyInner::GetSet {
+                                get_key_loc: get_key_loc.dupe(),
+                                get_type: get_type.dupe(),
+                                set_key_loc: Some(id_loc_clone),
+                                set_type: param_t_clone,
+                            }),
+                            _ => type_::Property::new(type_::PropertyInner::Set {
+                                key_loc: Some(id_loc_clone),
+                                type_: param_t_clone,
+                            }),
+                        };
+                        pmap.insert(prop_name, new_prop);
                     });
                     ast::types::object::NormalProperty {
                         loc: prop.loc.dupe(),
