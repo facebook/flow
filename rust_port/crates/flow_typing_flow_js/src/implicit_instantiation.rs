@@ -594,7 +594,6 @@ fn t_of_use_t<'cx>(
         | UseTInner::ObjTestProtoT(..)
         | UseTInner::HasOwnPropT(..)
         | UseTInner::LookupT { .. }
-        | UseTInner::DestructuringT(..)
         | UseTInner::OptionalIndexedAccessT { .. }
         | UseTInner::GetKeysT(..)
         | UseTInner::GetValuesT(..)

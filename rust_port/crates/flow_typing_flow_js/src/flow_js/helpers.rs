@@ -328,7 +328,6 @@ pub(super) fn empty_success(u: &UseT<Context>) -> bool {
         }
         UseTInner::CondT { .. } => false,
         UseTInner::ConditionalT { .. } => false,
-        UseTInner::DestructuringT { .. } => false,
         UseTInner::EnumExhaustiveCheckT { .. } => false,
         UseTInner::FilterMaybeT { .. } => false,
         UseTInner::ObjKitT { .. } => false,
@@ -2463,6 +2462,19 @@ pub(super) fn possible_concrete_types_for_object_assign<'cx>(
     t: &Type,
 ) -> Result<Vec<Type>, SpeculativeError> {
     possible_concrete_types(ConcretizationKind::ConcretizeForObjectAssign, cx, reason, t)
+}
+
+pub(super) fn possible_concrete_types_for_destructuring<'cx>(
+    cx: &Context<'cx>,
+    reason: &Reason,
+    t: &Type,
+) -> Result<Vec<Type>, SpeculativeError> {
+    possible_concrete_types(
+        ConcretizationKind::ConcretizeForDestructuring,
+        cx,
+        reason,
+        t,
+    )
 }
 
 pub(super) fn possible_concrete_types_for_computed_object_keys<'cx>(

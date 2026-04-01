@@ -97,7 +97,6 @@ and reason_of_use_t = function
   | ConcretizeTypeAppsT (_, _, (_, _, _, _, reason), _) -> reason
   | CondT (reason, _, _, _) -> reason
   | SealGenericT { reason; _ } -> reason
-  | DestructuringT (reason, _, _, _, _) -> reason
   | ResolveUnionT { reason; _ } -> reason
   | CheckUnusedPromiseT { reason; _ } -> reason
   | WriteComputedObjPropCheckT { reason; _ } -> reason
@@ -272,7 +271,6 @@ let rec util_use_op_of_use_t :
   | GetValuesT (_, _)
   | ConcretizeT _
   | CondT (_, _, _, _)
-  | DestructuringT _
   | ResolveUnionT _
   | ExitRendersT _
   | EnumExhaustiveCheckT _

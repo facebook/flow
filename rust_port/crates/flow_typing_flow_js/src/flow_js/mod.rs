@@ -74,7 +74,6 @@ use flow_typing_type::type_::DefT;
 use flow_typing_type::type_::DefTInner;
 use flow_typing_type::type_::DepthTrace;
 use flow_typing_type::type_::DerivedType;
-use flow_typing_type::type_::DestructKind;
 use flow_typing_type::type_::Destructor;
 use flow_typing_type::type_::DictType;
 use flow_typing_type::type_::DroType;
@@ -496,6 +495,14 @@ impl FlowJs {
         t: &Type,
     ) -> Result<Vec<Type>, SpeculativeError> {
         helpers::possible_concrete_types_for_object_assign(cx, reason, t)
+    }
+
+    pub fn possible_concrete_types_for_destructuring<'cx>(
+        cx: &Context<'cx>,
+        reason: &Reason,
+        t: &Type,
+    ) -> Result<Vec<Type>, SpeculativeError> {
+        helpers::possible_concrete_types_for_destructuring(cx, reason, t)
     }
 
     pub fn possible_concrete_types_for_computed_object_keys<'cx>(

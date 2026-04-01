@@ -781,10 +781,6 @@ module rec TypeTerm : sig
     | CondT of reason * t option * t * t_out
     (* util for deciding subclassing relations *)
     | ExtendsUseT of use_op * reason * t list * t * t
-    (* Used to calculate a destructured binding. If annot is true, the lower
-     * bound is an annotation (0->1), and t_out will be unified with the
-     * destructured type. The caller should wrap the tvar with an AnnotT. *)
-    | DestructuringT of reason * destruct_kind * selector * tvar * int
     (* Used to delay union lower bound handling until all the types in the union have been processed themselves *)
     | ResolveUnionT of {
         reason: reason;
@@ -884,15 +880,6 @@ module rec TypeTerm : sig
         default_case_loc: ALoc.t option;
       }
     | EnumExhaustiveCheckInvalid of ALoc.t list
-
-  (* Bindings created from destructuring annotations should themselves act like
-   * annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
-   * because `p` should behave like a `string` annotation.
-   *
-   * We accomplish this by wrapping the binding itself in an AnnotT type. *)
-  and destruct_kind =
-    | DestructAnnot
-    | DestructInfer
 
   and call_action =
     | Funcalltype of funcalltype
@@ -1657,6 +1644,7 @@ module rec TypeTerm : sig
     | ConcretizeForOperatorsChecking
     | ConcretizeForComputedObjectKeys
     | ConcretizeForObjectAssign
+    | ConcretizeForDestructuring
     | ConcretizeForSentinelPropTest
     | ConcretizeForMatchArg of { keep_unions: bool }
     | ConcretizeAll
@@ -4291,6 +4279,7 @@ let string_of_use_ctor = function
       | ConcretizeForOperatorsChecking -> "ConcretizeForOperatorsChecking"
       | ConcretizeForComputedObjectKeys -> "ConcretizeForComputedObjectKeys"
       | ConcretizeForObjectAssign -> "ConcretizeForObjectAssign"
+      | ConcretizeForDestructuring -> "ConcretizeForDestructuring"
       | ConcretizeForMatchArg { keep_unions } ->
         spf "ConcretizeForMatchArg {keep_unions=%b}" keep_unions)
   | LookupT _ -> "LookupT"
@@ -4330,7 +4319,6 @@ let string_of_use_ctor = function
   | TypeCastT _ -> "TypeCastT"
   | ConcretizeTypeAppsT _ -> "ConcretizeTypeAppsT"
   | CondT _ -> "CondT"
-  | DestructuringT _ -> "DestructuringT"
   | ResolveUnionT _ -> "ResolveUnionT"
   | FilterOptionalT _ -> "FilterOptionalT"
   | FilterMaybeT _ -> "FilterMaybeT"

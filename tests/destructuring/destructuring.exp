@@ -1551,6 +1551,27 @@ References:
                      ^^^^^^^ [1]
 
 
+Error ----------------------------------------------------------------------------------------- poly_concretize.js:18:22
+
+Flow cannot determine a type for object type [1]. object type [2] is inexact, so it may contain `onPress` with a type
+that conflicts with `onPress`'s definition in object type [1]. Try making object type [2] exact. [cannot-spread-inexact]
+
+   poly_concretize.js:18:22
+                            v
+   18| type PressableItem = {
+   19|   ...Base,
+   20|   onPress?: () => void,
+   21|   linkProps?: {href: string},
+   22|   ...LabelProps,
+   23| };
+       ^ [1]
+
+References:
+   poly_concretize.js:22:6
+   22|   ...LabelProps,
+            ^^^^^^^^^^ [2]
+
+
 Error ------------------------------------------------------------------------------------------------ string_lit.js:2:2
 
 Cannot cast `val` to undefined because string [1] is incompatible with undefined [2]. [incompatible-type]
@@ -1628,4 +1649,4 @@ References:
 
 
 
-Found 113 errors
+Found 114 errors

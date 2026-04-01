@@ -34,6 +34,17 @@ val reposition_reason : Context.t -> Reason.reason -> ?use_desc:bool -> Type.t -
 (* constraint utils *)
 val filter_optional : Context.t -> reason -> Type.t -> Type.ident
 
+val eval_selector :
+  Context.t ->
+  ?trace:Type.DepthTrace.t ->
+  annot:bool ->
+  Reason.reason ->
+  Type.t ->
+  Type.selector ->
+  Type.tvar ->
+  int ->
+  unit
+
 module Cache : sig
   val summarize_flow_constraint : Context.t -> (string * int) list
 end
@@ -137,6 +148,8 @@ val possible_concrete_types_for_operators_checking :
   Context.t -> Reason.reason -> Type.t -> Type.t list
 
 val possible_concrete_types_for_object_assign : Context.t -> Reason.reason -> Type.t -> Type.t list
+
+val possible_concrete_types_for_destructuring : Context.t -> Reason.reason -> Type.t -> Type.t list
 
 val possible_concrete_types_for_computed_object_keys :
   Context.t -> Reason.reason -> Type.t -> Type.t list

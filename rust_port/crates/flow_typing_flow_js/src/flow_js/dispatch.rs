@@ -3027,12 +3027,6 @@ fn __flow_impl<'cx>(
                 ),
             )?;
         }
-        (
-            TypeInner::IntersectionT(_, _),
-            UseTInner::DestructuringT(reason, kind, selector, tout, id),
-        ) => {
-            destruct(cx, trace, reason, kind.clone(), l, selector, tout, *id)?;
-        }
         // extends
         (
             TypeInner::IntersectionT(_, rep),
@@ -3187,7 +3181,8 @@ fn __flow_impl<'cx>(
                     ConcretizationKind::ConcretizeForOptionalChain
                     | ConcretizationKind::ConcretizeForOperatorsChecking
                     | ConcretizationKind::ConcretizeForComputedObjectKeys
-                    | ConcretizationKind::ConcretizeForObjectAssign,
+                    | ConcretizationKind::ConcretizeForObjectAssign
+                    | ConcretizationKind::ConcretizeForDestructuring,
                 seen: _,
                 collector,
             },
@@ -3558,12 +3553,6 @@ fn __flow_impl<'cx>(
                     )?;
                 }
             }
-        }
-        // *****************
-        // * destructuring *
-        // *****************
-        (_, UseTInner::DestructuringT(reason, kind, selector, tout, id)) => {
-            destruct(cx, trace, reason, kind.clone(), l, selector, tout, *id)?;
         }
         // ********************
         // * conditional type *
@@ -3951,6 +3940,16 @@ fn __flow_impl<'cx>(
             TypeInner::DefT(_, def_t),
             UseTInner::ConcretizeT {
                 kind: ConcretizationKind::ConcretizeForPredicate(_),
+                collector,
+                ..
+            },
+        ) if matches!(def_t.deref(), DefTInner::PolyT { .. }) => {
+            collector.add(l.dupe());
+        }
+        (
+            TypeInner::DefT(_, def_t),
+            UseTInner::ConcretizeT {
+                kind: ConcretizationKind::ConcretizeForDestructuring,
                 collector,
                 ..
             },
@@ -5603,6 +5602,16 @@ fn __flow_impl<'cx>(
             _,
             UseTInner::ConcretizeT {
                 kind: ConcretizationKind::ConcretizeForObjectAssign,
+                collector,
+                ..
+            },
+        ) => {
+            collector.add(l.dupe());
+        }
+        (
+            _,
+            UseTInner::ConcretizeT {
+                kind: ConcretizationKind::ConcretizeForDestructuring,
                 collector,
                 ..
             },

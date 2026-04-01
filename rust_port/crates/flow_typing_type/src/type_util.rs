@@ -138,7 +138,6 @@ pub fn reason_of_use_t<CX>(u: &UseT<CX>) -> &Reason {
         UseTInner::ConcretizeTypeAppsT(_, _, box (_, _, _, _, reason), _) => reason,
         UseTInner::CondT(reason, _, _, _) => reason,
         UseTInner::SealGenericT { reason, .. } => reason,
-        UseTInner::DestructuringT(reason, _, _, _, _) => reason,
         UseTInner::ResolveUnionT { reason, .. } => reason,
         UseTInner::CheckUnusedPromiseT { reason, .. } => reason,
         UseTInner::WriteComputedObjPropCheckT { reason, .. } => reason,
@@ -990,7 +989,6 @@ pub fn util_use_op_of_use_t<T, CX>(
         | UseTInner::GetValuesT(_, _)
         | UseTInner::ConcretizeT { .. }
         | UseTInner::CondT(_, _, _, _)
-        | UseTInner::DestructuringT(_, _, _, _, _)
         | UseTInner::ResolveUnionT { .. }
         | UseTInner::ExitRendersT { .. }
         | UseTInner::EnumExhaustiveCheckT { .. }

@@ -127,13 +127,6 @@ pub fn string_of_destructor(destructor: &Destructor) -> String {
     }
 }
 
-fn string_of_destruct_kind(kind: &type_::DestructKind) -> &'static str {
-    match kind {
-        type_::DestructKind::DestructAnnot => "Annot",
-        type_::DestructKind::DestructInfer => "Infer",
-    }
-}
-
 fn bool_of_sealtype(seal: &type_::object::spread::SealType) -> bool {
     match seal {
         type_::object::spread::SealType::Sealed => true,
@@ -1364,16 +1357,6 @@ fn dump_use_t_<CX>(
                 nexts_str.join("; "),
                 kid(tvars, l),
                 kid(tvars, u)
-            );
-            p(cx, use_t, true, &extra)
-        }
-        UseTInner::DestructuringT(_, k, s, tout, _) => {
-            let extra = format!(
-                "{}, {}, ({}, {})",
-                string_of_destruct_kind(k),
-                string_of_selector(s),
-                string_of_reason(cx, tout.reason()),
-                tvar(tvars, tout.id() as i32)
             );
             p(cx, use_t, true, &extra)
         }

@@ -40,10 +40,6 @@ let string_of_destructor = function
   | ReactElementConfigType -> "ReactElementConfig"
   | MappedType _ -> "MappedType"
 
-let string_of_destruct_kind = function
-  | DestructAnnot -> "Annot"
-  | DestructInfer -> "Infer"
-
 let bool_of_sealtype = function
   | Object.Spread.Sealed -> true
   | _ -> false
@@ -893,17 +889,6 @@ and dump_use_t_ (depth, tvars) cx t =
       p
         ~extra:(spf "[%s], %s, %s" (String.concat "; " (Base.List.map ~f:kid nexts)) (kid l) (kid u))
         t
-    | DestructuringT (_, k, s, (r, tout), _) ->
-      p
-        t
-        ~extra:
-          (spf
-             "%s, %s, (%s, %s)"
-             (string_of_destruct_kind k)
-             (string_of_selector s)
-             (string_of_reason r)
-             (tvar tout)
-          )
     | ResolveUnionT { resolved; unresolved; upper; id; _ } ->
       p
         t

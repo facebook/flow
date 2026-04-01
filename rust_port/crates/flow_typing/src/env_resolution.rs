@@ -1700,41 +1700,78 @@ fn resolve_binding<'cx>(
                                 env_api::DefLocType::PatternLoc,
                                 parent_loc.dupe(),
                             );
-                            let has_anno = binding_has_annot(binding);
+                            let annot = binding_has_annot(binding);
                             let (selector_ty, sel_reason, has_default) =
                                 mk_selector_reason_has_default(cx, &loc, selector)?;
-                            let kind = if has_anno {
-                                type_::DestructKind::DestructAnnot
-                            } else {
-                                type_::DestructKind::DestructInfer
+                            let eval_destruct = |cx: &Context<'_>,
+                                                 reason: Reason,
+                                                 t: Type,
+                                                 selector: type_::Selector,
+                                                 annot: bool|
+                             -> Type {
+                                let reason_c = reason.dupe();
+                                let selector_c = selector.clone();
+                                flow_js_utils::map_on_resolved_type(
+                                    cx,
+                                    reason.dupe(),
+                                    t,
+                                    move |cx, t| {
+                                        let reason_c2 = reason_c.dupe();
+                                        let selector_c2 = selector_c.clone();
+                                        tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
+                                            cx,
+                                            reason_c.dupe(),
+                                            |cx, tout_reason, tout_id| {
+                                                let tout =
+                                                    Tvar::new(tout_reason.dupe(), tout_id as u32);
+                                                let id = reason::mk_id() as i32;
+                                                match &selector_c2 {
+                                                    type_::Selector::Prop(_, true) => {
+                                                        // Concretize so eval_selector sees concrete types for the
+                                                        // has_default exact-object check (lookup_ub vs getprop_ub).
+                                                        for ct in flow_js::FlowJs::possible_concrete_types_for_destructuring(
+                                                            cx, &reason_c2, &t,
+                                                        )
+                                                        .expect("Non speculating")
+                                                        {
+                                                            flow_js::FlowJs::eval_selector(
+                                                                cx,
+                                                                None,
+                                                                annot,
+                                                                &reason_c2,
+                                                                &ct,
+                                                                &selector_c2,
+                                                                &tout,
+                                                                id,
+                                                            )
+                                                            .expect("Non speculating");
+                                                        }
+                                                    }
+                                                    _ => {
+                                                        // For other selectors, call eval_selector directly on the
+                                                        // original type. The flow mechanism will handle union
+                                                        // distribution, matching the old DestructuringT behavior.
+                                                        // Flow_js.eval_selector cx ~annot reason t selector tout id
+                                                        flow_js::FlowJs::eval_selector(
+                                                            cx,
+                                                            None,
+                                                            annot,
+                                                            &reason_c2,
+                                                            &t,
+                                                            &selector_c2,
+                                                            &tout,
+                                                            id,
+                                                        )
+                                                        .expect("Non speculating");
+                                                    }
+                                                }
+                                            },
+                                        )
+                                    },
+                                )
                             };
-                            let sel_reason_c = sel_reason.dupe();
-                            let selector_c = selector_ty.clone();
-                            let kind_c = kind.clone();
-                            let t = flow_js_utils::map_on_resolved_type(
-                                cx,
-                                sel_reason.dupe(),
-                                t,
-                                move |cx, t| {
-                                    tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                                        cx,
-                                        sel_reason_c.dupe(),
-                                        |cx, tout_reason, tout_id| {
-                                            let tout =
-                                                Tvar::new(tout_reason.dupe(), tout_id as u32);
-                                            let use_t =
-                                                UseT::new(type_::UseTInner::DestructuringT(
-                                                    sel_reason_c.dupe(),
-                                                    kind_c.clone(),
-                                                    selector_c.clone(),
-                                                    Box::new(tout),
-                                                    reason::mk_id() as i32,
-                                                ));
-                                            flow_js::flow_non_speculating(cx, (&t, &use_t));
-                                        },
-                                    )
-                                },
-                            );
+                            let t =
+                                eval_destruct(cx, sel_reason.dupe(), t, selector_ty.clone(), annot);
                             if has_default {
                                 let (default_selector, default_reason, _) =
                                     mk_selector_reason_has_default(
@@ -1742,31 +1779,7 @@ fn resolve_binding<'cx>(
                                         &loc,
                                         &selector::Selector::Default,
                                     )?;
-                                let default_reason_c = default_reason.dupe();
-                                flow_js_utils::map_on_resolved_type(
-                                    cx,
-                                    default_reason.dupe(),
-                                    t,
-                                    move |cx, t| {
-                                        tvar_resolver::mk_tvar_and_fully_resolve_no_wrap_where(
-                                            cx,
-                                            default_reason_c.dupe(),
-                                            |cx, tout_reason, tout_id| {
-                                                let tout =
-                                                    Tvar::new(tout_reason.dupe(), tout_id as u32);
-                                                let use_t =
-                                                    UseT::new(type_::UseTInner::DestructuringT(
-                                                        default_reason_c.dupe(),
-                                                        kind.clone(),
-                                                        default_selector.clone(),
-                                                        Box::new(tout),
-                                                        reason::mk_id() as i32,
-                                                    ));
-                                                flow_js::flow_non_speculating(cx, (&t, &use_t));
-                                            },
-                                        )
-                                    },
-                                )
+                                eval_destruct(cx, default_reason, t, default_selector, annot)
                             } else {
                                 t
                             }

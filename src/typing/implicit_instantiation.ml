@@ -382,7 +382,6 @@ module Make (Observer : OBSERVER) (Flow : Flow_common.S) : S = struct
     | ObjTestProtoT _
     | HasOwnPropT _
     | LookupT _
-    | DestructuringT _
     | OptionalIndexedAccessT _
     | GetKeysT _
     | GetValuesT _

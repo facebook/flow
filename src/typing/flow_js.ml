@@ -1870,8 +1870,6 @@ struct
                   hint;
                 }
             )
-        | (IntersectionT _, DestructuringT (reason, kind, selector, tout, id)) ->
-          destruct cx ~trace reason kind l selector tout id
         (* extends **)
         | (IntersectionT (_, rep), ExtendsUseT (use_op, reason, try_ts_on_failure, l, u)) ->
           let (t, ts) = InterRep.members_nel rep in
@@ -1930,7 +1928,8 @@ struct
                 reason = _;
                 kind =
                   ( ConcretizeForOptionalChain | ConcretizeForOperatorsChecking
-                  | ConcretizeForComputedObjectKeys | ConcretizeForObjectAssign );
+                  | ConcretizeForComputedObjectKeys | ConcretizeForObjectAssign
+                  | ConcretizeForDestructuring );
                 seen = _;
                 collector;
               }
@@ -2182,11 +2181,6 @@ struct
                 (rrt_resolved, rrt_unresolved)
                 rrt_resolve_to
           end
-        (*****************)
-        (* destructuring *)
-        (*****************)
-        | (_, DestructuringT (reason, kind, selector, tout, id)) ->
-          destruct cx ~trace reason kind l selector tout id
         (**************)
         (* conditional type *)
         (**************)
@@ -2395,6 +2389,9 @@ struct
           rec_flow cx trace (l, u)
         | ( DefT (_, PolyT _),
             ConcretizeT { reason = _; kind = ConcretizeForPredicate _; seen = _; collector }
+          )
+        | ( DefT (_, PolyT _),
+            ConcretizeT { reason = _; kind = ConcretizeForDestructuring; seen = _; collector }
           ) ->
           TypeCollector.add collector l
         (* The rules below are hit when a polymorphic type appears outside a
@@ -3371,6 +3368,8 @@ struct
         (* Object.assign logic has been moved to type_operation_utils.ml *)
         (*****************************************************************)
         | (l, ConcretizeT { reason = _; kind = ConcretizeForObjectAssign; seen = _; collector }) ->
+          TypeCollector.add collector l
+        | (l, ConcretizeT { reason = _; kind = ConcretizeForDestructuring; seen = _; collector }) ->
           TypeCollector.add collector l
         (*************************)
         (* objects can be copied *)
@@ -5342,7 +5341,6 @@ struct
     | UseT (_, DefT (_, TypeT _))
     | CondT _
     | ConditionalT _
-    | DestructuringT _
     | EnumExhaustiveCheckT _
     | FilterMaybeT _
     | ObjKitT _
@@ -5840,7 +5838,6 @@ struct
     | CallElemT _
     | CondT _
     | ConstructorT _
-    | DestructuringT _
     | ElemT _
     | EnumExhaustiveCheckT _
     | ExtendsUseT _
@@ -6309,14 +6306,6 @@ struct
             ignore_dicts = false;
           }
       )
-
-  and destruct cx ~trace reason kind t selector tout id =
-    let annot =
-      match kind with
-      | DestructAnnot -> true
-      | DestructInfer -> false
-    in
-    eval_selector cx ~trace ~annot reason t selector tout id
 
   and eval_selector cx ?trace ~annot reason curr_t s tvar id =
     flow_opt
@@ -9650,6 +9639,8 @@ module rec FlowJs : Flow_common.S = struct
     possible_concrete_types ConcretizeForOperatorsChecking
 
   let possible_concrete_types_for_object_assign = possible_concrete_types ConcretizeForObjectAssign
+
+  let possible_concrete_types_for_destructuring = possible_concrete_types ConcretizeForDestructuring
 
   let possible_concrete_types_for_computed_object_keys =
     possible_concrete_types ConcretizeForComputedObjectKeys

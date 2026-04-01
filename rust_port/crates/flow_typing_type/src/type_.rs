@@ -1469,7 +1469,6 @@ pub enum UseTInner<CX = ()> {
     ResolveSpreadT(UseOp, Reason, Box<ResolveSpreadType>),
     CondT(Reason, Option<Type>, Type, Type),
     ExtendsUseT(UseOp, Reason, Rc<[Type]>, Type, Type),
-    DestructuringT(Reason, DestructKind, Selector, Box<Tvar>, i32),
     ResolveUnionT {
         reason: Reason,
         unresolved: Rc<[Type]>,
@@ -1753,9 +1752,6 @@ impl<CX> Clone for UseTInner<CX> {
             }
             UseTInner::ExtendsUseT(a, b, c, d, e) => {
                 UseTInner::ExtendsUseT(a.clone(), b.clone(), c.clone(), d.clone(), e.clone())
-            }
-            UseTInner::DestructuringT(a, b, c, d, e) => {
-                UseTInner::DestructuringT(a.clone(), b.clone(), c.clone(), d.clone(), *e)
             }
             UseTInner::ResolveUnionT {
                 reason,
@@ -2150,10 +2146,6 @@ impl<CX> PartialEq for UseTInner<CX> {
             (
                 UseTInner::ExtendsUseT(a1, b1, c1, d1, e1),
                 UseTInner::ExtendsUseT(a2, b2, c2, d2, e2),
-            ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
-            (
-                UseTInner::DestructuringT(a1, b1, c1, d1, e1),
-                UseTInner::DestructuringT(a2, b2, c2, d2, e2),
             ) => a1 == a2 && b1 == b2 && c1 == c2 && d1 == d2 && e1 == e2,
             (
                 UseTInner::ResolveUnionT {
@@ -2634,13 +2626,6 @@ impl<CX> std::hash::Hash for UseTInner<CX> {
                 d.hash(state);
                 e.hash(state);
             }
-            UseTInner::DestructuringT(a, b, c, d, e) => {
-                a.hash(state);
-                b.hash(state);
-                c.hash(state);
-                d.hash(state);
-                e.hash(state);
-            }
             UseTInner::ResolveUnionT {
                 reason,
                 unresolved,
@@ -2822,7 +2807,6 @@ impl<CX> Ord for UseTInner<CX> {
                 UseTInner::ResolveSpreadT(..) => 43,
                 UseTInner::CondT(..) => 44,
                 UseTInner::ExtendsUseT(..) => 45,
-                UseTInner::DestructuringT(..) => 46,
                 UseTInner::ResolveUnionT { .. } => 47,
                 UseTInner::TypeCastT(..) => 48,
                 UseTInner::EnumCastT { .. } => 49,
@@ -3205,15 +3189,6 @@ impl<CX> Ord for UseTInner<CX> {
             (
                 UseTInner::ExtendsUseT(a1, b1, c1, d1, e1),
                 UseTInner::ExtendsUseT(a2, b2, c2, d2, e2),
-            ) => a1
-                .cmp(a2)
-                .then_with(|| b1.cmp(b2))
-                .then_with(|| c1.cmp(c2))
-                .then_with(|| d1.cmp(d2))
-                .then_with(|| e1.cmp(e2)),
-            (
-                UseTInner::DestructuringT(a1, b1, c1, d1, e1),
-                UseTInner::DestructuringT(a2, b2, c2, d2, e2),
             ) => a1
                 .cmp(a2)
                 .then_with(|| b1.cmp(b2))
@@ -3718,14 +3693,6 @@ impl<CX> std::fmt::Debug for UseTInner<CX> {
                 .field(d)
                 .field(e)
                 .finish(),
-            UseTInner::DestructuringT(a, b, c, d, e) => f
-                .debug_tuple("DestructuringT")
-                .field(a)
-                .field(b)
-                .field(c)
-                .field(d)
-                .field(e)
-                .finish(),
             UseTInner::ResolveUnionT {
                 reason,
                 unresolved,
@@ -3952,17 +3919,6 @@ pub enum EnumPossibleExhaustiveCheckT {
         default_case_loc: Option<ALoc>,
     },
     EnumExhaustiveCheckInvalid(Rc<[ALoc]>),
-}
-
-/// Bindings created from destructuring annotations should themselves act like
-/// annotations. That is, `var {p}: {p: string}; p = 0` should be an error,
-/// because `p` should behave like a `string` annotation.
-///
-/// We accomplish this by wrapping the binding itself in an AnnotT type. *)
-#[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
-pub enum DestructKind {
-    DestructAnnot,
-    DestructInfer,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
@@ -6270,6 +6226,7 @@ pub enum ConcretizationKind {
     ConcretizeForOperatorsChecking,
     ConcretizeForComputedObjectKeys,
     ConcretizeForObjectAssign,
+    ConcretizeForDestructuring,
     ConcretizeForSentinelPropTest,
     ConcretizeForMatchArg { keep_unions: bool },
     ConcretizeAll,
@@ -11128,6 +11085,9 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
             ConcretizationKind::ConcretizeForObjectAssign => {
                 "ConcretizeT ConcretizeForObjectAssign".to_string()
             }
+            ConcretizationKind::ConcretizeForDestructuring => {
+                "ConcretizeT ConcretizeForDestructuring".to_string()
+            }
             ConcretizationKind::ConcretizeForMatchArg { keep_unions } => {
                 format!(
                     "ConcretizeT ConcretizeForMatchArg {{keep_unions={}}}",
@@ -11182,7 +11142,6 @@ pub fn string_of_use_ctor<CX>(use_t: &UseT<CX>) -> String {
         UseTInner::TypeCastT { .. } => "TypeCastT".to_string(),
         UseTInner::ConcretizeTypeAppsT { .. } => "ConcretizeTypeAppsT".to_string(),
         UseTInner::CondT { .. } => "CondT".to_string(),
-        UseTInner::DestructuringT { .. } => "DestructuringT".to_string(),
         UseTInner::ResolveUnionT { .. } => "ResolveUnionT".to_string(),
         UseTInner::FilterOptionalT { .. } => "FilterOptionalT".to_string(),
         UseTInner::FilterMaybeT { .. } => "FilterMaybeT".to_string(),

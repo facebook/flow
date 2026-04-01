@@ -211,7 +211,6 @@ pub fn default_resolve_touts<'cx>(
         }
         UseTInner::CondT(_, _, _, t) => resolve(t.dupe()),
         UseTInner::ExtendsUseT(..) => Ok(()),
-        UseTInner::DestructuringT(_, _, _, tvar, _) => resolve_tvar(tvar),
         UseTInner::ResolveUnionT { upper, .. } => {
             default_resolve_touts(flow, resolve_callee, cx, loc.dupe(), upper)
         }

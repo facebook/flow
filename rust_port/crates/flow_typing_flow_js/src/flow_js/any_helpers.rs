@@ -446,7 +446,6 @@ pub(super) fn any_propagated<'cx>(
         | UseTInner::CallElemT(..)
         | UseTInner::CondT(..)
         | UseTInner::ConstructorT(..)
-        | UseTInner::DestructuringT(..)
         | UseTInner::ElemT { .. }
         | UseTInner::EnumExhaustiveCheckT { .. }
         | UseTInner::ExtendsUseT(..)

@@ -919,28 +919,31 @@ let rec resolve_binding cx def_scope_kind reason loc b =
         t
       | None ->
         let t = Type_env.checked_find_loc_env_write cx Env_api.PatternLoc parent_loc in
-        let has_anno = binding_has_annot binding in
+        let annot = binding_has_annot binding in
         let (selector, reason, has_default) = mk_selector_reason_has_default cx loc selector in
-        let kind =
-          if has_anno then
-            DestructAnnot
-          else
-            DestructInfer
-        in
-        let t =
+        let eval_destruct cx reason t selector annot =
           Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
               Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
-                  Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
+                  let id = Reason.mk_id () in
+                  match selector with
+                  | Type.Prop (_, true) ->
+                    (* Concretize so eval_selector sees concrete types for the
+                       has_default exact-object check (lookup_ub vs getprop_ub). *)
+                    List.iter
+                      (fun t -> Flow_js.eval_selector cx ~annot reason t selector tout id)
+                      (Flow_js.possible_concrete_types_for_destructuring cx reason t)
+                  | _ ->
+                    (* For other selectors, call eval_selector directly on the
+                       original type. The flow mechanism will handle union
+                       distribution, matching the old DestructuringT behavior. *)
+                    Flow_js.eval_selector cx ~annot reason t selector tout id
               )
           )
         in
+        let t = eval_destruct cx reason t selector annot in
         if has_default then
           let (selector, reason, _) = mk_selector_reason_has_default cx loc Selector.Default in
-          Flow_js_utils.map_on_resolved_type cx reason t (fun t ->
-              Tvar_resolver.mk_tvar_and_fully_resolve_no_wrap_where cx reason (fun tout ->
-                  Flow_js.flow cx (t, DestructuringT (reason, kind, selector, tout, Reason.mk_id ()))
-              )
-          )
+          eval_destruct cx reason t selector annot
         else
           t))
 

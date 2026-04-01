@@ -15,23 +15,6 @@ use super::helpers::mk_typeapp_instance_annot;
 use super::helpers::*;
 use super::*;
 
-pub(super) fn destruct<'cx>(
-    cx: &Context<'cx>,
-    trace: DepthTrace,
-    reason: &Reason,
-    kind: DestructKind,
-    t: &Type,
-    selector: &Selector,
-    tout: &Tvar,
-    id: i32,
-) -> Result<(), FlowJsException> {
-    let annot = match kind {
-        DestructKind::DestructAnnot => true,
-        DestructKind::DestructInfer => false,
-    };
-    eval_selector(cx, Some(trace), annot, reason, t, selector, tout, id)
-}
-
 pub(super) fn eval_selector<'cx>(
     cx: &Context<'cx>,
     trace: Option<DepthTrace>,
